@@ -1,0 +1,19 @@
+.filterContainer {
+  display: flex;
+  gap: 16px;
+}
+
+.select {
+  min-width: 120px;
+}
+
+@media (max-width: 768px) {
+  .filterContainer {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .select {
+    width: 100%;
+  }
+}
