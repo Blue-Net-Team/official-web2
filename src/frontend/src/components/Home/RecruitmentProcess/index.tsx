@@ -41,7 +41,7 @@ const RecruitmentProcess = () => {
   const router = useRouter()
 
   const handleJoinClick = () => {
-    router.push('/recruitment')
+    router.push('/enroll')
   }
 
   const processSteps: ProcessStep[] = [
