@@ -81,9 +81,21 @@
   color: #ffffff !important;
 }
 
+.formSelect .ant-select-selection-placeholder {
+  color: rgba(140, 140, 141, 0.6) !important;
+}
+
+.formSelect .ant-select-arrow {
+  color: rgba(140, 140, 141, 0.8) !important;
+}
+
 .formSelect:hover .ant-select-selector,
 .formSelect-focused .ant-select-selector {
   border-color: #6677ff !important;
+}
+
+.formSelect:hover .ant-select-arrow {
+  color: #6677ff !important;
 }
 
 .formTextarea {
@@ -91,6 +103,10 @@
   border: 1px solid rgba(255, 255, 255, 0.1) !important;
   border-radius: 10px !important;
   color: #ffffff !important;
+}
+
+.formTextarea::placeholder {
+  color: rgba(140, 140, 141, 0.6) !important;
 }
 
 .formTextarea:hover,

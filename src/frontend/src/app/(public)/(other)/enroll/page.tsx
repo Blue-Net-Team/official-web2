@@ -116,98 +116,6 @@ const customTheme: ThemeConfig = {
   },
 }
 
-// 粒子组件
-const Particles: React.FC = () => {
-  const canvasRef = useRef<HTMLCanvasElement>(null)
-
-  useEffect(() => {
-    const canvas = canvasRef.current
-    if (!canvas) return
-
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return
-
-    let animationId: number
-    let particles: Array<{
-      x: number
-      y: number
-      size: number
-      speedY: number
-      opacity: number
-      color: string
-    }> = []
-
-    const colors = ['#6677FF', '#FF6B35', '#2F27B0', '#2ECC71']
-
-    const resize = () => {
-      canvas.width = window.innerWidth
-      canvas.height = window.innerHeight
-    }
-
-    const createParticles = () => {
-      particles = []
-      for (let i = 0; i < 30; i++) {
-        particles.push({
-          x: Math.random() * canvas.width,
-          y: Math.random() * canvas.height,
-          size: 2 + Math.random() * 4,
-          speedY: 0.5 + Math.random() * 1,
-          opacity: 0.3 + Math.random() * 0.4,
-          color: colors[Math.floor(Math.random() * colors.length)],
-        })
-      }
-    }
-
-    const animate = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height)
-
-      particles.forEach((p) => {
-        p.y -= p.speedY
-        if (p.y < -10) {
-          p.y = canvas.height + 10
-          p.x = Math.random() * canvas.width
-        }
-
-        ctx.beginPath()
-        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2)
-        ctx.fillStyle = p.color
-        ctx.globalAlpha = p.opacity
-        ctx.fill()
-      })
-
-      ctx.globalAlpha = 1
-      animationId = requestAnimationFrame(animate)
-    }
-
-    resize()
-    createParticles()
-    animate()
-
-    window.addEventListener('resize', resize)
-
-    return () => {
-      cancelAnimationFrame(animationId)
-      window.removeEventListener('resize', resize)
-    }
-  }, [])
-
-  return (
-    <canvas
-      ref={canvasRef}
-      className={styles.particles}
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        width: '100%',
-        height: '100%',
-        pointerEvents: 'none',
-        zIndex: -1,
-      }}
-    />
-  )
-}
-
 // 方向选择器组件（桌面端侧边栏）
 interface DirectionSidebarProps {
   selected: Direction
@@ -522,229 +430,235 @@ const EnrollPage: React.FC = () => {
   }, [avatarId, submitEnrollment, messageApi])
 
   return (
-    <ConfigProvider theme={customTheme}>
-      {/* 背景效果 */}
-      <div className={styles.pageBg} />
-      <div className={styles.glowBg}>
-        <div className={styles.glowOrb} />
-        <div className={styles.glowOrb} />
-        <div className={styles.glowOrb} />
-      </div>
-      <Particles />
+    <div className={styles.pageContainer}>
+      <ConfigProvider theme={customTheme}>
+        {/* 背景效果 */}
+        <div className={styles.pageBg} />
 
-      {/* 主内容 */}
-      <main className={styles.mainContent}>
-        {/* 桌面端方向选择侧边栏 */}
-        <DirectionSidebar selected={selectedDirection} onSelect={handleDirectionSelect} />
+        {/* 主内容 */}
+        <main className={styles.mainContent}>
+          {/* 桌面端方向选择侧边栏 */}
+          <DirectionSidebar selected={selectedDirection} onSelect={handleDirectionSelect} />
 
-        {/* 报名卡片 */}
-        <div className={styles.enrollContainer}>
-          {/* 角落装饰 */}
-          <div className={`${styles.cornerDecoration} ${styles.topLeft}`} />
-          <div className={`${styles.cornerDecoration} ${styles.topRight}`} />
-          <div className={`${styles.cornerDecoration} ${styles.bottomLeft}`} />
-          <div className={`${styles.cornerDecoration} ${styles.bottomRight}`} />
+          {/* 报名卡片 */}
+          <div className={styles.enrollContainer}>
+            {/* 角落装饰 */}
+            <div className={`${styles.cornerDecoration} ${styles.topLeft}`} />
+            <div className={`${styles.cornerDecoration} ${styles.topRight}`} />
+            <div className={`${styles.cornerDecoration} ${styles.bottomLeft}`} />
+            <div className={`${styles.cornerDecoration} ${styles.bottomRight}`} />
 
-          {/* 页面标题 */}
-          <div className={styles.enrollHeader}>
-            <h1 className={styles.enrollTitle}>加入蓝网</h1>
-            <p className={styles.enrollSubtitle}>填写以下信息完成报名，开启你的科技创新之旅</p>
-          </div>
+            {/* 页面标题 */}
+            <div className={styles.enrollHeader}>
+              <h1 className={styles.enrollTitle}>加入蓝网</h1>
+              <p className={styles.enrollSubtitle}>填写以下信息完成报名，开启你的科技创新之旅</p>
+            </div>
 
-          {/* 报名表单 */}
-          <Form
-            form={form}
-            layout="vertical"
-            onFinish={handleSubmit}
-            className={styles.enrollForm}
-            initialValues={{ direction: selectedDirection }}
-          >
-            {/* 头像和基本信息区域 */}
-            <div className={styles.profileSection}>
-              <AvatarUpload
-                previewUrl={avatarPreview}
-                uploading={uploadingAvatar}
-                uploadProgress={uploadProgress}
-                onFileSelect={handleAvatarSelect}
-                messageApi={messageApi}
-              />
-              <div className={styles.basicInfo}>
-                <div className={styles.infoGroup}>
-                  <label className={styles.infoLabel}>
-                    姓名 <span className={styles.required}>*</span>
-                  </label>
-                  <Form.Item name="username" rules={[{ required: true, message: '请输入姓名' }]}>
-                    <Input placeholder="请输入真实姓名" className={styles.infoInput} />
-                  </Form.Item>
+            {/* 报名表单 */}
+            <Form
+              form={form}
+              layout="vertical"
+              onFinish={handleSubmit}
+              className={styles.enrollForm}
+              initialValues={{ direction: selectedDirection }}
+            >
+              {/* 头像和基本信息区域 */}
+              <div className={styles.profileSection}>
+                <AvatarUpload
+                  previewUrl={avatarPreview}
+                  uploading={uploadingAvatar}
+                  uploadProgress={uploadProgress}
+                  onFileSelect={handleAvatarSelect}
+                  messageApi={messageApi}
+                />
+                <div className={styles.basicInfo}>
+                  <div className={styles.infoGroup}>
+                    <label className={styles.infoLabel}>
+                      姓名 <span className={styles.required}>*</span>
+                    </label>
+                    <Form.Item name="username" rules={[{ required: true, message: '请输入姓名' }]}>
+                      <Input placeholder="请输入真实姓名" className={styles.infoInput} />
+                    </Form.Item>
+                  </div>
+                  <div className={styles.infoGroup}>
+                    <label className={styles.infoLabel}>
+                      学号 <span className={styles.required}>*</span>
+                    </label>
+                    <Form.Item
+                      name="studentId"
+                      rules={[
+                        { required: true, message: '请输入学号' },
+                        {
+                          pattern: /^\d{12,13}$/,
+                          message: '请输入正确的学号格式（12-13位数字）',
+                        },
+                      ]}
+                    >
+                      <Input
+                        placeholder="12-13位数字"
+                        maxLength={13}
+                        className={styles.infoInput}
+                      />
+                    </Form.Item>
+                  </div>
                 </div>
-                <div className={styles.infoGroup}>
-                  <label className={styles.infoLabel}>
-                    学号 <span className={styles.required}>*</span>
+              </div>
+              {/* 第一行：邮箱 + 学院 */}
+              <div className={styles.formRow}>
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>
+                    邮箱 <span className={styles.required}>*</span>
                   </label>
                   <Form.Item
-                    name="studentId"
+                    name="email"
                     rules={[
-                      { required: true, message: '请输入学号' },
-                      {
-                        pattern: /^\d{12,13}$/,
-                        message: '请输入正确的学号格式（12-13位数字）',
-                      },
+                      { required: true, message: '请输入邮箱' },
+                      { type: 'email', message: '请输入正确的邮箱格式' },
                     ]}
                   >
-                    <Input placeholder="12-13位数字" maxLength={13} className={styles.infoInput} />
+                    <Input placeholder="用于接收通知" />
+                  </Form.Item>
+                </div>
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>
+                    学院 <span className={styles.required}>*</span>
+                  </label>
+                  <Form.Item name="collegeId" rules={[{ required: true, message: '请选择学院' }]}>
+                    <Select
+                      placeholder="请选择学院"
+                      loading={loadingColleges}
+                      style={{
+                        width: '100%',
+                      }}
+                    >
+                      {colleges.map((college) => (
+                        <Option key={college.id} value={college.id}>
+                          {college.name}
+                        </Option>
+                      ))}
+                    </Select>
                   </Form.Item>
                 </div>
               </div>
-            </div>
-            {/* 第一行：邮箱 + 学院 */}
-            <div className={styles.formRow}>
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>
-                  邮箱 <span className={styles.required}>*</span>
-                </label>
+
+              {/* 第二行：专业 + 年级 */}
+              <div className={styles.formRow}>
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>
+                    专业 <span className={styles.required}>*</span>
+                  </label>
+                  <Form.Item name="major" rules={[{ required: true, message: '请输入专业' }]}>
+                    <Input placeholder="请输入专业名称" />
+                  </Form.Item>
+                </div>
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>
+                    年级 <span className={styles.required}>*</span>
+                  </label>
+                  <Form.Item name="grade" rules={[{ required: true, message: '请选择年级' }]}>
+                    <Select
+                      placeholder="请选择年级"
+                      style={{
+                        width: '100%',
+                      }}
+                    >
+                      {GRADE_OPTIONS.map((opt) => (
+                        <Option key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </Option>
+                      ))}
+                    </Select>
+                  </Form.Item>
+                </div>
+              </div>
+
+              {/* 移动端方向选择 */}
+              <MobileDirectionSelector
+                selected={selectedDirection}
+                onSelect={handleDirectionSelect}
+              />
+
+              {/* 自我介绍 */}
+              <div className={`${styles.formGroup} ${styles.fullWidth} ${styles.introSection}`}>
+                <div className={styles.introHeader}>
+                  <label className={styles.formLabel}>
+                    自我介绍 <span className={styles.required}>*</span>
+                  </label>
+                  <span
+                    className={`${styles.charCount} ${introLength < 100 ? styles.warning : ''}`}
+                  >
+                    {introLength}/500
+                  </span>
+                </div>
                 <Form.Item
-                  name="email"
+                  name="introduction"
                   rules={[
-                    { required: true, message: '请输入邮箱' },
-                    { type: 'email', message: '请输入正确的邮箱格式' },
+                    { required: true, message: '请输入自我介绍' },
+                    {
+                      validator: (_, value) => {
+                        if (value && value.length < 100) {
+                          return Promise.reject('自我介绍至少需要100字')
+                        }
+                        return Promise.resolve()
+                      },
+                    },
                   ]}
                 >
-                  <Input placeholder="用于接收通知" />
+                  <TextArea
+                    placeholder="请简单介绍你自己，包括你的兴趣爱好、技能特长、为什么想加入蓝网等等..."
+                    maxLength={500}
+                    rows={6}
+                    onChange={handleIntroChange}
+                  />
                 </Form.Item>
+                <div className={styles.introHint}>建议字数：100-500字</div>
               </div>
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>
-                  学院 <span className={styles.required}>*</span>
-                </label>
-                <Form.Item name="collegeId" rules={[{ required: true, message: '请选择学院' }]}>
-                  <Select
-                    placeholder="请选择学院"
-                    loading={loadingColleges}
-                    style={{
-                      width: '100%',
-                    }}
-                  >
-                    {colleges.map((college) => (
-                      <Option key={college.id} value={college.id}>
-                        {college.name}
-                      </Option>
-                    ))}
-                  </Select>
-                </Form.Item>
+
+              {/* 内推码 */}
+              <div className={styles.formRow}>
+                <div className={`${styles.formGroup} ${styles.fullWidth}`}>
+                  <label className={styles.formLabel}>
+                    内推码
+                    <span
+                      style={{
+                        color: 'rgba(255,255,255,0.4)',
+                        fontSize: '11px',
+                        marginLeft: '4px',
+                      }}
+                    >
+                      （选填）
+                    </span>
+                  </label>
+                  <Form.Item name="internalReferralCode">
+                    <Input placeholder="如有内推码请填写" maxLength={8} />
+                  </Form.Item>
+                </div>
               </div>
-            </div>
 
-            {/* 第二行：专业 + 年级 */}
-            <div className={styles.formRow}>
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>
-                  专业 <span className={styles.required}>*</span>
-                </label>
-                <Form.Item name="major" rules={[{ required: true, message: '请输入专业' }]}>
-                  <Input placeholder="请输入专业名称" />
-                </Form.Item>
+              {/* 提交按钮 */}
+              <div className={styles.submitSection}>
+                <Button
+                  type="primary"
+                  htmlType="submit"
+                  className={styles.submitBtn}
+                  disabled={submitting || uploadingAvatar}
+                  icon={submitting ? <Spin size="small" /> : <ArrowRightOutlined />}
+                >
+                  {submitting ? '提交中...' : '提交报名'}
+                </Button>
               </div>
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>
-                  年级 <span className={styles.required}>*</span>
-                </label>
-                <Form.Item name="grade" rules={[{ required: true, message: '请选择年级' }]}>
-                  <Select
-                    placeholder="请选择年级"
-                    style={{
-                      width: '100%',
-                    }}
-                  >
-                    {GRADE_OPTIONS.map((opt) => (
-                      <Option key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </Option>
-                    ))}
-                  </Select>
-                </Form.Item>
+
+              {/* 提示信息 */}
+              <div className={styles.formTips}>
+                提交即表示您同意我们的<a href="#">报名须知</a>和<a href="#">隐私政策</a>
+                <br />
+                已有账号？<a href="/login">立即登录</a>
               </div>
-            </div>
-
-            {/* 移动端方向选择 */}
-            <MobileDirectionSelector
-              selected={selectedDirection}
-              onSelect={handleDirectionSelect}
-            />
-
-            {/* 自我介绍 */}
-            <div className={`${styles.formGroup} ${styles.fullWidth} ${styles.introSection}`}>
-              <div className={styles.introHeader}>
-                <label className={styles.formLabel}>
-                  自我介绍 <span className={styles.required}>*</span>
-                </label>
-                <span className={`${styles.charCount} ${introLength < 100 ? styles.warning : ''}`}>
-                  {introLength}/500
-                </span>
-              </div>
-              <Form.Item
-                name="introduction"
-                rules={[
-                  { required: true, message: '请输入自我介绍' },
-                  {
-                    validator: (_, value) => {
-                      if (value && value.length < 100) {
-                        return Promise.reject('自我介绍至少需要100字')
-                      }
-                      return Promise.resolve()
-                    },
-                  },
-                ]}
-              >
-                <TextArea
-                  placeholder="请简单介绍你自己，包括你的兴趣爱好、技能特长、为什么想加入蓝网等等..."
-                  maxLength={500}
-                  rows={6}
-                  onChange={handleIntroChange}
-                />
-              </Form.Item>
-              <div className={styles.introHint}>建议字数：100-500字</div>
-            </div>
-
-            {/* 内推码 */}
-            <div className={styles.formRow}>
-              <div className={`${styles.formGroup} ${styles.fullWidth}`}>
-                <label className={styles.formLabel}>
-                  内推码
-                  <span
-                    style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', marginLeft: '4px' }}
-                  >
-                    （选填）
-                  </span>
-                </label>
-                <Form.Item name="internalReferralCode">
-                  <Input placeholder="如有内推码请填写" maxLength={8} />
-                </Form.Item>
-              </div>
-            </div>
-
-            {/* 提交按钮 */}
-            <div className={styles.submitSection}>
-              <Button
-                type="primary"
-                htmlType="submit"
-                className={styles.submitBtn}
-                disabled={submitting || uploadingAvatar}
-                icon={submitting ? <Spin size="small" /> : <ArrowRightOutlined />}
-              >
-                {submitting ? '提交中...' : '提交报名'}
-              </Button>
-            </div>
-
-            {/* 提示信息 */}
-            <div className={styles.formTips}>
-              提交即表示您同意我们的<a href="#">报名须知</a>和<a href="#">隐私政策</a>
-              <br />
-              已有账号？<a href="/login">立即登录</a>
-            </div>
-          </Form>
-        </div>
-      </main>
-    </ConfigProvider>
+            </Form>
+          </div>
+        </main>
+      </ConfigProvider>
+    </div>
   )
 }
 
