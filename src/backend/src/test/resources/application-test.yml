@@ -1,0 +1,30 @@
+spring:
+  sql:
+    init:
+      mode: never
+
+  testcontainers:
+    dynamic-property-registry-injection: allow
+
+
+  mail:
+    host: smtp.qq.com
+    port: 465
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    from: ${MAIL_USERNAME:}
+    properties:
+      mail:
+        debug: true
+        smtp:
+          auth: true
+          ssl:
+            enable: true
+          socketFactory:
+            class: javax.net.ssl.SSLSocketFactory
+            port: 465
+          connectiontimeout: 10000
+          timeout: 10000
+          writetimeout: 10000
+  flyway:
+    clean-disabled: false

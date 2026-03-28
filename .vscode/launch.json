@@ -1,0 +1,47 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "backend server",
+            "request": "launch",
+            "mainClass": "com.bluenet.web.BluenetBackendApplication",
+            "projectName": "web",
+            "cwd": "${workspaceFolder}/src/backend",
+            "vmArgs": "-Dspring.profiles.active=dev",
+            "env": {
+                "JAVA_HOME": "${env:JAVA_HOME}"
+            }
+        },
+        {
+            "type": "chrome",
+            "request": "launch",
+            "name": "client side",
+            "url": "http://localhost:3000",
+            "webRoot": "${workspaceFolder}/src/frontend",
+            "sourceMaps": true,
+            "sourceMapPathOverrides": {
+                "webpack:///./src/*": "${webRoot}/src/*"
+            }
+        },
+        {
+            "type": "node-terminal",
+            "name": "frontend server",
+            "request": "launch",
+            "command": "pnpm run dev",
+            "cwd": "${workspaceFolder}/src/frontend",
+            "serverReadyAction": {
+                "pattern": "Local:.*(https?://[^\\s]+)",
+                "uriFormat": "%s",
+                "action": "openExternally"
+            }
+        },
+        {
+            "type": "node-terminal",
+            "name": "install",
+            "request": "launch",
+            "command": "pnpm install",
+            "cwd": "${workspaceFolder}/src/frontend"
+        }
+    ]
+}

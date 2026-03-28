@@ -1,0 +1,50 @@
+# BlueNet Backend Dockerfile
+# 构建上下文应为项目根目录
+
+# ==================== 构建阶段 ====================
+FROM eclipse-temurin:21-jdk-alpine AS build
+WORKDIR /app
+
+# 复制 Maven 配置文件
+COPY src/backend/pom.xml .
+COPY src/backend/.mvn ./.mvn
+COPY src/backend/mvnw .
+
+# 下载依赖（利用缓存）
+RUN ./mvnw dependency:go-offline -B
+
+# 复制源代码并构建
+COPY src/backend/src ./src
+RUN ./mvnw clean package -DskipTests -B
+
+# ==================== 运行阶段 ====================
+FROM eclipse-temurin:21-jre-alpine
+LABEL authors="IVEN"
+LABEL description="BlueNet Backend Service"
+
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+
+ENV DATABASE_HOST=localhost
+ENV DATABASE_PORT=5432
+ENV DATABASE_NAME=blue_net
+ENV DATABASE_USERNAME=postgres
+ENV DATABASE_PASSWORD=000000
+ENV RABBITMQ_HOST=localhost
+ENV RABBITMQ_PORT=5672
+ENV RABBITMQ_USERNAME=guest
+ENV RABBITMQ_PASSWORD=guest
+ENV MAIL_USERNAME=""
+ENV MAIL_PASSWORD=""
+ENV MINIO_AK=admin
+ENV MINIO_SK=admin123
+ENV LANG C.UTF-8
+
+WORKDIR /app
+
+COPY --from=build --chown=appuser:appgroup /app/target/*.jar /app/backend.jar
+
+EXPOSE 8080 8088
+
+USER appuser
+
+ENTRYPOINT ["java", "-Dfile.encoding=UTF-8", "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:8088", "-jar", "backend.jar"]

@@ -1,0 +1,2916 @@
+{
+  "version": "2.9",
+  "children": [
+    {
+      "type": "frame",
+      "id": "uv4rB",
+      "x": 0,
+      "y": 0,
+      "name": "团队成就 - 桌面端 (1440px)",
+      "width": 1440,
+      "height": 1600,
+      "fill": "#000000",
+      "layout": "vertical",
+      "gap": 32,
+      "padding": [
+        40,
+        48
+      ],
+      "children": [
+        {
+          "type": "text",
+          "id": "PczWH",
+          "name": "title",
+          "fill": "#FFFFFF",
+          "content": "团队成就",
+          "fontFamily": "Space Grotesk",
+          "fontSize": 32,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "bGy8T",
+          "name": "subtitle",
+          "fill": "#8B9DC3",
+          "content": "记录我们的荣誉与成就",
+          "fontFamily": "Inter",
+          "fontSize": 16,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "frame",
+          "id": "LfqrE",
+          "name": "Masonry瀑布流",
+          "width": "fill_container",
+          "height": "fill_container",
+          "gap": 20,
+          "children": [
+            {
+              "type": "frame",
+              "id": "9eMMk",
+              "name": "列1",
+              "width": "fill_container",
+              "height": "fill_container",
+              "layout": "vertical",
+              "gap": 20,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "L6r3X",
+                  "name": "成就卡片1",
+                  "width": "fill_container",
+                  "height": 380,
+                  "fill": "#1a1a1a",
+                  "cornerRadius": 12,
+                  "stroke": {
+                    "thickness": 1,
+                    "fill": "#2a2a2a"
+                  },
+                  "layout": "vertical",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "B2lf0",
+                      "name": "图片区域",
+                      "width": "fill_container",
+                      "height": 180,
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "./images/generated-1774525124143.png",
+                        "mode": "fill"
+                      },
+                      "cornerRadius": [
+                        12,
+                        12,
+                        0,
+                        0
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "3S16S",
+                      "name": "内容区域",
+                      "width": "fill_container",
+                      "height": "fill_container",
+                      "layout": "vertical",
+                      "gap": 10,
+                      "padding": 16,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "IjHtT",
+                          "name": "标题行",
+                          "width": "fill_container",
+                          "gap": 8,
+                          "justifyContent": "space_between",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "KIw7d",
+                              "name": "card1Title",
+                              "fill": "#FFFFFF",
+                              "textGrowth": "fixed-width",
+                              "width": 240,
+                              "content": "电子设计竞赛一等奖",
+                              "fontFamily": "Space Grotesk",
+                              "fontSize": 14,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "xReoe",
+                              "name": "类型标签",
+                              "width": 48,
+                              "height": 20,
+                              "fill": "#E86835",
+                              "cornerRadius": 4,
+                              "padding": [
+                                4,
+                                8
+                              ],
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "OmVxf",
+                                  "name": "card1TagText",
+                                  "fill": "#FFFFFF",
+                                  "content": "竞赛",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 11,
+                                  "fontWeight": "500"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "lhatr",
+                          "name": "card1Event",
+                          "fill": "#8B9DC3",
+                          "content": "全国大学生电子设计竞赛",
+                          "fontFamily": "Inter",
+                          "fontSize": 12,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "29GWL",
+                          "name": "card1Year",
+                          "fill": "#6B7280",
+                          "content": "2024年",
+                          "fontFamily": "Inter",
+                          "fontSize": 12,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "tBtCy",
+                          "name": "成员头像",
+                          "width": "fill_container",
+                          "height": 24,
+                          "gap": -8,
+                          "children": [
+                            {
+                              "type": "ellipse",
+                              "id": "2ThMy",
+                              "name": "成员1",
+                              "fill": "#4F46E5",
+                              "width": 24,
+                              "height": 24,
+                              "stroke": {
+                                "thickness": 2,
+                                "fill": "#1A1F35"
+                              }
+                            },
+                            {
+                              "type": "ellipse",
+                              "id": "bZcDa",
+                              "name": "成员2",
+                              "fill": "#7C3AED",
+                              "width": 24,
+                              "height": 24,
+                              "stroke": {
+                                "thickness": 2,
+                                "fill": "#1A1F35"
+                              }
+                            },
+                            {
+                              "type": "ellipse",
+                              "id": "ZDDAi",
+                              "name": "成员3",
+                              "fill": "#EC4899",
+                              "width": 24,
+                              "height": 24,
+                              "stroke": {
+                                "thickness": 2,
+                                "fill": "#1A1F35"
+                              }
+                            },
+                            {
+                              "type": "ellipse",
+                              "id": "0ZwCi",
+                              "name": "成员4",
+                              "fill": "#F59E0B",
+                              "width": 24,
+                              "height": 24,
+                              "stroke": {
+                                "thickness": 2,
+                                "fill": "#1A1F35"
+                              }
+                            },
+                            {
+                              "type": "frame",
+                              "id": "9S7rQ",
+                              "name": "更多成员",
+                              "width": 24,
+                              "height": 24,
+                              "fill": "#374151",
+                              "cornerRadius": 12,
+                              "stroke": {
+                                "thickness": 2,
+                                "fill": "#1A1F35"
+                              },
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "O2c1Y",
+                                  "name": "m5Text",
+                                  "fill": "#FFFFFF",
+                                  "content": "+2",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 10,
+                                  "fontWeight": "600"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "XsuJq",
+                  "name": "成就卡片5",
+                  "width": "fill_container",
+                  "height": 340,
+                  "fill": "#1a1a1a",
+                  "cornerRadius": 12,
+                  "stroke": {
+                    "thickness": 1,
+                    "fill": "#2a2a2a"
+                  },
+                  "layout": "vertical",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "ATr0s",
+                      "name": "图片区域",
+                      "width": "fill_container",
+                      "height": 140,
+                      "fill": "#2A3050",
+                      "cornerRadius": [
+                        12,
+                        12,
+                        0,
+                        0
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "Rcgbu",
+                      "name": "内容区域",
+                      "width": "fill_container",
+                      "height": "fill_container",
+                      "layout": "vertical",
+                      "gap": 10,
+                      "padding": 16,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "lA06x",
+                          "name": "标题行",
+                          "width": "fill_container",
+                          "gap": 8,
+                          "justifyContent": "space_between",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "q0obi",
+                              "name": "card5Title",
+                              "fill": "#FFFFFF",
+                              "textGrowth": "fixed-width",
+                              "width": 240,
+                              "content": "创新创业大赛银奖",
+                              "fontFamily": "Space Grotesk",
+                              "fontSize": 14,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "VfDCD",
+                              "name": "类型标签",
+                              "width": 48,
+                              "height": 20,
+                              "fill": "#3B82F6",
+                              "cornerRadius": 4,
+                              "padding": [
+                                4,
+                                8
+                              ],
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "PzfAI",
+                                  "name": "card5TagText",
+                                  "fill": "#FFFFFF",
+                                  "content": "项目",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 11,
+                                  "fontWeight": "500"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "urHd3",
+                          "name": "card5Event",
+                          "fill": "#8B9DC3",
+                          "content": "互联网+大学生创新创业大赛",
+                          "fontFamily": "Inter",
+                          "fontSize": 12,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "9v13v",
+                          "name": "card5Year",
+                          "fill": "#6B7280",
+                          "content": "2023年11月",
+                          "fontFamily": "Inter",
+                          "fontSize": 12,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "M4Enw",
+                          "name": "成员头像",
+                          "width": "fill_container",
+                          "height": 24,
+                          "gap": -8,
+                          "children": [
+                            {
+                              "type": "ellipse",
+                              "id": "Wnxpi",
+                              "name": "成员1",
+                              "fill": "#EC4899",
+                              "width": 24,
+                              "height": 24,
+                              "stroke": {
+                                "thickness": 2,
+                                "fill": "#1A1F35"
+                              }
+                            },
+                            {
+                              "type": "ellipse",
+                              "id": "tFDT2",
+                              "name": "成员2",
+                              "fill": "#8B5CF6",
+                              "width": 24,
+                              "height": 24,
+                              "stroke": {
+                                "thickness": 2,
+                                "fill": "#1A1F35"
+                              }
+                            },
+                            {
+                              "type": "ellipse",
+                              "id": "WeOUb",
+                              "name": "成员3",
+                              "fill": "#06B6D4",
+                              "width": 24,
+                              "height": 24,
+                              "stroke": {
+                                "thickness": 2,
+                                "fill": "#1A1F35"
+                              }
+                            },
+                            {
+                              "type": "ellipse",
+                              "id": "mrW8Y",
+                              "name": "成员4",
+                              "fill": "#F97316",
+                              "width": 24,
+                              "height": 24,
+                              "stroke": {
+                                "thickness": 2,
+                                "fill": "#1A1F35"
+                              }
+                            },
+                            {
+                              "type": "frame",
+                              "id": "p7wOo",
+                              "name": "更多成员",
+                              "width": 24,
+                              "height": 24,
+                              "fill": "#374151",
+                              "cornerRadius": 12,
+                              "stroke": {
+                                "thickness": 2,
+                                "fill": "#1A1F35"
+                              },
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "eyq6M",
+                                  "name": "m5_5Text",
+                                  "fill": "#FFFFFF",
+                                  "content": "+5",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 10,
+                                  "fontWeight": "600"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "EC6j2",
+              "name": "列2",
+              "width": "fill_container",
+              "height": "fill_container",
+              "layout": "vertical",
+              "gap": 20,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "HRTUk",
+                  "name": "成就卡片2",
+                  "width": "fill_container",
+                  "height": 400,
+                  "fill": "#1a1a1a",
+                  "cornerRadius": 12,
+                  "stroke": {
+                    "thickness": 1,
+                    "fill": "#2a2a2a"
+                  },
+                  "layout": "vertical",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "8vD2l",
+                      "name": "图片区域",
+                      "width": "fill_container",
+                      "height": 200,
+                      "fill": "#2A3050",
+                      "cornerRadius": [
+                        12,
+                        12,
+                        0,
+                        0
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "yy0av",
+                      "name": "内容区域",
+                      "width": "fill_container",
+                      "height": "fill_container",
+                      "layout": "vertical",
+                      "gap": 10,
+                      "padding": 16,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "jZes3",
+                          "name": "标题行",
+                          "width": "fill_container",
+                          "gap": 8,
+                          "justifyContent": "space_between",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "8Flg5",
+                              "name": "card2Title",
+                              "fill": "#FFFFFF",
+                              "textGrowth": "fixed-width",
+                              "width": 240,
+                              "content": "蓝桥杯软件大赛一等奖",
+                              "fontFamily": "Space Grotesk",
+                              "fontSize": 14,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "BwtLj",
+                              "name": "类型标签",
+                              "width": 48,
+                              "height": 20,
+                              "fill": "#E86835",
+                              "cornerRadius": 4,
+                              "padding": [
+                                4,
+                                8
+                              ],
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "3Z6YY",
+                                  "name": "card2TagText",
+                                  "fill": "#FFFFFF",
+                                  "textGrowth": "fixed-width",
+                                  "width": 22,
+                                  "content": "竞赛",
+                                  "textAlign": "center",
+                                  "textAlignVertical": "middle",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 11,
+                                  "fontWeight": "500"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "5tDpt",
+                          "name": "card2Event",
+                          "fill": "#8B9DC3",
+                          "content": "蓝桥杯全国软件和信息技术专业人才大赛",
+                          "fontFamily": "Inter",
+                          "fontSize": 12,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "8Kpi3",
+                          "name": "card2Year",
+                          "fill": "#6B7280",
+                          "content": "2024年5月",
+                          "fontFamily": "Inter",
+                          "fontSize": 12,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "MH2SB",
+                          "name": "成员头像",
+                          "width": "fill_container",
+                          "height": 24,
+                          "gap": -8,
+                          "children": [
+                            {
+                              "type": "ellipse",
+                              "id": "ZPi00",
+                              "name": "成员1",
+                              "fill": "#10B981",
+                              "width": 24,
+                              "height": 24,
+                              "stroke": {
+                                "thickness": 2,
+                                "fill": "#1A1F35"
+                              }
+                            },
+                            {
+                              "type": "ellipse",
+                              "id": "W52Qi",
+                              "name": "成员2",
+                              "fill": "#6366F1",
+                              "width": 24,
+                              "height": 24,
+                              "stroke": {
+                                "thickness": 2,
+                                "fill": "#1A1F35"
+                              }
+                            },
+                            {
+                              "type": "ellipse",
+                              "id": "9zggd",
+                              "name": "成员3",
+                              "fill": "#F43F5E",
+                              "width": 24,
+                              "height": 24,
+                              "stroke": {
+                                "thickness": 2,
+                                "fill": "#1A1F35"
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "YZFkT",
+                  "name": "成就卡片6",
+                  "width": "fill_container",
+                  "height": 360,
+                  "fill": "#1a1a1a",
+                  "cornerRadius": 12,
+                  "stroke": {
+                    "thickness": 1,
+                    "fill": "#2a2a2a"
+                  },
+                  "layout": "vertical",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "CXcOd",
+                      "name": "图片区域",
+                      "width": "fill_container",
+                      "height": 160,
+                      "fill": "#2A3050",
+                      "cornerRadius": [
+                        12,
+                        12,
+                        0,
+                        0
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "419gt",
+                      "name": "内容区域",
+                      "width": "fill_container",
+                      "height": "fill_container",
+                      "layout": "vertical",
+                      "gap": 10,
+                      "padding": 16,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "O3LhY",
+                          "name": "标题行",
+                          "width": "fill_container",
+                          "gap": 8,
+                          "justifyContent": "space_between",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "VDo5w",
+                              "name": "card6Title",
+                              "fill": "#FFFFFF",
+                              "textGrowth": "fixed-width",
+                              "width": 240,
+                              "content": "数学建模竞赛一等奖",
+                              "fontFamily": "Space Grotesk",
+                              "fontSize": 14,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "a5Bab",
+                              "name": "类型标签",
+                              "width": 48,
+                              "height": 20,
+                              "fill": "#E86835",
+                              "cornerRadius": 4,
+                              "padding": [
+                                4,
+                                8
+                              ],
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "ifLgy",
+                                  "name": "card6TagText",
+                                  "fill": "#FFFFFF",
+                                  "content": "竞赛",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 11,
+                                  "fontWeight": "500"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "doFZw",
+                          "name": "card6Event",
+                          "fill": "#8B9DC3",
+                          "content": "全国大学生数学建模竞赛",
+                          "fontFamily": "Inter",
+                          "fontSize": 12,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "KHyo3",
+                          "name": "card6Year",
+                          "fill": "#6B7280",
+                          "content": "2023年9月",
+                          "fontFamily": "Inter",
+                          "fontSize": 12,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "sqs1d",
+                          "name": "成员头像",
+                          "width": "fill_container",
+                          "height": 24,
+                          "gap": -8,
+                          "children": [
+                            {
+                              "type": "ellipse",
+                              "id": "4E93x",
+                              "name": "成员1",
+                              "fill": "#10B981",
+                              "width": 24,
+                              "height": 24,
+                              "stroke": {
+                                "thickness": 2,
+                                "fill": "#1A1F35"
+                              }
+                            },
+                            {
+                              "type": "ellipse",
+                              "id": "A31jh",
+                              "name": "成员2",
+                              "fill": "#6366F1",
+                              "width": 24,
+                              "height": 24,
+                              "stroke": {
+                                "thickness": 2,
+                                "fill": "#1A1F35"
+                              }
+                            },
+                            {
+                              "type": "ellipse",
+                              "id": "dRpVn",
+                              "name": "成员3",
+                              "fill": "#F43F5E",
+                              "width": 24,
+                              "height": 24,
+                              "stroke": {
+                                "thickness": 2,
+                                "fill": "#1A1F35"
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "5CmjD",
+              "name": "列3",
+              "width": "fill_container",
+              "height": "fill_container",
+              "layout": "vertical",
+              "gap": 20,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "efH9I",
+                  "name": "成就卡片3",
+                  "width": "fill_container",
+                  "height": 360,
+                  "fill": "#1a1a1a",
+                  "cornerRadius": 12,
+                  "stroke": {
+                    "thickness": 1,
+                    "fill": "#2a2a2a"
+                  },
+                  "layout": "vertical",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "iMyiO",
+                      "name": "图片区域",
+                      "width": "fill_container",
+                      "height": 160,
+                      "fill": "#2A3050",
+                      "cornerRadius": [
+                        12,
+                        12,
+                        0,
+                        0
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "uvwuK",
+                      "name": "内容区域",
+                      "width": "fill_container",
+                      "height": "fill_container",
+                      "layout": "vertical",
+                      "gap": 10,
+                      "padding": 16,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "g0Igy",
+                          "name": "标题行",
+                          "width": "fill_container",
+                          "gap": 8,
+                          "justifyContent": "space_between",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "4uBsr",
+                              "name": "card3Title",
+                              "fill": "#FFFFFF",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "智能车竞赛二等奖",
+                              "fontFamily": "Space Grotesk",
+                              "fontSize": 14,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "v2bGQ",
+                              "name": "类型标签",
+                              "width": 48,
+                              "height": 20,
+                              "fill": "#E86835",
+                              "cornerRadius": 4,
+                              "padding": [
+                                4,
+                                8
+                              ],
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "fqGaC",
+                                  "name": "card3TagText",
+                                  "fill": "#FFFFFF",
+                                  "content": "竞赛",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 11,
+                                  "fontWeight": "500"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "wKKe5",
+                          "name": "card3Event",
+                          "fill": "#8B9DC3",
+                          "content": "全国大学生智能汽车竞赛",
+                          "fontFamily": "Inter",
+                          "fontSize": 12,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "U1eTH",
+                          "name": "card3Year",
+                          "fill": "#6B7280",
+                          "content": "2024年7月",
+                          "fontFamily": "Inter",
+                          "fontSize": 12,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "4u5N7",
+                          "name": "成员头像",
+                          "width": "fill_container",
+                          "height": 24,
+                          "gap": -8,
+                          "children": [
+                            {
+                              "type": "ellipse",
+                              "id": "ZVHUZ",
+                              "name": "成员1",
+                              "fill": "#8B5CF6",
+                              "width": 24,
+                              "height": 24,
+                              "stroke": {
+                                "thickness": 2,
+                                "fill": "#1A1F35"
+                              }
+                            },
+                            {
+                              "type": "ellipse",
+                              "id": "A2MzH",
+                              "name": "成员2",
+                              "fill": "#EC4899",
+                              "width": 24,
+                              "height": 24,
+                              "stroke": {
+                                "thickness": 2,
+                                "fill": "#1A1F35"
+                              }
+                            },
+                            {
+                              "type": "ellipse",
+                              "id": "nYf4w",
+                              "name": "成员3",
+                              "fill": "#14B8A6",
+                              "width": 24,
+                              "height": 24,
+                              "stroke": {
+                                "thickness": 2,
+                                "fill": "#1A1F35"
+                              }
+                            },
+                            {
+                              "type": "ellipse",
+                              "id": "7npNb",
+                              "name": "成员4",
+                              "fill": "#F97316",
+                              "width": 24,
+                              "height": 24,
+                              "stroke": {
+                                "thickness": 2,
+                                "fill": "#1A1F35"
+                              }
+                            },
+                            {
+                              "type": "frame",
+                              "id": "Ggf5c",
+                              "name": "更多成员",
+                              "width": 24,
+                              "height": 24,
+                              "fill": "#374151",
+                              "cornerRadius": 12,
+                              "stroke": {
+                                "thickness": 2,
+                                "fill": "#1A1F35"
+                              },
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "Zgipp",
+                                  "name": "m3_5Text",
+                                  "fill": "#FFFFFF",
+                                  "content": "+3",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 10,
+                                  "fontWeight": "600"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "ibdRv",
+                  "name": "成就卡片7",
+                  "width": "fill_container",
+                  "height": 380,
+                  "fill": "#1a1a1a",
+                  "cornerRadius": 12,
+                  "stroke": {
+                    "thickness": 1,
+                    "fill": "#2a2a2a"
+                  },
+                  "layout": "vertical",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "7V8ua",
+                      "name": "图片区域",
+                      "width": "fill_container",
+                      "height": 180,
+                      "fill": "#2A3050",
+                      "cornerRadius": [
+                        12,
+                        12,
+                        0,
+                        0
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "mXJhW",
+                      "name": "内容区域",
+                      "width": "fill_container",
+                      "height": "fill_container",
+                      "layout": "vertical",
+                      "gap": 10,
+                      "padding": 16,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "xHze1",
+                          "name": "标题行",
+                          "width": "fill_container",
+                          "gap": 8,
+                          "justifyContent": "space_between",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "G3qMw",
+                              "name": "card7Title",
+                              "fill": "#FFFFFF",
+                              "textGrowth": "fixed-width",
+                              "width": 240,
+                              "content": "机器人竞赛三等奖",
+                              "fontFamily": "Space Grotesk",
+                              "fontSize": 14,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "6E2AQ",
+                              "name": "类型标签",
+                              "width": 48,
+                              "height": 20,
+                              "fill": "#E86835",
+                              "cornerRadius": 4,
+                              "padding": [
+                                4,
+                                8
+                              ],
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "FfdWX",
+                                  "name": "card7TagText",
+                                  "fill": "#FFFFFF",
+                                  "content": "竞赛",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 11,
+                                  "fontWeight": "500"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "ob0PY",
+                          "name": "card7Event",
+                          "fill": "#8B9DC3",
+                          "content": "全国大学生机器人大赛",
+                          "fontFamily": "Inter",
+                          "fontSize": 12,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "7DzIa",
+                          "name": "card7Year",
+                          "fill": "#6B7280",
+                          "content": "2023年6月",
+                          "fontFamily": "Inter",
+                          "fontSize": 12,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "UarbX",
+                          "name": "成员头像",
+                          "width": "fill_container",
+                          "height": 24,
+                          "gap": -8,
+                          "children": [
+                            {
+                              "type": "ellipse",
+                              "id": "k5KQe",
+                              "name": "成员1",
+                              "fill": "#8B5CF6",
+                              "width": 24,
+                              "height": 24,
+                              "stroke": {
+                                "thickness": 2,
+                                "fill": "#1A1F35"
+                              }
+                            },
+                            {
+                              "type": "ellipse",
+                              "id": "fBOLV",
+                              "name": "成员2",
+                              "fill": "#EC4899",
+                              "width": 24,
+                              "height": 24,
+                              "stroke": {
+                                "thickness": 2,
+                                "fill": "#1A1F35"
+                              }
+                            },
+                            {
+                              "type": "ellipse",
+                              "id": "R1zZ3",
+                              "name": "成员3",
+                              "fill": "#14B8A6",
+                              "width": 24,
+                              "height": 24,
+                              "stroke": {
+                                "thickness": 2,
+                                "fill": "#1A1F35"
+                              }
+                            },
+                            {
+                              "type": "ellipse",
+                              "id": "zGDD2",
+                              "name": "成员4",
+                              "fill": "#F97316",
+                              "width": 24,
+                              "height": 24,
+                              "stroke": {
+                                "thickness": 2,
+                                "fill": "#1A1F35"
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "8UK7e",
+              "name": "列4",
+              "width": "fill_container",
+              "height": "fill_container",
+              "layout": "vertical",
+              "gap": 20,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "0Jqkg",
+                  "name": "成就卡片4",
+                  "width": "fill_container",
+                  "height": 380,
+                  "fill": "#1a1a1a",
+                  "cornerRadius": 12,
+                  "stroke": {
+                    "thickness": 1,
+                    "fill": "#2a2a2a"
+                  },
+                  "layout": "vertical",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "664ot",
+                      "name": "图片区域",
+                      "width": "fill_container",
+                      "height": 180,
+                      "fill": "#2A3050",
+                      "cornerRadius": [
+                        12,
+                        12,
+                        0,
+                        0
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "ikXoc",
+                      "name": "内容区域",
+                      "width": "fill_container",
+                      "height": "fill_container",
+                      "layout": "vertical",
+                      "gap": 10,
+                      "padding": 16,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "p2fdQ",
+                          "name": "标题行",
+                          "width": "fill_container",
+                          "gap": 8,
+                          "justifyContent": "space_between",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "kaCrq",
+                              "name": "card4Title",
+                              "fill": "#FFFFFF",
+                              "textGrowth": "fixed-width",
+                              "width": 240,
+                              "content": "深度学习目标检测研究",
+                              "fontFamily": "Space Grotesk",
+                              "fontSize": 14,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "VMr45",
+                              "name": "类型标签",
+                              "width": 48,
+                              "height": 20,
+                              "fill": "#8B5CF6",
+                              "cornerRadius": 4,
+                              "padding": [
+                                4,
+                                8
+                              ],
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "EpMXE",
+                                  "name": "card4TagText",
+                                  "fill": "#FFFFFF",
+                                  "content": "论文",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 11,
+                                  "fontWeight": "500"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "nCPJj",
+                          "name": "card4Event",
+                          "fill": "#8B9DC3",
+                          "content": "IEEE Transactions on Image Processing",
+                          "fontFamily": "Inter",
+                          "fontSize": 12,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "tDjCx",
+                          "name": "card4Year",
+                          "fill": "#6B7280",
+                          "content": "2024年3月",
+                          "fontFamily": "Inter",
+                          "fontSize": 12,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "IUtOW",
+                          "name": "成员头像",
+                          "width": "fill_container",
+                          "height": 24,
+                          "gap": -8,
+                          "children": [
+                            {
+                              "type": "ellipse",
+                              "id": "4GhuX",
+                              "name": "成员1",
+                              "fill": "#6366F1",
+                              "width": 24,
+                              "height": 24,
+                              "stroke": {
+                                "thickness": 2,
+                                "fill": "#1A1F35"
+                              }
+                            },
+                            {
+                              "type": "ellipse",
+                              "id": "S1pY1",
+                              "name": "成员2",
+                              "fill": "#F43F5E",
+                              "width": 24,
+                              "height": 24,
+                              "stroke": {
+                                "thickness": 2,
+                                "fill": "#1A1F35"
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "wepOT",
+                  "name": "成就卡片8",
+                  "width": "fill_container",
+                  "height": 360,
+                  "fill": "#1a1a1a",
+                  "cornerRadius": 12,
+                  "stroke": {
+                    "thickness": 1,
+                    "fill": "#2a2a2a"
+                  },
+                  "layout": "vertical",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "p3ARx",
+                      "name": "图片区域",
+                      "width": "fill_container",
+                      "height": 160,
+                      "fill": "#2A3050",
+                      "cornerRadius": [
+                        12,
+                        12,
+                        0,
+                        0
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "Uw64o",
+                      "name": "内容区域",
+                      "width": "fill_container",
+                      "height": "fill_container",
+                      "layout": "vertical",
+                      "gap": 10,
+                      "padding": 16,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "iGCqm",
+                          "name": "标题行",
+                          "width": "fill_container",
+                          "gap": 8,
+                          "justifyContent": "space_between",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "4EIj7",
+                              "name": "card8Title",
+                              "fill": "#FFFFFF",
+                              "textGrowth": "fixed-width",
+                              "width": 240,
+                              "content": "程序设计大赛银奖",
+                              "fontFamily": "Space Grotesk",
+                              "fontSize": 14,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "MmOXf",
+                              "name": "类型标签",
+                              "width": 48,
+                              "height": 20,
+                              "fill": "#E86835",
+                              "cornerRadius": 4,
+                              "padding": [
+                                4,
+                                8
+                              ],
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "UJvEx",
+                                  "name": "card8TagText",
+                                  "fill": "#FFFFFF",
+                                  "content": "竞赛",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 11,
+                                  "fontWeight": "500"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "ILkA9",
+                          "name": "card8Event",
+                          "fill": "#8B9DC3",
+                          "content": "ACM-ICPC国际大学生程序设计竞赛",
+                          "fontFamily": "Inter",
+                          "fontSize": 12,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "oF2y0",
+                          "name": "card8Year",
+                          "fill": "#6B7280",
+                          "content": "2023年10月",
+                          "fontFamily": "Inter",
+                          "fontSize": 12,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "zw3hg",
+                          "name": "成员头像",
+                          "width": "fill_container",
+                          "height": 24,
+                          "gap": -8,
+                          "children": [
+                            {
+                              "type": "ellipse",
+                              "id": "2ES1H",
+                              "name": "成员1",
+                              "fill": "#6366F1",
+                              "width": 24,
+                              "height": 24,
+                              "stroke": {
+                                "thickness": 2,
+                                "fill": "#1A1F35"
+                              }
+                            },
+                            {
+                              "type": "ellipse",
+                              "id": "4HbSi",
+                              "name": "成员2",
+                              "fill": "#F43F5E",
+                              "width": 24,
+                              "height": 24,
+                              "stroke": {
+                                "thickness": 2,
+                                "fill": "#1A1F35"
+                              }
+                            },
+                            {
+                              "type": "ellipse",
+                              "id": "8lYPU",
+                              "name": "成员3",
+                              "fill": "#10B981",
+                              "width": 24,
+                              "height": 24,
+                              "stroke": {
+                                "thickness": 2,
+                                "fill": "#1A1F35"
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "lvoh4",
+      "x": 1500,
+      "y": 0,
+      "name": "团队成就 - 移动端 (375px)",
+      "width": 375,
+      "height": 2200,
+      "fill": "#000000",
+      "layout": "vertical",
+      "gap": 24,
+      "padding": [
+        24,
+        16
+      ],
+      "children": [
+        {
+          "type": "text",
+          "id": "2WMm5",
+          "name": "mobileTitle",
+          "fill": "#FFFFFF",
+          "content": "团队成就",
+          "fontFamily": "Space Grotesk",
+          "fontSize": 24,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "HF5cA",
+          "name": "mobileSubtitle",
+          "fill": "#8B9DC3",
+          "content": "记录我们的荣誉与成就",
+          "fontFamily": "Inter",
+          "fontSize": 14,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "frame",
+          "id": "6lYIP",
+          "name": "Masonry瀑布流",
+          "width": "fill_container",
+          "height": "fill_container",
+          "gap": 12,
+          "children": [
+            {
+              "type": "frame",
+              "id": "i1N6i",
+              "name": "列1",
+              "width": "fill_container",
+              "height": "fill_container",
+              "layout": "vertical",
+              "gap": 12,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "X37RQ",
+                  "name": "成就卡片1",
+                  "width": "fill_container",
+                  "height": 300,
+                  "fill": "#1a1a1a",
+                  "cornerRadius": 12,
+                  "stroke": {
+                    "thickness": 1,
+                    "fill": "#2a2a2a"
+                  },
+                  "layout": "vertical",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "Y4Lpz",
+                      "name": "图片区域",
+                      "width": "fill_container",
+                      "height": 140,
+                      "fill": "#2A3050",
+                      "cornerRadius": [
+                        12,
+                        12,
+                        0,
+                        0
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "vmUhn",
+                      "name": "内容区域",
+                      "width": "fill_container",
+                      "height": "fill_container",
+                      "layout": "vertical",
+                      "gap": 8,
+                      "padding": 12,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "tHk1v",
+                          "name": "标题行",
+                          "width": "fill_container",
+                          "gap": 6,
+                          "justifyContent": "space_between",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "Wyi3x",
+                              "name": "mCard1Title",
+                              "fill": "#FFFFFF",
+                              "textGrowth": "fixed-width",
+                              "width": 100,
+                              "content": "电子设计竞赛一等奖",
+                              "fontFamily": "Space Grotesk",
+                              "fontSize": 12,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "5bmCL",
+                              "name": "类型标签",
+                              "width": 40,
+                              "height": 18,
+                              "fill": "#E86835",
+                              "cornerRadius": 4,
+                              "padding": [
+                                2,
+                                6
+                              ],
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "gZiAQ",
+                                  "name": "mCard1TagText",
+                                  "fill": "#FFFFFF",
+                                  "content": "竞赛",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 10,
+                                  "fontWeight": "500"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "uBWMy",
+                          "name": "mCard1Event",
+                          "fill": "#8B9DC3",
+                          "content": "全国大学生电子设计竞赛",
+                          "fontFamily": "Inter",
+                          "fontSize": 11,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "pY0qY",
+                          "name": "mCard1Year",
+                          "fill": "#6B7280",
+                          "content": "2024年8月",
+                          "fontFamily": "Inter",
+                          "fontSize": 11,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "rKzWd",
+                          "name": "成员头像",
+                          "width": "fill_container",
+                          "height": 20,
+                          "gap": -6,
+                          "children": [
+                            {
+                              "type": "ellipse",
+                              "id": "tcB1R",
+                              "name": "成员1",
+                              "fill": "#4F46E5",
+                              "width": 20,
+                              "height": 20,
+                              "stroke": {
+                                "thickness": 2,
+                                "fill": "#1A1F35"
+                              }
+                            },
+                            {
+                              "type": "ellipse",
+                              "id": "Qj3sV",
+                              "name": "成员2",
+                              "fill": "#7C3AED",
+                              "width": 20,
+                              "height": 20,
+                              "stroke": {
+                                "thickness": 2,
+                                "fill": "#1A1F35"
+                              }
+                            },
+                            {
+                              "type": "ellipse",
+                              "id": "BWVjv",
+                              "name": "成员3",
+                              "fill": "#EC4899",
+                              "width": 20,
+                              "height": 20,
+                              "stroke": {
+                                "thickness": 2,
+                                "fill": "#1A1F35"
+                              }
+                            },
+                            {
+                              "type": "ellipse",
+                              "id": "tqtBz",
+                              "name": "成员4",
+                              "fill": "#F59E0B",
+                              "width": 20,
+                              "height": 20,
+                              "stroke": {
+                                "thickness": 2,
+                                "fill": "#1A1F35"
+                              }
+                            },
+                            {
+                              "type": "frame",
+                              "id": "Ns8j5",
+                              "name": "更多",
+                              "width": 20,
+                              "height": 20,
+                              "fill": "#374151",
+                              "cornerRadius": 10,
+                              "stroke": {
+                                "thickness": 2,
+                                "fill": "#1A1F35"
+                              },
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "b4mSe",
+                                  "name": "m1_5Text",
+                                  "fill": "#FFFFFF",
+                                  "content": "+2",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 9,
+                                  "fontWeight": "600"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "0ZwEy",
+                  "name": "成就卡片3",
+                  "width": "fill_container",
+                  "height": 280,
+                  "fill": "#1a1a1a",
+                  "cornerRadius": 12,
+                  "stroke": {
+                    "thickness": 1,
+                    "fill": "#2a2a2a"
+                  },
+                  "layout": "vertical",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "PHapK",
+                      "name": "图片区域",
+                      "width": "fill_container",
+                      "height": 120,
+                      "fill": "#2A3050",
+                      "cornerRadius": [
+                        12,
+                        12,
+                        0,
+                        0
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "42JI1",
+                      "name": "内容区域",
+                      "width": "fill_container",
+                      "height": "fill_container",
+                      "layout": "vertical",
+                      "gap": 8,
+                      "padding": 12,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "zt76O",
+                          "name": "标题行",
+                          "width": "fill_container",
+                          "gap": 6,
+                          "justifyContent": "space_between",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "ePwCa",
+                              "name": "mCard3Title",
+                              "fill": "#FFFFFF",
+                              "textGrowth": "fixed-width",
+                              "width": 100,
+                              "content": "CVPR论文发表",
+                              "fontFamily": "Space Grotesk",
+                              "fontSize": 12,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "Uw2mG",
+                              "name": "类型标签",
+                              "width": 36,
+                              "height": 18,
+                              "fill": "#8B5CF6",
+                              "cornerRadius": 4,
+                              "padding": [
+                                2,
+                                6
+                              ],
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "pGFwv",
+                                  "name": "mCard3TagText",
+                                  "fill": "#FFFFFF",
+                                  "content": "论文",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 10,
+                                  "fontWeight": "500"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "SM2C0",
+                          "name": "mCard3Event",
+                          "fill": "#8B9DC3",
+                          "content": "IEEE CVPR 2024",
+                          "fontFamily": "Inter",
+                          "fontSize": 11,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "OqWpt",
+                          "name": "mCard3Year",
+                          "fill": "#6B7280",
+                          "content": "2024年6月",
+                          "fontFamily": "Inter",
+                          "fontSize": 11,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "mSL4P",
+                          "name": "成员头像",
+                          "width": "fill_container",
+                          "height": 20,
+                          "gap": -6,
+                          "children": [
+                            {
+                              "type": "ellipse",
+                              "id": "Bmv4s",
+                              "name": "成员1",
+                              "fill": "#8B5CF6",
+                              "width": 20,
+                              "height": 20,
+                              "stroke": {
+                                "thickness": 2,
+                                "fill": "#1A1F35"
+                              }
+                            },
+                            {
+                              "type": "ellipse",
+                              "id": "zgv11",
+                              "name": "成员2",
+                              "fill": "#06B6D4",
+                              "width": 20,
+                              "height": 20,
+                              "stroke": {
+                                "thickness": 2,
+                                "fill": "#1A1F35"
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "SHKly",
+                  "name": "成就卡片5",
+                  "width": "fill_container",
+                  "height": 320,
+                  "fill": "#1a1a1a",
+                  "cornerRadius": 12,
+                  "stroke": {
+                    "thickness": 1,
+                    "fill": "#2a2a2a"
+                  },
+                  "layout": "vertical",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "mFOu0",
+                      "name": "图片区域",
+                      "width": "fill_container",
+                      "height": 160,
+                      "fill": "#2A3050",
+                      "cornerRadius": [
+                        12,
+                        12,
+                        0,
+                        0
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "mC6yn",
+                      "name": "内容区域",
+                      "width": "fill_container",
+                      "height": "fill_container",
+                      "layout": "vertical",
+                      "gap": 8,
+                      "padding": 12,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "exRrQ",
+                          "name": "标题行",
+                          "width": "fill_container",
+                          "gap": 6,
+                          "justifyContent": "space_between",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "CbyFl",
+                              "name": "mCard5Title",
+                              "fill": "#FFFFFF",
+                              "textGrowth": "fixed-width",
+                              "width": 100,
+                              "content": "数学建模国赛二等奖",
+                              "fontFamily": "Space Grotesk",
+                              "fontSize": 12,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "XEksh",
+                              "name": "类型标签",
+                              "width": 40,
+                              "height": 18,
+                              "fill": "#E86835",
+                              "cornerRadius": 4,
+                              "padding": [
+                                2,
+                                6
+                              ],
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "GouYR",
+                                  "name": "mCard5TagText",
+                                  "fill": "#FFFFFF",
+                                  "content": "竞赛",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 10,
+                                  "fontWeight": "500"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "u0KQy",
+                          "name": "mCard5Event",
+                          "fill": "#8B9DC3",
+                          "content": "全国大学生数学建模竞赛",
+                          "fontFamily": "Inter",
+                          "fontSize": 11,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "ro58v",
+                          "name": "mCard5Year",
+                          "fill": "#6B7280",
+                          "content": "2023年9月",
+                          "fontFamily": "Inter",
+                          "fontSize": 11,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "HAlHx",
+                          "name": "成员头像",
+                          "width": "fill_container",
+                          "height": 20,
+                          "gap": -6,
+                          "children": [
+                            {
+                              "type": "ellipse",
+                              "id": "213VI",
+                              "name": "成员1",
+                              "fill": "#F43F5E",
+                              "width": 20,
+                              "height": 20,
+                              "stroke": {
+                                "thickness": 2,
+                                "fill": "#1A1F35"
+                              }
+                            },
+                            {
+                              "type": "ellipse",
+                              "id": "WnGMJ",
+                              "name": "成员2",
+                              "fill": "#8B5CF6",
+                              "width": 20,
+                              "height": 20,
+                              "stroke": {
+                                "thickness": 2,
+                                "fill": "#1A1F35"
+                              }
+                            },
+                            {
+                              "type": "ellipse",
+                              "id": "RYX39",
+                              "name": "成员3",
+                              "fill": "#22C55E",
+                              "width": 20,
+                              "height": 20,
+                              "stroke": {
+                                "thickness": 2,
+                                "fill": "#1A1F35"
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "EvrkE",
+                  "name": "成就卡片7",
+                  "width": "fill_container",
+                  "height": 300,
+                  "fill": "#1a1a1a",
+                  "cornerRadius": 12,
+                  "stroke": {
+                    "thickness": 1,
+                    "fill": "#2a2a2a"
+                  },
+                  "layout": "vertical",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "oUTcm",
+                      "name": "图片区域",
+                      "width": "fill_container",
+                      "height": 140,
+                      "fill": "#2A3050",
+                      "cornerRadius": [
+                        12,
+                        12,
+                        0,
+                        0
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "62Prg",
+                      "name": "内容区域",
+                      "width": "fill_container",
+                      "height": "fill_container",
+                      "layout": "vertical",
+                      "gap": 8,
+                      "padding": 12,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "l7Kv0",
+                          "name": "标题行",
+                          "width": "fill_container",
+                          "height": 20,
+                          "gap": 6,
+                          "justifyContent": "space_between",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "CYfcF",
+                              "name": "mCard7Title",
+                              "fill": "#FFFFFF",
+                              "textGrowth": "fixed-width",
+                              "width": 100,
+                              "content": "无人机控制系统",
+                              "fontFamily": "Space Grotesk",
+                              "fontSize": 12,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "nlkEH",
+                              "name": "类型标签",
+                              "width": 36,
+                              "height": 18,
+                              "fill": "#3B82F6",
+                              "cornerRadius": 4,
+                              "padding": [
+                                2,
+                                6
+                              ],
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "nKhGG",
+                                  "name": "mCard7TagText",
+                                  "fill": "#FFFFFF",
+                                  "content": "项目",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 10,
+                                  "fontWeight": "500"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "BIKhp",
+                          "name": "mCard7Event",
+                          "fill": "#8B9DC3",
+                          "content": "省级创新项目",
+                          "fontFamily": "Inter",
+                          "fontSize": 11,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "1kZfv",
+                          "name": "mCard7Year",
+                          "fill": "#6B7280",
+                          "content": "2023年6月",
+                          "fontFamily": "Inter",
+                          "fontSize": 11,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "hWmVF",
+                          "name": "成员头像",
+                          "width": "fill_container",
+                          "height": 20,
+                          "gap": -6,
+                          "children": [
+                            {
+                              "type": "ellipse",
+                              "id": "GRIRd",
+                              "name": "成员1",
+                              "fill": "#6366F1",
+                              "width": 20,
+                              "height": 20,
+                              "stroke": {
+                                "thickness": 2,
+                                "fill": "#1A1F35"
+                              }
+                            },
+                            {
+                              "type": "ellipse",
+                              "id": "kbPtI",
+                              "name": "成员2",
+                              "fill": "#EC4899",
+                              "width": 20,
+                              "height": 20,
+                              "stroke": {
+                                "thickness": 2,
+                                "fill": "#1A1F35"
+                              }
+                            },
+                            {
+                              "type": "ellipse",
+                              "id": "Trj7r",
+                              "name": "成员3",
+                              "fill": "#10B981",
+                              "width": 20,
+                              "height": 20,
+                              "stroke": {
+                                "thickness": 2,
+                                "fill": "#1A1F35"
+                              }
+                            },
+                            {
+                              "type": "ellipse",
+                              "id": "kuuRs",
+                              "name": "成员4",
+                              "fill": "#F97316",
+                              "width": 20,
+                              "height": 20,
+                              "stroke": {
+                                "thickness": 2,
+                                "fill": "#1A1F35"
+                              }
+                            },
+                            {
+                              "type": "frame",
+                              "id": "i0nYh",
+                              "name": "更多",
+                              "width": 20,
+                              "height": 20,
+                              "fill": "#374151",
+                              "cornerRadius": 10,
+                              "stroke": {
+                                "thickness": 2,
+                                "fill": "#1A1F35"
+                              },
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "U0XWV",
+                                  "name": "m7_5Text",
+                                  "fill": "#FFFFFF",
+                                  "content": "+1",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 9,
+                                  "fontWeight": "600"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "VgP8y",
+              "name": "列2",
+              "width": "fill_container",
+              "height": "fill_container",
+              "layout": "vertical",
+              "gap": 12,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "DP1RE",
+                  "name": "成就卡片2",
+                  "width": "fill_container",
+                  "height": 320,
+                  "fill": "#1a1a1a",
+                  "cornerRadius": 12,
+                  "stroke": {
+                    "thickness": 1,
+                    "fill": "#2a2a2a"
+                  },
+                  "layout": "vertical",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "Pcfl3",
+                      "name": "图片区域",
+                      "width": "fill_container",
+                      "height": 160,
+                      "fill": "#2A3050",
+                      "cornerRadius": [
+                        12,
+                        12,
+                        0,
+                        0
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "FXfhy",
+                      "name": "内容区域",
+                      "width": "fill_container",
+                      "height": "fill_container",
+                      "layout": "vertical",
+                      "gap": 8,
+                      "padding": 12,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "7cQH0",
+                          "name": "标题行",
+                          "width": "fill_container",
+                          "gap": 6,
+                          "justifyContent": "space_between",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "0jt4u",
+                              "name": "mCard2Title",
+                              "fill": "#FFFFFF",
+                              "textGrowth": "fixed-width",
+                              "width": 100,
+                              "content": "蓝桥杯软件大赛一等奖",
+                              "fontFamily": "Space Grotesk",
+                              "fontSize": 12,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "U03OC",
+                              "name": "类型标签",
+                              "width": 40,
+                              "height": 18,
+                              "fill": "#E86835",
+                              "cornerRadius": 4,
+                              "padding": [
+                                2,
+                                6
+                              ],
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "sDA31",
+                                  "name": "mCard2TagText",
+                                  "fill": "#FFFFFF",
+                                  "content": "竞赛",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 10,
+                                  "fontWeight": "500"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "jdvSj",
+                          "name": "mCard2Event",
+                          "fill": "#8B9DC3",
+                          "content": "蓝桥杯全国软件大赛",
+                          "fontFamily": "Inter",
+                          "fontSize": 11,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "N7s0h",
+                          "name": "mCard2Year",
+                          "fill": "#6B7280",
+                          "content": "2024年5月",
+                          "fontFamily": "Inter",
+                          "fontSize": 11,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "JBf1N",
+                          "name": "成员头像",
+                          "width": "fill_container",
+                          "height": 20,
+                          "gap": -6,
+                          "children": [
+                            {
+                              "type": "ellipse",
+                              "id": "qmW10",
+                              "name": "成员1",
+                              "fill": "#10B981",
+                              "width": 20,
+                              "height": 20,
+                              "stroke": {
+                                "thickness": 2,
+                                "fill": "#1A1F35"
+                              }
+                            },
+                            {
+                              "type": "ellipse",
+                              "id": "20ZPS",
+                              "name": "成员2",
+                              "fill": "#3B82F6",
+                              "width": 20,
+                              "height": 20,
+                              "stroke": {
+                                "thickness": 2,
+                                "fill": "#1A1F35"
+                              }
+                            },
+                            {
+                              "type": "ellipse",
+                              "id": "SqqC5",
+                              "name": "成员3",
+                              "fill": "#EF4444",
+                              "width": 20,
+                              "height": 20,
+                              "stroke": {
+                                "thickness": 2,
+                                "fill": "#1A1F35"
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "2pDLs",
+                  "name": "成就卡片4",
+                  "width": "fill_container",
+                  "height": 300,
+                  "fill": "#1a1a1a",
+                  "cornerRadius": 12,
+                  "stroke": {
+                    "thickness": 1,
+                    "fill": "#2a2a2a"
+                  },
+                  "layout": "vertical",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "IeM7e",
+                      "name": "图片区域",
+                      "width": "fill_container",
+                      "height": 140,
+                      "fill": "#2A3050",
+                      "cornerRadius": [
+                        12,
+                        12,
+                        0,
+                        0
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "TpVUK",
+                      "name": "内容区域",
+                      "width": "fill_container",
+                      "height": "fill_container",
+                      "layout": "vertical",
+                      "gap": 8,
+                      "padding": 12,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "7FheH",
+                          "name": "标题行",
+                          "width": "fill_container",
+                          "gap": 6,
+                          "justifyContent": "space_between",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "quPhZ",
+                              "name": "mCard4Title",
+                              "fill": "#FFFFFF",
+                              "textGrowth": "fixed-width",
+                              "width": 100,
+                              "content": "智能机器人项目",
+                              "fontFamily": "Space Grotesk",
+                              "fontSize": 12,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "Phvuc",
+                              "name": "类型标签",
+                              "width": 36,
+                              "height": 18,
+                              "fill": "#3B82F6",
+                              "cornerRadius": 4,
+                              "padding": [
+                                2,
+                                6
+                              ],
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "RAVwE",
+                                  "name": "mCard4TagText",
+                                  "fill": "#FFFFFF",
+                                  "content": "项目",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 10,
+                                  "fontWeight": "500"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "mrtQw",
+                          "name": "mCard4Event",
+                          "fill": "#8B9DC3",
+                          "content": "校企合作重点项目",
+                          "fontFamily": "Inter",
+                          "fontSize": 11,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "wkktg",
+                          "name": "mCard4Year",
+                          "fill": "#6B7280",
+                          "content": "2023年12月",
+                          "fontFamily": "Inter",
+                          "fontSize": 11,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "I1unn",
+                          "name": "成员头像",
+                          "width": "fill_container",
+                          "height": 20,
+                          "gap": -6,
+                          "children": [
+                            {
+                              "type": "ellipse",
+                              "id": "3EfAv",
+                              "name": "成员1",
+                              "fill": "#EC4899",
+                              "width": 20,
+                              "height": 20,
+                              "stroke": {
+                                "thickness": 2,
+                                "fill": "#1A1F35"
+                              }
+                            },
+                            {
+                              "type": "ellipse",
+                              "id": "Il35N",
+                              "name": "成员2",
+                              "fill": "#14B8A6",
+                              "width": 20,
+                              "height": 20,
+                              "stroke": {
+                                "thickness": 2,
+                                "fill": "#1A1F35"
+                              }
+                            },
+                            {
+                              "type": "ellipse",
+                              "id": "SvZfN",
+                              "name": "成员3",
+                              "fill": "#F97316",
+                              "width": 20,
+                              "height": 20,
+                              "stroke": {
+                                "thickness": 2,
+                                "fill": "#1A1F35"
+                              }
+                            },
+                            {
+                              "type": "ellipse",
+                              "id": "R5f3W",
+                              "name": "成员4",
+                              "fill": "#6366F1",
+                              "width": 20,
+                              "height": 20,
+                              "stroke": {
+                                "thickness": 2,
+                                "fill": "#1A1F35"
+                              }
+                            },
+                            {
+                              "type": "frame",
+                              "id": "mmJwZ",
+                              "name": "更多",
+                              "width": 20,
+                              "height": 20,
+                              "fill": "#374151",
+                              "cornerRadius": 10,
+                              "stroke": {
+                                "thickness": 2,
+                                "fill": "#1A1F35"
+                              },
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "6ugJ0",
+                                  "name": "m4_5Text",
+                                  "fill": "#FFFFFF",
+                                  "content": "+3",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 9,
+                                  "fontWeight": "600"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "pVjQl",
+                  "name": "成就卡片6",
+                  "width": "fill_container",
+                  "height": 280,
+                  "fill": "#1a1a1a",
+                  "cornerRadius": 12,
+                  "stroke": {
+                    "thickness": 1,
+                    "fill": "#2a2a2a"
+                  },
+                  "layout": "vertical",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "hgf2m",
+                      "name": "图片区域",
+                      "width": "fill_container",
+                      "height": 120,
+                      "fill": "#2A3050",
+                      "cornerRadius": [
+                        12,
+                        12,
+                        0,
+                        0
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "rLG0L",
+                      "name": "内容区域",
+                      "width": "fill_container",
+                      "height": "fill_container",
+                      "layout": "vertical",
+                      "gap": 8,
+                      "padding": 12,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "4a3t2",
+                          "name": "标题行",
+                          "width": "fill_container",
+                          "gap": 6,
+                          "justifyContent": "space_between",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "GFW3P",
+                              "name": "mCard6Title",
+                              "fill": "#FFFFFF",
+                              "textGrowth": "fixed-width",
+                              "width": 100,
+                              "content": "ICCV论文发表",
+                              "fontFamily": "Space Grotesk",
+                              "fontSize": 12,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "IEgeI",
+                              "name": "类型标签",
+                              "width": 36,
+                              "height": 18,
+                              "fill": "#8B5CF6",
+                              "cornerRadius": 4,
+                              "padding": [
+                                2,
+                                6
+                              ],
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "pbx7C",
+                                  "name": "mCard6TagText",
+                                  "fill": "#FFFFFF",
+                                  "content": "论文",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 10,
+                                  "fontWeight": "500"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "jhFFB",
+                          "name": "mCard6Event",
+                          "fill": "#8B9DC3",
+                          "content": "IEEE ICCV 2023",
+                          "fontFamily": "Inter",
+                          "fontSize": 11,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "GCyFV",
+                          "name": "mCard6Year",
+                          "fill": "#6B7280",
+                          "content": "2023年10月",
+                          "fontFamily": "Inter",
+                          "fontSize": 11,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "zNBBf",
+                          "name": "成员头像",
+                          "width": "fill_container",
+                          "height": 20,
+                          "gap": -6,
+                          "children": [
+                            {
+                              "type": "ellipse",
+                              "id": "nG391",
+                              "name": "成员1",
+                              "fill": "#3B82F6",
+                              "width": 20,
+                              "height": 20,
+                              "stroke": {
+                                "thickness": 2,
+                                "fill": "#1A1F35"
+                              }
+                            },
+                            {
+                              "type": "ellipse",
+                              "id": "zhw7R",
+                              "name": "成员2",
+                              "fill": "#F59E0B",
+                              "width": 20,
+                              "height": 20,
+                              "stroke": {
+                                "thickness": 2,
+                                "fill": "#1A1F35"
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "vcj5t",
+                  "name": "成就卡片8",
+                  "width": "fill_container",
+                  "height": 280,
+                  "fill": "#1a1a1a",
+                  "cornerRadius": 12,
+                  "stroke": {
+                    "thickness": 1,
+                    "fill": "#2a2a2a"
+                  },
+                  "layout": "vertical",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "ohJnM",
+                      "name": "图片区域",
+                      "width": "fill_container",
+                      "height": 120,
+                      "fill": "#2A3050",
+                      "cornerRadius": [
+                        12,
+                        12,
+                        0,
+                        0
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "oH8FX",
+                      "name": "内容区域",
+                      "width": "fill_container",
+                      "height": "fill_container",
+                      "layout": "vertical",
+                      "gap": 8,
+                      "padding": 12,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "xlXps",
+                          "name": "标题行",
+                          "width": "fill_container",
+                          "height": 20,
+                          "gap": 6,
+                          "justifyContent": "space_between",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "KdqNE",
+                              "name": "mCard8Title",
+                              "fill": "#FFFFFF",
+                              "textGrowth": "fixed-width",
+                              "width": 100,
+                              "content": "挑战杯金奖",
+                              "fontFamily": "Space Grotesk",
+                              "fontSize": 12,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "Q6cwx",
+                              "name": "类型标签",
+                              "width": 40,
+                              "height": 18,
+                              "fill": "#E86835",
+                              "cornerRadius": 4,
+                              "padding": [
+                                2,
+                                6
+                              ],
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "JLGbs",
+                                  "name": "mCard8TagText",
+                                  "fill": "#FFFFFF",
+                                  "content": "竞赛",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 10,
+                                  "fontWeight": "500"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "n8a5g",
+                          "name": "mCard8Event",
+                          "fill": "#8B9DC3",
+                          "content": "挑战杯创业计划竞赛",
+                          "fontFamily": "Inter",
+                          "fontSize": 11,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "hkhRi",
+                          "name": "mCard8Year",
+                          "fill": "#6B7280",
+                          "content": "2023年4月",
+                          "fontFamily": "Inter",
+                          "fontSize": 11,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "R8sgV",
+                          "name": "成员头像",
+                          "width": "fill_container",
+                          "height": 20,
+                          "gap": -6,
+                          "children": [
+                            {
+                              "type": "ellipse",
+                              "id": "y4AsG",
+                              "name": "成员1",
+                              "fill": "#14B8A6",
+                              "width": 20,
+                              "height": 20,
+                              "stroke": {
+                                "thickness": 2,
+                                "fill": "#1A1F35"
+                              }
+                            },
+                            {
+                              "type": "ellipse",
+                              "id": "Zm5gS",
+                              "name": "成员2",
+                              "fill": "#8B5CF6",
+                              "width": 20,
+                              "height": 20,
+                              "stroke": {
+                                "thickness": 2,
+                                "fill": "#1A1F35"
+                              }
+                            },
+                            {
+                              "type": "ellipse",
+                              "id": "5AhXV",
+                              "name": "成员3",
+                              "fill": "#EF4444",
+                              "width": 20,
+                              "height": 20,
+                              "stroke": {
+                                "thickness": 2,
+                                "fill": "#1A1F35"
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

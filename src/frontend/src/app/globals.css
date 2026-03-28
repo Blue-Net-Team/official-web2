@@ -1,0 +1,54 @@
+:root {
+  width: 100%;
+  height: 100%;
+  background-color: #000000;
+  color: #ffffff;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  color: #fff;
+  margin: 0;
+}
+
+p {
+  margin: 0;
+}
+
+body {
+  margin: 0;
+}
+
+/**
+ * 暗色主题文本
+ */
+.darkText {
+  color: #fff;
+}
+
+/**
+ * 亮色主题文本
+ */
+.lightText {
+  color: #000;
+}
+
+/* 移动端强制显示 Carousel 左右箭头 */
+@media (max-width: 767px) {
+  .ant-carousel .slick-arrow {
+    display: flex !important;
+    z-index: 10;
+  }
+
+  .ant-carousel .slick-prev {
+    left: 0;
+  }
+
+  .ant-carousel .slick-next {
+    right: 0;
+  }
+}

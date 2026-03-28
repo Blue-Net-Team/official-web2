@@ -1,0 +1,126 @@
+x-backend-env: &backend-env
+  DATABASE_HOST: database
+  DATABASE_PORT: 5432
+  DATABASE_NAME: blue_net
+  DATABASE_USERNAME: postgres
+  DATABASE_PASSWORD: ${DB_PASSWORD:-dg24Nihng@49*}
+  RABBITMQ_HOST: rabbitmq
+  RABBITMQ_PORT: 5672
+  RABBITMQ_USERNAME: admin
+  RABBITMQ_PASSWORD: bluenet123
+  MAIL_USERNAME: ${MAIL_USERNAME:-}
+  MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+  MINIO_ENDPOINT: oss
+  MINIO_PORT: 9000
+  MINIO_AK: admin
+  MINIO_SK: ${MINIO_PASSWORD:-g05q80*EH04}
+  JWT_SECRET: ${JWT_SECRET:-default-secret}
+
+services:
+  backend:
+    image: ${BACKEND_IMAGE:-bluenet-backend:latest}
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.backend
+    container_name: bluenet-backend
+    ports:
+      - "8080:8080"
+      - "18088:8088"
+    environment: *backend-env
+    depends_on:
+      - database
+      - oss
+      - rabbitmq
+    profiles:
+      - full
+      - app
+    restart: ${RESTART_POLICY:-no}
+    networks:
+      - bluenet-network
+
+  frontend:
+    image: ${FRONTEND_IMAGE:-bluenet-frontend:latest}
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.frontend
+    container_name: bluenet-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      BACKEND_HOST: backend
+      BACKEND_PORT: 8080
+    depends_on:
+      - backend
+    profiles:
+      - full
+      - app
+    restart: ${RESTART_POLICY:-no}
+    networks:
+      - bluenet-network
+
+  database:
+    image: postgres:17
+    container_name: bluenet-pgsql
+    ports:
+      - "15432:5432"
+    environment:
+      POSTGRES_DB: blue_net
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-dg24Nihng@49*}
+    volumes:
+      - database_data:/var/lib/postgresql/data
+    profiles:
+      - full
+      - infra
+    restart: ${RESTART_POLICY:-no}
+    networks:
+      - bluenet-network
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: bluenet-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: bluenet123
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    profiles:
+      - full
+      - infra
+    restart: ${RESTART_POLICY:-no}
+    networks:
+      - bluenet-network
+
+  oss:
+    image: minio/minio:latest
+    container_name: bluenet-oss
+    ports:
+      - "7000:9000"
+      - "7001:9001"
+    environment:
+      MINIO_ROOT_USER: admin
+      MINIO_ROOT_PASSWORD: ${MINIO_PASSWORD:-g05q80*EH04}
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio_data:/data
+    profiles:
+      - full
+      - infra
+    restart: ${RESTART_POLICY:-no}
+    networks:
+      - bluenet-network
+
+volumes:
+  database_data:
+    driver: local
+  rabbitmq_data:
+    driver: local
+  minio_data:
+    driver: local
+
+networks:
+  bluenet-network:
+    driver: bridge

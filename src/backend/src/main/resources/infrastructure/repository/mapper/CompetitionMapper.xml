@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bluenet.web.infrastructure.repository.mapper.CompetitionMapper">
+    <resultMap id="BaseResultMap" type="com.bluenet.web.domain.model.entity.Competition">
+        <id column="id" property="id"/>
+        <result column="name" property="name"/>
+        <result column="short_name" property="shortName"/>
+        <result column="logo_file_id" property="logoFileId"/>
+        <result column="summary" property="summary"/>
+        <result column="detail" property="detail"/>
+        <result column="sort_order" property="sortOrder"/>
+        <result column="enabled" property="enabled"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+    </resultMap>
+
+    <resultMap id="CompetitionBriefVOResultMap" type="com.bluenet.web.domain.model.vo.CompetitionBriefVO">
+        <id column="id" property="id"/>
+        <result column="name" property="name"/>
+        <result column="short_name" property="shortName"/>
+        <result column="logo_url" property="logoUrl"/>
+        <result column="logo_file_id" property="logoFileId"/>
+        <result column="summary" property="summary"/>
+    </resultMap>
+
+    <resultMap id="CompetitionVOResultMap" type="com.bluenet.web.domain.model.vo.CompetitionVO">
+        <id column="id" property="id"/>
+        <result column="name" property="name"/>
+        <result column="short_name" property="shortName"/>
+        <result column="logo_url" property="logoUrl"/>
+        <result column="logo_file_id" property="logoFileId"/>
+        <result column="summary" property="summary"/>
+        <result column="detail" property="detail"/>
+        <result column="sort_order" property="sortOrder"/>
+        <result column="enabled" property="enabled"/>
+    </resultMap>
+
+    <select id="selectEnabledCompetitionsWithLimit" resultMap="CompetitionBriefVOResultMap">
+        SELECT
+            c.id,
+            c.name,
+            c.short_name,
+            f.url AS logo_url,
+            c.logo_file_id,
+            c.summary
+        FROM tb_competition c
+        LEFT JOIN tb_file f ON c.logo_file_id = f.id
+        WHERE c.enabled = TRUE
+        ORDER BY c.sort_order DESC, c.created_at DESC
+        LIMIT #{limit}
+    </select>
+
+    <select id="selectCompetitionById" resultMap="CompetitionVOResultMap">
+        SELECT
+            c.id,
+            c.name,
+            c.short_name,
+            f.url AS logo_url,
+            c.logo_file_id,
+            c.summary,
+            c.detail,
+            c.sort_order,
+            c.enabled
+        FROM tb_competition c
+        LEFT JOIN tb_file f ON c.logo_file_id = f.id
+        WHERE c.id = #{id} AND c.enabled = TRUE
+    </select>
+</mapper>

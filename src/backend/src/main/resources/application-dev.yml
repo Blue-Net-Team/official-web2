@@ -1,0 +1,48 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/db_blue_net
+    username: postgres
+    password: "000000"
+    driver-class-name: org.postgresql.Driver
+
+  mail:
+    host: smtp.163.com
+    port: 465
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    from: ${MAIL_USERNAME:}
+    properties:
+      mail:
+        debug: true
+        smtp:
+          auth: true
+          ssl:
+            enable: true
+          socketFactory:
+            class: javax.net.ssl.SSLSocketFactory
+            port: 465
+          connectiontimeout: 10000
+          timeout: 10000
+          writetimeout: 10000
+
+# MinIO配置
+minio:
+  enabled: true
+  endpoint: localhost
+  port: 9000
+  accessKey: admin
+  secretKey: admin123
+
+# Cookie 配置（开发环境）
+cookie:
+  # 开发环境不设置 Domain（localhost 不需要）
+  domain:
+  # 开发环境通常使用 HTTP，Secure=false
+  secure: false
+  same-site: Lax
+  max-age: 43200
+
+# CORS 配置（开发环境）
+cors:
+  # 开发环境允许所有域名
+  allowed-origins: "*"

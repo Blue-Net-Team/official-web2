@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bluenet.web.infrastructure.repository.mapper.AssessmentQuestionMapper">
+    <resultMap id="BaseResultMap" type="com.bluenet.web.domain.model.entity.AssessmentQuestion">
+        <id column="id" property="id"/>
+        <result column="assessment_time_id" property="assessmentTimeId"/>
+        <result column="question_no" property="questionNo"/>
+        <result column="question_type" property="questionType"/>
+        <result column="title" property="title"/>
+        <result column="content" property="content" typeHandler="com.bluenet.web.infrastructure.repository.handler.QuestionContentTypeHandler"/>
+        <result column="attachment_id" property="attachmentId"/>
+        <result column="score" property="score"/>
+    </resultMap>
+</mapper>

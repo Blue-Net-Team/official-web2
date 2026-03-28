@@ -1,0 +1,763 @@
+{
+  "version": "2.9",
+  "children": [
+    {
+      "type": "frame",
+      "id": "nQ526",
+      "x": 0,
+      "y": 0,
+      "name": "Home - Desktop (1440px)",
+      "width": 1440,
+      "fill": "#000000ff",
+      "layout": "vertical",
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "frame",
+          "id": "6lju5",
+          "name": "1-TopContent",
+          "width": "fill_container",
+          "height": 800,
+          "layout": "vertical",
+          "gap": 42,
+          "padding": [
+            147,
+            152
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "Cu0Gq",
+              "name": "s1Title",
+              "fill": "#ffffff",
+              "content": "蓝网招新流程已启动",
+              "lineHeight": 1.32,
+              "fontFamily": "Inter",
+              "fontSize": 48,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "0TUm9",
+              "name": "s1Subtitle",
+              "fill": "#ffffff",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "从竞赛实战的技术锤炼到师生同研的机器人项目，科创之路的奖学金与就业赋能，我们全程护航",
+              "lineHeight": 1.31,
+              "fontFamily": "Inter",
+              "fontSize": 32,
+              "fontWeight": "normal"
+            },
+            {
+              "type": "frame",
+              "id": "8uDEF",
+              "name": "JoinButton",
+              "width": 132,
+              "height": 50,
+              "fill": "#ffffff",
+              "cornerRadius": 42,
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "2XnAl",
+                  "name": "s1BtnText",
+                  "fill": "#000000",
+                  "content": "立即加入",
+                  "fontFamily": "Inter",
+                  "fontSize": 20,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "Q4QOa",
+          "name": "2-Competitions",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 48,
+          "padding": [
+            32,
+            147,
+            96,
+            147
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "q7g8N",
+              "name": "s2Title",
+              "fill": "#ffffff",
+              "content": "参加各类竞赛",
+              "fontFamily": "Inter",
+              "fontSize": 48,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "wVciW",
+              "name": "CompetitionContainer",
+              "width": "fill_container",
+              "cornerRadius": 24,
+              "layout": "vertical",
+              "gap": 18,
+              "padding": [
+                34,
+                54,
+                24,
+                54
+              ],
+              "children": [
+                {
+                  "type": "text",
+                  "id": "O6qzC",
+                  "name": "s2SubTitle",
+                  "fill": "#ffffff",
+                  "content": "提供全面丰富的竞赛资源和项目实战",
+                  "fontFamily": "Inter",
+                  "fontSize": 30,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "frame",
+                  "id": "2QCrn",
+                  "name": "CardsRow",
+                  "width": "fill_container",
+                  "gap": 15,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "twlNn",
+                      "name": "Card1",
+                      "width": "fill_container",
+                      "height": 175,
+                      "fill": "#E86835",
+                      "cornerRadius": 32,
+                      "padding": [
+                        30,
+                        35
+                      ],
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "EhsKQ",
+                          "name": "Content",
+                          "width": "fill_container",
+                          "gap": 10,
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "LbO1C",
+                              "name": "Logo",
+                              "width": 64,
+                              "height": 44,
+                              "fill": "#ffffff33",
+                              "cornerRadius": 4
+                            },
+                            {
+                              "type": "frame",
+                              "id": "xQbWl",
+                              "name": "Text",
+                              "width": "fill_container",
+                              "layout": "vertical",
+                              "gap": 10,
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "kjW0Q",
+                                  "name": "card1Title",
+                                  "fill": "#ffffff",
+                                  "content": "RoboMaster机甲大师赛",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 16,
+                                  "fontWeight": "700"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "oHxCw",
+                                  "name": "card1Desc",
+                                  "fill": "#ffffff",
+                                  "content": "全国大学生机器人大赛",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 12,
+                                  "fontWeight": "700"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "tQgtK",
+                      "name": "Card2",
+                      "width": "fill_container",
+                      "height": 175,
+                      "fill": "#E86835",
+                      "cornerRadius": 32,
+                      "padding": [
+                        30,
+                        35
+                      ],
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "V7OQ9",
+                          "name": "Content",
+                          "width": "fill_container",
+                          "gap": 10,
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "e7eQq",
+                              "name": "Logo",
+                              "width": 64,
+                              "height": 44,
+                              "fill": "#ffffff33",
+                              "cornerRadius": 4
+                            },
+                            {
+                              "type": "frame",
+                              "id": "lMwcX",
+                              "name": "Text",
+                              "width": "fill_container",
+                              "layout": "vertical",
+                              "gap": 10,
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "kauk4",
+                                  "name": "card2Title",
+                                  "fill": "#ffffff",
+                                  "content": "全国大学生电子设计竞赛",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 16,
+                                  "fontWeight": "700"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "zfSvo",
+                                  "name": "card2Desc",
+                                  "fill": "#ffffff",
+                                  "content": "国家级A类竞赛",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 12,
+                                  "fontWeight": "700"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "M94Ek",
+                      "name": "Card3",
+                      "width": "fill_container",
+                      "height": 175,
+                      "fill": "#E86835",
+                      "cornerRadius": 32,
+                      "padding": [
+                        30,
+                        35
+                      ],
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "j26zS",
+                          "name": "Content",
+                          "width": "fill_container",
+                          "gap": 10,
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "BmLlf",
+                              "name": "Logo",
+                              "width": 64,
+                              "height": 44,
+                              "fill": "#ffffff33",
+                              "cornerRadius": 4
+                            },
+                            {
+                              "type": "frame",
+                              "id": "QH3pB",
+                              "name": "Text",
+                              "width": "fill_container",
+                              "layout": "vertical",
+                              "gap": 10,
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "nyk7e",
+                                  "name": "card3Title",
+                                  "fill": "#ffffff",
+                                  "content": "中国机器人大赛",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 16,
+                                  "fontWeight": "700"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "JuYyV",
+                                  "name": "card3Desc",
+                                  "fill": "#ffffff",
+                                  "content": "中国自动化学会主办",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 12,
+                                  "fontWeight": "700"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "id": "getJW",
+                  "name": "s2More",
+                  "fill": "#ffffff",
+                  "content": "探索蓝网团队参与的更多竞赛 →",
+                  "fontFamily": "Inter",
+                  "fontSize": 14,
+                  "fontWeight": "700"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "DiJU6",
+          "name": "3-AchievementAndResources",
+          "width": "fill_container",
+          "height": 750,
+          "layout": "vertical",
+          "gap": 44,
+          "padding": [
+            42,
+            0,
+            80,
+            93
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "3hOt0",
+              "name": "TitleRow",
+              "alignItems": "end",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "IHe23",
+                  "name": "s3Title1",
+                  "fill": "#ffffff",
+                  "content": "累计获奖超",
+                  "fontFamily": "Inter",
+                  "fontSize": 43,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "Ojzjs",
+                  "name": "s3TitleNum",
+                  "fill": "#ff9A3C",
+                  "content": "300",
+                  "fontFamily": "Inter",
+                  "fontSize": 79,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "DecH8",
+                  "name": "s3Title2",
+                  "fill": "#ffffff",
+                  "content": "项，拥有充足的实验室资源",
+                  "fontFamily": "Inter",
+                  "fontSize": 43,
+                  "fontWeight": "700"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "97zVP",
+              "name": "CarouselContainer",
+              "width": "fill_container",
+              "height": "fill_container",
+              "gap": 15,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "VBczN",
+                  "name": "ScrollBar",
+                  "width": 5,
+                  "height": "fill_container",
+                  "fill": "#153963",
+                  "cornerRadius": 2.5,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "2Xaev",
+                      "name": "ScrollThumb",
+                      "width": 5,
+                      "height": 128,
+                      "fill": "#ff6f3c99",
+                      "cornerRadius": 2.5
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "MwOqh",
+                  "name": "CarouselContent",
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "gap": 32,
+                  "padding": [
+                    0,
+                    0,
+                    0,
+                    15
+                  ],
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "yAJqS",
+                      "name": "TextContent",
+                      "width": 400,
+                      "height": "fill_container",
+                      "layout": "vertical",
+                      "gap": 26,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "tqbEx",
+                          "name": "s3ItemTitle",
+                          "fill": "#ffffff",
+                          "content": "竞赛丰富，加入即参赛",
+                          "fontFamily": "Inter",
+                          "fontSize": 35,
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "text",
+                          "id": "GYllJ",
+                          "name": "s3ItemDesc",
+                          "fill": "#ffffff",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "所有竞赛没有专业门槛，重要竞赛有学长、老师参与指导，奖项唾手可得",
+                          "lineHeight": 1.5,
+                          "fontFamily": "Inter",
+                          "fontSize": 20,
+                          "fontWeight": "700"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "r9TRd",
+                      "name": "ItemImage",
+                      "width": "fill_container",
+                      "height": "fill_container",
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "../../src/assets/c1.jpg",
+                        "mode": "fill"
+                      },
+                      "cornerRadius": [
+                        20,
+                        0,
+                        0,
+                        20
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "vEqa4",
+          "name": "4-FeaturedEquipment",
+          "width": "fill_container",
+          "height": 750,
+          "fill": "#060606ff",
+          "layout": "vertical",
+          "padding": [
+            40,
+            0
+          ],
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "yWSFu",
+              "name": "ContentCard",
+              "clip": true,
+              "width": 1008,
+              "height": 407,
+              "fill": {
+                "type": "image",
+                "enabled": true,
+                "url": "../../src/assets/equipment_bg.png",
+                "mode": "fill"
+              },
+              "cornerRadius": 72,
+              "stroke": {
+                "align": "inside",
+                "thickness": 3,
+                "fill": "#2F27B0"
+              },
+              "padding": [
+                42.5,
+                48
+              ],
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "22SgZ",
+                  "name": "TextContent",
+                  "width": 612,
+                  "layout": "vertical",
+                  "gap": 18,
+                  "padding": [
+                    0,
+                    0,
+                    0,
+                    21
+                  ],
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "7ilZC",
+                      "name": "Icon",
+                      "width": 52,
+                      "height": 52,
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "../../src/assets/3dPrinter.png",
+                        "mode": "fit"
+                      }
+                    },
+                    {
+                      "type": "text",
+                      "id": "Bi5sW",
+                      "name": "s4Title",
+                      "fill": "#ffffff",
+                      "content": "3D打印与3轴数铣",
+                      "fontFamily": "Inter",
+                      "fontSize": 35,
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "YccIW",
+                      "name": "s4Desc",
+                      "fill": "#ffffff",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "团队配备先进3D打印机和3轴数控铣床，为机器人开发深度赋能，帮我团队开发者更高效搭建机器人",
+                      "lineHeight": 1.5,
+                      "fontFamily": "Inter",
+                      "fontSize": 20,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "WOYO7",
+                      "name": "Button",
+                      "fill": "#ffffff",
+                      "cornerRadius": 20,
+                      "gap": 8,
+                      "padding": [
+                        9,
+                        15
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "HN8wl",
+                          "name": "s4BtnText",
+                          "fill": "#000000",
+                          "content": "浏览更多团队装备",
+                          "fontFamily": "Inter",
+                          "fontSize": 16,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "KEzRw",
+                          "name": "s4BtnArrow",
+                          "fill": "#000000",
+                          "content": "→",
+                          "fontFamily": "Inter",
+                          "fontSize": 16,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "feWEn",
+          "name": "5-TeamVibe",
+          "width": "fill_container",
+          "height": 750,
+          "layout": "vertical",
+          "gap": 33,
+          "padding": [
+            75,
+            0,
+            90,
+            93
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "uojI4",
+              "name": "s5Title",
+              "fill": "#ffffff",
+              "content": "重新定义团队氛围",
+              "fontFamily": "Inter",
+              "fontSize": 43,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "uApnH",
+              "name": "ContentCard",
+              "clip": true,
+              "width": "fill_container",
+              "height": "fill_container",
+              "cornerRadius": [
+                36,
+                0,
+                0,
+                36
+              ],
+              "stroke": {
+                "align": "inside",
+                "thickness": {
+                  "top": 3,
+                  "bottom": 3,
+                  "left": 3
+                },
+                "fill": "#1E3D9A"
+              },
+              "layout": "none",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "Pwwvj",
+                  "x": 396.0000000000001,
+                  "y": 0,
+                  "name": "BackgroundImage",
+                  "width": 951,
+                  "height": "fill_container(490)",
+                  "fill": [
+                    {
+                      "type": "image",
+                      "enabled": true,
+                      "url": "../../src/assets/team_vibe.jpg",
+                      "mode": "fill"
+                    },
+                    {
+                      "type": "gradient",
+                      "gradientType": "linear",
+                      "enabled": true,
+                      "rotation": -90,
+                      "size": {
+                        "height": 1
+                      },
+                      "colors": [
+                        {
+                          "color": "#000000ff",
+                          "position": 0
+                        },
+                        {
+                          "color": "#00000000",
+                          "position": 1
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "pYH4d",
+                  "x": 0,
+                  "y": 0,
+                  "name": "TextArea",
+                  "width": 1347,
+                  "height": "fill_container(418)",
+                  "layout": "vertical",
+                  "gap": 18,
+                  "padding": [
+                    36,
+                    32
+                  ],
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "sLcUr",
+                      "name": "s5SubTitle",
+                      "fill": "#ffffff",
+                      "content": "队内氛围融洽，技术精湛",
+                      "fontFamily": "Inter",
+                      "fontSize": 35,
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "ehtEw",
+                      "name": "s5Desc1",
+                      "fill": "#ffffff",
+                      "content": "团队氛围轻松融洽，弹性工作，无竞赛、论文等硬性指标。旨在培养学生学习更多新技术应用到工程实践",
+                      "lineHeight": 1.6,
+                      "fontFamily": "Inter",
+                      "fontSize": 20,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "J1mKW",
+                      "name": "s5Desc2",
+                      "fill": "#ffffff",
+                      "content": "进入团队后，可以跟学长和老师学习行业前沿技术，共同实现项目落地，丰富简历内容",
+                      "lineHeight": 1.6,
+                      "fontFamily": "Inter",
+                      "fontSize": 20,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="install" type="js.build_tools.npm">
+    <package-json value="$PROJECT_DIR$/src/frontend/package.json" />
+    <command value="install" />
+    <node-interpreter value="project" />
+    <package-manager value="pnpm" />
+    <envs />
+    <EXTENSION ID="com.intellij.javascript.debugger.execution.StartBrowserRunConfigurationExtension">
+      <browser name="98ca6316-2f89-46d9-a9e5-fa9e2b0625b3" />
+    </EXTENSION>
+    <method v="2" />
+  </configuration>
+</component>

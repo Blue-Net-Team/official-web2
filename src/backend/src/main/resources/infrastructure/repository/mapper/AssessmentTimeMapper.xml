@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bluenet.web.infrastructure.repository.mapper.AssessmentTimeMapper">
+    <resultMap id="BaseResultMap" type="com.bluenet.web.domain.model.entity.AssessmentTime">
+        <id column="id" property="id"/>
+        <result column="direction" property="direction"/>
+        <result column="epoch" property="epoch"/>
+        <result column="start_time" property="startTime"/>
+        <result column="end_time" property="endTime"/>
+        <result column="time_limit" property="timeLimit"/>
+        <result column="time_limit_minutes" property="timeLimitMinutes"/>
+    </resultMap>
+</mapper>

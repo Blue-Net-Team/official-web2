@@ -1,0 +1,2553 @@
+{
+  "version": "2.9",
+  "children": [
+    {
+      "type": "frame",
+      "id": "3NxjP",
+      "x": 0,
+      "y": 0,
+      "name": "竞赛列表 - 桌面端 (1440px)",
+      "width": 1440,
+      "fill": "#000000ff",
+      "layout": "vertical",
+      "gap": 48,
+      "padding": [
+        80,
+        147
+      ],
+      "children": [
+        {
+          "type": "text",
+          "id": "wn1TT",
+          "name": "PageTitle",
+          "fill": "#ffffff",
+          "content": "团队参加的竞赛",
+          "fontFamily": "Inter",
+          "fontSize": 48,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "wBDuo",
+          "name": "PageSubtitle",
+          "fill": "#ffffff99",
+          "content": "记录我们在各类竞赛中的成长与突破",
+          "fontFamily": "Inter",
+          "fontSize": 20,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "frame",
+          "id": "bIjAq",
+          "name": "Content",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 20,
+          "children": [
+            {
+              "type": "frame",
+              "id": "aUtyv",
+              "name": "CompetitionCard1",
+              "width": "fill_container",
+              "height": 200,
+              "fill": [
+                {
+                  "type": "image",
+                  "enabled": true,
+                  "url": "./imgs/rm.jpeg",
+                  "mode": "fill"
+                },
+                {
+                  "type": "gradient",
+                  "gradientType": "linear",
+                  "enabled": true,
+                  "rotation": 270,
+                  "size": {
+                    "height": 1
+                  },
+                  "colors": [
+                    {
+                      "color": "#1a1a1a",
+                      "position": 0.45
+                    },
+                    {
+                      "color": "#1a1a1aaa",
+                      "position": 1
+                    }
+                  ]
+                }
+              ],
+              "cornerRadius": 24,
+              "gap": 32,
+              "padding": [
+                32,
+                40
+              ],
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "5bry1",
+                  "name": "LeftSection",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 12,
+                  "justifyContent": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "EOoCE",
+                      "name": "CardHeader",
+                      "width": "fill_container",
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "r1GHJ",
+                          "name": "TitleGroup",
+                          "gap": 16,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "oyCIQ",
+                              "name": "CompetitionName",
+                              "fill": "#ffffff",
+                              "content": "RoboMaster机甲大师赛",
+                              "fontFamily": "Inter",
+                              "fontSize": 28,
+                              "fontWeight": "700"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "ln977",
+                              "name": "LevelBadge",
+                              "width": 80,
+                              "height": 28,
+                              "fill": "#E86835",
+                              "cornerRadius": 14,
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "p2YK8",
+                                  "name": "LevelText",
+                                  "fill": "#ffffff",
+                                  "content": "国家级",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 12,
+                                  "fontWeight": "700"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "LmXwx",
+                          "name": "Year",
+                          "fill": "#ffffff66",
+                          "content": "5月",
+                          "fontFamily": "Inter",
+                          "fontSize": 24,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "0wQeP",
+                      "name": "InfoGroup",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 8,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "DiuRv",
+                          "name": "Organizer",
+                          "width": "fill_container",
+                          "gap": 8,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "ccu9A",
+                              "name": "Label",
+                              "fill": "#ffffff99",
+                              "content": "主办单位：",
+                              "fontFamily": "Inter",
+                              "fontSize": 16,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "text",
+                              "id": "h1U3p",
+                              "name": "Value",
+                              "fill": "#ffffff",
+                              "content": "全国大学生机器人大赛组委会",
+                              "fontFamily": "Inter",
+                              "fontSize": 16,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "5uaE2",
+                          "name": "Description",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 4,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "O3H2t",
+                              "name": "Value",
+                              "fill": "#ffffffcc",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "RoboMaster机甲大师赛是一项面向全国高校的机器人对抗赛，参赛队伍需要设计并制造能够自主识别、瞄准和射击的机器人。",
+                              "lineHeight": 1.5,
+                              "fontFamily": "Inter",
+                              "fontSize": 16,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "OS6F5",
+              "name": "CompetitionCard2",
+              "width": "fill_container",
+              "height": 200,
+              "fill": "#1a1a1a",
+              "cornerRadius": 24,
+              "gap": 32,
+              "padding": [
+                32,
+                40
+              ],
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "KLMaM",
+                  "name": "LeftSection",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 12,
+                  "justifyContent": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "YiGIM",
+                      "name": "CardHeader",
+                      "width": "fill_container",
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "VP65q",
+                          "name": "TitleGroup",
+                          "gap": 16,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "sFHT2",
+                              "name": "CompetitionName",
+                              "fill": "#ffffff",
+                              "content": "全国大学生电子设计竞赛",
+                              "fontFamily": "Inter",
+                              "fontSize": 28,
+                              "fontWeight": "700"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "5J9FP",
+                              "name": "LevelBadge",
+                              "width": 80,
+                              "height": 28,
+                              "fill": "#E86835",
+                              "cornerRadius": 14,
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "0FmZV",
+                                  "name": "LevelText",
+                                  "fill": "#ffffff",
+                                  "content": "国家级",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 12,
+                                  "fontWeight": "700"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "lcGRQ",
+                          "name": "Year",
+                          "fill": "#ffffff66",
+                          "content": "8月",
+                          "fontFamily": "Inter",
+                          "fontSize": 24,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "z5kTa",
+                      "name": "InfoGroup",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 8,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "D3jlV",
+                          "name": "Organizer",
+                          "width": "fill_container",
+                          "gap": 8,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "Du2vj",
+                              "name": "Label",
+                              "fill": "#ffffff99",
+                              "content": "主办单位：",
+                              "fontFamily": "Inter",
+                              "fontSize": 16,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "text",
+                              "id": "ZrW4G",
+                              "name": "Value",
+                              "fill": "#ffffff",
+                              "content": "教育部高等教育司",
+                              "fontFamily": "Inter",
+                              "fontSize": 16,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "P6Kxj",
+                          "name": "Description",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 4,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "9vWNl",
+                              "name": "Value",
+                              "fill": "#ffffffcc",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "全国大学生电子设计竞赛是教育部倡导的大学生学科竞赛之一，旨在推动高校电子类课程教学改革，培养大学生的实践创新意识与基本能力。",
+                              "lineHeight": 1.5,
+                              "fontFamily": "Inter",
+                              "fontSize": 16,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "qXYUs",
+              "name": "CompetitionCard3",
+              "width": "fill_container",
+              "height": 200,
+              "fill": "#1a1a1a",
+              "cornerRadius": 24,
+              "gap": 32,
+              "padding": [
+                32,
+                40
+              ],
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "baVxJ",
+                  "name": "LeftSection",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 12,
+                  "justifyContent": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "hyvlS",
+                      "name": "CardHeader",
+                      "width": "fill_container",
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "26OaH",
+                          "name": "TitleGroup",
+                          "gap": 16,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "fUeoM",
+                              "name": "CompetitionName",
+                              "fill": "#ffffff",
+                              "content": "中国机器人大赛",
+                              "fontFamily": "Inter",
+                              "fontSize": 28,
+                              "fontWeight": "700"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "XRA55",
+                              "name": "LevelBadge",
+                              "width": 80,
+                              "height": 28,
+                              "fill": "#4A90E2",
+                              "cornerRadius": 14,
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "9B4Pm",
+                                  "name": "LevelText",
+                                  "fill": "#ffffff",
+                                  "content": "省级",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 12,
+                                  "fontWeight": "700"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "1jjOl",
+                          "name": "Year",
+                          "fill": "#ffffff66",
+                          "content": "11月",
+                          "fontFamily": "Inter",
+                          "fontSize": 24,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "0njmM",
+                      "name": "InfoGroup",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 8,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "HRLxS",
+                          "name": "Organizer",
+                          "width": "fill_container",
+                          "gap": 8,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "XOvw0",
+                              "name": "Label",
+                              "fill": "#ffffff99",
+                              "content": "主办单位：",
+                              "fontFamily": "Inter",
+                              "fontSize": 16,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "text",
+                              "id": "kugk9",
+                              "name": "Value",
+                              "fill": "#ffffff",
+                              "content": "中国自动化学会",
+                              "fontFamily": "Inter",
+                              "fontSize": 16,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "jP4Mo",
+                          "name": "Description",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 4,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "o3Ufj",
+                              "name": "Value",
+                              "fill": "#ffffffcc",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "中国机器人大赛是国内最具影响力的机器人赛事之一，涵盖机器人足球、机器人舞蹈、服务机器人等多个比赛项目。",
+                              "lineHeight": 1.5,
+                              "fontFamily": "Inter",
+                              "fontSize": 16,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "kU4tl",
+              "name": "CompetitionCard4",
+              "width": "fill_container",
+              "height": 200,
+              "fill": "#1a1a1a",
+              "cornerRadius": 24,
+              "gap": 32,
+              "padding": [
+                32,
+                40
+              ],
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "VFJXN",
+                  "name": "LeftSection",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 12,
+                  "justifyContent": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "XIz9M",
+                      "name": "CardHeader",
+                      "width": "fill_container",
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "a6N05",
+                          "name": "TitleGroup",
+                          "gap": 16,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "Oifrq",
+                              "name": "CompetitionName",
+                              "fill": "#ffffff",
+                              "content": "机械设计创新大赛",
+                              "fontFamily": "Inter",
+                              "fontSize": 28,
+                              "fontWeight": "700"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "OvOh4",
+                              "name": "LevelBadge",
+                              "width": 80,
+                              "height": 28,
+                              "fill": "#E86835",
+                              "cornerRadius": 14,
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "uZD34",
+                                  "name": "LevelText",
+                                  "fill": "#ffffff",
+                                  "content": "国家级",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 12,
+                                  "fontWeight": "700"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "ekFU9",
+                          "name": "Year",
+                          "fill": "#ffffff66",
+                          "content": "6月",
+                          "fontFamily": "Inter",
+                          "fontSize": 24,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "eYK9c",
+                      "name": "InfoGroup",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 8,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "6RFnn",
+                          "name": "Organizer",
+                          "width": "fill_container",
+                          "gap": 8,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "eGqDQ",
+                              "name": "Label",
+                              "fill": "#ffffff99",
+                              "content": "主办单位：",
+                              "fontFamily": "Inter",
+                              "fontSize": 16,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "text",
+                              "id": "2W8YB",
+                              "name": "Value",
+                              "fill": "#ffffff",
+                              "content": "教育部高等教育司",
+                              "fontFamily": "Inter",
+                              "fontSize": 16,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "agjGS",
+                          "name": "Description",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 4,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "it2Do",
+                              "name": "Value",
+                              "fill": "#ffffffcc",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "全国大学生机械创新设计大赛是一项面向全国高校的机械工程类学科竞赛，旨在培养大学生的创新设计意识、综合设计能力与团队协作精神。",
+                              "lineHeight": 1.5,
+                              "fontFamily": "Inter",
+                              "fontSize": 16,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "c9JVW",
+              "name": "CompetitionCard5",
+              "width": "fill_container",
+              "height": 200,
+              "fill": "#1a1a1a",
+              "cornerRadius": 24,
+              "gap": 32,
+              "padding": [
+                32,
+                40
+              ],
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "0qCyV",
+                  "name": "LeftSection",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 12,
+                  "justifyContent": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "uHou6",
+                      "name": "CardHeader",
+                      "width": "fill_container",
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "9eShQ",
+                          "name": "TitleGroup",
+                          "gap": 16,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "yDBVV",
+                              "name": "CompetitionName",
+                              "fill": "#ffffff",
+                              "content": "高教杯先进成图大赛",
+                              "fontFamily": "Inter",
+                              "fontSize": 28,
+                              "fontWeight": "700"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "F3bJu",
+                              "name": "LevelBadge",
+                              "width": 80,
+                              "height": 28,
+                              "fill": "#E86835",
+                              "cornerRadius": 14,
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "bDxAo",
+                                  "name": "LevelText",
+                                  "fill": "#ffffff",
+                                  "content": "国家级",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 12,
+                                  "fontWeight": "700"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "wqsGL",
+                          "name": "Year",
+                          "fill": "#ffffff66",
+                          "content": "7月",
+                          "fontFamily": "Inter",
+                          "fontSize": 24,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "3FtMB",
+                      "name": "InfoGroup",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 8,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "bhZKW",
+                          "name": "Organizer",
+                          "width": "fill_container",
+                          "gap": 8,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "tFf6f",
+                              "name": "Label",
+                              "fill": "#ffffff99",
+                              "content": "主办单位：",
+                              "fontFamily": "Inter",
+                              "fontSize": 16,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "text",
+                              "id": "wR0WX",
+                              "name": "Value",
+                              "fill": "#ffffff",
+                              "content": "教育部高等学校工程图学教学指导委员会",
+                              "fontFamily": "Inter",
+                              "fontSize": 16,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "tc9W8",
+                          "name": "Description",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 4,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "43QSv",
+                              "name": "Value",
+                              "fill": "#ffffffcc",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "全国大学生先进成图技术与产品信息建模创新大赛旨在培养学生的工程图学素养和创新设计能力，提高学生的手工绘图和计算机绘图能力。",
+                              "lineHeight": 1.5,
+                              "fontFamily": "Inter",
+                              "fontSize": 16,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "mGlaq",
+              "name": "CompetitionCard6",
+              "width": "fill_container",
+              "height": 200,
+              "fill": "#1a1a1a",
+              "cornerRadius": 24,
+              "gap": 32,
+              "padding": [
+                32,
+                40
+              ],
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "8PghC",
+                  "name": "LeftSection",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 12,
+                  "justifyContent": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "W8f5f",
+                      "name": "CardHeader",
+                      "width": "fill_container",
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "pJYZO",
+                          "name": "TitleGroup",
+                          "gap": 16,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "aopSv",
+                              "name": "CompetitionName",
+                              "fill": "#ffffff",
+                              "content": "高教杯数学建模大赛",
+                              "fontFamily": "Inter",
+                              "fontSize": 28,
+                              "fontWeight": "700"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "FLjGg",
+                              "name": "LevelBadge",
+                              "width": 80,
+                              "height": 28,
+                              "fill": "#E86835",
+                              "cornerRadius": 14,
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "9o6Sz",
+                                  "name": "LevelText",
+                                  "fill": "#ffffff",
+                                  "content": "国家级",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 12,
+                                  "fontWeight": "700"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "3uXdY",
+                          "name": "Year",
+                          "fill": "#ffffff66",
+                          "content": "9月",
+                          "fontFamily": "Inter",
+                          "fontSize": 24,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "CYBP1",
+                      "name": "InfoGroup",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 8,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "AhGCI",
+                          "name": "Organizer",
+                          "width": "fill_container",
+                          "gap": 8,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "JX9Vr",
+                              "name": "Label",
+                              "fill": "#ffffff99",
+                              "content": "主办单位：",
+                              "fontFamily": "Inter",
+                              "fontSize": 16,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "text",
+                              "id": "CTm4P",
+                              "name": "Value",
+                              "fill": "#ffffff",
+                              "content": "教育部高等教育司、中国工业与应用数学学会",
+                              "fontFamily": "Inter",
+                              "fontSize": 16,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "h4cfo",
+                          "name": "Description",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 4,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "us1eS",
+                              "name": "Value",
+                              "fill": "#ffffffcc",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "全国大学生数学建模竞赛是教育部倡导的大学生学科竞赛之一，旨在培养学生的创新意识及运用数学方法和计算机技术解决实际问题的能力。",
+                              "lineHeight": 1.5,
+                              "fontFamily": "Inter",
+                              "fontSize": 16,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "epxOu",
+              "name": "CompetitionCard7",
+              "width": "fill_container",
+              "height": 200,
+              "fill": "#1a1a1a",
+              "cornerRadius": 24,
+              "gap": 32,
+              "padding": [
+                32,
+                40
+              ],
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "XR3YN",
+                  "name": "LeftSection",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 12,
+                  "justifyContent": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "z5dC5",
+                      "name": "CardHeader",
+                      "width": "fill_container",
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "Mdpr1",
+                          "name": "TitleGroup",
+                          "gap": 16,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "NRqqL",
+                              "name": "CompetitionName",
+                              "fill": "#ffffff",
+                              "content": "工程实践与创新能力大赛",
+                              "fontFamily": "Inter",
+                              "fontSize": 28,
+                              "fontWeight": "700"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "R6EN8",
+                              "name": "LevelBadge",
+                              "width": 80,
+                              "height": 28,
+                              "fill": "#E86835",
+                              "cornerRadius": 14,
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "Qnd0F",
+                                  "name": "LevelText",
+                                  "fill": "#ffffff",
+                                  "content": "国家级",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 12,
+                                  "fontWeight": "700"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "lME1h",
+                          "name": "Year",
+                          "fill": "#ffffff66",
+                          "content": "10月",
+                          "fontFamily": "Inter",
+                          "fontSize": 24,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "UlhHH",
+                      "name": "InfoGroup",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 8,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "fQhau",
+                          "name": "Organizer",
+                          "width": "fill_container",
+                          "gap": 8,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "1L9ZO",
+                              "name": "Label",
+                              "fill": "#ffffff99",
+                              "content": "主办单位：",
+                              "fontFamily": "Inter",
+                              "fontSize": 16,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "text",
+                              "id": "pyGtK",
+                              "name": "Value",
+                              "fill": "#ffffff",
+                              "content": "教育部高等教育司",
+                              "fontFamily": "Inter",
+                              "fontSize": 16,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "NPMa5",
+                          "name": "Description",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 4,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "xWykO",
+                              "name": "Value",
+                              "fill": "#ffffffcc",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "中国大学生工程实践与创新能力大赛是面向全国高校的综合性工程实践竞赛，涵盖工程基础、智能制造、智能网联汽车等多个赛道。",
+                              "lineHeight": 1.5,
+                              "fontFamily": "Inter",
+                              "fontSize": 16,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "BfbLy",
+              "name": "CompetitionCard8",
+              "width": "fill_container",
+              "height": 200,
+              "fill": "#1a1a1a",
+              "cornerRadius": 24,
+              "gap": 32,
+              "padding": [
+                32,
+                40
+              ],
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "sdaUU",
+                  "name": "LeftSection",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 12,
+                  "justifyContent": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "5mRXQ",
+                      "name": "CardHeader",
+                      "width": "fill_container",
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "30IQ0",
+                          "name": "TitleGroup",
+                          "gap": 16,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "Bdi84",
+                              "name": "CompetitionName",
+                              "fill": "#ffffff",
+                              "content": "广东省工科大学生实验综合技能大赛",
+                              "fontFamily": "Inter",
+                              "fontSize": 28,
+                              "fontWeight": "700"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "j2YvB",
+                              "name": "LevelBadge",
+                              "width": 80,
+                              "height": 28,
+                              "fill": "#4A90E2",
+                              "cornerRadius": 14,
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "fDiN3",
+                                  "name": "LevelText",
+                                  "fill": "#ffffff",
+                                  "content": "省级",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 12,
+                                  "fontWeight": "700"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "tZu66",
+                          "name": "Year",
+                          "fill": "#ffffff66",
+                          "content": "5月",
+                          "fontFamily": "Inter",
+                          "fontSize": 24,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "DRJur",
+                      "name": "InfoGroup",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 8,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "1X0Hj",
+                          "name": "Organizer",
+                          "width": "fill_container",
+                          "gap": 8,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "XewBE",
+                              "name": "Label",
+                              "fill": "#ffffff99",
+                              "content": "主办单位：",
+                              "fontFamily": "Inter",
+                              "fontSize": 16,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "text",
+                              "id": "Zbhem",
+                              "name": "Value",
+                              "fill": "#ffffff",
+                              "content": "广东省教育厅",
+                              "fontFamily": "Inter",
+                              "fontSize": 16,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "uwGdP",
+                          "name": "Description",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 4,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "ljIpi",
+                              "name": "Value",
+                              "fill": "#ffffffcc",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "广东省工科大学生实验综合技能大赛是面向广东省高校工科类专业的省级学科竞赛，旨在提高大学生的实验技能和创新能力。",
+                              "lineHeight": 1.5,
+                              "fontFamily": "Inter",
+                              "fontSize": 16,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "lapko",
+      "x": 1560,
+      "y": 0,
+      "name": "竞赛列表 - 移动端 (375px)",
+      "width": 375,
+      "fill": "#000000ff",
+      "layout": "vertical",
+      "gap": 24,
+      "padding": [
+        40,
+        24
+      ],
+      "children": [
+        {
+          "type": "text",
+          "id": "zBHPL",
+          "name": "PageTitle",
+          "fill": "#ffffff",
+          "textGrowth": "fixed-width",
+          "width": "fill_container",
+          "content": "团队参加的竞赛",
+          "fontFamily": "Inter",
+          "fontSize": 28,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "IS5el",
+          "name": "PageSubtitle",
+          "fill": "#ffffff99",
+          "textGrowth": "fixed-width",
+          "width": "fill_container",
+          "content": "记录我们在各类竞赛中的成长与突破",
+          "fontFamily": "Inter",
+          "fontSize": 14,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "frame",
+          "id": "Ybhkh",
+          "name": "Content",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 16,
+          "children": [
+            {
+              "type": "frame",
+              "id": "Buefm",
+              "name": "CompetitionCard1",
+              "width": "fill_container",
+              "fill": [
+                {
+                  "type": "image",
+                  "enabled": true,
+                  "url": "./imgs/rm.jpeg",
+                  "mode": "fill"
+                },
+                {
+                  "type": "gradient",
+                  "gradientType": "linear",
+                  "enabled": true,
+                  "rotation": 270,
+                  "size": {
+                    "height": 1
+                  },
+                  "colors": [
+                    {
+                      "color": "#1a1a1a",
+                      "position": 0.45
+                    },
+                    {
+                      "color": "#1a1a1aaa",
+                      "position": 1
+                    }
+                  ]
+                }
+              ],
+              "cornerRadius": 20,
+              "gap": 20,
+              "padding": [
+                24,
+                20
+              ],
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "oxien",
+                  "name": "LeftSection",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 12,
+                  "justifyContent": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "gdJaE",
+                      "name": "CardHeader",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 6,
+                      "justifyContent": "space_between",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "0ptbz",
+                          "name": "TitleGroup",
+                          "width": "fill_container",
+                          "gap": 12,
+                          "justifyContent": "space_between",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "1CepP",
+                              "name": "CompetitionName",
+                              "fill": "#ffffff",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "RoboMaster机甲大师赛",
+                              "fontFamily": "Inter",
+                              "fontSize": 20,
+                              "fontWeight": "700"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "bHDSM",
+                              "name": "LevelBadge",
+                              "width": 64,
+                              "height": 24,
+                              "fill": "#E86835",
+                              "cornerRadius": 12,
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "WQhZx",
+                                  "name": "LevelText",
+                                  "fill": "#ffffff",
+                                  "content": "国家级",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 12,
+                                  "fontWeight": "700"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "vJga0",
+                      "name": "InfoGroup",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 8,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "uwOYN",
+                          "name": "Organizer",
+                          "width": "fill_container",
+                          "gap": 8,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "gXK0z",
+                              "name": "Label",
+                              "fill": "#ffffff99",
+                              "content": "主办单位：",
+                              "fontFamily": "Inter",
+                              "fontSize": 14,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "text",
+                              "id": "rjzZi",
+                              "name": "Value",
+                              "fill": "#ffffff",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "全国大学生机器人大赛组委会",
+                              "fontFamily": "Inter",
+                              "fontSize": 14,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "BWPr3",
+                          "name": "Description",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 4,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "xODsy",
+                              "name": "Value",
+                              "fill": "#ffffffcc",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "RoboMaster机甲大师赛是一项面向全国高校的机器人对抗赛，参赛队伍需要设计并制造能够自主识别、瞄准和射击的机器人。",
+                              "lineHeight": 1.5,
+                              "fontFamily": "Inter",
+                              "fontSize": 14,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "KNm1v",
+              "name": "CompetitionCard2",
+              "width": "fill_container",
+              "fill": "#1a1a1a",
+              "cornerRadius": 20,
+              "gap": 20,
+              "padding": [
+                24,
+                20
+              ],
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "eiisA",
+                  "name": "LeftSection",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 12,
+                  "justifyContent": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "DNb0V",
+                      "name": "CardHeader",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 6,
+                      "justifyContent": "space_between",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "5nVH0",
+                          "name": "TitleGroup",
+                          "width": "fill_container",
+                          "gap": 12,
+                          "justifyContent": "space_between",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "2QNes",
+                              "name": "CompetitionName",
+                              "fill": "#ffffff",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "全国大学生电子设计竞赛",
+                              "fontFamily": "Inter",
+                              "fontSize": 20,
+                              "fontWeight": "700"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "O3hFq",
+                              "name": "LevelBadge",
+                              "width": 64,
+                              "height": 24,
+                              "fill": "#E86835",
+                              "cornerRadius": 12,
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "NGgmf",
+                                  "name": "LevelText",
+                                  "fill": "#ffffff",
+                                  "content": "国家级",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 12,
+                                  "fontWeight": "700"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "1BKEj",
+                      "name": "InfoGroup",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 8,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "nRAdT",
+                          "name": "Organizer",
+                          "width": "fill_container",
+                          "gap": 8,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "SFCyc",
+                              "name": "Label",
+                              "fill": "#ffffff99",
+                              "content": "主办单位：",
+                              "fontFamily": "Inter",
+                              "fontSize": 14,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "text",
+                              "id": "VeNlO",
+                              "name": "Value",
+                              "fill": "#ffffff",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "教育部高等教育司",
+                              "fontFamily": "Inter",
+                              "fontSize": 14,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "JjRrg",
+                          "name": "Description",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 4,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "JPAy6",
+                              "name": "Value",
+                              "fill": "#ffffffcc",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "全国大学生电子设计竞赛是教育部倡导的大学生学科竞赛之一，旨在推动高校电子类课程教学改革，培养大学生的实践创新意识与基本能力。",
+                              "lineHeight": 1.5,
+                              "fontFamily": "Inter",
+                              "fontSize": 14,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "Gtd17",
+              "name": "CompetitionCard3",
+              "width": "fill_container",
+              "fill": "#1a1a1a",
+              "cornerRadius": 20,
+              "gap": 20,
+              "padding": [
+                24,
+                20
+              ],
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "FNPJx",
+                  "name": "LeftSection",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 12,
+                  "justifyContent": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "3lEO4",
+                      "name": "CardHeader",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 6,
+                      "justifyContent": "space_between",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "9xvTR",
+                          "name": "TitleGroup",
+                          "width": "fill_container",
+                          "gap": 12,
+                          "justifyContent": "space_between",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "XjsTw",
+                              "name": "CompetitionName",
+                              "fill": "#ffffff",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "中国机器人大赛",
+                              "fontFamily": "Inter",
+                              "fontSize": 20,
+                              "fontWeight": "700"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "lGi1p",
+                              "name": "LevelBadge",
+                              "width": 64,
+                              "height": 24,
+                              "fill": "#4A90E2",
+                              "cornerRadius": 12,
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "wXsSR",
+                                  "name": "LevelText",
+                                  "fill": "#ffffff",
+                                  "content": "省级",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 12,
+                                  "fontWeight": "700"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "NvfIu",
+                      "name": "InfoGroup",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 8,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "hpmHM",
+                          "name": "Organizer",
+                          "width": "fill_container",
+                          "gap": 8,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "S08js",
+                              "name": "Label",
+                              "fill": "#ffffff99",
+                              "content": "主办单位：",
+                              "fontFamily": "Inter",
+                              "fontSize": 14,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "text",
+                              "id": "1ETUP",
+                              "name": "Value",
+                              "fill": "#ffffff",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "中国自动化学会",
+                              "fontFamily": "Inter",
+                              "fontSize": 14,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "IFZ3G",
+                          "name": "Description",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 4,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "TOzmG",
+                              "name": "Value",
+                              "fill": "#ffffffcc",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "中国机器人大赛是国内最具影响力的机器人赛事之一，涵盖机器人足球、机器人舞蹈、服务机器人等多个比赛项目。",
+                              "lineHeight": 1.5,
+                              "fontFamily": "Inter",
+                              "fontSize": 14,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "ejax3",
+              "name": "CompetitionCard4",
+              "width": "fill_container",
+              "fill": "#1a1a1a",
+              "cornerRadius": 20,
+              "gap": 20,
+              "padding": [
+                24,
+                20
+              ],
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "5Kb0y",
+                  "name": "LeftSection",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 12,
+                  "justifyContent": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "98gaD",
+                      "name": "CardHeader",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 6,
+                      "justifyContent": "space_between",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "hwkDG",
+                          "name": "TitleGroup",
+                          "width": "fill_container",
+                          "gap": 12,
+                          "justifyContent": "space_between",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "Cyswc",
+                              "name": "CompetitionName",
+                              "fill": "#ffffff",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "机械设计创新大赛",
+                              "fontFamily": "Inter",
+                              "fontSize": 20,
+                              "fontWeight": "700"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "m1wlE",
+                              "name": "LevelBadge",
+                              "width": 64,
+                              "height": 24,
+                              "fill": "#E86835",
+                              "cornerRadius": 12,
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "TkL2K",
+                                  "name": "LevelText",
+                                  "fill": "#ffffff",
+                                  "content": "国家级",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 12,
+                                  "fontWeight": "700"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "Ehukg",
+                      "name": "InfoGroup",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 8,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "ez2LG",
+                          "name": "Organizer",
+                          "width": "fill_container",
+                          "gap": 8,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "vEs8g",
+                              "name": "Label",
+                              "fill": "#ffffff99",
+                              "content": "主办单位：",
+                              "fontFamily": "Inter",
+                              "fontSize": 14,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "text",
+                              "id": "VmacD",
+                              "name": "Value",
+                              "fill": "#ffffff",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "教育部高等教育司",
+                              "fontFamily": "Inter",
+                              "fontSize": 14,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "H78O6",
+                          "name": "Description",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 4,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "MnXq7",
+                              "name": "Value",
+                              "fill": "#ffffffcc",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "全国大学生机械创新设计大赛是一项面向全国高校的机械工程类学科竞赛，旨在培养大学生的创新设计意识、综合设计能力与团队协作精神。",
+                              "lineHeight": 1.5,
+                              "fontFamily": "Inter",
+                              "fontSize": 14,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "qPJqE",
+              "name": "CompetitionCard5",
+              "width": "fill_container",
+              "fill": "#1a1a1a",
+              "cornerRadius": 20,
+              "gap": 20,
+              "padding": [
+                24,
+                20
+              ],
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "sNNrF",
+                  "name": "LeftSection",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 12,
+                  "justifyContent": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "j6tGE",
+                      "name": "CardHeader",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 6,
+                      "justifyContent": "space_between",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "nzmJV",
+                          "name": "TitleGroup",
+                          "width": "fill_container",
+                          "gap": 12,
+                          "justifyContent": "space_between",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "Sq8kE",
+                              "name": "CompetitionName",
+                              "fill": "#ffffff",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "高教杯先进成图大赛",
+                              "fontFamily": "Inter",
+                              "fontSize": 20,
+                              "fontWeight": "700"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "mU70m",
+                              "name": "LevelBadge",
+                              "width": 64,
+                              "height": 24,
+                              "fill": "#E86835",
+                              "cornerRadius": 12,
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "XWVht",
+                                  "name": "LevelText",
+                                  "fill": "#ffffff",
+                                  "content": "国家级",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 12,
+                                  "fontWeight": "700"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "giCLQ",
+                      "name": "InfoGroup",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 8,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "z0prt",
+                          "name": "Organizer",
+                          "width": "fill_container",
+                          "gap": 8,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "gd0h3",
+                              "name": "Label",
+                              "fill": "#ffffff99",
+                              "content": "主办单位：",
+                              "fontFamily": "Inter",
+                              "fontSize": 14,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "text",
+                              "id": "Cra47",
+                              "name": "Value",
+                              "fill": "#ffffff",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "教育部高等学校工程图学教学指导委员会",
+                              "fontFamily": "Inter",
+                              "fontSize": 14,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "CoAYL",
+                          "name": "Description",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 4,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "77ZL8",
+                              "name": "Value",
+                              "fill": "#ffffffcc",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "全国大学生先进成图技术与产品信息建模创新大赛旨在培养学生的工程图学素养和创新设计能力，提高学生的手工绘图和计算机绘图能力。",
+                              "lineHeight": 1.5,
+                              "fontFamily": "Inter",
+                              "fontSize": 14,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "XChV9",
+              "name": "CompetitionCard6",
+              "width": "fill_container",
+              "fill": "#1a1a1a",
+              "cornerRadius": 20,
+              "gap": 20,
+              "padding": [
+                24,
+                20
+              ],
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "NrQJb",
+                  "name": "LeftSection",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 12,
+                  "justifyContent": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "gdlSn",
+                      "name": "CardHeader",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 6,
+                      "justifyContent": "space_between",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "tqFD8",
+                          "name": "TitleGroup",
+                          "width": "fill_container",
+                          "gap": 12,
+                          "justifyContent": "space_between",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "RfipB",
+                              "name": "CompetitionName",
+                              "fill": "#ffffff",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "高教杯数学建模大赛",
+                              "fontFamily": "Inter",
+                              "fontSize": 20,
+                              "fontWeight": "700"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "bGtRk",
+                              "name": "LevelBadge",
+                              "width": 64,
+                              "height": 24,
+                              "fill": "#E86835",
+                              "cornerRadius": 12,
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "ZrSSS",
+                                  "name": "LevelText",
+                                  "fill": "#ffffff",
+                                  "content": "国家级",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 12,
+                                  "fontWeight": "700"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "6GTTa",
+                      "name": "InfoGroup",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 8,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "NFmSY",
+                          "name": "Organizer",
+                          "width": "fill_container",
+                          "gap": 8,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "GocM9",
+                              "name": "Label",
+                              "fill": "#ffffff99",
+                              "content": "主办单位：",
+                              "fontFamily": "Inter",
+                              "fontSize": 14,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "text",
+                              "id": "Otkrc",
+                              "name": "Value",
+                              "fill": "#ffffff",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "教育部高等教育司、中国工业与应用数学学会",
+                              "fontFamily": "Inter",
+                              "fontSize": 14,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "9ZxUc",
+                          "name": "Description",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 4,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "anD9K",
+                              "name": "Value",
+                              "fill": "#ffffffcc",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "全国大学生数学建模竞赛是教育部倡导的大学生学科竞赛之一，旨在培养学生的创新意识及运用数学方法和计算机技术解决实际问题的能力。",
+                              "lineHeight": 1.5,
+                              "fontFamily": "Inter",
+                              "fontSize": 14,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "bv8Qr",
+              "name": "CompetitionCard7",
+              "width": "fill_container",
+              "fill": "#1a1a1a",
+              "cornerRadius": 20,
+              "gap": 20,
+              "padding": [
+                24,
+                20
+              ],
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "NORlE",
+                  "name": "LeftSection",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 12,
+                  "justifyContent": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "guDIx",
+                      "name": "CardHeader",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 6,
+                      "justifyContent": "space_between",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "9zMfr",
+                          "name": "TitleGroup",
+                          "width": "fill_container",
+                          "gap": 12,
+                          "justifyContent": "space_between",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "c1tPE",
+                              "name": "CompetitionName",
+                              "fill": "#ffffff",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "工程实践与创新能力大赛",
+                              "fontFamily": "Inter",
+                              "fontSize": 20,
+                              "fontWeight": "700"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "YnAVE",
+                              "name": "LevelBadge",
+                              "width": 64,
+                              "height": 24,
+                              "fill": "#E86835",
+                              "cornerRadius": 12,
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "QPpkU",
+                                  "name": "LevelText",
+                                  "fill": "#ffffff",
+                                  "content": "国家级",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 12,
+                                  "fontWeight": "700"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "Mh5a8",
+                      "name": "InfoGroup",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 8,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "EOOEw",
+                          "name": "Organizer",
+                          "width": "fill_container",
+                          "gap": 8,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "2It5C",
+                              "name": "Label",
+                              "fill": "#ffffff99",
+                              "content": "主办单位：",
+                              "fontFamily": "Inter",
+                              "fontSize": 14,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "text",
+                              "id": "fWmOU",
+                              "name": "Value",
+                              "fill": "#ffffff",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "教育部高等教育司",
+                              "fontFamily": "Inter",
+                              "fontSize": 14,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "kG7RN",
+                          "name": "Description",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 4,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "SjsPB",
+                              "name": "Value",
+                              "fill": "#ffffffcc",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "中国大学生工程实践与创新能力大赛是面向全国高校的综合性工程实践竞赛，涵盖工程基础、智能制造、智能网联汽车等多个赛道。",
+                              "lineHeight": 1.5,
+                              "fontFamily": "Inter",
+                              "fontSize": 14,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "IlWl2",
+              "name": "CompetitionCard8",
+              "width": "fill_container",
+              "fill": "#1a1a1a",
+              "cornerRadius": 20,
+              "gap": 20,
+              "padding": [
+                24,
+                20
+              ],
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "63bA8",
+                  "name": "LeftSection",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 12,
+                  "justifyContent": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "n4aoI",
+                      "name": "CardHeader",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 6,
+                      "justifyContent": "space_between",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "MevBS",
+                          "name": "TitleGroup",
+                          "width": "fill_container",
+                          "gap": 12,
+                          "justifyContent": "space_between",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "Q5BUU",
+                              "name": "CompetitionName",
+                              "fill": "#ffffff",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "广东省工科大学生实验综合技能大赛",
+                              "fontFamily": "Inter",
+                              "fontSize": 20,
+                              "fontWeight": "700"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "QgGfv",
+                              "name": "LevelBadge",
+                              "width": 64,
+                              "height": 24,
+                              "fill": "#4A90E2",
+                              "cornerRadius": 12,
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "3E3H3",
+                                  "name": "LevelText",
+                                  "fill": "#ffffff",
+                                  "content": "省级",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 12,
+                                  "fontWeight": "700"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "jgrox",
+                      "name": "InfoGroup",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 8,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "GC534",
+                          "name": "Organizer",
+                          "width": "fill_container",
+                          "gap": 8,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "i7jRq",
+                              "name": "Label",
+                              "fill": "#ffffff99",
+                              "content": "主办单位：",
+                              "fontFamily": "Inter",
+                              "fontSize": 14,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "text",
+                              "id": "xN4JO",
+                              "name": "Value",
+                              "fill": "#ffffff",
+                              "content": "广东省教育厅",
+                              "fontFamily": "Inter",
+                              "fontSize": 16,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "dzVJK",
+                          "name": "Description",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 4,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "Jk51h",
+                              "name": "Value",
+                              "fill": "#ffffffcc",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "广东省工科大学生实验综合技能大赛是面向广东省高校工科类专业的省级学科竞赛，旨在提高大学生的实验技能和创新能力。",
+                              "lineHeight": 1.5,
+                              "fontFamily": "Inter",
+                              "fontSize": 14,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

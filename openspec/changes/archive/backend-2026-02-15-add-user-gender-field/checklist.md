@@ -1,0 +1,7 @@
+- [x] Database schema updated with gender column
+- [x] Gender enum created and correctly annotated
+- [x] User entity updated with gender field
+- [x] UserVO updated with gender field
+- [x] UserInfo DTO updated with gender field
+- [x] Project compiles successfully
+- [x] Verify gender field default value behavior

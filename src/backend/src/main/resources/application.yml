@@ -1,0 +1,114 @@
+# 应用服务 WEB 访问端口
+server:
+  port: 8080
+  servlet:
+    encoding:
+      charset: utf-8
+      force: true
+      enabled: true
+
+spring:
+  profiles:
+    active: "@spring.profiles.active@"
+
+  datasource:
+    url: jdbc:postgresql://${DATABASE_HOST:localhost}:${DATABASE_PORT:5432}/${DATABASE_NAME:db_blue_net}
+    username: ${DATABASE_USERNAME:postgres}
+    password: ${DATABASE_PASSWORD:000000}
+    driver-class-name: org.postgresql.Driver
+  servlet:
+    multipart:
+      max-file-size: 5MB
+
+  mail:
+    host: smtp.163.com
+    port: 465
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    from: ${MAIL_USERNAME:}
+    properties:
+      mail:
+        debug: true
+        smtp:
+          auth: true
+          ssl:
+            enable: true
+          socketFactory:
+            class: javax.net.ssl.SSLSocketFactory
+            port: 465
+          connectiontimeout: 10000
+          timeout: 10000
+          writetimeout: 10000
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+
+mybatis-plus:
+  mapper-locations: classpath:infrastructure/repository/mapper/*.xml
+  type-aliases-package: com.bluenet.web.domain.model.entity
+  type-handlers-package: com.bluenet.web.infrastructure.repository.handler
+  configuration:
+    map-underscore-to-camel-case: true
+    default-enum-type-handler: com.baomidou.mybatisplus.core.handlers.MybatisEnumTypeHandler
+
+# MinIO配置
+minio:
+  enabled: true
+  endpoint: ${MINIO_ENDPOINT:localhost}
+  port: ${MINIO_PORT:9000}
+  accessKey: ${MINIO_AK:admin}
+  secretKey: ${MINIO_SK:admin1234}
+  useSSL: false
+  bucket-names:
+    - "avatar"
+    - "normal_img"
+    - "assessment_attachment"
+    - "qrcode"
+    - "work"
+
+# springdoc-openapi
+springdoc:
+  api-docs:
+    enabled: true
+    path: /v3/api-docs
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+
+# JWT配置
+jwt:
+  # 密钥（移除连字符以避免潜在问题，且长度满足安全要求）
+  secret: ${JWT_SECRET:BlueNetWeb21BackendJwtSecretKey20260215NoHyphensAllowed}
+  # 过期时间（秒），12小时 = 43200秒
+  expiration: 43200
+
+# 系统用户配置
+system-user:
+  username: ${SYSTEM_USER_USERNAME:system}
+  password: ${SYSTEM_USER_PASSWORD:admin123}
+  student-id: ${SYSTEM_USER_STUDENT_ID:000000000000}
+
+# Cookie 配置
+cookie:
+  # Cookie Domain，跨子域时设置为 .example.com
+  domain: ${COOKIE_DOMAIN:}
+  # Secure 属性，生产环境必须为 true
+  secure: ${COOKIE_SECURE:false}
+  # SameSite 属性，推荐 Lax
+  same-site: ${COOKIE_SAME_SITE:Lax}
+  # Cookie 有效期（秒），12小时 = 43200秒，与 JWT 一致
+  max-age: ${COOKIE_MAX_AGE:43200}
+  # Cookie Path
+  path: /
+  # 认证 Cookie 名称
+  auth-cookie-name: auth_token
+  # CSRF Cookie 名称
+  csrf-cookie-name: csrf_token
+
+# CORS 配置
+cors:
+  # 允许的前端域名，多个用逗号分隔
+  # 生产环境应配置具体域名，如: https://example.com,https://www.example.com
+  # 开发环境可使用 * 允许所有域名
+  allowed-origins: ${CORS_ALLOWED_ORIGINS:*}

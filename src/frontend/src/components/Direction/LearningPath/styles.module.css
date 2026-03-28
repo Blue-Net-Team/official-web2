@@ -1,0 +1,138 @@
+.section {
+  padding: 80px 147px;
+  background-color: #000000;
+}
+
+.title {
+  font-size: 36px;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0 0 24px 0;
+}
+
+.pathContainer {
+  margin-top: 24px;
+}
+
+.stepWrapper {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.stepCard {
+  flex: 1;
+  background-color: #111111;
+  border-radius: 12px;
+  padding: 32px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border: 1px solid #222222;
+  transition: border-color 0.3s ease;
+}
+
+.stepCard:hover {
+  border-color: var(--theme-primary);
+}
+
+.stepCard.clickable {
+  cursor: pointer;
+}
+
+.stepNumber {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--theme-primary);
+  line-height: 1;
+}
+
+.stepTitle {
+  font-size: 16px;
+  font-weight: 500;
+  color: #ffffff;
+  margin: 0;
+}
+
+.videoHint {
+  font-size: 12px;
+  color: var(--theme-primary);
+  opacity: 0.8;
+}
+
+.arrow {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--theme-primary);
+  flex-shrink: 0;
+}
+
+/* 响应式 - 平板 */
+@media (max-width: 1024px) {
+  .section {
+    padding: 60px 80px;
+  }
+
+  .title {
+    font-size: 32px;
+  }
+
+  .stepCard {
+    padding: 24px 20px;
+  }
+
+  .stepNumber {
+    font-size: 28px;
+  }
+}
+
+/* 响应式 - 平板 (768px - 991px) */
+@media (max-width: 991px) {
+  .pathContainer {
+    gap: 12px !important;
+  }
+
+  .stepWrapper {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .stepCard {
+    flex-direction: row;
+    align-items: center;
+    gap: 16px;
+    padding: 20px 16px;
+  }
+
+  .stepNumber {
+    font-size: 24px;
+    flex-shrink: 0;
+  }
+
+  .stepTitle {
+    font-size: 14px;
+    flex: 1;
+  }
+
+  .videoHint {
+    font-size: 11px;
+    flex-shrink: 0;
+  }
+
+  .arrow {
+    display: none;
+  }
+}
+
+/* 响应式 - 移动端 (小于 768px) */
+@media (max-width: 768px) {
+  .section {
+    padding: 48px 24px;
+  }
+
+  .title {
+    font-size: 24px;
+    margin-bottom: 20px;
+  }
+}

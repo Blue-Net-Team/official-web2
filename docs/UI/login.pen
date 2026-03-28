@@ -1,0 +1,877 @@
+{
+  "version": "2.9",
+  "children": [
+    {
+      "type": "frame",
+      "id": "ey5WN",
+      "x": 0,
+      "y": 0,
+      "name": "Login - Desktop (1440px)",
+      "width": 1440,
+      "height": 900,
+      "layout": "none",
+      "children": [
+        {
+          "type": "rectangle",
+          "id": "k26bX",
+          "x": 0,
+          "y": 0,
+          "name": "Background Image",
+          "fill": {
+            "type": "image",
+            "enabled": true,
+            "url": "..\\..\\src\\assets\\Login\\bg.png",
+            "mode": "fill"
+          },
+          "width": 1440,
+          "height": 900
+        },
+        {
+          "type": "rectangle",
+          "id": "R40xK",
+          "x": 0,
+          "y": 0,
+          "name": "Form Overlay",
+          "fill": "#141419a6",
+          "width": 720,
+          "height": 900,
+          "effect": {
+            "type": "background_blur",
+            "radius": 20
+          }
+        },
+        {
+          "type": "rectangle",
+          "id": "WEiCZ",
+          "x": 720,
+          "y": 0,
+          "name": "Form Border Line",
+          "fill": "#ffffff14",
+          "width": 1,
+          "height": 900
+        },
+        {
+          "type": "frame",
+          "id": "CavTB",
+          "x": 0,
+          "y": 0,
+          "name": "Content",
+          "width": 720,
+          "height": 900,
+          "layout": "vertical",
+          "padding": 80,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "oRetn",
+              "name": "Form Card",
+              "width": 400,
+              "layout": "vertical",
+              "gap": 32,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "nSFdS",
+                  "name": "Logo Brand",
+                  "gap": 12,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "KjEAP",
+                      "name": "Logo",
+                      "width": 48,
+                      "height": 48,
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "..\\..\\src\\assets\\logo.png",
+                        "mode": "fill"
+                      },
+                      "cornerRadius": 12
+                    },
+                    {
+                      "type": "text",
+                      "id": "fEjAi",
+                      "name": "Logo Title",
+                      "fill": "$text-primary",
+                      "content": "蓝网",
+                      "fontFamily": "Inter",
+                      "fontSize": 32,
+                      "fontWeight": "700",
+                      "letterSpacing": 2
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "id": "8kndZ",
+                  "name": "Logo Subtitle",
+                  "fill": "#ffffff80",
+                  "content": "全校规模最大的科创团队",
+                  "textAlign": "center",
+                  "fontFamily": "Inter",
+                  "fontSize": 14,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "frame",
+                  "id": "v2ROO",
+                  "name": "Tabs",
+                  "width": "fill_container",
+                  "gap": 32,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "arsTB",
+                      "name": "Tab 1 - Student ID",
+                      "layout": "vertical",
+                      "gap": 8,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "i9YMV",
+                          "name": "tab1Text",
+                          "fill": "$text-primary",
+                          "content": "学号登录",
+                          "fontFamily": "Inter",
+                          "fontSize": 15,
+                          "fontWeight": "500"
+                        },
+                        {
+                          "type": "rectangle",
+                          "cornerRadius": 2,
+                          "id": "PGdM3",
+                          "name": "Ink Bar",
+                          "fill": "$primary-orange",
+                          "width": 60,
+                          "height": 3
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "iLC8t",
+                      "name": "Tab 2 - Email",
+                      "layout": "vertical",
+                      "gap": 8,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "zoO7B",
+                          "name": "tab2Text",
+                          "fill": "#ffffff80",
+                          "content": "邮箱登录",
+                          "fontFamily": "Inter",
+                          "fontSize": 15,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "rectangle",
+                          "cornerRadius": 2,
+                          "id": "UMwmJ",
+                          "name": "Ink Bar",
+                          "fill": "$primary-orange",
+                          "width": 0,
+                          "height": 3
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "Zxv8N",
+                  "name": "Form Fields",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 20,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "9Utiw",
+                      "name": "Input - Student ID",
+                      "width": "fill_container",
+                      "height": 52,
+                      "fill": "#ffffff14",
+                      "cornerRadius": 12,
+                      "stroke": {
+                        "thickness": 1,
+                        "fill": "#ffffff1f"
+                      },
+                      "layout": "vertical",
+                      "padding": [
+                        0,
+                        16
+                      ],
+                      "justifyContent": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "a7p5E",
+                          "name": "input1Text",
+                          "fill": "#ffffff59",
+                          "content": "请输入学号",
+                          "fontFamily": "Inter",
+                          "fontSize": 15,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "yDVoL",
+                      "name": "Input - Password",
+                      "width": "fill_container",
+                      "height": 52,
+                      "fill": "#ffffff14",
+                      "cornerRadius": 12,
+                      "stroke": {
+                        "thickness": 1,
+                        "fill": "#ffffff1f"
+                      },
+                      "layout": "vertical",
+                      "padding": [
+                        0,
+                        16
+                      ],
+                      "justifyContent": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "OR44p",
+                          "name": "input2Text",
+                          "fill": "#ffffff59",
+                          "content": "请输入密码",
+                          "fontFamily": "Inter",
+                          "fontSize": 15,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "n1JBx",
+                      "name": "Forgot Password",
+                      "width": "fill_container",
+                      "justifyContent": "end",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "F2y0z",
+                          "name": "forgotText",
+                          "fill": "$primary-orange",
+                          "content": "忘记密码？",
+                          "fontFamily": "Inter",
+                          "fontSize": 13,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "g0gxY",
+                  "name": "Login Button",
+                  "width": "fill_container",
+                  "height": 52,
+                  "fill": "$primary-orange",
+                  "cornerRadius": 12,
+                  "effect": {
+                    "type": "shadow",
+                    "shadowType": "outer",
+                    "color": "#fa8c1659",
+                    "offset": {
+                      "x": 0,
+                      "y": 4
+                    },
+                    "blur": 20
+                  },
+                  "layout": "vertical",
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "uV7Cj",
+                      "name": "loginBtnText",
+                      "fill": "$text-primary",
+                      "content": "登录",
+                      "fontFamily": "Inter",
+                      "fontSize": 16,
+                      "fontWeight": "600"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "p1lrO",
+                  "name": "Divider",
+                  "width": "fill_container",
+                  "gap": 16,
+                  "padding": [
+                    24,
+                    0
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "rectangle",
+                      "id": "miWAx",
+                      "name": "dividerLine1",
+                      "fill": "#ffffff26",
+                      "width": "fill_container",
+                      "height": 1
+                    },
+                    {
+                      "type": "text",
+                      "id": "MuauA",
+                      "name": "dividerText",
+                      "fill": "#ffffff66",
+                      "content": "其他登录方式",
+                      "fontFamily": "Inter",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "rectangle",
+                      "id": "f8x7o",
+                      "name": "dividerLine2",
+                      "fill": "#ffffff26",
+                      "width": "fill_container",
+                      "height": 1
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "d21Lu",
+                  "name": "GitHub Button",
+                  "width": "fill_container",
+                  "height": 52,
+                  "fill": "#ffffff14",
+                  "cornerRadius": 12,
+                  "stroke": {
+                    "thickness": 1,
+                    "fill": "#ffffff26"
+                  },
+                  "gap": 8,
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon_font",
+                      "id": "5sDEJ",
+                      "name": "githubIcon",
+                      "width": 20,
+                      "height": 20,
+                      "iconFontName": "github",
+                      "iconFontFamily": "lucide",
+                      "fill": "$text-primary"
+                    },
+                    {
+                      "type": "text",
+                      "id": "aXb6s",
+                      "name": "githubBtnText",
+                      "fill": "$text-primary",
+                      "content": "使用 GitHub 登录",
+                      "fontFamily": "Inter",
+                      "fontSize": 15,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "id": "mnkNG",
+                  "name": "Tip Text",
+                  "fill": "#ffffff59",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "提示：只有通过报名审核后，才能获得登录账号",
+                  "textAlign": "center",
+                  "fontFamily": "Inter",
+                  "fontSize": 12,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "2MziI",
+      "x": 1500,
+      "y": 0,
+      "name": "Login - Mobile (375px)",
+      "width": 375,
+      "height": 812,
+      "layout": "none",
+      "children": [
+        {
+          "type": "rectangle",
+          "id": "bMy7U",
+          "x": 0,
+          "y": 0,
+          "name": "Mobile Background",
+          "fill": {
+            "type": "image",
+            "enabled": true,
+            "url": "..\\..\\src\\assets\\Login\\bg.png",
+            "mode": "fill"
+          },
+          "width": 375,
+          "height": 812
+        },
+        {
+          "type": "rectangle",
+          "id": "K6tXC",
+          "x": 0,
+          "y": 0,
+          "name": "Blur Overlay",
+          "fill": "#141419a6",
+          "width": 375,
+          "height": 812,
+          "effect": {
+            "type": "background_blur",
+            "radius": 24
+          }
+        },
+        {
+          "type": "frame",
+          "id": "DXv5z",
+          "x": 0,
+          "y": 0,
+          "name": "Mobile Content",
+          "width": 375,
+          "height": 812,
+          "layout": "vertical",
+          "padding": 24,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "XLRlV",
+              "name": "Mobile Form Card",
+              "width": "fill_container",
+              "fill": "#00000000",
+              "stroke": {
+                "thickness": 0,
+                "fill": "#00000000"
+              },
+              "effect": {
+                "type": "background_blur",
+                "radius": 0
+              },
+              "layout": "vertical",
+              "gap": 24,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "VFnSe",
+                  "name": "Logo Brand",
+                  "gap": 10,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "jsE8Q",
+                      "name": "Logo",
+                      "width": 40,
+                      "height": 40,
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "..\\..\\src\\assets\\logo.png",
+                        "mode": "fill"
+                      },
+                      "cornerRadius": 10
+                    },
+                    {
+                      "type": "text",
+                      "id": "6KfP5",
+                      "name": "mobileLogoTitle",
+                      "fill": "$text-primary",
+                      "content": "蓝网",
+                      "fontFamily": "Inter",
+                      "fontSize": 26,
+                      "fontWeight": "700",
+                      "letterSpacing": 2
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "id": "WL1lr",
+                  "name": "mobileLogoSubtitle",
+                  "fill": "#ffffff80",
+                  "content": "全校规模最大的科创团队",
+                  "textAlign": "center",
+                  "fontFamily": "Inter",
+                  "fontSize": 13,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "frame",
+                  "id": "89Cde",
+                  "name": "Tabs",
+                  "width": "fill_container",
+                  "gap": 24,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "4xXU4",
+                      "name": "Tab 1",
+                      "layout": "vertical",
+                      "gap": 6,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "b91lZ",
+                          "name": "mobileTab1Text",
+                          "fill": "$text-primary",
+                          "content": "学号登录",
+                          "fontFamily": "Inter",
+                          "fontSize": 14,
+                          "fontWeight": "500"
+                        },
+                        {
+                          "type": "rectangle",
+                          "cornerRadius": 1,
+                          "id": "S9maT",
+                          "name": "mobileTab1InkBar",
+                          "fill": "$primary-orange",
+                          "width": 50,
+                          "height": 2
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "JtGhp",
+                      "name": "Tab 2",
+                      "layout": "vertical",
+                      "gap": 6,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "Ti42o",
+                          "name": "mobileTab2Text",
+                          "fill": "#ffffff80",
+                          "content": "邮箱登录",
+                          "fontFamily": "Inter",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "FR0kT",
+                  "name": "Form Fields",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 16,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "Ocjwz",
+                      "name": "Input - Student ID",
+                      "width": "fill_container",
+                      "height": 48,
+                      "fill": "#ffffff14",
+                      "cornerRadius": 10,
+                      "stroke": {
+                        "thickness": 1,
+                        "fill": "#ffffff1a"
+                      },
+                      "layout": "vertical",
+                      "padding": [
+                        0,
+                        14
+                      ],
+                      "justifyContent": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "gRu4y",
+                          "name": "mobileInput1Text",
+                          "fill": "#ffffff59",
+                          "content": "请输入学号",
+                          "fontFamily": "Inter",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "kwRbF",
+                      "name": "Input - Password",
+                      "width": "fill_container",
+                      "height": 48,
+                      "fill": "#ffffff14",
+                      "cornerRadius": 10,
+                      "stroke": {
+                        "thickness": 1,
+                        "fill": "#ffffff1a"
+                      },
+                      "layout": "vertical",
+                      "padding": [
+                        0,
+                        14
+                      ],
+                      "justifyContent": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "nnmHO",
+                          "name": "mobileInput2Text",
+                          "fill": "#ffffff59",
+                          "content": "请输入密码",
+                          "fontFamily": "Inter",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "v54tk",
+                  "name": "Forgot Password",
+                  "width": "fill_container",
+                  "justifyContent": "end",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "eR06L",
+                      "name": "mobileForgotText",
+                      "fill": "$primary-orange",
+                      "content": "忘记密码？",
+                      "fontFamily": "Inter",
+                      "fontSize": 12,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "yGOrf",
+                  "name": "Login Button",
+                  "width": "fill_container",
+                  "height": 48,
+                  "fill": "$primary-orange",
+                  "cornerRadius": 10,
+                  "effect": {
+                    "type": "shadow",
+                    "shadowType": "outer",
+                    "color": "#fa8c1659",
+                    "offset": {
+                      "x": 0,
+                      "y": 4
+                    },
+                    "blur": 16
+                  },
+                  "layout": "vertical",
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "rje1Y",
+                      "name": "mobileLoginBtnText",
+                      "fill": "$text-primary",
+                      "content": "登录",
+                      "fontFamily": "Inter",
+                      "fontSize": 15,
+                      "fontWeight": "600"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "CwERO",
+                  "name": "Divider",
+                  "width": "fill_container",
+                  "gap": 12,
+                  "padding": [
+                    20,
+                    0
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "rectangle",
+                      "id": "UGNGz",
+                      "name": "mobileDividerLine1",
+                      "fill": "#ffffff26",
+                      "width": "fill_container",
+                      "height": 1
+                    },
+                    {
+                      "type": "text",
+                      "id": "PJeyn",
+                      "name": "mobileDividerText",
+                      "fill": "#ffffff66",
+                      "content": "其他",
+                      "fontFamily": "Inter",
+                      "fontSize": 12,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "rectangle",
+                      "id": "eu80T",
+                      "name": "mobileDividerLine2",
+                      "fill": "#ffffff26",
+                      "width": "fill_container",
+                      "height": 1
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "UlV9p",
+                  "name": "GitHub Button",
+                  "width": "fill_container",
+                  "height": 48,
+                  "fill": "#ffffff14",
+                  "cornerRadius": 10,
+                  "stroke": {
+                    "thickness": 1,
+                    "fill": "#ffffff26"
+                  },
+                  "gap": 8,
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon_font",
+                      "id": "o07n7",
+                      "name": "mobileGithubIcon",
+                      "width": 18,
+                      "height": 18,
+                      "iconFontName": "github",
+                      "iconFontFamily": "lucide",
+                      "fill": "$text-primary"
+                    },
+                    {
+                      "type": "text",
+                      "id": "7ORxm",
+                      "name": "mobileGithubBtnText",
+                      "fill": "$text-primary",
+                      "content": "GitHub 登录",
+                      "fontFamily": "Inter",
+                      "fontSize": 14,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "id": "RyjnG",
+                  "name": "mobileTipText",
+                  "fill": "#ffffff59",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "提示：只有通过报名审核后，才能获得登录账号",
+                  "textAlign": "center",
+                  "fontFamily": "Inter",
+                  "fontSize": 11,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "variables": {
+    "background": {
+      "type": "color",
+      "value": "#000000"
+    },
+    "border-radius": {
+      "type": "number",
+      "value": 12
+    },
+    "card-background": {
+      "type": "color",
+      "value": "#19191c"
+    },
+    "glass-background": {
+      "type": "color",
+      "value": "rgba(255,255,255,0.08)"
+    },
+    "primary-blue": {
+      "type": "color",
+      "value": "#6677ff"
+    },
+    "primary-blue-hover": {
+      "type": "color",
+      "value": "#7a89ff"
+    },
+    "primary-orange": {
+      "type": "color",
+      "value": "#fa8c16"
+    },
+    "primary-orange-hover": {
+      "type": "color",
+      "value": "#ffa940"
+    },
+    "spacing-lg": {
+      "type": "number",
+      "value": 24
+    },
+    "spacing-md": {
+      "type": "number",
+      "value": 16
+    },
+    "spacing-sm": {
+      "type": "number",
+      "value": 8
+    },
+    "spacing-xl": {
+      "type": "number",
+      "value": 32
+    },
+    "spacing-xs": {
+      "type": "number",
+      "value": 4
+    },
+    "success": {
+      "type": "color",
+      "value": "#10b981"
+    },
+    "text-placeholder": {
+      "type": "color",
+      "value": "rgba(255,255,255,0.35)"
+    },
+    "text-primary": {
+      "type": "color",
+      "value": "#ffffff"
+    },
+    "text-secondary": {
+      "type": "color",
+      "value": "rgba(255,255,255,0.6)"
+    },
+    "warning": {
+      "type": "color",
+      "value": "#ff6b35"
+    }
+  }
+}

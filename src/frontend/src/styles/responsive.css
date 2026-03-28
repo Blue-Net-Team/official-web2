@@ -1,0 +1,205 @@
+/**
+ * 全局响应式CSS变量和工具类
+ * 断点定义：
+ * - 移动端：< 768px
+ * - 平板：768px - 1024px
+ * - 桌面：> 1024px
+ */
+
+/* CSS变量定义 */
+:root {
+  /* 间距变量 - 桌面默认值 */
+  --section-padding-x: 93px;
+  --section-padding-y: 84px;
+  --container-padding: 147px;
+  --card-gap: 20px;
+  --content-gap: 36px;
+
+  /* 字体大小变量 - 桌面默认值 */
+  --font-size-hero-title: 48px;
+  --font-size-hero-subtitle: 32px;
+  --font-size-section-title: 43px;
+  --font-size-section-title-large: 79px;
+  --font-size-card-title: 35px;
+  --font-size-body: 20px;
+  --font-size-small: 16px;
+  --font-size-caption: 14px;
+
+  /* 行高变量 */
+  --line-height-title: 1.32;
+  --line-height-body: 1.5;
+
+  /* 组件尺寸变量 */
+  --button-height: 50px;
+  --button-padding-x: 26px;
+  --card-border-radius: 36px;
+  --container-max-width: 100%;
+}
+
+/* 平板断点 */
+@media (max-width: 1024px) {
+  :root {
+    --section-padding-x: 40px;
+    --section-padding-y: 60px;
+    --container-padding: 40px;
+    --card-gap: 15px;
+    --content-gap: 24px;
+
+    --font-size-hero-title: 40px;
+    --font-size-hero-subtitle: 24px;
+    --font-size-section-title: 36px;
+    --font-size-section-title-large: 60px;
+    --font-size-card-title: 28px;
+    --font-size-body: 18px;
+    --font-size-small: 14px;
+    --font-size-caption: 12px;
+  }
+}
+
+/* 移动端断点 */
+@media (max-width: 767px) {
+  :root {
+    --section-padding-x: 20px;
+    --section-padding-y: 40px;
+    --container-padding: 20px;
+    --card-gap: 16px;
+    --content-gap: 20px;
+
+    --font-size-hero-title: 32px;
+    --font-size-hero-subtitle: 20px;
+    --font-size-section-title: 28px;
+    --font-size-section-title-large: 48px;
+    --font-size-card-title: 24px;
+    --font-size-body: 16px;
+    --font-size-small: 14px;
+    --font-size-caption: 12px;
+
+    --button-height: 44px;
+    --button-padding-x: 20px;
+    --card-border-radius: 24px;
+  }
+}
+
+/* 响应式工具类 */
+
+/* 隐藏/显示工具类 */
+.hide-mobile {
+  display: inherit;
+}
+
+.hide-tablet {
+  display: inherit;
+}
+
+.hide-desktop {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  .hide-mobile {
+    display: none !important;
+  }
+  .show-mobile {
+    display: inherit !important;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1024px) {
+  .hide-tablet {
+    display: none !important;
+  }
+  .show-tablet {
+    display: inherit !important;
+  }
+}
+
+@media (min-width: 1025px) {
+  .hide-desktop {
+    display: none !important;
+  }
+  .show-desktop {
+    display: inherit !important;
+  }
+}
+
+/* 响应式字体工具类 */
+.text-responsive-hero {
+  font-size: var(--font-size-hero-title);
+  line-height: var(--line-height-title);
+}
+
+.text-responsive-subtitle {
+  font-size: var(--font-size-hero-subtitle);
+  line-height: var(--line-height-body);
+}
+
+.text-responsive-section-title {
+  font-size: var(--font-size-section-title);
+}
+
+.text-responsive-body {
+  font-size: var(--font-size-body);
+  line-height: var(--line-height-body);
+}
+
+/* 响应式间距工具类 */
+.section-padding {
+  padding: var(--section-padding-y) var(--section-padding-x);
+}
+
+.container-padding {
+  padding-left: var(--container-padding);
+  padding-right: var(--container-padding);
+}
+
+/* 触摸目标最小尺寸 */
+.touch-target {
+  min-width: 44px;
+  min-height: 44px;
+}
+
+/* 防止横向滚动 */
+.prevent-overflow {
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+/* 响应式网格 */
+.responsive-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--card-gap);
+}
+
+@media (max-width: 1024px) {
+  .responsive-grid-3 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 767px) {
+  .responsive-grid-3 {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* 响应式flex布局 */
+.responsive-flex-row {
+  display: flex;
+  flex-direction: row;
+}
+
+@media (max-width: 767px) {
+  .responsive-flex-row {
+    flex-direction: column;
+  }
+}
+
+/* 流体字体 - 在最小值和最大值之间平滑过渡 */
+.fluid-font {
+  font-size: clamp(
+    var(--font-size-min, 14px),
+    var(--font-size-preferred, 4vw),
+    var(--font-size-max, 48px)
+  );
+}

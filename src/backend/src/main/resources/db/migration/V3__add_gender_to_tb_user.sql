@@ -1,0 +1,2 @@
+ALTER TABLE tb_user
+ADD COLUMN gender VARCHAR(20) NOT NULL DEFAULT 'unknown';

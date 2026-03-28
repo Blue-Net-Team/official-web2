@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bluenet.web.infrastructure.repository.mapper.EnrollMapper">
+    <resultMap id="BaseResultMap" type="com.bluenet.web.domain.model.entity.Enroll">
+        <id column="id" property="id"/>
+        <result column="username" property="username"/>
+        <result column="student_id" property="studentId"/>
+        <result column="password" property="password"/>
+        <result column="internal_referral_code" property="internalReferralCode"/>
+        <result column="college_id" property="collegeId"/>
+        <result column="major" property="major"/>
+        <result column="grade" property="grade"/>
+        <result column="direction" property="direction"/>
+        <result column="avatar_id" property="avatarId"/>
+        <result column="status" property="status"/>
+        <result column="email" property="email"/>
+        <result column="introduction" property="introduction"/>
+    </resultMap>
+
+    <select id="selectByStudentId" resultMap="BaseResultMap">
+        SELECT * FROM tb_enroll WHERE student_id = #{studentId}
+    </select>
+</mapper>

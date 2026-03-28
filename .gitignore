@@ -1,0 +1,120 @@
+# ==================== 后端 (Java/Spring Boot) ====================
+
+# Maven
+target/
+.mvn/wrapper/maven-wrapper.jar
+
+# Spring Boot
+HELP.md
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+# ==================== 前端 (Node.js/Next.js) ====================
+
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Next.js
+.next/
+out/
+
+# Build outputs
+*.tsbuildinfo
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Local env files
+*.local
+
+# ==================== IDE & Editor ====================
+
+### VS Code ###
+.vscode/*
+!.vscode/launch.json
+
+### Others ###
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# ==================== 系统文件 ====================
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Linux
+*~
+
+# ==================== Docker ====================
+
+# Docker volumes (local)
+docker/volumes/
+
+# ==================== 敏感配置 ====================
+
+# Environment files (keep templates)
+.env
+.env.local
+.env.*.local
+!.env.example
+!.env.template
+
+# MCP config (AI tools)
+**/mcp.json
+!.mcp.json.example
+
+# ==================== 其他 ====================
+
+**.local.json
+
+# null 文件（AI 工具生成）
+**/null
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.swp
+*~
+
+# Test coverage
+coverage/
+.nyc_output/
+
+# Cache
+.cache/
+.parcel-cache/

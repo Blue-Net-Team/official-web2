@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bluenet.web.infrastructure.repository.mapper.UserMapper">
+    <resultMap id="BaseResultMap" type="com.bluenet.web.domain.model.entity.User">
+        <id column="id" property="id"/>
+        <result column="student_id" property="studentId"/>
+        <result column="email" property="email"/>
+        <result column="role_id" property="roleId"/>
+        <result column="password" property="password"/>
+        <result column="username" property="username"/>
+        <result column="nickname" property="nickname"/>
+        <result column="college_id" property="collegeId"/>
+        <result column="major" property="major"/>
+        <result column="direction" property="direction"/>
+        <result column="gender" property="gender"/>
+        <result column="job" property="job"/>
+        <result column="avatar_id" property="avatarId"/>
+        <result column="disable" property="disable"/>
+        <result column="qrcode_id" property="qrcodeId"/>
+        <result column="github_id" property="githubId"/>
+        <result column="github_username" property="githubUsername"/>
+        <result column="internal_referral_code" property="internalReferralCode"/>
+    </resultMap>
+
+    <select id="selectByEmail" resultMap="BaseResultMap">
+        SELECT *
+        FROM tb_user
+        WHERE email = #{email}
+    </select>
+
+    <select id="selectByStudentId" resultMap="BaseResultMap">
+        SELECT *
+        FROM tb_user
+        WHERE student_id = #{studentId}
+    </select>
+
+    <select id="selectByInternalReferralCode" resultMap="BaseResultMap">
+        SELECT *
+        FROM tb_user
+        WHERE internal_referral_code = #{code}
+    </select>
+
+    <update id="updateAvatarId">
+        UPDATE tb_user
+        SET avatar_id = #{avatarId}
+        WHERE id = #{id}
+    </update>
+
+    <update id="updateQrcodeId">
+        UPDATE tb_user
+        SET qrcode_id = #{qrcodeId}
+        WHERE id = #{id}
+    </update>
+
+    <select id="selectByRoleNamesAndDirection" resultMap="BaseResultMap">
+        SELECT u.*
+        FROM tb_user u
+        INNER JOIN tb_role r ON u.role_id = r.id
+        WHERE u.disable = false
+        AND u.role_id IS NOT NULL
+        <if test="roleNames != null and !roleNames.isEmpty()">
+            AND r.name IN
+            <foreach collection="roleNames" item="roleName" open="(" separator="," close=")">
+                #{roleName}
+            </foreach>
+        </if>
+        <if test="direction != null">
+            AND u.direction = #{direction}
+        </if>
+        <if test="requireDirectionNotNull != null and requireDirectionNotNull">
+            AND u.direction IS NOT NULL
+        </if>
+        <if test="excludeUsername != null and excludeUsername != ''">
+            AND u.username != #{excludeUsername}
+        </if>
+        ORDER BY u.student_id DESC, u.id ASC
+    </select>
+
+    <update id="updateProfile">
+        UPDATE tb_user
+        <set>
+            <if test="username != null">
+                username = #{username},
+            </if>
+            <if test="nickname != null">
+                nickname = #{nickname},
+            </if>
+            <if test="college != null">
+                college_id = (SELECT id FROM tb_college WHERE name = #{college} LIMIT 1),
+            </if>
+            <if test="major != null">
+                major = #{major},
+            </if>
+            <if test="direction != null">
+                direction = #{direction},
+            </if>
+            <if test="gender != null">
+                gender = #{gender},
+            </if>
+            <if test="bio != null">
+                bio = #{bio},
+            </if>
+        </set>
+        WHERE id = #{userId}
+    </update>
+</mapper>

@@ -1,0 +1,246 @@
+# CI/CD Pipeline 工作流
+# 支持多分支部署：master -> 生产环境，develop -> 开发环境
+
+name: CI/CD Pipeline
+
+# 触发条件配置
+on:
+  # 推送到 master 或 develop 分支时触发
+  push:
+    branches: [ master, develop ]
+  # PR 到 master 或 develop 分支时触发（仅运行测试）
+  pull_request:
+    branches: [ master, develop ]
+  # 支持手动触发
+  workflow_dispatch:
+
+# 全局环境变量
+env:
+  REGISTRY: ghcr.io
+  BACKEND_IMAGE: ghcr.io/${{ github.repository_owner }}/bluenet-backend
+  FRONTEND_IMAGE: ghcr.io/${{ github.repository_owner }}/bluenet-frontend
+
+jobs:
+  # ==================== 测试阶段 ====================
+  
+  # 后端测试 Job
+  backend-test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src/backend
+
+    steps:
+    - uses: actions/checkout@v4
+
+    # 配置 JDK 21 环境
+    - name: Set up JDK 21
+      uses: actions/setup-java@v4
+      with:
+        java-version: '21'
+        distribution: 'temurin'
+        cache: maven
+
+    # 缓存 Maven 依赖，加速后续构建
+    - name: Cache Maven dependencies
+      uses: actions/cache@v4
+      with:
+        path: ~/.m2/repository
+        key: ${{ runner.os }}-maven-${{ hashFiles('src/backend/**/pom.xml') }}
+        restore-keys: |
+          ${{ runner.os }}-maven-
+
+    # 编译后端代码
+    - name: Compile backend
+      run: ./mvnw -B clean compile
+
+    # 运行后端测试（包含 Testcontainers 集成测试）
+    - name: Run backend tests
+      run: ./mvnw -B test
+
+  # 前端测试 Job
+  frontend-test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src/frontend
+
+    steps:
+    - uses: actions/checkout@v4
+
+    # 配置 Node.js 20 环境
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'pnpm'
+        cache-dependency-path: src/frontend/pnpm-lock.yaml
+
+    # 安装 pnpm 包管理器
+    - name: Install pnpm
+      uses: pnpm/action-setup@v3
+      with:
+        version: 9
+
+    # 安装前端依赖
+    - name: Install dependencies
+      run: pnpm install --frozen-lockfile
+
+    # TypeScript 类型检查
+    - name: TypeScript check
+      run: npx tsc --noEmit
+
+    # ESLint 代码检查
+    - name: Lint check
+      run: pnpm lint
+
+  # ==================== 构建阶段 ====================
+  
+  # 构建并推送 Docker 镜像
+  build-and-push:
+    runs-on: ubuntu-latest
+    needs: [backend-test, frontend-test]  # 依赖测试通过
+    if: github.event_name == 'push'  # 仅 push 事件触发，PR 不触发构建
+    permissions:
+      contents: read
+      packages: write  # 需要写入权限以推送镜像到 GHCR
+    outputs:
+      image_tag: ${{ steps.meta-backend.outputs.version }}
+
+    steps:
+    - uses: actions/checkout@v4
+
+    # 配置 Docker Buildx（支持多平台构建和缓存）
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    # 登录 GitHub Container Registry
+    - name: Login to GitHub Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    # 提取后端镜像元数据（标签和标签）
+    # master 分支：latest + sha
+    # develop 分支：develop + sha
+    - name: Extract metadata for backend
+      id: meta-backend
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.BACKEND_IMAGE }}
+        tags: |
+          type=ref,event=branch
+          type=sha,prefix=
+          type=raw,value=latest,enable=${{ github.ref == 'refs/heads/master' }}
+
+    # 构建并推送后端镜像
+    - name: Build and push backend image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: docker/Dockerfile.backend
+        push: true
+        tags: ${{ steps.meta-backend.outputs.tags }}
+        labels: ${{ steps.meta-backend.outputs.labels }}
+        cache-from: type=gha  # 使用 GitHub Actions 缓存
+        cache-to: type=gha,mode=max
+
+    # 提取前端镜像元数据
+    - name: Extract metadata for frontend
+      id: meta-frontend
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.FRONTEND_IMAGE }}
+        tags: |
+          type=ref,event=branch
+          type=sha,prefix=
+          type=raw,value=latest,enable=${{ github.ref == 'refs/heads/master' }}
+
+    # 构建并推送前端镜像
+    - name: Build and push frontend image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: docker/Dockerfile.frontend
+        push: true
+        tags: ${{ steps.meta-frontend.outputs.tags }}
+        labels: ${{ steps.meta-frontend.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+  # ==================== 部署阶段 ====================
+  
+  # 部署到服务器
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build-and-push  # 依赖构建完成
+    if: github.event_name == 'push'
+    
+    steps:
+    - uses: actions/checkout@v4
+
+    # 根据分支设置部署变量
+    # master -> 生产环境 (DEPLOY_HOST_PROD, DEPLOY_PATH_PROD)
+    # develop -> 开发环境 (DEPLOY_HOST_DEV, DEPLOY_PATH_DEV)
+    - name: Set deployment variables
+      id: vars
+      run: |
+        if [ "${{ github.ref }}" = "refs/heads/master" ]; then
+          echo "deploy_path=${{ secrets.DEPLOY_PATH_PROD }}" >> $GITHUB_OUTPUT
+          echo "deploy_host=${{ secrets.DEPLOY_HOST_PROD }}" >> $GITHUB_OUTPUT
+          echo "image_tag=latest" >> $GITHUB_OUTPUT
+          echo "env_name=production" >> $GITHUB_OUTPUT
+        else
+          echo "deploy_path=${{ secrets.DEPLOY_PATH_DEV }}" >> $GITHUB_OUTPUT
+          echo "deploy_host=${{ secrets.DEPLOY_HOST_DEV }}" >> $GITHUB_OUTPUT
+          echo "image_tag=develop" >> $GITHUB_OUTPUT
+          echo "env_name=development" >> $GITHUB_OUTPUT
+        fi
+
+    # 通过 SCP 同步 docker-compose.yml 到服务器
+    - name: Sync compose file to server
+      uses: appleboy/scp-action@v0.1.7
+      with:
+        host: ${{ steps.vars.outputs.deploy_host }}
+        username: ${{ secrets.DEPLOY_USER }}
+        key: ${{ secrets.DEPLOY_KEY }}
+        port: ${{ secrets.DEPLOY_PORT || 22 }}
+        source: "docker/docker-compose.yml"
+        target: ${{ steps.vars.outputs.deploy_path }}
+        strip_components: 1  # 去掉路径前缀 docker/
+
+    # 通过 SSH 执行部署命令
+    - name: Deploy to server via SSH
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ steps.vars.outputs.deploy_host }}
+        username: ${{ secrets.DEPLOY_USER }}
+        key: ${{ secrets.DEPLOY_KEY }}
+        port: ${{ secrets.DEPLOY_PORT || 22 }}
+        envs: GITHUB_TOKEN, GITHUB_ACTOR, BACKEND_IMAGE, FRONTEND_IMAGE, RESTART_POLICY, DEPLOY_PATH
+        script: |
+          cd $DEPLOY_PATH
+          
+          echo "=== Deploying ${{ steps.vars.outputs.env_name }} environment ==="
+          
+          echo "Logging in to GitHub Container Registry..."
+          echo $GITHUB_TOKEN | docker login ghcr.io -u $GITHUB_ACTOR --password-stdin
+          
+          echo "Pulling latest images..."
+          docker compose --profile full pull
+          
+          echo "Restarting services..."
+          docker compose --profile full up -d --remove-orphans
+          
+          echo "Cleaning up old images..."
+          docker image prune -f
+          
+          echo "Deployment to ${{ steps.vars.outputs.env_name }} completed successfully!"
+      env:
+        # 注入镜像标签，根据分支使用不同的标签
+        BACKEND_IMAGE: ghcr.io/${{ github.repository_owner }}/bluenet-backend:${{ steps.vars.outputs.image_tag }}
+        FRONTEND_IMAGE: ghcr.io/${{ github.repository_owner }}/bluenet-frontend:${{ steps.vars.outputs.image_tag }}
+        RESTART_POLICY: unless-stopped
+        DEPLOY_PATH: ${{ steps.vars.outputs.deploy_path }}

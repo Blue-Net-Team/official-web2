@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bluenet.web.infrastructure.repository.mapper.LearningPathMapper">
+
+    <!-- 根据方向查询学习步骤列表 -->
+    <select id="selectByDirection" resultType="com.bluenet.web.domain.model.vo.LearningStepVO">
+        SELECT
+            id,
+            direction,
+            step_number AS stepNumber,
+            title,
+            video_url AS videoUrl
+        FROM tb_direction_learning_step
+        WHERE direction = #{direction}
+        ORDER BY step_number ASC
+    </select>
+
+    <!-- 根据ID查询学习步骤 -->
+    <select id="selectById" resultType="com.bluenet.web.domain.model.vo.LearningStepVO">
+        SELECT
+            id,
+            direction,
+            step_number AS stepNumber,
+            title,
+            video_url AS videoUrl
+        FROM tb_direction_learning_step
+        WHERE id = #{id}
+    </select>
+
+    <!-- 检查同一方向内步骤序号是否已存在 -->
+    <select id="existsByDirectionAndStepNumber" resultType="boolean">
+        SELECT COUNT(*) > 0
+        FROM tb_direction_learning_step
+        WHERE direction = #{direction}
+          AND step_number = #{stepNumber}
+          AND (#{excludeId} IS NULL OR id != #{excludeId})
+    </select>
+
+</mapper>

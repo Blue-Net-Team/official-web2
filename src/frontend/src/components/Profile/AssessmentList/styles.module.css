@@ -1,0 +1,247 @@
+.assessmentList {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.assessmentCard {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 16px;
+  padding: 24px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.assessmentCard:hover {
+  transform: translateY(-4px);
+  border-color: rgba(102, 119, 255, 0.2);
+  box-shadow: 0 8px 32px rgba(102, 119, 255, 0.1);
+}
+
+.assessmentHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.assessmentTitleSection {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.assessmentIcon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #6677ff 0%, #2f27b0 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.assessmentIcon svg {
+  width: 24px;
+  height: 24px;
+  color: white;
+}
+
+.assessmentTitleInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.assessmentTitle {
+  font-size: 18px;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.assessmentRound {
+  font-size: 14px;
+  color: #6677ff;
+}
+
+.assessmentStatus {
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.statusNotStarted {
+  background: rgba(140, 140, 141, 0.15);
+  color: rgba(140, 140, 141, 1);
+}
+
+.statusInProgress {
+  background: linear-gradient(135deg, #6677ff 0%, #2f27b0 100%);
+  color: white;
+}
+
+.statusEnded {
+  background: rgba(7, 193, 96, 0.15);
+  color: #07c160;
+}
+
+.assessmentMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  margin-bottom: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.assessmentMetaItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: rgba(140, 140, 141, 1);
+}
+
+.assessmentMetaItem svg {
+  width: 16px;
+  height: 16px;
+}
+
+.assessmentProgress {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.progressBar {
+  flex: 1;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.progressFillNotStarted {
+  width: 0%;
+  background: rgba(140, 140, 141, 0.5);
+}
+
+.progressFillInProgress {
+  width: 60%;
+  background: linear-gradient(90deg, #6677ff 0%, #2f27b0 100%);
+}
+
+.progressFillEnded {
+  width: 100%;
+  background: #07c160;
+}
+
+.progressText {
+  font-size: 13px;
+  color: rgba(140, 140, 141, 1);
+  min-width: 60px;
+  text-align: right;
+}
+
+.assessmentFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.assessmentScore {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.scoreValue {
+  font-size: 20px;
+  font-weight: 700;
+  color: #ff6b35;
+}
+
+.assessmentAction {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: #6677ff;
+  transition: all 0.3s ease;
+}
+
+.assessmentCard:hover .assessmentAction {
+  gap: 10px;
+}
+
+.assessmentActionDisabled {
+  color: rgba(140, 140, 141, 0.6);
+}
+
+.emptyState {
+  text-align: center;
+  padding: 60px 20px;
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 16px;
+}
+
+.emptyIcon {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 20px;
+  border-radius: 50%;
+  background: rgba(102, 119, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.emptyIcon svg {
+  width: 40px;
+  height: 40px;
+  color: #6677ff;
+}
+
+.emptyTitle {
+  font-size: 18px;
+  font-weight: 600;
+  color: #ffffff;
+  margin-bottom: 8px;
+}
+
+.emptyDesc {
+  font-size: 14px;
+  color: rgba(140, 140, 141, 1);
+}
+
+@media (max-width: 640px) {
+  .assessmentCard {
+    padding: 16px;
+  }
+
+  .assessmentHeader {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .assessmentMeta {
+    flex-direction: column;
+    gap: 8px;
+  }
+}

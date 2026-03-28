@@ -1,0 +1,752 @@
+/* ========================================
+   成员详情页面组件样式
+   BlueNet Member Profile Styles
+   ======================================== */
+
+/* ========================================
+   页面容器
+   ======================================== */
+.pageContainer {
+  width: 100%;
+  min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+}
+
+.pageBg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background:
+    radial-gradient(ellipse 80% 50% at 20% 40%, rgba(102, 119, 255, 0.15) 0%, transparent 50%),
+    radial-gradient(ellipse 60% 40% at 80% 60%, rgba(255, 107, 53, 0.1) 0%, transparent 50%);
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* ========================================
+   主内容区域
+   ======================================== */
+.mainContent {
+  display: flex;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 40px 64px;
+  gap: 32px;
+  position: relative;
+  z-index: 1;
+}
+
+.contentArea {
+  flex: 1;
+  min-width: 0;
+}
+
+/* ========================================
+   侧边栏
+   ======================================== */
+.sidebar {
+  width: 340px;
+  flex-shrink: 0;
+}
+
+.sidebarContent {
+  position: sticky;
+  top: 104px;
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 16px;
+  padding: 32px;
+  transition: all 0.3s ease;
+}
+
+/* 头像区域 */
+.avatarSection {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.avatarContainer {
+  position: relative;
+  display: inline-block;
+  margin-bottom: 20px;
+}
+
+.avatarRing {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #6677ff 0%, #ff6b35 100%);
+  padding: 4px;
+}
+
+.avatarImg {
+  width: 112px;
+  height: 112px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 48px;
+  font-weight: 700;
+  color: #ffffff;
+  overflow: hidden;
+  position: relative;
+}
+
+.avatarImg img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.memberName {
+  font-size: 24px;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 6px;
+}
+
+.memberNickname {
+  font-size: 14px;
+  color: rgba(140, 140, 141, 1);
+}
+
+.roleBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  margin-top: 12px;
+}
+
+.roleBadgeCandidate {
+  background: linear-gradient(135deg, #ff6b35 0%, #ff8c42 100%);
+  color: white;
+}
+
+.roleBadgeMember {
+  background: linear-gradient(135deg, #6677ff 0%, #2f27b0 100%);
+  color: white;
+}
+
+.roleBadgeAdmin {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+}
+
+/* 个人简介 */
+.bioSection {
+  margin-bottom: 24px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.bioText {
+  font-size: 14px;
+  line-height: 1.7;
+  color: rgba(255, 255, 255, 0.7);
+  text-align: center;
+}
+
+/* 信息列表 */
+.infoList {
+  margin-bottom: 24px;
+}
+
+.infoItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.7);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.infoItem:last-child {
+  border-bottom: none;
+}
+
+.infoItem svg {
+  width: 18px;
+  height: 18px;
+  color: #6677ff;
+  flex-shrink: 0;
+}
+
+/* 报名方向 */
+.directionSection {
+  margin-bottom: 24px;
+  padding: 24px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.sectionLabel {
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(140, 140, 141, 1);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 16px;
+}
+
+.directionItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.02);
+  margin-bottom: 10px;
+  transition: all 0.3s ease;
+}
+
+.directionItem:hover {
+  background: rgba(102, 119, 255, 0.08);
+}
+
+.directionIcon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #6677ff 0%, #2f27b0 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: white;
+}
+
+.directionInfo {
+  flex: 1;
+}
+
+.directionName {
+  font-size: 14px;
+  font-weight: 500;
+  color: #ffffff;
+}
+
+/* 统计数据 */
+.statsSection {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  padding-top: 24px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.statBox {
+  text-align: center;
+  padding: 12px 8px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.02);
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.statBox:hover {
+  background: rgba(102, 119, 255, 0.08);
+}
+
+.statBoxActive {
+  background: rgba(102, 119, 255, 0.1);
+}
+
+.statNumber {
+  font-size: 20px;
+  font-weight: 700;
+  color: #6677ff;
+  margin-bottom: 4px;
+}
+
+.statLabel {
+  font-size: 12px;
+  color: rgba(140, 140, 141, 1);
+}
+
+/* ========================================
+   Tab导航
+   ======================================== */
+.sectionTabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 24px;
+  padding: 4px;
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+}
+
+.tabBtn {
+  flex: 1;
+  padding: 12px 16px;
+  border: none;
+  background: transparent;
+  color: rgba(140, 140, 141, 1);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  text-decoration: none;
+}
+
+.tabBtn:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.tabBtnActive {
+  background: linear-gradient(135deg, #6677ff 0%, #2f27b0 100%);
+  color: white;
+  box-shadow: 0 4px 16px rgba(102, 119, 255, 0.3);
+}
+
+.tabBtn svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.tabLabel {
+  display: inline;
+}
+
+.tabCount {
+  font-size: 12px;
+  opacity: 0.8;
+  background: rgba(255, 255, 255, 0.2);
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+/* ========================================
+   面板样式
+   ======================================== */
+.profilePanel,
+.experiencePanel {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 16px;
+  padding: 32px;
+  animation: fadeIn 0.3s ease;
+}
+
+.panelHeader {
+  font-size: 18px;
+  font-weight: 600;
+  color: #ffffff;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.panelHeader svg {
+  width: 20px;
+  height: 20px;
+  color: #6677ff;
+}
+
+/* ========================================
+   信息网格
+   ======================================== */
+.infoGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+.infoGridItem {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.infoGridFullwidth {
+  grid-column: 1 / -1;
+}
+
+.infoGridLabel {
+  font-size: 12px;
+  font-weight: 500;
+  color: rgba(140, 140, 141, 1);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.infoGridValue {
+  font-size: 14px;
+  color: #ffffff;
+}
+
+/* ========================================
+   经历列表
+   ======================================== */
+.experienceList {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.experienceCard {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 20px;
+  transition: all 0.3s ease;
+}
+
+.experienceCard:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(102, 119, 255, 0.2);
+  transform: translateY(-2px);
+}
+
+.experienceHeader {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.experienceIcon {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.experienceIconProject {
+  background: linear-gradient(135deg, #6677ff 0%, #2f27b0 100%);
+}
+
+.experienceIconCompetition {
+  background: linear-gradient(135deg, #ff6b35 0%, #ff8c42 100%);
+}
+
+.experienceIconInternship {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+.experienceIcon svg {
+  width: 22px;
+  height: 22px;
+  color: white;
+}
+
+.experienceInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.experienceName {
+  font-size: 16px;
+  font-weight: 600;
+  color: #ffffff;
+  margin-bottom: 4px;
+}
+
+.experienceRole {
+  font-size: 13px;
+  color: #6677ff;
+}
+
+.experienceRoleCompetition {
+  color: #ff6b35;
+}
+
+.experienceRoleInternship {
+  color: #10b981;
+}
+
+.experienceDate {
+  font-size: 13px;
+  color: rgba(140, 140, 141, 1);
+  white-space: nowrap;
+}
+
+.experienceDesc {
+  font-size: 14px;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 12px;
+}
+
+.experienceTech {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.techTag {
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  background: rgba(102, 119, 255, 0.1);
+  color: #6677ff;
+  border: 1px solid rgba(102, 119, 255, 0.2);
+}
+
+.experienceFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.experienceLinks {
+  display: flex;
+  gap: 16px;
+}
+
+.experienceLink {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #6677ff;
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+.experienceLink:hover {
+  color: #8895ff;
+}
+
+.experienceLink svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* 空状态 */
+.emptyState {
+  text-align: center;
+  padding: 48px 24px;
+}
+
+.emptyIcon {
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.02);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px;
+  color: rgba(140, 140, 141, 1);
+}
+
+.emptyIcon svg {
+  width: 32px;
+  height: 32px;
+}
+
+.emptyTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: #ffffff;
+  margin-bottom: 8px;
+}
+
+.emptyDesc {
+  font-size: 14px;
+  color: rgba(140, 140, 141, 1);
+}
+
+/* ========================================
+   加载与错误状态
+   ======================================== */
+.loadingContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+}
+
+.errorContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  text-align: center;
+}
+
+.errorIcon {
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+  background: rgba(239, 68, 68, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+  color: #ef4444;
+}
+
+.errorIcon svg {
+  width: 32px;
+  height: 32px;
+}
+
+.errorTitle {
+  font-size: 18px;
+  font-weight: 600;
+  color: #ffffff;
+  margin-bottom: 8px;
+}
+
+.errorDesc {
+  font-size: 14px;
+  color: rgba(140, 140, 141, 1);
+  margin-bottom: 24px;
+}
+
+.backButton {
+  padding: 12px 24px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: none;
+  background: linear-gradient(135deg, #6677ff 0%, #2f27b0 100%);
+  color: white;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.backButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(102, 119, 255, 0.4);
+}
+
+/* ========================================
+   响应式设计
+   ======================================== */
+@media (max-width: 1024px) {
+  .mainContent {
+    flex-direction: column;
+    padding: 24px;
+  }
+
+  .sidebar {
+    width: 100%;
+    flex-shrink: 1;
+  }
+
+  .sidebarContent {
+    position: relative;
+    top: auto;
+  }
+
+  .sectionTabs {
+    flex-wrap: wrap;
+  }
+
+  .tabBtn {
+    flex: 1 1 calc(33.333% - 6px);
+  }
+}
+
+@media (max-width: 768px) {
+  .mainContent {
+    padding: 16px;
+  }
+
+  .tabBtn {
+    flex: 1 1 calc(50% - 4px);
+    padding: 10px 8px;
+    font-size: 12px;
+  }
+
+  .infoGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .experienceHeader {
+    flex-wrap: wrap;
+  }
+
+  .experienceDate {
+    width: 100%;
+    margin-top: 4px;
+  }
+
+  .experienceFooter {
+    flex-direction: column;
+    gap: 16px;
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 480px) {
+  .sidebarContent,
+  .profilePanel,
+  .experiencePanel {
+    padding: 16px;
+  }
+
+  .memberName {
+    font-size: 20px;
+  }
+
+  .avatarRing {
+    width: 100px;
+    height: 100px;
+  }
+
+  .avatarImg {
+    width: 92px;
+    height: 92px;
+    font-size: 36px;
+  }
+
+  .tabBtn {
+    flex: 1 1 100%;
+  }
+
+  .statBox {
+    padding: 8px 4px;
+  }
+}
+
+/* ========================================
+   动画效果
+   ======================================== */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
