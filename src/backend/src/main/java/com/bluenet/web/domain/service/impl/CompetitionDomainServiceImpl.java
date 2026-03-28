@@ -27,13 +27,17 @@ public class CompetitionDomainServiceImpl implements CompetitionDomainService {
     }
 
     @Override
-    public Long createCompetition(String name, String shortName, Long logoFileId, String summary, String detail) {
+    public Long createCompetition(String name, String shortName, Long logoFileId, String summary, String detail,
+            String level, String month, String organizer) {
         Competition competition = new Competition();
         competition.setName(name);
         competition.setShortName(shortName);
         competition.setLogoFileId(logoFileId);
         competition.setSummary(summary);
         competition.setDetail(detail);
+        competition.setLevel(level != null ? level : "省级");
+        competition.setMonth(month);
+        competition.setOrganizer(organizer);
         competition.setSortOrder(0);
         competition.setEnabled(true);
         return competitionRepository.save(competition);
@@ -41,7 +45,7 @@ public class CompetitionDomainServiceImpl implements CompetitionDomainService {
 
     @Override
     public void updateCompetition(Long id, String name, String shortName, Long logoFileId, String summary,
-            String detail, Boolean enabled) {
+            String detail, String level, String month, String organizer, Boolean enabled) {
         Competition competition = new Competition();
         competition.setId(id);
         competition.setName(name);
@@ -49,6 +53,9 @@ public class CompetitionDomainServiceImpl implements CompetitionDomainService {
         competition.setLogoFileId(logoFileId);
         competition.setSummary(summary);
         competition.setDetail(detail);
+        competition.setLevel(level);
+        competition.setMonth(month);
+        competition.setOrganizer(organizer);
         competition.setEnabled(enabled);
         competitionRepository.update(competition);
     }

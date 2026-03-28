@@ -3,6 +3,7 @@ package com.bluenet.web.application.converter;
 import com.bluenet.web.api.dto.competition.CompetitionBriefDTO;
 import com.bluenet.web.api.dto.competition.CompetitionDetailDTO;
 import com.bluenet.web.api.dto.competition.CompetitionImageDTO;
+import com.bluenet.web.api.dto.competition.CompetitionResponseDTO;
 import com.bluenet.web.domain.model.vo.CompetitionBriefVO;
 import com.bluenet.web.domain.model.vo.CompetitionVO;
 import com.bluenet.web.domain.model.vo.IntroduceImageVO;
@@ -34,6 +35,9 @@ public class CompetitionConverter {
                 .logoUrl(vo.getLogoUrl())
                 .logoFileId(vo.getLogoFileId())
                 .summary(vo.getSummary())
+                .level(vo.getLevel())
+                .month(vo.getMonth())
+                .organizer(vo.getOrganizer())
                 .build();
     }
 
@@ -46,6 +50,36 @@ public class CompetitionConverter {
      */
     public List<CompetitionBriefDTO> convertToBriefDTOList(List<CompetitionBriefVO> voList) {
         return voList.stream().map(this::convertToBriefDTO).collect(Collectors.toList());
+    }
+
+    /**
+     * 将竞赛简要VO转换为响应DTO
+     *
+     * @param vo
+     *            竞赛简要VO
+     * @return 竞赛响应DTO
+     */
+    public CompetitionResponseDTO convertToResponseDTO(CompetitionBriefVO vo) {
+        return CompetitionResponseDTO.builder()
+                .id(vo.getId())
+                .name(vo.getName())
+                .level(vo.getLevel())
+                .month(vo.getMonth())
+                .organizer(vo.getOrganizer())
+                .summary(vo.getSummary())
+                .introduceImageFileId(vo.getIntroduceImageFileId())
+                .build();
+    }
+
+    /**
+     * 将竞赛简要VO列表转换为响应DTO列表
+     *
+     * @param voList
+     *            竞赛简要VO列表
+     * @return 竞赛响应DTO列表
+     */
+    public List<CompetitionResponseDTO> convertToResponseDTOList(List<CompetitionBriefVO> voList) {
+        return voList.stream().map(this::convertToResponseDTO).collect(Collectors.toList());
     }
 
     /**
@@ -68,6 +102,9 @@ public class CompetitionConverter {
                 .logoFileId(vo.getLogoFileId())
                 .summary(vo.getSummary())
                 .detail(vo.getDetail())
+                .level(vo.getLevel())
+                .month(vo.getMonth())
+                .organizer(vo.getOrganizer())
                 .images(imageDTOs)
                 .build();
     }

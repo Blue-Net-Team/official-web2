@@ -3,8 +3,10 @@ package com.bluenet.web.domain.model.vo;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
+@NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class CompetitionBriefVO {
@@ -14,4 +16,8 @@ public class CompetitionBriefVO {
     private String logoUrl;
     private Long logoFileId;
     private String summary;
+    private String level;
+    private String month;
+    private String organizer;
+    private Long introduceImageFileId;
 }

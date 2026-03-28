@@ -36,6 +36,15 @@ public class CompetitionDetailDTO {
     @Schema(description = "竞赛详细介绍")
     private String detail;
 
+    @Schema(description = "竞赛级别，如：国家级、省级、校级等")
+    private String level;
+
+    @Schema(description = "举办月份，如：1月、2月等")
+    private String month;
+
+    @Schema(description = "主办单位")
+    private String organizer;
+
     @Schema(description = "竞赛相关照片")
     private List<CompetitionImageDTO> images;
 }

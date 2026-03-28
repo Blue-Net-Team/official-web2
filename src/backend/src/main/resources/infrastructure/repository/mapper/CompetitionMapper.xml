@@ -8,6 +8,9 @@
         <result column="logo_file_id" property="logoFileId"/>
         <result column="summary" property="summary"/>
         <result column="detail" property="detail"/>
+        <result column="level" property="level"/>
+        <result column="month" property="month"/>
+        <result column="organizer" property="organizer"/>
         <result column="sort_order" property="sortOrder"/>
         <result column="enabled" property="enabled"/>
         <result column="created_at" property="createdAt"/>
@@ -21,6 +24,10 @@
         <result column="logo_url" property="logoUrl"/>
         <result column="logo_file_id" property="logoFileId"/>
         <result column="summary" property="summary"/>
+        <result column="level" property="level"/>
+        <result column="month" property="month"/>
+        <result column="organizer" property="organizer"/>
+        <result column="introduce_image_file_id" property="introduceImageFileId"/>
     </resultMap>
 
     <resultMap id="CompetitionVOResultMap" type="com.bluenet.web.domain.model.vo.CompetitionVO">
@@ -31,6 +38,9 @@
         <result column="logo_file_id" property="logoFileId"/>
         <result column="summary" property="summary"/>
         <result column="detail" property="detail"/>
+        <result column="level" property="level"/>
+        <result column="month" property="month"/>
+        <result column="organizer" property="organizer"/>
         <result column="sort_order" property="sortOrder"/>
         <result column="enabled" property="enabled"/>
     </resultMap>
@@ -42,9 +52,28 @@
             c.short_name,
             f.url AS logo_url,
             c.logo_file_id,
-            c.summary
+            c.summary,
+            c.level,
+            c.month,
+            c.organizer,
+            intro.file_id AS introduce_image_file_id
         FROM tb_competition c
         LEFT JOIN tb_file f ON c.logo_file_id = f.id
+        LEFT JOIN (
+            SELECT ranked.competition_id, ranked.file_id
+            FROM (
+                SELECT
+                    ii.competition_id,
+                    ii.file_id,
+                    ROW_NUMBER() OVER (
+                        PARTITION BY ii.competition_id
+                        ORDER BY COALESCE(ii.sort_order, 0) DESC, ii.id ASC
+                    ) AS rn
+                FROM tb_introduce_image ii
+                WHERE ii.type = 'competition'
+            ) ranked
+            WHERE ranked.rn = 1
+        ) intro ON intro.competition_id = c.id
         WHERE c.enabled = TRUE
         ORDER BY c.sort_order DESC, c.created_at DESC
         LIMIT #{limit}
@@ -59,6 +88,9 @@
             c.logo_file_id,
             c.summary,
             c.detail,
+            c.level,
+            c.month,
+            c.organizer,
             c.sort_order,
             c.enabled
         FROM tb_competition c

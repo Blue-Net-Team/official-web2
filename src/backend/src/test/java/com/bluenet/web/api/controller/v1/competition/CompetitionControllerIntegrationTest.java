@@ -22,6 +22,7 @@ import com.bluenet.web.BaseIntegrationTest;
 import com.bluenet.web.api.dto.ResponseMessage;
 import com.bluenet.web.api.dto.competition.CompetitionBriefDTO;
 import com.bluenet.web.api.dto.competition.CompetitionDetailDTO;
+import com.bluenet.web.api.dto.competition.CompetitionResponseDTO;
 import com.bluenet.web.domain.model.entity.Competition;
 import com.bluenet.web.domain.model.entity.File;
 import com.bluenet.web.domain.model.entity.IntroduceImage;
@@ -226,24 +227,24 @@ class CompetitionControllerIntegrationTest extends BaseIntegrationTest {
     }
 
     /**
-     * 集成测试：竞赛简要信息应包含必要字段
+     * 集成测试：竞赛简要信息应包含必要字段 注意：API 返回 CompetitionResponseDTO，不包含 shortName、logoUrl 等字段
      */
     @Test
     @DisplayName("集成测试：竞赛简要信息应包含必要字段")
     void getCompetitionList_shouldContainRequiredFields() {
         // 执行
-        ResponseEntity<ResponseMessage<List<CompetitionBriefDTO>>> response = restTemplate.exchange(
+        ResponseEntity<ResponseMessage<List<CompetitionResponseDTO>>> response = restTemplate.exchange(
                 "/api/v1/competitions?limit=10",
                 HttpMethod.GET,
                 null,
-                new ParameterizedTypeReference<ResponseMessage<List<CompetitionBriefDTO>>>() {
+                new ParameterizedTypeReference<ResponseMessage<List<CompetitionResponseDTO>>>() {
                 });
 
         // 验证
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        List<CompetitionBriefDTO> competitions = response.getBody().getData();
+        List<CompetitionResponseDTO> competitions = response.getBody().getData();
 
-        CompetitionBriefDTO firstCompetition = competitions.stream()
+        CompetitionResponseDTO firstCompetition = competitions.stream()
                 .filter(c -> TEST_NAME.equals(c.getName()))
                 .findFirst()
                 .orElse(null);
@@ -251,9 +252,6 @@ class CompetitionControllerIntegrationTest extends BaseIntegrationTest {
         assertNotNull(firstCompetition);
         assertNotNull(firstCompetition.getId());
         assertEquals(TEST_NAME, firstCompetition.getName());
-        assertEquals(TEST_SHORT_NAME, firstCompetition.getShortName());
-        assertEquals(TEST_FILE_URL, firstCompetition.getLogoUrl());
-        assertEquals(TEST_FILE_ID, firstCompetition.getLogoFileId());
         assertEquals(TEST_SUMMARY, firstCompetition.getSummary());
     }
 

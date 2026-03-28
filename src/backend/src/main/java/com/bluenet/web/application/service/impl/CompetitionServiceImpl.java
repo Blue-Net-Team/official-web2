@@ -32,6 +32,28 @@ public class CompetitionServiceImpl implements CompetitionService {
     }
 
     @Override
+    public List<CompetitionResponseDTO> getCompetitionResponseList(int limit) {
+        int validLimit = Math.min(Math.max(limit, 1), 50);
+        List<CompetitionBriefVO> voList = competitionDomainService.getCompetitionList(validLimit);
+
+        // 为每个竞赛查询第一张介绍图片
+        for (CompetitionBriefVO vo : voList) {
+            List<IntroduceImageVO> images = introduceImageDomainService.getCompetitionImages(vo.getId());
+            if (!images.isEmpty()) {
+                // 按 sort_order 排序取第一张
+                images.sort((a, b) -> {
+                    int sortA = a.getSortOrder() != null ? a.getSortOrder() : 0;
+                    int sortB = b.getSortOrder() != null ? b.getSortOrder() : 0;
+                    return Integer.compare(sortB, sortA); // 降序，sort_order 越大越靠前
+                });
+                vo.setIntroduceImageFileId(images.get(0).getFileId());
+            }
+        }
+
+        return competitionConverter.convertToResponseDTOList(voList);
+    }
+
+    @Override
     public CompetitionDetailDTO getCompetitionDetail(Long id) {
         Optional<CompetitionVO> competitionOpt = competitionDomainService.getCompetitionById(id);
         if (competitionOpt.isEmpty()) {
@@ -50,7 +72,10 @@ public class CompetitionServiceImpl implements CompetitionService {
                 request.getShortName(),
                 request.getLogoFileId(),
                 request.getSummary(),
-                request.getDetail());
+                request.getDetail(),
+                request.getLevel(),
+                request.getMonth(),
+                request.getOrganizer());
 
         Optional<CompetitionVO> created = competitionDomainService.getCompetitionById(id);
         if (created.isEmpty()) {
@@ -64,6 +89,9 @@ public class CompetitionServiceImpl implements CompetitionService {
                 .shortName(created.get().getShortName())
                 .logoUrl(created.get().getLogoUrl())
                 .summary(created.get().getSummary())
+                .level(created.get().getLevel())
+                .month(created.get().getMonth())
+                .organizer(created.get().getOrganizer())
                 .build();
         return competitionConverter.convertToBriefDTO(briefVO);
     }
@@ -82,6 +110,9 @@ public class CompetitionServiceImpl implements CompetitionService {
                 request.getLogoFileId(),
                 request.getSummary(),
                 request.getDetail(),
+                request.getLevel(),
+                request.getMonth(),
+                request.getOrganizer(),
                 request.getEnabled());
 
         Optional<CompetitionVO> updated = competitionDomainService.getCompetitionById(id);
@@ -95,6 +126,9 @@ public class CompetitionServiceImpl implements CompetitionService {
                 .shortName(updated.get().getShortName())
                 .logoUrl(updated.get().getLogoUrl())
                 .summary(updated.get().getSummary())
+                .level(updated.get().getLevel())
+                .month(updated.get().getMonth())
+                .organizer(updated.get().getOrganizer())
                 .build();
         return competitionConverter.convertToBriefDTO(briefVO);
     }

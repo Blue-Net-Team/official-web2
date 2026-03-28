@@ -44,9 +44,16 @@ public interface CompetitionDomainService {
      *            竞赛简介
      * @param detail
      *            竞赛详细介绍
+     * @param level
+     *            竞赛级别
+     * @param month
+     *            举办月份
+     * @param organizer
+     *            主办单位
      * @return 创建后的竞赛ID
      */
-    Long createCompetition(String name, String shortName, Long logoFileId, String summary, String detail);
+    Long createCompetition(String name, String shortName, Long logoFileId, String summary, String detail,
+            String level, String month, String organizer);
 
     /**
      * 更新竞赛
@@ -63,11 +70,17 @@ public interface CompetitionDomainService {
      *            竞赛简介
      * @param detail
      *            竞赛详细介绍
+     * @param level
+     *            竞赛级别
+     * @param month
+     *            举办月份
+     * @param organizer
+     *            主办单位
      * @param enabled
      *            是否启用
      */
     void updateCompetition(Long id, String name, String shortName, Long logoFileId, String summary, String detail,
-            Boolean enabled);
+            String level, String month, String organizer, Boolean enabled);
 
     /**
      * 删除竞赛

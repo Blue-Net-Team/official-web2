@@ -17,6 +17,9 @@ public class Competition {
     private Long logoFileId;
     private String summary;
     private String detail;
+    private String level = "省级";
+    private String month;
+    private String organizer;
     private Integer sortOrder;
     private Boolean enabled;
     private LocalDateTime createdAt;

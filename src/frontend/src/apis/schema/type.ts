@@ -80,6 +80,12 @@ export interface AuthMeResponseDTO {
 }
 
 /**
+ * 竞赛级别
+ * 对应后端存储的中文值
+ */
+export type CompetitionLevel = 'national' | 'provincial' | 'school' | '国家级' | '省级' | '校级'
+
+/**
  * 竞赛简介
  * 对应后端 CompetitionBriefDTO.java
  */
@@ -92,6 +98,14 @@ export interface CompetitionBriefDTO {
   /** Logo文件ID，用于调用下载接口 */
   logoFileId: number | null
   summary: string
+  /** 竞赛级别 */
+  level: CompetitionLevel
+  /** 举办月份（可选） */
+  month?: string
+  /** 主办单位（可选） */
+  organizer?: string
+  /** 介绍图片文件ID（可选） */
+  introduceImageFileId?: number | null
 }
 
 /**

@@ -182,6 +182,9 @@ class CompetitionDomainServiceImplTest {
         // 准备
         Long logoFileId = 100L;
         Long expectedId = 1L;
+        String level = "国家级";
+        String month = "4月";
+        String organizer = "工信部";
 
         when(competitionRepository.save(any())).thenReturn(expectedId);
 
@@ -191,7 +194,10 @@ class CompetitionDomainServiceImplTest {
                 TEST_SHORT_NAME,
                 logoFileId,
                 TEST_SUMMARY,
-                TEST_DETAIL);
+                TEST_DETAIL,
+                level,
+                month,
+                organizer);
 
         // 验证
         assertEquals(expectedId, result);
@@ -202,6 +208,9 @@ class CompetitionDomainServiceImplTest {
                                 && competition.getLogoFileId().equals(logoFileId)
                                 && competition.getSummary().equals(TEST_SUMMARY)
                                 && competition.getDetail().equals(TEST_DETAIL)
+                                && competition.getLevel().equals(level)
+                                && competition.getMonth().equals(month)
+                                && competition.getOrganizer().equals(organizer)
                                 && competition.getSortOrder().equals(0) && competition.getEnabled().equals(true)));
     }
 
@@ -213,6 +222,9 @@ class CompetitionDomainServiceImplTest {
     void createCompetition_withNullLogoFileId_shouldCreateSuccessfully() {
         // 准备
         Long expectedId = 1L;
+        String level = "国家级";
+        String month = "4月";
+        String organizer = "工信部";
 
         when(competitionRepository.save(any())).thenReturn(expectedId);
 
@@ -222,7 +234,10 @@ class CompetitionDomainServiceImplTest {
                 TEST_SHORT_NAME,
                 null,
                 TEST_SUMMARY,
-                TEST_DETAIL);
+                TEST_DETAIL,
+                level,
+                month,
+                organizer);
 
         // 验证
         assertEquals(expectedId, result);
@@ -240,6 +255,9 @@ class CompetitionDomainServiceImplTest {
         // 准备
         Long logoFileId = 100L;
         Boolean enabled = true;
+        String level = "国家级";
+        String month = "4月";
+        String organizer = "工信部";
 
         // 执行
         competitionDomainService.updateCompetition(
@@ -249,6 +267,9 @@ class CompetitionDomainServiceImplTest {
                 logoFileId,
                 TEST_SUMMARY,
                 TEST_DETAIL,
+                level,
+                month,
+                organizer,
                 enabled);
 
         // 验证
@@ -260,6 +281,9 @@ class CompetitionDomainServiceImplTest {
                                 && competition.getLogoFileId().equals(logoFileId)
                                 && competition.getSummary().equals(TEST_SUMMARY)
                                 && competition.getDetail().equals(TEST_DETAIL)
+                                && competition.getLevel().equals(level)
+                                && competition.getMonth().equals(month)
+                                && competition.getOrganizer().equals(organizer)
                                 && competition.getEnabled().equals(enabled)));
     }
 
@@ -271,6 +295,9 @@ class CompetitionDomainServiceImplTest {
     void updateCompetition_disableCompetition_shouldUpdateSuccessfully() {
         // 准备
         Boolean enabled = false;
+        String level = "国家级";
+        String month = "4月";
+        String organizer = "工信部";
 
         // 执行
         competitionDomainService.updateCompetition(
@@ -280,6 +307,9 @@ class CompetitionDomainServiceImplTest {
                 null,
                 TEST_SUMMARY,
                 TEST_DETAIL,
+                level,
+                month,
+                organizer,
                 enabled);
 
         // 验证

@@ -1,8 +1,8 @@
 package com.bluenet.web.api.controller.v1.competition;
 
 import com.bluenet.web.api.dto.ResponseMessage;
-import com.bluenet.web.api.dto.competition.CompetitionBriefDTO;
 import com.bluenet.web.api.dto.competition.CompetitionDetailDTO;
+import com.bluenet.web.api.dto.competition.CompetitionResponseDTO;
 import com.bluenet.web.api.dto.competition.ResponseMessageCompetitionBriefList;
 import com.bluenet.web.api.dto.competition.ResponseMessageCompetitionDetail;
 import com.bluenet.web.application.service.CompetitionService;
@@ -33,9 +33,9 @@ public class CompetitionController {
             @ApiResponse(responseCode = "200", description = "成功，返回竞赛列表", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseMessageCompetitionBriefList.class))) })
     @RequiresPermission(name = "获取竞赛列表", value = "competition:list", access = AccessLevel.PUBLIC)
     @GetMapping
-    public ResponseMessage<List<CompetitionBriefDTO>> getCompetitionList(
+    public ResponseMessage<List<CompetitionResponseDTO>> getCompetitionList(
             @Parameter(description = "返回数量限制，默认10，最大50", example = "10") @RequestParam(defaultValue = "10") int limit) {
-        List<CompetitionBriefDTO> competitions = competitionService.getCompetitionList(limit);
+        List<CompetitionResponseDTO> competitions = competitionService.getCompetitionResponseList(limit);
         return ResponseMessage.success(competitions);
     }
 

@@ -31,6 +31,18 @@ public class UpdateCompetitionRequestDTO {
     @Schema(description = "竞赛详细介绍")
     private String detail;
 
+    @Size(max = 20, message = "竞赛级别最多20个字符")
+    @Schema(description = "竞赛级别，如：国家级、省级、校级等")
+    private String level;
+
+    @Size(max = 10, message = "举办月份最多10个字符")
+    @Schema(description = "举办月份，如：1月、2月等")
+    private String month;
+
+    @Size(max = 200, message = "主办单位最多200个字符")
+    @Schema(description = "主办单位")
+    private String organizer;
+
     @Schema(description = "是否启用")
     private Boolean enabled;
 }

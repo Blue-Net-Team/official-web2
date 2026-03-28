@@ -21,6 +21,15 @@ public interface CompetitionService {
     List<CompetitionBriefDTO> getCompetitionList(int limit);
 
     /**
+     * 获取竞赛响应列表（包含新字段和图片信息）
+     *
+     * @param limit
+     *            限制返回数量，如果为0则返回全部
+     * @return 竞赛响应DTO列表
+     */
+    List<CompetitionResponseDTO> getCompetitionResponseList(int limit);
+
+    /**
      * 获取竞赛详情
      *
      * @param id

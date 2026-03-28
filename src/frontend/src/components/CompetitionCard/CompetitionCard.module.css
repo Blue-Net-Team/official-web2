@@ -1,0 +1,226 @@
+.card {
+  position: relative;
+  width: 100%;
+  height: 200px;
+  background-color: #1a1a1a;
+  border-radius: 24px;
+  padding: 40px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  overflow: hidden;
+  transition:
+    transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    background-color 0.3s ease;
+  opacity: 0;
+  animation: fadeInUp 0.6s ease forwards;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+  background-color: #222222;
+}
+
+.cardWithImage {
+  background-size: cover;
+  background-position: center;
+}
+
+.cardWithImage:hover {
+  background-color: transparent;
+}
+
+.cardWithImage::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(270deg, #1a1a1a 45%, #1a1a1aaa 100%);
+  border-radius: 24px;
+  z-index: 1;
+  transition: opacity 0.3s ease;
+}
+
+.cardWithImage:hover::before {
+  opacity: 0.9;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.cardContent {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  height: 100%;
+  justify-content: center;
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.titleGroup {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex: 1;
+  min-width: 0;
+}
+
+.competitionName {
+  font-size: 28px;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0;
+  font-family: 'Inter', sans-serif;
+}
+
+.levelBadge {
+  width: 80px;
+  height: 28px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: #ffffff;
+  flex-shrink: 0;
+  font-family: 'Inter', sans-serif;
+  position: relative;
+  overflow: hidden;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.levelBadge::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s ease;
+}
+
+.card:hover .levelBadge::before {
+  left: 100%;
+}
+
+.card:hover .levelBadge {
+  transform: scale(1.05);
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+}
+
+.month {
+  font-size: 24px;
+  font-weight: 400;
+  color: #ffffff66;
+  flex-shrink: 0;
+  font-family: 'Inter', sans-serif;
+}
+
+.infoGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.organizer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.label {
+  font-size: 16px;
+  font-weight: 400;
+  color: #ffffff99;
+  flex-shrink: 0;
+  font-family: 'Inter', sans-serif;
+}
+
+.value {
+  font-size: 16px;
+  font-weight: 400;
+  color: #ffffff;
+  font-family: 'Inter', sans-serif;
+}
+
+.description {
+  font-size: 16px;
+  font-weight: 400;
+  color: #ffffffcc;
+  line-height: 1.5;
+  margin: 0;
+  font-family: 'Inter', sans-serif;
+}
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+  .card {
+    height: auto;
+    min-height: 200px;
+    padding: 32px 24px;
+    border-radius: 20px;
+    gap: 24px;
+  }
+
+  .cardHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .titleGroup {
+    width: 100%;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .competitionName {
+    font-size: 20px;
+  }
+
+  .levelBadge {
+    width: 64px;
+    height: 24px;
+    border-radius: 12px;
+    font-size: 12px;
+  }
+
+  .month {
+    font-size: 18px;
+  }
+
+  .label,
+  .value,
+  .description {
+    font-size: 14px;
+  }
+
+  .organizer {
+    gap: 4px;
+  }
+}
