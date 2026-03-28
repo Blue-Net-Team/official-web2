@@ -49,24 +49,10 @@
 }
 
 .formInput {
-  background: rgba(255, 255, 255, 0.05) !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
   border-radius: 10px !important;
-  color: #ffffff !important;
-}
-
-.formInput:hover,
-.formInput:focus {
-  border-color: #6677ff !important;
-}
-
-.formInput::placeholder {
-  color: rgba(140, 140, 141, 0.6) !important;
 }
 
 .formInputDisabled {
-  background: rgba(255, 255, 255, 0.02) !important;
-  color: rgba(140, 140, 141, 0.8) !important;
   cursor: not-allowed !important;
 }
 
@@ -74,44 +60,8 @@
   width: 100%;
 }
 
-.formSelect .ant-select-selector {
-  background: rgba(255, 255, 255, 0.05) !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
-  border-radius: 10px !important;
-  color: #ffffff !important;
-}
-
-.formSelect .ant-select-selection-placeholder {
-  color: rgba(140, 140, 141, 0.6) !important;
-}
-
-.formSelect .ant-select-arrow {
-  color: rgba(140, 140, 141, 0.8) !important;
-}
-
-.formSelect:hover .ant-select-selector,
-.formSelect-focused .ant-select-selector {
-  border-color: #6677ff !important;
-}
-
-.formSelect:hover .ant-select-arrow {
-  color: #6677ff !important;
-}
-
 .formTextarea {
-  background: rgba(255, 255, 255, 0.05) !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
   border-radius: 10px !important;
-  color: #ffffff !important;
-}
-
-.formTextarea::placeholder {
-  color: rgba(140, 140, 141, 0.6) !important;
-}
-
-.formTextarea:hover,
-.formTextarea:focus {
-  border-color: #6677ff !important;
 }
 
 .formHint {
