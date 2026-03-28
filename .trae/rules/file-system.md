@@ -21,6 +21,20 @@ description: 涉及文件上传下载、存储权限时使用
 
 `{fileType}-{uuid}.{ext}`（如 `avatar-xxx.jpg`）
 
+## MinIO 存储路径
+
+`{bucket}/{filename}`
+- `bucket` = `FileType.getValue()`
+- `filename` = 完整文件名
+
+## 数据库存储
+
+`tb_file` 表字段：
+- `id` - 文件 ID（主键）
+- `name` - 文件名（如 `avatar-xxx.jpg`）
+- `type` - 文件类型（FileType 枚举值）
+- `url` - **已废弃**，文件下载通过 `/api/v1/file/download/{fileId}` 接口实现
+
 ## 权限控制（动态判断）
 
 | 文件类型 | 权限逻辑 |

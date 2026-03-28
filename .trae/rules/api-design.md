@@ -28,6 +28,38 @@ description: 设计或修改 REST API 接口时使用
 - 列表：`ResponseMessage<List<EnrollmentDTO>>`
 - 分页：`ResponseMessage<PageDTO<EnrollmentDTO>>`
 
+### 分页接口规范
+
+**必须使用 `PageDTO<T>` 而非 Spring Data 的 `Page<T>`**
+
+```java
+// ✅ 正确
+public ResponseMessage<PageDTO<AchievementDTO>> getAchievements(...) {
+    PageDTO<AchievementDTO> result = achievementService.getAchievements(...);
+    return ResponseMessage.success(result);
+}
+
+// ❌ 错误 - Spring Data Page 序列化格式与前端不兼容
+public ResponseMessage<Page<AchievementDTO>> getAchievements(...) {
+    Page<AchievementDTO> result = achievementService.getAchievements(...);
+    return ResponseMessage.success(result);
+}
+```
+
+**Service 层实现示例**：
+
+```java
+@Override
+public PageDTO<AchievementDTO> getAchievements(Integer page, Integer size, ...) {
+    Pageable pageable = PageRequest.of(page, size);
+    Page<AchievementVO> voPage = repository.findWithFilter(..., pageable);
+    Page<AchievementDTO> dtoPage = voPage.map(converter::convertToDTO);
+    return PageDTO.from(dtoPage);  // 关键：转换为 PageDTO
+}
+```
+
+**原因**：前端 `PageDTO<T>` 接口定义与后端 `PageDTO.java` 对应，使用 Spring Data 的 `Page<T>` 会导致字段名不匹配。
+
 ## 权限注解（必须）
 
 ```java

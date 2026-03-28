@@ -200,7 +200,7 @@ openspec/
 
 ### 核心表前缀
 
-所有表以 `tb_` 开头，包含 `deleted` 软删除字段。
+所有表以 `tb_` 开头，不使用软删除字段，数据直接物理删除。
 
 ### 关键实体关系
 
@@ -264,11 +264,13 @@ openspec/
 #### 文件命名规则
 
 1. **自动生成**：`{fileType}-{uuid}.{ext}`（如 `avatar-123e4567-e89b-12d3-a456-426614174000.jpg`）
-   - `fileType` 使用枚举名称的小写形式（如 `normal_img`、`assessment_attachment`）
-   - 注意：文件类型在文件名中使用下划线（`normal_img`），而存储值使用连字符（`normal-img`）
-2. **存储路径**：`{fileType}/{uuid}`（URL 格式）
-   - 同样使用枚举名称的小写形式作为路径前缀
-3. **元数据存储**：`tb_file` 表存储文件名、类型、URL，不存储实际文件内容
+   - `fileType` 使用枚举名称的小写形式（如 `avatar`、`normal_img`、`assessment_attachment`）
+   - 注意：文件类型在文件名中使用下划线（`normal_img`），而存储桶名称使用连字符（`normal-img`）
+2. **MinIO 存储路径**：`{bucket}/{filename}`
+   - `bucket` = `FileType.getValue()`（如 `avatar`、`normal-img`、`work`）
+   - `filename` = 完整文件名（如 `avatar-xxx.jpg`）
+3. **元数据存储**：`tb_file` 表存储文件 ID、文件名、类型，不存储实际文件内容
+   - `url` 字段已废弃，文件下载通过 `GET /api/v1/file/download/{fileId}` 接口实现
    - 文件类型字段存储的是 `FileType` 枚举值（如 `NORMAL_IMG`），而非存储值
 
 #### 文件权限控制（动态判断）
