@@ -45,3 +45,33 @@ export type EnrollStatus = 'pending' | 'approved' | 'rejected'
  * 对应后端 FileType.java
  */
 export type FileType = 'avatar' | 'normal-img' | 'assessment-attachment' | 'work' | 'qrcode'
+
+/**
+ * 成就类型枚举
+ * 对应后端 AchievementType.java
+ */
+export type AchievementType = 'paper' | 'patent' | 'competition'
+
+/**
+ * 成就类型标签
+ */
+export const ACHIEVEMENT_TYPE_LABELS: Record<AchievementType, string> = {
+  paper: '论文',
+  patent: '专利',
+  competition: '竞赛',
+}
+
+/**
+ * 奖项级别枚举
+ * 对应后端 AwardLevel.java
+ */
+export type AwardLevel = 'national' | 'provincial' | 'school'
+
+/**
+ * 奖项级别标签
+ */
+export const AWARD_LEVEL_LABELS: Record<AwardLevel, string> = {
+  national: '国家级',
+  provincial: '省级',
+  school: '校级',
+}

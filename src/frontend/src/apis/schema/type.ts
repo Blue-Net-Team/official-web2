@@ -1,6 +1,6 @@
-import { Direction, Gender, EnrollStatus, FileType } from './enumerate'
+import { Direction, Gender, EnrollStatus, FileType, AchievementType, AwardLevel } from './enumerate'
 
-export type { Direction, Gender, EnrollStatus, FileType }
+export type { Direction, Gender, EnrollStatus, FileType, AchievementType, AwardLevel }
 
 /**
  * 统一 API 响应包装
@@ -201,7 +201,7 @@ export interface FileInfo {
   name: string
   /** 文件类型 */
   type: FileType
-  /** 文件url，不包含控制层前缀 */
+  /** @deprecated 已废弃，文件下载请使用 /api/v1/file/download/{id} 接口 */
   url: string
 }
 
@@ -316,4 +316,48 @@ export interface PageDTO<T> {
   last: boolean
   /** 是否为空 */
   empty: boolean
+}
+
+/**
+ * 成就信息
+ * 对应后端 AchievementDTO.java
+ */
+export interface AchievementDTO {
+  /** 成就ID */
+  id: number
+  /** 成就标题（竞赛名/论文标题/专利标题） */
+  title: string
+  /** 成就类型：paper/patent/competition */
+  type: AchievementType
+  /** 关联信息（竞赛赛项名/论文学期名/专利可为null） */
+  relateTo: string | null
+  /** 获奖日期 */
+  achieveAt: string
+  /** 奖项级别：national/provincial/school，仅竞赛类型有效 */
+  awardLevel: AwardLevel | null
+  /** 奖项级别名称 */
+  awardLevelName: string | null
+  /** 奖项名称，仅竞赛类型有效 */
+  awardName: string | null
+  /** 竞赛名称 */
+  competitionName: string | null
+  /** 竞赛简称 */
+  competitionShortName: string | null
+  /** 竞赛Logo文件ID */
+  competitionLogoFileId: number | null
+}
+
+/**
+ * 成就统计信息
+ * 对应后端 AchievementStatsDTO.java
+ */
+export interface AchievementStatsDTO {
+  /** 总成就数 */
+  totalAchievements: number
+  /** 国家级奖项数 */
+  nationalCount: number
+  /** 省级奖项数 */
+  provincialCount: number
+  /** 校级奖项数 */
+  schoolCount: number
 }
