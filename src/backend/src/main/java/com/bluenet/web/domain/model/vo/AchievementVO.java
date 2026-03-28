@@ -1,23 +1,25 @@
-package com.bluenet.web.domain.model.entity;
+package com.bluenet.web.domain.model.vo;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
 import com.bluenet.web.domain.model.enumerate.AchievementType;
 import com.bluenet.web.domain.model.enumerate.AwardLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 
 import java.time.LocalDate;
 
 @Data
-@TableName("tb_achievement")
-public class Achievement {
-    @TableId(type = IdType.AUTO)
+@AllArgsConstructor
+@Builder
+public class AchievementVO {
     private Long id;
     private String title;
-    private AchievementType type;
     private String relateTo;
+    private AchievementType type;
     private LocalDate achieveAt;
     private AwardLevel awardLevel;
     private String awardName;
+    private String competitionName;
+    private String competitionShortName;
+    private Long competitionLogoFileId;
 }

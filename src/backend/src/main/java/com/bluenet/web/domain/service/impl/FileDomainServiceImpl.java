@@ -56,12 +56,14 @@ public class FileDomainServiceImpl implements FileDomainService {
     }
 
     /**
-     * 生成文件url，不包括api接口前缀
+     * 生成文件url
      *
+     * @deprecated url 字段已废弃，此方法仅用于向后兼容
      * @param fileType
      *            文件类型枚举
      * @return 生成的url
      */
+    @Deprecated
     private String generateFileUrl(FileType fileType) {
         String uuidPart = UUID.randomUUID().toString();
         return String.format("%s/%s", fileType.name().toLowerCase(), uuidPart);

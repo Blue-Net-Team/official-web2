@@ -12,5 +12,6 @@ public class FileVO {
     private Long id;
     private String name;
     private FileType type;
+    @Deprecated
     private String url;
 }

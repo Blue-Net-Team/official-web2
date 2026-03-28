@@ -17,6 +17,6 @@ public class FileInfo {
     private String name;
     @Schema(description = "文件类型")
     private FileType type;
-    @Schema(description = "文件url，不包含控制层前缀")
+    @Schema(description = "已废弃，文件下载请使用 /api/v1/file/download/{id} 接口", deprecated = true)
     private String url;
 }
