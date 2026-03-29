@@ -9,6 +9,7 @@
             "projectName": "web",
             "cwd": "${workspaceFolder}/src/backend",
             "vmArgs": "-Dspring.profiles.active=dev",
+            "envFile": "${workspaceFolder}/src/backend/.env",
             "env": {
                 "JAVA_HOME": "${env:JAVA_HOME}"
             }
