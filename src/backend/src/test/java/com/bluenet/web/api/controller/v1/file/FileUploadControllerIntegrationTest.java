@@ -81,43 +81,23 @@ class FileUploadControllerIntegrationTest extends BaseIntegrationTest {
     class UploadIntroduceImageTests {
 
         /**
-         * 上传实验室介绍图片：应成功上传
+         * 上传竞赛介绍图片：应成功上传
          */
         @Test
-        @DisplayName("上传实验室介绍图片：应成功上传")
+        @DisplayName("上传竞赛介绍图片：应成功上传")
         @WithUserVO(userId = 1L, studentId = "2024001001", username = "管理员", roleName = "MEMBER", permissions = "file:upload:introduce-image")
-        void uploadIntroduceImage_laboratoryType_shouldUploadSuccessfully() throws Exception {
-            MockMultipartFile file = new MockMultipartFile("file", "lab.jpg", "image/jpeg",
+        void uploadIntroduceImage_competitionType_shouldUploadSuccessfully() throws Exception {
+            MockMultipartFile file = new MockMultipartFile("file", "competition.jpg", "image/jpeg",
                     "jpeg content".getBytes(StandardCharsets.UTF_8));
 
             mockMvc.perform(
                     multipart("/api/v1/file/upload/introduce-image")
                             .file(file)
-                            .param("type", "LABORATORY"))
+                            .param("type", "COMPETITION"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.code").value(200))
                     .andExpect(jsonPath("$.data.id").isNumber())
                     .andExpect(jsonPath("$.data.type").value("NORMAL_IMG"));
-        }
-
-        /**
-         * 上传方向介绍图片：应成功上传并关联方向
-         */
-        @Test
-        @DisplayName("上传方向介绍图片：应成功上传并关联方向")
-        @WithUserVO(userId = 1L, studentId = "2024001001", username = "管理员", roleName = "MEMBER", permissions = "file:upload:introduce-image")
-        void uploadIntroduceImage_directionType_shouldUploadWithDirection() throws Exception {
-            MockMultipartFile file = new MockMultipartFile("file", "direction.jpg", "image/jpeg",
-                    "jpeg content".getBytes(StandardCharsets.UTF_8));
-
-            mockMvc.perform(
-                    multipart("/api/v1/file/upload/introduce-image")
-                            .file(file)
-                            .param("type", "DIRECTION")
-                            .param("direction", "COMPUTER_VISION"))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.code").value(200))
-                    .andExpect(jsonPath("$.data.id").isNumber());
         }
 
         /**
@@ -127,37 +107,17 @@ class FileUploadControllerIntegrationTest extends BaseIntegrationTest {
         @DisplayName("上传介绍图片带描述：应成功上传")
         @WithUserVO(userId = 1L, studentId = "2024001001", username = "管理员", roleName = "MEMBER", permissions = "file:upload:introduce-image")
         void uploadIntroduceImage_withDescription_shouldUploadSuccessfully() throws Exception {
-            MockMultipartFile file = new MockMultipartFile("file", "team.jpg", "image/jpeg",
+            MockMultipartFile file = new MockMultipartFile("file", "competition.jpg", "image/jpeg",
                     "jpeg content".getBytes(StandardCharsets.UTF_8));
 
             mockMvc.perform(
                     multipart("/api/v1/file/upload/introduce-image")
                             .file(file)
-                            .param("type", "TEAM_PHOTO")
-                            .param("description", "团队合照"))
+                            .param("type", "COMPETITION")
+                            .param("description", "竞赛介绍"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.code").value(200))
                     .andExpect(jsonPath("$.data.id").isNumber());
-        }
-
-        /**
-         * 上传介绍图片：非DIRECTION类型时传入direction参数应返回400错误
-         */
-        @Test
-        @DisplayName("上传介绍图片：非DIRECTION类型时传入direction参数应返回400错误")
-        @WithUserVO(userId = 1L, studentId = "2024001001", username = "管理员", roleName = "MEMBER", permissions = "file:upload:introduce-image")
-        void uploadIntroduceImage_nonDirectionTypeWithDirection_shouldReturn400() throws Exception {
-            MockMultipartFile file = new MockMultipartFile("file", "lab.jpg", "image/jpeg",
-                    "jpeg content".getBytes(StandardCharsets.UTF_8));
-
-            mockMvc.perform(
-                    multipart("/api/v1/file/upload/introduce-image")
-                            .file(file)
-                            .param("type", "LABORATORY")
-                            .param("direction", "COMPUTER_VISION"))
-                    .andExpect(status().isBadRequest())
-                    .andExpect(jsonPath("$.code").value(400))
-                    .andExpect(jsonPath("$.msg").value("direction 参数仅在 type=DIRECTION 时有效"));
         }
 
         /**
@@ -167,7 +127,7 @@ class FileUploadControllerIntegrationTest extends BaseIntegrationTest {
         @DisplayName("上传介绍图片：描述超长应返回400错误")
         @WithUserVO(userId = 1L, studentId = "2024001001", username = "管理员", roleName = "MEMBER", permissions = "file:upload:introduce-image")
         void uploadIntroduceImage_descriptionTooLong_shouldReturn400() throws Exception {
-            MockMultipartFile file = new MockMultipartFile("file", "lab.jpg", "image/jpeg",
+            MockMultipartFile file = new MockMultipartFile("file", "competition.jpg", "image/jpeg",
                     "jpeg content".getBytes(StandardCharsets.UTF_8));
 
             // 构造超长描述（超过500字符）
@@ -176,7 +136,7 @@ class FileUploadControllerIntegrationTest extends BaseIntegrationTest {
             mockMvc.perform(
                     multipart("/api/v1/file/upload/introduce-image")
                             .file(file)
-                            .param("type", "LABORATORY")
+                            .param("type", "COMPETITION")
                             .param("description", longDescription))
                     .andExpect(status().isBadRequest());
         }
@@ -187,13 +147,13 @@ class FileUploadControllerIntegrationTest extends BaseIntegrationTest {
         @Test
         @DisplayName("上传介绍图片：未登录应返回401错误")
         void uploadIntroduceImage_unauthenticated_shouldReturn401() throws Exception {
-            MockMultipartFile file = new MockMultipartFile("file", "lab.jpg", "image/jpeg",
+            MockMultipartFile file = new MockMultipartFile("file", "competition.jpg", "image/jpeg",
                     "jpeg content".getBytes(StandardCharsets.UTF_8));
 
             mockMvc.perform(
                     multipart("/api/v1/file/upload/introduce-image")
                             .file(file)
-                            .param("type", "LABORATORY"))
+                            .param("type", "COMPETITION"))
                     .andExpect(status().isUnauthorized());
         }
 
@@ -204,33 +164,31 @@ class FileUploadControllerIntegrationTest extends BaseIntegrationTest {
         @DisplayName("上传介绍图片：非MEMBER角色应返回403错误")
         @WithUserVO(userId = 2L, studentId = "2024001002", username = "考生", roleName = "CANDIDATE")
         void uploadIntroduceImage_nonMember_shouldReturn403() throws Exception {
-            MockMultipartFile file = new MockMultipartFile("file", "lab.jpg", "image/jpeg",
+            MockMultipartFile file = new MockMultipartFile("file", "competition.jpg", "image/jpeg",
                     "jpeg content".getBytes(StandardCharsets.UTF_8));
 
             mockMvc.perform(
                     multipart("/api/v1/file/upload/introduce-image")
                             .file(file)
-                            .param("type", "LABORATORY"))
+                            .param("type", "COMPETITION"))
                     .andExpect(status().isForbidden());
         }
 
         /**
-         * 上传设备介绍图片：应成功上传
+         * 上传介绍图片：无效类型应返回400错误
          */
         @Test
-        @DisplayName("上传设备介绍图片：应成功上传")
+        @DisplayName("上传介绍图片：无效类型应返回400错误")
         @WithUserVO(userId = 1L, studentId = "2024001001", username = "管理员", roleName = "MEMBER", permissions = "file:upload:introduce-image")
-        void uploadIntroduceImage_equipmentType_shouldUploadSuccessfully() throws Exception {
-            MockMultipartFile file = new MockMultipartFile("file", "equipment.jpg", "image/jpeg",
+        void uploadIntroduceImage_invalidType_shouldReturn400() throws Exception {
+            MockMultipartFile file = new MockMultipartFile("file", "test.jpg", "image/jpeg",
                     "jpeg content".getBytes(StandardCharsets.UTF_8));
 
             mockMvc.perform(
                     multipart("/api/v1/file/upload/introduce-image")
                             .file(file)
-                            .param("type", "EQUIPMENT")
-                            .param("description", "实验设备"))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.code").value(200));
+                            .param("type", "INVALID_TYPE"))
+                    .andExpect(status().isBadRequest());
         }
     }
 
@@ -286,12 +244,12 @@ class FileUploadControllerIntegrationTest extends BaseIntegrationTest {
         }
 
         /**
-         * 上传竞赛图片：竞赛不存在应返回400错误
+         * 上传竞赛图片：竞赛不存在应返回404错误
          */
         @Test
         @DisplayName("上传竞赛图片：竞赛不存在应返回404错误")
         @WithUserVO(userId = 1L, studentId = "2024001001", username = "管理员", roleName = "MEMBER", permissions = "file:upload:competition:image")
-        void uploadCompetitionImage_nonExistentCompetition_shouldReturn400() throws Exception {
+        void uploadCompetitionImage_nonExistentCompetition_shouldReturn404() throws Exception {
             MockMultipartFile file = new MockMultipartFile("file", "competition.jpg", "image/jpeg",
                     "jpeg content".getBytes(StandardCharsets.UTF_8));
 
@@ -305,12 +263,12 @@ class FileUploadControllerIntegrationTest extends BaseIntegrationTest {
         }
 
         /**
-         * 上传竞赛图片：图片数量已达上限应返回400错误
+         * 上传竞赛图片：图片数量已达上限应返回409错误
          */
         @Test
         @DisplayName("上传竞赛图片：图片数量已达上限应返回409错误")
         @WithUserVO(userId = 1L, studentId = "2024001001", username = "管理员", roleName = "MEMBER", permissions = "file:upload:competition:image")
-        void uploadCompetitionImage_exceedLimit_shouldReturn400() throws Exception {
+        void uploadCompetitionImage_exceedLimit_shouldReturn409() throws Exception {
             // 创建测试竞赛
             createTestCompetition();
 
@@ -471,12 +429,12 @@ class FileUploadControllerIntegrationTest extends BaseIntegrationTest {
         }
 
         /**
-         * 上传竞赛Logo：竞赛不存在应返回400错误
+         * 上传竞赛Logo：竞赛不存在应返回404错误
          */
         @Test
-        @DisplayName("上传竞赛Logo：竞赛不存在应返回400错误")
+        @DisplayName("上传竞赛Logo：竞赛不存在应返回404错误")
         @WithUserVO(userId = 1L, studentId = "2024001001", username = "管理员", roleName = "MEMBER", permissions = "file:upload:competition:logo")
-        void uploadCompetitionLogo_nonExistentCompetition_shouldReturn400() throws Exception {
+        void uploadCompetitionLogo_nonExistentCompetition_shouldReturn404() throws Exception {
             MockMultipartFile file = new MockMultipartFile("file", "logo.png", "image/png",
                     "png content".getBytes(StandardCharsets.UTF_8));
 

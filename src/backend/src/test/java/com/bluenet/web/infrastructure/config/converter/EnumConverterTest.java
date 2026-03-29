@@ -26,12 +26,12 @@ class EnumConverterTest {
         Converter<String, ImageType> converter = factory.getConverter(ImageType.class);
 
         // 测试转换
-        ImageType result = converter.convert("laboratory");
+        ImageType result = converter.convert("competition");
 
         // 验证
         assertNotNull(result);
-        assertEquals(ImageType.LABORATORY, result);
-        assertEquals("laboratory", result.getValue());
+        assertEquals(ImageType.COMPETITION, result);
+        assertEquals("competition", result.getValue());
     }
 
     @Test
@@ -42,11 +42,11 @@ class EnumConverterTest {
         Converter<String, ImageType> converter = factory.getConverter(ImageType.class);
 
         // 测试转换
-        ImageType result = converter.convert("LABORATORY");
+        ImageType result = converter.convert("COMPETITION");
 
         // 验证
         assertNotNull(result);
-        assertEquals(ImageType.LABORATORY, result);
+        assertEquals(ImageType.COMPETITION, result);
     }
 
     @Test
@@ -57,11 +57,11 @@ class EnumConverterTest {
         Converter<String, ImageType> converter = factory.getConverter(ImageType.class);
 
         // 测试转换
-        ImageType result = converter.convert("Laboratory");
+        ImageType result = converter.convert("Competition");
 
         // 验证
         assertNotNull(result);
-        assertEquals(ImageType.LABORATORY, result);
+        assertEquals(ImageType.COMPETITION, result);
     }
 
 }

@@ -46,4 +46,10 @@ public class AchievementDTO {
 
     @Schema(description = "竞赛Logo文件ID")
     private Long competitionLogoFileId;
+
+    @Schema(description = "成就图片文件ID")
+    private Long fileId;
+
+    @Schema(description = "成就图片URL")
+    private String fileUrl;
 }

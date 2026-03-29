@@ -5,7 +5,6 @@ import com.bluenet.web.api.dto.ResponseMessage;
 import com.bluenet.web.application.service.FileService;
 import com.bluenet.web.domain.exception.DataConflict;
 import com.bluenet.web.domain.exception.DataNotFound;
-import com.bluenet.web.domain.model.enumerate.Direction;
 import com.bluenet.web.domain.model.enumerate.ImageType;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
 import com.bluenet.web.infrastructure.security.annotation.RequiresPermission;
@@ -112,24 +111,21 @@ public class FileUploadController {
     }
 
     // 上传介绍图片
-    @Operation(summary = "上传介绍图片", description = "上传实验室介绍、设备介绍、团队合照、方向介绍等图片")
+    @Operation(summary = "上传介绍图片", description = "上传实验室介绍、设备介绍、竞赛介绍图片。支持类型：laboratory、equipment、competition")
     @PostMapping("/introduce-image")
     @RequiresPermission(name = "上传介绍图片", value = "file:upload:introduce-image", access = AccessLevel.PROTECTED)
     @RequestBody(content = @Content(mediaType = "multipart/form-data", schema = @Schema(type = "object"), schemaProperties = {
             @SchemaProperty(name = "file", schema = @Schema(type = "string", format = "binary")),
             @SchemaProperty(name = "type", schema = @Schema(type = "string", description = "图片类型", allowableValues = {
-                    "laboratory", "equipment", "team_photo", "direction", "patent", "paper" })),
-            @SchemaProperty(name = "direction", schema = @Schema(type = "string", description = "方向（仅在 type=direction 时有效）", allowableValues = {
-                    "COMPUTER_VISION", "STRUCTURAL_DESIGN", "EMBEDDED" })),
+                    "laboratory", "equipment", "competition" })),
             @SchemaProperty(name = "description", schema = @Schema(type = "string", description = "图片描述")) }))
     @SecurityRequirement(name = "bearer-jwt")
     public ResponseMessage<FileInfo> uploadIntroduceImage(
             @RequestParam("file") MultipartFile file,
             @RequestParam("type") ImageType type,
-            @RequestParam(value = "direction", required = false) Direction direction,
             @RequestParam(value = "description", required = false) @Size(max = 500, message = "描述长度不能超过500字符") String description) {
         try {
-            FileInfo fileInfo = fileService.uploadIntroduceImage(type, direction, description, file);
+            FileInfo fileInfo = fileService.uploadIntroduceImage(type, null, description, file);
             log.info("介绍图片上传成功，文件id: {}, 类型: {}", fileInfo.getId(), type);
             return ResponseMessage.success(fileInfo);
         } catch (IllegalArgumentException e) {

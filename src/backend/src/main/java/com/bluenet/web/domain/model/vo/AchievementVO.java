@@ -22,4 +22,6 @@ public class AchievementVO {
     private String competitionName;
     private String competitionShortName;
     private Long competitionLogoFileId;
+    private Long fileId;
+    private String fileUrl;
 }

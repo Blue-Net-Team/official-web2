@@ -7,6 +7,8 @@ import org.springframework.validation.BindException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 
 import com.bluenet.web.api.dto.ResponseMessage;
 import com.bluenet.web.domain.exception.GlobalException;
@@ -62,6 +64,39 @@ public class GlobalExceptionHandler {
         String message = ex.getAllErrors().isEmpty()
                 ? HttpStatus.BAD_REQUEST.getReasonPhrase()
                 : ex.getAllErrors().getFirst().getDefaultMessage();
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(ResponseMessage.error(HttpStatus.BAD_REQUEST.value(), message));
+    }
+
+    /**
+     * 处理缺少必需请求参数异常。
+     *
+     * @param ex
+     *            缺少参数异常
+     * @return 错误响应
+     */
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<ResponseMessage<Void>> handleMissingServletRequestParameterException(
+            MissingServletRequestParameterException ex) {
+        String message = "缺少必需的请求参数: " + ex.getParameterName();
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(ResponseMessage.error(HttpStatus.BAD_REQUEST.value(), message));
+    }
+
+    /**
+     * 处理方法参数类型不匹配异常（如枚举转换失败）。
+     *
+     * @param ex
+     *            类型不匹配异常
+     * @return 错误响应
+     */
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ResponseMessage<Void>> handleMethodArgumentTypeMismatchException(
+            MethodArgumentTypeMismatchException ex) {
+        String message = "参数类型不匹配: " + ex.getName();
+        if (ex.getRequiredType() != null && ex.getRequiredType().isEnum()) {
+            message = "无效的枚举值: " + ex.getValue();
+        }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(ResponseMessage.error(HttpStatus.BAD_REQUEST.value(), message));
     }

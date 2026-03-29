@@ -216,10 +216,10 @@ class EntityCrudTest extends BaseIntegrationTest {
 
         // ImageType 在 IntroduceImage 中
         IntroduceImage image = new IntroduceImage();
-        image.setType(ImageType.LABORATORY);
-        image.setDescription("实验室照片");
+        image.setType(ImageType.COMPETITION);
+        image.setDescription("竞赛照片");
 
-        assertEquals(ImageType.LABORATORY, image.getType());
+        assertEquals(ImageType.COMPETITION, image.getType());
 
         // ProgrammingLanguage 在 AssessmentAnswer 中
         AssessmentAnswer answer = new AssessmentAnswer();

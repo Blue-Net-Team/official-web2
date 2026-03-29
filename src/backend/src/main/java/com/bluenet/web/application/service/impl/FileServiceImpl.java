@@ -5,7 +5,6 @@ import com.bluenet.web.application.service.FileService;
 import com.bluenet.web.domain.exception.DataConflict;
 import com.bluenet.web.domain.exception.DataNotFound;
 import com.bluenet.web.domain.exception.GlobalException;
-import com.bluenet.web.domain.model.enumerate.Direction;
 import com.bluenet.web.domain.model.enumerate.FileType;
 import com.bluenet.web.domain.model.enumerate.ImageType;
 import com.bluenet.web.domain.model.enumerate.QrcodeType;
@@ -101,15 +100,11 @@ public class FileServiceImpl implements FileService {
 
     @Override
     @Transactional
-    public FileInfo uploadIntroduceImage(ImageType type, Direction direction, String description, MultipartFile file) {
-        // 参数验证：direction 仅在 type=DIRECTION 时有效
-        if (direction != null && type != ImageType.DIRECTION) {
-            throw new IllegalArgumentException("direction 参数仅在 type=DIRECTION 时有效");
-        }
-
+    public FileInfo uploadIntroduceImage(ImageType type, com.bluenet.web.domain.model.enumerate.Direction direction,
+            String description, MultipartFile file) {
         FileVO fileVO = saveFile(file, FileType.NORMAL_IMG);
 
-        introduceImageDomainService.addIntroduceImage(type, fileVO.getId(), direction, description);
+        introduceImageDomainService.addIntroduceImage(type, fileVO.getId(), description);
 
         log.info("介绍图片上传成功，文件id: {}, 类型: {}", fileVO.getId(), type);
         return convertToFileInfo(fileVO);

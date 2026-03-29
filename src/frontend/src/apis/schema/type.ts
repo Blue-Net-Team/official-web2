@@ -359,6 +359,10 @@ export interface AchievementDTO {
   competitionShortName: string | null
   /** 竞赛Logo文件ID */
   competitionLogoFileId: number | null
+  /** 成就图片文件ID */
+  fileId: number | null
+  /** 成就图片URL */
+  fileUrl: string | null
 }
 
 /**

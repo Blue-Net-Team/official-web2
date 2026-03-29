@@ -21,7 +21,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.bluenet.web.api.dto.file.FileInfo;
-import com.bluenet.web.domain.model.enumerate.Direction;
 import com.bluenet.web.domain.model.enumerate.FileType;
 import com.bluenet.web.domain.model.enumerate.ImageType;
 import com.bluenet.web.domain.model.vo.FileVO;
@@ -84,21 +83,19 @@ class FileServiceImplTest {
     class UploadIntroduceImageTests {
 
         /**
-         * 上传实验室介绍图片：应成功上传并返回文件信息
+         * 上传竞赛介绍图片：应成功上传并返回文件信息
          */
         @Test
-        @DisplayName("上传实验室介绍图片：应成功上传并返回文件信息")
-        void uploadIntroduceImage_laboratoryType_shouldUploadSuccessfully() throws IOException {
+        @DisplayName("上传竞赛介绍图片：应成功上传并返回文件信息")
+        void uploadIntroduceImage_competitionType_shouldUploadSuccessfully() throws IOException {
             // 准备
             when(fileDomainService.generateFilename(eq(FileType.NORMAL_IMG), any())).thenReturn(TEST_FILE_NAME);
             when(fileDomainService.saveFile(eq(FileType.NORMAL_IMG), any(), any())).thenReturn(testFileVO);
-            when(
-                    introduceImageDomainService
-                            .addIntroduceImage(eq(ImageType.LABORATORY), eq(TEST_FILE_ID), isNull(), isNull()))
-                                    .thenReturn(1L);
+            when(introduceImageDomainService.addIntroduceImage(eq(ImageType.COMPETITION), eq(TEST_FILE_ID), isNull()))
+                    .thenReturn(1L);
 
             // 执行
-            FileInfo result = fileService.uploadIntroduceImage(ImageType.LABORATORY, null, null, mockFile);
+            FileInfo result = fileService.uploadIntroduceImage(ImageType.COMPETITION, null, null, mockFile);
 
             // 验证
             assertNotNull(result);
@@ -108,32 +105,7 @@ class FileServiceImplTest {
             assertEquals(TEST_FILE_URL, result.getUrl());
 
             verify(fileDomainService).saveFile(eq(FileType.NORMAL_IMG), any(), any());
-            verify(introduceImageDomainService).addIntroduceImage(ImageType.LABORATORY, TEST_FILE_ID, null, null);
-        }
-
-        /**
-         * 上传方向介绍图片：应成功上传并关联方向
-         */
-        @Test
-        @DisplayName("上传方向介绍图片：应成功上传并关联方向")
-        void uploadIntroduceImage_directionType_shouldUploadWithDirection() throws IOException {
-            // 准备
-            Direction direction = Direction.COMPUTER_VISION;
-            when(fileDomainService.generateFilename(eq(FileType.NORMAL_IMG), any())).thenReturn(TEST_FILE_NAME);
-            when(fileDomainService.saveFile(eq(FileType.NORMAL_IMG), any(), any())).thenReturn(testFileVO);
-            when(
-                    introduceImageDomainService
-                            .addIntroduceImage(eq(ImageType.DIRECTION), eq(TEST_FILE_ID), eq(direction), isNull()))
-                                    .thenReturn(1L);
-
-            // 执行
-            FileInfo result = fileService.uploadIntroduceImage(ImageType.DIRECTION, direction, null, mockFile);
-
-            // 验证
-            assertNotNull(result);
-            assertEquals(TEST_FILE_ID, result.getId());
-
-            verify(introduceImageDomainService).addIntroduceImage(ImageType.DIRECTION, TEST_FILE_ID, direction, null);
+            verify(introduceImageDomainService).addIntroduceImage(ImageType.COMPETITION, TEST_FILE_ID, null);
         }
 
         /**
@@ -147,90 +119,20 @@ class FileServiceImplTest {
             when(fileDomainService.saveFile(eq(FileType.NORMAL_IMG), any(), any())).thenReturn(testFileVO);
             when(
                     introduceImageDomainService.addIntroduceImage(
-                            eq(ImageType.LABORATORY),
+                            eq(ImageType.COMPETITION),
                             eq(TEST_FILE_ID),
-                            isNull(),
                             eq(TEST_DESCRIPTION)))
                                     .thenReturn(1L);
 
             // 执行
-            FileInfo result = fileService.uploadIntroduceImage(ImageType.LABORATORY, null, TEST_DESCRIPTION, mockFile);
+            FileInfo result = fileService.uploadIntroduceImage(ImageType.COMPETITION, null, TEST_DESCRIPTION, mockFile);
 
             // 验证
             assertNotNull(result);
             assertEquals(TEST_FILE_ID, result.getId());
 
             verify(introduceImageDomainService)
-                    .addIntroduceImage(ImageType.LABORATORY, TEST_FILE_ID, null, TEST_DESCRIPTION);
-        }
-
-        /**
-         * 上传介绍图片：非DIRECTION类型时传入direction参数应抛出异常
-         */
-        @Test
-        @DisplayName("上传介绍图片：非DIRECTION类型时传入direction参数应抛出异常")
-        void uploadIntroduceImage_nonDirectionTypeWithDirection_shouldThrowException() {
-            // 准备
-            Direction direction = Direction.COMPUTER_VISION;
-
-            // 执行 & 验证
-            IllegalArgumentException exception = assertThrows(
-                    IllegalArgumentException.class,
-                    () -> fileService.uploadIntroduceImage(ImageType.LABORATORY, direction, null, mockFile));
-
-            assertEquals("direction 参数仅在 type=DIRECTION 时有效", exception.getMessage());
-
-            // 验证没有调用文件保存方法
-            verify(fileDomainService, never()).saveFile(any(), any(), any());
-            verify(introduceImageDomainService, never()).addIntroduceImage(any(), any(), any(), any());
-        }
-
-        /**
-         * 上传设备介绍图片：应成功上传
-         */
-        @Test
-        @DisplayName("上传设备介绍图片：应成功上传")
-        void uploadIntroduceImage_equipmentType_shouldUploadSuccessfully() throws IOException {
-            // 准备
-            when(fileDomainService.generateFilename(eq(FileType.NORMAL_IMG), any())).thenReturn(TEST_FILE_NAME);
-            when(fileDomainService.saveFile(eq(FileType.NORMAL_IMG), any(), any())).thenReturn(testFileVO);
-            when(
-                    introduceImageDomainService
-                            .addIntroduceImage(eq(ImageType.EQUIPMENT), eq(TEST_FILE_ID), isNull(), isNull()))
-                                    .thenReturn(1L);
-
-            // 执行
-            FileInfo result = fileService.uploadIntroduceImage(ImageType.EQUIPMENT, null, null, mockFile);
-
-            // 验证
-            assertNotNull(result);
-            assertEquals(TEST_FILE_ID, result.getId());
-
-            verify(introduceImageDomainService).addIntroduceImage(ImageType.EQUIPMENT, TEST_FILE_ID, null, null);
-        }
-
-        /**
-         * 上传团队合照：应成功上传
-         */
-        @Test
-        @DisplayName("上传团队合照：应成功上传")
-        void uploadIntroduceImage_teamPhotoType_shouldUploadSuccessfully() throws IOException {
-            // 准备
-            when(fileDomainService.generateFilename(eq(FileType.NORMAL_IMG), any())).thenReturn(TEST_FILE_NAME);
-            when(fileDomainService.saveFile(eq(FileType.NORMAL_IMG), any(), any())).thenReturn(testFileVO);
-            when(
-                    introduceImageDomainService
-                            .addIntroduceImage(eq(ImageType.TEAM_PHOTO), eq(TEST_FILE_ID), isNull(), isNull()))
-                                    .thenReturn(1L);
-
-            // 执行
-            FileInfo result = fileService.uploadIntroduceImage(ImageType.TEAM_PHOTO, null, null, mockFile);
-
-            // 验证
-            assertNotNull(result);
-            assertEquals(TEST_FILE_ID, result.getId());
-
-            verify(introduceImageDomainService).addIntroduceImage(ImageType.TEAM_PHOTO, TEST_FILE_ID, null, null);
+                    .addIntroduceImage(ImageType.COMPETITION, TEST_FILE_ID, TEST_DESCRIPTION);
         }
     }
 

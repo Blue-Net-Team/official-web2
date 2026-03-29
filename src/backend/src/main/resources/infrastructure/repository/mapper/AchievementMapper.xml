@@ -22,6 +22,8 @@
         <result column="competition_name" property="competitionName"/>
         <result column="competition_short_name" property="competitionShortName"/>
         <result column="competition_logo_file_id" property="competitionLogoFileId"/>
+        <result column="file_id" property="fileId"/>
+        <result column="file_url" property="fileUrl"/>
     </resultMap>
 
     <resultMap id="AchievementStatsVOResultMap" type="com.bluenet.web.domain.model.vo.AchievementStatsVO">
@@ -42,9 +44,12 @@
             a.award_name,
             c.name AS competition_name,
             c.short_name AS competition_short_name,
-            c.logo_file_id AS competition_logo_file_id
+            c.logo_file_id AS competition_logo_file_id,
+            a.file_id,
+            f.url AS file_url
         FROM tb_achievement a
         LEFT JOIN tb_competition c ON a.relate_to = c.name
+        LEFT JOIN tb_file f ON a.file_id = f.id
         <where>
             <if test="type != null and type != ''">
                 AND a.type = #{type}

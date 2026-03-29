@@ -1,6 +1,5 @@
 package com.bluenet.web.domain.repository;
 
-import com.bluenet.web.domain.model.enumerate.Direction;
 import com.bluenet.web.domain.model.enumerate.ImageType;
 import com.bluenet.web.domain.model.vo.IntroduceImageVO;
 
@@ -14,15 +13,13 @@ import java.util.List;
  */
 public interface IntroduceImageRepository {
     /**
-     * 根据类型和方向查询介绍图片
+     * 根据类型查询介绍图片
      *
      * @param type
      *            图片类型
-     * @param direction
-     *            方向
      * @return 介绍图片列表
      */
-    List<IntroduceImageVO> findByTypeAndDirection(ImageType type, Direction direction);
+    List<IntroduceImageVO> findByType(ImageType type);
 
     /**
      * 根据类型和竞赛ID查询介绍图片

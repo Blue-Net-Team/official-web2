@@ -1,6 +1,5 @@
 package com.bluenet.web.api.controller.v1.introduce;
 
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -16,17 +15,18 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
-import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import com.bluenet.web.api.dto.introduce.IntroduceImageDTO;
 import com.bluenet.web.application.service.IntroduceImageService;
-import com.bluenet.web.domain.model.enumerate.Direction;
 import com.bluenet.web.domain.model.enumerate.ImageType;
 import com.bluenet.web.testcontainers.TestcontainersConfiguration;
 
+/**
+ * IntroduceImageController单元测试
+ */
 @DisplayName("IntroduceImageController 单元测试")
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -41,112 +41,68 @@ class IntroduceImageControllerTest {
     @MockBean
     private IntroduceImageService introduceImageService;
 
-    private static final Long TEST_ID = 1L;
-    private static final Long TEST_FILE_ID = 100L;
-    private static final String TEST_DESCRIPTION = "测试图片";
-    private static final String TEST_FILE_URL = "http://example.com/image.jpg";
-    private static final Direction TEST_DIRECTION = Direction.COMPUTER_VISION;
+    private static final String BASE_URL = "/api/v1/introduce-images";
 
-    private IntroduceImageDTO createTestIntroduceImageDTO() {
+    private IntroduceImageDTO createTestDTO() {
         return IntroduceImageDTO.builder()
-                .id(TEST_ID)
-                .type(ImageType.LABORATORY)
-                .description(TEST_DESCRIPTION)
-                .fileId(TEST_FILE_ID)
-                .fileUrl(TEST_FILE_URL)
-                .direction(TEST_DIRECTION)
+                .id(1L)
+                .type(ImageType.COMPETITION)
+                .description("测试图片")
+                .fileId(100L)
+                .fileUrl("http://example.com/image.jpg")
                 .build();
     }
 
     /**
-     * 获取介绍图片列表：应返回200成功响应
+     * 获取介绍图片列表：应返回成功响应
      */
     @Test
-    @DisplayName("获取介绍图片列表：应返回200成功响应")
-    void getIntroduceImages_shouldReturn200Success() throws Exception {
+    @DisplayName("获取介绍图片列表：应返回成功响应")
+    void getIntroduceImages_shouldReturnSuccessResponse() throws Exception {
         // 准备
-        ImageType type = ImageType.LABORATORY;
-        List<IntroduceImageDTO> expectedDTOs = new ArrayList<>();
-        expectedDTOs.add(createTestIntroduceImageDTO());
+        List<IntroduceImageDTO> images = new ArrayList<>();
+        images.add(createTestDTO());
 
-        when(introduceImageService.getIntroduceImages(type, null)).thenReturn(expectedDTOs);
+        when(introduceImageService.getIntroduceImages(ImageType.COMPETITION)).thenReturn(images);
 
-        // 执行 & 验证
+        // 执行和验证
         mockMvc.perform(
-                get("/api/v1/introduce-images").param("type", type.name()).contentType(MediaType.APPLICATION_JSON))
+                get(BASE_URL)
+                        .param("type", "competition"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200))
-                .andExpect(jsonPath("$.msg").value("Success"))
-                .andExpect(jsonPath("$.data[0].id").value(TEST_ID))
-                .andExpect(jsonPath("$.data[0].type").value(type.name()))
-                .andExpect(jsonPath("$.data[0].description").value(TEST_DESCRIPTION));
-
-        verify(introduceImageService).getIntroduceImages(type, null);
+                .andExpect(jsonPath("$.data").isArray())
+                .andExpect(jsonPath("$.data[0].id").value(1))
+                .andExpect(jsonPath("$.data[0].type").value("COMPETITION"));
     }
 
     /**
-     * 获取介绍图片列表：带方向参数应返回200成功响应
+     * 获取介绍图片列表：无图片时应返回空数组
      */
     @Test
-    @DisplayName("获取介绍图片列表：带方向参数应返回200成功响应")
-    void getIntroduceImages_withDirection_shouldReturn200Success() throws Exception {
+    @DisplayName("获取介绍图片列表：无图片时应返回空数组")
+    void getIntroduceImages_noImages_shouldReturnEmptyArray() throws Exception {
         // 准备
-        ImageType type = ImageType.DIRECTION;
-        Direction direction = TEST_DIRECTION;
-        List<IntroduceImageDTO> expectedDTOs = new ArrayList<>();
-        expectedDTOs.add(createTestIntroduceImageDTO());
+        when(introduceImageService.getIntroduceImages(ImageType.COMPETITION)).thenReturn(new ArrayList<>());
 
-        when(introduceImageService.getIntroduceImages(type, direction)).thenReturn(expectedDTOs);
-
-        // 执行 & 验证
+        // 执行和验证
         mockMvc.perform(
-                get("/api/v1/introduce-images").param("type", type.name())
-                        .param("direction", direction.name())
-                        .contentType(MediaType.APPLICATION_JSON))
+                get(BASE_URL)
+                        .param("type", "competition"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200))
-                .andExpect(jsonPath("$.msg").value("Success"))
-                .andExpect(jsonPath("$.data[0].direction").value(direction.name()));
-
-        verify(introduceImageService).getIntroduceImages(type, direction);
-    }
-
-    /**
-     * 获取介绍图片列表：无匹配图片应返回空列表
-     */
-    @Test
-    @DisplayName("获取介绍图片列表：无匹配图片应返回空列表")
-    void getIntroduceImages_noMatchingImages_shouldReturnEmptyList() throws Exception {
-        // 准备
-        ImageType type = ImageType.LABORATORY;
-        List<IntroduceImageDTO> expectedDTOs = new ArrayList<>();
-
-        when(introduceImageService.getIntroduceImages(type, null)).thenReturn(expectedDTOs);
-
-        // 执行 & 验证
-        mockMvc.perform(
-                get("/api/v1/introduce-images").param("type", type.name()).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value(200))
-                .andExpect(jsonPath("$.msg").value("Success"))
+                .andExpect(jsonPath("$.data").isArray())
                 .andExpect(jsonPath("$.data").isEmpty());
-
-        verify(introduceImageService).getIntroduceImages(type, null);
     }
 
     /**
-     * 获取介绍图片列表：参数错误应返回500错误响应
+     * 获取介绍图片列表：缺少type参数应返回400错误
      */
     @Test
-    @DisplayName("获取介绍图片列表：参数错误应返回500错误响应")
-    void getIntroduceImages_invalidParameters_shouldReturn500Error() throws Exception {
-        // 准备
-        String invalidType = "INVALID_TYPE";
-
-        // 执行 & 验证
-        mockMvc.perform(
-                get("/api/v1/introduce-images").param("type", invalidType).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isInternalServerError());
+    @DisplayName("获取介绍图片列表：缺少type参数应返回400错误")
+    void getIntroduceImages_missingType_shouldReturn400() throws Exception {
+        // 执行和验证
+        mockMvc.perform(get(BASE_URL))
+                .andExpect(status().isBadRequest());
     }
-
 }

@@ -1,7 +1,6 @@
 package com.bluenet.web.application.service;
 
 import com.bluenet.web.api.dto.file.FileInfo;
-import com.bluenet.web.domain.model.enumerate.Direction;
 import com.bluenet.web.domain.model.enumerate.ImageType;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -65,14 +64,15 @@ public interface FileService {
      * @param type
      *            图片类型
      * @param direction
-     *            方向（仅在 type=DIRECTION 时有效）
+     *            方向（已弃用，传 null）
      * @param description
      *            图片描述
      * @param file
      *            上传的文件
      * @return 文件信息
      */
-    FileInfo uploadIntroduceImage(ImageType type, Direction direction, String description, MultipartFile file);
+    FileInfo uploadIntroduceImage(ImageType type, com.bluenet.web.domain.model.enumerate.Direction direction,
+            String description, MultipartFile file);
 
     /**
      * 上传竞赛合照

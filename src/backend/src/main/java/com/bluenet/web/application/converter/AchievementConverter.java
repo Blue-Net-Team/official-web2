@@ -25,6 +25,8 @@ public class AchievementConverter {
                 .competitionName(vo.getCompetitionName())
                 .competitionShortName(vo.getCompetitionShortName())
                 .competitionLogoFileId(vo.getCompetitionLogoFileId())
+                .fileId(vo.getFileId())
+                .fileUrl(vo.getFileUrl())
                 .build();
     }
 

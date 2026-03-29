@@ -1,7 +1,6 @@
 package com.bluenet.web.infrastructure.repository.impl;
 
 import com.bluenet.web.domain.model.entity.IntroduceImage;
-import com.bluenet.web.domain.model.enumerate.Direction;
 import com.bluenet.web.domain.model.enumerate.ImageType;
 import com.bluenet.web.domain.model.vo.IntroduceImageVO;
 import com.bluenet.web.domain.repository.IntroduceImageRepository;
@@ -17,8 +16,8 @@ public class IntroduceImageRepositoryImpl implements IntroduceImageRepository {
     private final IntroduceImageMapper introduceImageMapper;
 
     @Override
-    public List<IntroduceImageVO> findByTypeAndDirection(ImageType type, Direction direction) {
-        return introduceImageMapper.selectByTypeAndDirection(type, direction);
+    public List<IntroduceImageVO> findByType(ImageType type) {
+        return introduceImageMapper.selectByType(type);
     }
 
     @Override

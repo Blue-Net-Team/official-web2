@@ -20,4 +20,5 @@ public class Achievement {
     private LocalDate achieveAt;
     private AwardLevel awardLevel;
     private String awardName;
+    private Long fileId;
 }

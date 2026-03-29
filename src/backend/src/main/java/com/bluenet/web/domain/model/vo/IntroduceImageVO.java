@@ -1,6 +1,5 @@
 package com.bluenet.web.domain.model.vo;
 
-import com.bluenet.web.domain.model.enumerate.Direction;
 import com.bluenet.web.domain.model.enumerate.ImageType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -35,11 +34,6 @@ public class IntroduceImageVO {
      * 关联的文件ID
      */
     private Long fileId;
-
-    /**
-     * 方向（仅在 type=DIRECTION 时有效）
-     */
-    private Direction direction;
 
     /**
      * 文件URL（用于前端直接访问）

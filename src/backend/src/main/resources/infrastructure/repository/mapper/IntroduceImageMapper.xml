@@ -16,29 +16,24 @@
         <result column="type" property="type"/>
         <result column="description" property="description"/>
         <result column="file_id" property="fileId"/>
-        <result column="direction" property="direction"/>
         <result column="file_url" property="fileUrl"/>
         <result column="competition_id" property="competitionId"/>
         <result column="sort_order" property="sortOrder"/>
     </resultMap>
 
-    <select id="selectByTypeAndDirection" resultMap="IntroduceImageVOResultMap">
+    <select id="selectByType" resultMap="IntroduceImageVOResultMap">
         SELECT
             ii.id,
             ii.type,
             ii.description,
             ii.file_id,
-            ii.direction,
             f.url AS file_url,
             ii.competition_id,
             ii.sort_order
         FROM tb_introduce_image ii
         LEFT JOIN tb_file f ON ii.file_id = f.id
         WHERE ii.type = #{type}
-        <if test="direction != null">
-            AND ii.direction = #{direction}
-        </if>
-        ORDER BY ii.id ASC
+        ORDER BY ii.sort_order ASC, ii.id ASC
     </select>
 
     <select id="selectByTypeAndCompetitionId" resultMap="IntroduceImageVOResultMap">
@@ -47,7 +42,6 @@
             ii.type,
             ii.description,
             ii.file_id,
-            ii.direction,
             f.url AS file_url,
             ii.competition_id,
             ii.sort_order

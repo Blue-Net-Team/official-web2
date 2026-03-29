@@ -28,7 +28,6 @@ public class IntroduceImageConverter {
                 .type(introduceImageVO.getType())
                 .description(introduceImageVO.getDescription())
                 .fileId(introduceImageVO.getFileId())
-                .direction(introduceImageVO.getDirection())
                 .fileUrl(introduceImageVO.getFileUrl())
                 .build();
     }
