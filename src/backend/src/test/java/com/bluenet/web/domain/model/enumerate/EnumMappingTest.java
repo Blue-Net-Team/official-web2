@@ -87,8 +87,6 @@ class EnumMappingTest extends BaseIntegrationTest {
 
     @Test
     void testImageTypeEnumValues() {
-        assertEquals("laboratory", ImageType.LABORATORY.getValue());
-        assertEquals("equipment", ImageType.EQUIPMENT.getValue());
         assertEquals("competition", ImageType.COMPETITION.getValue());
     }
 

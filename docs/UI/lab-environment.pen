@@ -1,0 +1,1043 @@
+{
+  "version": "2.9",
+  "children": [
+    {
+      "type": "frame",
+      "id": "Rpmpm",
+      "x": 0,
+      "y": 0,
+      "name": "设备装备-桌面端",
+      "width": 1440,
+      "fill": "#0a0a0f",
+      "layout": "vertical",
+      "children": [
+        {
+          "type": "frame",
+          "id": "wx3vR",
+          "name": "Hero区域",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 16,
+          "padding": [
+            100,
+            120,
+            60,
+            120
+          ],
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "kEOK1",
+              "name": "heroTitle",
+              "fill": "#ffffff",
+              "content": "实验室环境",
+              "fontFamily": "Inter",
+              "fontSize": 56,
+              "fontWeight": "600"
+            },
+            {
+              "type": "text",
+              "id": "tt53p",
+              "name": "heroSubtitle",
+              "fill": "#a0a0b0",
+              "content": "专业的实验场地与先进的工程设备，为创新实践提供全方位支持",
+              "fontFamily": "Inter",
+              "fontSize": 20,
+              "fontWeight": "normal"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "HgBdR",
+          "name": "场地展示区",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 32,
+          "padding": [
+            45,
+            120,
+            60,
+            120
+          ],
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "nKf5m",
+              "name": "Frame 1",
+              "clip": true,
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 23,
+              "justifyContent": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "TSHWb",
+                  "name": "场地标题",
+                  "fill": "#ffffff",
+                  "content": "我们的场地",
+                  "fontFamily": "Inter",
+                  "fontSize": 36,
+                  "fontWeight": "600"
+                },
+                {
+                  "type": "text",
+                  "id": "yY43M",
+                  "name": "场地描述",
+                  "fill": "#a0a0b0",
+                  "content": "宽敞明亮的实验室环境，为创新实践提供理想空间",
+                  "fontFamily": "Inter",
+                  "fontSize": 18,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "52C55",
+              "name": "场地网格",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 24,
+              "justifyContent": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "Pj4gh",
+                  "name": "场地第一行",
+                  "width": "fill_container",
+                  "gap": 24,
+                  "justifyContent": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "adSOk",
+                      "name": "办公室卡片",
+                      "width": 588,
+                      "fill": "#15151f",
+                      "cornerRadius": 16,
+                      "effect": {
+                        "type": "shadow",
+                        "shadowType": "outer",
+                        "color": "#00000040",
+                        "offset": {
+                          "x": 0,
+                          "y": 4
+                        },
+                        "blur": 24
+                      },
+                      "layout": "vertical",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "WY2F9",
+                          "name": "办公室图片",
+                          "width": "fill_container",
+                          "height": 280,
+                          "fill": {
+                            "type": "image",
+                            "enabled": true,
+                            "url": "./images/venue-office.png",
+                            "mode": "fill"
+                          },
+                          "cornerRadius": [
+                            16,
+                            16,
+                            0,
+                            0
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "QpU7c",
+                          "name": "办公室内容",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 12,
+                          "padding": 24,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "HLflw",
+                              "name": "办公室标题",
+                              "fill": "#ffffff",
+                              "content": "办公区域",
+                              "fontFamily": "Inter",
+                              "fontSize": 20,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "text",
+                              "id": "cHje0",
+                              "name": "办公室副标题",
+                              "fill": "#4a9eff",
+                              "content": "团队协作空间",
+                              "fontFamily": "Inter",
+                              "fontSize": 14,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "text",
+                              "id": "o1XT7",
+                              "name": "办公室描述",
+                              "fill": "#a0a0b0",
+                              "textGrowth": "fixed-width",
+                              "width": 540,
+                              "content": "配备充足的办公桌椅和充足的电源接口，为团队成员提供专注高效的工作环境。支持小组讨论和独立开发两种工作模式。",
+                              "fontFamily": "Inter",
+                              "fontSize": 14,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "8K0Yx",
+                      "name": "调试场地卡片",
+                      "width": 588,
+                      "fill": "#15151f",
+                      "cornerRadius": 16,
+                      "effect": {
+                        "type": "shadow",
+                        "shadowType": "outer",
+                        "color": "#00000040",
+                        "offset": {
+                          "x": 0,
+                          "y": 4
+                        },
+                        "blur": 24
+                      },
+                      "layout": "vertical",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "oXX5j",
+                          "name": "调试场地图片",
+                          "width": "fill_container",
+                          "height": 280,
+                          "fill": {
+                            "type": "image",
+                            "enabled": true,
+                            "url": "./images/venue-debug.png",
+                            "mode": "fill"
+                          },
+                          "cornerRadius": [
+                            16,
+                            16,
+                            0,
+                            0
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "2vU7X",
+                          "name": "调试场地内容",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 12,
+                          "padding": 24,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "AK1Ll",
+                              "name": "调试场地标题",
+                              "fill": "#ffffff",
+                              "content": "调试场地",
+                              "fontFamily": "Inter",
+                              "fontSize": 20,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "text",
+                              "id": "5207L",
+                              "name": "调试场地副标题",
+                              "fill": "#4a9eff",
+                              "content": "硬件测试专区",
+                              "fontFamily": "Inter",
+                              "fontSize": 14,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "text",
+                              "id": "Ibhgj",
+                              "name": "调试场地描述",
+                              "fill": "#a0a0b0",
+                              "textGrowth": "fixed-width",
+                              "width": 540,
+                              "content": "专业的硬件调试工作台，配备示波器、万用表、电源等测试仪器。",
+                              "fontFamily": "Inter",
+                              "fontSize": 14,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "2ISXt",
+                  "name": "场地第二行",
+                  "width": "fill_container",
+                  "gap": 24,
+                  "justifyContent": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "AATRQ",
+                      "name": "实验室规模卡片",
+                      "width": 588,
+                      "fill": "#15151f",
+                      "cornerRadius": 16,
+                      "effect": {
+                        "type": "shadow",
+                        "shadowType": "outer",
+                        "color": "#00000040",
+                        "offset": {
+                          "x": 0,
+                          "y": 4
+                        },
+                        "blur": 24
+                      },
+                      "layout": "vertical",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "4P3k6",
+                          "name": "实验室规模图片",
+                          "width": "fill_container",
+                          "height": 280,
+                          "fill": {
+                            "type": "image",
+                            "enabled": true,
+                            "url": "./images/venue-scale.png",
+                            "mode": "fill"
+                          },
+                          "cornerRadius": [
+                            16,
+                            16,
+                            0,
+                            0
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "rsntV",
+                          "name": "实验室规模内容",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 12,
+                          "padding": 24,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "p2TtQ",
+                              "name": "实验室规模标题",
+                              "fill": "#ffffff",
+                              "content": "实验室规模",
+                              "fontFamily": "Inter",
+                              "fontSize": 20,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "text",
+                              "id": "N0U05",
+                              "name": "实验室规模副标题",
+                              "fill": "#4a9eff",
+                              "content": "200+平米创新空间",
+                              "fontFamily": "Inter",
+                              "fontSize": 14,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "text",
+                              "id": "gkOww",
+                              "name": "实验室规模描述",
+                              "fill": "#a0a0b0",
+                              "textGrowth": "fixed-width",
+                              "width": 540,
+                              "content": "总面积超过200平方米的现代化实验室，划分为多个功能区域。可同时容纳50余名成员进行项目开发，配备完善的消防和安全设施。",
+                              "fontFamily": "Inter",
+                              "fontSize": 14,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "NlZDO",
+                      "name": "会议室卡片",
+                      "width": 588,
+                      "fill": "#15151f",
+                      "cornerRadius": 16,
+                      "effect": {
+                        "type": "shadow",
+                        "shadowType": "outer",
+                        "color": "#00000040",
+                        "offset": {
+                          "x": 0,
+                          "y": 4
+                        },
+                        "blur": 24
+                      },
+                      "layout": "vertical",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "KPCuK",
+                          "name": "会议室图片",
+                          "width": "fill_container",
+                          "height": 280,
+                          "fill": {
+                            "type": "image",
+                            "enabled": true,
+                            "url": "./images/venue-meeting.png",
+                            "mode": "fill"
+                          },
+                          "cornerRadius": [
+                            16,
+                            16,
+                            0,
+                            0
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "KCr3q",
+                          "name": "会议室内容",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 12,
+                          "padding": 24,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "lQzuy",
+                              "name": "会议室标题",
+                              "fill": "#ffffff",
+                              "content": "多功能会议室",
+                              "fontFamily": "Inter",
+                              "fontSize": 20,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "text",
+                              "id": "1lqYW",
+                              "name": "会议室副标题",
+                              "fill": "#4a9eff",
+                              "content": "项目研讨与分享",
+                              "fontFamily": "Inter",
+                              "fontSize": 14,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "text",
+                              "id": "QeKIn",
+                              "name": "会议室描述",
+                              "fill": "#a0a0b0",
+                              "textGrowth": "fixed-width",
+                              "width": 540,
+                              "content": "配备投影仪和视频会议设备的多功能会议室。可容纳60人同时进行项目汇报、技术分享和团队培训，支持线上线下混合会议模式。",
+                              "fontFamily": "Inter",
+                              "fontSize": 14,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "Dep1Y",
+          "name": "设备展示区",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 32,
+          "padding": [
+            60,
+            120,
+            100,
+            120
+          ],
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "S6pI1",
+              "name": "Frame 2",
+              "clip": true,
+              "width": "fill_container",
+              "layout": "vertical",
+              "justifyContent": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "0Tl3y",
+                  "name": "sectionTitle",
+                  "fill": "#ffffff",
+                  "content": "我们的设备",
+                  "fontFamily": "Inter",
+                  "fontSize": 36,
+                  "fontWeight": "600"
+                },
+                {
+                  "type": "text",
+                  "id": "PRcBR",
+                  "name": "设备描述",
+                  "fill": "#a0a0b0",
+                  "content": "涵盖3D打印、嵌入式开发、电路设计等多领域的专业设备，满足各类创新项目需求",
+                  "fontFamily": "Inter",
+                  "fontSize": 18,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "XlSM8",
+              "name": "设备网格",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 24,
+              "justifyContent": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "FYnNe",
+                  "name": "第一行",
+                  "width": "fill_container",
+                  "gap": 24,
+                  "justifyContent": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "9gr6k",
+                      "name": "设备卡片1",
+                      "width": 380,
+                      "fill": "#15151f",
+                      "cornerRadius": 16,
+                      "effect": {
+                        "type": "shadow",
+                        "shadowType": "outer",
+                        "color": "#00000040",
+                        "offset": {
+                          "x": 0,
+                          "y": 4
+                        },
+                        "blur": 24
+                      },
+                      "layout": "vertical",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "BJzF8",
+                          "name": "设备图片",
+                          "width": "fill_container",
+                          "height": 200,
+                          "fill": {
+                            "type": "image",
+                            "enabled": true,
+                            "url": "./images/generated-1774754802281.png",
+                            "mode": "fill"
+                          },
+                          "cornerRadius": [
+                            16,
+                            16,
+                            0,
+                            0
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "stHh3",
+                          "name": "卡片内容",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 12,
+                          "padding": 24,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "lNkfl",
+                              "name": "card1Title",
+                              "fill": "#ffffff",
+                              "content": "3D打印机",
+                              "fontFamily": "Inter",
+                              "fontSize": 20,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "text",
+                              "id": "ZlOTz",
+                              "name": "card1Brand",
+                              "fill": "#4a9eff",
+                              "content": "泰尔时代",
+                              "fontFamily": "Inter",
+                              "fontSize": 14,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "text",
+                              "id": "7T1Ed",
+                              "name": "card1Desc",
+                              "fill": "#a0a0b0",
+                              "textGrowth": "fixed-width",
+                              "width": 332,
+                              "content": "高精度FDM 3D打印设备，支持PLA、ABS等多种材料，可快速制造原型和零件。",
+                              "fontFamily": "Inter",
+                              "fontSize": 14,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "FU3ct",
+                      "name": "设备卡片2",
+                      "width": 380,
+                      "fill": "#15151f",
+                      "cornerRadius": 16,
+                      "effect": {
+                        "type": "shadow",
+                        "shadowType": "outer",
+                        "color": "#00000040",
+                        "offset": {
+                          "x": 0,
+                          "y": 4
+                        },
+                        "blur": 24
+                      },
+                      "layout": "vertical",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "4Ce3A",
+                          "name": "设备图片",
+                          "width": "fill_container",
+                          "height": 200,
+                          "fill": {
+                            "type": "image",
+                            "enabled": true,
+                            "url": "./images/generated-1774754821943.png",
+                            "mode": "fill"
+                          },
+                          "cornerRadius": [
+                            16,
+                            16,
+                            0,
+                            0
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "bxG24",
+                          "name": "卡片内容",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 12,
+                          "padding": 24,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "7unMn",
+                              "name": "card2Title",
+                              "fill": "#ffffff",
+                              "content": "激光切割机",
+                              "fontFamily": "Inter",
+                              "fontSize": 20,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "text",
+                              "id": "nrdxg",
+                              "name": "card2Brand",
+                              "fill": "#4a9eff",
+                              "content": "华中数控",
+                              "fontFamily": "Inter",
+                              "fontSize": 14,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "text",
+                              "id": "gQuKd",
+                              "name": "card2Desc",
+                              "fill": "#a0a0b0",
+                              "textGrowth": "fixed-width",
+                              "width": 332,
+                              "content": "高精度激光切割设备，可切割亚克力、木板、皮革等多种材料，适用于精密加工。",
+                              "fontFamily": "Inter",
+                              "fontSize": 14,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "10LYa",
+                      "name": "设备卡片3",
+                      "width": 380,
+                      "fill": "#15151f",
+                      "cornerRadius": 16,
+                      "effect": {
+                        "type": "shadow",
+                        "shadowType": "outer",
+                        "color": "#00000040",
+                        "offset": {
+                          "x": 0,
+                          "y": 4
+                        },
+                        "blur": 24
+                      },
+                      "layout": "vertical",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "nDFNc",
+                          "name": "设备图片",
+                          "width": "fill_container",
+                          "height": 200,
+                          "fill": {
+                            "type": "image",
+                            "enabled": true,
+                            "url": "./images/generated-1774754842368.png",
+                            "mode": "fill"
+                          },
+                          "cornerRadius": [
+                            16,
+                            16,
+                            0,
+                            0
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "vWRmi",
+                          "name": "卡片内容",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 12,
+                          "padding": 24,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "TWJQ9",
+                              "name": "card3Title",
+                              "fill": "#ffffff",
+                              "content": "桌面铣床",
+                              "fontFamily": "Inter",
+                              "fontSize": 20,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "text",
+                              "id": "gv8NT",
+                              "name": "card3Brand",
+                              "fill": "#4a9eff",
+                              "content": "精密加工设备",
+                              "fontFamily": "Inter",
+                              "fontSize": 14,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "text",
+                              "id": "dcBZ0",
+                              "name": "card3Desc",
+                              "fill": "#a0a0b0",
+                              "textGrowth": "fixed-width",
+                              "width": 332,
+                              "content": "紧凑型桌面铣床，适用于小零件的精密铣削加工，操作简单方便。",
+                              "fontFamily": "Inter",
+                              "fontSize": 14,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "18qcS",
+                  "name": "第二行",
+                  "width": "fill_container",
+                  "gap": 24,
+                  "justifyContent": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "3LhZ4",
+                      "name": "设备卡片4",
+                      "width": 380,
+                      "fill": "#15151f",
+                      "cornerRadius": 16,
+                      "effect": {
+                        "type": "shadow",
+                        "shadowType": "outer",
+                        "color": "#00000040",
+                        "offset": {
+                          "x": 0,
+                          "y": 4
+                        },
+                        "blur": 24
+                      },
+                      "layout": "vertical",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "J52Vb",
+                          "name": "设备图片",
+                          "width": "fill_container",
+                          "height": 200,
+                          "fill": {
+                            "type": "image",
+                            "enabled": true,
+                            "url": "./images/generated-1774755425784.png",
+                            "mode": "fill"
+                          },
+                          "cornerRadius": [
+                            16,
+                            16,
+                            0,
+                            0
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "VwS0v",
+                          "name": "卡片内容",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 12,
+                          "padding": 24,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "EGRVZ",
+                              "name": "card4Title",
+                              "fill": "#ffffff",
+                              "content": "PCB制板机",
+                              "fontFamily": "Inter",
+                              "fontSize": 20,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "text",
+                              "id": "4YEcZ",
+                              "name": "card4Brand",
+                              "fill": "#4a9eff",
+                              "content": "专业制板设备",
+                              "fontFamily": "Inter",
+                              "fontSize": 14,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "text",
+                              "id": "y74tK",
+                              "name": "card4Desc",
+                              "fill": "#a0a0b0",
+                              "textGrowth": "fixed-width",
+                              "width": 332,
+                              "content": "高精度PCB制板设备，可快速制作印刷电路板，支持双面板制作，适用于电子设计与开发。",
+                              "fontFamily": "Inter",
+                              "fontSize": 14,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "w1zPn",
+                      "name": "设备卡片5",
+                      "width": 380,
+                      "fill": "#15151f",
+                      "cornerRadius": 16,
+                      "effect": {
+                        "type": "shadow",
+                        "shadowType": "outer",
+                        "color": "#00000040",
+                        "offset": {
+                          "x": 0,
+                          "y": 4
+                        },
+                        "blur": 24
+                      },
+                      "layout": "vertical",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "xK4tT",
+                          "name": "设备图片",
+                          "width": "fill_container",
+                          "height": 200,
+                          "fill": {
+                            "type": "image",
+                            "enabled": true,
+                            "url": "./images/generated-1774755451618.png",
+                            "mode": "fill"
+                          },
+                          "cornerRadius": [
+                            16,
+                            16,
+                            0,
+                            0
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "MkGqs",
+                          "name": "卡片内容",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 12,
+                          "padding": 24,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "lW3K2",
+                              "name": "card5Title",
+                              "fill": "#ffffff",
+                              "content": "数控车床",
+                              "fontFamily": "Inter",
+                              "fontSize": 20,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "text",
+                              "id": "nh0G2",
+                              "name": "card5Brand",
+                              "fill": "#4a9eff",
+                              "content": "精密数控设备",
+                              "fontFamily": "Inter",
+                              "fontSize": 14,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "text",
+                              "id": "1ona3",
+                              "name": "card5Desc",
+                              "fill": "#a0a0b0",
+                              "textGrowth": "fixed-width",
+                              "width": 332,
+                              "content": "高精度数控车床，可自动完成轴类零件的车削加工，适用于精密机械制造。",
+                              "fontFamily": "Inter",
+                              "fontSize": 14,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "lMdmn",
+                      "name": "设备卡片6",
+                      "width": 380,
+                      "fill": "#15151f",
+                      "cornerRadius": 16,
+                      "effect": {
+                        "type": "shadow",
+                        "shadowType": "outer",
+                        "color": "#00000040",
+                        "offset": {
+                          "x": 0,
+                          "y": 4
+                        },
+                        "blur": 24
+                      },
+                      "layout": "vertical",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "2HTfD",
+                          "name": "设备图片",
+                          "width": "fill_container",
+                          "height": 200,
+                          "fill": {
+                            "type": "image",
+                            "enabled": true,
+                            "url": "./images/generated-1774755466794.png",
+                            "mode": "fill"
+                          },
+                          "cornerRadius": [
+                            16,
+                            16,
+                            0,
+                            0
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "fISk2",
+                          "name": "卡片内容",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 12,
+                          "padding": 24,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "UwkUz",
+                              "name": "card6Title",
+                              "fill": "#ffffff",
+                              "content": "三轴数控铣床",
+                              "fontFamily": "Inter",
+                              "fontSize": 20,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "text",
+                              "id": "yTbsN",
+                              "name": "card6Brand",
+                              "fill": "#4a9eff",
+                              "content": "高级数控设备",
+                              "fontFamily": "Inter",
+                              "fontSize": 14,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "text",
+                              "id": "OUQUX",
+                              "name": "card6Desc",
+                              "fill": "#a0a0b0",
+                              "textGrowth": "fixed-width",
+                              "width": 332,
+                              "content": "三轴联动数控铣床，可完成复杂曲面零件的铣削加工，适用于高精度机械制造。",
+                              "fontFamily": "Inter",
+                              "fontSize": 14,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

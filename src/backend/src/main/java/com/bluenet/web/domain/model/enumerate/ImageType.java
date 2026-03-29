@@ -5,8 +5,6 @@ import lombok.Getter;
 
 @Getter
 public enum ImageType {
-    LABORATORY("laboratory", "实验室介绍"),
-    EQUIPMENT("equipment", "设备介绍"),
     COMPETITION("competition", "竞赛介绍");
 
     @EnumValue

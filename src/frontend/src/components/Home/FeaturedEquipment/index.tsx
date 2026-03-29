@@ -12,7 +12,7 @@ export default function FeaturedEquipment() {
   const router = useRouter()
 
   const handleBrowseMore = () => {
-    router.push('/equipment')
+    router.push('/lab-environment')
   }
 
   return (

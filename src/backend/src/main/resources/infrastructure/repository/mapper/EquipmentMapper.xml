@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bluenet.web.infrastructure.repository.mapper.EquipmentMapper">
+    <resultMap id="BaseResultMap" type="com.bluenet.web.domain.model.entity.Equipment">
+        <id column="id" property="id"/>
+        <result column="name" property="name"/>
+        <result column="brand" property="brand"/>
+        <result column="description" property="description"/>
+        <result column="image_file_id" property="imageFileId"/>
+        <result column="sort_order" property="sortOrder"/>
+    </resultMap>
+
+    <resultMap id="EquipmentVOResultMap" type="com.bluenet.web.domain.model.vo.EquipmentVO">
+        <id column="id" property="id"/>
+        <result column="name" property="name"/>
+        <result column="brand" property="brand"/>
+        <result column="description" property="description"/>
+        <result column="image_url" property="imageUrl"/>
+        <result column="image_file_id" property="imageFileId"/>
+        <result column="sort_order" property="sortOrder"/>
+    </resultMap>
+
+    <select id="selectAllOrderBySortOrderDesc" resultMap="EquipmentVOResultMap">
+        SELECT
+            e.id,
+            e.name,
+            e.brand,
+            e.description,
+            f.url AS image_url,
+            e.image_file_id,
+            e.sort_order
+        FROM tb_equipment e
+        LEFT JOIN tb_file f ON e.image_file_id = f.id
+        ORDER BY e.sort_order DESC, e.id ASC
+    </select>
+
+    <select id="selectByIdWithImageUrl" resultMap="EquipmentVOResultMap">
+        SELECT
+            e.id,
+            e.name,
+            e.brand,
+            e.description,
+            f.url AS image_url,
+            e.image_file_id,
+            e.sort_order
+        FROM tb_equipment e
+        LEFT JOIN tb_file f ON e.image_file_id = f.id
+        WHERE e.id = #{id}
+    </select>
+</mapper>

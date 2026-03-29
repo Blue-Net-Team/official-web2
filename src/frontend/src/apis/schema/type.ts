@@ -379,3 +379,41 @@ export interface AchievementStatsDTO {
   /** 校级奖项数 */
   schoolCount: number
 }
+
+/**
+ * 场地信息
+ * 对应后端 VenueDTO.java
+ */
+export interface VenueDTO {
+  /** 场地ID */
+  id: number
+  /** 场地名称 */
+  name: string
+  /** 副标题 */
+  subtitle: string | null
+  /** 描述 */
+  description: string | null
+  /** 图片URL */
+  imageUrl: string | null
+  /** 图片文件ID */
+  imageFileId: number | null
+}
+
+/**
+ * 设备信息
+ * 对应后端 EquipmentDTO.java
+ */
+export interface EquipmentDTO {
+  /** 设备ID */
+  id: number
+  /** 设备名称 */
+  name: string
+  /** 品牌 */
+  brand: string | null
+  /** 描述 */
+  description: string | null
+  /** 图片URL */
+  imageUrl: string | null
+  /** 图片文件ID */
+  imageFileId: number | null
+}

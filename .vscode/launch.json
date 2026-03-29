@@ -15,15 +15,11 @@
             }
         },
         {
-            "type": "chrome",
+            "type": "msedge",
             "request": "launch",
             "name": "client side",
             "url": "http://localhost:3000",
             "webRoot": "${workspaceFolder}/src/frontend",
-            "sourceMaps": true,
-            "sourceMapPathOverrides": {
-                "webpack:///./src/*": "${webRoot}/src/*"
-            }
         },
         {
             "type": "node-terminal",
