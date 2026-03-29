@@ -31,6 +31,8 @@ bluenet_web2.2/
 │   └── frontend/          # 前端代码（Next.js）
 │       ├── src/           # 源代码
 │       └── public/        # 静态资源
+├── scripts/               # 脚本文件
+│   └── hooks/             # Git Hooks（可推送到远端）
 ├── docker/                # Docker 配置
 ├── openspec/              # OpenSpec 变更管理
 │   ├── changes/archive/   # 已归档变更
@@ -302,10 +304,46 @@ openspec/
 
 ### 环境配置
 
-- 开发环境：`application-dev.yml`（默认激活）
-- 生产环境：`application-prod.yml`
-- 测试环境：`application-test.yml`
-- 关键配置：数据库连接、MinIO、JWT 密钥、邮件服务
+#### 配置文件
+
+| 环境 | 配置文件 | 激活方式 |
+|------|---------|---------|
+| 开发环境 | `application-dev.yml` | 默认激活 |
+| 生产环境 | `application-prod.yml` | `-Dspring-boot.run.profiles=prod` |
+| 测试环境 | `application-test.yml` | 测试时自动激活 |
+
+#### 环境变量
+
+项目使用 `.env` 文件管理环境变量，从 `.env.example` 复制并填写：
+
+```bash
+cd src/backend
+cp .env.example .env
+```
+
+**关键配置项：**
+
+| 类别 | 变量 | 说明 |
+|------|------|------|
+| 数据库 | `DATABASE_*` | PostgreSQL 连接配置 |
+| 对象存储 | `MINIO_*` | MinIO 连接配置 |
+| 认证 | `JWT_SECRET` | JWT 签名密钥（至少 32 字符） |
+| 邮件 | `MAIL_*` | SMTP 邮件服务配置 |
+| Cookie | `COOKIE_*` | Cookie 安全配置 |
+| CORS | `CORS_ALLOWED_ORIGINS` | 跨域配置 |
+
+#### 安全要求
+
+**开发环境：**
+- `COOKIE_SECURE=false`（允许 HTTP）
+- `CORS_ALLOWED_ORIGINS=*`（允许所有来源）
+
+**生产环境：**
+- `COOKIE_SECURE=true`（必须 HTTPS）
+- `CORS_ALLOWED_ORIGINS` 必须配置具体域名
+- `JWT_SECRET` 必须使用强密钥
+
+> 📖 详细配置请参考 [环境配置指南](./docs/环境配置指南.md)
 
 ## 认证机制
 
@@ -389,15 +427,75 @@ infrastructure/
 
 ### 提交规范
 
+提交信息必须遵循以下格式：
+
 ```
-feat: 新功能
-fix: 修复bug
-docs: 文档更新
-style: 代码格式（不影响功能）
-refactor: 重构
-test: 测试相关
-chore: 构建过程或辅助工具的变动
+type: description
 ```
+
+或带作用域：
+
+```
+type(scope): description
+```
+
+**支持的类型：**
+
+| 类型       | 说明                |
+| ---------- | ------------------- |
+| `feat`     | 新功能              |
+| `fix`      | 修复 Bug            |
+| `docs`     | 文档更新            |
+| `style`    | 代码格式（不影响功能）|
+| `refactor` | 重构                |
+| `test`     | 测试相关            |
+| `chore`    | 构建/工具变动       |
+| `perf`     | 性能优化            |
+| `ci`       | CI/CD 配置变动      |
+| `build`    | 构建系统变动        |
+| `revert`   | 回滚提交            |
+
+**示例：**
+
+```
+feat: 添加用户登录功能
+feat(UI): 添加登录表单组件
+fix: 修复登录页面样式问题
+fix(API): 修复用户认证异常
+docs: 更新 README 文档
+refactor: 重构文件上传逻辑
+```
+
+**多行提交格式：**
+
+```
+feat: 添加用户登录功能
+
+- 实现登录表单组件
+- 添加表单验证逻辑
+- 集成 JWT 认证
+```
+
+**规则：**
+
+1. 冒号后必须有一个空格
+2. 描述至少 5 个字符
+3. 描述不建议以句号结尾
+4. 作用域可选，放在括号内
+
+### Git Hooks 安装
+
+项目使用 Git Hooks 进行提交信息校验。克隆仓库后需安装：
+
+```bash
+# 进入项目根目录
+cd bluenet_web2.2
+
+# 安装 Git Hooks
+./scripts/hooks/install.sh
+```
+
+**注意**：`.git/hooks/` 目录不会被推送到远端，需要手动安装。
 
 ### 分支策略
 

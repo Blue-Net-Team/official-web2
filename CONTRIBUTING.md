@@ -44,26 +44,43 @@
 
 ### 环境要求
 
+#### 后端环境
+
 | 工具 | 版本要求 | 说明 |
 |------|---------|------|
 | JDK | 21+ | Java 开发环境 |
 | Maven | 3.9+ | 项目构建工具 |
-| PostgreSQL | 17+ | 主数据库 |
-| Redis | 7.x | 缓存服务 |
-| RabbitMQ | 3.x | 消息队列 |
+| PostgreSQL | 15+ / 17+ | 主数据库 |
+| Redis | 7.x | 缓存服务（可选） |
+| RabbitMQ | 3.x | 消息队列（可选） |
 | MinIO | 最新版 | 对象存储 |
+
+#### 前端环境
+
+| 工具 | 版本要求 | 说明 |
+|------|---------|------|
+| Node.js | 20+ | JavaScript 运行时 |
+| pnpm | 9+ | 包管理器 |
 
 ### 克隆项目
 
 ```bash
-git clone https://github.com/<your-username>/bluenet_backend.git
-cd bluenet_backend
+git clone https://github.com/<your-username>/bluenet_web2.2.git
+cd bluenet_web2.2
 ```
+
+### 安装 Git Hooks
+
+```bash
+./scripts/hooks/install.sh
+```
+
+此脚本会安装提交信息校验的 Git Hooks。
 
 ### 配置上游仓库
 
 ```bash
-git remote add upstream https://github.com/<original-owner>/bluenet_backend.git
+git remote add upstream https://github.com/<original-owner>/bluenet_web2.2.git
 ```
 
 ### 同步上游更改
@@ -74,10 +91,37 @@ git checkout main
 git merge upstream/main
 ```
 
+### 环境变量配置
+
+1. 复制环境变量模板：
+   ```bash
+   cd src/backend
+   cp .env.example .env
+   ```
+
+2. 编辑 `.env` 文件，填写必要配置：
+   ```bash
+   # 数据库配置
+   DATABASE_PASSWORD=your_database_password
+
+   # MinIO 配置
+   MINIO_SK=your_minio_secret_key
+
+   # JWT 密钥（至少 32 字符）
+   JWT_SECRET=your_jwt_secret_key_at_least_32_characters
+
+   # 邮件服务（可选）
+   MAIL_USERNAME=your_email@163.com
+   MAIL_PASSWORD=your_smtp_password
+   ```
+
 ### 初始化数据库
 
 ```bash
-createdb db_blue_net
+# 创建数据库
+psql -U postgres
+CREATE DATABASE db_blue_net;
+\q
 ```
 
 Flyway 会在应用启动时自动执行数据库迁移脚本。
@@ -91,7 +135,13 @@ Flyway 会在应用启动时自动执行数据库迁移脚本。
 ### 运行项目
 
 ```bash
+# 后端（开发环境）
 ./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
+
+# 前端（新终端）
+cd src/frontend
+pnpm install
+pnpm dev
 ```
 
 ### 运行测试
@@ -172,30 +222,55 @@ V{版本号}__{描述}.sql
 
 ## 提交规范
 
-请使用以下格式的提交信息：
+提交信息必须遵循以下格式：
 
 ```
 <类型>: <简短描述>
+```
 
-[可选的详细描述]
+或带作用域：
 
-[可选的页脚]
+```
+<类型>(<作用域>): <简短描述>
 ```
 
 ### 提交类型
 
-| 类型 | 说明 |
-|------|------|
-| `feat` | 新功能 |
-| `fix` | Bug 修复 |
-| `docs` | 文档更新 |
-| `style` | 代码格式（不影响功能） |
-| `refactor` | 重构（不新增功能也不修复 Bug） |
-| `test` | 测试相关 |
-| `chore` | 构建过程或辅助工具的变动 |
-| `perf` | 性能优化 |
+| 类型       | 说明                         |
+| ---------- | ---------------------------- |
+| `feat`     | 新功能                       |
+| `fix`      | Bug 修复                     |
+| `docs`     | 文档更新                     |
+| `style`    | 代码格式（不影响功能）       |
+| `refactor` | 重构（不新增功能也不修复 Bug）|
+| `test`     | 测试相关                     |
+| `chore`    | 构建过程或辅助工具的变动     |
+| `perf`     | 性能优化                     |
+| `ci`       | CI/CD 配置变动               |
+| `build`    | 构建系统变动                 |
+| `revert`   | 回滚提交                     |
+
+### 提交规则
+
+1. 冒号后必须有一个空格
+2. 描述至少 5 个字符
+3. 描述不建议以句号结尾
+4. 作用域可选，放在括号内
 
 ### 提交示例
+
+**单行格式：**
+
+```
+feat: 添加用户头像上传功能
+feat(UI): 添加登录表单组件
+fix: 修复登录页面样式问题
+fix(API): 修复用户认证异常
+docs: 更新 README 文档
+refactor: 重构文件上传逻辑
+```
+
+**多行格式：**
 
 ```
 feat: 添加用户头像上传功能
@@ -206,6 +281,16 @@ feat: 添加用户头像上传功能
 
 Closes #123
 ```
+
+### Git Hooks 安装
+
+项目使用 Git Hooks 进行提交信息校验。克隆仓库后请运行：
+
+```bash
+./scripts/hooks/install.sh
+```
+
+此脚本会将共享的 Git Hooks 复制到本地 `.git/hooks/` 目录。
 
 ## 分支策略
 
@@ -288,6 +373,14 @@ git rebase upstream/develop
 
 - 创建 Issue 进行讨论
 - 发送邮件至 gdou_bluenet@163.com
+
+## 相关文档
+
+- [环境配置指南](./docs/环境配置指南.md) - 详细的环境配置说明
+- [自动部署配置指南](./docs/自动部署配置指南.md) - CI/CD 部署配置
+- [数据库设计](./docs/数据库设计.md) - 数据库表结构说明
+- [后端开发手册](./docs/后端开发手册.md) - 后端开发规范
+- [前端开发手册](./docs/前端开发手册.md) - 前端开发规范
 
 ---
 
