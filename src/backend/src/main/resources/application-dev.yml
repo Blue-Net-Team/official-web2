@@ -1,8 +1,8 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/db_blue_net
-    username: postgres
-    password: "000000"
+    url: jdbc:postgresql://${DATABASE_HOST:localhost}:${DATABASE_PORT:5432}/${DATABASE_NAME:db_blue_net}
+    username: ${DATABASE_USERNAME:postgres}
+    password: ${DATABASE_PASSWORD:000000}
     driver-class-name: org.postgresql.Driver
 
   mail:
@@ -28,21 +28,18 @@ spring:
 # MinIO配置
 minio:
   enabled: true
-  endpoint: localhost
-  port: 9000
-  accessKey: admin
-  secretKey: admin123
+  endpoint: ${MINIO_ENDPOINT:localhost}
+  port: ${MINIO_PORT:9000}
+  accessKey: ${MINIO_AK:admin}
+  secretKey: ${MINIO_SK:admin1234}
 
 # Cookie 配置（开发环境）
 cookie:
-  # 开发环境不设置 Domain（localhost 不需要）
-  domain:
-  # 开发环境通常使用 HTTP，Secure=false
-  secure: false
-  same-site: Lax
-  max-age: 43200
+  domain: ${COOKIE_DOMAIN:}
+  secure: ${COOKIE_SECURE:false}
+  same-site: ${COOKIE_SAME_SITE:Lax}
+  max-age: ${COOKIE_MAX_AGE:43200}
 
 # CORS 配置（开发环境）
 cors:
-  # 开发环境允许所有域名
-  allowed-origins: "*"
+  allowed-origins: ${CORS_ALLOWED_ORIGINS:*}
