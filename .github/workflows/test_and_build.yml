@@ -50,6 +50,10 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-maven-
 
+    # 赋予 Maven Wrapper 执行权限
+    - name: Make mvnw executable
+      run: chmod +x ./mvnw
+
     # 编译后端代码
     - name: Compile backend
       run: ./mvnw -B clean compile
@@ -68,6 +72,12 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
+    # 安装 pnpm 包管理器
+    - name: Install pnpm
+      uses: pnpm/action-setup@v3
+      with:
+        version: 9
+
     # 配置 Node.js 20 环境
     - name: Set up Node.js
       uses: actions/setup-node@v4
@@ -75,12 +85,6 @@ jobs:
         node-version: '20'
         cache: 'pnpm'
         cache-dependency-path: src/frontend/pnpm-lock.yaml
-
-    # 安装 pnpm 包管理器
-    - name: Install pnpm
-      uses: pnpm/action-setup@v3
-      with:
-        version: 9
 
     # 安装前端依赖
     - name: Install dependencies
