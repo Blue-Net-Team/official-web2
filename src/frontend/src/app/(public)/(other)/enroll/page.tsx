@@ -78,8 +78,7 @@ const customTheme: ThemeConfig = {
     Input: {
       colorBgContainer: 'rgba(255, 255, 255, 0.05)',
       colorBorder: 'rgba(255, 255, 255, 0.1)',
-      colorBorderHover: '#6677FF',
-      colorBorderActive: '#6677FF',
+      colorInfoBorderHover: '#6677FF',
       colorError: '#FF6B35',
       colorErrorBorder: '#FF6B35',
       colorText: '#ffffff',
@@ -89,8 +88,7 @@ const customTheme: ThemeConfig = {
     Select: {
       colorBgContainer: 'rgba(255, 255, 255, 0.05)',
       colorBorder: 'rgba(255, 255, 255, 0.1)',
-      colorBorderHover: '#6677FF',
-      colorBorderActive: '#6677FF',
+      colorInfoBorderHover: '#6677FF',
       colorError: '#FF6B35',
       colorErrorBorder: '#FF6B35',
       colorText: '#ffffff',
@@ -105,13 +103,13 @@ const customTheme: ThemeConfig = {
       colorPrimaryActive: '#5a6ce0',
       primaryShadow: '0 0 20px rgba(102, 119, 255, 0.4)',
       defaultBg: 'rgba(255, 255, 255, 0.05)',
-      defaultBorder: 'rgba(255, 255, 255, 0.1)',
+      colorBorder: 'rgba(255, 255, 255, 0.1)',
       defaultColor: '#ffffff',
     },
     Upload: {
       colorBgContainer: 'rgba(255, 255, 255, 0.05)',
       colorBorder: 'rgba(102, 119, 255, 0.4)',
-      colorBorderHover: '#6677FF',
+      colorInfoBorderHover: '#6677FF',
     },
   },
 }
@@ -305,7 +303,7 @@ const EnrollPage: React.FC = () => {
           setColleges(response.data)
         }
       } catch (error) {
-        message.error('获取学院列表失败')
+        messageApi.error('获取学院列表失败')
       } finally {
         setLoadingColleges(false)
       }
@@ -390,7 +388,7 @@ const EnrollPage: React.FC = () => {
           ? await enrollService.updateEnrollment(data)
           : await enrollService.submitEnrollment(data)
 
-        if (response.code === 200) {
+        if (response.code === 201) {
           messageApi.success(forceUpdate ? '报名信息更新成功！' : '报名成功！')
           form.resetFields()
           setAvatarPreview('')
@@ -400,18 +398,21 @@ const EnrollPage: React.FC = () => {
         } else {
           messageApi.error(response.msg || '报名失败，请稍后重试')
         }
-      } catch (error: any) {
-        if (error.response?.data?.code === 409) {
-          modal.confirm({
-            title: '该学号已报名',
-            content: '是否更新报名信息？',
-            okText: '更新',
-            cancelText: '取消',
-            onOk: () => submitEnrollment(true),
-          })
-        } else {
-          messageApi.error('网络错误，请稍后重试')
+      } catch (error: unknown) {
+        if (error && typeof error === 'object' && 'response' in error) {
+          const err = error as { response?: { data?: { code?: number } } }
+          if (err.response?.data?.code === 409) {
+            modal.confirm({
+              title: '该学号已报名',
+              content: '是否更新报名信息？',
+              okText: '更新',
+              cancelText: '取消',
+              onOk: () => submitEnrollment(true),
+            })
+            return
+          }
         }
+        messageApi.error('网络错误，请稍后重试')
       } finally {
         setSubmitting(false)
       }

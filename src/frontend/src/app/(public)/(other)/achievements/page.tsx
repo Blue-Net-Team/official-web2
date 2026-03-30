@@ -130,10 +130,11 @@ export default function AchievementsPage() {
               <Masonry
                 columns={{ xs: 1, sm: 2, lg: 3 }}
                 gutter={{ xs: 16, sm: 16, lg: 16 }}
-                items={achievements}
-                itemRender={(achievement: AchievementDTO) => (
-                  <AchievementCard achievement={achievement} />
-                )}
+                items={achievements.map((achievement) => ({
+                  key: achievement.id,
+                  data: achievement,
+                }))}
+                itemRender={(itemInfo) => <AchievementCard achievement={itemInfo.data} />}
               />
               {totalPages > 1 && (
                 <div className={styles.paginationContainer}>

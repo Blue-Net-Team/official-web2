@@ -1,5 +1,6 @@
 import { Direction, Role, Gender } from '@/apis/schema/enumerate'
 import styles from './MemberCard.module.css'
+import type { StaticImageData } from 'next/image'
 import sexManIcon from '@/assets/icon/gender/sex_man.svg'
 import sexWomanIcon from '@/assets/icon/gender/sex_woman.svg'
 import cvIcon from '@/assets/icon/direction/cv_icon.png'
@@ -9,7 +10,7 @@ import embedIcon from '@/assets/icon/direction/embed_icon.png'
 interface DirectionConfig {
   label: string
   icon: string
-  iconImg: string
+  iconImg: string | StaticImageData
   className: string
 }
 
