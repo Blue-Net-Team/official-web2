@@ -80,7 +80,7 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: ${DB_PASSWORD:-dg24Nihng@49*}
     volumes:
-      - ${ENV:-dev}_database_data:/var/lib/postgresql/data
+      - bluenet_database_${ENV:-dev}_data:/var/lib/postgresql/data
     profiles:
       - full
       - infra
@@ -98,7 +98,7 @@ services:
       RABBITMQ_DEFAULT_USER: admin
       RABBITMQ_DEFAULT_PASS: bluenet123
     volumes:
-      - ${ENV:-dev}_rabbitmq_data:/var/lib/rabbitmq
+      - bluenet_rabbitmq_${ENV:-dev}_data:/var/lib/rabbitmq
     profiles:
       - full
       - infra
@@ -117,7 +117,7 @@ services:
       MINIO_ROOT_PASSWORD: ${MINIO_PASSWORD:-g05q80*EH04}
     command: server /data --console-address ":9001"
     volumes:
-      - ${ENV:-dev}_minio_data:/data
+      - bluenet_minio_${ENV:-dev}_data:/data
     profiles:
       - full
       - infra
