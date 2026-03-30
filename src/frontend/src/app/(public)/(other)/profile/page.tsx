@@ -1,7 +1,15 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import type { TabName, UserInfo, Experience, TabCounts, UserStats } from '@/types/profile'
+import type {
+  TabName,
+  UserInfo,
+  Experience,
+  TabCounts,
+  UserStats,
+  Assessment,
+  ExperienceType,
+} from '@/types/profile'
 import { userService } from '@/apis/services/user.service'
 import MockProfileService from '@/mocks/services/profile.service'
 import {
@@ -15,8 +23,6 @@ import { Spin } from 'antd'
 import styles from './styles.module.css'
 
 const DEFAULT_TAB: TabName = 'profile'
-
-const VALID_TABS: TabName[] = ['profile', 'assessment', 'projects', 'competitions', 'internships']
 
 /** Mock 用户统计数据（后端暂无对应 API） */
 const mockUserStats: UserStats = {
@@ -33,7 +39,7 @@ export default function ProfilePage() {
     competitions: 0,
     internships: 0,
   })
-  const [assessments, setAssessments] = useState<any[]>([])
+  const [assessments, setAssessments] = useState<Assessment[]>([])
   const [experiences, setExperiences] = useState<Experience[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -82,9 +88,9 @@ export default function ProfilePage() {
 
   // 处理经历添加
   const handleAddExperience = async (type: string, data: Omit<Experience, 'id'>) => {
-    const res = await userService.createExperience({ ...data, type: type as any })
+    const res = await userService.createExperience({ ...data, type: type as ExperienceType })
     if (res.code === 200) {
-      await loadData() // 刷新数据
+      await loadData()
     }
   }
 

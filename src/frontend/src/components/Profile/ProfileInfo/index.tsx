@@ -32,9 +32,6 @@ interface ProfileInfoProps {
   onUpdate?: () => void
 }
 
-/** MEMBER 及以上角色可以修改的字段 */
-const MEMBER_EDITABLE_FIELDS = ['username', 'gender', 'college', 'major', 'direction']
-
 /** 判断是否为 MEMBER 及以上角色 */
 function isMemberOrAbove(roleName: string | undefined): boolean {
   if (!roleName) return false
@@ -87,7 +84,6 @@ export default function ProfileInfo({ profile, onUpdate }: ProfileInfoProps) {
     }
   }
 
-  const displayName = profile.nickname || profile.username
   const directionLabel = DirectionLabels[profile.direction] || profile.direction
   const genderLabel = GenderLabels[profile.gender] || profile.gender
 

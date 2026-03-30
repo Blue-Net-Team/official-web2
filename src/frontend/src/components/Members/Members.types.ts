@@ -1,4 +1,3 @@
-import { MemberBriefDTO } from '@/apis/schema/type'
 import { Direction } from '@/apis/schema/enumerate'
 
 export interface FilterTab {

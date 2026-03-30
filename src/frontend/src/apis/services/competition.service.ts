@@ -1,4 +1,4 @@
-import { apiClient, publicClient } from '../client'
+import { publicClient } from '../client'
 
 import { CompetitionBriefDTO, ResponseMessage } from '../schema/type'
 

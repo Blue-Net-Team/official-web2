@@ -11,8 +11,10 @@
  */
 import type { UserInfo, UserStats } from '@/types/profile'
 import { DirectionLabels } from '@/types/profile'
+import { API_BASE_URL } from '@/apis/config'
 import styles from './styles.module.css'
 import { DesktopOutlined, BookOutlined, CalendarOutlined, EditOutlined } from '@ant-design/icons'
+import Image from 'next/image'
 
 interface ProfileSidebarProps {
   profile: UserInfo
@@ -40,7 +42,12 @@ export default function ProfileSidebar({ profile, stats }: ProfileSidebarProps) 
             <div className={styles.avatarRing}>
               <div className={styles.avatarImg}>
                 {profile.avatarFileId ? (
-                  <img src={`/api/v1/files/${profile.avatarFileId}`} alt={displayName} />
+                  <Image
+                    src={`${API_BASE_URL}/file/download/${profile.avatarFileId}`}
+                    alt={displayName}
+                    width={120}
+                    height={120}
+                  />
                 ) : (
                   displayName.charAt(0)
                 )}

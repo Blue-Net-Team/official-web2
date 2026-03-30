@@ -16,13 +16,7 @@ import type {
   UpdateProfileRequest,
   ExperienceType,
 } from '@/types/profile'
-import {
-  mockUserInfo,
-  mockUserStats,
-  mockTabCounts,
-  mockAssessments,
-  mockExperiences,
-} from '@/mocks/data/profile'
+import { mockUserInfo, mockUserStats, mockAssessments, mockExperiences } from '@/mocks/data/profile'
 
 // ==================== 模拟延迟工具 ====================
 

@@ -5,7 +5,6 @@ import Image from 'next/image'
 import { MemberDetailDTO, TabCounts } from '@/apis/schema/type'
 import { DIRECTION_LABELS } from '@/apis/schema/enumerate'
 import { API_BASE_URL } from '@/apis/config'
-import { UserOutlined } from '@ant-design/icons'
 import styles from './MemberProfile.module.css'
 
 interface MemberProfileSidebarProps {

@@ -1,4 +1,3 @@
-import { RightOutlined } from '@ant-design/icons'
 import styles from './styles.module.css'
 import Image from 'next/image'
 

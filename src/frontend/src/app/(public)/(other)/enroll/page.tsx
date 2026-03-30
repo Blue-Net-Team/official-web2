@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useRef, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { Form, Input, Select, Button, App, Upload, Spin, ConfigProvider, ThemeConfig } from 'antd'
 import type { MessageInstance } from 'antd/es/message/interface'
 import { PlusOutlined, ArrowRightOutlined } from '@ant-design/icons'
@@ -255,7 +255,13 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
               <span className={styles.avatarUploadText}>上传中...</span>
             </div>
           ) : previewUrl ? (
-            <img src={previewUrl} alt="avatar" className={styles.avatarPreview} />
+            <Image
+              src={previewUrl}
+              alt="avatar"
+              width={120}
+              height={120}
+              className={styles.avatarPreview}
+            />
           ) : (
             <div className={styles.avatarUploadContent}>
               <PlusOutlined style={{ fontSize: '28px', color: 'rgba(102, 119, 255, 0.6)' }} />
@@ -302,14 +308,14 @@ const EnrollPage: React.FC = () => {
         if (response.code === 200 && response.data) {
           setColleges(response.data)
         }
-      } catch (error) {
+      } catch {
         messageApi.error('获取学院列表失败')
       } finally {
         setLoadingColleges(false)
       }
     }
     fetchColleges()
-  }, [])
+  }, [messageApi])
 
   const handleDirectionSelect = useCallback(
     (direction: Direction) => {
@@ -341,7 +347,7 @@ const EnrollPage: React.FC = () => {
           messageApi.error(response.msg || '头像上传失败')
           setAvatarPreview('')
         }
-      } catch (error) {
+      } catch {
         messageApi.error('头像上传失败，请稍后重试')
         setAvatarPreview('')
       } finally {

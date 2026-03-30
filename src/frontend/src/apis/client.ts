@@ -1,9 +1,4 @@
-import axios, {
-  AxiosInstance,
-  AxiosError,
-  InternalAxiosRequestConfig,
-  AxiosRequestConfig,
-} from 'axios'
+import axios, { AxiosInstance, AxiosError, InternalAxiosRequestConfig } from 'axios'
 import { API_BASE_URL } from './config'
 import { ResponseMessage } from './schema/type'
 
