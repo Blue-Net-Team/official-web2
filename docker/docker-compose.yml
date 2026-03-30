@@ -1,20 +1,34 @@
 x-backend-env: &backend-env
   DATABASE_HOST: database
   DATABASE_PORT: 5432
-  DATABASE_NAME: blue_net
+  DATABASE_NAME: db_blue_net
   DATABASE_USERNAME: postgres
-  DATABASE_PASSWORD: ${DB_PASSWORD:-dg24Nihng@49*}
+  DATABASE_PASSWORD: ${DB_PASSWORD:-hyfzhl999}
   RABBITMQ_HOST: rabbitmq
   RABBITMQ_PORT: 5672
   RABBITMQ_USERNAME: admin
   RABBITMQ_PASSWORD: bluenet123
-  MAIL_USERNAME: ${MAIL_USERNAME:-}
-  MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+  MAIL_USERNAME: ${MAIL_USERNAME:-gdou_bluenet@163.com}
+  MAIL_PASSWORD: ${MAIL_PASSWORD:-WUxwy9YxyMW3DzA6}
   MINIO_ENDPOINT: oss
   MINIO_PORT: 9000
   MINIO_AK: admin
-  MINIO_SK: ${MINIO_PASSWORD:-g05q80*EH04}
-  JWT_SECRET: ${JWT_SECRET:-default-secret}
+  MINIO_SK: ${MINIO_PASSWORD:-admin123}
+  JWT_SECRET: ${JWT_SECRET:-zB88N23VOdV3bCXCWBrUHFrB6ifAxK5lFX6F}
+  SYSTEM_USER_USERNAME: ${SYSTEM_USER_USERNAME:-system}
+  SYSTEM_USER_PASSWORD: ${SYSTEM_USER_PASSWORD:-admin123}
+  SYSTEM_USER_STUDENT_ID: ${SYSTEM_USER_STUDENT_ID:-000000000000}
+  COOKIE_DOMAIN: ${COOKIE_DOMAIN:-}
+  COOKIE_SECURE: ${COOKIE_SECURE:-false}
+  COOKIE_SAME_SITE: ${COOKIE_SAME_SITE:-Lax}
+  COOKIE_MAX_AGE: ${COOKIE_MAX_AGE:-43200}
+  CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-*}
+
+x-frontend-env: &frontend-env
+  BACKEND_HOST: backend
+  BACKEND_PORT: 8080
+  SSL_ENABLED: ${SSL_ENABLED:-false}
+  API_PREFIX: ${API_PREFIX:-/api/v1}
 
 services:
   backend:
@@ -46,9 +60,7 @@ services:
     container_name: bluenet-frontend
     ports:
       - "3000:3000"
-    environment:
-      BACKEND_HOST: backend
-      BACKEND_PORT: 8080
+    environment: *frontend-env
     depends_on:
       - backend
     profiles:
@@ -68,7 +80,7 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: ${DB_PASSWORD:-dg24Nihng@49*}
     volumes:
-      - database_data:/var/lib/postgresql/data
+      - ${ENV:-dev}_database_data:/var/lib/postgresql/data
     profiles:
       - full
       - infra
@@ -86,7 +98,7 @@ services:
       RABBITMQ_DEFAULT_USER: admin
       RABBITMQ_DEFAULT_PASS: bluenet123
     volumes:
-      - rabbitmq_data:/var/lib/rabbitmq
+      - ${ENV:-dev}_rabbitmq_data:/var/lib/rabbitmq
     profiles:
       - full
       - infra
@@ -105,21 +117,13 @@ services:
       MINIO_ROOT_PASSWORD: ${MINIO_PASSWORD:-g05q80*EH04}
     command: server /data --console-address ":9001"
     volumes:
-      - minio_data:/data
+      - ${ENV:-dev}_minio_data:/data
     profiles:
       - full
       - infra
     restart: ${RESTART_POLICY:-no}
     networks:
       - bluenet-network
-
-volumes:
-  database_data:
-    driver: local
-  rabbitmq_data:
-    driver: local
-  minio_data:
-    driver: local
 
 networks:
   bluenet-network:
