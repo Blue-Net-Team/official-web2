@@ -1,0 +1,122 @@
+#!/bin/sh
+#
+# BlueNet 项目 Pre-commit Hook
+# 检查后端 和前端 代码格式
+# 格式化后自动暂存并继续提交
+#
+
+echo "🔍 正在运行提交前检查..."
+
+STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACMR)
+
+if [ -z "$STAGED_FILES" ]; then
+  echo "✅ 没有暂存的文件需要检查"
+  exit 0
+fi
+
+NEED_RESTAGE=false
+
+# ============================================
+# 后端 Java 格式检查
+# ============================================
+JAVA_FILES=$(echo "$STAGED_FILES" | grep -E "^src/backend/.*\.java$" || true)
+
+if [ -n "$JAVA_FILES" ]; then
+  echo ""
+  echo "☕ 正在检查后端 Java 代码格式..."
+  
+  CURRENT_DIR=$(pwd)
+  cd src/backend
+  
+  if command -v mvnw.cmd >/dev/null 2>&1; then
+    mvnw.cmd spotless:check -q 2>/dev/null
+  elif [ -f "./mvnw" ]; then
+    ./mvnw spotless:check -q 2>/dev/null
+  else
+    mvn spotless:check -q 2>/dev/null
+  fi
+  
+  if [ $? -ne 0 ]; then
+    echo ""
+    echo "⚠️  后端代码格式检查未通过，正在自动修复..."
+    
+    if command -v mvnw.cmd >/dev/null 2>&1; then
+      mvnw.cmd spotless:apply -q
+    elif [ -f "./mvnw" ]; then
+      ./mvnw spotless:apply -q
+    else
+      mvn spotless:apply -q
+    fi
+    
+    if [ $? -eq 0 ]; then
+      echo "✨ 后端代码格式已修复"
+      NEED_RESTAGE=true
+    else
+      echo "❌ 后端代码格式修复失败，请手动检查"
+      cd "$CURRENT_DIR"
+      exit 1
+    fi
+  else
+    echo "✅ 后端代码格式检查通过"
+  fi
+  
+  cd "$CURRENT_DIR"
+fi
+
+# ============================================
+# 前端格式检查
+# ============================================
+FRONTEND_FILES=$(echo "$STAGED_FILES" | grep -E "^src/frontend/.*\.(js|jsx|ts|tsx|json|css|scss|md)$" || true)
+
+if [ -n "$FRONTEND_FILES" ]; then
+  echo ""
+  echo "🎨 正在检查前端代码格式..."
+  
+  if ! command -v pnpm >/dev/null 2>&1; then
+    echo "⚠️  未找到 pnpm，跳过前端格式检查"
+    echo "   如需启用前端格式检查，请运行: npm install -g pnpm"
+  else
+    CURRENT_DIR=$(pwd)
+    cd src/frontend
+    
+    if [ ! -d "node_modules" ]; then
+      echo "📦 正在安装前端依赖..."
+      pnpm install --silent
+    fi
+    
+    pnpm format:check --silent 2>/dev/null
+    
+    if [ $? -ne 0 ]; then
+      echo ""
+      echo "⚠️  前端代码格式检查未通过，正在自动修复..."
+      pnpm format --silent
+      
+      if [ $? -eq 0 ]; then
+        echo "✨ 前端代码格式已修复"
+        NEED_RESTAGE=true
+      else
+        echo "❌ 前端代码格式修复失败，请手动检查"
+        cd "$CURRENT_DIR"
+        exit 1
+      fi
+    else
+      echo "✅ 前端代码格式检查通过"
+    fi
+    
+    cd "$CURRENT_DIR"
+  fi
+fi
+
+# ============================================
+# 自动重新暂存并继续提交
+# ============================================
+if [ "$NEED_RESTAGE" = true ]; then
+  echo ""
+  echo "📝 正在重新暂存格式化后的文件..."
+  git add -u
+  echo "📤 文件已重新暂存，继续提交..."
+fi
+
+echo ""
+echo "🎉 所有检查通过，提交成功！"
+exit 0

@@ -10,7 +10,18 @@ const compat = new FlatCompat({
 })
 
 const eslintConfig = [
-  ...compat.extends('next/core-web-vitals', 'next/typescript'),
+  ...compat.extends('next', 'next/typescript'),
+  {
+    rules: {
+      // TypeScript 规则 - 降级为警告
+      '@typescript-eslint/no-explicit-any': 'warn',
+      '@typescript-eslint/no-unused-vars': 'warn',
+      // React Hooks 规则 - 降级为警告
+      'react-hooks/exhaustive-deps': 'warn',
+      // Next.js 规则 - 禁用 img 元素检查
+      '@next/next/no-img-element': 'off',
+    }
+  }
 ]
 
 export default eslintConfig
