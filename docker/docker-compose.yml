@@ -14,6 +14,9 @@ x-backend-env: &backend-env
   MINIO_PORT: 9000
   MINIO_AK: admin
   MINIO_SK: ${MINIO_PASSWORD:-admin123}
+  REDIS_HOST: redis
+  REDIS_PORT: 6379
+  REDIS_PASSWORD: ${REDIS_PASSWORD:-}
   JWT_SECRET: ${JWT_SECRET:-zB88N23VOdV3bCXCWBrUHFrB6ifAxK5lFX6F}
   SYSTEM_USER_USERNAME: ${SYSTEM_USER_USERNAME:-system}
   SYSTEM_USER_PASSWORD: ${SYSTEM_USER_PASSWORD:-admin123}
@@ -43,6 +46,7 @@ services:
     environment: *backend-env
     depends_on:
       - database
+      - redis
       - oss
       - rabbitmq
     profiles:
@@ -99,6 +103,21 @@ services:
       RABBITMQ_DEFAULT_PASS: bluenet123
     volumes:
       - bluenet_rabbitmq_${ENV:-dev}_data:/var/lib/rabbitmq
+    profiles:
+      - full
+      - infra
+    restart: ${RESTART_POLICY:-no}
+    networks:
+      - bluenet-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: bluenet-redis
+    ports:
+      - "6739:6379"
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-}
+    volumes:
+      - bluenet_redis_${ENV:-dev}_data:/data
     profiles:
       - full
       - infra
