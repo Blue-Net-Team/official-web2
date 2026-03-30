@@ -219,14 +219,14 @@ jobs:
         username: ${{ secrets.DEPLOY_USER }}
         key: ${{ secrets.DEPLOY_KEY }}
         port: ${{ secrets.DEPLOY_PORT || 22 }}
-        envs: GITHUB_TOKEN, GITHUB_ACTOR, BACKEND_IMAGE, FRONTEND_IMAGE, RESTART_POLICY, DEPLOY_PATH
+        envs: GITHUB_ACTOR, BACKEND_IMAGE, FRONTEND_IMAGE, RESTART_POLICY, DEPLOY_PATH, PAT_TOKEN
         script: |
           cd $DEPLOY_PATH
           
           echo "=== Deploying ${{ steps.vars.outputs.env_name }} environment ==="
           
           echo "Logging in to GitHub Container Registry..."
-          echo $GITHUB_TOKEN | docker login ghcr.io -u $GITHUB_ACTOR --password-stdin
+          echo $PAT_TOKEN | docker login ghcr.io -u $GITHUB_ACTOR --password-stdin
           
           echo "Pulling latest images..."
           docker compose --profile full pull
@@ -244,3 +244,4 @@ jobs:
         FRONTEND_IMAGE: ghcr.io/${{ github.repository_owner }}/bluenet-frontend:${{ steps.vars.outputs.image_tag }}
         RESTART_POLICY: unless-stopped
         DEPLOY_PATH: ${{ steps.vars.outputs.deploy_path }}
+        PAT_TOKEN: ${{ secrets.PAT_TOKEN }}
