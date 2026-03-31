@@ -6,6 +6,8 @@ import { CompetitionBriefDTO } from '@/apis/schema/type'
 import BackgroundDecorations from './BackgroundDecorations'
 import styles from './page.module.css'
 
+export const revalidate = 3600
+
 function LoadingState() {
   return (
     <div className={styles.loadingContainer}>

@@ -132,6 +132,7 @@ pnpm lint
 - **数据库**：不使用物理外键，在应用层维护关系
 - **文件权限**：File 表仅存储元信息，权限通过关联业务表动态控制
 - **API 文档**：使用 SpringDoc OpenAPI 生成文档，所有对外暴露的 DTO、接口必须添加 `@Schema`、`@Operation` 等注解描述
+- **前端 ISR**：所有从后端获取数据的 Server Component 页面必须设置 `export const revalidate = <秒数>`（静态数字字面量，不能是变量引用），默认 3600 秒
 
 ### 文件权限设计
 

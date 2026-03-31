@@ -14,6 +14,8 @@ import Wrapper from '@/components/Wrapper'
 import DirectionIntroduce from '@/components/Home/DirectionIntroduce'
 import RecruitmentProcess from '@/components/Home/RecruitmentProcess'
 
+export const revalidate = 3600
+
 /**
  * 渲染竞赛表格异步组件，用于流式渲染
  * @returns 竞赛表格组件

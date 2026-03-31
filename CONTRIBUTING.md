@@ -150,6 +150,19 @@ pnpm dev
 ./mvnw test
 ```
 
+### 前端开发注意事项
+
+#### Server Component 与 ISR
+
+前端使用 Next.js App Router，页面默认为 Server Component。**所有从后端获取数据的 Server Component 页面必须配置 ISR**，否则 build 后数据不会更新。
+
+```typescript
+// 每个有后端数据获取的页面文件必须添加（必须是静态数字字面量）：
+export const revalidate = 3600
+```
+
+**重要限制**：`revalidate` 必须是静态数字字面量，不能使用变量引用或 `process.env` 表达式。详细规范请参考 [前端开发手册](./docs/前端开发手册.md)。
+
 ## 项目架构
 
 本项目采用 **领域驱动设计（DDD）** 四层架构：

@@ -15,7 +15,6 @@ interface PageProps {
   }>
 }
 
-// ISR 配置：每小时重新验证
 export const revalidate = 3600
 
 export async function generateStaticParams() {

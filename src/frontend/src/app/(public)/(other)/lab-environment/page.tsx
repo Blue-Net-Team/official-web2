@@ -8,6 +8,8 @@ import { API_BASE_URL } from '@/apis/config'
 import BackgroundDecorations from './BackgroundDecorations'
 import styles from './page.module.css'
 
+export const revalidate = 3600
+
 function LoadingState() {
   return (
     <div className={styles.loadingContainer}>
