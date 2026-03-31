@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, Suspense } from 'react'
 import { Form, Input, Select, Button, App, Upload, Spin, ConfigProvider, ThemeConfig } from 'antd'
 import type { MessageInstance } from 'antd/es/message/interface'
 import { PlusOutlined, ArrowRightOutlined } from '@ant-design/icons'
@@ -278,7 +278,7 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
 }
 
 // 主页面组件
-const EnrollPage: React.FC = () => {
+const EnrollPageContent: React.FC = () => {
   const { message: messageApi, modal } = App.useApp()
   const [form] = Form.useForm()
   const searchParams = useSearchParams()
@@ -669,4 +669,23 @@ const EnrollPage: React.FC = () => {
   )
 }
 
-export default EnrollPage
+export default function EnrollPage() {
+  return (
+    <Suspense
+      fallback={
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            minHeight: '100vh',
+          }}
+        >
+          <Spin size="large" />
+        </div>
+      }
+    >
+      <EnrollPageContent />
+    </Suspense>
+  )
+}
