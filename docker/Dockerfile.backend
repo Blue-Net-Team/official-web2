@@ -2,7 +2,7 @@
 # 构建上下文应为项目根目录
 
 # ==================== 构建阶段 ====================
-FROM eclipse-temurin:21-jdk-alpine AS build
+FROM openjdk:21 AS build
 WORKDIR /app
 
 # 复制 Maven 配置文件
@@ -21,7 +21,7 @@ COPY src/backend/src ./src
 RUN ./mvnw clean package -DskipTests -B
 
 # ==================== 运行阶段 ====================
-FROM eclipse-temurin:21-jre-alpine
+FROM openjdk:21
 LABEL authors="IVEN"
 LABEL description="BlueNet Backend Service"
 
