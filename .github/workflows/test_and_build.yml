@@ -18,8 +18,8 @@ on:
 # 全局环境变量
 env:
   REGISTRY: ghcr.io
-  BACKEND_IMAGE: ghcr.io/${{ github.repository_owner }}/bluenet-backend
-  FRONTEND_IMAGE: ghcr.io/${{ github.repository_owner }}/bluenet-frontend
+  BACKEND_IMAGE: ghcr.io/${{ toLower(github.repository_owner) }}/bluenet-backend
+  FRONTEND_IMAGE: ghcr.io/${{ toLower(github.repository_owner) }}/bluenet-frontend
 
 jobs:
   # ==================== 测试阶段 ====================
@@ -229,7 +229,7 @@ jobs:
 
           echo "Backend deployment completed!"
       env:
-        BACKEND_IMAGE: ghcr.io/${{ github.repository_owner }}/bluenet-backend:${{ steps.vars.outputs.image_tag }}
+        BACKEND_IMAGE: ghcr.io/${{ toLower(github.repository_owner) }}/bluenet-backend:${{ steps.vars.outputs.image_tag }}
         DEPLOY_PATH: ${{ steps.vars.outputs.deploy_path }}
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -381,6 +381,6 @@ jobs:
 
           echo "✅ Deployment to ${{ steps.vars.outputs.env_name }} completed successfully!"
       env:
-        FRONTEND_IMAGE: ghcr.io/${{ github.repository_owner }}/bluenet-frontend:${{ steps.vars.outputs.image_tag }}
+        FRONTEND_IMAGE: ghcr.io/${{ toLower(github.repository_owner) }}/bluenet-frontend:${{ steps.vars.outputs.image_tag }}
         DEPLOY_PATH: ${{ steps.vars.outputs.deploy_path }}
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
