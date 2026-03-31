@@ -45,10 +45,14 @@ services:
       - "18088:8088"
     environment: *backend-env
     depends_on:
-      - database
-      - redis
-      - oss
-      - rabbitmq
+      database:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      oss:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/api/v1/health"]
       interval: 10s
@@ -72,7 +76,8 @@ services:
       - "3000:3000"
     environment: *frontend-env
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     profiles:
       - full
       - app
@@ -86,11 +91,17 @@ services:
     ports:
       - "15432:5432"
     environment:
-      POSTGRES_DB: blue_net
+      POSTGRES_DB: db_blue_net
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: ${DB_PASSWORD:-dg24Nihng@49*}
     volumes:
       - bluenet_database_${ENV:-dev}_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d blue_net"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
     profiles:
       - full
       - infra
@@ -109,6 +120,12 @@ services:
       RABBITMQ_DEFAULT_PASS: bluenet123
     volumes:
       - bluenet_rabbitmq_${ENV:-dev}_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
     profiles:
       - full
       - infra
@@ -124,6 +141,12 @@ services:
     command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-}
     volumes:
       - bluenet_redis_${ENV:-dev}_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
     profiles:
       - full
       - infra
@@ -143,6 +166,12 @@ services:
     command: server /data --console-address ":9001"
     volumes:
       - bluenet_minio_${ENV:-dev}_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
     profiles:
       - full
       - infra
