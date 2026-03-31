@@ -106,6 +106,7 @@ docker/volumes/
 
 # null 文件（AI 工具生成）
 **/null
+**/nul
 
 # Temporary files
 *.tmp
