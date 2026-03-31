@@ -8,6 +8,7 @@ import com.bluenet.web.infrastructure.security.util.PermissionValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -31,7 +32,9 @@ public class PermissionScanner implements InitializingBean {
     private final PermissionMapper permissionMapper;
     private final RolePermissionMapper rolePermissionMapper;
 
-    public PermissionScanner(RequestMappingHandlerMapping handlerMapping, PermissionMapper permissionMapper,
+    public PermissionScanner(
+            @Qualifier("requestMappingHandlerMapping") RequestMappingHandlerMapping handlerMapping,
+            PermissionMapper permissionMapper,
             RolePermissionMapper rolePermissionMapper) {
         this.handlerMapping = handlerMapping;
         this.permissionMapper = permissionMapper;
