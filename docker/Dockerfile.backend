@@ -1,31 +1,11 @@
 # BlueNet Backend Dockerfile
+# 使用预编译的 jar 文件，不在 Docker 中编译
 # 构建上下文应为项目根目录
 
-# ==================== 构建阶段 ====================
-FROM openjdk:21 AS build
-WORKDIR /app
-
-# 复制 Maven 配置文件
-COPY src/backend/pom.xml .
-COPY src/backend/.mvn ./.mvn
-COPY src/backend/mvnw .
-
-# 赋予 mvnw 执行权限
-RUN chmod +x ./mvnw
-
-# 下载依赖（利用缓存）
-RUN ./mvnw dependency:go-offline -B
-
-# 复制源代码并构建
-COPY src/backend/src ./src
-RUN ./mvnw clean package -DskipTests -B
-
-# ==================== 运行阶段 ====================
-FROM openjdk:21
+FROM eclipse-temurin:21-jre-alpine
 LABEL authors="IVEN"
 LABEL description="BlueNet Backend Service"
 
-# 安装 curl 用于健康检查
 RUN apk add --no-cache curl
 
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
@@ -47,7 +27,7 @@ ENV LANG C.UTF-8
 
 WORKDIR /app
 
-COPY --from=build --chown=appuser:appgroup /app/target/*.jar /app/backend.jar
+COPY src/backend/target/*.jar /app/backend.jar
 
 EXPOSE 8080 8088
 

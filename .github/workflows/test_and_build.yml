@@ -115,6 +115,27 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
+    - name: Set up JDK 21
+      uses: actions/setup-java@v4
+      with:
+        java-version: '21'
+        distribution: 'temurin'
+        cache: maven
+
+    - name: Cache Maven dependencies
+      uses: actions/cache@v4
+      with:
+        path: ~/.m2/repository
+        key: ${{ runner.os }}-maven-${{ hashFiles('src/backend/**/pom.xml') }}
+        restore-keys: |
+          ${{ runner.os }}-maven-
+
+    - name: Build backend JAR
+      working-directory: src/backend
+      run: |
+        chmod +x ./mvnw
+        ./mvnw clean package -DskipTests -B
+
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
 
