@@ -1,28 +1,23 @@
 # CI/CD Pipeline 工作流
 # 支持多分支部署：master -> 生产环境，develop -> 开发环境
 # 分阶段部署：后端 -> 健康检查 -> 前端
+# 部署方式：构建镜像后 docker save -> SCP 传输到服务器 -> docker load 导入（避免国内服务器 pull ghcr.io 超时）
 
 name: CI/CD Pipeline
 
-# 触发条件配置
 on:
-  # 推送到 master 或 develop 分支时触发
   push:
     branches: [ master, develop ]
-  # PR 到 master 或 develop 分支时触发（仅运行测试）
   pull_request:
     branches: [ master, develop ]
-  # 支持手动触发
   workflow_dispatch:
 
-# 全局环境变量
 env:
   REGISTRY: ghcr.io
 
 jobs:
   # ==================== 测试阶段 ====================
 
-  # 后端测试 Job
   backend-test:
     runs-on: ubuntu-latest
     defaults:
@@ -32,7 +27,6 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    # 配置 JDK 21 环境
     - name: Set up JDK 21
       uses: actions/setup-java@v4
       with:
@@ -40,7 +34,6 @@ jobs:
         distribution: 'temurin'
         cache: maven
 
-    # 缓存 Maven 依赖，加速后续构建
     - name: Cache Maven dependencies
       uses: actions/cache@v4
       with:
@@ -49,19 +42,15 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-maven-
 
-    # 赋予 Maven Wrapper 执行权限
     - name: Make mvnw executable
       run: chmod +x ./mvnw
 
-    # 编译后端代码
     - name: Compile backend
       run: ./mvnw -B clean compile
 
-    # 运行后端测试（包含 Testcontainers 集成测试）
     - name: Run backend tests
       run: ./mvnw -B test
 
-  # 前端测试 Job
   frontend-test:
     runs-on: ubuntu-latest
     defaults:
@@ -71,13 +60,11 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    # 安装 pnpm 包管理器
     - name: Install pnpm
       uses: pnpm/action-setup@v3
       with:
         version: 9
 
-    # 配置 Node.js 20 环境
     - name: Set up Node.js
       uses: actions/setup-node@v4
       with:
@@ -85,21 +72,17 @@ jobs:
         cache: 'pnpm'
         cache-dependency-path: src/frontend/pnpm-lock.yaml
 
-    # 安装前端依赖
     - name: Install dependencies
       run: pnpm install --frozen-lockfile
 
-    # TypeScript 类型检查
     - name: TypeScript check
       run: npx tsc --noEmit
 
-    # ESLint 代码检查
     - name: Lint check
       run: pnpm lint
 
-  # ==================== 构建阶段 ====================
+  # ==================== 构建后端阶段 ====================
 
-  # 构建并推送后端 Docker 镜像
   build-backend:
     runs-on: ubuntu-latest
     needs: [backend-test]
@@ -107,8 +90,6 @@ jobs:
     permissions:
       contents: read
       packages: write
-    outputs:
-      image_tag: ${{ steps.meta.outputs.version }}
 
     steps:
     - uses: actions/checkout@v4
@@ -116,6 +97,15 @@ jobs:
     - name: Set image name
       id: image
       run: echo "name=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
+
+    - name: Set deployment variables
+      id: vars
+      run: |
+        if [ "${{ github.ref }}" = "refs/heads/master" ]; then
+          echo "image_tag=latest" >> $GITHUB_OUTPUT
+        else
+          echo "image_tag=develop" >> $GITHUB_OUTPUT
+        fi
 
     - name: Set up JDK 21
       uses: actions/setup-java@v4
@@ -169,6 +159,21 @@ jobs:
         cache-from: type=gha
         cache-to: type=gha,mode=max
 
+    - name: Save backend image as tar
+      run: |
+        IMAGE_TAG="${{ steps.vars.outputs.image_tag }}"
+        GHCR_IMAGE="${{ env.REGISTRY }}/${{ steps.image.outputs.name }}/bluenet-backend:${IMAGE_TAG}"
+        LOCAL_TAG="bluenet-backend:${IMAGE_TAG}"
+        docker tag "$GHCR_IMAGE" "$LOCAL_TAG"
+        docker save "$LOCAL_TAG" | gzip > backend-image.tar.gz
+
+    - name: Upload backend image artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: backend-image
+        path: backend-image.tar.gz
+        retention-days: 1
+
   # ==================== 部署后端阶段 ====================
 
   deploy-backend:
@@ -180,10 +185,6 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-
-    - name: Set image name
-      id: image
-      run: echo "owner=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
 
     - name: Set deployment variables
       id: vars
@@ -200,6 +201,12 @@ jobs:
           echo "env_name=development" >> $GITHUB_OUTPUT
         fi
 
+    - name: Download backend image artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: backend-image
+        path: ./images
+
     - name: Sync compose file to server
       uses: appleboy/scp-action@v0.1.7
       with:
@@ -211,6 +218,16 @@ jobs:
         target: ${{ steps.vars.outputs.deploy_path }}
         strip_components: 1
 
+    - name: Transfer image to server
+      uses: appleboy/scp-action@v0.1.7
+      with:
+        host: ${{ steps.vars.outputs.deploy_host }}
+        username: ${{ secrets.DEPLOY_USER }}
+        key: ${{ secrets.DEPLOY_KEY }}
+        port: ${{ secrets.DEPLOY_PORT || 22 }}
+        source: "images/backend-image.tar.gz"
+        target: /tmp/bluenet-deploy
+
     - name: Deploy backend via SSH
       uses: appleboy/ssh-action@v1.0.3
       with:
@@ -218,30 +235,24 @@ jobs:
         username: ${{ secrets.DEPLOY_USER }}
         key: ${{ secrets.DEPLOY_KEY }}
         port: ${{ secrets.DEPLOY_PORT || 22 }}
-        envs: GITHUB_ACTOR, BACKEND_IMAGE, DEPLOY_PATH, GITHUB_TOKEN
+        envs: BACKEND_IMAGE, DEPLOY_PATH
         script: |
           cd $DEPLOY_PATH
 
           echo "=== Deploying backend to ${{ steps.vars.outputs.env_name }} environment ==="
 
-          echo "Logging in to GitHub Container Registry..."
-          echo $GITHUB_TOKEN | docker login ghcr.io -u $GITHUB_ACTOR --password-stdin
+          echo "Loading backend image from tar..."
+          gunzip -c /tmp/bluenet-deploy/images/backend-image.tar.gz | docker load
 
-          echo "Pulling backend image..."
-          for i in 1 2 3; do
-            docker compose pull backend && break
-            echo "⚠️ Pull attempt $i failed, retrying in 10s..."
-            sleep 10
-          done
+          rm -f /tmp/bluenet-deploy/images/backend-image.tar.gz
 
           echo "Starting backend service..."
           docker compose up -d backend --remove-orphans
 
           echo "Backend deployment completed!"
       env:
-        BACKEND_IMAGE: ghcr.io/${{ steps.image.outputs.owner }}/bluenet-backend:${{ steps.vars.outputs.image_tag }}
+        BACKEND_IMAGE: bluenet-backend:${{ steps.vars.outputs.image_tag }}
         DEPLOY_PATH: ${{ steps.vars.outputs.deploy_path }}
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   # ==================== 健康检查阶段 ====================
 
@@ -336,12 +347,26 @@ jobs:
         push: true
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
-        # 构建时使用公网地址访问后端 API（用于 Next.js 预渲染）
         build-args: |
           BUILD_BACKEND_HOST=${{ steps.vars.outputs.deploy_host }}
           BUILD_BACKEND_PORT=8080
         cache-from: type=gha
         cache-to: type=gha,mode=max
+
+    - name: Save frontend image as tar
+      run: |
+        IMAGE_TAG="${{ steps.vars.outputs.image_tag }}"
+        GHCR_IMAGE="${{ env.REGISTRY }}/${{ steps.image.outputs.owner }}/bluenet-frontend:${IMAGE_TAG}"
+        LOCAL_TAG="bluenet-frontend:${IMAGE_TAG}"
+        docker tag "$GHCR_IMAGE" "$LOCAL_TAG"
+        docker save "$LOCAL_TAG" | gzip > frontend-image.tar.gz
+
+    - name: Upload frontend image artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: frontend-image
+        path: frontend-image.tar.gz
+        retention-days: 1
 
   # ==================== 部署前端阶段 ====================
 
@@ -352,10 +377,6 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-
-    - name: Set image name
-      id: image
-      run: echo "owner=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
 
     - name: Set deployment variables
       id: vars
@@ -372,6 +393,22 @@ jobs:
           echo "env_name=development" >> $GITHUB_OUTPUT
         fi
 
+    - name: Download frontend image artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: frontend-image
+        path: ./images
+
+    - name: Transfer image to server
+      uses: appleboy/scp-action@v0.1.7
+      with:
+        host: ${{ steps.vars.outputs.deploy_host }}
+        username: ${{ secrets.DEPLOY_USER }}
+        key: ${{ secrets.DEPLOY_KEY }}
+        port: ${{ secrets.DEPLOY_PORT || 22 }}
+        source: "images/frontend-image.tar.gz"
+        target: /tmp/bluenet-deploy
+
     - name: Deploy frontend via SSH
       uses: appleboy/ssh-action@v1.0.3
       with:
@@ -379,21 +416,16 @@ jobs:
         username: ${{ secrets.DEPLOY_USER }}
         key: ${{ secrets.DEPLOY_KEY }}
         port: ${{ secrets.DEPLOY_PORT || 22 }}
-        envs: GITHUB_ACTOR, FRONTEND_IMAGE, DEPLOY_PATH, GITHUB_TOKEN
+        envs: FRONTEND_IMAGE, DEPLOY_PATH
         script: |
           cd $DEPLOY_PATH
 
           echo "=== Deploying frontend to ${{ steps.vars.outputs.env_name }} environment ==="
 
-          echo "Logging in to GitHub Container Registry..."
-          echo $GITHUB_TOKEN | docker login ghcr.io -u $GITHUB_ACTOR --password-stdin
+          echo "Loading frontend image from tar..."
+          gunzip -c /tmp/bluenet-deploy/images/frontend-image.tar.gz | docker load
 
-          echo "Pulling frontend image..."
-          for i in 1 2 3; do
-            docker compose pull frontend && break
-            echo "⚠️ Pull attempt $i failed, retrying in 10s..."
-            sleep 10
-          done
+          rm -f /tmp/bluenet-deploy/images/frontend-image.tar.gz
 
           echo "Starting frontend service..."
           docker compose up -d --no-deps frontend --remove-orphans
@@ -403,6 +435,5 @@ jobs:
 
           echo "✅ Deployment to ${{ steps.vars.outputs.env_name }} completed successfully!"
       env:
-        FRONTEND_IMAGE: ghcr.io/${{ steps.image.outputs.owner }}/bluenet-frontend:${{ steps.vars.outputs.image_tag }}
+        FRONTEND_IMAGE: bluenet-frontend:${{ steps.vars.outputs.image_tag }}
         DEPLOY_PATH: ${{ steps.vars.outputs.deploy_path }}
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
