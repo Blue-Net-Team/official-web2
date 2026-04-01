@@ -186,3 +186,9 @@ services:
 networks:
   bluenet-network:
     driver: bridge
+
+volumes:
+  bluenet_database_dev_data:
+  bluenet_rabbitmq_dev_data:
+  bluenet_redis_dev_data:
+  bluenet_minio_dev_data:

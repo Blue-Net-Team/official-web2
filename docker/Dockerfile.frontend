@@ -9,6 +9,11 @@ FROM node:20-alpine AS builder
 ARG BUILD_BACKEND_HOST=localhost
 ARG BUILD_BACKEND_PORT=8080
 
+# 构建时参数：客户端访问后端的地址（NEXT_PUBLIC_* 会被打包进客户端代码）
+ARG NEXT_PUBLIC_BACKEND_HOST=localhost
+ARG NEXT_PUBLIC_BACKEND_PORT=8080
+ARG NEXT_PUBLIC_SSL_ENABLED=false
+
 # 安装 pnpm
 RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
 
@@ -26,6 +31,9 @@ COPY src/frontend/ ./
 # 设置构建时的环境变量并构建应用
 ENV BACKEND_HOST=${BUILD_BACKEND_HOST}
 ENV BACKEND_PORT=${BUILD_BACKEND_PORT}
+ENV NEXT_PUBLIC_BACKEND_HOST=${NEXT_PUBLIC_BACKEND_HOST}
+ENV NEXT_PUBLIC_BACKEND_PORT=${NEXT_PUBLIC_BACKEND_PORT}
+ENV NEXT_PUBLIC_SSL_ENABLED=${NEXT_PUBLIC_SSL_ENABLED}
 RUN pnpm build
 
 # ==================== 运行阶段 ====================

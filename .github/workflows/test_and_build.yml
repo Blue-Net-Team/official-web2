@@ -356,6 +356,9 @@ jobs:
         build-args: |
           BUILD_BACKEND_HOST=${{ steps.vars.outputs.deploy_host }}
           BUILD_BACKEND_PORT=8080
+          NEXT_PUBLIC_BACKEND_HOST=${{ steps.vars.outputs.deploy_host }}
+          NEXT_PUBLIC_BACKEND_PORT=8080
+          NEXT_PUBLIC_SSL_ENABLED=false
         cache-from: type=gha
         cache-to: type=gha,mode=max
 
