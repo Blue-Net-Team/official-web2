@@ -46,7 +46,7 @@ export default function TopContent() {
   const router = useRouter()
 
   const handleJoinClick = () => {
-    router.push('/recruitment')
+    router.push('/enroll')
   }
 
   return (
