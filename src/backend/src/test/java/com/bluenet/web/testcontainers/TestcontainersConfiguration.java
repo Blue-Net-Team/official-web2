@@ -3,6 +3,7 @@ package com.bluenet.web.testcontainers;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.context.annotation.Bean;
+import org.springframework.test.context.DynamicPropertyRegistry;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.MinIOContainer;
 import org.testcontainers.containers.PostgreSQLContainer;
@@ -11,9 +12,10 @@ import org.testcontainers.utility.DockerImageName;
 @TestConfiguration(proxyBeanMethods = false)
 public class TestcontainersConfiguration {
 
-    private static final DockerImageName POSTGRES_IMAGE = DockerImageName.parse("postgres:17-alpine");
-    private static final DockerImageName MINIO_IMAGE = DockerImageName.parse("minio/minio:latest");
-    private static final DockerImageName REDIS_IMAGE = DockerImageName.parse("redis:7-alpine");
+    private static final DockerImageName POSTGRES_IMAGE = DockerImageName.parse("postgres:17");
+    private static final DockerImageName MINIO_IMAGE = DockerImageName
+            .parse("minio/minio:RELEASE.2025-09-07T16-13-09Z");
+    private static final DockerImageName REDIS_IMAGE = DockerImageName.parse("redis:7");
 
     @Bean
     @ServiceConnection
@@ -32,9 +34,18 @@ public class TestcontainersConfiguration {
     }
 
     @Bean
-    public MinIOContainer minioContainer() {
-        return new MinIOContainer(MINIO_IMAGE)
+    public MinIOContainer minioContainer(DynamicPropertyRegistry registry) {
+        MinIOContainer container = new MinIOContainer(MINIO_IMAGE)
                 .withUserName("testuser")
                 .withPassword("testpassword");
+
+        registry.add("minio.enabled", () -> "true");
+        registry.add("minio.endpoint", container::getHost);
+        registry.add("minio.port", () -> container.getMappedPort(9000));
+        registry.add("minio.accessKey", container::getUserName);
+        registry.add("minio.secretKey", container::getPassword);
+        registry.add("minio.useSSL", () -> "false");
+
+        return container;
     }
 }
