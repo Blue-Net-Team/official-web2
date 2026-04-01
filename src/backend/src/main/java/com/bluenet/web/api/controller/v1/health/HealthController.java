@@ -75,7 +75,8 @@ public class HealthController {
         HttpStatus httpStatus = Status.DOWN.equals(status)
                 ? HttpStatus.SERVICE_UNAVAILABLE
                 : HttpStatus.OK;
+        String msg = Status.DOWN.equals(status) ? "DOWN" : "UP";
 
-        return ResponseMessage.error(503, "DOWN", dto);
+        return new ResponseMessage<HealthStatusDTO>(httpStatus.value(), msg, dto);
     }
 }
