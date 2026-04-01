@@ -148,16 +148,22 @@ jobs:
           type=sha,prefix=
           type=raw,value=latest,enable=${{ github.ref == 'refs/heads/master' }}
 
-    - name: Build and push backend image
+    - name: Build backend image
       uses: docker/build-push-action@v5
       with:
         context: .
         file: docker/Dockerfile.backend
-        push: true
+        load: true
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
+
+    - name: Push backend image to ghcr.io
+      run: |
+        echo '${{ steps.meta.outputs.tags }}' | while read -r tag; do
+          [ -n "$tag" ] && docker push "$tag"
+        done
 
     - name: Save backend image as tar
       run: |
@@ -339,12 +345,12 @@ jobs:
           type=sha,prefix=
           type=raw,value=latest,enable=${{ github.ref == 'refs/heads/master' }}
 
-    - name: Build and push frontend image
+    - name: Build frontend image
       uses: docker/build-push-action@v5
       with:
         context: .
         file: docker/Dockerfile.frontend
-        push: true
+        load: true
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
         build-args: |
@@ -352,6 +358,12 @@ jobs:
           BUILD_BACKEND_PORT=8080
         cache-from: type=gha
         cache-to: type=gha,mode=max
+
+    - name: Push frontend image to ghcr.io
+      run: |
+        echo '${{ steps.meta.outputs.tags }}' | while read -r tag; do
+          [ -n "$tag" ] && docker push "$tag"
+        done
 
     - name: Save frontend image as tar
       run: |
