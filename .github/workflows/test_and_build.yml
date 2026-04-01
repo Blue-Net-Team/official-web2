@@ -396,7 +396,7 @@ jobs:
           done
 
           echo "Starting frontend service..."
-          docker compose up -d frontend --remove-orphans
+          docker compose up -d --no-deps frontend --remove-orphans
 
           echo "Cleaning up old images..."
           docker image prune -f
