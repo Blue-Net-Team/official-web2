@@ -228,7 +228,11 @@ jobs:
           echo $GITHUB_TOKEN | docker login ghcr.io -u $GITHUB_ACTOR --password-stdin
 
           echo "Pulling backend image..."
-          docker compose pull backend
+          for i in 1 2 3; do
+            docker compose pull backend && break
+            echo "⚠️ Pull attempt $i failed, retrying in 10s..."
+            sleep 10
+          done
 
           echo "Starting backend service..."
           docker compose up -d backend --remove-orphans
@@ -385,7 +389,11 @@ jobs:
           echo $GITHUB_TOKEN | docker login ghcr.io -u $GITHUB_ACTOR --password-stdin
 
           echo "Pulling frontend image..."
-          docker compose pull frontend
+          for i in 1 2 3; do
+            docker compose pull frontend && break
+            echo "⚠️ Pull attempt $i failed, retrying in 10s..."
+            sleep 10
+          done
 
           echo "Starting frontend service..."
           docker compose up -d frontend --remove-orphans
