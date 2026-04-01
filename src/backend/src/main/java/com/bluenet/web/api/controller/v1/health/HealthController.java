@@ -7,6 +7,9 @@ import org.springframework.boot.actuate.health.CompositeHealth;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthComponent;
 import org.springframework.boot.actuate.health.HealthEndpoint;
+import org.springframework.boot.actuate.health.Status;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -38,13 +41,13 @@ public class HealthController {
 
     @Operation(summary = "健康检查", description = "检查后端及依赖中间件（数据库、Redis、MinIO）的健康状态")
     @ApiResponse(responseCode = "200", description = "成功，返回健康状态", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseMessage.class)))
+    @ApiResponse(responseCode = "503", description = "服务不可用，至少一个组件状态为 DOWN")
     @GetMapping("/health")
-    public ResponseMessage<HealthStatusDTO> health() {
+    public ResponseEntity<ResponseMessage<HealthStatusDTO>> health() {
         HealthComponent healthComponent = healthEndpoint.health();
 
         Map<String, ComponentHealth> components = new LinkedHashMap<>();
 
-        // CompositeHealth (包括 SystemHealth) 包含各组件的健康状态
         if (healthComponent instanceof CompositeHealth compositeHealth) {
             Map<String, HealthComponent> healthComponents = compositeHealth.getComponents();
             if (healthComponents != null) {
@@ -64,11 +67,16 @@ public class HealthController {
             }
         }
 
+        Status status = healthComponent.getStatus();
         HealthStatusDTO dto = HealthStatusDTO.builder()
-                .status(healthComponent.getStatus().getCode())
+                .status(status.getCode())
                 .components(components)
                 .build();
 
-        return ResponseMessage.success(dto);
+        HttpStatus httpStatus = Status.DOWN.equals(status)
+                ? HttpStatus.SERVICE_UNAVAILABLE
+                : HttpStatus.OK;
+
+        return ResponseEntity.status(httpStatus).body(ResponseMessage.success(dto));
     }
 }

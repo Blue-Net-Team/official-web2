@@ -45,7 +45,6 @@ class HealthControllerIntegrationTest extends BaseIntegrationTest {
                 });
 
         // Then
-        assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
 
         ResponseMessage<HealthStatusDTO> body = response.getBody();
@@ -59,6 +58,16 @@ class HealthControllerIntegrationTest extends BaseIntegrationTest {
                 "UP".equals(healthStatus.getStatus()) || "DOWN".equals(healthStatus.getStatus()),
                 "Status should be UP or DOWN");
         assertNotNull(healthStatus.getComponents());
+
+        // 当状态为 UP 时，HTTP 状态码应为 200；状态为 DOWN 时，应为 503
+        if ("UP".equals(healthStatus.getStatus())) {
+            assertEquals(HttpStatus.OK, response.getStatusCode(), "HTTP status should be 200 when health is UP");
+        } else if ("DOWN".equals(healthStatus.getStatus())) {
+            assertEquals(
+                    HttpStatus.SERVICE_UNAVAILABLE,
+                    response.getStatusCode(),
+                    "HTTP status should be 503 when health is DOWN");
+        }
     }
 
     @Test
@@ -72,10 +81,15 @@ class HealthControllerIntegrationTest extends BaseIntegrationTest {
                 new ParameterizedTypeReference<ResponseMessage<HealthStatusDTO>>() {
                 });
 
-        // Then - 应该成功访问
-        assertEquals(HttpStatus.OK, response.getStatusCode());
+        // Then - 应该能够成功访问（无论健康状态如何，请求本身是成功的）
         assertNotNull(response.getBody());
         assertEquals(200, response.getBody().getCode());
+
+        // 声明健康检查是公开访问的，不应返回 401 或 403
+        int statusCode = response.getStatusCode().value();
+        assertTrue(
+                statusCode == 200 || statusCode == 503,
+                "Health check should be publicly accessible (200 or 503)");
     }
 
     @Test
@@ -90,7 +104,6 @@ class HealthControllerIntegrationTest extends BaseIntegrationTest {
                 });
 
         // Then
-        assertEquals(HttpStatus.OK, response.getStatusCode());
         HealthStatusDTO healthStatus = response.getBody().getData();
 
         // 验证组件映射存在且非空

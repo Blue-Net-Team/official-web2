@@ -11,6 +11,12 @@ spring:
   profiles:
     active: "@spring.profiles.active@"
 
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+
   datasource:
     url: jdbc:postgresql://${DATABASE_HOST:localhost}:${DATABASE_PORT:5432}/${DATABASE_NAME:db_blue_net}
     username: ${DATABASE_USERNAME:postgres}

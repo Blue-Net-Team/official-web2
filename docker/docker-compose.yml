@@ -146,7 +146,7 @@ services:
     volumes:
       - bluenet_redis_${ENV:-dev}_data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD", "sh", "-c", "redis-cli -a \"${REDIS_PASSWORD:-}\" ping | grep -q PONG"]
       interval: 5s
       timeout: 5s
       retries: 5
