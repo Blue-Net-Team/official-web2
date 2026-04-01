@@ -114,6 +114,23 @@ public class ResponseMessage<T> {
         return new ResponseMessage<>(code, msg, null);
     }
 
+    /**
+     * 创建自定义错误响应。
+     *
+     * @param code
+     *            响应码
+     * @param msg
+     *            响应消息
+     * @param data
+     *            响应体
+     * @param <T>
+     *            载荷类型
+     * @return 错误响应
+     */
+    public static <T> ResponseMessage<T> error(Integer code, String msg, T data) {
+        return new ResponseMessage<>(code, msg, data);
+    }
+
     public static <T> ResponseMessage<T> error(GlobalException e) {
         return new ResponseMessage<>(e.getCode().value(), e.getMessage(), null);
     }

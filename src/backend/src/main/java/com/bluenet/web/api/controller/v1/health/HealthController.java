@@ -9,7 +9,6 @@ import org.springframework.boot.actuate.health.HealthComponent;
 import org.springframework.boot.actuate.health.HealthEndpoint;
 import org.springframework.boot.actuate.health.Status;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -43,7 +42,7 @@ public class HealthController {
     @ApiResponse(responseCode = "200", description = "成功，返回健康状态", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseMessage.class)))
     @ApiResponse(responseCode = "503", description = "服务不可用，至少一个组件状态为 DOWN")
     @GetMapping("/health")
-    public ResponseEntity<ResponseMessage<HealthStatusDTO>> health() {
+    public ResponseMessage<HealthStatusDTO> health() {
         HealthComponent healthComponent = healthEndpoint.health();
 
         Map<String, ComponentHealth> components = new LinkedHashMap<>();
@@ -77,6 +76,6 @@ public class HealthController {
                 ? HttpStatus.SERVICE_UNAVAILABLE
                 : HttpStatus.OK;
 
-        return ResponseEntity.status(httpStatus).body(ResponseMessage.success(dto));
+        return ResponseMessage.error(503, "DOWN", dto);
     }
 }

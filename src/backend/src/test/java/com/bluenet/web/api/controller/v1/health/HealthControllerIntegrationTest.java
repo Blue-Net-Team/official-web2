@@ -48,8 +48,6 @@ class HealthControllerIntegrationTest extends BaseIntegrationTest {
         assertNotNull(response.getBody());
 
         ResponseMessage<HealthStatusDTO> body = response.getBody();
-        assertEquals(200, body.getCode());
-        assertEquals("Success", body.getMsg());
         assertNotNull(body.getData());
 
         HealthStatusDTO healthStatus = body.getData();
@@ -59,14 +57,20 @@ class HealthControllerIntegrationTest extends BaseIntegrationTest {
                 "Status should be UP or DOWN");
         assertNotNull(healthStatus.getComponents());
 
+        // HTTP 状态码应与 ResponseMessage 的 code 一致
+        assertEquals(body.getCode(), response.getStatusCode().value(), "HTTP status should match ResponseMessage code");
+
         // 当状态为 UP 时，HTTP 状态码应为 200；状态为 DOWN 时，应为 503
         if ("UP".equals(healthStatus.getStatus())) {
             assertEquals(HttpStatus.OK, response.getStatusCode(), "HTTP status should be 200 when health is UP");
+            assertEquals(200, body.getCode(), "ResponseMessage code should be 200 when health is UP");
+            assertEquals("Success", body.getMsg());
         } else if ("DOWN".equals(healthStatus.getStatus())) {
             assertEquals(
                     HttpStatus.SERVICE_UNAVAILABLE,
                     response.getStatusCode(),
                     "HTTP status should be 503 when health is DOWN");
+            assertEquals(503, body.getCode(), "ResponseMessage code should be 503 when health is DOWN");
         }
     }
 
@@ -83,13 +87,12 @@ class HealthControllerIntegrationTest extends BaseIntegrationTest {
 
         // Then - 应该能够成功访问（无论健康状态如何，请求本身是成功的）
         assertNotNull(response.getBody());
-        assertEquals(200, response.getBody().getCode());
 
-        // 声明健康检查是公开访问的，不应返回 401 或 403
+        // 健康检查是公开访问的，不应返回 401 或 403
         int statusCode = response.getStatusCode().value();
         assertTrue(
                 statusCode == 200 || statusCode == 503,
-                "Health check should be publicly accessible (200 or 503)");
+                "Health check should be publicly accessible (200 for UP or 503 for DOWN)");
     }
 
     @Test
