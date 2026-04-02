@@ -116,4 +116,12 @@ public interface FileRepository {
     default void deleteFile(File file) {
         deleteFile(file.getName(), file.getType());
     }
+
+    /**
+     * 根据文件ID删除文件（包括数据库记录和存储对象）
+     *
+     * @param id
+     *            文件ID
+     */
+    void deleteFileById(Long id);
 }

@@ -15,6 +15,7 @@ import type { CollegeDTO } from '@/apis/schema/type'
 import cvIcon from '@/assets/icon/direction/cv_icon.png'
 import structIcon from '@/assets/icon/direction/struct_icon.png'
 import embedIcon from '@/assets/icon/direction/embed_icon.png'
+import ConsultationQrcode from '@/components/Enroll/ConsultationQrcode'
 
 const { TextArea } = Input
 const { Option } = Select
@@ -444,8 +445,11 @@ const EnrollPageContent: React.FC = () => {
 
         {/* 主内容 */}
         <main className={styles.mainContent}>
-          {/* 桌面端方向选择侧边栏 */}
-          <DirectionSidebar selected={selectedDirection} onSelect={handleDirectionSelect} />
+          {/* 左侧栏：桌面端方向选择侧边栏 + 咨询群 */}
+          <div className={styles.sidebarColumn}>
+            <DirectionSidebar selected={selectedDirection} onSelect={handleDirectionSelect} />
+            <ConsultationQrcode />
+          </div>
 
           {/* 报名卡片 */}
           <div className={styles.enrollContainer}>
@@ -662,6 +666,11 @@ const EnrollPageContent: React.FC = () => {
                 已有账号？<a href="/login">立即登录</a>
               </div>
             </Form>
+          </div>
+
+          {/* 移动端咨询群 */}
+          <div className={styles.mobileConsultation}>
+            <ConsultationQrcode popoverPlacement="top" />
           </div>
         </main>
       </ConfigProvider>

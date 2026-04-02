@@ -36,15 +36,22 @@
   z-index: 1;
 }
 
+/* 左侧栏 */
+.sidebarColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  flex-shrink: 0;
+  width: 220px;
+  animation: fadeInLeft 0.8s cubic-bezier(0.4, 0, 0.2, 1) 0.2s both;
+}
+
 /* 左侧方向选择 - PC端 */
 .directionSidebar {
-  width: 220px;
-  flex-shrink: 0;
   display: flex;
   flex-direction: column;
   gap: 16px;
   margin-top: 0;
-  animation: fadeInLeft 0.8s cubic-bezier(0.4, 0, 0.2, 1) 0.2s both;
 }
 
 .directionSidebarTitle {
@@ -771,14 +778,30 @@
 /* 输入框错误状态 - 通过 ConfigProvider 或自定义组件实现 */
 /* 注意：不使用 :global，改用 ConfigProvider 的 theme 或组件级样式 */
 
+/* 移动端咨询群（桌面端隐藏） */
+.mobileConsultation {
+  display: none;
+}
+
 /* 响应式媒体查询 */
 @media (max-width: 1024px) {
   .mainContent {
     padding: 100px 20px 60px;
   }
 
-  .directionSidebar {
+  .sidebarColumn {
     display: none;
+  }
+
+  .mainContent {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .mobileConsultation {
+    display: block;
+    width: 100%;
+    max-width: 600px;
   }
 
   .mobileDirectionSection {

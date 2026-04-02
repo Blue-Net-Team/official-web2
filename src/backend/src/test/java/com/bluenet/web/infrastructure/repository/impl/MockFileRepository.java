@@ -63,4 +63,9 @@ public class MockFileRepository implements FileRepository {
     public void deleteFile(String filename, FileType fileType) {
         log.debug("Mock deleting file: {} ({})", filename, fileType);
     }
+
+    @Override
+    public void deleteFileById(Long id) {
+        log.debug("Mock deleting file by id: {}", id);
+    }
 }

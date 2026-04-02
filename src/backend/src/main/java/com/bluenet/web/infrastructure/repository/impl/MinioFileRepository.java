@@ -201,6 +201,38 @@ public class MinioFileRepository implements FileRepository {
         }
     }
 
+    @Override
+    @Transactional
+    public void deleteFileById(Long id) {
+        // 查找对应的File
+        File file = fileMapper.selectById(id);
+        if (file == null) {
+            log.warn("File not found in database for deletion: id={}", id);
+            throw new DataNotFound("File not found for deletion, id: " + id);
+        }
+
+        // 删除数据库记录
+        int influencedRows = fileMapper.deleteById(id);
+        if (influencedRows == 0) {
+            log.warn("Failed to delete file record from database: id={}", id);
+            throw new RuntimeException("Failed to delete file record, id: " + id);
+        }
+
+        // 删除MinIO对象
+        String bucketName = getBucketName(file.getType());
+        try {
+            minioClient.removeObject(
+                    RemoveObjectArgs.builder()
+                            .bucket(bucketName)
+                            .object(file.getName())
+                            .build());
+            log.debug("File deleted successfully from MinIO: {}/{}", bucketName, file.getName());
+        } catch (Exception e) {
+            log.error("Error deleting file from MinIO: {}/{}", bucketName, file.getName(), e);
+            throw new RuntimeException("Failed to delete file from MinIO: " + file.getName(), e);
+        }
+    }
+
     /**
      * 根据FileType获取bucket名称
      *

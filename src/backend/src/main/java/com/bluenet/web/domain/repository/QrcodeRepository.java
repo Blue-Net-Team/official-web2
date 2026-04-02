@@ -1,8 +1,10 @@
 package com.bluenet.web.domain.repository;
 
 import com.bluenet.web.domain.model.entity.Qrcode;
+import com.bluenet.web.domain.model.enumerate.QrcodeType;
 import com.bluenet.web.domain.model.vo.QrcodeVO;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -14,7 +16,7 @@ public interface QrcodeRepository {
      * 保存二维码
      *
      * @param qrcode
-     *            二维码实体
+     *            二维码VO
      */
     void save(QrcodeVO qrcode);
 
@@ -35,4 +37,21 @@ public interface QrcodeRepository {
      * @return 二维码实体
      */
     Optional<Qrcode> findByFileId(Long fileId);
+
+    /**
+     * 根据类型查询二维码列表（按ID升序）
+     *
+     * @param type
+     *            二维码类型
+     * @return 二维码列表
+     */
+    List<Qrcode> findByType(QrcodeType type);
+
+    /**
+     * 根据ID删除二维码
+     *
+     * @param id
+     *            二维码ID
+     */
+    void deleteById(Long id);
 }

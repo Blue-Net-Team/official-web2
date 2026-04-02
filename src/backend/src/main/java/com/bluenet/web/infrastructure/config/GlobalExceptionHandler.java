@@ -108,6 +108,20 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * 处理非法参数异常。
+     *
+     * @param ex
+     *            非法参数异常
+     * @return 错误响应
+     */
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ResponseMessage<Void>> handleIllegalArgumentException(IllegalArgumentException ex) {
+        logException(ex);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(ResponseMessage.error(HttpStatus.BAD_REQUEST.value(), ex.getMessage()));
+    }
+
+    /**
      * 处理未捕获的系统异常。
      *
      * @param ex

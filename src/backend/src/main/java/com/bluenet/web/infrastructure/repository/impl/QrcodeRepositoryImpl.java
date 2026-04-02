@@ -1,6 +1,8 @@
 package com.bluenet.web.infrastructure.repository.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.bluenet.web.domain.model.entity.Qrcode;
+import com.bluenet.web.domain.model.enumerate.QrcodeType;
 import com.bluenet.web.domain.model.vo.QrcodeVO;
 import com.bluenet.web.domain.repository.QrcodeRepository;
 import com.bluenet.web.infrastructure.repository.mapper.QrcodeMapper;
@@ -9,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -55,6 +58,19 @@ public class QrcodeRepositoryImpl implements QrcodeRepository {
             return Optional.empty();
         }
         return Optional.of(qrcode);
+    }
+
+    @Override
+    public List<Qrcode> findByType(QrcodeType type) {
+        LambdaQueryWrapper<Qrcode> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Qrcode::getType, type).orderByAsc(Qrcode::getId);
+        return qrcodeMapper.selectList(wrapper);
+    }
+
+    @Override
+    public void deleteById(Long id) {
+        qrcodeMapper.deleteById(id);
+        log.info("删除二维码: id={}", id);
     }
 
     private QrcodeVO convertToVO(Qrcode qrcode) {
