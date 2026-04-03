@@ -54,7 +54,7 @@ const AdminSideBar = () => {
       width={200}
       collapsible
       collapsed={collapsed}
-      onCollapse={(value) => setCollapsed(value)}
+      onCollapse={(value: boolean) => setCollapsed(value)}
       className={styles.sider}
     >
       <Menu

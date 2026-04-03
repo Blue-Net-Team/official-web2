@@ -134,7 +134,9 @@ export default function AchievementsPage() {
                   key: achievement.id,
                   data: achievement,
                 }))}
-                itemRender={(itemInfo) => <AchievementCard achievement={itemInfo.data} />}
+                itemRender={(itemInfo: { data: AchievementDTO }) => (
+                  <AchievementCard achievement={itemInfo.data} />
+                )}
               />
               {totalPages > 1 && (
                 <div className={styles.paginationContainer}>
@@ -144,7 +146,7 @@ export default function AchievementsPage() {
                     pageSize={PAGE_SIZE}
                     onChange={handlePageChange}
                     showSizeChanger={false}
-                    showTotal={(total) => `共 ${total} 项成就`}
+                    showTotal={(total: number) => `共 ${total} 项成就`}
                   />
                 </div>
               )}

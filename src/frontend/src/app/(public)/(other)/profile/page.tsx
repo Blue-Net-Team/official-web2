@@ -140,7 +140,7 @@ export default function ProfilePage() {
       <div className={styles.pageBg} />
 
       <main className={styles.mainContent}>
-        <ProfileSidebar profile={profile} stats={mockUserStats} />
+        <ProfileSidebar profile={profile} stats={mockUserStats} onAvatarUpdate={loadData} />
 
         <div className={styles.contentArea}>
           <ProfileTabs activeTab={currentTab} tabCounts={tabCounts} onTabChange={handleTabChange} />

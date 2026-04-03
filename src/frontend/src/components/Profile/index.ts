@@ -1,3 +1,4 @@
+export { default as AvatarCropModal } from './AvatarCropModal'
 export { default as AssessmentList } from './AssessmentList'
 export { default as ExperienceSection } from './ExperienceSection'
 export { default as ProfileInfo } from './ProfileInfo'

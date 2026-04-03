@@ -18,7 +18,6 @@ import embedIcon from '@/assets/icon/direction/embed_icon.png'
 import ConsultationQrcode from '@/components/Enroll/ConsultationQrcode'
 
 const { TextArea } = Input
-const { Option } = Select
 
 // 方向配置
 const DIRECTIONS = [
@@ -538,16 +537,15 @@ const EnrollPageContent: React.FC = () => {
                     <Select
                       placeholder="请选择学院"
                       loading={loadingColleges}
+                      options={colleges.map((college) => ({
+                        key: college.id,
+                        value: college.id,
+                        label: college.name,
+                      }))}
                       style={{
                         width: '100%',
                       }}
-                    >
-                      {colleges.map((college) => (
-                        <Option key={college.id} value={college.id}>
-                          {college.name}
-                        </Option>
-                      ))}
-                    </Select>
+                    />
                   </Form.Item>
                 </div>
               </div>
@@ -569,16 +567,15 @@ const EnrollPageContent: React.FC = () => {
                   <Form.Item name="grade" rules={[{ required: true, message: '请选择年级' }]}>
                     <Select
                       placeholder="请选择年级"
+                      options={GRADE_OPTIONS.map((opt) => ({
+                        key: opt.value,
+                        value: opt.value,
+                        label: opt.label,
+                      }))}
                       style={{
                         width: '100%',
                       }}
-                    >
-                      {GRADE_OPTIONS.map((opt) => (
-                        <Option key={opt.value} value={opt.value}>
-                          {opt.label}
-                        </Option>
-                      ))}
-                    </Select>
+                    />
                   </Form.Item>
                 </div>
               </div>

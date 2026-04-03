@@ -135,7 +135,7 @@ export const Members: React.FC<MembersProps> = ({ initialPage = 0 }) => {
                   pageSize={PAGE_SIZE}
                   onChange={handlePageChange}
                   showSizeChanger={false}
-                  showTotal={(total) => `共 ${total} 人`}
+                  showTotal={(total: number) => `共 ${total} 人`}
                 />
               </div>
             )}

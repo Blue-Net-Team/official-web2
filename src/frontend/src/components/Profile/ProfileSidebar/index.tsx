@@ -1,24 +1,29 @@
-/**
- * 个人主页侧边栏组件 - 服务端组件
- *
- * 功能：
- * - 展示用户头像、姓名、昵称、角色标签
- * - 展示个人简介、基本信息（学院/专业/年级）
- * - 展示报名方向
- * - 展示统计数据（考核轮次/已完成/平均分）
- *
- * @author BlueNet Team
- */
+'use client'
+
+import { useState, useRef, useCallback } from 'react'
 import type { UserInfo, UserStats } from '@/types/profile'
 import { DirectionLabels } from '@/types/profile'
 import { API_BASE_URL } from '@/apis/config'
+import { fileService } from '@/apis/services/file.service'
 import styles from './styles.module.css'
-import { DesktopOutlined, BookOutlined, CalendarOutlined, EditOutlined } from '@ant-design/icons'
+import {
+  DesktopOutlined,
+  BookOutlined,
+  CalendarOutlined,
+  CameraOutlined,
+  LoadingOutlined,
+} from '@ant-design/icons'
+import { message } from 'antd'
 import Image from 'next/image'
+import AvatarCropModal from '../AvatarCropModal'
+
+const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+const MAX_SIZE = 5 * 1024 * 1024
 
 interface ProfileSidebarProps {
   profile: UserInfo
   stats: UserStats
+  onAvatarUpdate?: () => void
 }
 
 const directionAbbrMap: Record<string, string> = {
@@ -27,21 +32,91 @@ const directionAbbrMap: Record<string, string> = {
   structural_design: 'SD',
 }
 
-export default function ProfileSidebar({ profile, stats }: ProfileSidebarProps) {
+export default function ProfileSidebar({ profile, stats, onAvatarUpdate }: ProfileSidebarProps) {
+  const [uploading, setUploading] = useState(false)
+  const [cropModalOpen, setCropModalOpen] = useState(false)
+  const [cropImageSrc, setCropImageSrc] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
   const directionAbbr =
     directionAbbrMap[profile.direction] ||
     (profile.direction ? profile.direction.slice(0, 2).toUpperCase() : '-')
   const directionLabel = DirectionLabels[profile.direction] || profile.direction || '-'
   const displayName = profile.nickname || profile.username
 
+  const handleAvatarClick = useCallback(() => {
+    if (uploading) return
+    fileInputRef.current?.click()
+  }, [uploading])
+
+  const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    e.target.value = ''
+
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      message.error('请选择图片文件（JPG/PNG/GIF/WEBP）')
+      return
+    }
+
+    if (file.size > MAX_SIZE) {
+      message.error('图片大小不能超过 5MB')
+      return
+    }
+
+    const url = URL.createObjectURL(file)
+    setCropImageSrc(url)
+    setCropModalOpen(true)
+  }, [])
+
+  const handleCropConfirm = useCallback(
+    async (blob: Blob) => {
+      setUploading(true)
+      setCropModalOpen(false)
+      try {
+        const file = new File([blob], 'avatar.jpg', { type: 'image/jpeg' })
+        const res = await fileService.uploadAvatar(file)
+        if (res.code === 200) {
+          message.success('头像更新成功')
+          onAvatarUpdate?.()
+        } else {
+          message.error(res.msg || '头像上传失败，请重试')
+        }
+      } catch {
+        message.error('头像上传失败，请重试')
+      } finally {
+        setUploading(false)
+        if (cropImageSrc) {
+          URL.revokeObjectURL(cropImageSrc)
+          setCropImageSrc(null)
+        }
+      }
+    },
+    [onAvatarUpdate, cropImageSrc]
+  )
+
+  const handleCropCancel = useCallback(() => {
+    setCropModalOpen(false)
+    if (cropImageSrc) {
+      URL.revokeObjectURL(cropImageSrc)
+      setCropImageSrc(null)
+    }
+  }, [cropImageSrc])
+
   return (
     <aside className={styles.sidebar}>
       <div className={styles.sidebarContent}>
         <div className={styles.avatarSection}>
           <div className={styles.avatarContainer}>
-            <div className={styles.avatarRing}>
+            <div
+              className={`${styles.avatarRing} ${uploading ? '' : styles.avatarRingClickable}`}
+              onClick={handleAvatarClick}
+            >
               <div className={styles.avatarImg}>
-                {profile.avatarFileId ? (
+                {uploading ? (
+                  <LoadingOutlined className={styles.avatarLoading} />
+                ) : profile.avatarFileId ? (
                   <Image
                     src={`${API_BASE_URL}/file/download/${profile.avatarFileId}`}
                     alt={displayName}
@@ -52,10 +127,20 @@ export default function ProfileSidebar({ profile, stats }: ProfileSidebarProps) 
                   displayName.charAt(0)
                 )}
               </div>
+              {!uploading && (
+                <div className={styles.avatarOverlay}>
+                  <CameraOutlined className={styles.avatarOverlayIcon} />
+                  <span className={styles.avatarOverlayText}>更换头像</span>
+                </div>
+              )}
             </div>
-            <div className={styles.avatarEdit}>
-              <EditOutlined />
-            </div>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/gif,image/webp"
+              onChange={handleFileChange}
+              className={styles.hiddenInput}
+            />
           </div>
           <div>
             <h1 className={styles.memberName}>{displayName}</h1>
@@ -124,6 +209,13 @@ export default function ProfileSidebar({ profile, stats }: ProfileSidebarProps) 
           </div>
         </div>
       </div>
+
+      <AvatarCropModal
+        open={cropModalOpen}
+        imageSrc={cropImageSrc}
+        onConfirm={handleCropConfirm}
+        onCancel={handleCropCancel}
+      />
     </aside>
   )
 }

@@ -26,11 +26,17 @@
 }
 
 .avatarRing {
+  position: relative;
   width: 120px;
   height: 120px;
   border-radius: 50%;
   background: linear-gradient(135deg, #6677ff 0%, #ff6b35 100%);
   padding: 4px;
+  overflow: hidden;
+}
+
+.avatarRingClickable {
+  cursor: pointer;
 }
 
 .avatarImg {
@@ -53,31 +59,43 @@
   object-fit: cover;
 }
 
-.avatarEdit {
+.avatarLoading {
+  font-size: 28px;
+  color: #6677ff;
+}
+
+.avatarOverlay {
   position: absolute;
-  bottom: 4px;
-  right: 4px;
-  width: 32px;
-  height: 32px;
+  inset: 4px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #6677ff 0%, #2f27b0 100%);
-  border: 2px solid #0a0a0a;
+  background: rgba(0, 0, 0, 0.55);
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
-  transition: all 0.3s ease;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  pointer-events: none;
 }
 
-.avatarEdit:hover {
-  transform: scale(1.1);
-  box-shadow: 0 4px 16px rgba(102, 119, 255, 0.4);
+.avatarRingClickable:hover .avatarOverlay {
+  opacity: 1;
 }
 
-.avatarEdit svg {
-  width: 16px;
-  height: 16px;
+.avatarOverlayIcon {
+  font-size: 20px;
   color: #ffffff;
+}
+
+.avatarOverlayText {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.85);
+  white-space: nowrap;
+}
+
+.hiddenInput {
+  display: none;
 }
 
 .memberName {

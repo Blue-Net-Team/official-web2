@@ -230,7 +230,7 @@ const NavBar = () => {
           <Dropdown
             menu={{
               items: loginDropdownMenuItems,
-              onClick: (e) => handleMenuClick(e.key),
+              onClick: (e: { key: string }) => handleMenuClick(e.key),
             }}
           >
             {renderUserInfo()}
@@ -278,7 +278,7 @@ const NavBar = () => {
             items={menuItems}
             className={styles.menu}
             selectedKeys={[]}
-            onClick={(e) => handleMenuClick(e.key)}
+            onClick={(e: { key: string }) => handleMenuClick(e.key)}
           />
         )}
       </div>
@@ -308,7 +308,7 @@ const NavBar = () => {
           items={getMobilMenuItemsFromCommon()}
           className={styles.drawerMenu}
           selectedKeys={[]}
-          onClick={(e) => {
+          onClick={(e: { key: string }) => {
             handleMenuClick(e.key)
             closeDrawer()
           }}
