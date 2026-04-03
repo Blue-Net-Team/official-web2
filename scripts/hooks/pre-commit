@@ -113,7 +113,11 @@ fi
 if [ "$NEED_RESTAGE" = true ]; then
   echo ""
   echo "📝 正在重新暂存格式化后的文件..."
-  git add -u
+  echo "$STAGED_FILES" | while IFS= read -r file; do
+    if [ -f "$file" ]; then
+      git add "$file"
+    fi
+  done
   echo "📤 文件已重新暂存，继续提交..."
 fi
 
