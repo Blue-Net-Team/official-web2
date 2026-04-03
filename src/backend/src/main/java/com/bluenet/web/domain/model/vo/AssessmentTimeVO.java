@@ -31,6 +31,11 @@ public class AssessmentTimeVO {
     private Integer epoch;
 
     /**
+     * 年级（1=大一, 2=大二, 3=大三）
+     */
+    private Integer grade;
+
+    /**
      * 开始时间
      */
     private LocalDateTime startTime;

@@ -15,6 +15,7 @@ public class AssessmentTime {
     private Long id;
     private Direction direction;
     private Integer epoch;
+    private Integer grade;
     private LocalDateTime startTime;
     private LocalDateTime endTime;
     private Boolean timeLimit;
