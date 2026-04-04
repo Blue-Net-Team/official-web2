@@ -13,7 +13,7 @@ import { Spin } from 'antd'
 import { useRouter } from 'next/navigation'
 import authStore from '@/stores/authStore'
 import { assessmentTimeService } from '@/apis/services/assessment-time.service'
-import type { AssessmentTimeDTO, AssessmentStatus } from '@/types/assessment'
+import type { AssessmentTimeDTO, AssessmentStatus, Direction } from '@/types/assessment'
 import { DirectionLabels } from '@/types/assessment'
 import styles from './styles.module.css'
 
@@ -222,7 +222,7 @@ export default function AssessmentPage() {
                       <div className={styles.cardTitleInfo}>
                         <span className={styles.cardTitle}>{getEpochLabel(item.epoch)}</span>
                         <span className={styles.cardSubtitle}>
-                          {DirectionLabels[item.direction] || item.direction}
+                          {DirectionLabels[item.direction as Direction] || item.direction}
                         </span>
                       </div>
                     </div>

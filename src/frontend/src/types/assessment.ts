@@ -5,7 +5,8 @@
  */
 
 /** 方向/类型枚举 - 复用全局枚举定义 */
-export type { Direction } from '@/apis/schema/enumerate'
+import type { Direction } from '@/apis/schema/enumerate'
+export type { Direction }
 export { DIRECTION_LABELS as DirectionLabels } from '@/apis/schema/enumerate'
 
 /** 年级枚举描述映射 */
