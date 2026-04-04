@@ -1,0 +1,447 @@
+/* Assessment Schedule Page Styles */
+
+.container {
+  min-height: 100vh;
+  background-color: #0a0a0a;
+  padding: 40px 24px 80px;
+  position: relative;
+  overflow-x: hidden;
+}
+
+.pageBg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background:
+    radial-gradient(ellipse 80% 50% at 20% 40%, rgba(102, 119, 255, 0.15) 0%, transparent 50%),
+    radial-gradient(ellipse 60% 40% at 80% 60%, rgba(255, 107, 53, 0.1) 0%, transparent 50%),
+    radial-gradient(ellipse 50% 30% at 50% 100%, rgba(47, 39, 176, 0.2) 0%, transparent 50%);
+  z-index: 0;
+  pointer-events: none;
+}
+
+.content {
+  max-width: 960px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 1;
+}
+
+/* Header */
+.header {
+  margin-bottom: 40px;
+}
+
+.title {
+  font-size: 28px;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0 0 8px;
+  background: linear-gradient(135deg, #ffffff 0%, rgba(255, 255, 255, 0.7) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.subtitle {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.45);
+  margin: 0 0 20px;
+}
+
+.tags {
+  display: flex;
+  gap: 8px;
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.65);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(12px);
+}
+
+/* Loading */
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 300px;
+}
+
+/* Empty State */
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 24px;
+  text-align: center;
+}
+
+.emptyIcon {
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.04);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  color: rgba(255, 255, 255, 0.25);
+  margin-bottom: 16px;
+}
+
+.emptyTitle {
+  font-size: 16px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.45);
+  margin: 0 0 8px;
+}
+
+.emptyDesc {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.25);
+  margin: 0;
+}
+
+/* Card List */
+.cardList {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Card - Frosted Glass */
+.card {
+  position: relative;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 24px;
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+  overflow: hidden;
+}
+
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  pointer-events: none;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+/* Card Status Variants */
+.cardInProgress {
+  border-color: rgba(102, 119, 255, 0.2);
+  box-shadow:
+    0 0 20px rgba(102, 119, 255, 0.06),
+    inset 0 1px 0 rgba(102, 119, 255, 0.1);
+}
+
+.cardInProgress::before {
+  background: linear-gradient(90deg, transparent, rgba(102, 119, 255, 0.3), transparent);
+}
+
+.cardInProgress:hover {
+  box-shadow:
+    0 8px 32px rgba(102, 119, 255, 0.12),
+    inset 0 1px 0 rgba(102, 119, 255, 0.15);
+  border-color: rgba(102, 119, 255, 0.3);
+}
+
+.cardNotStarted {
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
+.cardNotStarted:hover {
+  box-shadow: 0 4px 16px rgba(255, 255, 255, 0.04);
+}
+
+.cardEnded {
+  border-color: rgba(7, 193, 96, 0.2);
+  box-shadow:
+    0 0 20px rgba(7, 193, 96, 0.06),
+    inset 0 1px 0 rgba(7, 193, 96, 0.1);
+}
+
+.cardEnded::before {
+  background: linear-gradient(90deg, transparent, rgba(7, 193, 96, 0.3), transparent);
+}
+
+.cardEnded:hover {
+  box-shadow:
+    0 8px 32px rgba(7, 193, 96, 0.12),
+    inset 0 1px 0 rgba(7, 193, 96, 0.15);
+  border-color: rgba(7, 193, 96, 0.3);
+}
+
+/* Card Header */
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+}
+
+.cardTitleSection {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.cardIcon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+  backdrop-filter: blur(8px);
+}
+
+.cardIconInProgress {
+  background: rgba(102, 119, 255, 0.15);
+  color: #6677ff;
+  box-shadow: 0 0 16px rgba(102, 119, 255, 0.15);
+}
+
+.cardIconNotStarted {
+  background: rgba(140, 140, 141, 0.1);
+  color: rgba(140, 140, 141, 1);
+}
+
+.cardIconEnded {
+  background: rgba(7, 193, 96, 0.15);
+  color: #07c160;
+  box-shadow: 0 0 16px rgba(7, 193, 96, 0.15);
+}
+
+.cardTitleInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.cardTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.cardSubtitle {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+/* Status Badge */
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  flex-shrink: 0;
+  backdrop-filter: blur(8px);
+}
+
+.statusInProgress {
+  background: rgba(102, 119, 255, 0.15);
+  color: #6677ff;
+  border: 1px solid rgba(102, 119, 255, 0.2);
+}
+
+.statusNotStarted {
+  background: rgba(140, 140, 141, 0.1);
+  color: rgba(140, 140, 141, 1);
+  border: 1px solid rgba(140, 140, 141, 0.15);
+}
+
+.statusEnded {
+  background: rgba(7, 193, 96, 0.15);
+  color: #07c160;
+  border: 1px solid rgba(7, 193, 96, 0.2);
+}
+
+/* Card Meta */
+.cardMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.metaItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.metaItem svg {
+  font-size: 14px;
+}
+
+.timeLimitHighlight {
+  color: #fa8c16;
+  font-weight: 500;
+}
+
+/* Progress Section */
+.progressSection {
+  margin-bottom: 20px;
+}
+
+.progressHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.progressLabel {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.progressValue {
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.progressBar {
+  height: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.progressFillInProgress {
+  background: linear-gradient(90deg, #6677ff, #2f27b0);
+  box-shadow: 0 0 8px rgba(102, 119, 255, 0.3);
+}
+
+.progressFillNotStarted {
+  background: rgba(140, 140, 141, 0.3);
+}
+
+.progressFillEnded {
+  background: linear-gradient(90deg, #07c160, #05a34e);
+  box-shadow: 0 0 8px rgba(7, 193, 96, 0.3);
+}
+
+/* Card Footer */
+.cardFooter {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.actionButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 20px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  transition:
+    opacity 0.2s ease,
+    box-shadow 0.2s ease;
+  backdrop-filter: blur(8px);
+}
+
+.actionButton:hover {
+  opacity: 0.85;
+}
+
+.actionButton svg {
+  font-size: 12px;
+}
+
+.actionInProgress {
+  background: linear-gradient(135deg, #6677ff, #2f27b0);
+  color: #ffffff;
+  box-shadow: 0 4px 16px rgba(102, 119, 255, 0.3);
+}
+
+.actionInProgress:hover {
+  box-shadow: 0 6px 24px rgba(102, 119, 255, 0.4);
+}
+
+.actionNotStarted {
+  background: rgba(140, 140, 141, 0.15);
+  color: rgba(140, 140, 141, 1);
+  cursor: not-allowed;
+  border: 1px solid rgba(140, 140, 141, 0.15);
+}
+
+.actionNotStarted:hover {
+  opacity: 1;
+}
+
+.actionEnded {
+  background: linear-gradient(135deg, #07c160, #05a34e);
+  color: #ffffff;
+  box-shadow: 0 4px 16px rgba(7, 193, 96, 0.3);
+}
+
+.actionEnded:hover {
+  box-shadow: 0 6px 24px rgba(7, 193, 96, 0.4);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .container {
+    padding: 24px 16px 60px;
+  }
+
+  .title {
+    font-size: 22px;
+  }
+
+  .card {
+    padding: 18px;
+  }
+
+  .cardHeader {
+    margin-bottom: 16px;
+  }
+
+  .cardMeta {
+    gap: 12px;
+  }
+}

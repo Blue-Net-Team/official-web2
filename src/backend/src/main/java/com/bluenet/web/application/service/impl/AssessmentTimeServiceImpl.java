@@ -1,6 +1,7 @@
 package com.bluenet.web.application.service.impl;
 
 import com.bluenet.web.api.dto.PageDTO;
+import com.bluenet.web.api.dto.assessment_time.AssessmentProgressDTO;
 import com.bluenet.web.api.dto.assessment_time.AssessmentTimeDTO;
 import com.bluenet.web.api.dto.assessment_time.CreateAssessmentTimeRequestDTO;
 import com.bluenet.web.api.dto.assessment_time.UpdateAssessmentTimeRequestDTO;
@@ -9,6 +10,8 @@ import com.bluenet.web.application.service.AssessmentTimeService;
 import com.bluenet.web.domain.model.enumerate.Direction;
 import com.bluenet.web.domain.model.vo.AssessmentTimeVO;
 import com.bluenet.web.domain.model.vo.UserVO;
+import com.bluenet.web.domain.repository.AssessmentAnswerRepository;
+import com.bluenet.web.domain.repository.AssessmentQuestionRepository;
 import com.bluenet.web.domain.repository.AssessmentTimeRepository;
 import com.bluenet.web.domain.service.AssessmentTimeDomainService;
 import com.bluenet.web.domain.util.GradeCalculator;
@@ -35,6 +38,8 @@ public class AssessmentTimeServiceImpl implements AssessmentTimeService {
     private final AssessmentTimeDomainService assessmentTimeDomainService;
     private final AssessmentTimeConverter assessmentTimeConverter;
     private final AssessmentTimeRepository assessmentTimeRepository;
+    private final AssessmentQuestionRepository assessmentQuestionRepository;
+    private final AssessmentAnswerRepository assessmentAnswerRepository;
 
     @Override
     @Transactional
@@ -121,6 +126,39 @@ public class AssessmentTimeServiceImpl implements AssessmentTimeService {
 
     @Override
     public PageDTO<AssessmentTimeDTO> listAssessmentTimesForUser(Integer page, Integer size) {
-        return listAssessmentTimes(page, size);
+        PageDTO<AssessmentTimeDTO> result = listAssessmentTimes(page, size);
+
+        UserVO currentUser = UserCTX.getCurrentUser();
+        if (currentUser != null) {
+            for (AssessmentTimeDTO dto : result.getContent()) {
+                int totalQuestions = assessmentQuestionRepository.countByAssessmentTimeId(dto.getId());
+                int completedQuestions = assessmentAnswerRepository
+                        .countByUserIdAndAssessmentTimeId(currentUser.getId(), dto.getId());
+                dto.setTotalQuestions(totalQuestions);
+                dto.setCompletedQuestions(completedQuestions);
+            }
+        }
+
+        return result;
+    }
+
+    @Override
+    public AssessmentProgressDTO getAssessmentProgress(Long assessmentTimeId) {
+        assessmentTimeDomainService.getById(assessmentTimeId)
+                .orElseThrow(() -> new IllegalArgumentException("考核时间不存在"));
+
+        UserVO currentUser = UserCTX.getCurrentUser();
+        int totalQuestions = assessmentQuestionRepository.countByAssessmentTimeId(assessmentTimeId);
+        int completedQuestions = 0;
+        if (currentUser != null) {
+            completedQuestions = assessmentAnswerRepository
+                    .countByUserIdAndAssessmentTimeId(currentUser.getId(), assessmentTimeId);
+        }
+
+        return AssessmentProgressDTO.builder()
+                .assessmentTimeId(assessmentTimeId)
+                .totalQuestions(totalQuestions)
+                .completedQuestions(completedQuestions)
+                .build();
     }
 }

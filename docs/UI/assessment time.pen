@@ -1,0 +1,917 @@
+{
+  "version": "2.10",
+  "children": [
+    {
+      "type": "frame",
+      "id": "vt5Jj",
+      "x": 0,
+      "y": 0,
+      "name": "Assessment Schedule",
+      "width": 1440,
+      "fill": "#000000",
+      "layout": "vertical",
+      "gap": 32,
+      "padding": [
+        48,
+        80
+      ],
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "frame",
+          "id": "0Hyqx",
+          "name": "Page Header",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 12,
+          "children": [
+            {
+              "type": "text",
+              "id": "EXt6V",
+              "name": "title",
+              "fill": "#ffffff",
+              "content": "考核时间安排",
+              "fontFamily": "Inter",
+              "fontSize": 28,
+              "fontWeight": "600"
+            },
+            {
+              "type": "frame",
+              "id": "asWui",
+              "name": "descRow",
+              "width": "fill_container",
+              "gap": 12,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "ORnZf",
+                  "name": "desc",
+                  "fill": "#ffffff73",
+                  "content": "查看当前可参加的考核时间安排",
+                  "fontFamily": "Inter",
+                  "fontSize": 14,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "frame",
+                  "id": "e8aRp",
+                  "name": "badge",
+                  "fill": "#fa8c161a",
+                  "cornerRadius": 12,
+                  "stroke": {
+                    "thickness": 1,
+                    "fill": "#fa8c164d"
+                  },
+                  "gap": 6,
+                  "padding": [
+                    4,
+                    12
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon_font",
+                      "id": "05KI9",
+                      "name": "badgeIcon",
+                      "width": 14,
+                      "height": 14,
+                      "iconFontName": "layers",
+                      "iconFontFamily": "feather",
+                      "fill": "#fa8c16"
+                    },
+                    {
+                      "type": "text",
+                      "id": "4gYkI",
+                      "name": "badgeText",
+                      "fill": "#fa8c16",
+                      "content": "计算机视觉 · 大一",
+                      "fontFamily": "Inter",
+                      "fontSize": 12,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "6tKBA",
+          "name": "Card List",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 16,
+          "children": [
+            {
+              "type": "frame",
+              "id": "mE0xX",
+              "name": "Card - In Progress",
+              "width": "fill_container",
+              "fill": "#ffffff08",
+              "cornerRadius": 16,
+              "stroke": {
+                "thickness": 1,
+                "fill": "#6677ff4d"
+              },
+              "layout": "vertical",
+              "gap": 16,
+              "padding": 24,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "8kigP",
+                  "name": "c1Header",
+                  "width": "fill_container",
+                  "justifyContent": "space_between",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "RkMtj",
+                      "name": "c1TitleRow",
+                      "gap": 12,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon_font",
+                          "id": "h8oml",
+                          "name": "c1Icon",
+                          "width": 20,
+                          "height": 20,
+                          "iconFontName": "monitor",
+                          "iconFontFamily": "feather",
+                          "fill": "#6677ff"
+                        },
+                        {
+                          "type": "text",
+                          "id": "MB10S",
+                          "name": "c1Title",
+                          "fill": "#ffffff",
+                          "content": "第一轮考核",
+                          "fontFamily": "Inter",
+                          "fontSize": 18,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "text",
+                          "id": "kA1Fr",
+                          "name": "c1Sub",
+                          "fill": "#ffffff73",
+                          "content": "计算机视觉方向",
+                          "fontFamily": "Inter",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "f0z3H",
+                      "name": "c1Status",
+                      "fill": "#6677ff26",
+                      "cornerRadius": 10,
+                      "gap": 6,
+                      "padding": [
+                        4,
+                        12
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "ellipse",
+                          "id": "MbtVc",
+                          "name": "c1Dot",
+                          "fill": "#6677ff",
+                          "width": 8,
+                          "height": 8
+                        },
+                        {
+                          "type": "text",
+                          "id": "R0mr3",
+                          "name": "c1StatusTxt",
+                          "fill": "#6677ff",
+                          "content": "进行中",
+                          "fontFamily": "Inter",
+                          "fontSize": 12,
+                          "fontWeight": "500"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "palfO",
+                  "name": "c1Meta",
+                  "width": "fill_container",
+                  "gap": 24,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon_font",
+                      "id": "pY5I4",
+                      "name": "c1TimeIco",
+                      "width": 14,
+                      "height": 14,
+                      "iconFontName": "calendar",
+                      "iconFontFamily": "feather",
+                      "fill": "#ffffff73"
+                    },
+                    {
+                      "type": "text",
+                      "id": "HbxL9",
+                      "name": "c1TimeTxt",
+                      "fill": "#ffffffa6",
+                      "content": "2025-03-15 09:00 — 2025-03-15 21:00",
+                      "fontFamily": "Inter",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "icon_font",
+                      "id": "xqReN",
+                      "name": "c1LimitIco",
+                      "width": 14,
+                      "height": 14,
+                      "iconFontName": "clock",
+                      "iconFontFamily": "feather",
+                      "fill": "#fa8c16"
+                    },
+                    {
+                      "type": "text",
+                      "id": "HH3Vi",
+                      "name": "c1LimitTxt",
+                      "fill": "#fa8c16",
+                      "content": "限时 120 分钟",
+                      "fontFamily": "Inter",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "DnlJA",
+                  "name": "c1ProgSec",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 8,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "WKnq7",
+                      "name": "c1ProgHead",
+                      "width": "fill_container",
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "Hhpjm",
+                          "name": "c1ProgLabel",
+                          "fill": "#ffffffa6",
+                          "content": "5/8 已完成",
+                          "fontFamily": "Inter",
+                          "fontSize": 13,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "oKTCa",
+                          "name": "c1ProgPct",
+                          "fill": "#6677ff",
+                          "content": "62.5%",
+                          "fontFamily": "Inter",
+                          "fontSize": 13,
+                          "fontWeight": "500"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "Jh5EM",
+                      "name": "c1ProgBg",
+                      "width": "fill_container",
+                      "height": 6,
+                      "fill": "#ffffff0f",
+                      "cornerRadius": 3,
+                      "layout": "none",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "UvcLT",
+                          "x": 0,
+                          "y": 0,
+                          "name": "c1ProgFill",
+                          "width": 770,
+                          "height": 6,
+                          "fill": {
+                            "type": "gradient",
+                            "gradientType": "linear",
+                            "enabled": true,
+                            "rotation": 0,
+                            "size": {
+                              "height": 1
+                            },
+                            "colors": [
+                              {
+                                "color": "#6677ff",
+                                "position": 0
+                              },
+                              {
+                                "color": "#2f27b0",
+                                "position": 1
+                              }
+                            ]
+                          },
+                          "cornerRadius": 3
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "YAsVR",
+                  "name": "c1Footer",
+                  "width": "fill_container",
+                  "justifyContent": "end",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "LqrtB",
+                      "name": "c1Btn",
+                      "fill": {
+                        "type": "gradient",
+                        "gradientType": "linear",
+                        "enabled": true,
+                        "rotation": 0,
+                        "size": {
+                          "height": 1
+                        },
+                        "colors": [
+                          {
+                            "color": "#6677ff",
+                            "position": 0
+                          },
+                          {
+                            "color": "#2f27b0",
+                            "position": 1
+                          }
+                        ]
+                      },
+                      "cornerRadius": 8,
+                      "gap": 6,
+                      "padding": [
+                        8,
+                        20
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "vSK6m",
+                          "name": "c1BtnTxt",
+                          "fill": "#ffffff",
+                          "content": "继续答题",
+                          "fontFamily": "Inter",
+                          "fontSize": 14,
+                          "fontWeight": "500"
+                        },
+                        {
+                          "type": "icon_font",
+                          "id": "Qxhrp",
+                          "name": "c1BtnIco",
+                          "width": 16,
+                          "height": 16,
+                          "iconFontName": "arrow-right",
+                          "iconFontFamily": "feather",
+                          "fill": "#ffffff"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "M7E3X",
+              "name": "Card - Not Started",
+              "width": "fill_container",
+              "fill": "#ffffff08",
+              "cornerRadius": 16,
+              "stroke": {
+                "thickness": 1,
+                "fill": "#ffffff0f"
+              },
+              "layout": "vertical",
+              "gap": 16,
+              "padding": 24,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "j5DV2",
+                  "name": "c2Header",
+                  "width": "fill_container",
+                  "justifyContent": "space_between",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "TKO2c",
+                      "name": "c2TitleRow",
+                      "gap": 12,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon_font",
+                          "id": "6zJrr",
+                          "name": "c2Icon",
+                          "width": 20,
+                          "height": 20,
+                          "iconFontName": "box",
+                          "iconFontFamily": "feather",
+                          "fill": "#ffffff4d"
+                        },
+                        {
+                          "type": "text",
+                          "id": "ifQ7E",
+                          "name": "c2Title",
+                          "fill": "#ffffffa6",
+                          "content": "第二轮考核",
+                          "fontFamily": "Inter",
+                          "fontSize": 18,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "text",
+                          "id": "UGcH9",
+                          "name": "c2Sub",
+                          "fill": "#ffffff4d",
+                          "content": "结构设计方向",
+                          "fontFamily": "Inter",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "4NL9I",
+                      "name": "c2Status",
+                      "fill": "#ffffff0f",
+                      "cornerRadius": 10,
+                      "gap": 6,
+                      "padding": [
+                        4,
+                        12
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "ellipse",
+                          "id": "5S8uC",
+                          "name": "c2Dot",
+                          "fill": "#8c8c8d",
+                          "width": 8,
+                          "height": 8
+                        },
+                        {
+                          "type": "text",
+                          "id": "TtvKC",
+                          "name": "c2StatusTxt",
+                          "fill": "#8c8c8d",
+                          "content": "未开始",
+                          "fontFamily": "Inter",
+                          "fontSize": 12,
+                          "fontWeight": "500"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "CQSVg",
+                  "name": "c2Meta",
+                  "width": "fill_container",
+                  "gap": 24,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon_font",
+                      "id": "GAgrF",
+                      "name": "c2TimeIco",
+                      "width": 14,
+                      "height": 14,
+                      "iconFontName": "calendar",
+                      "iconFontFamily": "feather",
+                      "fill": "#ffffff4d"
+                    },
+                    {
+                      "type": "text",
+                      "id": "uj3hB",
+                      "name": "c2TimeTxt",
+                      "fill": "#ffffff73",
+                      "content": "2025-04-01 09:00 — 2025-04-01 21:00",
+                      "fontFamily": "Inter",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "icon_font",
+                      "id": "pWman",
+                      "name": "c2LimitIco",
+                      "width": 14,
+                      "height": 14,
+                      "iconFontName": "clock",
+                      "iconFontFamily": "feather",
+                      "fill": "#ffffff4d"
+                    },
+                    {
+                      "type": "text",
+                      "id": "bzmEG",
+                      "name": "c2LimitTxt",
+                      "fill": "#ffffff73",
+                      "content": "不限时",
+                      "fontFamily": "Inter",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "yD62T",
+                  "name": "c2ProgSec",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 8,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "KWLX3",
+                      "name": "c2ProgHead",
+                      "width": "fill_container",
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "BGGCu",
+                          "name": "c2ProgLabel",
+                          "fill": "#ffffff73",
+                          "content": "0/10 已完成",
+                          "fontFamily": "Inter",
+                          "fontSize": 13,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "Eot3z",
+                          "name": "c2ProgPct",
+                          "fill": "#ffffff73",
+                          "content": "0%",
+                          "fontFamily": "Inter",
+                          "fontSize": 13,
+                          "fontWeight": "500"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "1aJ2m",
+                      "name": "c2ProgBg",
+                      "width": "fill_container",
+                      "height": 6,
+                      "fill": "#ffffff0f",
+                      "cornerRadius": 3
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "1Chbr",
+                  "name": "c2Footer",
+                  "width": "fill_container",
+                  "justifyContent": "end",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "LEesL",
+                      "name": "c2Btn",
+                      "fill": "#ffffff0f",
+                      "cornerRadius": 8,
+                      "gap": 6,
+                      "padding": [
+                        8,
+                        20
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "QyDW4",
+                          "name": "c2BtnTxt",
+                          "fill": "#ffffff4d",
+                          "content": "暂不可进入",
+                          "fontFamily": "Inter",
+                          "fontSize": 14,
+                          "fontWeight": "500"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "p6uVh",
+              "name": "Card - Ended",
+              "width": "fill_container",
+              "fill": "#ffffff08",
+              "cornerRadius": 16,
+              "stroke": {
+                "thickness": 1,
+                "fill": "#07c1604d"
+              },
+              "layout": "vertical",
+              "gap": 16,
+              "padding": 24,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "6OZRe",
+                  "name": "c3Header",
+                  "width": "fill_container",
+                  "justifyContent": "space_between",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "aJPTu",
+                      "name": "c3TitleRow",
+                      "gap": 12,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon_font",
+                          "id": "lSbKP",
+                          "name": "c3Icon",
+                          "width": 20,
+                          "height": 20,
+                          "iconFontName": "cpu",
+                          "iconFontFamily": "feather",
+                          "fill": "#07c160"
+                        },
+                        {
+                          "type": "text",
+                          "id": "2vvfU",
+                          "name": "c3Title",
+                          "fill": "#ffffff",
+                          "content": "第一轮考核",
+                          "fontFamily": "Inter",
+                          "fontSize": 18,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "text",
+                          "id": "In1dn",
+                          "name": "c3Sub",
+                          "fill": "#ffffff73",
+                          "content": "嵌入式方向",
+                          "fontFamily": "Inter",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "dcenf",
+                      "name": "c3Status",
+                      "fill": "#07c16026",
+                      "cornerRadius": 10,
+                      "gap": 6,
+                      "padding": [
+                        4,
+                        12
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "ellipse",
+                          "id": "gZMrJ",
+                          "name": "c3Dot",
+                          "fill": "#07c160",
+                          "width": 8,
+                          "height": 8
+                        },
+                        {
+                          "type": "text",
+                          "id": "imjbJ",
+                          "name": "c3StatusTxt",
+                          "fill": "#07c160",
+                          "content": "已结束",
+                          "fontFamily": "Inter",
+                          "fontSize": 12,
+                          "fontWeight": "500"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "PI7fq",
+                  "name": "c3Meta",
+                  "width": "fill_container",
+                  "gap": 24,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon_font",
+                      "id": "NV9Ri",
+                      "name": "c3TimeIco",
+                      "width": 14,
+                      "height": 14,
+                      "iconFontName": "calendar",
+                      "iconFontFamily": "feather",
+                      "fill": "#ffffff73"
+                    },
+                    {
+                      "type": "text",
+                      "id": "vO9Tl",
+                      "name": "c3TimeTxt",
+                      "fill": "#ffffffa6",
+                      "content": "2025-03-01 09:00 — 2025-03-01 21:00",
+                      "fontFamily": "Inter",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "icon_font",
+                      "id": "lYWe5",
+                      "name": "c3LimitIco",
+                      "width": 14,
+                      "height": 14,
+                      "iconFontName": "clock",
+                      "iconFontFamily": "feather",
+                      "fill": "#fa8c16"
+                    },
+                    {
+                      "type": "text",
+                      "id": "CBJq2",
+                      "name": "c3LimitTxt",
+                      "fill": "#fa8c16",
+                      "content": "限时 90 分钟",
+                      "fontFamily": "Inter",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "hu6Yu",
+                  "name": "c3ProgSec",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 8,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "vEyLy",
+                      "name": "c3ProgHead",
+                      "width": "fill_container",
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "O9Nng",
+                          "name": "c3ProgLabel",
+                          "fill": "#ffffffa6",
+                          "content": "8/8 已完成",
+                          "fontFamily": "Inter",
+                          "fontSize": 13,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "21dJb",
+                          "name": "c3ScoreTxt",
+                          "fill": "#fa8c16",
+                          "content": "得分 85.5",
+                          "fontFamily": "Inter",
+                          "fontSize": 13,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "SbMvV",
+                      "name": "c3ProgBg",
+                      "width": "fill_container",
+                      "height": 6,
+                      "fill": "#ffffff0f",
+                      "cornerRadius": 3,
+                      "layout": "none",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "5mM4i",
+                          "x": 0,
+                          "y": 0,
+                          "name": "c3ProgFill",
+                          "width": 1232,
+                          "height": 6,
+                          "fill": "#07c160",
+                          "cornerRadius": 3
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "29D0Z",
+                  "name": "c3Footer",
+                  "width": "fill_container",
+                  "justifyContent": "end",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "uurEh",
+                      "name": "c3Btn",
+                      "fill": {
+                        "type": "gradient",
+                        "gradientType": "linear",
+                        "enabled": true,
+                        "rotation": 0,
+                        "size": {
+                          "height": 1
+                        },
+                        "colors": [
+                          {
+                            "color": "#07c160",
+                            "position": 0
+                          },
+                          {
+                            "color": "#059648",
+                            "position": 1
+                          }
+                        ]
+                      },
+                      "cornerRadius": 8,
+                      "stroke": {
+                        "thickness": 0,
+                        "fill": "#00000000"
+                      },
+                      "gap": 6,
+                      "padding": [
+                        8,
+                        20
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "YmGBn",
+                          "name": "c3BtnTxt",
+                          "fill": "#ffffff",
+                          "content": "查看详情",
+                          "fontFamily": "Inter",
+                          "fontSize": 14,
+                          "fontWeight": "500"
+                        },
+                        {
+                          "type": "icon_font",
+                          "id": "6axUp",
+                          "name": "c3BtnIco",
+                          "width": 16,
+                          "height": 16,
+                          "iconFontName": "arrow-right",
+                          "iconFontFamily": "feather",
+                          "fill": "#ffffff"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

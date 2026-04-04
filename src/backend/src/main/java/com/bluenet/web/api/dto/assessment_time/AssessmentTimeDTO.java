@@ -44,4 +44,10 @@ public class AssessmentTimeDTO {
 
     @Schema(description = "限时分钟数")
     private Integer timeLimitMinutes;
+
+    @Schema(description = "题目总数")
+    private Integer totalQuestions;
+
+    @Schema(description = "已完成题目数")
+    private Integer completedQuestions;
 }

@@ -81,6 +81,49 @@ class AssessmentTimeConverterTest {
             assertFalse(dto.getTimeLimit());
             assertNull(dto.getTimeLimitMinutes());
         }
+
+        @Test
+        @DisplayName("进度数据：应正确映射 totalQuestions 和 completedQuestions")
+        void convertToDTO_withProgress_shouldMapProgressFields() {
+            AssessmentTimeVO vo = AssessmentTimeVO.builder()
+                    .id(3L)
+                    .direction(Direction.COMPUTER_VISION)
+                    .epoch(1)
+                    .grade(1)
+                    .startTime(LocalDateTime.of(2026, 6, 1, 9, 0))
+                    .endTime(LocalDateTime.of(2026, 6, 1, 11, 0))
+                    .timeLimit(true)
+                    .timeLimitMinutes(120)
+                    .totalQuestions(8)
+                    .completedQuestions(5)
+                    .build();
+
+            AssessmentTimeDTO dto = converter.convertToDTO(vo);
+
+            assertNotNull(dto);
+            assertEquals(8, dto.getTotalQuestions());
+            assertEquals(5, dto.getCompletedQuestions());
+        }
+
+        @Test
+        @DisplayName("无进度数据：totalQuestions 和 completedQuestions 应为 null")
+        void convertToDTO_withoutProgress_shouldHaveNullProgress() {
+            AssessmentTimeVO vo = AssessmentTimeVO.builder()
+                    .id(4L)
+                    .direction(Direction.STRUCTURAL_DESIGN)
+                    .epoch(1)
+                    .grade(2)
+                    .startTime(LocalDateTime.of(2026, 8, 1, 9, 0))
+                    .endTime(LocalDateTime.of(2026, 8, 1, 11, 0))
+                    .timeLimit(false)
+                    .build();
+
+            AssessmentTimeDTO dto = converter.convertToDTO(vo);
+
+            assertNotNull(dto);
+            assertNull(dto.getTotalQuestions());
+            assertNull(dto.getCompletedQuestions());
+        }
     }
 
     // ==================== convertToDTOList 测试 ====================

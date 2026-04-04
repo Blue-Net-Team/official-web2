@@ -54,4 +54,14 @@ public class AssessmentTimeVO {
      * 时间限制分钟数
      */
     private Integer timeLimitMinutes;
+
+    /**
+     * 题目总数
+     */
+    private Integer totalQuestions;
+
+    /**
+     * 已完成题目数
+     */
+    private Integer completedQuestions;
 }

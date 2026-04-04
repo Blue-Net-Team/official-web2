@@ -60,6 +60,11 @@ public class AssessmentAnswerRepositoryImpl implements AssessmentAnswerRepositor
         return influence;
     }
 
+    @Override
+    public int countByUserIdAndAssessmentTimeId(Long userId, Long assessmentTimeId) {
+        return assessmentAnswerMapper.countByUserIdAndAssessmentTimeId(userId, assessmentTimeId);
+    }
+
     private AssessmentAnswerVO convertToVO(AssessmentAnswer answer) {
         return AssessmentAnswerVO.builder()
                 .id(answer.getId())

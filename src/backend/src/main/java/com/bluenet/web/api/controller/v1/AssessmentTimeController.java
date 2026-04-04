@@ -2,6 +2,7 @@ package com.bluenet.web.api.controller.v1;
 
 import com.bluenet.web.api.dto.PageDTO;
 import com.bluenet.web.api.dto.ResponseMessage;
+import com.bluenet.web.api.dto.assessment_time.AssessmentProgressDTO;
 import com.bluenet.web.api.dto.assessment_time.AssessmentTimeDTO;
 import com.bluenet.web.api.dto.assessment_time.ResponseMessageAssessmentTimeList;
 import com.bluenet.web.application.service.AssessmentTimeService;
@@ -43,5 +44,14 @@ public class AssessmentTimeController {
             @Parameter(description = "每页大小（默认5）") @RequestParam(required = false, defaultValue = "5") Integer size) {
         PageDTO<AssessmentTimeDTO> result = assessmentTimeService.listAssessmentTimesForUser(page, size);
         return ResponseMessage.success(result);
+    }
+
+    @Operation(summary = "查询考核进度", description = "查询指定考核时间的答题进度，包括题目总数和已完成题目数")
+    @RequiresPermission(name = "查询考核进度", value = "assessment-time:progress", access = AccessLevel.AUTHENTICATED)
+    @GetMapping("/{id}/progress")
+    public ResponseMessage<AssessmentProgressDTO> getAssessmentProgress(
+            @Parameter(description = "考核时间ID") @PathVariable Long id) {
+        AssessmentProgressDTO progress = assessmentTimeService.getAssessmentProgress(id);
+        return ResponseMessage.success(progress);
     }
 }

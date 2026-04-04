@@ -1,6 +1,7 @@
 package com.bluenet.web.application.service;
 
 import com.bluenet.web.api.dto.PageDTO;
+import com.bluenet.web.api.dto.assessment_time.AssessmentProgressDTO;
 import com.bluenet.web.api.dto.assessment_time.AssessmentTimeDTO;
 import com.bluenet.web.api.dto.assessment_time.CreateAssessmentTimeRequestDTO;
 import com.bluenet.web.api.dto.assessment_time.UpdateAssessmentTimeRequestDTO;
@@ -61,4 +62,13 @@ public interface AssessmentTimeService {
      * @return 分页考核时间DTO
      */
     PageDTO<AssessmentTimeDTO> listAssessmentTimesForUser(Integer page, Integer size);
+
+    /**
+     * 查询指定考核时间的答题进度
+     *
+     * @param assessmentTimeId
+     *            考核时间ID
+     * @return 进度信息
+     */
+    AssessmentProgressDTO getAssessmentProgress(Long assessmentTimeId);
 }

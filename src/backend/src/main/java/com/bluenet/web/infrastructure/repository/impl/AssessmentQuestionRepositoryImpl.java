@@ -5,6 +5,7 @@ import com.bluenet.web.domain.model.entity.AssessmentQuestion;
 import com.bluenet.web.domain.model.vo.AssessmentQuestionVO;
 import com.bluenet.web.domain.repository.AssessmentQuestionRepository;
 import com.bluenet.web.infrastructure.repository.mapper.AssessmentQuestionMapper;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
@@ -44,6 +45,13 @@ public class AssessmentQuestionRepositoryImpl implements AssessmentQuestionRepos
             throw new GlobalException("更新题目附件失败");
         }
         return influence;
+    }
+
+    @Override
+    public int countByAssessmentTimeId(Long assessmentTimeId) {
+        LambdaQueryWrapper<AssessmentQuestion> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(AssessmentQuestion::getAssessmentTimeId, assessmentTimeId);
+        return Math.toIntExact(assessmentQuestionMapper.selectCount(wrapper));
     }
 
     private AssessmentQuestionVO convertToVO(AssessmentQuestion question) {

@@ -1,12 +1,16 @@
 package com.bluenet.web.application.service.impl;
 
 import com.bluenet.web.api.dto.PageDTO;
+import com.bluenet.web.api.dto.assessment_time.AssessmentProgressDTO;
 import com.bluenet.web.api.dto.assessment_time.AssessmentTimeDTO;
 import com.bluenet.web.api.dto.assessment_time.CreateAssessmentTimeRequestDTO;
 import com.bluenet.web.api.dto.assessment_time.UpdateAssessmentTimeRequestDTO;
 import com.bluenet.web.application.converter.AssessmentTimeConverter;
 import com.bluenet.web.domain.model.enumerate.Direction;
 import com.bluenet.web.domain.model.vo.AssessmentTimeVO;
+import com.bluenet.web.domain.model.vo.UserVO;
+import com.bluenet.web.domain.repository.AssessmentAnswerRepository;
+import com.bluenet.web.domain.repository.AssessmentQuestionRepository;
 import com.bluenet.web.domain.repository.AssessmentTimeRepository;
 import com.bluenet.web.domain.service.AssessmentTimeDomainService;
 import com.bluenet.web.infrastructure.security.RoleType;
@@ -49,6 +53,12 @@ class AssessmentTimeServiceImplTest {
 
     @Mock
     private AssessmentTimeRepository assessmentTimeRepository;
+
+    @Mock
+    private AssessmentQuestionRepository assessmentQuestionRepository;
+
+    @Mock
+    private AssessmentAnswerRepository assessmentAnswerRepository;
 
     @InjectMocks
     private AssessmentTimeServiceImpl assessmentTimeService;
@@ -355,8 +365,41 @@ class AssessmentTimeServiceImplTest {
     class ListForUserTests {
 
         @Test
-        @DisplayName("应调用listAssessmentTimes")
-        void listForUser_shouldDelegateToList() {
+        @DisplayName("已登录用户：应为每个DTO填充进度数据")
+        void listForUser_authenticatedUser_shouldPopulateProgress() {
+            try (MockedStatic<UserCTX> mockedUserCTX = mockStatic(UserCTX.class)) {
+                UserVO userVO = UserVO.builder()
+                        .id(1L)
+                        .roleName("CANDIDATE")
+                        .direction(Direction.COMPUTER_VISION)
+                        .studentId("2024123456")
+                        .build();
+                mockedUserCTX.when(UserCTX::getCurrentUser).thenReturn(userVO);
+
+                List<AssessmentTimeVO> voList = List.of(createTestVO());
+                Page<AssessmentTimeVO> voPage = new PageImpl<>(voList);
+                when(assessmentTimeRepository.findByFilters(eq(Direction.COMPUTER_VISION), any(Integer.class), any()))
+                        .thenReturn(voPage);
+
+                AssessmentTimeDTO dto = createTestDTO();
+                when(assessmentTimeConverter.convertToDTO(any())).thenReturn(dto);
+                when(assessmentQuestionRepository.countByAssessmentTimeId(TEST_ID)).thenReturn(8);
+                when(assessmentAnswerRepository.countByUserIdAndAssessmentTimeId(1L, TEST_ID)).thenReturn(5);
+
+                PageDTO<AssessmentTimeDTO> result = assessmentTimeService.listAssessmentTimesForUser(0, 5);
+
+                assertNotNull(result);
+                assertEquals(1, result.getContent().size());
+                assertEquals(8, result.getContent().get(0).getTotalQuestions());
+                assertEquals(5, result.getContent().get(0).getCompletedQuestions());
+                verify(assessmentQuestionRepository).countByAssessmentTimeId(TEST_ID);
+                verify(assessmentAnswerRepository).countByUserIdAndAssessmentTimeId(1L, TEST_ID);
+            }
+        }
+
+        @Test
+        @DisplayName("未登录用户：不应填充进度数据")
+        void listForUser_noUser_shouldNotPopulateProgress() {
             try (MockedStatic<UserCTX> mockedUserCTX = mockStatic(UserCTX.class)) {
                 mockedUserCTX.when(UserCTX::getCurrentUser).thenReturn(null);
 
@@ -367,6 +410,138 @@ class AssessmentTimeServiceImplTest {
                 PageDTO<AssessmentTimeDTO> result = assessmentTimeService.listAssessmentTimesForUser(0, 5);
 
                 assertNotNull(result);
+                assertTrue(result.getContent().isEmpty());
+                verifyNoInteractions(assessmentQuestionRepository);
+                verifyNoInteractions(assessmentAnswerRepository);
+            }
+        }
+
+        @Test
+        @DisplayName("多个考核时间：应为每个分别填充进度")
+        void listForUser_multipleTimes_shouldPopulateEach() {
+            try (MockedStatic<UserCTX> mockedUserCTX = mockStatic(UserCTX.class)) {
+                UserVO userVO = UserVO.builder()
+                        .id(1L)
+                        .roleName("MEMBER")
+                        .direction(Direction.COMPUTER_VISION)
+                        .build();
+                mockedUserCTX.when(UserCTX::getCurrentUser).thenReturn(userVO);
+
+                AssessmentTimeVO vo1 = AssessmentTimeVO.builder()
+                        .id(1L)
+                        .direction(Direction.COMPUTER_VISION)
+                        .epoch(1)
+                        .grade(1)
+                        .startTime(futureStart)
+                        .endTime(futureEnd)
+                        .timeLimit(false)
+                        .build();
+                AssessmentTimeVO vo2 = AssessmentTimeVO.builder()
+                        .id(2L)
+                        .direction(Direction.COMPUTER_VISION)
+                        .epoch(2)
+                        .grade(1)
+                        .startTime(futureStart)
+                        .endTime(futureEnd)
+                        .timeLimit(true)
+                        .timeLimitMinutes(90)
+                        .build();
+                Page<AssessmentTimeVO> voPage = new PageImpl<>(List.of(vo1, vo2));
+                when(assessmentTimeRepository.findByFilters(eq(Direction.COMPUTER_VISION), isNull(), any()))
+                        .thenReturn(voPage);
+
+                AssessmentTimeDTO dto1 = AssessmentTimeDTO.builder().id(1L).build();
+                AssessmentTimeDTO dto2 = AssessmentTimeDTO.builder().id(2L).build();
+                when(assessmentTimeConverter.convertToDTO(vo1)).thenReturn(dto1);
+                when(assessmentTimeConverter.convertToDTO(vo2)).thenReturn(dto2);
+                when(assessmentQuestionRepository.countByAssessmentTimeId(1L)).thenReturn(10);
+                when(assessmentQuestionRepository.countByAssessmentTimeId(2L)).thenReturn(5);
+                when(assessmentAnswerRepository.countByUserIdAndAssessmentTimeId(1L, 1L)).thenReturn(3);
+                when(assessmentAnswerRepository.countByUserIdAndAssessmentTimeId(1L, 2L)).thenReturn(0);
+
+                PageDTO<AssessmentTimeDTO> result = assessmentTimeService.listAssessmentTimesForUser(0, 5);
+
+                assertEquals(2, result.getContent().size());
+                assertEquals(10, result.getContent().get(0).getTotalQuestions());
+                assertEquals(3, result.getContent().get(0).getCompletedQuestions());
+                assertEquals(5, result.getContent().get(1).getTotalQuestions());
+                assertEquals(0, result.getContent().get(1).getCompletedQuestions());
+            }
+        }
+    }
+
+    // ==================== getAssessmentProgress 测试 ====================
+
+    @Nested
+    @DisplayName("getAssessmentProgress 方法测试")
+    class GetAssessmentProgressTests {
+
+        @Test
+        @DisplayName("考核时间存在：应返回进度数据")
+        void getProgress_existing_shouldReturnProgress() {
+            try (MockedStatic<UserCTX> mockedUserCTX = mockStatic(UserCTX.class)) {
+                UserVO userVO = UserVO.builder()
+                        .id(1L)
+                        .roleName("CANDIDATE")
+                        .build();
+                mockedUserCTX.when(UserCTX::getCurrentUser).thenReturn(userVO);
+
+                when(assessmentTimeDomainService.getById(TEST_ID)).thenReturn(Optional.of(createTestVO()));
+                when(assessmentQuestionRepository.countByAssessmentTimeId(TEST_ID)).thenReturn(8);
+                when(assessmentAnswerRepository.countByUserIdAndAssessmentTimeId(1L, TEST_ID)).thenReturn(5);
+
+                AssessmentProgressDTO result = assessmentTimeService.getAssessmentProgress(TEST_ID);
+
+                assertNotNull(result);
+                assertEquals(TEST_ID, result.getAssessmentTimeId());
+                assertEquals(8, result.getTotalQuestions());
+                assertEquals(5, result.getCompletedQuestions());
+            }
+        }
+
+        @Test
+        @DisplayName("考核时间不存在：应抛出IllegalArgumentException")
+        void getProgress_notExisting_shouldThrow() {
+            when(assessmentTimeDomainService.getById(999L)).thenReturn(Optional.empty());
+
+            IllegalArgumentException ex = assertThrows(
+                    IllegalArgumentException.class,
+                    () -> assessmentTimeService.getAssessmentProgress(999L));
+            assertEquals("考核时间不存在", ex.getMessage());
+        }
+
+        @Test
+        @DisplayName("无题目：totalQuestions 应为 0")
+        void getProgress_noQuestions_shouldReturnZeroTotal() {
+            try (MockedStatic<UserCTX> mockedUserCTX = mockStatic(UserCTX.class)) {
+                UserVO userVO = UserVO.builder().id(1L).roleName("CANDIDATE").build();
+                mockedUserCTX.when(UserCTX::getCurrentUser).thenReturn(userVO);
+
+                when(assessmentTimeDomainService.getById(TEST_ID)).thenReturn(Optional.of(createTestVO()));
+                when(assessmentQuestionRepository.countByAssessmentTimeId(TEST_ID)).thenReturn(0);
+                when(assessmentAnswerRepository.countByUserIdAndAssessmentTimeId(1L, TEST_ID)).thenReturn(0);
+
+                AssessmentProgressDTO result = assessmentTimeService.getAssessmentProgress(TEST_ID);
+
+                assertEquals(0, result.getTotalQuestions());
+                assertEquals(0, result.getCompletedQuestions());
+            }
+        }
+
+        @Test
+        @DisplayName("未登录用户：completedQuestions 应为 0")
+        void getProgress_noUser_shouldReturnZeroCompleted() {
+            try (MockedStatic<UserCTX> mockedUserCTX = mockStatic(UserCTX.class)) {
+                mockedUserCTX.when(UserCTX::getCurrentUser).thenReturn(null);
+
+                when(assessmentTimeDomainService.getById(TEST_ID)).thenReturn(Optional.of(createTestVO()));
+                when(assessmentQuestionRepository.countByAssessmentTimeId(TEST_ID)).thenReturn(10);
+
+                AssessmentProgressDTO result = assessmentTimeService.getAssessmentProgress(TEST_ID);
+
+                assertEquals(10, result.getTotalQuestions());
+                assertEquals(0, result.getCompletedQuestions());
+                verifyNoInteractions(assessmentAnswerRepository);
             }
         }
     }

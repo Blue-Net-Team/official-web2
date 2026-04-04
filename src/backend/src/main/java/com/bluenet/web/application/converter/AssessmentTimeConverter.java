@@ -32,6 +32,8 @@ public class AssessmentTimeConverter {
                 .endTime(vo.getEndTime())
                 .timeLimit(vo.getTimeLimit())
                 .timeLimitMinutes(vo.getTimeLimitMinutes())
+                .totalQuestions(vo.getTotalQuestions())
+                .completedQuestions(vo.getCompletedQuestions())
                 .build();
     }
 
