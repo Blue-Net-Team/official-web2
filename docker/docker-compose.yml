@@ -101,7 +101,7 @@ services:
     volumes:
       - bluenet_database_${ENV:-dev}_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d blue_net"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d db_blue_net"]
       interval: 5s
       timeout: 5s
       retries: 10

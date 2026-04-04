@@ -12,7 +12,7 @@ RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
 ENV DATABASE_HOST=localhost
 ENV DATABASE_PORT=5432
-ENV DATABASE_NAME=blue_net
+ENV DATABASE_NAME=db_blue_net
 ENV DATABASE_USERNAME=postgres
 ENV DATABASE_PASSWORD=
 ENV RABBITMQ_HOST=localhost
