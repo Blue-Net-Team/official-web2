@@ -29,8 +29,13 @@ WORKDIR /app
 
 COPY src/backend/target/*.jar /app/backend.jar
 
-EXPOSE 8080 8088
+EXPOSE 8080
 
 USER appuser
 
-ENTRYPOINT ["java", "-Dfile.encoding=UTF-8", "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:8088", "-jar", "backend.jar"]
+ENTRYPOINT ["java", \
+  "-Dfile.encoding=UTF-8", \
+  "-Xms256m", \
+  "-Xmx384m", \
+  "-XX:+UseSerialGC", \
+  "-jar", "backend.jar"]
