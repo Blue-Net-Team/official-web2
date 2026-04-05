@@ -26,6 +26,7 @@ import {
 import { Form, Input, Button, message, Select } from 'antd'
 import { userService } from '@/apis/services/user.service'
 import authStore from '@/stores/authStore'
+import GitHubBinding from './GitHubBinding'
 
 interface ProfileInfoProps {
   profile: UserInfo
@@ -285,6 +286,8 @@ export default function ProfileInfo({ profile, onUpdate }: ProfileInfoProps) {
               </div>
             </div>
           </div>
+
+          <GitHubBinding initialGithubUsername={profile.githubUsername} />
 
           <div className={styles.formActions}>
             <Button

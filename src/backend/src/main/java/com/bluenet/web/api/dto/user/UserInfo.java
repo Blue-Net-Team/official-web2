@@ -47,4 +47,7 @@ public class UserInfo {
 
     @Schema(description = "个人简介")
     private String bio;
+
+    @Schema(description = "GitHub 用户名")
+    private String githubUsername;
 }

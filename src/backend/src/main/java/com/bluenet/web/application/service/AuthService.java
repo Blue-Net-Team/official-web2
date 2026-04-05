@@ -13,29 +13,51 @@ public interface AuthService {
 
     /**
      * 学号密码登录
-     *
-     * @param requestDTO
-     *            登录请求DTO
-     * @param response
-     *            HTTP响应，用于设置Cookie
-     * @return 登录响应DTO，包含CSRF Token和用户信息
      */
     UserAuthResponseDTO login(StudentIdLoginRequestDTO requestDTO, HttpServletResponse response);
 
     /**
      * 用户登出
-     *
-     * @param response
-     *            HTTP响应，用于清除Cookie
      */
     void logout(HttpServletResponse response);
 
     /**
-     * 获取当前登录状态 用于页面刷新后恢复登录状态
-     *
-     * @param response
-     *            HTTP响应，用于刷新CSRF Token Cookie
-     * @return 登录状态响应
+     * 获取当前登录状态
      */
     AuthMeResponseDTO getAuthMe(HttpServletResponse response);
+
+    /**
+     * 发起 GitHub OAuth 登录
+     *
+     * @param callbackBaseUrl
+     *            后端回调基础 URL（如 http://localhost:8080）
+     * @return GitHub 授权页面 URL
+     */
+    String initiateGithubLogin(String callbackBaseUrl);
+
+    /**
+     * 发起 GitHub 账号绑定
+     *
+     * @param callbackBaseUrl
+     *            后端回调基础 URL
+     * @return GitHub 授权页面 URL
+     */
+    String initiateGithubBind(String callbackBaseUrl);
+
+    /**
+     * 处理 GitHub OAuth 回调（登录和绑定共用）
+     */
+    void handleGithubCallback(String code, String state, String callbackBaseUrl, HttpServletResponse response);
+
+    /**
+     * 获取当前用户的 GitHub 绑定状态
+     *
+     * @return GitHub 用户名，未绑定返回 null
+     */
+    String getGithubBindingStatus();
+
+    /**
+     * 解绑 GitHub 账号
+     */
+    void unbindGithub();
 }

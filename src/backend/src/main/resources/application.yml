@@ -112,6 +112,14 @@ cookie:
   # CSRF Cookie 名称
   csrf-cookie-name: csrf_token
 
+# GitHub OAuth 配置
+github:
+  oauth:
+    client-id: ${GITHUB_CLIENT_ID:}
+    client-secret: ${GITHUB_CLIENT_SECRET:}
+    callback-base-url: ${GITHUB_CALLBACK_BASE_URL:http://localhost:8080}
+    frontend-base-url: ${GITHUB_FRONTEND_BASE_URL:http://localhost:3000}
+
 # CORS 配置
 cors:
   # 允许的前端域名，多个用逗号分隔

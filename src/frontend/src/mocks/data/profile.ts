@@ -32,6 +32,7 @@ export const mockUserInfo: UserInfo = {
   direction: 'computer_vision' as Direction,
   gender: 'unknown' as Gender,
   bio: '海纳百川，有容乃大。热爱计算机视觉与深度学习，专注于目标检测与图像分割领域。',
+  githubUsername: null,
 }
 
 /** Mock用户统计数据 */

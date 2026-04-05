@@ -38,4 +38,43 @@ export const authService = {
     const response = await publicClient.get<ResponseMessage<AuthMeResponseDTO>>('/auth/me')
     return response.data
   },
+
+  /**
+   * 发起 GitHub OAuth 登录 - 公开接口
+   * 对应后端 GET /api/v1/auth/github
+   * 返回 GitHub 授权页面 URL，前端应重定向到该 URL
+   */
+  async getGithubAuthorizeUrl(): Promise<ResponseMessage<string>> {
+    const response = await publicClient.get<ResponseMessage<string>>('/auth/github')
+    return response.data
+  },
+
+  /**
+   * 发起 GitHub 账号绑定 - 需要认证
+   * 对应后端 GET /api/v1/auth/github/bind
+   * 返回 GitHub 授权页面 URL，前端应重定向到该 URL
+   */
+  async getGithubBindUrl(): Promise<ResponseMessage<string>> {
+    const response = await apiClient.get<ResponseMessage<string>>('/auth/github/bind')
+    return response.data
+  },
+
+  /**
+   * 查询 GitHub 绑定状态 - 需要认证
+   * 对应后端 GET /api/v1/auth/github/status
+   * 返回 GitHub 用户名（未绑定返回 null）
+   */
+  async getGithubBindingStatus(): Promise<ResponseMessage<string | null>> {
+    const response = await apiClient.get<ResponseMessage<string | null>>('/auth/github/status')
+    return response.data
+  },
+
+  /**
+   * 解绑 GitHub 账号 - 需要认证
+   * 对应后端 DELETE /api/v1/auth/github/bind
+   */
+  async unbindGithub(): Promise<ResponseMessage<void>> {
+    const response = await apiClient.delete<ResponseMessage<void>>('/auth/github/bind')
+    return response.data
+  },
 }

@@ -44,6 +44,7 @@ public class UserConverter {
                 .avatarFileId(userVO.getAvatarFileId())
                 .roleName(userVO.getRoleName())
                 .bio(userVO.getBio())
+                .githubUsername(userVO.getGithubUsername())
                 .build();
     }
 }

@@ -133,6 +133,25 @@ public class UserRepositoryImpl implements UserRepository {
         return new TabCountsVO(projects, competitions, internships);
     }
 
+    @Override
+    public Optional<UserVO> findByGithubId(String githubId) {
+        User user = userMapper.selectByGithubId(githubId);
+        if (user == null) {
+            return Optional.empty();
+        }
+        return Optional.of(convertToVO(user));
+    }
+
+    @Override
+    public void updateGithubBinding(Long userId, String githubId, String githubUsername) {
+        userMapper.updateGithubBinding(userId, githubId, githubUsername);
+    }
+
+    @Override
+    public void clearGithubBinding(Long userId) {
+        userMapper.clearGithubBinding(userId);
+    }
+
     private UserVO convertToVO(User user) {
         // 学院
         String collegeName = null;

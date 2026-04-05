@@ -103,4 +103,24 @@
         </set>
         WHERE id = #{userId}
     </update>
+
+    <select id="selectByGithubId" resultMap="BaseResultMap">
+        SELECT *
+        FROM tb_user
+        WHERE github_id = #{githubId}
+    </select>
+
+    <update id="updateGithubBinding">
+        UPDATE tb_user
+        SET github_id = #{githubId},
+            github_username = #{githubUsername}
+        WHERE id = #{userId}
+    </update>
+
+    <update id="clearGithubBinding">
+        UPDATE tb_user
+        SET github_id = NULL,
+            github_username = NULL
+        WHERE id = #{userId}
+    </update>
 </mapper>

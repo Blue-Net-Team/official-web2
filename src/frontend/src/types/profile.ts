@@ -45,6 +45,7 @@ export interface UserInfo {
   direction: Direction
   gender: Gender
   bio: string
+  githubUsername: string | null
 }
 
 /** 更新用户信息请求 - 对应后端 UpdateProfileRequestDTO */

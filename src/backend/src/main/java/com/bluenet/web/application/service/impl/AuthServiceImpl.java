@@ -1,13 +1,19 @@
 package com.bluenet.web.application.service.impl;
 
 import java.util.Optional;
+import java.util.UUID;
 
 import com.bluenet.web.api.dto.auth.AuthMeResponseDTO;
 import com.bluenet.web.application.converter.UserConverter;
+import com.bluenet.web.domain.model.vo.GitHubUserInfo;
+import com.bluenet.web.domain.model.vo.OAuthState;
+import com.bluenet.web.domain.service.GitHubOAuthService;
+import com.bluenet.web.infrastructure.config.GitHubOAuthProperties;
 import com.bluenet.web.infrastructure.security.auth.AuthTokenService;
 import com.bluenet.web.infrastructure.security.cookie.CookieService;
 import com.bluenet.web.infrastructure.security.csrf.CsrfTokenService;
 
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,10 +23,13 @@ import com.bluenet.web.application.service.AuthService;
 import com.bluenet.web.domain.exception.Unauthorized;
 import com.bluenet.web.domain.model.enumerate.LocalLoginType;
 import com.bluenet.web.domain.model.vo.UserVO;
+import com.bluenet.web.domain.repository.UserRepository;
 import com.bluenet.web.domain.service.AuthDomainService;
 import com.bluenet.web.infrastructure.security.jwt.JwtPayload;
 import com.bluenet.web.infrastructure.security.jwt.JwtUtil;
 import com.bluenet.web.infrastructure.security.util.UserCTX;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -43,6 +52,14 @@ public class AuthServiceImpl implements AuthService {
     private final UserConverter userConverter;
     private final CookieService cookieService;
     private final CsrfTokenService csrfTokenService;
+    private final GitHubOAuthService gitHubOAuthService;
+    private final UserRepository userRepository;
+    private final StringRedisTemplate redisTemplate;
+    private final ObjectMapper objectMapper;
+    private final GitHubOAuthProperties gitHubOAuthProperties;
+
+    private static final long OAUTH_STATE_TTL_SECONDS = 600; // 10 minutes
+    private static final String OAUTH_STATE_KEY_PREFIX = "oauth:state:";
 
     @Override
     @Transactional(readOnly = true)
@@ -147,5 +164,168 @@ public class AuthServiceImpl implements AuthService {
      */
     private Long extractUserId(UserVO userVO) {
         return userVO.getId();
+    }
+
+    // ==================== GitHub OAuth ====================
+
+    @Override
+    public String initiateGithubLogin(String callbackBaseUrl) {
+        String state = UUID.randomUUID().toString().replace("-", "");
+        String redirectUri = callbackBaseUrl + "/api/v1/auth/github/callback";
+        storeOAuthState(state, "login", null);
+        return gitHubOAuthService.buildAuthorizeUrl(state, redirectUri);
+    }
+
+    @Override
+    public String initiateGithubBind(String callbackBaseUrl) {
+        UserVO currentUser = UserCTX.getCurrentUser();
+        if (currentUser == null) {
+            throw new Unauthorized("未登录");
+        }
+
+        String state = UUID.randomUUID().toString().replace("-", "");
+        String redirectUri = callbackBaseUrl + "/api/v1/auth/github/callback";
+        storeOAuthState(state, "bind", currentUser.getId());
+        return gitHubOAuthService.buildAuthorizeUrl(state, redirectUri);
+    }
+
+    @Override
+    @Transactional
+    public void handleGithubCallback(String code, String state, String callbackBaseUrl, HttpServletResponse response) {
+        // 1. Validate state and determine flow type
+        OAuthState oauthState = validateAndConsumeState(state);
+        if (oauthState == null) {
+            redirectToFrontend(response, "/login", "github=error");
+            return;
+        }
+
+        // 2. Exchange code for token and get GitHub user info
+        String redirectUri = callbackBaseUrl + "/api/v1/auth/github/callback";
+        String accessToken;
+        GitHubUserInfo githubUser;
+        try {
+            accessToken = gitHubOAuthService.exchangeCodeForToken(code, redirectUri);
+            githubUser = gitHubOAuthService.getUserInfo(accessToken);
+        } catch (Exception e) {
+            log.error("GitHub OAuth failed", e);
+            String redirectPath = "bind".equals(oauthState.getType()) ? "/profile" : "/login";
+            redirectToFrontend(response, redirectPath, "github=error");
+            return;
+        }
+
+        String githubId = String.valueOf(githubUser.getId());
+
+        // 3. Handle based on flow type
+        if ("bind".equals(oauthState.getType())) {
+            handleBindFlow(oauthState, githubId, githubUser, response);
+        } else {
+            handleLoginFlow(githubId, githubUser, response);
+        }
+    }
+
+    private void handleLoginFlow(String githubId, GitHubUserInfo githubUser, HttpServletResponse response) {
+        // Find matching user by githubId
+        Optional<UserVO> userOpt = userRepository.findByGithubId(githubId);
+        if (userOpt.isEmpty()) {
+            log.info("GitHub login failed: no user bound to githubId {}", githubId);
+            redirectToFrontend(response, "/login", "github=unbound");
+            return;
+        }
+
+        UserVO userVO = userOpt.get();
+
+        // Update githubUsername if changed
+        if (githubUser.getLogin() != null && !githubUser.getLogin().equals(userVO.getGithubUsername())) {
+            userRepository.updateGithubBinding(userVO.getId(), githubId, githubUser.getLogin());
+        }
+
+        // Set JWT Cookie
+        setAuthCookiesForUser(userVO, response);
+        log.info("GitHub login success for userId {}", userVO.getId());
+        redirectToFrontend(response, "/login", "github=success");
+    }
+
+    private void handleBindFlow(OAuthState oauthState, String githubId, GitHubUserInfo githubUser,
+            HttpServletResponse response) {
+        // Check if already bound to another user
+        Optional<UserVO> existingUser = userRepository.findByGithubId(githubId);
+        if (existingUser.isPresent() && !existingUser.get().getId().equals(oauthState.getUserId())) {
+            log.warn("GitHub bind failed: githubId {} already bound to user {}", githubId, existingUser.get().getId());
+            redirectToFrontend(response, "/profile", "github=already_bound");
+            return;
+        }
+
+        // Bind to user
+        userRepository.updateGithubBinding(oauthState.getUserId(), githubId, githubUser.getLogin());
+        log.info("GitHub bind success for userId {}", oauthState.getUserId());
+        redirectToFrontend(response, "/profile", "github=binding_success");
+    }
+
+    @Override
+    public String getGithubBindingStatus() {
+        UserVO currentUser = UserCTX.getCurrentUser();
+        if (currentUser == null) {
+            throw new Unauthorized("未登录");
+        }
+        return currentUser.getGithubUsername();
+    }
+
+    @Override
+    @Transactional
+    public void unbindGithub() {
+        UserVO currentUser = UserCTX.getCurrentUser();
+        if (currentUser == null) {
+            throw new Unauthorized("未登录");
+        }
+        if (currentUser.getGithubUsername() == null) {
+            throw new IllegalStateException("未绑定 GitHub 账号");
+        }
+        userRepository.clearGithubBinding(currentUser.getId());
+        log.info("GitHub unbind success for userId {}", currentUser.getId());
+    }
+
+    private void storeOAuthState(String state, String type, Long userId) {
+        OAuthState oauthState = new OAuthState(type, userId);
+        try {
+            String stateJson = objectMapper.writeValueAsString(oauthState);
+            redisTemplate.opsForValue()
+                    .set(
+                            OAUTH_STATE_KEY_PREFIX + state,
+                            stateJson,
+                            java.time.Duration.ofSeconds(OAUTH_STATE_TTL_SECONDS));
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to serialize OAuth state", e);
+        }
+    }
+
+    private OAuthState validateAndConsumeState(String state) {
+        String key = OAUTH_STATE_KEY_PREFIX + state;
+        String stateJson = redisTemplate.opsForValue().getAndDelete(key);
+        if (stateJson == null) {
+            log.warn("OAuth state not found or expired: {}", state);
+            return null;
+        }
+        try {
+            return objectMapper.readValue(stateJson, OAuthState.class);
+        } catch (Exception e) {
+            log.error("Failed to deserialize OAuth state", e);
+            return null;
+        }
+    }
+
+    private void setAuthCookiesForUser(UserVO userVO, HttpServletResponse response) {
+        String jwtToken = jwtUtil.generateToken(userVO.getId());
+        authTokenService.storeToken(jwtUtil.getJti(jwtToken), userVO.getId());
+        String csrfToken = csrfTokenService.generateCsrfToken();
+        cookieService.setAuthCookies(response, jwtToken, csrfToken);
+    }
+
+    private void redirectToFrontend(HttpServletResponse response, String path, String query) {
+        try {
+            String frontendUrl = gitHubOAuthProperties.getFrontendBaseUrl();
+            response.sendRedirect(frontendUrl + path + "?" + query);
+        } catch (Exception e) {
+            log.error("Failed to redirect", e);
+        }
     }
 }

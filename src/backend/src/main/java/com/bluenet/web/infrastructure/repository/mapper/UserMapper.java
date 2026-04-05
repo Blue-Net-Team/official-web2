@@ -39,4 +39,12 @@ public interface UserMapper extends BaseMapper<User> {
             @Param("direction") Direction direction,
             @Param("gender") Gender gender,
             @Param("bio") String bio);
+
+    User selectByGithubId(String githubId);
+
+    int updateGithubBinding(@Param("userId") Long userId,
+            @Param("githubId") String githubId,
+            @Param("githubUsername") String githubUsername);
+
+    int clearGithubBinding(@Param("userId") Long userId);
 }

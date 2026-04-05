@@ -3,6 +3,7 @@ package com.bluenet.web.api.controller.v1;
 import com.bluenet.web.api.dto.auth.AuthMeResponseDTO;
 import com.bluenet.web.domain.exception.Unauthorized;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -10,13 +11,10 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.bluenet.web.api.dto.ResponseMessage;
 import com.bluenet.web.api.dto.auth.ResponseMessageUserAuthResponseDTO;
@@ -31,10 +29,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 /**
- * 认证接口：登录、登出、获取登录状态
- * <p>
- * 登录成功后，JWT 通过 HttpOnly Cookie 自动设置，CSRF Token 通过响应体返回。 登出时清除 Cookie。
- * </p>
+ * 认证接口：登录、登出、获取登录状态、GitHub OAuth
  */
 @Tag(name = "认证", description = "登录、登出等认证相关接口")
 @RestController
@@ -43,6 +38,9 @@ import lombok.RequiredArgsConstructor;
 public class AuthController {
 
     private final AuthService authService;
+
+    @Value("${github.oauth.callback-base-url:http://localhost:8080}")
+    private String callbackBaseUrl;
 
     @Operation(summary = "学号登录", description = "使用学号与密码登录。JWT 通过 HttpOnly Cookie 自动设置，响应体返回 CSRF Token 与用户信息。")
     @ApiResponses({
@@ -62,9 +60,6 @@ public class AuthController {
     }
 
     @Operation(summary = "用户登出", description = "使当前 JWT 失效并清除 Cookie。需要已登录状态（通过 Cookie 认证）。")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "登出成功", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseMessage.class))),
-            @ApiResponse(responseCode = "401", description = "未登录", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseMessage.class), examples = @ExampleObject(value = "{\"code\":401,\"msg\":\"未登录\",\"data\":null}"))) })
     @SecurityRequirement(name = "cookie-auth")
     @RequiresPermission(value = "auth:logout", name = "用户登出", access = AccessLevel.AUTHENTICATED)
     @PostMapping("/logout")
@@ -74,12 +69,57 @@ public class AuthController {
     }
 
     @Operation(summary = "获取当前登录状态", description = "检查当前用户是否已登录。页面刷新后调用此接口恢复登录状态和获取 CSRF Token。")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "成功获取登录状态", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseMessage.class))) })
     @RequiresPermission(value = "auth:me", name = "获取登录状态", access = AccessLevel.PUBLIC)
     @GetMapping("/me")
     public ResponseMessage<AuthMeResponseDTO> getAuthMe(HttpServletResponse response) {
         AuthMeResponseDTO responseDTO = authService.getAuthMe(response);
         return ResponseMessage.success(responseDTO);
+    }
+
+    // ==================== GitHub OAuth ====================
+
+    @Operation(summary = "发起 GitHub 登录", description = "获取 GitHub OAuth 授权页面 URL，前端应将用户重定向到该 URL")
+    @RequiresPermission(value = "auth:github:login", name = "GitHub登录", access = AccessLevel.PUBLIC)
+    @GetMapping("/github")
+    public ResponseMessage<String> initiateGithubLogin() {
+        String authorizeUrl = authService.initiateGithubLogin(callbackBaseUrl);
+        return ResponseMessage.success(authorizeUrl);
+    }
+
+    @Operation(summary = "GitHub OAuth 回调", description = "GitHub 授权后的回调端点，处理登录和绑定流程")
+    @RequiresPermission(value = "auth:github:callback", name = "GitHub回调", access = AccessLevel.PUBLIC)
+    @GetMapping("/github/callback")
+    public void handleGithubCallback(
+            @Parameter(description = "GitHub 返回的授权码") @RequestParam String code,
+            @Parameter(description = "防 CSRF 的 state 参数") @RequestParam String state,
+            HttpServletResponse response) {
+        authService.handleGithubCallback(code, state, callbackBaseUrl, response);
+    }
+
+    @Operation(summary = "查询 GitHub 绑定状态", description = "获取当前用户的 GitHub 绑定状态")
+    @SecurityRequirement(name = "cookie-auth")
+    @RequiresPermission(value = "auth:github:status", name = "GitHub绑定状态", access = AccessLevel.AUTHENTICATED)
+    @GetMapping("/github/status")
+    public ResponseMessage<String> getGithubBindingStatus() {
+        String githubUsername = authService.getGithubBindingStatus();
+        return ResponseMessage.success(githubUsername);
+    }
+
+    @Operation(summary = "发起 GitHub 绑定", description = "获取 GitHub OAuth 授权页面 URL 用于绑定账号")
+    @SecurityRequirement(name = "cookie-auth")
+    @RequiresPermission(value = "auth:github:bind", name = "GitHub绑定", access = AccessLevel.AUTHENTICATED)
+    @GetMapping("/github/bind")
+    public ResponseMessage<String> initiateGithubBind() {
+        String authorizeUrl = authService.initiateGithubBind(callbackBaseUrl);
+        return ResponseMessage.success(authorizeUrl);
+    }
+
+    @Operation(summary = "解绑 GitHub 账号", description = "解除当前用户的 GitHub 账号绑定")
+    @SecurityRequirement(name = "cookie-auth")
+    @RequiresPermission(value = "auth:github:unbind", name = "GitHub解绑", access = AccessLevel.AUTHENTICATED)
+    @DeleteMapping("/github/bind")
+    public ResponseMessage<Void> unbindGithub() {
+        authService.unbindGithub();
+        return ResponseMessage.success();
     }
 }

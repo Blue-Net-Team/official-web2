@@ -51,4 +51,10 @@ public interface UserRepository {
      * @return Tab计数
      */
     TabCountsVO getTabCounts(Long userId);
+
+    Optional<UserVO> findByGithubId(String githubId);
+
+    void updateGithubBinding(Long userId, String githubId, String githubUsername);
+
+    void clearGithubBinding(Long userId);
 }

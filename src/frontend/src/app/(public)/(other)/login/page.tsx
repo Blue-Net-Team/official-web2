@@ -1,15 +1,16 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button, Input, Tabs, Form, App, ConfigProvider, theme } from 'antd'
 import { GithubOutlined } from '@ant-design/icons'
 import Image from 'next/image'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import styles from './styles.module.css'
 import logo from '@/assets/logo.png'
 import loginBg from '@/assets/Login/bg.png'
 import authStore from '@/stores/authStore'
+import { authService } from '@/apis/services/auth.service'
 
 const primaryColor = '#fa8c16'
 const primaryColorHover = '#ffa940'
@@ -66,8 +67,36 @@ export default function LoginPage() {
   const [countdown, setCountdown] = useState<number>(0)
   const [form] = Form.useForm()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { message: messageApi } = App.useApp()
-  const { isLoading, login } = authStore()
+  const { isLoading, login, checkAuthStatus } = authStore()
+
+  // Handle GitHub OAuth callback params
+  useEffect(() => {
+    const githubStatus = searchParams.get('github')
+    if (!githubStatus) return
+    if (githubStatus === 'success') {
+      checkAuthStatus().then(() => {
+        messageApi.success('GitHub 登录成功')
+        router.push('/')
+      })
+    } else if (githubStatus === 'unbound') {
+      messageApi.warning('请先使用学号登录，然后在个人设置中绑定 GitHub 账号')
+    } else if (githubStatus === 'error') {
+      messageApi.error('GitHub 登录失败，请稍后重试')
+    }
+  }, [searchParams])
+
+  const handleGithubLogin = async () => {
+    try {
+      const res = await authService.getGithubAuthorizeUrl()
+      if (res.data) {
+        window.location.href = res.data
+      }
+    } catch {
+      messageApi.error('获取 GitHub 授权链接失败')
+    }
+  }
 
   const handleSendCode = () => {
     if (countdown > 0) return
@@ -247,7 +276,7 @@ export default function LoginPage() {
               className={styles.githubLogin}
               size="large"
               icon={<GithubOutlined />}
-              onClick={() => messageApi.info('GitHub登录功能暂未开放')}
+              onClick={handleGithubLogin}
               disabled={isLoading}
             >
               使用 GitHub 登录
