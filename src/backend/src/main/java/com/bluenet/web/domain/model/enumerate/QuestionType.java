@@ -1,6 +1,7 @@
 package com.bluenet.web.domain.model.enumerate;
 
 import com.baomidou.mybatisplus.annotation.EnumValue;
+import com.fasterxml.jackson.annotation.JsonValue;
 import lombok.Getter;
 
 @Getter
@@ -11,6 +12,7 @@ public enum QuestionType {
     ALGORITHM("algorithm", "算法题");
 
     @EnumValue
+    @JsonValue
     private final String value;
     private final String description;
 

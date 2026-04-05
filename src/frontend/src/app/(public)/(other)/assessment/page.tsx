@@ -252,6 +252,11 @@ export default function AssessmentPage() {
                             ? 'bg-gradient-to-br from-[#07c160] to-[#05a34e] text-white shadow-[0_4px_16px_rgba(7,193,96,0.3)] hover:shadow-[0_6px_24px_rgba(7,193,96,0.4)]'
                             : 'bg-[rgba(140,140,141,0.15)] text-[#8c8c8d] cursor-not-allowed border border-[rgba(140,140,141,0.15)]'
                       }`}
+                      onClick={() => {
+                        if (status !== 'not-started') {
+                          router.push(`/assessment/${item.id}/questions`)
+                        }
+                      }}
                     >
                       {isInProgress ? '继续答题' : isEnded ? '查看详情' : '暂不可进入'}
                       {status !== 'not-started' && <RightOutlined className="text-xs" />}

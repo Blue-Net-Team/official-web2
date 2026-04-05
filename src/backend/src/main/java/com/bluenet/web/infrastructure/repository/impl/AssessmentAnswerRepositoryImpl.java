@@ -65,6 +65,11 @@ public class AssessmentAnswerRepositoryImpl implements AssessmentAnswerRepositor
         return assessmentAnswerMapper.countByUserIdAndAssessmentTimeId(userId, assessmentTimeId);
     }
 
+    @Override
+    public boolean existsByUserIdAndQuestionId(Long userId, Long questionId) {
+        return assessmentAnswerMapper.countByUserIdAndQuestionId(userId, questionId) > 0;
+    }
+
     private AssessmentAnswerVO convertToVO(AssessmentAnswer answer) {
         return AssessmentAnswerVO.builder()
                 .id(answer.getId())

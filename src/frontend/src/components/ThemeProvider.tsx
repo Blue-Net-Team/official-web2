@@ -96,6 +96,25 @@ const themeConfig = {
       hoverBorderColor: primaryColor,
       activeShadow: `0 0 0 3px ${primaryColor}26`,
     },
+    Table: {
+      headerBg: 'rgba(255, 255, 255, 0.03)',
+      headerColor: 'rgba(255, 255, 255, 0.4)',
+      headerSortActiveBg: 'rgba(255, 255, 255, 0.06)',
+      headerSortHoverBg: 'rgba(255, 255, 255, 0.05)',
+      rowHoverBg: 'rgba(255, 255, 255, 0.03)',
+      borderColor: 'rgba(255, 255, 255, 0.06)',
+      colorBgContainer: 'transparent',
+      cellPaddingBlock: 14,
+      cellPaddingInline: 20,
+      fontSize: 14,
+      colorText: 'rgba(255, 255, 255, 0.8)',
+      footerBg: 'transparent',
+      footerColor: 'rgba(255, 255, 255, 0.35)',
+    },
+    Tag: {
+      fontSize: 13,
+      borderRadius: 6,
+    },
   },
 }
 

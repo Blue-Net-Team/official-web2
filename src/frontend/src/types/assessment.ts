@@ -52,3 +52,36 @@ export interface AssessmentProgressDTO {
   /** 已完成题目数 */
   completedQuestions: number
 }
+
+/** 题型枚举 */
+export type QuestionType = 'single_choice' | 'multiple_choice' | 'file_upload' | 'algorithm'
+
+/** 题型标签映射 */
+export const QuestionTypeLabels: Record<QuestionType, string> = {
+  single_choice: '单选题',
+  multiple_choice: '多选题',
+  file_upload: '文件上传',
+  algorithm: '算法题',
+}
+
+/** 考题信息 - 对应后端 AssessmentQuestionDTO */
+export interface AssessmentQuestionDTO {
+  /** 考题ID */
+  id: number
+  /** 考核时间ID */
+  assessmentTimeId: number
+  /** 题号 */
+  questionNo: number
+  /** 题型 */
+  questionType: QuestionType
+  /** 题目标题 */
+  title: string
+  /** 题目内容（仅管理端返回） */
+  content: unknown | null
+  /** 附件ID */
+  attachmentId: number | null
+  /** 分值 */
+  score: number
+  /** 当前用户是否已作答（仅用户端返回） */
+  answered: boolean | null
+}

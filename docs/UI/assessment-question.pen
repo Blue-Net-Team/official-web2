@@ -1,0 +1,1299 @@
+{
+  "version": "2.10",
+  "children": [
+    {
+      "type": "frame",
+      "id": "KMwsd",
+      "x": 1540,
+      "y": 0,
+      "name": "Assessment Questions",
+      "width": 1440,
+      "fill": "#0a0a0a",
+      "layout": "vertical",
+      "gap": 32,
+      "padding": [
+        48,
+        80
+      ],
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "frame",
+          "id": "gBnRk",
+          "name": "Page Header",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 16,
+          "children": [
+            {
+              "type": "frame",
+              "id": "Y11X0",
+              "name": "Back Row",
+              "gap": 8,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "24C0m",
+                  "name": "backArrow",
+                  "width": 16,
+                  "height": 16,
+                  "iconFontName": "arrow-left",
+                  "iconFontFamily": "feather",
+                  "fill": "#ffffffa6"
+                },
+                {
+                  "type": "text",
+                  "id": "W81MQ",
+                  "name": "backText",
+                  "fill": "#ffffffa6",
+                  "content": "返回考核列表",
+                  "fontFamily": "Inter",
+                  "fontSize": 14,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "OKQTK",
+              "name": "Title Row",
+              "width": "fill_container",
+              "justifyContent": "space_between",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "FaBT2",
+                  "name": "titleLeft",
+                  "layout": "vertical",
+                  "gap": 6,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "PKiu9",
+                      "name": "pageTitle",
+                      "fill": "#ffffff",
+                      "content": "第一轮考核 · 考题目录",
+                      "fontFamily": "Inter",
+                      "fontSize": 28,
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "29uMi",
+                      "name": "pageSub",
+                      "fill": "#ffffff73",
+                      "content": "计算机视觉方向 · 大一 · 2025-03-15 09:00 — 21:00",
+                      "fontFamily": "Inter",
+                      "fontSize": 14,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "YDRoW",
+                  "name": "statusBadge",
+                  "fill": "#6677ff26",
+                  "cornerRadius": 10,
+                  "gap": 6,
+                  "padding": [
+                    4,
+                    12
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "ellipse",
+                      "id": "OkRM5",
+                      "name": "statusDot",
+                      "fill": "#6677ff",
+                      "width": 8,
+                      "height": 8
+                    },
+                    {
+                      "type": "text",
+                      "id": "45vxx",
+                      "name": "statusTxt",
+                      "fill": "#6677ff",
+                      "content": "进行中",
+                      "fontFamily": "Inter",
+                      "fontSize": 12,
+                      "fontWeight": "500"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "oS4GB",
+          "name": "Stats Row",
+          "width": "fill_container",
+          "gap": 12,
+          "children": [
+            {
+              "type": "frame",
+              "id": "G9P3q",
+              "name": "stat-total",
+              "width": "fill_container",
+              "fill": "#ffffff08",
+              "cornerRadius": 12,
+              "layout": "vertical",
+              "gap": 6,
+              "padding": [
+                16,
+                20
+              ],
+              "children": [
+                {
+                  "type": "text",
+                  "id": "FrHir",
+                  "name": "stat1label",
+                  "fill": "#ffffff73",
+                  "content": "题目总数",
+                  "fontFamily": "Inter",
+                  "fontSize": 12,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "text",
+                  "id": "jNj4m",
+                  "name": "stat1val",
+                  "fill": "#ffffff",
+                  "content": "8",
+                  "fontFamily": "Inter",
+                  "fontSize": 24,
+                  "fontWeight": "700"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "JFolt",
+              "name": "stat-answered",
+              "width": "fill_container",
+              "fill": "#ffffff08",
+              "cornerRadius": 12,
+              "layout": "vertical",
+              "gap": 6,
+              "padding": [
+                16,
+                20
+              ],
+              "children": [
+                {
+                  "type": "text",
+                  "id": "apEcO",
+                  "name": "stat2label",
+                  "fill": "#ffffff73",
+                  "content": "已作答",
+                  "fontFamily": "Inter",
+                  "fontSize": 12,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "text",
+                  "id": "OyVeG",
+                  "name": "stat2val",
+                  "fill": "#6677ff",
+                  "content": "5",
+                  "fontFamily": "Inter",
+                  "fontSize": 24,
+                  "fontWeight": "700"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "gf4dU",
+              "name": "stat-unanswered",
+              "width": "fill_container",
+              "fill": "#ffffff08",
+              "cornerRadius": 12,
+              "layout": "vertical",
+              "gap": 6,
+              "padding": [
+                16,
+                20
+              ],
+              "children": [
+                {
+                  "type": "text",
+                  "id": "y5uQ2",
+                  "name": "stat3label",
+                  "fill": "#ffffff73",
+                  "content": "未作答",
+                  "fontFamily": "Inter",
+                  "fontSize": 12,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "text",
+                  "id": "wcBmk",
+                  "name": "stat3val",
+                  "fill": "#fa8c16",
+                  "content": "3",
+                  "fontFamily": "Inter",
+                  "fontSize": 24,
+                  "fontWeight": "700"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "rDYwb",
+              "name": "stat-score",
+              "width": "fill_container",
+              "fill": "#ffffff08",
+              "cornerRadius": 12,
+              "layout": "vertical",
+              "gap": 6,
+              "padding": [
+                16,
+                20
+              ],
+              "children": [
+                {
+                  "type": "text",
+                  "id": "cshm7",
+                  "name": "stat4label",
+                  "fill": "#ffffff73",
+                  "content": "总分",
+                  "fontFamily": "Inter",
+                  "fontSize": 12,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "text",
+                  "id": "oIy9j",
+                  "name": "stat4val",
+                  "fill": "#07c160",
+                  "content": "100",
+                  "fontFamily": "Inter",
+                  "fontSize": 24,
+                  "fontWeight": "700"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "xXZAd",
+          "name": "Question List",
+          "clip": true,
+          "width": "fill_container",
+          "fill": "#ffffff06",
+          "cornerRadius": 12,
+          "layout": "vertical",
+          "gap": 2,
+          "children": [
+            {
+              "type": "frame",
+              "id": "rzDA5",
+              "name": "List Header",
+              "width": "fill_container",
+              "fill": "#ffffff0a",
+              "padding": [
+                14,
+                24
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "igJ8Q",
+                  "name": "col-no",
+                  "fill": "#ffffff4d",
+                  "textGrowth": "fixed-width",
+                  "width": 60,
+                  "content": "序号",
+                  "fontFamily": "Inter",
+                  "fontSize": 12,
+                  "fontWeight": "600"
+                },
+                {
+                  "type": "text",
+                  "id": "3Wmlg",
+                  "name": "col-title",
+                  "fill": "#ffffff4d",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "题目",
+                  "fontFamily": "Inter",
+                  "fontSize": 12,
+                  "fontWeight": "600"
+                },
+                {
+                  "type": "text",
+                  "id": "2Qms2",
+                  "name": "col-type",
+                  "fill": "#ffffff4d",
+                  "textGrowth": "fixed-width",
+                  "width": 90,
+                  "content": "题型",
+                  "fontFamily": "Inter",
+                  "fontSize": 12,
+                  "fontWeight": "600"
+                },
+                {
+                  "type": "text",
+                  "id": "LvpsZ",
+                  "name": "col-score",
+                  "fill": "#ffffff4d",
+                  "textGrowth": "fixed-width",
+                  "width": 60,
+                  "content": "分值",
+                  "fontFamily": "Inter",
+                  "fontSize": 12,
+                  "fontWeight": "600"
+                },
+                {
+                  "type": "text",
+                  "id": "H62zr",
+                  "name": "col-status",
+                  "fill": "#ffffff4d",
+                  "textGrowth": "fixed-width",
+                  "width": 80,
+                  "content": "状态",
+                  "fontFamily": "Inter",
+                  "fontSize": 12,
+                  "fontWeight": "600"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "5aKND",
+              "name": "Q1 - Answered",
+              "width": "fill_container",
+              "fill": "#ffffff05",
+              "padding": [
+                16,
+                24
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "KB5L6",
+                  "name": "r1no",
+                  "fill": "#6677ff",
+                  "content": "01",
+                  "fontFamily": "Inter",
+                  "fontSize": 14,
+                  "fontWeight": "600"
+                },
+                {
+                  "type": "text",
+                  "id": "GOHFY",
+                  "name": "r1title",
+                  "fill": "#ffffff",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "以下哪个是卷积神经网络的核心操作？",
+                  "fontFamily": "Inter",
+                  "fontSize": 14,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "frame",
+                  "id": "gmaJ7",
+                  "name": "r1type",
+                  "width": 90,
+                  "fill": "#6677ff1a",
+                  "cornerRadius": 6,
+                  "padding": [
+                    3,
+                    10
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "I6yMF",
+                      "name": "r1typeTxt",
+                      "fill": "#6677ff",
+                      "content": "单选题",
+                      "fontFamily": "Inter",
+                      "fontSize": 12,
+                      "fontWeight": "500"
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "id": "fkxLt",
+                  "name": "r1score",
+                  "fill": "#ffffffa6",
+                  "content": "10",
+                  "fontFamily": "Inter",
+                  "fontSize": 14,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "frame",
+                  "id": "GQMma",
+                  "name": "r1status",
+                  "width": 80,
+                  "fill": "#07c1601a",
+                  "cornerRadius": 6,
+                  "gap": 5,
+                  "padding": [
+                    3,
+                    10
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon_font",
+                      "id": "urvxU",
+                      "name": "r1sIco",
+                      "width": 12,
+                      "height": 12,
+                      "iconFontName": "check-circle",
+                      "iconFontFamily": "feather",
+                      "fill": "#07c160"
+                    },
+                    {
+                      "type": "text",
+                      "id": "fZgXd",
+                      "name": "r1sTxt",
+                      "fill": "#07c160",
+                      "content": "已答",
+                      "fontFamily": "Inter",
+                      "fontSize": 12,
+                      "fontWeight": "500"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "yCqR0",
+              "name": "Q2 - Answered",
+              "width": "fill_container",
+              "fill": "#ffffff03",
+              "padding": [
+                16,
+                24
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "DnTIU",
+                  "name": "r2no",
+                  "fill": "#6677ff",
+                  "content": "02",
+                  "fontFamily": "Inter",
+                  "fontSize": 14,
+                  "fontWeight": "600"
+                },
+                {
+                  "type": "text",
+                  "id": "OQaNU",
+                  "name": "r2title",
+                  "fill": "#ffffff",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "以下哪些属于常见的图像预处理方法？",
+                  "fontFamily": "Inter",
+                  "fontSize": 14,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "frame",
+                  "id": "BpDHK",
+                  "name": "r2type",
+                  "width": 90,
+                  "fill": "#a855f71a",
+                  "cornerRadius": 6,
+                  "padding": [
+                    3,
+                    10
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "v6NG1",
+                      "name": "r2typeTxt",
+                      "fill": "#a855f7",
+                      "content": "多选题",
+                      "fontFamily": "Inter",
+                      "fontSize": 12,
+                      "fontWeight": "500"
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "id": "ML7qd",
+                  "name": "r2score",
+                  "fill": "#ffffffa6",
+                  "content": "15",
+                  "fontFamily": "Inter",
+                  "fontSize": 14,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "frame",
+                  "id": "24CQx",
+                  "name": "r2status",
+                  "width": 80,
+                  "fill": "#07c1601a",
+                  "cornerRadius": 6,
+                  "gap": 5,
+                  "padding": [
+                    3,
+                    10
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon_font",
+                      "id": "hEzIQ",
+                      "name": "r2sIco",
+                      "width": 12,
+                      "height": 12,
+                      "iconFontName": "check-circle",
+                      "iconFontFamily": "feather",
+                      "fill": "#07c160"
+                    },
+                    {
+                      "type": "text",
+                      "id": "u0utO",
+                      "name": "r2sTxt",
+                      "fill": "#07c160",
+                      "content": "已答",
+                      "fontFamily": "Inter",
+                      "fontSize": 12,
+                      "fontWeight": "500"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "lRFOi",
+              "name": "Q3 - Unanswered",
+              "width": "fill_container",
+              "fill": "#ffffff05",
+              "padding": [
+                16,
+                24
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "3isr1",
+                  "name": "r3no",
+                  "fill": "#ffffffa6",
+                  "content": "03",
+                  "fontFamily": "Inter",
+                  "fontSize": 14,
+                  "fontWeight": "600"
+                },
+                {
+                  "type": "text",
+                  "id": "MaIyc",
+                  "name": "r3title",
+                  "fill": "#ffffff",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "请上传你的项目设计方案 PDF 文件",
+                  "fontFamily": "Inter",
+                  "fontSize": 14,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "frame",
+                  "id": "giuhR",
+                  "name": "r3type",
+                  "width": 90,
+                  "fill": "#fa8c161a",
+                  "cornerRadius": 6,
+                  "padding": [
+                    3,
+                    10
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "z1PBZ",
+                      "name": "r3typeTxt",
+                      "fill": "#fa8c16",
+                      "content": "文件上传",
+                      "fontFamily": "Inter",
+                      "fontSize": 12,
+                      "fontWeight": "500"
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "id": "UHIOs",
+                  "name": "r3score",
+                  "fill": "#ffffffa6",
+                  "content": "20",
+                  "fontFamily": "Inter",
+                  "fontSize": 14,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "frame",
+                  "id": "jm5SL",
+                  "name": "r3status",
+                  "width": 80,
+                  "fill": "#ffffff0a",
+                  "cornerRadius": 6,
+                  "gap": 5,
+                  "padding": [
+                    3,
+                    10
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "efL9p",
+                      "name": "r3sTxt",
+                      "fill": "#ffffff4d",
+                      "content": "未答",
+                      "fontFamily": "Inter",
+                      "fontSize": 12,
+                      "fontWeight": "500"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "Rs0St",
+              "name": "Q4 - Answered",
+              "width": "fill_container",
+              "fill": "#ffffff03",
+              "padding": [
+                16,
+                24
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "VGp7a",
+                  "name": "r4no",
+                  "fill": "#6677ff",
+                  "content": "04",
+                  "fontFamily": "Inter",
+                  "fontSize": 14,
+                  "fontWeight": "600"
+                },
+                {
+                  "type": "text",
+                  "id": "JeBfX",
+                  "name": "r4title",
+                  "fill": "#ffffff",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "实现一个两数之和的算法",
+                  "fontFamily": "Inter",
+                  "fontSize": 14,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "frame",
+                  "id": "bOSOb",
+                  "name": "r4type",
+                  "width": 90,
+                  "fill": "#22d3ee1a",
+                  "cornerRadius": 6,
+                  "padding": [
+                    3,
+                    10
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "MBTqC",
+                      "name": "r4typeTxt",
+                      "fill": "#22d3ee",
+                      "content": "算法题",
+                      "fontFamily": "Inter",
+                      "fontSize": 12,
+                      "fontWeight": "500"
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "id": "UZirf",
+                  "name": "r4score",
+                  "fill": "#ffffffa6",
+                  "content": "25",
+                  "fontFamily": "Inter",
+                  "fontSize": 14,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "frame",
+                  "id": "j3ZkG",
+                  "name": "r4status",
+                  "width": 80,
+                  "fill": "#07c1601a",
+                  "cornerRadius": 6,
+                  "gap": 5,
+                  "padding": [
+                    3,
+                    10
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon_font",
+                      "id": "Im3sd",
+                      "name": "r4sIco",
+                      "width": 12,
+                      "height": 12,
+                      "iconFontName": "check-circle",
+                      "iconFontFamily": "feather",
+                      "fill": "#07c160"
+                    },
+                    {
+                      "type": "text",
+                      "id": "NvhN6",
+                      "name": "r4sTxt",
+                      "fill": "#07c160",
+                      "content": "已答",
+                      "fontFamily": "Inter",
+                      "fontSize": 12,
+                      "fontWeight": "500"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "CELlG",
+              "name": "Q5 - Answered",
+              "width": "fill_container",
+              "fill": "#ffffff05",
+              "padding": [
+                16,
+                24
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "4FoQb",
+                  "name": "r5no",
+                  "fill": "#6677ff",
+                  "content": "05",
+                  "fontFamily": "Inter",
+                  "fontSize": 14,
+                  "fontWeight": "600"
+                },
+                {
+                  "type": "text",
+                  "id": "9ud9p",
+                  "name": "r5title",
+                  "fill": "#ffffff",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "请实现一个简单的二分查找算法",
+                  "fontFamily": "Inter",
+                  "fontSize": 14,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "frame",
+                  "id": "mwlUo",
+                  "name": "r5type",
+                  "width": 90,
+                  "fill": "#f5222d1a",
+                  "cornerRadius": 6,
+                  "padding": [
+                    3,
+                    10
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "b3GEr",
+                      "name": "r5typeTxt",
+                      "fill": "#f5222d",
+                      "content": "算法题",
+                      "fontFamily": "Inter",
+                      "fontSize": 12,
+                      "fontWeight": "500"
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "id": "HM9J7",
+                  "name": "r5score",
+                  "fill": "#ffffffa6",
+                  "content": "15",
+                  "fontFamily": "Inter",
+                  "fontSize": 14,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "frame",
+                  "id": "JPQYC",
+                  "name": "r5status",
+                  "width": 80,
+                  "fill": "#07c1601a",
+                  "cornerRadius": 6,
+                  "gap": 5,
+                  "padding": [
+                    3,
+                    10
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon_font",
+                      "id": "jPzzp",
+                      "name": "r5sIco",
+                      "width": 12,
+                      "height": 12,
+                      "iconFontName": "check-circle",
+                      "iconFontFamily": "feather",
+                      "fill": "#07c160"
+                    },
+                    {
+                      "type": "text",
+                      "id": "OmiwG",
+                      "name": "r5sTxt",
+                      "fill": "#07c160",
+                      "content": "已答",
+                      "fontFamily": "Inter",
+                      "fontSize": 12,
+                      "fontWeight": "500"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "7oZJI",
+              "name": "Q6 - Unanswered",
+              "width": "fill_container",
+              "fill": "#ffffff03",
+              "padding": [
+                16,
+                24
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "b9OMZ",
+                  "name": "r6no",
+                  "fill": "#ffffffa6",
+                  "content": "06",
+                  "fontFamily": "Inter",
+                  "fontSize": 14,
+                  "fontWeight": "600"
+                },
+                {
+                  "type": "text",
+                  "id": "VV5XW",
+                  "name": "r6title",
+                  "fill": "#ffffffa6",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "请描述 YOLO 目标检测算法的基本流程",
+                  "fontFamily": "Inter",
+                  "fontSize": 14,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "frame",
+                  "id": "oRk7l",
+                  "name": "r6type",
+                  "width": 90,
+                  "fill": "#6677ff1a",
+                  "cornerRadius": 6,
+                  "padding": [
+                    3,
+                    10
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "kO8QD",
+                      "name": "r6typeTxt",
+                      "fill": "#6677ff",
+                      "content": "简答题",
+                      "fontFamily": "Inter",
+                      "fontSize": 12,
+                      "fontWeight": "500"
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "id": "FW504",
+                  "name": "r6score",
+                  "fill": "#ffffffa6",
+                  "content": "15",
+                  "fontFamily": "Inter",
+                  "fontSize": 14,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "frame",
+                  "id": "PxCX3",
+                  "name": "r6status",
+                  "width": 80,
+                  "fill": "#ffffff0a",
+                  "cornerRadius": 6,
+                  "gap": 5,
+                  "padding": [
+                    3,
+                    10
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon_font",
+                      "id": "O7CdU",
+                      "name": "r6sIco",
+                      "width": 12,
+                      "height": 12,
+                      "iconFontName": "circle",
+                      "iconFontFamily": "feather",
+                      "fill": "#ffffff4d"
+                    },
+                    {
+                      "type": "text",
+                      "id": "n8gd9",
+                      "name": "r6sTxt",
+                      "fill": "#ffffff4d",
+                      "content": "未答",
+                      "fontFamily": "Inter",
+                      "fontSize": 12,
+                      "fontWeight": "500"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "cfY9y",
+              "name": "Q7 - Answered",
+              "width": "fill_container",
+              "fill": "#ffffff05",
+              "padding": [
+                16,
+                24
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "GflA4",
+                  "name": "r7no",
+                  "fill": "#6677ff",
+                  "content": "07",
+                  "fontFamily": "Inter",
+                  "fontSize": 14,
+                  "fontWeight": "600"
+                },
+                {
+                  "type": "text",
+                  "id": "yYsLR",
+                  "name": "r7title",
+                  "fill": "#ffffff",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "关于深度学习框架，以下说法正确的是？",
+                  "fontFamily": "Inter",
+                  "fontSize": 14,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "frame",
+                  "id": "fjhRA",
+                  "name": "r7type",
+                  "width": 90,
+                  "fill": "#6677ff1a",
+                  "cornerRadius": 6,
+                  "padding": [
+                    3,
+                    10
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "csF8p",
+                      "name": "r7typeTxt",
+                      "fill": "#6677ff",
+                      "content": "多选题",
+                      "fontFamily": "Inter",
+                      "fontSize": 12,
+                      "fontWeight": "500"
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "id": "TnxMp",
+                  "name": "r7score",
+                  "fill": "#ffffffa6",
+                  "content": "10",
+                  "fontFamily": "Inter",
+                  "fontSize": 14,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "frame",
+                  "id": "qrXhc",
+                  "name": "r7status",
+                  "width": 80,
+                  "fill": "#07c1601a",
+                  "cornerRadius": 6,
+                  "gap": 5,
+                  "padding": [
+                    3,
+                    10
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon_font",
+                      "id": "cwCRI",
+                      "name": "r7sIco",
+                      "width": 12,
+                      "height": 12,
+                      "iconFontName": "check-circle",
+                      "iconFontFamily": "feather",
+                      "fill": "#07c160"
+                    },
+                    {
+                      "type": "text",
+                      "id": "CKtep",
+                      "name": "r7sTxt",
+                      "fill": "#07c160",
+                      "content": "已答",
+                      "fontFamily": "Inter",
+                      "fontSize": 12,
+                      "fontWeight": "500"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "56AIL",
+              "name": "Q8 - Answered",
+              "width": "fill_container",
+              "fill": "#ffffff03",
+              "padding": [
+                16,
+                24
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "3SmgC",
+                  "name": "r8no",
+                  "fill": "#6677ff",
+                  "content": "08",
+                  "fontFamily": "Inter",
+                  "fontSize": 14,
+                  "fontWeight": "600"
+                },
+                {
+                  "type": "text",
+                  "id": "GdILc",
+                  "name": "r8title",
+                  "fill": "#ffffff",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "请用 Python 实现快速排序算法并分析时间复杂度",
+                  "fontFamily": "Inter",
+                  "fontSize": 14,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "frame",
+                  "id": "pogNR",
+                  "name": "r8type",
+                  "width": 90,
+                  "fill": "#f5222d1a",
+                  "cornerRadius": 6,
+                  "padding": [
+                    3,
+                    10
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "ClBku",
+                      "name": "r8typeTxt",
+                      "fill": "#f5222d",
+                      "content": "算法题",
+                      "fontFamily": "Inter",
+                      "fontSize": 12,
+                      "fontWeight": "500"
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "id": "xJ8CL",
+                  "name": "r8score",
+                  "fill": "#ffffffa6",
+                  "content": "20",
+                  "fontFamily": "Inter",
+                  "fontSize": 14,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "frame",
+                  "id": "K6MuR",
+                  "name": "r8status",
+                  "width": 80,
+                  "fill": "#07c1601a",
+                  "cornerRadius": 6,
+                  "gap": 5,
+                  "padding": [
+                    3,
+                    10
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon_font",
+                      "id": "si12w",
+                      "name": "r8sIco",
+                      "width": 12,
+                      "height": 12,
+                      "iconFontName": "check-circle",
+                      "iconFontFamily": "feather",
+                      "fill": "#07c160"
+                    },
+                    {
+                      "type": "text",
+                      "id": "o61qX",
+                      "name": "r8sTxt",
+                      "fill": "#07c160",
+                      "content": "已答",
+                      "fontFamily": "Inter",
+                      "fontSize": 12,
+                      "fontWeight": "500"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "FrsWG",
+          "name": "Footer",
+          "width": "fill_container",
+          "padding": [
+            8,
+            0,
+            0,
+            0
+          ],
+          "justifyContent": "space_between",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "xWmWk",
+              "name": "footLeft",
+              "fill": "#ffffff4d",
+              "content": "共 8 道题目 · 已作答 5 · 未答 3 · 总分 100",
+              "fontFamily": "Inter",
+              "fontSize": 13,
+              "fontWeight": "normal"
+            },
+            {
+              "type": "frame",
+              "id": "Px0ur",
+              "name": "footRight",
+              "fill": {
+                "type": "gradient",
+                "gradientType": "linear",
+                "enabled": true,
+                "rotation": 0,
+                "size": {
+                  "height": 1
+                },
+                "colors": [
+                  {
+                    "color": "#6677ff",
+                    "position": 0
+                  },
+                  {
+                    "color": "#2f27b0",
+                    "position": 1
+                  }
+                ]
+              },
+              "cornerRadius": 8,
+              "gap": 8,
+              "padding": [
+                10,
+                24
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "H7E4B",
+                  "name": "footTxt",
+                  "fill": "#ffffff",
+                  "content": "开始答题",
+                  "fontFamily": "Inter",
+                  "fontSize": 14,
+                  "fontWeight": "600"
+                },
+                {
+                  "type": "icon_font",
+                  "id": "q7dwu",
+                  "name": "footIco",
+                  "width": 16,
+                  "height": 16,
+                  "iconFontName": "arrow-right",
+                  "iconFontFamily": "feather",
+                  "fill": "#ffffff"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
