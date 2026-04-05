@@ -1,7 +1,17 @@
 package com.bluenet.web.api.controller.v1;
 
+import com.bluenet.web.api.dto.ResponseMessage;
 import com.bluenet.web.api.dto.auth.AuthMeResponseDTO;
+import com.bluenet.web.api.dto.auth.EmailLoginRequestDTO;
+import com.bluenet.web.api.dto.auth.ResponseMessageUserAuthResponseDTO;
+import com.bluenet.web.api.dto.auth.SendVerificationCodeRequestDTO;
+import com.bluenet.web.api.dto.auth.StudentIdLoginRequestDTO;
+import com.bluenet.web.api.dto.auth.UserAuthResponseDTO;
+import com.bluenet.web.application.service.AuthService;
 import com.bluenet.web.domain.exception.Unauthorized;
+import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
+import com.bluenet.web.infrastructure.security.annotation.RequiresPermission;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -15,14 +25,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import com.bluenet.web.api.dto.ResponseMessage;
-import com.bluenet.web.api.dto.auth.ResponseMessageUserAuthResponseDTO;
-import com.bluenet.web.api.dto.auth.StudentIdLoginRequestDTO;
-import com.bluenet.web.api.dto.auth.UserAuthResponseDTO;
-import com.bluenet.web.application.service.AuthService;
-import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
-import com.bluenet.web.infrastructure.security.annotation.RequiresPermission;
 
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -57,6 +59,38 @@ public class AuthController {
         } catch (Unauthorized unauthorized) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseMessage.error(unauthorized));
         }
+    }
+
+    @Operation(summary = "邮箱验证码登录", description = "使用邮箱与验证码登录。JWT 通过 HttpOnly Cookie 自动设置，响应体返回 CSRF Token 与用户信息。")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "登录成功", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseMessageUserAuthResponseDTO.class))),
+            @ApiResponse(responseCode = "401", description = "邮箱或验证码错误", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseMessage.class), examples = @ExampleObject(value = "{\"code\":401,\"msg\":\"邮箱或验证码错误\",\"data\":null}"))) })
+    @RequiresPermission(value = "auth:login:email", name = "邮箱登录", access = AccessLevel.PUBLIC)
+    @PostMapping("/login/email")
+    public ResponseEntity<ResponseMessage<?>> emailLogin(
+            @Valid @RequestBody EmailLoginRequestDTO requestDTO,
+            HttpServletResponse response) {
+        try {
+            UserAuthResponseDTO responseDTO = authService.loginWithEmail(
+                    requestDTO.getEmail(),
+                    requestDTO.getVerifyCode(),
+                    response);
+            return ResponseEntity.ok(ResponseMessage.success(responseDTO));
+        } catch (Unauthorized unauthorized) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseMessage.error(unauthorized));
+        }
+    }
+
+    @Operation(summary = "发送邮箱验证码", description = "向指定邮箱发送6位数字验证码，有效期5分钟。60秒内同一邮箱只能发送一次。")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "发送成功", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseMessage.class))),
+            @ApiResponse(responseCode = "400", description = "发送过于频繁", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseMessage.class), examples = @ExampleObject(value = "{\"code\":400,\"msg\":\"发送过于频繁，请稍后再试\",\"data\":null}"))) })
+    @RequiresPermission(value = "auth:verification-code:send", name = "发送验证码", access = AccessLevel.PUBLIC)
+    @PostMapping("/verification-code/send")
+    public ResponseMessage<Void> sendVerificationCode(
+            @Valid @RequestBody SendVerificationCodeRequestDTO requestDTO) {
+        authService.sendVerificationCode(requestDTO);
+        return ResponseMessage.success();
     }
 
     @Operation(summary = "用户登出", description = "使当前 JWT 失效并清除 Cookie。需要已登录状态（通过 Cookie 认证）。")

@@ -1,6 +1,7 @@
 package com.bluenet.web.application.service;
 
 import com.bluenet.web.api.dto.auth.AuthMeResponseDTO;
+import com.bluenet.web.api.dto.auth.SendVerificationCodeRequestDTO;
 import com.bluenet.web.api.dto.auth.StudentIdLoginRequestDTO;
 import com.bluenet.web.api.dto.auth.UserAuthResponseDTO;
 
@@ -15,6 +16,27 @@ public interface AuthService {
      * 学号密码登录
      */
     UserAuthResponseDTO login(StudentIdLoginRequestDTO requestDTO, HttpServletResponse response);
+
+    /**
+     * 邮箱验证码登录
+     *
+     * @param email
+     *            邮箱
+     * @param verifyCode
+     *            验证码
+     * @param response
+     *            HTTP响应，用于设置Cookie
+     * @return 登录响应DTO，包含CSRF Token和用户信息
+     */
+    UserAuthResponseDTO loginWithEmail(String email, String verifyCode, HttpServletResponse response);
+
+    /**
+     * 发送邮箱验证码
+     *
+     * @param requestDTO
+     *            发送验证码请求DTO
+     */
+    void sendVerificationCode(SendVerificationCodeRequestDTO requestDTO);
 
     /**
      * 用户登出

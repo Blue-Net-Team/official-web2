@@ -37,6 +37,7 @@ public class CsrfTokenFilter extends OncePerRequestFilter {
             // 认证相关
             "/api/v1/auth/login/**",
             "/api/v1/auth/logout",
+            "/api/v1/auth/verification-code/send",
             // 公开报名
             "/api/v1/enrollments",
             // 公开文件上传（头像上传，报名时使用）

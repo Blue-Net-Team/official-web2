@@ -250,4 +250,20 @@ class AuthDomainServiceImplTest {
         // 验证
         assertFalse(result.isPresent());
     }
+
+    /**
+     * 验证本地登录：邮箱对应的用户不存在应抛出 Unauthorized
+     */
+    @Test
+    @DisplayName("验证本地登录：邮箱对应的用户不存在应抛出 Unauthorized")
+    void checkLocalValid_withNonExistentEmail_shouldThrowUnauthorized() {
+        // 准备
+        when(userRepository.findByEmail("nonexistent@example.com")).thenReturn(Optional.empty());
+
+        // 执行 & 验证
+        Unauthorized exception = assertThrows(
+                Unauthorized.class,
+                () -> authDomainService.checkLocalValid("nonexistent@example.com", "123456", LocalLoginType.EMAIL));
+        assertEquals("账号或密码错误", exception.getMessage());
+    }
 }

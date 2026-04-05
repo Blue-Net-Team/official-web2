@@ -53,6 +53,20 @@ export interface StudentIdLoginRequestDTO {
   password: string
 }
 
+/** 邮箱登录请求 */
+export interface EmailLoginRequestDTO {
+  /** 邮箱 */
+  email: string
+  /** 验证码 */
+  verifyCode: string
+}
+
+/** 发送验证码请求 */
+export interface SendVerificationCodeRequestDTO {
+  /** 邮箱 */
+  email: string
+}
+
 /**
  * 登录成功响应
  * 对应后端 UserAuthResponseDTO.java

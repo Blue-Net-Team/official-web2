@@ -4,7 +4,12 @@ import java.util.Optional;
 import java.util.UUID;
 
 import com.bluenet.web.api.dto.auth.AuthMeResponseDTO;
+import com.bluenet.web.api.dto.auth.SendVerificationCodeRequestDTO;
 import com.bluenet.web.application.converter.UserConverter;
+import com.bluenet.web.domain.model.vo.VerifyCodeVO;
+import com.bluenet.web.domain.repository.VerificationCodeRepository;
+import com.bluenet.web.domain.service.VerificationCodeDomainService;
+import com.bluenet.web.infrastructure.email.EmailSender;
 import com.bluenet.web.domain.model.vo.GitHubUserInfo;
 import com.bluenet.web.domain.model.vo.OAuthState;
 import com.bluenet.web.domain.service.GitHubOAuthService;
@@ -20,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.bluenet.web.api.dto.auth.StudentIdLoginRequestDTO;
 import com.bluenet.web.api.dto.auth.UserAuthResponseDTO;
 import com.bluenet.web.application.service.AuthService;
+import com.bluenet.web.domain.exception.BadRequest;
 import com.bluenet.web.domain.exception.Unauthorized;
 import com.bluenet.web.domain.model.enumerate.LocalLoginType;
 import com.bluenet.web.domain.model.vo.UserVO;
@@ -52,6 +58,9 @@ public class AuthServiceImpl implements AuthService {
     private final UserConverter userConverter;
     private final CookieService cookieService;
     private final CsrfTokenService csrfTokenService;
+    private final VerificationCodeDomainService verificationCodeDomainService;
+    private final VerificationCodeRepository verificationCodeRepository;
+    private final EmailSender emailSender;
     private final GitHubOAuthService gitHubOAuthService;
     private final UserRepository userRepository;
     private final StringRedisTemplate redisTemplate;
@@ -95,6 +104,76 @@ public class AuthServiceImpl implements AuthService {
 
         log.info("User logged in successfully: {}", requestDTO.getStudentId());
         return responseDTO;
+    }
+
+    @Override
+    @Transactional
+    public UserAuthResponseDTO loginWithEmail(String email, String verifyCode, HttpServletResponse response) {
+        // 1. 调用领域服务验证邮箱验证码登录
+        Optional<UserVO> userVOOptional = authDomainService.checkLocalValid(
+                email,
+                verifyCode,
+                LocalLoginType.EMAIL);
+
+        // 2. 处理验证结果
+        UserVO userVO = userVOOptional.orElseThrow(() -> {
+            log.warn("Email login failed: invalid credentials - {}", email);
+            return new Unauthorized("邮箱或验证码错误");
+        });
+
+        // 3. 标记验证码已使用
+        verificationCodeRepository.markAsUsed(email, verifyCode);
+
+        // 4. 生成JWT Token并设置Cookie（复用login的步骤3-7）
+        String jwtToken = jwtUtil.generateToken(extractUserId(userVO));
+        authTokenService.storeToken(jwtUtil.getJti(jwtToken), extractUserId(userVO));
+        String csrfToken = csrfTokenService.generateCsrfToken();
+        cookieService.setAuthCookies(response, jwtToken, csrfToken);
+
+        // 5. 构建响应
+        UserAuthResponseDTO responseDTO = new UserAuthResponseDTO();
+        responseDTO.setCsrfToken(csrfToken);
+        responseDTO.setUserInfo(userConverter.convertToUserInfo(userVO));
+
+        log.info("User logged in via email successfully: {}", email);
+        return responseDTO;
+    }
+
+    @Override
+    public void sendVerificationCode(SendVerificationCodeRequestDTO requestDTO) {
+        String email = requestDTO.getEmail();
+
+        // 1. 检查60秒内是否已发送
+        Optional<VerifyCodeVO> recentCode = verificationCodeRepository.findLatestByEmailWithinSeconds(email, 60);
+        if (recentCode.isPresent()) {
+            log.warn("验证码发送过于频繁 - email={}", email);
+            throw new BadRequest("发送过于频繁，请稍后再试");
+        }
+
+        // 2. 调用领域服务生成验证码
+        VerifyCodeVO verifyCodeVO = verificationCodeDomainService.generateCode(email, null);
+
+        // 3. 存储验证码
+        verificationCodeRepository.save(verifyCodeVO);
+
+        // 4. 异步发送验证码邮件
+        String subject = "蓝网登录验证码";
+        String htmlContent = buildVerificationCodeEmail(verifyCodeVO.getCode());
+        emailSender.sendHtmlAsync(email, subject, htmlContent);
+
+        log.info("验证码已发送 - email={}", email);
+    }
+
+    private String buildVerificationCodeEmail(String code) {
+        return """
+                <div style="max-width:400px;margin:0 auto;padding:20px;font-family:sans-serif;">
+                    <h2 style="color:#fa8c16;text-align:center;">蓝网登录验证码</h2>
+                    <p style="text-align:center;font-size:14px;color:#666;">您的验证码为：</p>
+                    <p style="text-align:center;font-size:32px;font-weight:bold;letter-spacing:8px;color:#fa8c16;">%s</p>
+                    <p style="text-align:center;font-size:12px;color:#999;">验证码5分钟内有效，p>
+                </div>
+                """
+                .formatted(code);
     }
 
     @Override

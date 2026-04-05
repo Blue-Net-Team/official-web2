@@ -1,26 +1,34 @@
-## Purpose
+## MODIFIED Requirements
 
-登录功能集成，实现前端登录表单与后端认证 API 的完整对接，包括密码哈希处理、API 调用、Token 存储和全局状态管理。
+### Requirement: 前端认证服务支持邮箱登录 API
+前端认证服务 SHALL 提供发送验证码和邮箱登录两个 API 调用方法。
 
-## Requirements
+#### Scenario: 调用发送验证码 API
+- **WHEN** 前端调用 `authService.sendVerificationCode(email)`
+- **THEN** 系统 SHALL 向 `POST /api/v1/auth/verification-code/send` 发送请求，携带邮箱地址
 
-### Requirement: 密码前端哈希处理
+#### Scenario: 调用邮箱登录 API
+- **WHEN** 前端调用 `authService.loginWithEmail(email, code)`
+- **THEN** 系统 SHALL 向 `POST /api/v1/auth/login/email` 发送请求，携带邮箱和验证码
 
-系统 SHALL 在发送登录请求前对用户密码进行 SHA-256 哈希处理。
+### Requirement: 前端登录页面支持邮箱登录
+前端登录页面的邮箱登录 Tab SHALL 对接真实后端 API，替换当前模拟逻辑。
 
-#### Scenario: 密码哈希处理流程
-- **WHEN** 用户提交登录表单
-- **THEN** 系统 SHALL 使用 Web Crypto API 对密码进行 SHA-256 哈希
-- **THEN** 哈希结果 SHALL 转换为小写十六进制字符串
-- **THEN** 哈希后的密码 SHALL 作为请求体的 password 字段发送
+#### Scenario: 发送验证码成功
+- **WHEN** 用户填写邮箱后点击"获取验证码"按钮
+- **THEN** 前端 SHALL 调用发送验证码 API，成功后启动 60 秒倒计时，显示成功提示
 
-#### Scenario: 哈希函数实现
-- **WHEN** 调用密码哈希函数
-- **THEN** 函数 SHALL 使用 `crypto.subtle.digest('SHA-256', data)` 方法
-- **THEN** 函数 SHALL 返回 Promise<string> 类型
-- **THEN** 输出格式 SHALL 为 64 位小写十六进制字符串
+#### Scenario: 发送验证码失败（频率限制）
+- **WHEN** 用户在 60 秒内再次点击"获取验证码"
+- **THEN** 前端 SHALL 显示后端返回的错误信息（如"发送过于频繁"）
 
-### Requirement: 认证状态管理
+#### Scenario: 邮箱登录成功
+- **WHEN** 用户填写邮箱和验证码后点击"登录"按钮
+- **THEN** 前端 SHALL 调用邮箱登录 API，成功后跳转到首页
+
+#### Scenario: 邮箱登录失败
+- **WHEN** 邮箱或验证码不正确
+- **THEN** 前端 SHALL 显示错误提示"邮箱或验证码错误"
 
 系统 SHALL 使用 Zustand 管理全局认证状态，并持久化到 localStorage。
 

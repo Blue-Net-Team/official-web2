@@ -69,6 +69,7 @@ export default function LoginPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { message: messageApi } = App.useApp()
+  const { isLoading, login, loginWithEmail, sendVerificationCode } = authStore()
   const { isLoading, login, checkAuthStatus } = authStore()
 
   // Handle GitHub OAuth callback params
@@ -98,8 +99,10 @@ export default function LoginPage() {
     }
   }
 
-  const handleSendCode = () => {
-    if (countdown > 0) return
+  const [sendingCode, setSendingCode] = useState(false)
+
+  const handleSendCode = async () => {
+    if (countdown > 0 || sendingCode) return
 
     const email = form.getFieldValue('email')
     if (!email) {
@@ -107,8 +110,17 @@ export default function LoginPage() {
       return
     }
 
-    setCountdown(60)
-    messageApi.success('验证码已发送')
+    try {
+      setSendingCode(true)
+      await sendVerificationCode(email)
+      setCountdown(60)
+      messageApi.success('验证码已发送')
+    } catch (error: unknown) {
+      const errorMsg = error instanceof Error ? error.message : '发送失败，请稍后重试'
+      messageApi.error(errorMsg)
+    } finally {
+      setSendingCode(false)
+    }
 
     const timer = setInterval(() => {
       setCountdown((prev) => {
@@ -146,7 +158,23 @@ export default function LoginPage() {
         }
       }
     } else {
-      messageApi.info('邮箱登录功能暂未开放')
+      if (!values.email || !values.verifyCode) {
+        messageApi.error('请输入邮箱和验证码')
+        return
+      }
+
+      try {
+        await loginWithEmail(values.email, values.verifyCode)
+        messageApi.success('登录成功')
+        router.push('/')
+      } catch (error) {
+        const errormessage = error instanceof Error ? error.message : '登录失败，请稍后重试'
+        if (errormessage.includes('验证码')) {
+          messageApi.error('验证码错误或已过期，请重新获取')
+        } else {
+          messageApi.error(errormessage)
+        }
+      }
     }
   }
 

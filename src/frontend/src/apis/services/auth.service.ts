@@ -1,6 +1,12 @@
 import { publicClient, apiClient } from '../client'
 import { ResponseMessage } from '../schema/type'
-import { StudentIdLoginRequestDTO, UserAuthResponseDTO, AuthMeResponseDTO } from '../schema/type'
+import {
+  StudentIdLoginRequestDTO,
+  UserAuthResponseDTO,
+  AuthMeResponseDTO,
+  EmailLoginRequestDTO,
+  SendVerificationCodeRequestDTO,
+} from '../schema/type'
 
 export const authService = {
   /**
@@ -15,6 +21,35 @@ export const authService = {
     const response = await publicClient.post<ResponseMessage<UserAuthResponseDTO>>(
       '/auth/login/student-id',
       credentials
+    )
+    return response.data
+  },
+
+  /**
+   * 邮箱验证码登录 - 公开接口
+   * 对应后端 POST /api/v1/auth/login/email
+   * JWT 通过 HttpOnly Cookie 自动设置，响应体返回 CSRF Token
+   * @param credentials 邮箱和验证码
+   */
+  async loginWithEmail(
+    credentials: EmailLoginRequestDTO
+  ): Promise<ResponseMessage<UserAuthResponseDTO>> {
+    const response = await publicClient.post<ResponseMessage<UserAuthResponseDTO>>(
+      '/auth/login/email',
+      credentials
+    )
+    return response.data
+  },
+
+  /**
+   * 发送邮箱验证码 - 公开接口
+   * 对应后端 POST /api/v1/auth/verification-code/send
+   * @param data 邮箱
+   */
+  async sendVerificationCode(data: SendVerificationCodeRequestDTO): Promise<ResponseMessage<void>> {
+    const response = await publicClient.post<ResponseMessage<void>>(
+      '/auth/verification-code/send',
+      data
     )
     return response.data
   },
