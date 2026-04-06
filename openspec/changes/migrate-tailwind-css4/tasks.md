@@ -34,9 +34,9 @@
 - [x] 4.1 迁移 ConsultationQrcode 组件：`components/Enroll/ConsultationQrcode/styles.module.css` → Tailwind class
 - [x] 4.2 迁移 TechStack 组件：`components/Direction/TechStack/styles.module.css` → Tailwind class
 - [x] 4.3 迁移 RecruitmentInfo 组件：`components/Direction/RecruitmentInfo/styles.module.css` → Tailwind class
-- [ ] 4.4 迁移 LearningPath 组件：`components/Direction/LearningPath/styles.module.css` → Tailwind class
-- [ ] 4.5 迁移 HeroSection 组件：`components/Direction/HeroSection/styles.module.css` → Tailwind class
-- [ ] 4.6 迁移 CareerSection 组件：`components/Direction/CareerSection/styles.module.css` → Tailwind class
+- [x] 4.4 迁移 LearningPath 组件：`components/Direction/LearningPath/styles.module.css` → Tailwind class
+- [x] 4.5 迁移 HeroSection 组件：`components/Direction/HeroSection/styles.module.css` → Tailwind class
+- [x] 4.6 迁移 CareerSection 组件：`components/Direction/CareerSection/styles.module.css` → Tailwind class
 
 ## 5. Profile 系列组件迁移
 
