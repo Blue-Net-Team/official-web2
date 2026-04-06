@@ -1,13 +1,13 @@
 ## 1. 基础设施搭建
 
-- [ ] 1.1 安装 Tailwind CSS 4 依赖：`pnpm add tailwindcss @tailwindcss/postcss`
-- [ ] 1.2 创建 `src/frontend/postcss.config.mjs`，配置 `@tailwindcss/postcss` 插件
-- [ ] 1.3 在 `globals.css` 顶部添加 `@import "tailwindcss"` 指令
-- [ ] 1.4 将 `responsive.css` 中的 CSS 变量迁移到 `globals.css` 的 `@theme` 块（间距 token：section-padding-x/y、container-padding、card-gap、content-gap）
-- [ ] 1.5 将 `responsive.css` 中的字体变量迁移到 `@theme`（字号 token：hero-title、hero-subtitle、section-title、section-title-large、card-title、body、small、caption）
-- [ ] 1.6 将 `responsive.css` 中的行高和组件尺寸变量迁移到 `@theme`（line-height、button-height、button-padding-x、card-border-radius）
-- [ ] 1.7 配置响应式断点 token（sm: 768px、md: 1024px）与现有 responsive.css 断点对齐
-- [ ] 1.8 验证：执行 `pnpm build` 确认基础设施搭建成功，Ant Design 组件样式不受影响
+- [x] 1.1 安装 Tailwind CSS 4 依赖：`pnpm add tailwindcss @tailwindcss/postcss`
+- [x] 1.2 创建 `src/frontend/postcss.config.mjs`，配置 `@tailwindcss/postcss` 插件
+- [x] 1.3 在 `globals.css` 顶部添加 `@import "tailwindcss"` 指令
+- [x] 1.4 将 `responsive.css` 中的 CSS 变量迁移到 `globals.css` 的 `@theme` 块（间距 token：section-padding-x/y、container-padding、card-gap、content-gap）
+- [x] 1.5 将 `responsive.css` 中的字体变量迁移到 `@theme`（字号 token：hero-title、hero-subtitle、section-title、section-title-large、card-title、body、small、caption）
+- [x] 1.6 将 `responsive.css` 中的行高和组件尺寸变量迁移到 `@theme`（line-height、button-height、button-padding-x、card-border-radius）
+- [x] 1.7 配置响应式断点 token（sm: 768px、md: 1024px）与现有 responsive.css 断点对齐
+- [x] 1.8 验证：执行 `pnpm build` 确认基础设施搭建成功，Ant Design 组件样式不受影响
 
 ## 2. 基础 UI 组件迁移
 

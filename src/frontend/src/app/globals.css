@@ -1,8 +1,102 @@
+@import 'tailwindcss';
+
+@theme {
+  --breakpoint-sm: 768px;
+  --breakpoint-md: 1024px;
+
+  --spacing-section-padding-x: 93px;
+  --spacing-section-padding-y: 84px;
+  --spacing-container-padding: 147px;
+  --spacing-card-gap: 20px;
+  --spacing-content-gap: 36px;
+
+  --font-size-hero-title: 48px;
+  --font-size-hero-subtitle: 32px;
+  --font-size-section-title: 43px;
+  --font-size-section-title-large: 79px;
+  --font-size-card-title: 35px;
+  --font-size-body: 20px;
+  --font-size-small: 16px;
+  --font-size-caption: 14px;
+
+  --line-height-title: 1.32;
+  --line-height-body: 1.5;
+
+  --spacing-button-height: 50px;
+  --spacing-button-padding-x: 26px;
+  --radius-card: 36px;
+}
+
 :root {
   width: 100%;
   height: 100%;
   background-color: #000000;
   color: #ffffff;
+
+  --section-padding-x: 93px;
+  --section-padding-y: 84px;
+  --container-padding: 147px;
+  --card-gap: 20px;
+  --content-gap: 36px;
+
+  --font-size-hero-title: 48px;
+  --font-size-hero-subtitle: 32px;
+  --font-size-section-title: 43px;
+  --font-size-section-title-large: 79px;
+  --font-size-card-title: 35px;
+  --font-size-body: 20px;
+  --font-size-small: 16px;
+  --font-size-caption: 14px;
+
+  --line-height-title: 1.32;
+  --line-height-body: 1.5;
+
+  --button-height: 50px;
+  --button-padding-x: 26px;
+  --card-border-radius: 36px;
+  --container-max-width: 100%;
+}
+
+@media (max-width: 1024px) {
+  :root {
+    --section-padding-x: 40px;
+    --section-padding-y: 60px;
+    --container-padding: 40px;
+    --card-gap: 15px;
+    --content-gap: 24px;
+
+    --font-size-hero-title: 40px;
+    --font-size-hero-subtitle: 24px;
+    --font-size-section-title: 36px;
+    --font-size-section-title-large: 60px;
+    --font-size-card-title: 28px;
+    --font-size-body: 18px;
+    --font-size-small: 14px;
+    --font-size-caption: 12px;
+  }
+}
+
+@media (max-width: 767px) {
+  :root {
+    --section-padding-x: 20px;
+    --section-padding-y: 40px;
+    --container-padding: 20px;
+    --card-gap: 16px;
+    --content-gap: 20px;
+
+    --font-size-hero-title: 32px;
+    --font-size-hero-subtitle: 20px;
+    --font-size-section-title: 28px;
+    --font-size-section-title-large: 48px;
+    --font-size-card-title: 24px;
+    --font-size-body: 16px;
+    --font-size-small: 14px;
+    --font-size-caption: 12px;
+
+    --button-height: 44px;
+    --button-padding-x: 20px;
+    --card-border-radius: 24px;
+  }
 }
 
 h1,
