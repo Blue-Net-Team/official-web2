@@ -3,11 +3,10 @@
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
-import { Layout, Menu, Button, Drawer, Dropdown, Flex, MenuProps } from 'antd'
+import { Layout, Menu, Button, Drawer, Dropdown, Flex, MenuProps, ConfigProvider } from 'antd'
 import { LockOutlined, LogoutOutlined, MenuOutlined, UserOutlined } from '@ant-design/icons'
 import Image from 'next/image'
 import logoImage from '@/assets/logo.png'
-import styles from './styles.module.css'
 import authStore from '@/stores/authStore'
 import { getRoleLevel } from '@/utils/RoleUtils'
 
@@ -20,6 +19,35 @@ const DEFAULT_USER_INFO = {
   roleName: '',
   direction: null,
   avatarUrl: null,
+}
+
+const loginButtonStyle: React.CSSProperties = {
+  backgroundColor: '#ff6f3c',
+  borderColor: '#ff6f3c',
+  borderRadius: 16,
+  padding: '0 18px',
+  height: 29,
+  fontSize: 14,
+  color: '#ffe4c5',
+}
+
+const drawerThemeConfig = {
+  components: {
+    Drawer: {
+      colorBgElevated: '#19191c',
+      colorBgMask: 'rgba(0, 0, 0, 0.45)',
+      colorText: '#ffffff',
+      colorTextDescription: 'rgba(140, 140, 141, 1)',
+    },
+    Menu: {
+      darkItemBg: '#19191c',
+      darkItemColor: 'rgba(140, 140, 141, 1)',
+      darkItemHoverColor: '#ffffff',
+      darkItemSelectedColor: '#ff6f3c',
+      darkItemSelectedBg: 'transparent',
+      darkSubMenuItemBg: '#19191c',
+    },
+  },
 }
 
 const NavBar = () => {
@@ -203,7 +231,7 @@ const NavBar = () => {
           <Image
             src={userInfo.avatarUrl}
             alt="user avatar"
-            className={styles.avatar}
+            className="w-10 h-10 rounded-full object-cover"
             width={40}
             height={40}
           />
@@ -211,10 +239,7 @@ const NavBar = () => {
           <UserOutlined style={{ fontSize: 24, color: '#fff' }} />
         )}
         {/* 用户名 */}
-        <span
-          className="darkText"
-          style={{ display: 'inline-block', lineHeight: '1.5', userSelect: 'none' }}
-        >
+        <span className="darkText inline-block leading-normal select-none">
           {userInfo?.username}
         </span>
       </Flex>
@@ -238,7 +263,21 @@ const NavBar = () => {
         )
       }
       return (
-        <Button type="primary" className={styles.loginButton} onClick={() => router.push('/login')}>
+        <Button
+          type="primary"
+          style={loginButtonStyle}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = '#ff8a5c'
+            e.currentTarget.style.borderColor = '#ff8a5c'
+            e.currentTarget.style.color = '#fff'
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = '#ff6f3c'
+            e.currentTarget.style.borderColor = '#ff6f3c'
+            e.currentTarget.style.color = '#ffe4c5'
+          }}
+          onClick={() => router.push('/login')}
+        >
           登录
         </Button>
       )
@@ -249,8 +288,17 @@ const NavBar = () => {
       return (
         <Button
           type="primary"
-          className={styles.loginButton}
-          style={{ width: '100%' }}
+          style={{ ...loginButtonStyle, width: '100%' }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = '#ff8a5c'
+            e.currentTarget.style.borderColor = '#ff8a5c'
+            e.currentTarget.style.color = '#fff'
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = '#ff6f3c'
+            e.currentTarget.style.borderColor = '#ff6f3c'
+            e.currentTarget.style.color = '#ffe4c5'
+          }}
           onClick={() => router.push('/login')}
         >
           登录
@@ -260,13 +308,19 @@ const NavBar = () => {
   }
 
   return (
-    <Header className={styles.header}>
-      <div className={styles.logoContainer}>
-        <div className={styles.logoWrapper} onClick={() => router.push('/')}>
-          <div className={styles.logoIconWrapper}>
-            <Image src={logoImage} alt="bluenet logo" className={styles.logoImage} />
+    <Header className="bg-[#19191c] px-16 h-16 flex items-center justify-between max-md:px-6">
+      <div className="flex items-center gap-10 max-md:gap-5">
+        <div
+          className="flex items-center gap-1.5 cursor-pointer group"
+          onClick={() => router.push('/')}
+        >
+          <div className="w-9 h-9 bg-transparent rounded flex items-center justify-center">
+            <Image src={logoImage} alt="bluenet logo" className="w-9 h-9" />
           </div>
-          <Link href="/" className={styles.logoText}>
+          <Link
+            href="/"
+            className="text-sm font-bold text-white! select-none hover:text-[#ff6f3c]!"
+          >
             BLUENET
           </Link>
         </div>
@@ -276,7 +330,7 @@ const NavBar = () => {
             theme="dark"
             mode="horizontal"
             items={menuItems}
-            className={styles.menu}
+            className="bg-transparent border-b-0"
             selectedKeys={[]}
             onClick={(e: { key: string }) => handleMenuClick(e.key)}
           />
@@ -288,32 +342,59 @@ const NavBar = () => {
       {isMobile && (
         <Button
           type="text"
-          className={styles.menuButton}
+          className="text-white text-xl flex items-center justify-center hover:text-[#ff6f3c] hover:bg-transparent"
           icon={<MenuOutlined style={{ color: 'white' }} />}
           onClick={toggleDrawer}
         />
       )}
 
-      <Drawer
-        placement="right"
-        open={drawerOpen}
-        onClose={closeDrawer}
-        className={styles.drawer}
-        size={250}
-      >
-        {/* {renderLoginBtnOrUserInfo()} */}
-        <Menu
-          mode="inline"
-          theme="dark"
-          items={getMobilMenuItemsFromCommon()}
-          className={styles.drawerMenu}
-          selectedKeys={[]}
-          onClick={(e: { key: string }) => {
-            handleMenuClick(e.key)
-            closeDrawer()
+      <ConfigProvider theme={drawerThemeConfig}>
+        <Drawer
+          placement="right"
+          open={drawerOpen}
+          onClose={closeDrawer}
+          size={250}
+          styles={{
+            header: {
+              borderBottom: '1px solid #333',
+              padding: '19.6px 24px',
+            },
+            body: {
+              padding: '24px 16px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 16,
+            },
           }}
-        />
-      </Drawer>
+        >
+          <Menu
+            mode="inline"
+            theme="dark"
+            items={getMobilMenuItemsFromCommon()}
+            className="border-none bg-transparent"
+            selectedKeys={[]}
+            onClick={(e: { key: string }) => {
+              handleMenuClick(e.key)
+              closeDrawer()
+            }}
+            styles={{
+              item: {
+                color: '#fff',
+                fontSize: 16,
+                padding: '12px 16px',
+                margin: 0,
+                borderRadius: 8,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'flex-start',
+                textAlign: 'left',
+                lineHeight: 1.5,
+                height: 'auto',
+              },
+            }}
+          />
+        </Drawer>
+      </ConfigProvider>
     </Header>
   )
 }

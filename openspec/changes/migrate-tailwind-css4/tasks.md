@@ -11,8 +11,8 @@
 
 ## 2. 基础 UI 组件迁移
 
-- [ ] 2.1 迁移 Footer 组件：`components/Footer/style.module.css` → Tailwind class
-- [ ] 2.2 迁移 PublicNavbar 组件：`components/PublicNavbar/styles.module.css` → Tailwind class
+- [x] 2.1 迁移 Footer 组件：`components/Footer/style.module.css` → Tailwind class
+- [x] 2.2 迁移 PublicNavbar 组件：`components/PublicNavbar/styles.module.css` → Tailwind class
 - [ ] 2.3 迁移 AdminSideBar 组件：`components/Admin/AdminSideBar/styles.module.css` → Tailwind class
 - [ ] 2.4 迁移 AdminHeadBar 组件：`components/Admin/AdminHeadBar/styles.module.css` → Tailwind class
 
