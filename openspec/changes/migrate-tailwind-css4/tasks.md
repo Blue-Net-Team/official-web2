@@ -18,8 +18,8 @@
 
 ## 3. Home 页面子组件迁移
 
-- [ ] 3.1 迁移 TopContent 组件：`components/Home/TopContent/styles.module.css` → Tailwind class
-- [ ] 3.2 迁移 DirectionCard 组件：`components/Home/DirectionIntroduce/DirectionCard/styles.module.css` → Tailwind class
+- [x] 3.1 迁移 TopContent 组件：`components/Home/TopContent/styles.module.css` → Tailwind class
+- [x] 3.2 迁移 DirectionCard 组件：`components/Home/DirectionIntroduce/DirectionCard/styles.module.css` → Tailwind class
 - [ ] 3.3 迁移 DirectionIntroduce 组件：`components/Home/DirectionIntroduce/styles.module.css` → Tailwind class
 - [ ] 3.4 迁移 ProcessCard 组件：`components/Home/RecruitmentProcess/ProcessCard/styles.module.css` → Tailwind class
 - [ ] 3.5 迁移 RecruitmentProcess 组件：`components/Home/RecruitmentProcess/styles.module.css` → Tailwind class
