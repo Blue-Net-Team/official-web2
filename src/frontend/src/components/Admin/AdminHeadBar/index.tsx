@@ -3,19 +3,18 @@
 import { Layout } from 'antd'
 import Image from 'next/image'
 import logoImage from '@/assets/logo.png'
-import styles from './styles.module.css'
 
 const { Header } = Layout
 
 const AdminHeadBar = () => {
   return (
-    <Header className={styles.header}>
-      <div className={styles.logoContainer}>
-        <div className={styles.logoWrapper}>
-          <div className={styles.logoIconWrapper}>
-            <Image src={logoImage} alt="bluenet logo" className={styles.logoImage} />
+    <Header className="h-16 flex items-center bg-[#19191c] px-4 sm:px-16">
+      <div className="flex items-center">
+        <div className="flex items-center gap-1.5">
+          <div className="w-9 h-9 bg-transparent rounded flex items-center justify-center">
+            <Image src={logoImage} alt="bluenet logo" className="w-9 h-9" />
           </div>
-          <div className={styles.logoText}>BLUENET ADMIN</div>
+          <div className="text-sm font-bold text-white">BLUENET ADMIN</div>
         </div>
       </div>
     </Header>

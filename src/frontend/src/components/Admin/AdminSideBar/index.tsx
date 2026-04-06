@@ -3,7 +3,6 @@
 import { Menu, MenuProps } from 'antd'
 import Sider from 'antd/es/layout/Sider'
 import React from 'react'
-import styles from './styles.module.css'
 
 const AdminSideBar = () => {
   const [collapsed, setCollapsed] = React.useState(false)
@@ -55,7 +54,7 @@ const AdminSideBar = () => {
       collapsible
       collapsed={collapsed}
       onCollapse={(value: boolean) => setCollapsed(value)}
-      className={styles.sider}
+      className="admin-sider h-screen overflow-auto sticky top-0 [inset-inline-start:0] [scrollbar-gutter:stable]"
     >
       <Menu
         theme="dark"
