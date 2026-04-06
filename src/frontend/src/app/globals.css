@@ -1,9 +1,6 @@
 @import 'tailwindcss';
 
 @theme {
-  --breakpoint-sm: 768px;
-  --breakpoint-md: 1024px;
-
   --spacing-section-padding-x: 93px;
   --spacing-section-padding-y: 84px;
   --spacing-container-padding: 147px;

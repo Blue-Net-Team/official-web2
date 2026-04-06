@@ -3,7 +3,6 @@
 import Image from 'next/image'
 import { FireOutlined } from '@ant-design/icons'
 import { useState } from 'react'
-import styles from './styles.module.css'
 
 interface CompetitionLogoProps {
   src: string
@@ -23,7 +22,7 @@ const CompetitionLogo = ({ src, alt }: CompetitionLogoProps) => {
       alt={alt}
       width={64}
       height={44}
-      className={styles.logo}
+      className="object-contain"
       onError={() => setError(true)}
     />
   )

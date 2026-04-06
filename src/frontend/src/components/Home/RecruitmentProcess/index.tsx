@@ -1,9 +1,8 @@
 'use client'
 
-import { Button, ConfigProvider, Flex } from 'antd'
+import { Button, ConfigProvider } from 'antd'
 import { DoubleRightOutlined, RightOutlined } from '@ant-design/icons'
 import { useRouter } from 'next/navigation'
-import styles from './styles.module.css'
 import ProcessCard from './ProcessCard'
 import registerIcon from '@/assets/HomeRecruitmentProcess/register_icon.png'
 import assessmentIcon from '@/assets/HomeRecruitmentProcess/assessment_icon.png'
@@ -57,7 +56,7 @@ const RecruitmentProcess = () => {
             onClick={handleJoinClick}
             icon={<RightOutlined />}
             iconPlacement="end"
-            className={styles.processButton}
+            className="min-h-[44px] flex items-center justify-center"
           >
             立即加入
           </Button>
@@ -81,39 +80,43 @@ const RecruitmentProcess = () => {
   ]
 
   return (
-    <Flex vertical align="start" className={styles.container}>
-      <h1 className={styles.mainTitle}>
-        现在<span className={styles.highlightTitle}>招新流程</span>已启动，欢迎加入我们
+    <div className="w-full min-h-screen p-[40px_20px] sm:p-[60px_40px] md:p-[60px_40px] lg:p-[70.5px_93px] flex flex-col gap-3 sm:gap-4 md:gap-5 box-border items-start">
+      <h1 className="font-[Microsoft_YaHei] text-2xl sm:text-[28px] md:text-9 font-bold text-white text-left m-0">
+        现在
+        <span className="text-[40px] sm:text-[48px] md:text-[60px] lg:text-[79px] font-bold text-left text-[rgba(255,111,60,1)]">
+          招新流程
+        </span>
+        已启动，欢迎加入我们
       </h1>
 
-      <p className={styles.text}>
+      <p className="text-white text-sm sm:text-base md:text-lg lg:text-xl font-normal leading-[1.5] sm:leading-[26px] text-left m-0">
         任何专业都可以加入我们，技术不是门槛，我们更在乎学习态度与自学能力
       </p>
-      <p className={styles.text}>新人录用分为以下3步，完成招新流程后即可加入团队</p>
+      <p className="text-white text-sm sm:text-base md:text-lg lg:text-xl font-normal leading-[1.5] sm:leading-[26px] text-left m-0">
+        新人录用分为以下3步，完成招新流程后即可加入团队
+      </p>
 
-      <div className={styles.cardsContainer}>
+      <div className="w-full flex flex-col items-center py-5 sm:py-6 md:py-7 lg:py-[23px_60px] gap-4 lg:flex-row lg:justify-between lg:items-center lg:gap-4">
         <ProcessCard
           icon={processSteps[0].icon}
           title={processSteps[0].title}
           description={processSteps[0].description}
           btn={processSteps[0].btn}
         />
-        <DoubleRightOutlined className={`${styles.arrowIcon} ${styles.arrowDesktop}`} />
-        <DoubleRightOutlined className={`${styles.arrowIcon} ${styles.arrowMobile}`} />
+        <DoubleRightOutlined className="rotate-90 lg:rotate-0 text-[32px] sm:text-[40px] md:text-[40px] lg:text-[64px] text-[rgba(255,111,60,0.6)]! min-w-[44px] min-h-[44px]" />
         <ProcessCard
           icon={processSteps[1].icon}
           title={processSteps[1].title}
           description={processSteps[1].description}
         />
-        <DoubleRightOutlined className={`${styles.arrowIcon} ${styles.arrowDesktop}`} />
-        <DoubleRightOutlined className={`${styles.arrowIcon} ${styles.arrowMobile}`} />
+        <DoubleRightOutlined className="rotate-90 lg:rotate-0 text-[32px] sm:text-[40px] md:text-[40px] lg:text-[64px] text-[rgba(255,111,60,0.6)]! min-w-[44px] min-h-[44px]" />
         <ProcessCard
           icon={processSteps[2].icon}
           title={processSteps[2].title}
           description={processSteps[2].description}
         />
       </div>
-    </Flex>
+    </div>
   )
 }
 
