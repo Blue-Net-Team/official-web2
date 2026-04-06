@@ -27,7 +27,7 @@
 - [x] 3.7 迁移 Competitions 组件：`components/Home/Competitions/styles.module.css` → Tailwind class
 - [x] 3.8 迁移 FeaturedEquipment 组件：`components/Home/FeaturedEquipment/styles.module.css` → Tailwind class
 - [x] 3.9 迁移 AchievementAndResources 组件：`components/Home/AchievementAndResources/styles.module.css` → Tailwind class
-- [ ] 3.10 迁移 TeamVibe 组件：`components/Home/TeamVibe/styles.module.css` → Tailwind class
+- [x] 3.10 迁移 TeamVibe 组件：`components/Home/TeamVibe/styles.module.css` → Tailwind class
 
 ## 4. 独立页面组件迁移
 
