@@ -24,9 +24,9 @@
 - [x] 3.4 迁移 ProcessCard 组件：`components/Home/RecruitmentProcess/ProcessCard/styles.module.css` → Tailwind class
 - [x] 3.5 迁移 RecruitmentProcess 组件：`components/Home/RecruitmentProcess/styles.module.css` → Tailwind class
 - [x] 3.6 迁移 CompetitionCard 组件：`components/Home/Competitions/CompetitionCard/styles.module.css` → Tailwind class
-- [ ] 3.7 迁移 Competitions 组件：`components/Home/Competitions/styles.module.css` → Tailwind class
-- [ ] 3.8 迁移 FeaturedEquipment 组件：`components/Home/FeaturedEquipment/styles.module.css` → Tailwind class
-- [ ] 3.9 迁移 AchievementAndResources 组件：`components/Home/AchievementAndResources/styles.module.css` → Tailwind class
+- [x] 3.7 迁移 Competitions 组件：`components/Home/Competitions/styles.module.css` → Tailwind class
+- [x] 3.8 迁移 FeaturedEquipment 组件：`components/Home/FeaturedEquipment/styles.module.css` → Tailwind class
+- [x] 3.9 迁移 AchievementAndResources 组件：`components/Home/AchievementAndResources/styles.module.css` → Tailwind class
 - [ ] 3.10 迁移 TeamVibe 组件：`components/Home/TeamVibe/styles.module.css` → Tailwind class
 
 ## 4. 独立页面组件迁移

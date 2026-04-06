@@ -1,7 +1,6 @@
 'use client'
 
 import { Carousel } from 'antd'
-import styles from './styles.module.css'
 import c1 from '@/assets/c1.jpg'
 import c2 from '@/assets/c2.jpg'
 import c3 from '@/assets/c3.jpg'
@@ -19,13 +18,12 @@ interface contentType {
 const AchievementAndResources = () => {
   const [isMobile, setIsMobile] = useState(false)
 
-  // 监听窗口大小变化
   useEffect(() => {
     const checkMobile = () => {
-      setIsMobile(window.innerWidth <= 768) // 根据你的断点调整
+      setIsMobile(window.innerWidth <= 768)
     }
 
-    checkMobile() // 初始化检查
+    checkMobile()
     window.addEventListener('resize', checkMobile)
     return () => window.removeEventListener('resize', checkMobile)
   }, [])
@@ -59,9 +57,7 @@ const AchievementAndResources = () => {
   const [currentSlide, setCurrentSlide] = useState(0)
   const totalSlides = content.length
 
-  // 计算滚动条的高度/宽度百分比
   const thumbSizePercent = 100 / totalSlides
-  // 计算滚动条的位置
   const thumbPositionPercent = currentSlide * thumbSizePercent
 
   const handleSlideChange = (from: number, to: number) => {
@@ -69,36 +65,34 @@ const AchievementAndResources = () => {
   }
 
   return (
-    <div className={styles.content}>
-      <h1 className={styles.title}>
-        累计获奖超<span className={styles.bigTitle}>300</span>项
-        <span className={styles.comma}>，</span>
-        <span className={styles.lineBreak}></span>拥有充足的实验室资源
+    <div className="flex flex-col gap-[28px] md:gap-[44px] h-fit md:h-[110vh] w-full box-border pl-5 pr-5 pt-5 pb-[30px] md:pl-[93px] md:pr-0 md:pt-[42px] md:pb-[80px]">
+      <h1 className="text-white text-[20px] md:text-[43px]">
+        累计获奖超
+        <span className="text-[#ff9a3c] text-[36px] md:text-[79px]">300</span>项
+        <span className="hidden md:inline">，</span>
+        <span className="block md:hidden"></span>拥有充足的实验室资源
       </h1>
 
-      {/* 左右布局，左边滚动条，右边内容 */}
-      <div className={styles.carouselContainer}>
-        {/* 滚动指示条 - 桌面端纵向 */}
-        <div className={`${styles.scrollBar} ${styles.fullHeight} ${styles.desktopScrollBar}`}>
+      <div className="w-full flex flex-col-reverse md:flex-row items-center md:items-center gap-0">
+        <div className="hidden md:block w-[5px] min-w-[5px] mr-[15px] h-full bg-[#153963] relative">
           <div
-            className={styles.scrollThumb}
+            className="absolute left-0 w-full bg-[rgba(255,111,60,0.6)] transition-[top_0.3s_ease] rounded-[2.5px]"
             style={{
               height: `${thumbSizePercent}%`,
               top: `${thumbPositionPercent}%`,
             }}
           />
         </div>
-        {/* 滚动指示条 - 手机端横向 */}
-        <div className={`${styles.scrollBar} ${styles.mobileScrollBar}`}>
+        <div className="block md:hidden w-full min-w-auto h-[5px] min-h-[5px] mr-0 mt-[15px] bg-[#153963] relative">
           <div
-            className={styles.scrollThumb}
+            className="absolute top-0 h-full bg-[rgba(255,111,60,0.6)] transition-[left_0.3s_ease] rounded-[2.5px]"
             style={{
               width: `${thumbSizePercent}%`,
               left: `${thumbPositionPercent}%`,
             }}
           />
         </div>
-        <div className={styles.carouselWrapper}>
+        <div className="p-0 md:pl-[15px] w-full md:flex-1 md:min-w-0">
           <Carousel
             ref={carouselRef}
             arrows={!isMobile}
@@ -110,12 +104,16 @@ const AchievementAndResources = () => {
           >
             {content.map((item, index) => (
               <div key={index}>
-                <div className={styles.scrollContainer}>
-                  <div className={styles.scrollText}>
-                    <h3 className={styles.itemTitle}>{item.title}</h3>
-                    <p className={styles.itemDescription}>{item.description}</p>
+                <div className="flex flex-col md:flex-row gap-[10px] h-auto md:h-[510px] min-w-0">
+                  <div className="flex md:flex-1 md:h-full flex-col gap-[18px] md:gap-[26px]">
+                    <h3 className="text-[18px] md:text-[35px] font-bold leading-[26px] md:leading-[46px] text-left">
+                      {item.title}
+                    </h3>
+                    <p className="text-sm md:text-[20px] font-bold text-white h-[52px] md:h-auto">
+                      {item.description}
+                    </p>
                   </div>
-                  <div className={styles.imageContainer}>
+                  <div className="relative flex-1 min-h-[250px] md:min-h-0 rounded-[20px] md:rounded-[20px_0_0_20px] overflow-hidden min-w-0">
                     <Image src={item.image} alt={item.title} fill style={{ objectFit: 'cover' }} />
                   </div>
                 </div>

@@ -1,51 +1,50 @@
 import { Col, Flex, Row, ConfigProvider } from 'antd'
 import CompetitionCard from './CompetitionCard'
-import styles from './styles.module.css'
 import Link from 'next/link'
 import { RightOutlined } from '@ant-design/icons'
 import { CompetitionBriefDTO } from '@/apis/schema/type'
 import { competitionTitle, moreDescription, title } from './constant'
 
-// Ant Design 主题配置
 const themeConfig = {
   token: {
     fontSize: 14,
   },
 }
 
-/**
- * 竞赛组件
- * @param competitions 竞赛信息数组
- * @returns 渲染后的竞赛组件
- */
 const Competitions = ({ competitions }: { competitions: CompetitionBriefDTO[] }) => {
-  // 只取前6个
   const competitionsToShow = competitions.slice(0, 6)
 
   return (
     <ConfigProvider theme={themeConfig}>
-      <div className={`${styles.contentPage} ${styles.fullWidth}`}>
-        <Flex vertical gap={48} className={styles.fullWidth}>
-          <h1 className={styles.title}>{title}</h1>
-          <Flex className={`${styles.fullWidth} ${styles.competitionContainer}`} gap={18} vertical>
-            <h2 className={styles.competitionTitle}>{competitionTitle}</h2>
-            {/* 使用Ant Design Grid响应式属性 */}
+      <div className="flex flex-col items-center w-full p-[32px_20px_40px_20px] sm:p-[32px_40px_60px_40px] md:p-[32px_147px_96px_147px] box-border">
+        <Flex vertical gap={48} className="w-full">
+          <h1 className="text-[28px] sm:text-[36px] md:text-[48px] font-bold text-white m-0">
+            {title}
+          </h1>
+          <Flex
+            className="w-full p-5 sm:p-[24px_30px] md:p-[34px_54px_24px_54px] rounded-[16px] sm:rounded-[24px] md:rounded-[24px]"
+            gap={18}
+            vertical
+          >
+            <h2 className="font-[Microsoft_YaHei] text-[20px] sm:text-[24px] md:text-[30px] font-bold leading-[1.4] sm:leading-[40px] md:leading-[40px] text-white m-0">
+              {competitionTitle}
+            </h2>
             <Row justify="space-evenly" gutter={[15, 15]} style={{ marginInline: '0' }}>
               {competitionsToShow.map((competition, index) => (
-                <Col
-                  xs={24} // 移动端：单列
-                  md={12} // 平板：双列
-                  lg={8} // 桌面：三列
-                  key={index}
-                >
+                <Col xs={24} md={12} lg={8} key={index}>
                   <CompetitionCard competition={competition} />
                 </Col>
               ))}
             </Row>
-            <Link href="/competitions" className={styles.moreLink}>
+            <Link
+              href="/competitions"
+              className="text-white! no-underline inline-flex mt-5 w-fit hover:text-[#ffc93c]!"
+            >
               <Flex gap={8} align="center">
-                <span className={styles.moreDescription}>{moreDescription}</span>
-                <RightOutlined className={styles.moreIcon} />
+                <span className="text-inherit font-[Microsoft_YaHei] text-sm font-bold leading-[18px]">
+                  {moreDescription}
+                </span>
+                <RightOutlined className="text-sm flex items-center justify-center min-w-[44px] min-h-[44px]" />
               </Flex>
             </Link>
           </Flex>
