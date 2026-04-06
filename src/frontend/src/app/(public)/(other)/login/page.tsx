@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { Suspense, useState, useEffect } from 'react'
 import { Button, Input, Tabs, Form, App, ConfigProvider, theme } from 'antd'
 import { GithubOutlined } from '@ant-design/icons'
 import Image from 'next/image'
@@ -63,14 +63,21 @@ interface LoginFormValues {
 }
 
 export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginPageContent />
+    </Suspense>
+  )
+}
+
+function LoginPageContent() {
   const [activeTab, setActiveTab] = useState<string>('student')
   const [countdown, setCountdown] = useState<number>(0)
   const [form] = Form.useForm()
   const router = useRouter()
   const searchParams = useSearchParams()
   const { message: messageApi } = App.useApp()
-  const { isLoading, login, loginWithEmail, sendVerificationCode } = authStore()
-  const { isLoading, login, checkAuthStatus } = authStore()
+  const { isLoading, login, loginWithEmail, sendVerificationCode, checkAuthStatus } = authStore()
 
   // Handle GitHub OAuth callback params
   useEffect(() => {
