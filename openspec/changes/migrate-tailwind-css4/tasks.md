@@ -40,28 +40,28 @@
 
 ## 5. Profile 系列组件迁移
 
-- [ ] 5.1 迁移 AvatarCropModal 组件：`components/Profile/AvatarCropModal/styles.module.css` → Tailwind class
-- [ ] 5.2 迁移 ProfileInfo 组件：`components/Profile/ProfileInfo/styles.module.css` → Tailwind class
-- [ ] 5.3 迁移 ProfileSidebar 组件：`components/Profile/ProfileSidebar/styles.module.css` → Tailwind class
-- [ ] 5.4 迁移 ProfileTabs 组件：`components/Profile/ProfileTabs/styles.module.css` → Tailwind class
-- [ ] 5.5 迁移 AssessmentList 组件：`components/Profile/AssessmentList/styles.module.css` → Tailwind class
-- [ ] 5.6 迁移 ExperienceSection 组件：`components/Profile/ExperienceSection/styles.module.css` → Tailwind class
+- [x] 5.1 迁移 AvatarCropModal 组件：`components/Profile/AvatarCropModal/styles.module.css` → Tailwind class
+- [x] 5.2 迁移 ProfileInfo 组件：`components/Profile/ProfileInfo/styles.module.css` → Tailwind class
+- [x] 5.3 迁移 ProfileSidebar 组件：`components/Profile/ProfileSidebar/styles.module.css` → Tailwind class
+- [x] 5.4 迁移 ProfileTabs 组件：`components/Profile/ProfileTabs/styles.module.css` → Tailwind class
+- [x] 5.5 迁移 AssessmentList 组件：`components/Profile/AssessmentList/styles.module.css` → Tailwind class
+- [x] 5.6 迁移 ExperienceSection 组件：`components/Profile/ExperienceSection/styles.module.css` → Tailwind class
 
 ## 6. 成员系列组件迁移
 
-- [ ] 6.1 迁移 MemberCard 组件：`components/Members/MemberCard/MemberCard.module.css` → Tailwind class
-- [ ] 6.2 迁移 Members 组件：`components/Members/Members.module.css` → Tailwind class
-- [ ] 6.3 迁移 MemberProfile 组件：`components/MemberProfile/MemberProfile.module.css` → Tailwind class
+- [x] 6.1 迁移 MemberCard 组件：`components/Members/MemberCard/MemberCard.module.css` → Tailwind class
+- [x] 6.2 迁移 Members 组件：`components/Members/Members.module.css` → Tailwind class
+- [x] 6.3 迁移 MemberProfile 组件：`components/MemberProfile/MemberProfile.module.css` → Tailwind class
 
 ## 7. Achievements 系列组件迁移
 
-- [ ] 7.1 迁移 AchievementCard 组件：`components/Achievements/AchievementCard/styles.module.css` → Tailwind class
-- [ ] 7.2 迁移 AchievementFilter 组件：`components/Achievements/AchievementFilter/styles.module.css` → Tailwind class
-- [ ] 7.3 迁移 AchievementStats 组件：`components/Achievements/AchievementStats/styles.module.css` → Tailwind class
+- [x] 7.1 迁移 AchievementCard 组件：`components/Achievements/AchievementCard/styles.module.css` → Tailwind class
+- [x] 7.2 迁移 AchievementFilter 组件：`components/Achievements/AchievementFilter/styles.module.css` → Tailwind class
+- [x] 7.3 迁移 AchievementStats 组件：`components/Achievements/AchievementStats/styles.module.css` → Tailwind class
 
 ## 8. 独立卡片组件迁移
 
-- [ ] 8.1 迁移 CompetitionCard 组件（独立）：`components/CompetitionCard/CompetitionCard.module.css` → Tailwind class
+- [x] 8.1 迁移 CompetitionCard 组件（独立）：`components/CompetitionCard/CompetitionCard.module.css` → Tailwind class
 
 ## 9. 页面级样式迁移
 

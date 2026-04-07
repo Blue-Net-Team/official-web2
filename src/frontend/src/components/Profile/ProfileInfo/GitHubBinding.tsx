@@ -1,11 +1,10 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { Button, Modal, App, Spin } from 'antd'
+import { Button, App } from 'antd'
 import { GithubOutlined, LinkOutlined, DisconnectOutlined } from '@ant-design/icons'
 import { authService } from '@/apis/services/auth.service'
 import { useSearchParams, useRouter } from 'next/navigation'
-import styles from './styles.module.css'
 
 interface GitHubBindingProps {
   initialGithubUsername?: string | null
@@ -19,14 +18,11 @@ export default function GitHubBinding({ initialGithubUsername }: GitHubBindingPr
   const searchParams = useSearchParams()
   const router = useRouter()
 
-  // Handle OAuth callback params
   useEffect(() => {
     const githubParam = searchParams.get('github')
     if (githubParam === 'binding_success') {
       messageApi.success('GitHub 账号绑定成功')
-      // Refresh binding status
       refreshStatus()
-      // Clean up URL
       router.replace('/profile')
     } else if (githubParam === 'already_bound') {
       messageApi.error('该 GitHub 账号已被其他用户绑定')
@@ -83,31 +79,31 @@ export default function GitHubBinding({ initialGithubUsername }: GitHubBindingPr
   }
 
   return (
-    <div className={styles.emailSection}>
-      <div className={styles.formSectionTitle}>
+    <div className="mt-8 pt-8 border-t border-white/[0.05]">
+      <div className="text-lg font-semibold text-white mb-6 flex items-center gap-[10px] [&>svg]:w-5 [&>svg]:h-5 [&>svg]:text-[#6677ff]">
         <GithubOutlined />
         GitHub 账号
       </div>
-      <div className={styles.emailDisplay}>
-        <div className={styles.emailInfo}>
+      <div className="flex items-center justify-between p-4 bg-white/[0.02] rounded-[10px] max-[640px]:flex-col max-[640px]:gap-3 max-[640px]:items-start">
+        <div className="flex items-center gap-3 [&>svg]:w-5 [&>svg]:h-5 [&>svg]:text-[#6677ff]">
           <GithubOutlined />
           {githubUsername ? (
-            <span className={styles.emailText}>{githubUsername}</span>
+            <span className="text-sm text-white">{githubUsername}</span>
           ) : (
-            <span className={styles.emailText} style={{ opacity: 0.5 }}>
+            <span className="text-sm text-white" style={{ opacity: 0.5 }}>
               未绑定
             </span>
           )}
         </div>
-        <div className={styles.emailRight}>
+        <div className="flex items-center gap-3">
           {githubUsername ? (
             <>
-              <span className={styles.emailStatus}>
+              <span className="flex items-center gap-1.5 text-xs text-[#07c160] [&>svg]:w-[14px] [&>svg]:h-[14px]">
                 <LinkOutlined />
                 已绑定
               </span>
               <Button
-                className={styles.changeEmailBtn}
+                className="px-4 py-2 rounded-lg bg-transparent !border-[rgba(255,77,79,0.3)] text-[#ff4d4f] text-[13px] font-medium cursor-pointer transition-all duration-300 flex items-center gap-1.5 hover:enabled:bg-[rgba(255,77,79,0.1)] hover:enabled:!border-[#ff4d4f]"
                 danger
                 onClick={handleUnbind}
                 loading={loading}
@@ -118,7 +114,7 @@ export default function GitHubBinding({ initialGithubUsername }: GitHubBindingPr
             </>
           ) : (
             <Button
-              className={styles.changeEmailBtn}
+              className="px-4 py-2 rounded-lg bg-transparent !border-[rgba(102,119,255,0.3)] text-[#6677ff] text-[13px] font-medium cursor-pointer transition-all duration-300 flex items-center gap-1.5 hover:enabled:bg-[rgba(102,119,255,0.1)] hover:enabled:!border-[#6677ff]"
               type="primary"
               onClick={handleBind}
               loading={bindLoading}

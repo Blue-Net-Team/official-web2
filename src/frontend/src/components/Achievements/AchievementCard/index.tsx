@@ -1,5 +1,4 @@
 import { Card, Flex, Tag } from 'antd'
-import styles from './styles.module.css'
 import { AchievementDTO } from '@/apis/schema/type'
 import { AWARD_LEVEL_LABELS } from '@/apis/schema/enumerate'
 import { TrophyOutlined, BulbOutlined, FileTextOutlined } from '@ant-design/icons'
@@ -57,7 +56,7 @@ const AchievementCard = ({ achievement }: AchievementCardProps) => {
 
   return (
     <Card
-      className={styles.card}
+      className="glass-card rounded-xl max-md:rounded-lg hover:-translate-y-0.5"
       styles={{
         body: {
           padding: '20px 24px',
@@ -66,35 +65,48 @@ const AchievementCard = ({ achievement }: AchievementCardProps) => {
     >
       <Flex align="start" gap={16}>
         <div
-          className={styles.logoWrapper}
+          className="w-14 h-14 rounded-xl max-md:w-12 max-md:h-12 max-md:rounded-lg flex items-center justify-center shrink-0 overflow-hidden"
           style={{ background: typeGradient[achievement.type] || typeGradient.competition }}
         >
           {logoImageUrl ? (
-            <Image src={logoImageUrl} alt={displayName} fill className={styles.logo} />
+            <Image
+              src={logoImageUrl}
+              alt={displayName}
+              fill
+              className="w-full h-full object-cover"
+            />
           ) : (
             typeIcon
           )}
         </div>
-        <Flex vertical className={styles.contentContainer}>
+        <Flex vertical className="flex-1 min-w-0">
           <Flex align="center" gap={8} wrap="wrap">
-            <div className={styles.title}>{displayName}</div>
+            <div className="text-base max-md:text-sm font-semibold text-white whitespace-nowrap overflow-hidden text-ellipsis">
+              {displayName}
+            </div>
             {typeLabel && !isCompetition && (
-              <Tag color={typeTagColor[achievement.type]} className={styles.typeTag}>
+              <Tag
+                color={typeTagColor[achievement.type]}
+                className="text-xs font-medium border-none px-2 py-0.5 rounded"
+              >
                 {typeLabel}
               </Tag>
             )}
             {isCompetition && achievement.awardLevel && (
-              <Tag color={awardLevelColor[achievement.awardLevel]} className={styles.awardTag}>
+              <Tag
+                color={awardLevelColor[achievement.awardLevel]}
+                className="text-xs font-medium border-none px-2 py-0.5 rounded"
+              >
                 {AWARD_LEVEL_LABELS[achievement.awardLevel]}
               </Tag>
             )}
           </Flex>
-          {subInfo && <div className={styles.subInfo}>{subInfo}</div>}
+          {subInfo && <div className="text-sm max-md:text-xs text-white/65 mt-1">{subInfo}</div>}
           {isCompetition && achievement.awardName && (
-            <div className={styles.awardName}>{achievement.awardName}</div>
+            <div className="text-sm max-md:text-xs text-white/70 mt-1">{achievement.awardName}</div>
           )}
-          <Flex align="center" gap={16} className={styles.metaInfo}>
-            {year && <span className={styles.metaText}>{year}年</span>}
+          <Flex align="center" gap={16} className="mt-2">
+            {year && <span className="text-xs text-white/50">{year}年</span>}
           </Flex>
         </Flex>
       </Flex>

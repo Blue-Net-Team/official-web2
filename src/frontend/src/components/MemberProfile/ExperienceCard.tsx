@@ -2,7 +2,6 @@
 
 import React from 'react'
 import { UserExperience } from '@/apis/schema/type'
-import styles from './MemberProfile.module.css'
 import {
   FolderOutlined,
   TrophyOutlined,
@@ -15,23 +14,28 @@ interface ExperienceCardProps {
   experience: UserExperience
 }
 
+const ICON_CLASS_MAP: Record<string, string> = {
+  project: 'bg-gradient-to-br from-[#6677ff] to-[#2f27b0]',
+  competition: 'bg-gradient-to-br from-[#ff6b35] to-[#ff8c42]',
+  internship: 'bg-gradient-to-br from-[#10b981] to-[#059669]',
+}
+
+const ROLE_CLASS_MAP: Record<string, string> = {
+  competition: 'text-[#ff6b35]',
+  internship: 'text-[#10b981]',
+}
+
 export const ExperienceCard: React.FC<ExperienceCardProps> = ({ experience }) => {
   const isProject = experience.type === 'project'
   const isCompetition = experience.type === 'competition'
   const isInternship = experience.type === 'internship'
 
-  // 获取显示名称
   const displayName = isInternship ? experience.company || experience.name : experience.name
-
-  // 获取角色/职位
   const displayRole = isInternship ? experience.position : experience.role
-
-  // 获取时间显示
   const displayDate = experience.startDate
     ? `${experience.startDate} - ${experience.endDate || '至今'}`
     : experience.date || ''
 
-  // 获取图标
   const getIcon = () => {
     switch (experience.type) {
       case 'project':
@@ -43,72 +47,44 @@ export const ExperienceCard: React.FC<ExperienceCardProps> = ({ experience }) =>
     }
   }
 
-  // 获取图标样式类
-  const getIconClass = () => {
-    switch (experience.type) {
-      case 'project':
-        return styles.experienceIconProject
-      case 'competition':
-        return styles.experienceIconCompetition
-      case 'internship':
-        return styles.experienceIconInternship
-    }
-  }
-
-  // 获取角色样式类
-  const getRoleClass = () => {
-    switch (experience.type) {
-      case 'competition':
-        return styles.experienceRoleCompetition
-      case 'internship':
-        return styles.experienceRoleInternship
-      default:
-        return ''
-    }
-  }
-
   return (
-    <div className={styles.experienceCard}>
-      <div className={styles.experienceHeader}>
-        <div className={`${styles.experienceIcon} ${getIconClass()}`}>{getIcon()}</div>
-        <div className={styles.experienceInfo}>
-          <div className={styles.experienceName}>{displayName}</div>
+    <div className="bg-white/[0.02] border border-white/[0.05] rounded-xl p-5 transition-all duration-300 hover:bg-white/[0.04] hover:border-[#6677ff]/20 hover:-translate-y-0.5">
+      <div className="flex items-start gap-3 mb-3 max-md:flex-wrap">
+        <div
+          className={`w-11 h-11 rounded-[10px] flex items-center justify-center shrink-0 [&_svg]:w-[22px] [&_svg]:h-[22px] [&_svg]:text-white ${ICON_CLASS_MAP[experience.type] || ''}`}
+        >
+          {getIcon()}
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="text-base font-semibold text-white mb-1">{displayName}</div>
           {displayRole && (
-            <div className={`${styles.experienceRole} ${getRoleClass()}`}>
+            <div className={`text-[13px] text-[#6677ff] ${ROLE_CLASS_MAP[experience.type] || ''}`}>
               {displayRole}
               {isCompetition && experience.award && ` · ${experience.award}`}
             </div>
           )}
         </div>
-        <div className={styles.experienceDate}>{displayDate}</div>
+        <div className="text-[13px] text-[#8c8c8d] whitespace-nowrap max-md:w-full max-md:mt-1">
+          {displayDate}
+        </div>
       </div>
 
-      {/* 竞赛元信息 */}
       {isCompetition && (experience.date || experience.teamSize) && (
-        <div
-          className={styles.competitionMeta}
-          style={{
-            display: 'flex',
-            gap: '16px',
-            marginBottom: '12px',
-            fontSize: '13px',
-            color: 'rgba(140, 140, 141, 1)',
-          }}
-        >
+        <div className="flex gap-4 mb-3 text-[13px] text-[#8c8c8d]">
           {experience.date && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <div className="flex items-center gap-1.5">
               <FileTextOutlined style={{ fontSize: '14px' }} />
               <span>{experience.date}</span>
             </div>
           )}
           {experience.teamSize && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <div className="flex items-center gap-1.5">
               <svg
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
                 strokeWidth="2"
-                style={{ width: '14px', height: '14px' }}
+                className="w-[14px] h-[14px]"
               >
                 <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
                 <circle cx="9" cy="7" r="4" />
@@ -121,29 +97,31 @@ export const ExperienceCard: React.FC<ExperienceCardProps> = ({ experience }) =>
         </div>
       )}
 
-      {/* 描述 */}
-      {experience.description && <p className={styles.experienceDesc}>{experience.description}</p>}
+      {experience.description && (
+        <p className="text-sm leading-[1.6] text-white/70 mb-3">{experience.description}</p>
+      )}
 
-      {/* 技术栈（项目） */}
       {isProject && experience.techStack && experience.techStack.length > 0 && (
-        <div className={styles.experienceTech}>
+        <div className="flex flex-wrap gap-2 mb-4">
           {experience.techStack.map((tech, index) => (
-            <span key={index} className={styles.techTag}>
+            <span
+              key={index}
+              className="px-2.5 py-1 rounded-md text-xs bg-[#6677ff]/10 text-[#6677ff] border border-[#6677ff]/20"
+            >
               {tech}
             </span>
           ))}
         </div>
       )}
 
-      {/* 链接 */}
-      <div className={styles.experienceFooter}>
-        <div className={styles.experienceLinks}>
+      <div className="flex items-center justify-between pt-4 border-t border-white/[0.05] max-md:flex-col max-md:gap-4 max-md:items-start">
+        <div className="flex gap-4">
           {isProject && experience.demoUrl && (
             <a
               href={experience.demoUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className={styles.experienceLink}
+              className="flex items-center gap-1.5 text-[13px] text-[#6677ff] no-underline transition-all duration-300 hover:text-[#8895ff] [&_svg]:w-4 [&_svg]:h-4"
             >
               <LinkOutlined />
               项目演示
@@ -154,7 +132,7 @@ export const ExperienceCard: React.FC<ExperienceCardProps> = ({ experience }) =>
               href={experience.certificateUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className={styles.experienceLink}
+              className="flex items-center gap-1.5 text-[13px] text-[#6677ff] no-underline transition-all duration-300 hover:text-[#8895ff] [&_svg]:w-4 [&_svg]:h-4"
             >
               <FileTextOutlined />
               获奖证书

@@ -15,7 +15,6 @@
 'use client'
 
 import type { TabName, TabCounts } from '@/types/profile'
-import styles from './styles.module.css'
 import {
   UserOutlined,
   FileTextOutlined,
@@ -79,16 +78,24 @@ export default function ProfileTabs({ activeTab, tabCounts, onTabChange }: Profi
   }
 
   return (
-    <nav className={styles.sectionTabs}>
+    <nav className="flex gap-2 mb-6 p-1 bg-white/[0.03] backdrop-blur-[20px] border border-white/[0.05] rounded-xl max-lg:flex-wrap max-[640px]:flex-wrap">
       {tabs.map((tab) => (
         <button
           key={tab.key}
           onClick={() => handleClick(tab.key)}
-          className={`${styles.tabBtn} ${activeTab === tab.key ? styles.tabBtnActive : ''}`}
+          className={`flex-1 py-3 px-5 border-none bg-transparent text-[rgba(140,140,141,1)] text-sm font-medium cursor-pointer rounded-lg transition-all duration-300 flex items-center justify-center gap-1.5 no-underline hover:text-white hover:bg-white/[0.05] max-[640px]:flex-[1_1_calc(50%-4px)] max-[640px]:py-[10px] max-[640px]:px-2 max-[640px]:text-xs ${
+            activeTab === tab.key
+              ? 'bg-[linear-gradient(135deg,#6677ff_0%,#2f27b0_100%)] text-white shadow-[0_4px_16px_rgba(102,119,255,0.3)]'
+              : ''
+          }`}
         >
           {tab.icon}
-          <span className={styles.tabLabel}>{tab.label}</span>
-          {tab.showCount && <span className={styles.tabCount}>{getCount(tab)}</span>}
+          <span className="inline">{tab.label}</span>
+          {tab.showCount && (
+            <span className="text-xs opacity-80 bg-white/20 py-[2px] px-2 rounded-[10px]">
+              {getCount(tab)}
+            </span>
+          )}
         </button>
       ))}
     </nav>

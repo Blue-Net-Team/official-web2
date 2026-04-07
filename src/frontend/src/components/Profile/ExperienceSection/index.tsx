@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import type { Experience, ExperienceType, InternshipStatus } from '@/types/profile'
-import styles from './styles.module.css'
 import {
   FolderOutlined,
   TrophyOutlined,
@@ -30,21 +29,23 @@ function getAwardBadgeClass(award: string): string {
   switch (award) {
     case '一等奖':
     case 'first':
-      return styles.awardBadgeFirst
+      return 'bg-[linear-gradient(135deg,#ffd700_0%,#ffa500_100%)] text-black'
     case '二等奖':
     case 'second':
-      return styles.awardBadgeSecond
+      return 'bg-[linear-gradient(135deg,#c0c0c0_0%,#a0a0a0_100%)] text-black'
     case '三等奖':
     case 'third':
     case '铜牌':
-      return styles.awardBadgeThird
+      return 'bg-[linear-gradient(135deg,#cd7f32_0%,#b87333_100%)] text-white'
     default:
       return ''
   }
 }
 
 function getInternshipBadgeClass(status: InternshipStatus): string {
-  return status === 'active' ? styles.internshipBadge : styles.internshipBadgeEnded
+  return status === 'active'
+    ? 'bg-[rgba(102,119,255,0.15)] text-[#6677ff]'
+    : 'bg-[rgba(140,140,141,0.2)] text-[rgba(140,140,141,1)]'
 }
 
 function getInternshipStatusText(status: InternshipStatus): string {
@@ -123,11 +124,11 @@ export default function ExperienceSection({
   const getIconClass = () => {
     switch (type) {
       case 'project':
-        return styles.experienceIconProject
+        return 'bg-[linear-gradient(135deg,#6677ff_0%,#2f27b0_100%)]'
       case 'competition':
-        return styles.experienceIconCompetition
+        return 'bg-[linear-gradient(135deg,#ff6b35_0%,#ff8c42_100%)]'
       case 'internship':
-        return styles.experienceIconInternship
+        return 'bg-[linear-gradient(135deg,#059669_0%,#10b981_100%)]'
     }
   }
 
@@ -274,37 +275,50 @@ export default function ExperienceSection({
     return (
       <div
         key={item.id}
-        className={`${styles.experienceCard} ${isCompetition ? styles.competitionCard : ''} ${isInternship ? styles.internshipCard : ''}`}
+        className={`bg-white/[0.03] backdrop-blur-[20px] border border-white/[0.05] rounded-2xl p-6 transition-all duration-300 mb-4 last:mb-0 hover:-translate-y-1 hover:border-[rgba(102,119,255,0.2)] hover:shadow-[0_8px_32px_rgba(102,119,255,0.1)] max-[640px]:p-4
+          ${isCompetition ? 'border-l-4 border-l-[#ff6b35]' : ''}
+          ${isInternship ? 'border-l-4 border-l-[#059669]' : ''}
+        `}
       >
-        <div className={styles.experienceHeader}>
-          <div className={`${styles.experienceIcon} ${getIconClass()}`}>{getIcon()}</div>
-          <div className={styles.experienceInfo}>
-            <div className={styles.experienceName}>{displayName}</div>
-            {displayRole && <div className={styles.experienceRole}>{displayRole}</div>}
+        <div className="flex items-center gap-3 mb-4 max-[640px]:flex-wrap">
+          <div
+            className={`w-11 h-11 rounded-[10px] flex items-center justify-center shrink-0 [&>svg]:w-5 [&>svg]:h-5 [&>svg]:text-white ${getIconClass()}`}
+          >
+            {getIcon()}
+          </div>
+          <div className="flex flex-col gap-1 flex-1 min-w-0">
+            <div className="text-base font-semibold text-white">{displayName}</div>
+            {displayRole && <div className="text-sm text-[rgba(140,140,141,1)]">{displayRole}</div>}
           </div>
           {isCompetition && item.award && (
-            <div className={`${styles.awardBadge} ${getAwardBadgeClass(item.award)}`}>
+            <div
+              className={`px-3.5 py-1.5 rounded-[20px] text-xs font-semibold whitespace-nowrap shrink-0 ${getAwardBadgeClass(item.award)}`}
+            >
               {item.award}
             </div>
           )}
           {isInternship && item.status && (
-            <div className={`${styles.internshipBadge} ${getInternshipBadgeClass(item.status)}`}>
+            <div
+              className={`px-3.5 py-1.5 rounded-[20px] text-xs font-semibold whitespace-nowrap shrink-0 max-[640px]:ml-auto ${getInternshipBadgeClass(item.status)}`}
+            >
               {getInternshipStatusText(item.status)}
             </div>
           )}
-          <div className={styles.experienceDate}>{displayDate}</div>
+          <div className="text-sm text-[rgba(140,140,141,1)] whitespace-nowrap shrink-0 max-[640px]:w-full max-[640px]:mt-1">
+            {displayDate}
+          </div>
         </div>
 
         {isCompetition && (
-          <div className={styles.competitionMeta}>
+          <div className="flex flex-wrap gap-4 mb-4 max-[640px]:flex-col max-[640px]:gap-2">
             {item.date && (
-              <div className={styles.metaItem}>
+              <div className="flex items-center gap-2 text-[13px] text-[rgba(140,140,141,1)] [&>svg]:w-4 [&>svg]:h-4">
                 <FileTextOutlined />
                 <span>{item.date}</span>
               </div>
             )}
             {item.teamSize && (
-              <div className={styles.metaItem}>
+              <div className="flex items-center gap-2 text-[13px] text-[rgba(140,140,141,1)] [&>svg]:w-4 [&>svg]:h-4">
                 <TeamOutlined />
                 <span>{item.teamSize}人团队</span>
               </div>
@@ -313,32 +327,39 @@ export default function ExperienceSection({
         )}
 
         {isInternship && item.achievements && item.achievements.length > 0 && (
-          <div className={styles.internshipAchievement}>
-            <StarOutlined />
-            <span>{item.achievements.join('；')}</span>
+          <div className="flex items-center gap-2 py-2.5 px-3.5 bg-[rgba(255,193,7,0.1)] border border-[rgba(255,193,7,0.2)] rounded-lg mb-4">
+            <StarOutlined className="w-4 h-4 text-[#ffc107]" />
+            <span className="text-[13px] text-[#ffc107] font-medium">
+              {item.achievements.join('；')}
+            </span>
           </div>
         )}
 
-        {item.description && <p className={styles.experienceDesc}>{item.description}</p>}
+        {item.description && (
+          <p className="text-sm text-white/70 leading-relaxed m-0 mb-4">{item.description}</p>
+        )}
 
         {type === 'project' && item.techStack && item.techStack.length > 0 && (
-          <div className={styles.experienceTech}>
+          <div className="flex flex-wrap gap-2 mb-4">
             {item.techStack.map((tech) => (
-              <span key={tech} className={styles.techTag}>
+              <span
+                key={tech}
+                className="px-2.5 py-1 rounded-md text-xs bg-[rgba(102,119,255,0.1)] text-[#6677ff] border border-[rgba(102,119,255,0.2)]"
+              >
                 {tech}
               </span>
             ))}
           </div>
         )}
 
-        <div className={styles.experienceFooter}>
-          <div className={styles.experienceLinks}>
+        <div className="flex items-center justify-between pt-4 border-t border-white/[0.05] max-[640px]:flex-col max-[640px]:gap-3 max-[640px]:items-start">
+          <div className="flex gap-4">
             {type === 'project' && item.demoUrl && (
               <a
                 href={item.demoUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className={styles.experienceLink}
+                className="flex items-center gap-1.5 text-[13px] text-[#6677ff] no-underline transition-colors duration-300 hover:text-[#8895ff]"
               >
                 <LinkOutlined />
                 项目演示
@@ -349,16 +370,16 @@ export default function ExperienceSection({
                 href={item.certificateUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className={styles.experienceLink}
+                className="flex items-center gap-1.5 text-[13px] text-[#6677ff] no-underline transition-colors duration-300 hover:text-[#8895ff]"
               >
                 <FileTextOutlined />
                 获奖证书
               </a>
             )}
           </div>
-          <div className={styles.experienceActions}>
+          <div className="flex gap-2">
             <button
-              className={`${styles.actionBtn} ${styles.actionBtnEdit}`}
+              className="w-8 h-8 rounded-lg bg-transparent border border-[rgba(255,255,255,0.1)] flex items-center justify-center cursor-pointer transition-all duration-300 hover:bg-[rgba(102,119,255,0.1)] hover:border-[#6677ff] [&>svg]:w-4 [&>svg]:h-4 [&>svg]:text-[#6677ff]"
               onClick={() => handleOpenModal(item)}
             >
               <EditOutlined />
@@ -370,7 +391,7 @@ export default function ExperienceSection({
               okText="确定"
               cancelText="取消"
             >
-              <button className={`${styles.actionBtn} ${styles.actionBtnDelete}`}>
+              <button className="w-8 h-8 rounded-lg bg-transparent border border-[rgba(255,255,255,0.1)] flex items-center justify-center cursor-pointer transition-all duration-300 hover:bg-[rgba(255,107,53,0.1)] hover:border-[#ff6b35] [&>svg]:w-4 [&>svg]:h-4 [&>svg]:text-[#ff6b35]">
                 <DeleteOutlined />
               </button>
             </Popconfirm>
@@ -381,12 +402,12 @@ export default function ExperienceSection({
   }
 
   return (
-    <div className={styles.experienceSection}>
-      <div className={styles.sectionHeader}>
-        <h3 className={styles.sectionTitle}>{title}</h3>
+    <div className="bg-white/[0.03] backdrop-blur-[20px] border border-white/[0.05] rounded-2xl p-6 max-[640px]:p-4">
+      <div className="flex items-center justify-between mb-5 pb-4 border-b border-white/[0.05] max-[640px]:flex-col max-[640px]:gap-3 max-[640px]:items-start">
+        <h3 className="text-lg font-semibold text-white m-0">{title}</h3>
         <Button
           type="primary"
-          className={`${styles.btn} ${styles.btnPrimary} ${styles.btnSm}`}
+          className="!px-6 !py-3 !rounded-[10px] !text-sm !font-medium cursor-pointer transition-all duration-300 !border-none !bg-[linear-gradient(135deg,#6677ff_0%,#2f27b0_100%)] text-white shadow-[0_4px_16px_rgba(102,119,255,0.3)] hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(102,119,255,0.4)] flex items-center gap-2"
           icon={<PlusOutlined />}
           onClick={() => handleOpenModal()}
         >
@@ -395,14 +416,16 @@ export default function ExperienceSection({
       </div>
 
       {data.length > 0 ? (
-        <div className={styles.experienceList}>{data.map((item) => renderItem(item))}</div>
+        <div className="flex flex-col">{data.map((item) => renderItem(item))}</div>
       ) : (
-        <div className={styles.emptyState}>
-          <div className={styles.emptyIcon}>{getIcon()}</div>
-          <h3 className={styles.emptyTitle}>
+        <div className="text-center py-[60px] px-5 bg-white/[0.03] backdrop-blur-[20px] border border-white/[0.05] rounded-2xl">
+          <div className="w-20 h-20 mx-auto mb-5 rounded-full bg-[rgba(102,119,255,0.1)] flex items-center justify-center [&>svg]:w-10 [&>svg]:h-10 [&>svg]:text-[#6677ff]">
+            {getIcon()}
+          </div>
+          <h3 className="text-lg font-semibold text-white mb-2 m-0">
             暂无{type === 'project' ? '项目' : type === 'competition' ? '竞赛' : '实习'}经历
           </h3>
-          <p className={styles.emptyDesc}>点击上方按钮添加你的经历</p>
+          <p className="text-sm text-[rgba(140,140,141,1)] m-0">点击上方按钮添加你的经历</p>
         </div>
       )}
 

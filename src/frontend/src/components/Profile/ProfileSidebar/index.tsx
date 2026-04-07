@@ -5,7 +5,6 @@ import type { UserInfo, UserStats } from '@/types/profile'
 import { DirectionLabels } from '@/types/profile'
 import { API_BASE_URL } from '@/apis/config'
 import { fileService } from '@/apis/services/file.service'
-import styles from './styles.module.css'
 import {
   DesktopOutlined,
   BookOutlined,
@@ -105,17 +104,17 @@ export default function ProfileSidebar({ profile, stats, onAvatarUpdate }: Profi
   }, [cropImageSrc])
 
   return (
-    <aside className={styles.sidebar}>
-      <div className={styles.sidebarContent}>
-        <div className={styles.avatarSection}>
-          <div className={styles.avatarContainer}>
+    <aside className="w-[340px] shrink-0 max-lg:w-full max-lg:shrink">
+      <div className="sticky top-[104px] bg-white/[0.03] backdrop-blur-[20px] border border-white/[0.05] rounded-2xl p-8 transition-all duration-300 max-lg:relative max-lg:top-auto max-[640px]:p-5">
+        <div className="text-center mb-6">
+          <div className="relative inline-block mb-5">
             <div
-              className={`${styles.avatarRing} ${uploading ? '' : styles.avatarRingClickable}`}
+              className={`relative w-[120px] h-[120px] rounded-full bg-[linear-gradient(135deg,#6677ff_0%,#ff6b35_100%)] p-1 overflow-hidden group ${uploading ? '' : 'cursor-pointer'}`}
               onClick={handleAvatarClick}
             >
-              <div className={styles.avatarImg}>
+              <div className="w-[112px] h-[112px] rounded-full bg-[linear-gradient(135deg,#1a1a1a_0%,#2a2a2a_100%)] flex items-center justify-center text-[48px] font-bold text-white overflow-hidden [&>img]:w-full [&>img]:h-full [&>img]:object-cover">
                 {uploading ? (
-                  <LoadingOutlined className={styles.avatarLoading} />
+                  <LoadingOutlined className="text-[28px] text-[#6677ff]" />
                 ) : profile.avatarFileId ? (
                   <Image
                     src={`${API_BASE_URL}/file/download/${profile.avatarFileId}`}
@@ -128,9 +127,9 @@ export default function ProfileSidebar({ profile, stats, onAvatarUpdate }: Profi
                 )}
               </div>
               {!uploading && (
-                <div className={styles.avatarOverlay}>
-                  <CameraOutlined className={styles.avatarOverlayIcon} />
-                  <span className={styles.avatarOverlayText}>更换头像</span>
+                <div className="absolute inset-1 rounded-full bg-black/55 flex flex-col items-center justify-center gap-1 opacity-0 transition-opacity duration-250 pointer-events-none group-hover:opacity-100">
+                  <CameraOutlined className="text-[20px] text-white" />
+                  <span className="text-[11px] text-white/85 whitespace-nowrap">更换头像</span>
                 </div>
               )}
             </div>
@@ -139,16 +138,20 @@ export default function ProfileSidebar({ profile, stats, onAvatarUpdate }: Profi
               type="file"
               accept="image/jpeg,image/png,image/gif,image/webp"
               onChange={handleFileChange}
-              className={styles.hiddenInput}
+              className="hidden"
             />
           </div>
           <div>
-            <h1 className={styles.memberName}>{displayName}</h1>
-            {profile.nickname && <span className={styles.memberNickname}>@{profile.username}</span>}
+            <h1 className="text-2xl font-bold text-white mb-1.5">{displayName}</h1>
+            {profile.nickname && (
+              <span className="text-sm text-[rgba(140,140,141,1)]">@{profile.username}</span>
+            )}
           </div>
           <span
-            className={`${styles.roleBadge} ${
-              profile.roleName === 'candidate' ? styles.roleBadgeCandidate : styles.roleBadgeMember
+            className={`inline-flex items-center gap-1.5 px-[14px] py-1.5 rounded-[20px] text-xs font-semibold mt-3 ${
+              profile.roleName === 'candidate'
+                ? 'bg-[linear-gradient(135deg,#ff6b35_0%,#ff8c42_100%)] text-white'
+                : 'bg-[linear-gradient(135deg,#6677ff_0%,#2f27b0_100%)] text-white'
             }`}
           >
             {profile.roleName === 'candidate' ? '考生' : '成员'}
@@ -156,26 +159,26 @@ export default function ProfileSidebar({ profile, stats, onAvatarUpdate }: Profi
         </div>
 
         {profile.bio && (
-          <div className={styles.bioSection}>
-            <p className={styles.bioText}>{profile.bio}</p>
+          <div className="mb-6 pb-6 border-b border-white/[0.05]">
+            <p className="text-sm leading-[1.7] text-white/70 text-center">{profile.bio}</p>
           </div>
         )}
 
-        <div className={styles.infoList}>
+        <div className="mb-6">
           {profile.college && (
-            <div className={styles.infoItem}>
+            <div className="flex items-center gap-3 py-3 text-sm text-white/70 border-b border-white/[0.03] [&>svg]:w-[18px] [&>svg]:h-[18px] [&>svg]:text-[#6677ff] [&>svg]:shrink-0">
               <DesktopOutlined />
               <span>{profile.college}</span>
             </div>
           )}
           {profile.major && (
-            <div className={styles.infoItem}>
+            <div className="flex items-center gap-3 py-3 text-sm text-white/70 border-b border-white/[0.03] [&>svg]:w-[18px] [&>svg]:h-[18px] [&>svg]:text-[#6677ff] [&>svg]:shrink-0">
               <BookOutlined />
               <span>{profile.major}</span>
             </div>
           )}
           {profile.grade && (
-            <div className={styles.infoItem}>
+            <div className="flex items-center gap-3 py-3 text-sm text-white/70 [&>svg]:w-[18px] [&>svg]:h-[18px] [&>svg]:text-[#6677ff] [&>svg]:shrink-0">
               <CalendarOutlined />
               <span>{profile.grade}</span>
             </div>
@@ -183,29 +186,33 @@ export default function ProfileSidebar({ profile, stats, onAvatarUpdate }: Profi
         </div>
 
         {profile.direction && (
-          <div className={styles.directionSection}>
-            <div className={styles.sectionLabel}>报名方向</div>
-            <div className={styles.directionItem}>
-              <div className={styles.directionIcon}>{directionAbbr}</div>
-              <div className={styles.directionInfo}>
-                <div className={styles.directionName}>{directionLabel}</div>
+          <div className="mb-6 py-6 border-t border-b border-white/[0.05]">
+            <div className="text-xs font-semibold text-[rgba(140,140,141,1)] uppercase tracking-[0.5px] mb-4">
+              报名方向
+            </div>
+            <div className="flex items-center gap-3 p-3 rounded-[10px] bg-white/[0.02] mb-2.5 transition-all duration-300 hover:bg-[rgba(102,119,255,0.08)]">
+              <div className="w-10 h-10 rounded-[10px] bg-[linear-gradient(135deg,#6677ff_0%,#2f27b0_100%)] flex items-center justify-center text-sm font-semibold text-white">
+                {directionAbbr}
+              </div>
+              <div className="flex-1">
+                <div className="text-sm font-medium text-white">{directionLabel}</div>
               </div>
             </div>
           </div>
         )}
 
-        <div className={styles.statsSection}>
-          <div className={styles.statBox}>
-            <div className={styles.statNumber}>{stats.assessmentCount}</div>
-            <div className={styles.statLabel}>考核轮次</div>
+        <div className="grid grid-cols-3 gap-3 pt-6 border-t border-white/[0.05]">
+          <div className="text-center py-3 px-2 rounded-[10px] bg-white/[0.02] transition-all duration-300 hover:bg-[rgba(102,119,255,0.08)]">
+            <div className="text-xl font-bold text-[#6677ff] mb-1">{stats.assessmentCount}</div>
+            <div className="text-xs text-[rgba(140,140,141,1)]">考核轮次</div>
           </div>
-          <div className={styles.statBox}>
-            <div className={styles.statNumber}>{stats.completedCount}</div>
-            <div className={styles.statLabel}>已完成</div>
+          <div className="text-center py-3 px-2 rounded-[10px] bg-white/[0.02] transition-all duration-300 hover:bg-[rgba(102,119,255,0.08)]">
+            <div className="text-xl font-bold text-[#6677ff] mb-1">{stats.completedCount}</div>
+            <div className="text-xs text-[rgba(140,140,141,1)]">已完成</div>
           </div>
-          <div className={styles.statBox}>
-            <div className={styles.statNumber}>{stats.averageScore}</div>
-            <div className={styles.statLabel}>平均分</div>
+          <div className="text-center py-3 px-2 rounded-[10px] bg-white/[0.02] transition-all duration-300 hover:bg-[rgba(102,119,255,0.08)]">
+            <div className="text-xl font-bold text-[#6677ff] mb-1">{stats.averageScore}</div>
+            <div className="text-xs text-[rgba(140,140,141,1)]">平均分</div>
           </div>
         </div>
       </div>

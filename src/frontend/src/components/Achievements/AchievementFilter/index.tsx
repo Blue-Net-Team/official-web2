@@ -2,7 +2,6 @@
 
 import { useRouter, usePathname } from 'next/navigation'
 import { Select, Space } from 'antd'
-import styles from './styles.module.css'
 import { AWARD_LEVEL_LABELS, ACHIEVEMENT_TYPE_LABELS } from '@/apis/schema/enumerate'
 
 interface AchievementFilterProps {
@@ -81,12 +80,12 @@ const AchievementFilter = ({
   }
 
   return (
-    <Space size={16} wrap className={styles.filterContainer}>
+    <Space size={16} wrap className="flex gap-4 max-md:flex-col max-md:gap-3">
       <Select
         value={type}
         onChange={handleTypeChange}
         options={typeOptions}
-        className={styles.select}
+        className="min-w-[120px] max-md:w-full"
         placeholder="成就类型"
         allowClear
       />
@@ -94,7 +93,7 @@ const AchievementFilter = ({
         value={awardLevel}
         onChange={handleAwardLevelChange}
         options={awardLevelOptions}
-        className={styles.select}
+        className="min-w-[120px] max-md:w-full"
         placeholder="奖项级别"
         allowClear
       />
@@ -102,7 +101,7 @@ const AchievementFilter = ({
         value={year}
         onChange={handleYearChange}
         options={yearOptions}
-        className={styles.select}
+        className="min-w-[120px] max-md:w-full"
         placeholder="获奖年份"
         allowClear
       />

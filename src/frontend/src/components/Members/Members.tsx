@@ -7,7 +7,6 @@ import { MembersProps, FilterTab } from './Members.types'
 import { Direction, DIRECTION_LABELS } from '@/apis/schema/enumerate'
 import { MemberService } from '@/apis/services/member.service'
 import { MemberBriefDTO } from '@/apis/schema/type'
-import styles from './Members.module.css'
 
 const PAGE_SIZE = 16
 
@@ -24,7 +23,6 @@ export const Members: React.FC<MembersProps> = ({ initialPage = 0 }) => {
     EMBEDDED: 0,
   })
 
-  // Fetch all member counts on mount for filter tabs
   useEffect(() => {
     const fetchCounts = async () => {
       try {
@@ -92,7 +90,7 @@ export const Members: React.FC<MembersProps> = ({ initialPage = 0 }) => {
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page - 1)
-    const membersSection = document.querySelector(`.${styles.membersSection}`)
+    const membersSection = document.querySelector('[data-members-section]')
     if (membersSection) {
       membersSection.scrollIntoView({ behavior: 'smooth', block: 'start' })
     }
@@ -100,35 +98,48 @@ export const Members: React.FC<MembersProps> = ({ initialPage = 0 }) => {
 
   return (
     <>
-      <section className={styles.filterSection}>
-        <div className={styles.filterTabs}>
+      <section className="w-full px-16 pb-10 flex justify-center max-md:px-5 max-md:pb-6 max-[1024px]:px-10 max-[1024px]:pb-8">
+        <div className="flex gap-3 p-2 bg-white/[0.03] rounded-2xl border border-white/[0.08] flex-wrap justify-center max-md:gap-2">
           {filterTabs.map((tab) => (
             <button
               key={tab.key}
-              className={`${styles.filterTab} ${
-                activeFilter === tab.key ? styles.filterTabActive : ''
+              className={`px-6 py-3 rounded-xl text-sm font-medium border-none cursor-pointer transition-all duration-300 flex items-center gap-2 font-[inherit] max-md:px-4 max-md:py-2.5 max-md:text-[13px] ${
+                activeFilter === tab.key
+                  ? 'text-white bg-gradient-to-br from-[#6677ff]/30 to-[#2f27b0]/30 border border-[#6677ff]/40'
+                  : 'text-white/60 bg-transparent hover:text-white/90 hover:bg-white/[0.05]'
               }`}
               onClick={() => handleFilterChange(tab.key)}
             >
               {tab.label}
-              <span className={styles.filterCount}>{tab.count}</span>
+              <span
+                className={`px-2 py-0.5 rounded-[10px] text-xs ${
+                  activeFilter === tab.key ? 'bg-white/20 text-white' : 'bg-white/10 text-white/50'
+                }`}
+              >
+                {tab.count}
+              </span>
             </button>
           ))}
         </div>
       </section>
 
-      <section className={styles.membersSection}>
+      <section
+        className="w-full px-16 pb-20 max-md:px-5 max-md:pb-10 max-[1024px]:px-10 max-[1024px]:pb-15"
+        data-members-section
+      >
         {loading ? (
-          <div className={styles.loadingContainer}>加载中...</div>
+          <div className="flex justify-center items-center min-h-[300px] text-white/60 text-base">
+            加载中...
+          </div>
         ) : (
           <>
-            <div className={styles.membersGrid}>
+            <div className="grid grid-cols-4 gap-6 max-w-[1400px] mx-auto max-[1200px]:grid-cols-3 max-[1024px]:gap-5 max-[900px]:grid-cols-2 max-md:grid-cols-1 max-md:gap-4">
               {members.map((member, index) => (
                 <MemberCard key={member.id} member={member} index={index} />
               ))}
             </div>
             {totalPages > 1 && (
-              <div className={styles.paginationContainer}>
+              <div className="flex justify-center mt-12 pt-8 border-t border-white/[0.08]">
                 <Pagination
                   current={currentPage + 1}
                   total={totalElements}

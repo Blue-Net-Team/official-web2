@@ -5,7 +5,6 @@ import { MemberDetailDTO, TabCounts, UserExperience } from '@/apis/schema/type'
 import { ProfilePanel } from './ProfilePanel'
 import { ExperiencePanel } from './ExperiencePanel'
 import { MemberService } from '@/apis/services/member.service'
-import styles from './MemberProfile.module.css'
 import { UserOutlined, FolderOutlined, TrophyOutlined, SolutionOutlined } from '@ant-design/icons'
 import { Spin } from 'antd'
 
@@ -103,7 +102,7 @@ export const MemberProfileContent: React.FC<MemberProfileContentProps> = ({
 
     if (isLoading) {
       return (
-        <div className={styles.loadingContainer}>
+        <div className="flex items-center justify-center min-h-[400px]">
           <Spin size="large" />
         </div>
       )
@@ -113,20 +112,28 @@ export const MemberProfileContent: React.FC<MemberProfileContentProps> = ({
   }
 
   return (
-    <div className={styles.contentArea}>
-      <nav className={styles.sectionTabs}>
+    <div className="flex-1 min-w-0">
+      <nav className="flex gap-2 mb-6 p-1 bg-white/[0.03] backdrop-blur-[20px] border border-white/[0.05] rounded-xl max-[1024px]:flex-wrap">
         {TAB_CONFIG.map((tab) => {
           const Icon = tab.icon
           const count = getCount(tab.key)
           return (
             <button
               key={tab.key}
-              className={`${styles.tabBtn} ${activeTab === tab.key ? styles.tabBtnActive : ''}`}
+              className={`flex-1 py-3 px-4 border-none bg-transparent text-sm font-medium cursor-pointer rounded-lg transition-all duration-300 flex items-center justify-center gap-1.5 no-underline max-[1024px]:flex-[1_1_calc(33.333%-6px)] max-md:flex-[1_1_calc(50%-4px)] max-md:py-2.5 max-md:px-2 max-md:text-xs max-[480px]:flex-[1_1_100%] [&_svg]:w-[18px] [&_svg]:h-[18px] [&_svg]:shrink-0 ${
+                activeTab === tab.key
+                  ? 'bg-gradient-to-br from-[#6677ff] to-[#2f27b0] text-white shadow-[0_4px_16px_rgba(102,119,255,0.3)]'
+                  : 'text-[#8c8c8d] hover:text-white hover:bg-white/[0.05]'
+              }`}
               onClick={() => onTabChange(tab.key)}
             >
               <Icon />
-              <span className={styles.tabLabel}>{tab.label}</span>
-              {count !== undefined && count > 0 && <span className={styles.tabCount}>{count}</span>}
+              <span className="inline">{tab.label}</span>
+              {count !== undefined && count > 0 && (
+                <span className="text-xs opacity-80 bg-white/20 px-2 py-0.5 rounded-[10px]">
+                  {count}
+                </span>
+              )}
             </button>
           )
         })}

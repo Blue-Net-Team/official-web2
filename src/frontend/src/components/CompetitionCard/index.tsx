@@ -1,6 +1,5 @@
 import { CompetitionBriefDTO } from '@/apis/schema/type'
 import { COMPETITION_LEVEL_LABELS, COMPETITION_LEVEL_COLORS } from '@/types/competition'
-import styles from './CompetitionCard.module.css'
 
 interface CompetitionCardProps {
   competition: CompetitionBriefDTO
@@ -16,41 +15,98 @@ export default function CompetitionCard({
   const levelColor = COMPETITION_LEVEL_COLORS[competition.level]
   const levelLabel = COMPETITION_LEVEL_LABELS[competition.level]
 
-  // 构建图片背景样式
-  const cardStyle =
-    showImage && competition.introduceImageFileId
+  const hasImage = showImage && !!competition.introduceImageFileId
+
+  const cardStyle: React.CSSProperties = {
+    animationDelay: `${index * 0.1}s`,
+    ...(hasImage
       ? {
           backgroundImage: `url(/api/v1/file/download/${competition.introduceImageFileId})`,
-          animationDelay: `${index * 0.1}s`,
         }
-      : {
-          animationDelay: `${index * 0.1}s`,
-        }
+      : {}),
+  }
 
   return (
     <div
-      className={`${styles.card} ${showImage && competition.introduceImageFileId ? styles.cardWithImage : ''}`}
+      className={`group relative w-full h-[200px] rounded-3xl p-10 px-8 flex flex-col gap-8 overflow-hidden
+        opacity-0 animate-[fadeInUp_0.6s_ease_forwards]
+        hover:-translate-y-1
+        max-md:h-auto max-md:min-h-[200px] max-md:p-8 max-md:px-6 max-md:rounded-[20px] max-md:gap-6
+        ${hasImage ? 'bg-cover bg-center' : 'glass-card'}
+      `}
       style={cardStyle}
     >
-      <div className={styles.cardContent}>
-        <div className={styles.cardHeader}>
-          <div className={styles.titleGroup}>
-            <h3 className={styles.competitionName}>{competition.name}</h3>
-            <span className={styles.levelBadge} style={{ backgroundColor: levelColor }}>
+      {hasImage && (
+        <div
+          className="absolute inset-0 rounded-3xl z-[1] glass-card
+            group-hover:bg-[rgba(255,255,255,0.12)]"
+        />
+      )}
+      <div className="relative z-[2] flex flex-col gap-3 h-full justify-center">
+        <div
+          className="flex justify-between items-center gap-4
+          max-md:flex-col max-md:items-start max-md:gap-3"
+        >
+          <div
+            className="flex items-center gap-4 flex-1 min-w-0
+            max-md:w-full max-md:justify-between max-md:gap-3"
+          >
+            <h3
+              className="text-[28px] font-bold text-white m-0 font-[Inter,sans-serif]
+              max-md:text-xl"
+            >
+              {competition.name}
+            </h3>
+            <span
+              className="w-20 h-7 rounded-[14px] flex items-center justify-center
+                text-xs font-bold text-white shrink-0 font-[Inter,sans-serif]
+                relative overflow-hidden
+                transition-[transform,box-shadow] duration-200
+                group-hover:scale-105 group-hover:shadow-[0_0_20px_rgba(255,255,255,0.1)]
+                max-md:w-16 max-md:h-6 max-md:rounded-xl
+                before:content-[''] before:absolute before:top-0 before:-left-full
+                before:w-full before:h-full
+                before:bg-[linear-gradient(90deg,transparent,rgba(255,255,255,0.2),transparent)]
+                before:transition-[left] before:duration-500
+                group-hover:before:left-full"
+              style={{ backgroundColor: levelColor }}
+            >
               {levelLabel}
             </span>
           </div>
-          {competition.month && <span className={styles.month}>{competition.month}</span>}
+          {competition.month && (
+            <span
+              className="text-2xl font-normal text-white/40 shrink-0 font-[Inter,sans-serif]
+              max-md:text-[18px]"
+            >
+              {competition.month}
+            </span>
+          )}
         </div>
 
-        <div className={styles.infoGroup}>
+        <div className="flex flex-col gap-2">
           {competition.organizer && (
-            <div className={styles.organizer}>
-              <span className={styles.label}>主办单位：</span>
-              <span className={styles.value}>{competition.organizer}</span>
+            <div className="flex items-center gap-2 flex-wrap max-md:gap-1">
+              <span
+                className="text-base font-normal text-white/60 shrink-0 font-[Inter,sans-serif]
+                max-md:text-sm"
+              >
+                主办单位：
+              </span>
+              <span
+                className="text-base font-normal text-white font-[Inter,sans-serif]
+                max-md:text-sm"
+              >
+                {competition.organizer}
+              </span>
             </div>
           )}
-          <p className={styles.description}>{competition.summary}</p>
+          <p
+            className="text-base font-normal text-white/80 leading-[1.5] m-0 font-[Inter,sans-serif]
+            max-md:text-sm"
+          >
+            {competition.summary}
+          </p>
         </div>
       </div>
     </div>

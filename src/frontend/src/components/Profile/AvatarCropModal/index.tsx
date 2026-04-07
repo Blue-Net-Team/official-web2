@@ -4,7 +4,6 @@ import { useState, useCallback } from 'react'
 import { Modal, Slider } from 'antd'
 import _Cropper from 'react-easy-crop'
 import type { Area } from 'react-easy-crop'
-import styles from './styles.module.css'
 
 // react-easy-crop exports a class component; cast to any for React 19 JSX compat
 const Cropper = _Cropper as unknown as React.FC<Record<string, unknown>>
@@ -107,7 +106,7 @@ export default function AvatarCropModal({
         setZoom(1)
       }}
     >
-      <div className={styles.cropContainer}>
+      <div className="relative w-full h-[360px] bg-[#1a1a1a] rounded-lg overflow-hidden mb-4">
         {imageSrc && (
           <Cropper
             image={imageSrc}
@@ -122,16 +121,9 @@ export default function AvatarCropModal({
           />
         )}
       </div>
-      <div className={styles.zoomControl}>
-        <span className={styles.zoomLabel}>缩放</span>
-        <Slider
-          min={1}
-          max={3}
-          step={0.01}
-          value={zoom}
-          onChange={setZoom}
-          className={styles.zoomSlider}
-        />
+      <div className="flex items-center gap-3 px-1">
+        <span className="text-[13px] text-white/50 whitespace-nowrap shrink-0">缩放</span>
+        <Slider min={1} max={3} step={0.01} value={zoom} onChange={setZoom} className="flex-1" />
       </div>
     </Modal>
   )

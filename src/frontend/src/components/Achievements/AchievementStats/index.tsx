@@ -1,6 +1,5 @@
 import { Card, Col, Row, Statistic } from 'antd'
 import { TrophyOutlined, StarOutlined, CrownOutlined, FlagOutlined } from '@ant-design/icons'
-import styles from './styles.module.css'
 import { AchievementStatsDTO } from '@/apis/schema/type'
 
 interface AchievementStatsProps {
@@ -36,14 +35,17 @@ const AchievementStats = ({ stats }: AchievementStatsProps) => {
   ]
 
   return (
-    <Row gutter={[16, 16]} className={styles.statsContainer}>
+    <Row gutter={[16, 16]} className="w-full">
       {statItems.map((item) => (
         <Col xs={12} sm={6} key={item.title}>
-          <Card className={styles.statCard} styles={{ body: { padding: '16px' } }}>
-            <div className={styles.statContent}>
-              <div className={styles.statIcon}>{item.icon}</div>
+          <Card
+            className="glass-card rounded-xl max-md:rounded-lg"
+            styles={{ body: { padding: '16px' } }}
+          >
+            <div className="flex items-center gap-3 max-md:flex-col max-md:text-center">
+              <div className="flex items-center justify-center">{item.icon}</div>
               <Statistic
-                title={<span className={styles.statTitle}>{item.title}</span>}
+                title={<span className="text-sm text-white/65">{item.title}</span>}
                 value={item.value}
                 valueStyle={{ color: item.color, fontWeight: 600 }}
               />
