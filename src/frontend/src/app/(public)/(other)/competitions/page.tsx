@@ -4,13 +4,12 @@ import { CompetitionService } from '@/apis/services/competition.service'
 import CompetitionCard from '@/components/CompetitionCard'
 import { CompetitionBriefDTO } from '@/apis/schema/type'
 import BackgroundDecorations from './BackgroundDecorations'
-import styles from './page.module.css'
 
 export const revalidate = 3600
 
 function LoadingState() {
   return (
-    <div className={styles.loadingContainer}>
+    <div className="flex justify-center items-center min-h-[400px]">
       <Spin size="large" />
     </div>
   )
@@ -18,7 +17,7 @@ function LoadingState() {
 
 function EmptyState() {
   return (
-    <div className={styles.emptyContainer}>
+    <div className="flex justify-center items-center min-h-[400px]">
       <Empty description="暂无竞赛数据" />
     </div>
   )
@@ -30,7 +29,7 @@ function CompetitionsContent({ competitions }: { competitions: CompetitionBriefD
   }
 
   return (
-    <div className={styles.competitionsList}>
+    <div className="flex flex-col gap-5 max-sm:gap-4 relative z-1">
       {competitions.map((competition, index) => (
         <CompetitionCard
           key={competition.id}
@@ -62,11 +61,15 @@ export const metadata = {
 
 export default function CompetitionsPage() {
   return (
-    <div className={styles.pageContainer}>
+    <div className="min-h-screen bg-black px-[147px] max-md:px-12 max-sm:px-6 py-20 max-md:py-[60px] max-sm:py-10 flex flex-col gap-12 max-sm:gap-8 relative overflow-hidden">
       <BackgroundDecorations />
-      <header className={styles.pageHeader}>
-        <h1 className={styles.pageTitle}>团队参加的竞赛</h1>
-        <p className={styles.pageSubtitle}>记录我们在各类竞赛中的成长与突破</p>
+      <header className="flex flex-col gap-4 max-sm:gap-3 relative z-1">
+        <h1 className="text-5xl max-md:text-4xl max-sm:text-[28px] font-bold text-white m-0 font-['Inter']">
+          团队参加的竞赛
+        </h1>
+        <p className="text-xl max-md:text-lg max-sm:text-sm font-normal text-white/60 m-0 font-['Inter']">
+          记录我们在各类竞赛中的成长与突破
+        </p>
       </header>
 
       <Suspense fallback={<LoadingState />}>

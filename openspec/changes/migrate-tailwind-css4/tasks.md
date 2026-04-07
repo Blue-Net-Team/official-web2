@@ -67,20 +67,20 @@
 
 - [x] 9.1 迁移首页页面样式：`app/(public)/(home)/styles.module.css` → Tailwind class
 - [x] 9.2 迁移个人资料页样式：`app/(public)/(other)/profile/styles.module.css` → Tailwind class
-- [ ] 9.3 迁移成员列表页样式：`app/(public)/(other)/members/styles.module.css` → Tailwind class
-- [ ] 9.4 迁移登录页样式：`app/(public)/(other)/login/styles.module.css` → Tailwind class
-- [ ] 9.5 迁移实验室环境页样式：`app/(public)/(other)/lab-environment/page.module.css` → Tailwind class
-- [ ] 9.6 迁移报名页样式：`app/(public)/(other)/enroll/styles.module.css` → Tailwind class
-- [ ] 9.7 迁移方向详情页样式：`app/(public)/(other)/direction/[slug]/styles.module.css` → Tailwind class
-- [ ] 9.8 迁移竞赛页样式：`app/(public)/(other)/competitions/page.module.css` → Tailwind class
-- [ ] 9.9 迁移考核页样式：`app/(public)/(other)/assessment/styles.module.css` → Tailwind class
-- [ ] 9.10 迁移成果页样式：`app/(public)/(other)/achievements/styles.module.css` → Tailwind class
+- [x] 9.3 迁移成员列表页样式：`app/(public)/(other)/members/styles.module.css` → Tailwind class
+- [x] 9.4 迁移登录页样式：`app/(public)/(other)/login/styles.module.css` → Tailwind class
+- [x] 9.5 迁移实验室环境页样式：`app/(public)/(other)/lab-environment/page.module.css` → Tailwind class
+- [x] 9.6 迁移报名页样式：`app/(public)/(other)/enroll/styles.module.css` → Tailwind class
+- [x] 9.7 迁移方向详情页样式：`app/(public)/(other)/direction/[slug]/styles.module.css` → Tailwind class
+- [x] 9.8 迁移竞赛页样式：`app/(public)/(other)/competitions/page.module.css` → Tailwind class
+- [x] 9.9 迁移考核页样式：`app/(public)/(other)/assessment/styles.module.css` → Tailwind class
+- [x] 9.10 迁移成果页样式：`app/(public)/(other)/achievements/styles.module.css` → Tailwind class
 
 ## 10. 清理阶段
 
-- [ ] 10.1 删除 `src/frontend/src/styles/responsive.css`（工具类已被 Tailwind 替代）
-- [ ] 10.2 清理 `globals.css` 中已被 Tailwind 替代的原始样式（darkText、lightText 等工具类）
-- [ ] 10.3 检查并清理 `public/index.css` 是否仍被引用，如不需要则删除
-- [ ] 10.4 全局搜索确认无残留的 `.module.css` import 语句
-- [ ] 10.5 执行 `pnpm build` 确认构建成功，无任何错误或警告
-- [ ] 10.6 执行 `pnpm lint` 确认代码质量检查通过
+- [x] 10.1 删除 `src/frontend/src/styles/responsive.css`（工具类已被 Tailwind 替代）
+- [x] 10.2 清理 `globals.css` 中已被 Tailwind 替代的原始样式（darkText、lightText 等工具类）
+- [x] 10.3 检查并清理 `public/index.css` 是否仍被引用，如不需要则删除
+- [x] 10.4 全局搜索确认无残留的 `.module.css` import 语句
+- [x] 10.5 执行 `pnpm build` 确认构建成功，无任何错误或警告
+- [x] 10.6 执行 `pnpm lint` 确认代码质量检查通过

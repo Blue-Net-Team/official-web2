@@ -7,7 +7,6 @@ import TechStack from '@/components/Direction/TechStack'
 import LearningPath from '@/components/Direction/LearningPath'
 import CareerSection from '@/components/Direction/CareerSection'
 import RecruitmentInfo from '@/components/Direction/RecruitmentInfo'
-import styles from './styles.module.css'
 
 interface PageProps {
   params: Promise<{
@@ -44,13 +43,11 @@ export default async function DirectionPage({ params }: PageProps) {
     notFound()
   }
 
-  // 尝试从后端获取学习路径视频链接
   let learningPathWithVideos: LearningStep[] = direction.learningPath
 
   try {
     const response = await directionService.getLearningPath(slug)
 
-    // API 调用成功且有数据时，合并静态数据与动态视频链接
     if (response.code === 200 && response.data?.steps) {
       learningPathWithVideos = direction.learningPath.map((step) => {
         const videoData = response.data!.steps.find((v) => v.stepNumber === step.step)
@@ -61,7 +58,6 @@ export default async function DirectionPage({ params }: PageProps) {
       })
     }
   } catch (error) {
-    // API 失败时静默降级，使用静态数据
     console.error('Failed to fetch learning path data:', error)
   }
 
@@ -73,7 +69,7 @@ export default async function DirectionPage({ params }: PageProps) {
   } as React.CSSProperties
 
   return (
-    <div className={styles.container} style={themeStyle}>
+    <div className="min-h-screen bg-black text-white" style={themeStyle}>
       <HeroSection data={direction} />
       <TechStack data={direction.techStack} />
       <LearningPath data={learningPathWithVideos} />

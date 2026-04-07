@@ -5,6 +5,7 @@ import { Form, Input, Select, Button, App, Upload, Spin, ConfigProvider, ThemeCo
 import type { MessageInstance } from 'antd/es/message/interface'
 import { PlusOutlined, ArrowRightOutlined } from '@ant-design/icons'
 import Image from 'next/image'
+import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import styles from './styles.module.css'
 import { enrollService } from '@/apis/services/enroll.service'
@@ -19,7 +20,6 @@ import ConsultationQrcode from '@/components/Enroll/ConsultationQrcode'
 
 const { TextArea } = Input
 
-// 方向配置
 const DIRECTIONS = [
   {
     key: 'COMPUTER_VISION' as Direction,
@@ -44,34 +44,26 @@ const DIRECTIONS = [
   },
 ]
 
-// 学院选项（使用学院ID）
 const GRADE_OPTIONS = [
   { value: 1, label: '大一' },
   { value: 2, label: '大二' },
 ]
 
-// 自定义主题配置
 const customTheme: ThemeConfig = {
   token: {
-    // 错误状态颜色
     colorError: '#FF6B35',
     colorErrorBorder: '#FF6B35',
     colorErrorOutline: 'rgba(255, 107, 53, 0.3)',
-    // 主色调
     colorPrimary: '#6677FF',
     colorPrimaryHover: '#7a89ff',
     colorPrimaryActive: '#5a6ce0',
-    // 边框颜色
     colorBorder: 'rgba(255, 255, 255, 0.1)',
     colorBorderSecondary: 'rgba(255, 255, 255, 0.05)',
-    // 背景色
     colorBgContainer: 'rgba(255, 255, 255, 0.05)',
     colorBgElevated: '#1a1a2e',
-    // 文字颜色
     colorText: '#ffffff',
     colorTextPlaceholder: 'rgba(255, 255, 255, 0.4)',
     colorTextDisabled: 'rgba(255, 255, 255, 0.3)',
-    // 圆角
     borderRadius: 10,
   },
   components: {
@@ -114,7 +106,6 @@ const customTheme: ThemeConfig = {
   },
 }
 
-// 方向选择器组件（桌面端侧边栏）
 interface DirectionSidebarProps {
   selected: Direction
   onSelect: (direction: Direction) => void
@@ -122,22 +113,38 @@ interface DirectionSidebarProps {
 
 const DirectionSidebar: React.FC<DirectionSidebarProps> = ({ selected, onSelect }) => {
   return (
-    <aside className={styles.directionSidebar}>
-      <div className={styles.directionSidebarTitle}>选择方向</div>
+    <aside className="flex flex-col gap-4 mt-0 animate-[fadeInLeft_0.8s_cubic-bezier(0.4,0,0.2,1)_0.2s_both]">
+      <div className="text-sm font-semibold text-white/50 mb-2 pl-2 uppercase tracking-[2px] font-['Orbitron']">
+        选择方向
+      </div>
       {DIRECTIONS.map((dir) => (
         <div
           key={dir.key}
-          className={`${styles.directionSidebarItem} ${
-            selected === dir.key ? styles.active : ''
-          } ${selected === dir.key ? styles[dir.theme] : ''}`}
+          className={`${styles.directionItem} flex items-center gap-[14px] p-[18px] bg-[rgba(20,20,30,0.6)] border border-white/[0.08] rounded-2xl cursor-pointer transition-all duration-[400ms] cubic-bezier(0.4,0,0.2,1) relative overflow-hidden hover:translate-x-2 hover:border-[rgba(102,119,255,0.3)] hover:shadow-[0_0_30px_rgba(102,119,255,0.2)] ${
+            selected === dir.key
+              ? dir.theme === 'computerVision'
+                ? 'border-[#6677ff] bg-gradient-to-br from-[rgba(102,119,255,0.15)] to-[rgba(47,39,176,0.1)] shadow-[0_0_30px_rgba(102,119,255,0.3),inset_0_0_20px_rgba(102,119,255,0.1)]'
+                : dir.theme === 'structuralDesign'
+                  ? 'border-[#ff6b35] bg-gradient-to-br from-[rgba(255,107,53,0.15)] to-[rgba(255,140,66,0.1)] shadow-[0_0_30px_rgba(255,107,53,0.3),inset_0_0_20px_rgba(255,107,53,0.1)]'
+                  : 'border-[#2ecc71] bg-gradient-to-br from-[rgba(46,204,113,0.15)] to-[rgba(39,174,96,0.1)] shadow-[0_0_30px_rgba(46,204,113,0.3),inset_0_0_20px_rgba(46,204,113,0.1)]'
+              : ''
+          }`}
           onClick={() => onSelect(dir.key)}
         >
-          <div className={`${styles.directionSidebarIcon} ${styles[dir.theme]}`}>
+          <div
+            className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 transition-transform overflow-hidden hover:scale-110 hover:rotate-[5deg] ${
+              dir.theme === 'computerVision'
+                ? 'bg-gradient-to-br from-[rgba(102,119,255,0.3)] to-[rgba(47,39,176,0.3)] shadow-[0_0_20px_rgba(102,119,255,0.3)]'
+                : dir.theme === 'structuralDesign'
+                  ? 'bg-gradient-to-br from-[rgba(255,107,53,0.3)] to-[rgba(255,140,66,0.3)] shadow-[0_0_20px_rgba(255,107,53,0.3)]'
+                  : 'bg-gradient-to-br from-[rgba(46,204,113,0.3)] to-[rgba(39,174,96,0.3)] shadow-[0_0_20px_rgba(46,204,113,0.3)]'
+            }`}
+          >
             <Image src={dir.icon} alt={dir.name} width={44} height={44} />
           </div>
-          <div className={styles.directionSidebarInfo}>
-            <span className={styles.directionSidebarName}>{dir.name}</span>
-            <span className={styles.directionSidebarDesc}>{dir.desc}</span>
+          <div className="flex flex-col gap-1">
+            <span className="text-[15px] font-semibold text-white/95">{dir.name}</span>
+            <span className="text-xs text-white/50">{dir.desc}</span>
           </div>
         </div>
       ))}
@@ -145,7 +152,6 @@ const DirectionSidebar: React.FC<DirectionSidebarProps> = ({ selected, onSelect 
   )
 }
 
-// 移动端方向选择组件
 interface MobileDirectionSelectorProps {
   selected: Direction
   onSelect: (direction: Direction) => void
@@ -156,29 +162,44 @@ const MobileDirectionSelector: React.FC<MobileDirectionSelectorProps> = ({
   onSelect,
 }) => {
   return (
-    <div className={`${styles.formGroup} ${styles.fullWidth} ${styles.mobileDirectionSection}`}>
-      <label className={styles.formLabel}>
-        报名方向 <span className={styles.required}>*</span>
+    <div className="hidden max-lg:flex flex-col gap-[6px] animate-[slideIn_0.6s_cubic-bezier(0.4,0,0.2,1)_0.4s_both]">
+      <label className="text-[13px] font-medium text-white/70 flex items-center gap-1">
+        报名方向 <span className="text-[#ff6b35]">*</span>
       </label>
-      <div className={styles.directionOptions}>
+      <div className="grid grid-cols-3 max-sm:grid-cols-1 gap-3">
         {DIRECTIONS.map((dir) => (
-          <label key={dir.key} className={styles.directionOption}>
+          <label key={dir.key} className="cursor-pointer">
             <input
               type="radio"
               name="direction_mobile"
               value={dir.key}
               checked={selected === dir.key}
               onChange={() => onSelect(dir.key)}
+              className="hidden"
             />
             <div
-              className={`${styles.directionCard} ${styles[dir.theme]} ${
-                selected === dir.key ? styles.selected : ''
+              className={`flex flex-col max-sm:flex-row items-center max-sm:justify-start gap-2 max-sm:gap-[14px] p-4 max-sm:p-[14px_16px] bg-white/[0.03] border rounded-xl transition-all ${
+                selected === dir.key
+                  ? dir.theme === 'computerVision'
+                    ? 'border-[#6677ff] bg-gradient-to-br from-[rgba(102,119,255,0.15)] to-[rgba(47,39,176,0.1)] shadow-[0_0_20px_rgba(102,119,255,0.2)]'
+                    : dir.theme === 'structuralDesign'
+                      ? 'border-[#ff6b35] bg-gradient-to-br from-[rgba(255,107,53,0.15)] to-[rgba(255,140,66,0.1)] shadow-[0_0_20px_rgba(255,107,53,0.2)]'
+                      : 'border-[#2ecc71] bg-gradient-to-br from-[rgba(46,204,113,0.15)] to-[rgba(39,174,96,0.1)] shadow-[0_0_20px_rgba(46,204,113,0.2)]'
+                  : 'border-white/[0.08] hover:border-[rgba(102,119,255,0.3)] hover:bg-[rgba(102,119,255,0.05)]'
               }`}
             >
-              <div className={`${styles.directionIcon} ${styles[dir.theme]}`}>
+              <div
+                className={`w-12 max-sm:w-11 h-12 max-sm:h-11 rounded-xl flex items-center justify-center overflow-hidden ${
+                  dir.theme === 'computerVision'
+                    ? 'bg-gradient-to-br from-[rgba(102,119,255,0.3)] to-[rgba(47,39,176,0.3)] shadow-[0_0_15px_rgba(102,119,255,0.3)]'
+                    : dir.theme === 'structuralDesign'
+                      ? 'bg-gradient-to-br from-[rgba(255,107,53,0.3)] to-[rgba(255,140,66,0.3)] shadow-[0_0_15px_rgba(255,107,53,0.3)]'
+                      : 'bg-gradient-to-br from-[rgba(46,204,113,0.3)] to-[rgba(39,174,96,0.3)] shadow-[0_0_15px_rgba(46,204,113,0.3)]'
+                }`}
+              >
                 <Image src={dir.icon} alt={dir.name} width={48} height={48} />
               </div>
-              <span className={styles.directionName}>{dir.name}</span>
+              <span className="text-[13px] font-medium text-white/90">{dir.name}</span>
             </div>
           </label>
         ))}
@@ -187,7 +208,6 @@ const MobileDirectionSelector: React.FC<MobileDirectionSelectorProps> = ({
   )
 }
 
-// 头像上传组件
 interface AvatarUploadProps {
   previewUrl?: string
   uploading?: boolean
@@ -224,7 +244,7 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
   )
 
   return (
-    <div className={styles.avatarWrapper}>
+    <div className="flex flex-col items-center gap-[10px] shrink-0">
       <Upload
         accept="image/*"
         showUploadList={false}
@@ -232,27 +252,32 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
         disabled={uploading}
       >
         <div
-          className={`${styles.avatarUploadArea} ${
-            previewUrl ? styles.hasImage : ''
-          } ${uploading ? styles.uploading : ''}`}
+          className={`w-[100px] max-sm:w-[110px] h-[100px] max-sm:h-[110px] border-2 border-dashed border-[rgba(102,119,255,0.4)] rounded-full flex flex-col items-center justify-center cursor-pointer transition-all bg-[rgba(102,119,255,0.05)] relative overflow-hidden hover:border-[#6677ff] hover:shadow-[0_0_20px_rgba(102,119,255,0.4)] ${
+            previewUrl ? 'border-solid border-transparent' : ''
+          } ${uploading ? 'border-[#6677ff] bg-[rgba(102,119,255,0.1)] cursor-not-allowed' : ''}`}
         >
           {uploading ? (
-            <div className={styles.avatarUploadContent}>
-              <div className={styles.progressRing}>
-                <svg viewBox="0 0 36 36" className={styles.progressSvg}>
+            <div className="flex flex-col items-center justify-center gap-1 z-1">
+              <div className="relative w-10 h-10 flex items-center justify-center">
+                <svg viewBox="0 0 36 36" className="w-full h-full -rotate-90">
                   <path
-                    className={styles.progressBg}
+                    className="fill-none stroke-[rgba(102,119,255,0.2)]"
+                    strokeWidth="3"
                     d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
                   />
                   <path
-                    className={styles.progressBar}
+                    className="fill-none stroke-[#6677ff]"
+                    strokeWidth="3"
+                    strokeLinecap="round"
                     strokeDasharray={`${uploadProgress || 0}, 100`}
                     d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
                   />
                 </svg>
-                <span className={styles.progressText}>{uploadProgress || 0}%</span>
+                <span className="absolute text-[10px] text-[#6677ff] font-semibold">
+                  {uploadProgress || 0}%
+                </span>
               </div>
-              <span className={styles.avatarUploadText}>上传中...</span>
+              <span className="text-[11px] text-white/40">上传中...</span>
             </div>
           ) : previewUrl ? (
             <Image
@@ -260,31 +285,29 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
               alt="avatar"
               width={120}
               height={120}
-              className={styles.avatarPreview}
+              className="absolute inset-[2px] w-[calc(100%-4px)] h-[calc(100%-4px)] object-cover rounded-full"
             />
           ) : (
-            <div className={styles.avatarUploadContent}>
+            <div className="flex flex-col items-center justify-center gap-1 z-1">
               <PlusOutlined style={{ fontSize: '28px', color: 'rgba(102, 119, 255, 0.6)' }} />
-              <span className={styles.avatarUploadText}>点击上传</span>
+              <span className="text-[11px] text-white/40">点击上传</span>
             </div>
           )}
         </div>
       </Upload>
-      <div className={styles.avatarLabel}>
-        头像<span className={styles.required}>*</span>
+      <div className="text-xs text-white/50 font-medium">
+        头像<span className="text-[#ff6b35] ml-[2px]">*</span>
       </div>
     </div>
   )
 }
 
-// 主页面组件
 const EnrollPageContent: React.FC = () => {
   const { message: messageApi, modal } = App.useApp()
   const [form] = Form.useForm()
   const searchParams = useSearchParams()
   const [selectedDirection, setSelectedDirection] = useState<Direction>('COMPUTER_VISION')
 
-  // 从URL查询参数读取方向
   useEffect(() => {
     const directionFromUrl = searchParams.get('direction') as Direction
     if (directionFromUrl && DIRECTIONS.some((d) => d.key === directionFromUrl)) {
@@ -325,17 +348,13 @@ const EnrollPageContent: React.FC = () => {
     [form]
   )
 
-  // 处理头像文件选择和上传
   const handleAvatarSelect = useCallback(
     async (file: File) => {
-      // 创建预览URL
       const previewUrl = URL.createObjectURL(file)
       setAvatarPreview(previewUrl)
-      // 清除之前上传的avatarId
       setAvatarId(null)
       setUploadProgress(0)
 
-      // 立即上传头像
       setUploadingAvatar(true)
       try {
         const response = await fileService.uploadAvatar(file)
@@ -357,13 +376,11 @@ const EnrollPageContent: React.FC = () => {
     [messageApi]
   )
 
-  // 处理自我介绍输入
   const handleIntroChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const value = e.target.value
     setIntroLength(value.length)
   }, [])
 
-  // 提交报名
   const submitEnrollment = useCallback(
     async (forceUpdate = false) => {
       const values = form.getFieldsValue()
@@ -426,7 +443,6 @@ const EnrollPageContent: React.FC = () => {
     [avatarId, introLength, selectedDirection, form, messageApi, modal]
   )
 
-  // 表单提交
   const handleSubmit = useCallback(async () => {
     if (!avatarId) {
       messageApi.error('请上传头像')
@@ -437,43 +453,41 @@ const EnrollPageContent: React.FC = () => {
   }, [avatarId, submitEnrollment, messageApi])
 
   return (
-    <div className={styles.pageContainer}>
+    <div className="w-full min-h-screen bg-[#0a0a0a] text-white relative overflow-x-hidden">
       <ConfigProvider theme={customTheme}>
-        {/* 背景效果 */}
-        <div className={styles.pageBg} />
+        <div className="fixed top-0 left-0 w-full h-full bg-[radial-gradient(ellipse_80%_50%_at_20%_40%,rgba(102,119,255,0.15)_0%,transparent_50%),radial-gradient(ellipse_60%_40%_at_80%_60%,rgba(255,107,53,0.1)_0%,transparent_50%),radial-gradient(ellipse_50%_30%_at_50%_100%,rgba(47,39,176,0.2)_0%,transparent_50%)] z-0 pointer-events-none" />
 
-        {/* 主内容 */}
-        <main className={styles.mainContent}>
-          {/* 左侧栏：桌面端方向选择侧边栏 + 咨询群 */}
-          <div className={styles.sidebarColumn}>
+        <main className="w-full min-h-screen flex justify-center items-start pt-[100px] max-lg:pt-[100px] px-10 max-lg:px-5 pb-[60px] gap-[30px] max-lg:flex-col max-lg:items-center relative z-1">
+          <div className="flex flex-col gap-6 shrink-0 w-[220px] max-lg:hidden animate-[fadeInLeft_0.8s_cubic-bezier(0.4,0,0.2,1)_0.2s_both]">
             <DirectionSidebar selected={selectedDirection} onSelect={handleDirectionSelect} />
             <ConsultationQrcode />
           </div>
 
-          {/* 报名卡片 */}
-          <div className={styles.enrollContainer}>
-            {/* 角落装饰 */}
-            <div className={`${styles.cornerDecoration} ${styles.topLeft}`} />
-            <div className={`${styles.cornerDecoration} ${styles.topRight}`} />
-            <div className={`${styles.cornerDecoration} ${styles.bottomLeft}`} />
-            <div className={`${styles.cornerDecoration} ${styles.bottomRight}`} />
+          <div className="w-full max-w-[600px] bg-[rgba(20,20,30,0.6)] border border-[rgba(102,119,255,0.15)] rounded-3xl p-10 max-sm:p-7 max-sm:rounded-2xl backdrop-blur-[20px] relative overflow-hidden shadow-[0_0_60px_rgba(102,119,255,0.1),inset_0_0_60px_rgba(102,119,255,0.02)] animate-[fadeInUp_0.8s_cubic-bezier(0.4,0,0.2,1)]">
+            <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-[#6677ff] via-[#ff6b35] to-[#2f27b0] shadow-[0_0_20px_#6677ff]" />
 
-            {/* 页面标题 */}
-            <div className={styles.enrollHeader}>
-              <h1 className={styles.enrollTitle}>加入蓝网</h1>
-              <p className={styles.enrollSubtitle}>填写以下信息完成报名，开启你的科技创新之旅</p>
+            <div className="absolute w-[60px] max-sm:w-10 h-[60px] max-sm:h-10 border-2 border-[rgba(102,119,255,0.3)] top-[15px] left-[15px] border-r-0 border-b-0 rounded-tl-xl" />
+            <div className="absolute w-[60px] max-sm:w-10 h-[60px] max-sm:h-10 border-2 border-[rgba(102,119,255,0.3)] top-[15px] right-[15px] border-l-0 border-b-0 rounded-tr-xl" />
+            <div className="absolute w-[60px] max-sm:w-10 h-[60px] max-sm:h-10 border-2 border-[rgba(102,119,255,0.3)] bottom-[15px] left-[15px] border-r-0 border-t-0 rounded-bl-xl" />
+            <div className="absolute w-[60px] max-sm:w-10 h-[60px] max-sm:h-10 border-2 border-[rgba(102,119,255,0.3)] bottom-[15px] right-[15px] border-l-0 border-t-0 rounded-br-xl" />
+
+            <div className="text-center mb-8 relative">
+              <h1 className="text-[36px] max-sm:text-[28px] font-bold text-white mb-3 font-['Orbitron'] tracking-[4px] max-sm:tracking-[2px] bg-gradient-to-br from-white via-[#6677ff] to-[#ff6b35] bg-clip-text text-transparent animate-[titleGlow_3s_ease-in-out_infinite]">
+                加入蓝网
+              </h1>
+              <p className="text-sm text-white/50 leading-relaxed tracking-[1px]">
+                填写以下信息完成报名，开启你的科技创新之旅
+              </p>
             </div>
 
-            {/* 报名表单 */}
             <Form
               form={form}
               layout="vertical"
               onFinish={handleSubmit}
-              className={styles.enrollForm}
+              className="flex flex-col gap-[18px]"
               initialValues={{ direction: selectedDirection }}
             >
-              {/* 头像和基本信息区域 */}
-              <div className={styles.profileSection}>
+              <div className="flex items-start gap-6 max-sm:flex-col max-sm:items-center mb-8 p-6 max-sm:p-5 bg-white/[0.03] rounded-2xl border border-white/[0.05] animate-[slideIn_0.6s_cubic-bezier(0.4,0,0.2,1)_0.1s_both]">
                 <AvatarUpload
                   previewUrl={avatarPreview}
                   uploading={uploadingAvatar}
@@ -481,18 +495,22 @@ const EnrollPageContent: React.FC = () => {
                   onFileSelect={handleAvatarSelect}
                   messageApi={messageApi}
                 />
-                <div className={styles.basicInfo}>
-                  <div className={styles.infoGroup}>
-                    <label className={styles.infoLabel}>
-                      姓名 <span className={styles.required}>*</span>
+                <div className="flex-1 max-sm:w-full flex flex-col gap-[14px]">
+                  <div className="flex flex-col gap-[6px]">
+                    <label className="text-[13px] font-medium text-white/70 flex items-center gap-1">
+                      姓名 <span className="text-[#ff6b35]">*</span>
                     </label>
-                    <Form.Item name="username" rules={[{ required: true, message: '请输入姓名' }]}>
-                      <Input placeholder="请输入真实姓名" className={styles.infoInput} />
+                    <Form.Item
+                      name="username"
+                      rules={[{ required: true, message: '请输入姓名' }]}
+                      className="mb-0"
+                    >
+                      <Input placeholder="请输入真实姓名" />
                     </Form.Item>
                   </div>
-                  <div className={styles.infoGroup}>
-                    <label className={styles.infoLabel}>
-                      学号 <span className={styles.required}>*</span>
+                  <div className="flex flex-col gap-[6px]">
+                    <label className="text-[13px] font-medium text-white/70 flex items-center gap-1">
+                      学号 <span className="text-[#ff6b35]">*</span>
                     </label>
                     <Form.Item
                       name="studentId"
@@ -503,21 +521,18 @@ const EnrollPageContent: React.FC = () => {
                           message: '请输入正确的学号格式（12-13位数字）',
                         },
                       ]}
+                      className="mb-0"
                     >
-                      <Input
-                        placeholder="12-13位数字"
-                        maxLength={13}
-                        className={styles.infoInput}
-                      />
+                      <Input placeholder="12-13位数字" maxLength={13} />
                     </Form.Item>
                   </div>
                 </div>
               </div>
-              {/* 第一行：邮箱 + 学院 */}
-              <div className={styles.formRow}>
-                <div className={styles.formGroup}>
-                  <label className={styles.formLabel}>
-                    邮箱 <span className={styles.required}>*</span>
+
+              <div className="grid grid-cols-2 max-sm:grid-cols-1 gap-4 animate-[slideIn_0.6s_cubic-bezier(0.4,0,0.2,1)_0.2s_both]">
+                <div className="flex flex-col gap-[6px]">
+                  <label className="text-[13px] font-medium text-white/70 flex items-center gap-1">
+                    邮箱 <span className="text-[#ff6b35]">*</span>
                   </label>
                   <Form.Item
                     name="email"
@@ -525,15 +540,20 @@ const EnrollPageContent: React.FC = () => {
                       { required: true, message: '请输入邮箱' },
                       { type: 'email', message: '请输入正确的邮箱格式' },
                     ]}
+                    className="mb-0"
                   >
                     <Input placeholder="用于接收通知" />
                   </Form.Item>
                 </div>
-                <div className={styles.formGroup}>
-                  <label className={styles.formLabel}>
-                    学院 <span className={styles.required}>*</span>
+                <div className="flex flex-col gap-[6px]">
+                  <label className="text-[13px] font-medium text-white/70 flex items-center gap-1">
+                    学院 <span className="text-[#ff6b35]">*</span>
                   </label>
-                  <Form.Item name="collegeId" rules={[{ required: true, message: '请选择学院' }]}>
+                  <Form.Item
+                    name="collegeId"
+                    rules={[{ required: true, message: '请选择学院' }]}
+                    className="mb-0"
+                  >
                     <Select
                       placeholder="请选择学院"
                       loading={loadingColleges}
@@ -542,29 +562,34 @@ const EnrollPageContent: React.FC = () => {
                         value: college.id,
                         label: college.name,
                       }))}
-                      style={{
-                        width: '100%',
-                      }}
+                      style={{ width: '100%' }}
                     />
                   </Form.Item>
                 </div>
               </div>
 
-              {/* 第二行：专业 + 年级 */}
-              <div className={styles.formRow}>
-                <div className={styles.formGroup}>
-                  <label className={styles.formLabel}>
-                    专业 <span className={styles.required}>*</span>
+              <div className="grid grid-cols-2 max-sm:grid-cols-1 gap-4 animate-[slideIn_0.6s_cubic-bezier(0.4,0,0.2,1)_0.3s_both]">
+                <div className="flex flex-col gap-[6px]">
+                  <label className="text-[13px] font-medium text-white/70 flex items-center gap-1">
+                    专业 <span className="text-[#ff6b35]">*</span>
                   </label>
-                  <Form.Item name="major" rules={[{ required: true, message: '请输入专业' }]}>
+                  <Form.Item
+                    name="major"
+                    rules={[{ required: true, message: '请输入专业' }]}
+                    className="mb-0"
+                  >
                     <Input placeholder="请输入专业名称" />
                   </Form.Item>
                 </div>
-                <div className={styles.formGroup}>
-                  <label className={styles.formLabel}>
-                    年级 <span className={styles.required}>*</span>
+                <div className="flex flex-col gap-[6px]">
+                  <label className="text-[13px] font-medium text-white/70 flex items-center gap-1">
+                    年级 <span className="text-[#ff6b35]">*</span>
                   </label>
-                  <Form.Item name="grade" rules={[{ required: true, message: '请选择年级' }]}>
+                  <Form.Item
+                    name="grade"
+                    rules={[{ required: true, message: '请选择年级' }]}
+                    className="mb-0"
+                  >
                     <Select
                       placeholder="请选择年级"
                       options={GRADE_OPTIONS.map((opt) => ({
@@ -572,28 +597,24 @@ const EnrollPageContent: React.FC = () => {
                         value: opt.value,
                         label: opt.label,
                       }))}
-                      style={{
-                        width: '100%',
-                      }}
+                      style={{ width: '100%' }}
                     />
                   </Form.Item>
                 </div>
               </div>
 
-              {/* 移动端方向选择 */}
               <MobileDirectionSelector
                 selected={selectedDirection}
                 onSelect={handleDirectionSelect}
               />
 
-              {/* 自我介绍 */}
-              <div className={`${styles.formGroup} ${styles.fullWidth} ${styles.introSection}`}>
-                <div className={styles.introHeader}>
-                  <label className={styles.formLabel}>
-                    自我介绍 <span className={styles.required}>*</span>
+              <div className="flex flex-col gap-[6px] animate-[slideIn_0.6s_cubic-bezier(0.4,0,0.2,1)_0.5s_both]">
+                <div className="flex justify-between items-center">
+                  <label className="text-[13px] font-medium text-white/70 flex items-center gap-1">
+                    自我介绍 <span className="text-[#ff6b35]">*</span>
                   </label>
                   <span
-                    className={`${styles.charCount} ${introLength < 100 ? styles.warning : ''}`}
+                    className={`text-xs ${introLength < 100 ? 'text-[#ff6b35]' : 'text-white/40'}`}
                   >
                     {introLength}/500
                   </span>
@@ -611,6 +632,7 @@ const EnrollPageContent: React.FC = () => {
                       },
                     },
                   ]}
+                  className="mb-0"
                 >
                   <TextArea
                     placeholder="请简单介绍你自己，包括你的兴趣爱好、技能特长、为什么想加入蓝网等等..."
@@ -619,36 +641,26 @@ const EnrollPageContent: React.FC = () => {
                     onChange={handleIntroChange}
                   />
                 </Form.Item>
-                <div className={styles.introHint}>建议字数：100-500字</div>
+                <div className="text-xs text-white/30 mt-1">建议字数：100-500字</div>
               </div>
 
-              {/* 内推码 */}
-              <div className={styles.formRow}>
-                <div className={`${styles.formGroup} ${styles.fullWidth}`}>
-                  <label className={styles.formLabel}>
+              <div className="grid grid-cols-1 gap-4 animate-[slideIn_0.6s_cubic-bezier(0.4,0,0.2,1)_0.6s_both]">
+                <div className="flex flex-col gap-[6px]">
+                  <label className="text-[13px] font-medium text-white/70 flex items-center gap-1">
                     内推码
-                    <span
-                      style={{
-                        color: 'rgba(255,255,255,0.4)',
-                        fontSize: '11px',
-                        marginLeft: '4px',
-                      }}
-                    >
-                      （选填）
-                    </span>
+                    <span className="text-white/40 text-[11px] ml-1">（选填）</span>
                   </label>
-                  <Form.Item name="internalReferralCode">
+                  <Form.Item name="internalReferralCode" className="mb-0">
                     <Input placeholder="如有内推码请填写" maxLength={8} />
                   </Form.Item>
                 </div>
               </div>
 
-              {/* 提交按钮 */}
-              <div className={styles.submitSection}>
+              <div className="mt-2 animate-[slideIn_0.6s_cubic-bezier(0.4,0,0.2,1)_0.6s_both]">
                 <Button
                   type="primary"
                   htmlType="submit"
-                  className={styles.submitBtn}
+                  className={`${styles.submitBtn} w-full h-[52px] bg-gradient-to-br from-[#6677ff] to-[#2f27b0] border-none rounded-xl text-white text-base font-semibold flex items-center justify-center gap-[10px] transition-all shadow-[0_0_30px_rgba(102,119,255,0.3)] relative overflow-hidden hover:-translate-y-0.5 hover:shadow-[0_5px_30px_rgba(102,119,255,0.5)] disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none`}
                   disabled={submitting || uploadingAvatar}
                   icon={submitting ? <Spin size="small" /> : <ArrowRightOutlined />}
                 >
@@ -656,17 +668,34 @@ const EnrollPageContent: React.FC = () => {
                 </Button>
               </div>
 
-              {/* 提示信息 */}
-              <div className={styles.formTips}>
-                提交即表示您同意我们的<a href="#">报名须知</a>和<a href="#">隐私政策</a>
+              <div className="text-center text-[13px] text-white/40 leading-relaxed animate-[slideIn_0.6s_cubic-bezier(0.4,0,0.2,1)_0.7s_both]">
+                提交即表示您同意我们的
+                <Link
+                  href="#"
+                  className={`${styles.link} text-[#6677ff]! hover:text-[#6677ff]! no-underline relative transition-all`}
+                >
+                  报名须知
+                </Link>
+                和
+                <Link
+                  href="#"
+                  className={`${styles.link} text-[#6677ff]! hover:text-[#6677ff]! no-underline relative transition-all`}
+                >
+                  隐私政策
+                </Link>
                 <br />
-                已有账号？<a href="/login">立即登录</a>
+                已有账号？
+                <Link
+                  href="/login"
+                  className={`${styles.link} text-[#6677ff]! hover:text-[#6677ff]! no-underline relative transition-all`}
+                >
+                  立即登录
+                </Link>
               </div>
             </Form>
           </div>
 
-          {/* 移动端咨询群 */}
-          <div className={styles.mobileConsultation}>
+          <div className="hidden max-lg:block w-full max-w-[600px]">
             <ConsultationQrcode popoverPlacement="top" />
           </div>
         </main>
@@ -679,14 +708,7 @@ export default function EnrollPage() {
   return (
     <Suspense
       fallback={
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            minHeight: '100vh',
-          }}
-        >
+        <div className="flex justify-center items-center min-h-screen">
           <Spin size="large" />
         </div>
       }

@@ -6,13 +6,12 @@ import { EquipmentService } from '@/apis/services/equipment.service'
 import type { VenueDTO, EquipmentDTO } from '@/apis/schema/type'
 import { API_BASE_URL } from '@/apis/config'
 import BackgroundDecorations from './BackgroundDecorations'
-import styles from './page.module.css'
 
 export const revalidate = 3600
 
 function LoadingState() {
   return (
-    <div className={styles.loadingContainer}>
+    <div className="flex justify-center items-center min-h-[200px] w-full">
       <Spin size="large" />
     </div>
   )
@@ -20,61 +19,72 @@ function LoadingState() {
 
 function EmptyState({ message }: { message: string }) {
   return (
-    <div className={styles.emptyContainer}>
+    <div className="flex justify-center items-center min-h-[200px] w-full">
       <Empty description={message} />
     </div>
   )
 }
 
-// 场地卡片组件
 function VenueCard({ venue }: { venue: VenueDTO }) {
   const imageUrl = venue.imageFileId ? `${API_BASE_URL}/file/download/${venue.imageFileId}` : null
 
   return (
-    <div className={styles.venueCard}>
-      <div className={styles.venueImageWrapper}>
+    <div className="bg-white/[0.05] backdrop-blur-xl border border-white/10 rounded-2xl overflow-hidden shadow-[0_4px_24px_rgba(0,0,0,0.25)] transition-all hover:-translate-y-1 hover:shadow-[0_8px_32px_rgba(0,0,0,0.35)] hover:bg-white/[0.08]">
+      <div className="relative w-full h-[280px] max-sm:h-[200px] overflow-hidden">
         {imageUrl ? (
-          <Image src={imageUrl} alt={venue.name} fill className={styles.venueImage} />
+          <Image src={imageUrl} alt={venue.name} fill className="object-cover" />
         ) : (
-          <div className={styles.venueImagePlaceholder} />
+          <div className="w-full h-full bg-gradient-to-br from-[rgba(74,144,226,0.2)] to-[rgba(232,104,53,0.2)]" />
         )}
       </div>
-      <div className={styles.venueContent}>
-        <h3 className={styles.venueName}>{venue.name}</h3>
-        {venue.subtitle && <p className={styles.venueSubtitle}>{venue.subtitle}</p>}
-        {venue.description && <p className={styles.venueDescriptionText}>{venue.description}</p>}
+      <div className="p-6 max-sm:p-4 flex flex-col gap-3">
+        <h3 className="text-xl max-sm:text-lg font-semibold text-white m-0 font-['Inter']">
+          {venue.name}
+        </h3>
+        {venue.subtitle && (
+          <p className="text-sm font-normal text-[#4a9eff] m-0 font-['Inter']">{venue.subtitle}</p>
+        )}
+        {venue.description && (
+          <p className="text-sm font-normal text-[#a0a0b0] m-0 font-['Inter'] leading-relaxed">
+            {venue.description}
+          </p>
+        )}
       </div>
     </div>
   )
 }
 
-// 设备卡片组件
 function EquipmentCard({ equipment }: { equipment: EquipmentDTO }) {
   const imageUrl = equipment.imageFileId
     ? `${API_BASE_URL}/file/download/${equipment.imageFileId}`
     : null
 
   return (
-    <div className={styles.equipmentCard}>
-      <div className={styles.equipmentImageWrapper}>
+    <div className="bg-white/[0.05] backdrop-blur-xl border border-white/10 rounded-2xl overflow-hidden shadow-[0_4px_24px_rgba(0,0,0,0.25)] transition-all hover:-translate-y-1 hover:shadow-[0_8px_32px_rgba(0,0,0,0.35)] hover:bg-white/[0.08]">
+      <div className="relative w-full h-[200px] max-sm:h-[160px] overflow-hidden">
         {imageUrl ? (
-          <Image src={imageUrl} alt={equipment.name} fill className={styles.equipmentImage} />
+          <Image src={imageUrl} alt={equipment.name} fill className="object-cover" />
         ) : (
-          <div className={styles.equipmentImagePlaceholder} />
+          <div className="w-full h-full bg-gradient-to-br from-[rgba(232,104,53,0.2)] to-[rgba(74,144,226,0.2)]" />
         )}
       </div>
-      <div className={styles.equipmentContent}>
-        <h3 className={styles.equipmentName}>{equipment.name}</h3>
-        {equipment.brand && <p className={styles.equipmentBrand}>{equipment.brand}</p>}
+      <div className="p-6 max-sm:p-4 flex flex-col gap-3">
+        <h3 className="text-xl max-sm:text-lg font-semibold text-white m-0 font-['Inter']">
+          {equipment.name}
+        </h3>
+        {equipment.brand && (
+          <p className="text-sm font-normal text-[#4a9eff] m-0 font-['Inter']">{equipment.brand}</p>
+        )}
         {equipment.description && (
-          <p className={styles.equipmentDescription}>{equipment.description}</p>
+          <p className="text-sm font-normal text-[#a0a0b0] m-0 font-['Inter'] leading-relaxed">
+            {equipment.description}
+          </p>
         )}
       </div>
     </div>
   )
 }
 
-// 场地列表组件
 async function VenuesSection() {
   const response = await VenueService.getAllVenues()
 
@@ -85,7 +95,7 @@ async function VenuesSection() {
   const venues: VenueDTO[] = response.data
 
   return (
-    <div className={styles.venueGrid}>
+    <div className="grid grid-cols-2 max-sm:grid-cols-1 gap-6 max-sm:gap-4 w-full">
       {venues.map((venue) => (
         <VenueCard key={venue.id} venue={venue} />
       ))}
@@ -93,7 +103,6 @@ async function VenuesSection() {
   )
 }
 
-// 设备列表组件
 async function EquipmentsSection() {
   const response = await EquipmentService.getAllEquipments()
 
@@ -104,7 +113,7 @@ async function EquipmentsSection() {
   const equipments: EquipmentDTO[] = response.data
 
   return (
-    <div className={styles.equipmentGrid}>
+    <div className="grid grid-cols-3 max-sm:grid-cols-1 gap-6 max-sm:gap-4 w-full">
       {equipments.map((equipment) => (
         <EquipmentCard key={equipment.id} equipment={equipment} />
       ))}
@@ -119,33 +128,38 @@ export const metadata = {
 
 export default function LabEnvironmentPage() {
   return (
-    <div className={styles.pageContainer}>
+    <div className="min-h-screen bg-[#0a0a0f] flex flex-col relative overflow-hidden">
       <BackgroundDecorations />
 
-      {/* Hero 区域 - 固定文本 */}
-      <section className={styles.heroSection}>
-        <h1 className={styles.heroTitle}>实验室环境</h1>
-        <p className={styles.heroSubtitle}>
+      <section className="flex flex-col items-center gap-4 py-[100px] px-[120px] max-xl:px-12 max-md:px-6 max-md:py-[60px] max-md:gap-3 relative z-1">
+        <h1 className="text-[56px] max-md:text-[42px] max-sm:text-[32px] font-semibold text-white m-0 font-['Inter'] text-center">
+          实验室环境
+        </h1>
+        <p className="text-xl max-md:text-lg max-sm:text-base font-normal text-[#a0a0b0] m-0 font-['Inter'] text-center max-w-[800px]">
           专业的实验场地与先进的工程设备，为创新实践提供全方位支持
         </p>
       </section>
 
-      {/* 场地展示区 - 标题固定，卡片从后端获取 */}
-      <section className={styles.venueSection}>
-        <div className={styles.sectionHeader}>
-          <h2 className={styles.sectionTitle}>我们的场地</h2>
-          <p className={styles.sectionDescription}>宽敞明亮的实验室环境，为创新实践提供理想空间</p>
+      <section className="flex flex-col items-start gap-8 pt-[45px] pb-[60px] px-[120px] max-xl:px-12 max-md:px-6 max-md:pt-8 max-md:pb-12 max-md:gap-6 relative z-1 box-border w-full">
+        <div className="flex flex-col gap-[23px] max-md:gap-4 items-start w-full">
+          <h2 className="text-[36px] max-md:text-[30px] max-sm:text-2xl font-semibold text-white m-0 font-['Inter'] text-left w-full">
+            我们的场地
+          </h2>
+          <p className="text-lg max-md:text-base max-sm:text-sm font-normal text-[#a0a0b0] m-0 font-['Inter'] text-left w-full">
+            宽敞明亮的实验室环境，为创新实践提供理想空间
+          </p>
         </div>
         <Suspense fallback={<LoadingState />}>
           <VenuesSection />
         </Suspense>
       </section>
 
-      {/* 设备展示区 - 标题固定，卡片从后端获取 */}
-      <section className={styles.equipmentSection}>
-        <div className={styles.sectionHeader}>
-          <h2 className={styles.sectionTitle}>我们的设备</h2>
-          <p className={styles.sectionDescription}>
+      <section className="flex flex-col items-start gap-8 py-[60px] px-[120px] max-xl:px-12 max-md:px-6 max-md:py-12 max-md:gap-6 relative z-1 box-border w-full">
+        <div className="flex flex-col gap-[23px] max-md:gap-4 items-start w-full">
+          <h2 className="text-[36px] max-md:text-[30px] max-sm:text-2xl font-semibold text-white m-0 font-['Inter'] text-left w-full">
+            我们的设备
+          </h2>
+          <p className="text-lg max-md:text-base max-sm:text-sm font-normal text-[#a0a0b0] m-0 font-['Inter'] text-left w-full">
             涵盖3D打印、嵌入式开发、电路设计等多领域的专业设备，满足各类创新项目需求
           </p>
         </div>

@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { Masonry, Spin, Empty, Pagination } from 'antd'
-import styles from './styles.module.css'
 import AchievementCard from '@/components/Achievements/AchievementCard'
 import AchievementStats from '@/components/Achievements/AchievementStats'
 import AchievementFilter from '@/components/Achievements/AchievementFilter'
@@ -45,7 +44,6 @@ export default function AchievementsPage() {
     fetchStats()
   }, [])
 
-  // 获取成就列表
   const fetchAchievements = useCallback(async () => {
     setLoading(true)
     try {
@@ -90,26 +88,28 @@ export default function AchievementsPage() {
 
   // 处理页码变化
   const handlePageChange = (page: number) => {
-    setCurrentPage(page - 1) // UI 显示从 1 开始，API 从 0 开始
-    const achievementsSection = document.querySelector(`.${styles.achievementsSection}`)
+    setCurrentPage(page - 1)
+    const achievementsSection = document.querySelector('.achievements-section')
     if (achievementsSection) {
       achievementsSection.scrollIntoView({ behavior: 'smooth', block: 'start' })
     }
   }
 
   return (
-    <div className={styles.pageContainer}>
-      <div className={styles.pageBg} />
-      <main className={styles.mainContent}>
-        <section className={styles.pageHeader}>
-          <h1 className={styles.pageTitle}>团队成就</h1>
-          <p className={styles.pageSubtitle}>
+    <div className="w-full min-h-screen bg-[#0a0a0a] text-white relative overflow-x-hidden">
+      <div className="fixed top-0 left-0 w-full h-full bg-[radial-gradient(ellipse_80%_50%_at_20%_40%,rgba(102,119,255,0.15)_0%,transparent_50%),radial-gradient(ellipse_60%_40%_at_80%_60%,rgba(255,107,53,0.1)_0%,transparent_50%),radial-gradient(ellipse_50%_30%_at_50%_100%,rgba(47,39,176,0.2)_0%,transparent_50%)] z-0 pointer-events-none" />
+      <main className="flex flex-col items-center w-full min-h-screen py-8 px-[147px] max-lg:px-10 max-md:px-4 box-border relative z-1">
+        <section className="text-center mb-8 w-full pt-8">
+          <h1 className="text-5xl max-md:text-4xl max-sm:text-[28px] font-bold text-white mb-4 bg-gradient-to-br from-white to-white/80 bg-clip-text text-transparent">
+            团队成就
+          </h1>
+          <p className="text-lg max-sm:text-sm text-white/50 max-w-[600px] mx-auto leading-relaxed">
             记录团队在学术研究、技术创新和学科竞赛中取得的荣誉与成果
           </p>
         </section>
 
         <AchievementStats stats={stats} />
-        <section className={styles.filterSection}>
+        <section className="w-full my-6 flex justify-end max-md:justify-center">
           <AchievementFilter
             type={type}
             awardLevel={awardLevel}
@@ -118,9 +118,9 @@ export default function AchievementsPage() {
             onFilterChange={handleFilterChange}
           />
         </section>
-        <section className={styles.achievementsSection}>
+        <section className="w-full mt-4 achievements-section">
           {loading ? (
-            <div className={styles.loadingContainer}>
+            <div className="flex justify-center items-center min-h-[300px] w-full">
               <Spin size="large" />
             </div>
           ) : achievements.length === 0 ? (
@@ -139,7 +139,7 @@ export default function AchievementsPage() {
                 )}
               />
               {totalPages > 1 && (
-                <div className={styles.paginationContainer}>
+                <div className="flex justify-center mt-8 py-4">
                   <Pagination
                     current={currentPage + 1}
                     total={totalElements}
