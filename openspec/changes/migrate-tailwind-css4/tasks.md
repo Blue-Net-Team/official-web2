@@ -65,8 +65,8 @@
 
 ## 9. 页面级样式迁移
 
-- [ ] 9.1 迁移首页页面样式：`app/(public)/(home)/styles.module.css` → Tailwind class
-- [ ] 9.2 迁移个人资料页样式：`app/(public)/(other)/profile/styles.module.css` → Tailwind class
+- [x] 9.1 迁移首页页面样式：`app/(public)/(home)/styles.module.css` → Tailwind class
+- [x] 9.2 迁移个人资料页样式：`app/(public)/(other)/profile/styles.module.css` → Tailwind class
 - [ ] 9.3 迁移成员列表页样式：`app/(public)/(other)/members/styles.module.css` → Tailwind class
 - [ ] 9.4 迁移登录页样式：`app/(public)/(other)/login/styles.module.css` → Tailwind class
 - [ ] 9.5 迁移实验室环境页样式：`app/(public)/(other)/lab-environment/page.module.css` → Tailwind class

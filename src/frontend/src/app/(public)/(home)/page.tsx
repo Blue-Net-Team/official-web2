@@ -1,6 +1,5 @@
 import bg1 from '@/assets/bg1.png'
 import bg2 from '@/assets/bg2.png'
-import styles from './styles.module.css'
 import { Flex } from 'antd'
 import TopContent from '@/components/Home/TopContent'
 import { CompetitionService } from '@/apis/services/competition.service'
@@ -16,10 +15,6 @@ import RecruitmentProcess from '@/components/Home/RecruitmentProcess'
 
 export const revalidate = 3600
 
-/**
- * 渲染竞赛表格异步组件，用于流式渲染
- * @returns 竞赛表格组件
- */
 async function CompetitionsTable() {
   const competitionsBrief = await CompetitionService.getAllCompetitions()
 
@@ -36,11 +31,10 @@ export default function Home() {
       <Flex
         vertical
         align="center"
-        className={`${styles.container} ${styles.bg}`}
+        className="relative min-h-screen w-full max-w-full overflow-x-hidden bg-no-repeat bg-blend-screen bg-[position:right_-15%,right_30%] bg-[size:100%_auto,100%_auto] max-lg:bg-[position:right_-5%,right_35%] max-md:bg-[position:right_-3%,right_30%] max-md:bg-[size:120%_auto,150%_auto]"
         style={
           {
-            '--bg1': `url(${bg1.src})`,
-            '--bg2': `url(${bg2.src})`,
+            backgroundImage: `url(${bg1.src}), url(${bg2.src})`,
           } as React.CSSProperties
         }
       >

@@ -117,8 +117,8 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div className={styles.pageContainer}>
-        <div className={styles.loadingContainer}>
+      <div className="w-full min-h-screen bg-[#0a0a0a] text-white relative overflow-x-hidden">
+        <div className="flex justify-center items-center min-h-[400px] w-full">
           <Spin size="large" />
         </div>
       </div>
@@ -127,8 +127,8 @@ export default function ProfilePage() {
 
   if (!profile) {
     return (
-      <div className={styles.pageContainer}>
-        <div className={styles.loadingContainer}>
+      <div className="w-full min-h-screen bg-[#0a0a0a] text-white relative overflow-x-hidden">
+        <div className="flex justify-center items-center min-h-[400px] w-full">
           <p>加载失败，请刷新页面重试</p>
         </div>
       </div>
@@ -136,13 +136,13 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className={styles.pageContainer}>
-      <div className={styles.pageBg} />
+    <div className="w-full min-h-screen bg-[#0a0a0a] text-white relative overflow-x-hidden">
+      <div className={`fixed w-full h-full pointer-events-none z-0 ${styles.pageBg}`} />
 
-      <main className={styles.mainContent}>
+      <main className="flex max-w-[1400px] mx-auto pt-[104px] px-16 pb-10 gap-8 relative z-[1] flex-row max-lg:flex-col md:px-6 max-sm:pt-20 max-sm:px-4 max-sm:pb-6">
         <ProfileSidebar profile={profile} stats={mockUserStats} onAvatarUpdate={loadData} />
 
-        <div className={styles.contentArea}>
+        <div className="flex-1 min-w-0">
           <ProfileTabs activeTab={currentTab} tabCounts={tabCounts} onTabChange={handleTabChange} />
 
           {currentTab === 'profile' && <ProfileInfo profile={profile} onUpdate={loadData} />}
