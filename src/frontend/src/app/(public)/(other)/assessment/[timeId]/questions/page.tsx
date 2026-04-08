@@ -15,10 +15,13 @@ import type { TableColumnsType } from 'antd'
 import { assessmentQuestionService } from '@/apis/services/assessment-question.service'
 import { assessmentTimeService } from '@/apis/services/assessment-time.service'
 import authStore from '@/stores/authStore'
-import type { AssessmentQuestionDTO, QuestionType } from '@/types/assessment'
+import type {
+  AssessmentQuestionDTO,
+  AssessmentTimeDTO,
+  QuestionType,
+} from '@/apis/schema/assessment.dto'
 import { QuestionTypeLabels } from '@/types/assessment'
-import type { AssessmentTimeDTO } from '@/types/assessment'
-import { DirectionLabels } from '@/types/assessment'
+import { DIRECTION_LABELS as DirectionLabels } from '@/apis/schema/enumerate'
 import type { Direction } from '@/apis/schema/enumerate'
 import styles from './styles.module.css'
 

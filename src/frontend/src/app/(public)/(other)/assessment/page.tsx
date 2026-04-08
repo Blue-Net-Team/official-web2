@@ -13,8 +13,9 @@ import { Spin } from 'antd'
 import { useRouter } from 'next/navigation'
 import authStore from '@/stores/authStore'
 import { assessmentTimeService } from '@/apis/services/assessment-time.service'
-import type { AssessmentTimeDTO, AssessmentStatus, Direction } from '@/types/assessment'
-import { DirectionLabels } from '@/types/assessment'
+import type { AssessmentTimeDTO, AssessmentStatus } from '@/apis/schema/assessment.dto'
+import type { Direction } from '@/apis/schema/enumerate'
+import { DIRECTION_LABELS as DirectionLabels } from '@/apis/schema/enumerate'
 
 function getAssessmentStatus(startTime: string, endTime: string): AssessmentStatus {
   const now = new Date().getTime()
