@@ -42,7 +42,6 @@ import { QuestionTypeLabels } from '@/types/assessment'
 import CountdownTimer from './CountdownTimer'
 import styles from './styles.module.css'
 
-/** 获取考核状态 */
 function getStatusInfo(
   startTime: string,
   endTime: string
@@ -55,14 +54,12 @@ function getStatusInfo(
   return { text: '进行中', status: 'in-progress' }
 }
 
-/** 格式化日期 */
 function formatDate(dateStr: string): string {
   const d = new Date(dateStr)
   const pad = (n: number) => String(n).padStart(2, '0')
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`
 }
 
-/** 格式化文件大小 */
 function formatFileSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
@@ -306,12 +303,11 @@ export default function QuestionDetailPage() {
       router.push(`/assessment/${timeId}/questions/${questionsList[currentIndex + 1].id}`)
   }
 
-  // ====== Loading / Not Found ======
   if (!isAuthenticated || loading) {
     return (
-      <div className={styles.container}>
-        <div className={styles.pageBg} />
-        <div className={styles.loading}>
+      <div className="min-h-screen bg-[#0a0a0a] relative flex flex-col">
+        <div className={`${styles.bg} top-0 left-0 w-full h-full z-0 pointer-events-none fixed`} />
+        <div className="flex flex-col justify-center items-center min-h-[300px] relative z-10">
           <Spin size="large" />
         </div>
       </div>
@@ -320,10 +316,10 @@ export default function QuestionDetailPage() {
 
   if (!question) {
     return (
-      <div className={styles.container}>
-        <div className={styles.pageBg} />
-        <div className={styles.notFound}>
-          <p>题目不存在或无权查看</p>
+      <div className="min-h-screen bg-[#0a0a0a] relative flex flex-col">
+        <div className={`${styles.bg} top-0 left-0 w-full h-full z-0 pointer-events-none fixed`} />
+        <div className="flex flex-col justify-center items-center min-h-[300px] relative z-10">
+          <p className="text-white/50 mb-4">题目不存在或无权查看</p>
           <Button onClick={() => router.push(`/assessment/${timeId}/questions`)}>
             返回题目列表
           </Button>
@@ -332,7 +328,6 @@ export default function QuestionDetailPage() {
     )
   }
 
-  // ====== 数据准备 ======
   const fileContent = question.content as FileUploadContent | null
   const isFileUpload = question.questionType === 'file_upload'
   const isAnswered = !!answer
@@ -390,42 +385,37 @@ export default function QuestionDetailPage() {
   }
 
   const renderUploadedFileRow = (meta: string, onRemove: () => void) => (
-    <div className={styles.uploadedFileRow}>
-      <div className={styles.uploadedFileInfo}>
-        <div className={styles.uploadedFileIconWrap}>
-          <FileOutlined className={styles.uploadedFileIcon} />
+    <div className="flex items-center justify-between p-3.5 rounded-lg bg-white/[0.08]">
+      <div className="flex items-center gap-3">
+        <div className="w-9 h-9 rounded-md bg-[#6677ff]/[0.1] flex items-center justify-center flex-shrink-0">
+          <FileOutlined className="text-base text-[#6677ff]" />
         </div>
-        <div className={styles.uploadedFileDetail}>
-          <span className={styles.uploadedFileName}>{uploadedFile!.name}</span>
-          <span className={styles.uploadedFileMeta}>
+        <div className="flex flex-col gap-0.5">
+          <span className="text-[13px] font-medium text-white">{uploadedFile!.name}</span>
+          <span className="text-[11px] text-white/30">
             {uploadedFile!.size ? formatFileSize(uploadedFile!.size) : ''} · {meta}
           </span>
         </div>
       </div>
-      <button className={styles.uploadedFileRemove} onClick={onRemove}>
-        <DeleteOutlined className={styles.uploadedFileRemoveIcon} />
+      <button
+        title="删除文件"
+        className="w-7 h-7 rounded-md bg-[#f5222d]/[0.24] border-none flex items-center justify-center cursor-pointer transition-colors duration-200 hover:bg-[#f5222d]/[0.48] flex-shrink-0"
+        onClick={onRemove}
+      >
+        <DeleteOutlined className="text-sm text-[#f5222d]!" />
       </button>
     </div>
   )
 
   const renderProgressBar = () =>
     uploadProgress > 0 && uploadProgress < 100 ? (
-      <div style={{ marginTop: 16 }}>
-        <div
-          style={{
-            height: 4,
-            borderRadius: 2,
-            background: '#ffffff0a',
-            overflow: 'hidden',
-          }}
-        >
+      <div className="mt-4">
+        <div className="h-1 rounded-[2px] bg-white/[0.04] overflow-hidden">
           <div
+            className="h-full rounded-[2px] transition-[width] duration-300 ease-out"
             style={{
-              height: '100%',
               width: `${uploadProgress}%`,
               background: 'linear-gradient(90deg, #6677ff, #8594ff)',
-              borderRadius: 2,
-              transition: 'width 0.3s ease',
             }}
           />
         </div>
@@ -443,24 +433,24 @@ export default function QuestionDetailPage() {
     switch (uploadPhase) {
       case 'answered':
         return (
-          <div className={styles.answeredInfo}>
-            <CheckCircleOutlined className={styles.answeredIcon} />
-            <div style={{ flex: 1 }}>
-              <p className={styles.answeredText}>已提交答案</p>
-              <p className={styles.answeredTime}>
+          <div className="flex items-center gap-4 p-5 rounded-[10px] bg-[#07c160]/[0.06] border border-[#07c160]/[0.12]">
+            <CheckCircleOutlined className="text-[32px] text-[#07c160]" />
+            <div className="flex-1">
+              <p className="text-base font-semibold text-[#07c160] mb-1">已提交答案</p>
+              <p className="text-[13px] text-white/45 m-0">
                 提交时间：
                 {answer?.submitTime ? new Date(answer.submitTime).toLocaleString('zh-CN') : '-'}
               </p>
             </div>
             {!isExpired && (
               <button
-                className={styles.resubmitButton}
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#fa8c16]/[0.1] border border-[#fa8c16]/[0.19] text-[#fa8c16] text-xs font-medium cursor-pointer transition-all duration-200 flex-shrink-0 hover:bg-[#fa8c16]/[0.19]"
                 onClick={() => {
                   setIsResubmitting(true)
                   setUploadedFile(null)
                 }}
               >
-                <RedoOutlined style={{ fontSize: 14 }} />
+                <RedoOutlined className="text-sm" />
                 重新提交
               </button>
             )}
@@ -476,23 +466,26 @@ export default function QuestionDetailPage() {
       case 'resubmitting':
         return (
           <>
-            <Upload.Dragger {...draggerProps} rootClassName={styles.dropZone}>
-              <p className={styles.dropIcon}>
+            <Upload.Dragger
+              {...draggerProps}
+              rootClassName="min-h-[200px] bg-white/[0.02] border border-dashed border-white/10 rounded-xl transition-all duration-300 ease hover:border-[#6677ff]/40 hover:bg-[#6677ff]/[0.03]"
+            >
+              <p className="text-[36px] text-white/30 m-0">
                 <InboxOutlined />
               </p>
-              <p className={styles.dropText}>上传新文件替换已提交的答案</p>
-              <p className={styles.dropSubtext}>{dropHintText}</p>
+              <p className="mt-3 text-sm text-white/65">上传新文件替换已提交的答案</p>
+              <p className="mt-2 text-xs text-white/30">{dropHintText}</p>
             </Upload.Dragger>
             {renderProgressBar()}
           </>
         )
       case 'expired':
         return (
-          <div className={styles.expiredUploadInfo}>
-            <WarningOutlined className={styles.expiredIcon} />
+          <div className="flex items-center gap-4 p-5 rounded-[10px] bg-[#ff4d4f]/[0.06] border border-[#ff4d4f]/[0.12]">
+            <WarningOutlined className="text-[32px] text-[#ff4d4f]" />
             <div>
-              <p className={styles.expiredText}>考核已结束</p>
-              <p className={styles.expiredDesc}>
+              <p className="text-base font-semibold text-[#ff4d4f] mb-1">考核已结束</p>
+              <p className="text-[13px] text-white/45 m-0">
                 {uploadedFile ? '考核时间已到，答案已自动提交' : '考核已结束，未提交答案'}
               </p>
             </div>
@@ -509,12 +502,15 @@ export default function QuestionDetailPage() {
       default:
         return (
           <>
-            <Upload.Dragger {...draggerProps} rootClassName={styles.dropZone}>
-              <p className={styles.dropIcon}>
+            <Upload.Dragger
+              {...draggerProps}
+              rootClassName="min-h-[200px] bg-white/[0.02] border border-dashed border-white/10 rounded-xl transition-all duration-300 ease hover:border-[#6677ff]/40 hover:bg-[#6677ff]/[0.03]"
+            >
+              <p className="text-[36px] text-white/30 m-0">
                 <InboxOutlined />
               </p>
-              <p className={styles.dropText}>拖拽文件到此处，或点击选择文件</p>
-              <p className={styles.dropSubtext}>{dropHintText}</p>
+              <p className="mt-3 text-sm text-white/65">拖拽文件到此处，或点击选择文件</p>
+              <p className="mt-2 text-xs text-white/30">{dropHintText}</p>
             </Upload.Dragger>
             {renderProgressBar()}
           </>
@@ -522,20 +518,18 @@ export default function QuestionDetailPage() {
     }
   }
 
-  // 解析题目描述中的要求列表
   const descriptionLines = fileContent?.content?.split('\n').filter(Boolean) || []
   const mainDesc = descriptionLines[0] || '暂无题目描述'
   const requirements = descriptionLines.slice(1)
 
   return (
-    <div className={styles.container}>
-      <div className={styles.pageBg} />
+    <div className="min-h-screen bg-[#0a0a0a] relative flex flex-col">
+      <div className={`${styles.bg} top-0 left-0 w-full h-full z-0 pointer-events-none fixed`} />
       {contextHolder}
 
-      {/* 超时锁定横幅 */}
       {isExpired && (
-        <div className={styles.expiredBanner}>
-          <WarningOutlined style={{ marginRight: 8 }} />
+        <div className="relative z-[2] flex items-center justify-center px-6 py-3 bg-[#ff4d4f]/[0.12] border-b border-[#ff4d4f]/[0.25] text-[#ff4d4f] text-sm font-semibold backdrop-blur-[8px]">
+          <WarningOutlined className="mr-2" />
           {isAnswered
             ? '考核已结束'
             : uploadedFile
@@ -544,30 +538,31 @@ export default function QuestionDetailPage() {
         </div>
       )}
 
-      <div className={styles.pageContent}>
-        {/* ====== Header ====== */}
-        <header className={styles.header}>
+      <div className="relative z-10 max-w-[1440px] w-full mx-auto px-5 md:px-10 lg:px-20 py-[60px] flex flex-col gap-8">
+        <header className="flex items-center gap-3 flex-wrap">
           <button
-            className={styles.backButton}
+            className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border-none bg-white/[0.08] text-white/65 text-[13px] cursor-pointer transition-all duration-200 flex-shrink-0 hover:bg-white/[0.08] hover:text-white"
             onClick={() => router.push(`/assessment/${timeId}/questions`)}
           >
             <ArrowLeftOutlined />
             <span>返回目录</span>
           </button>
 
-          <div className={styles.titleSection}>
-            <div className={styles.titleRow}>
-              <h1 className={styles.questionTitle}>
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center gap-3 flex-wrap">
+              <h1 className="text-[22px] font-semibold text-white m-0">
                 题目 {question.questionNo} · {QuestionTypeLabels[question.questionType]}
               </h1>
-              <span className={styles.scoreTag}>{question.score} 分</span>
+              <span className="inline-flex items-center px-3 py-1 rounded-md bg-[#fa8c16]/[0.1] text-xs font-semibold text-[#fa8c16] border-none">
+                {question.score} 分
+              </span>
               {isAnswered && (
                 <Tag color="success" style={{ margin: 0 }}>
                   <CheckCircleOutlined /> 已答
                 </Tag>
               )}
             </div>
-            <div className={styles.metaRow}>
+            <div className="flex items-center gap-4 flex-wrap">
               {timeInfo && (
                 <Tag color="blue" style={{ margin: 0 }}>
                   {DirectionLabels[timeInfo.direction]}
@@ -589,43 +584,40 @@ export default function QuestionDetailPage() {
           </div>
         </header>
 
-        {/* ====== 双栏布局 ====== */}
-        <div className={styles.bodyLayout}>
-          {/* ====== 左栏：主内容 ====== */}
-          <main className={styles.mainContent}>
-            {/* 题目要求卡片 */}
-            <section className={styles.card}>
-              <div className={styles.cardHeader}>
-                <FileTextOutlined
-                  className={`${styles.cardHeaderIcon} ${styles.cardHeaderIconOrange}`}
-                />
-                <h2 className={styles.cardHeaderTitle}>{question.title}</h2>
+        <div className="flex flex-col lg:flex-row gap-8">
+          <main className="flex-1 min-w-0 flex flex-col gap-6">
+            <section className="bg-white/[0.06] border border-white/[0.08] rounded-xl p-7 h-fit">
+              <div className="flex items-center gap-2.5">
+                <FileTextOutlined className="text-xl text-[#fa8c16]" />
+                <h2 className="text-base font-semibold text-white m-0">{question.title}</h2>
               </div>
-              <hr className={styles.divider} />
-              <div className={styles.descriptionBody}>
-                <p className={styles.descriptionText}>{mainDesc}</p>
+              <hr className="w-full h-px bg-white/[0.04] border-none m-0 my-4" />
+              <div className="flex flex-col gap-4">
+                <p className="text-sm leading-relaxed text-white/65 whitespace-pre-wrap m-0">
+                  {mainDesc}
+                </p>
                 {requirements.length > 0 && (
-                  <div className={styles.requirementsList}>
+                  <div className="flex flex-col gap-2.5">
                     {requirements.map((req, i) => (
-                      <div key={i} className={styles.requirementItem}>
-                        <span className={styles.requirementNum}>{i + 1}.</span>
-                        <span className={styles.requirementText}>{req}</span>
+                      <div key={i} className="flex gap-2 text-[13px] text-white/45">
+                        <span className="flex-shrink-0 text-white/45">{i + 1}.</span>
+                        <span className="text-white/65 leading-relaxed">{req}</span>
                       </div>
                     ))}
                   </div>
                 )}
                 {fileContent?.allowedExtensions && (
-                  <div className={styles.requirementItem}>
-                    <span className={styles.requirementNum}>允许的文件类型：</span>
-                    <span className={styles.requirementText}>
+                  <div className="flex gap-2 text-[13px] text-white/45">
+                    <span className="flex-shrink-0 text-white/45">允许的文件类型：</span>
+                    <span className="text-white/65 leading-relaxed">
                       {fileContent.allowedExtensions.join(', ')}
                     </span>
                   </div>
                 )}
                 {fileContent?.maxFileSize && (
-                  <div className={styles.requirementItem}>
-                    <span className={styles.requirementNum}>最大文件大小：</span>
-                    <span className={styles.requirementText}>
+                  <div className="flex gap-2 text-[13px] text-white/45">
+                    <span className="flex-shrink-0 text-white/45">最大文件大小：</span>
+                    <span className="text-white/65 leading-relaxed">
                       {formatFileSize(fileContent.maxFileSize)}
                     </span>
                   </div>
@@ -633,63 +625,58 @@ export default function QuestionDetailPage() {
               </div>
             </section>
 
-            {/* 附件下载卡片 */}
             {question.attachmentId && (
-              <div className={styles.attachmentCard}>
-                <div className={styles.attachmentIconWrap}>
-                  <PaperClipOutlined className={styles.attachmentIcon} />
+              <div className="bg-white/[0.06] border border-white/[0.08] rounded-xl px-5 py-4 flex items-center gap-3.5">
+                <div className="w-10 h-10 rounded-lg bg-[#6677ff]/[0.1] flex items-center justify-center flex-shrink-0">
+                  <PaperClipOutlined className="text-lg text-[#6677ff]" />
                 </div>
-                <div className={styles.attachmentInfo}>
-                  <span className={styles.attachmentName}>考题附件</span>
-                  <span className={styles.attachmentMeta}>点击右侧下载</span>
+                <div className="flex-1 flex flex-col gap-0.5 min-w-0">
+                  <span className="text-sm font-medium text-white overflow-hidden text-ellipsis whitespace-nowrap">
+                    考题附件
+                  </span>
+                  <span className="text-xs text-white/30">点击右侧下载</span>
                 </div>
                 <button
-                  className={styles.downloadButton}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#6677ff]/[0.15] border-none text-[#6677ff] text-xs font-medium cursor-pointer transition-all duration-200 flex-shrink-0 hover:bg-[#6677ff]/[0.25]"
                   onClick={() => fileService.downloadFile(question.attachmentId!)}
                 >
-                  <DownOutlined style={{ fontSize: 14 }} />
+                  <DownOutlined className="text-sm" />
                   下载附件
                 </button>
               </div>
             )}
 
-            {/* ====== 题型内容区域 ====== */}
             {isFileUpload ? (
-              <section className={styles.card}>
-                <div className={styles.uploadHeader}>
-                  <div className={styles.uploadTitleRow}>
-                    <UploadOutlined
-                      className={`${styles.cardHeaderIcon} ${styles.cardHeaderIconBlue}`}
-                    />
-                    <h2 className={styles.cardHeaderTitle}>上传答案</h2>
+              <section className="bg-white/[0.06] border border-white/[0.08] rounded-xl p-7 h-fit">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2.5">
+                    <UploadOutlined className="text-xl text-[#6677ff]" />
+                    <h2 className="text-base font-semibold text-white m-0">上传答案</h2>
                   </div>
-                  <span className={styles.uploadHint}>{uploadHintText}</span>
+                  <span className="text-xs text-white/30 flex-shrink-0">{uploadHintText}</span>
                 </div>
-                <hr className={styles.divider} />
-                <div style={{ flex: 1, paddingTop: 18 }}>
+                <hr className="w-full h-px bg-white/[0.04] border-none m-0" />
+                <div className="flex-1 pt-[18px]">
                   <UploadArea />
                 </div>
               </section>
             ) : (
-              /* 其他题型：正在开发占位符 */
-              <div className={styles.developingPlaceholder}>
-                <ExperimentOutlined className={styles.developingIcon} />
-                <p className={styles.developingText}>正在开发</p>
-                <p className={styles.developingSubtext}>
+              <div className="flex flex-col items-center justify-center gap-3 min-h-[200px] bg-white/[0.06] border border-white/[0.08] rounded-xl px-5 py-10">
+                <ExperimentOutlined className="text-[40px] text-white/15" />
+                <p className="text-base font-medium text-white/40 m-0">正在开发</p>
+                <p className="text-[13px] text-white/25 m-0">
                   {QuestionTypeLabels[question.questionType]}功能即将上线
                 </p>
               </div>
             )}
           </main>
 
-          {/* ====== 右栏：侧栏 ====== */}
-          <aside className={styles.sidebar}>
-            {/* 倒计时卡片（限时） */}
+          <aside className="w-full lg:w-80 flex-shrink-0 lg:sticky lg:top-6 lg:self-start flex flex-col gap-6">
             {isTimed && deadline && (
-              <div className={styles.timerCard}>
-                <div className={styles.timerHeader}>
-                  <ClockCircleOutlined className={styles.timerHeaderIcon} />
-                  <span className={styles.timerLabel}>剩余时间</span>
+              <div className="bg-white/[0.06] border border-white/[0.08] rounded-xl p-6 flex flex-col items-center gap-5">
+                <div className="w-full flex items-center justify-center gap-2">
+                  <ClockCircleOutlined className="text-base text-[#fa8c16]" />
+                  <span className="text-[13px] font-medium text-white/65">剩余时间</span>
                 </div>
                 <CountdownTimer
                   deadline={deadline}
@@ -699,19 +686,22 @@ export default function QuestionDetailPage() {
               </div>
             )}
 
-            {/* 时间范围卡片（无限时） */}
             {!isTimed && timeInfo && (
-              <div className={styles.timeRangeCard}>
-                <div className={styles.timeRangeHeader}>
-                  <CalendarOutlined className={styles.timeRangeHeaderIcon} />
-                  <span className={styles.timeRangeTitle}>考核时间</span>
+              <div className="bg-white/[0.06] border border-white/[0.08] rounded-xl p-5 flex flex-col gap-4">
+                <div className="flex items-center gap-2">
+                  <CalendarOutlined className="text-base text-[#6677ff]" />
+                  <span className="text-[13px] font-medium text-white/65">考核时间</span>
                 </div>
-                <div className={styles.timeRangeBody}>
-                  <span className={styles.timeRangeValue}>{formatDate(timeInfo.startTime)}</span>
-                  <DownOutlined className={styles.timeRangeArrow} />
-                  <span className={styles.timeRangeValue}>{formatDate(timeInfo.endTime)}</span>
+                <div className="flex flex-col items-center gap-2.5">
+                  <span className="text-sm text-white/65 tabular-nums">
+                    {formatDate(timeInfo.startTime)}
+                  </span>
+                  <DownOutlined className="text-sm text-white/30" />
+                  <span className="text-sm text-white/65 tabular-nums">
+                    {formatDate(timeInfo.endTime)}
+                  </span>
                   {statusInfo && (
-                    <span className={styles.timeRangeStatusBadge}>
+                    <span className="inline-flex items-center gap-1 px-3 py-1 rounded-md bg-[#07c160]/[0.1] text-[11px] text-[#07c160] border-none">
                       {statusInfo.text === '进行中' ? '进行中 · 无限时' : statusInfo.text}
                     </span>
                   )}
@@ -719,126 +709,130 @@ export default function QuestionDetailPage() {
               </div>
             )}
 
-            {/* 答题信息卡片 */}
-            <div className={styles.infoCard}>
-              <h3 className={styles.infoTitle}>答题信息</h3>
-              <hr className={styles.divider} />
-              <div className={styles.infoRow}>
-                <span className={styles.infoLabel}>考核轮次</span>
-                <span className={styles.infoValue}>
+            <div className="bg-white/[0.06] border border-white/[0.08] rounded-xl p-5 flex flex-col gap-4">
+              <h3 className="text-sm font-semibold text-white m-0">答题信息</h3>
+              <hr className="w-full h-px bg-white/[0.04] border-none m-0" />
+              <div className="flex justify-between items-center">
+                <span className="text-[13px] text-white/45">考核轮次</span>
+                <span className="text-[13px] text-white/65">
                   {timeInfo ? `第${timeInfo.epoch}轮考核` : '-'}
                 </span>
               </div>
-              <div className={styles.infoRow}>
-                <span className={styles.infoLabel}>题目序号</span>
-                <span className={styles.infoValue}>
+              <div className="flex justify-between items-center">
+                <span className="text-[13px] text-white/45">题目序号</span>
+                <span className="text-[13px] text-white/65">
                   {currentIndex >= 0 ? `${currentIndex + 1} / ${questionsList.length}` : '-'}
                 </span>
               </div>
-              <div className={styles.infoRow}>
-                <span className={styles.infoLabel}>分值</span>
-                <span className={styles.infoValueHighlight}>{question.score} 分</span>
+              <div className="flex justify-between items-center">
+                <span className="text-[13px] text-white/45">分值</span>
+                <span className="text-[13px] font-semibold text-[#fa8c16]">
+                  {question.score} 分
+                </span>
               </div>
             </div>
 
-            {/* 已上传文件卡片（仅文件上传题 + 已上传文件 + 未提交） */}
             {isFileUpload && uploadedFile && !isAnswered && !isExpired && (
-              <div className={styles.uploadedCard}>
-                <div className={styles.uploadedCardHeader}>
-                  <CheckCircleOutlined className={styles.uploadedCardIcon} />
-                  <span className={styles.uploadedCardTitle}>已上传文件</span>
+              <div className="bg-white/[0.06] border border-[#07c160]/[0.1] rounded-xl p-5 flex flex-col gap-4">
+                <div className="flex items-center gap-2">
+                  <CheckCircleOutlined className="text-base text-[#07c160]" />
+                  <span className="text-sm font-semibold text-white">已上传文件</span>
                 </div>
-                <hr className={styles.divider} />
-                <div className={styles.uploadedCardItem}>
-                  <div className={styles.uploadedFileIconWrap}>
-                    <FileOutlined className={styles.uploadedFileIcon} />
+                <hr className="w-full h-px bg-white/[0.04] border-none m-0" />
+                <div className="flex items-center gap-3 p-3.5 rounded-lg bg-white/[0.08]">
+                  <div className="w-9 h-9 rounded-md bg-[#6677ff]/[0.1] flex items-center justify-center flex-shrink-0">
+                    <FileOutlined className="text-base text-[#6677ff]" />
                   </div>
-                  <div className={styles.uploadedFileDetail}>
-                    <span className={styles.uploadedFileName}>{uploadedFile.name}</span>
-                    <span className={styles.uploadedFileMeta}>
+                  <div className="flex flex-col gap-0.5 flex-1 min-w-0">
+                    <span className="text-[13px] font-medium text-white overflow-hidden text-ellipsis whitespace-nowrap">
+                      {uploadedFile.name}
+                    </span>
+                    <span className="text-[11px] text-white/30">
                       {uploadedFile.size ? `${formatFileSize(uploadedFile.size)} · ` : ''}刚刚上传
                     </span>
                   </div>
-                  <button className={styles.uploadedFileRemove} onClick={handleRemoveFile}>
-                    <DeleteOutlined className={styles.uploadedFileRemoveIcon} />
+                  <button
+                    title="删除文件"
+                    className="w-7 h-7 rounded-md bg-[#f5222d]/[0.24] border-none flex items-center justify-center cursor-pointer transition-colors duration-200 hover:bg-[#f5222d]/[0.48] flex-shrink-0"
+                    onClick={handleRemoveFile}
+                  >
+                    <DeleteOutlined className="text-sm text-[#f5222d]!" />
                   </button>
                 </div>
               </div>
             )}
 
-            {/* 已提交状态卡片 */}
             {isAnswered && !isResubmitting && (
-              <div className={styles.uploadedCard}>
-                <div className={styles.uploadedCardHeader}>
-                  <CheckCircleOutlined className={styles.uploadedCardIcon} />
-                  <span className={styles.uploadedCardTitle}>已提交</span>
+              <div className="bg-white/[0.06] border border-[#07c160]/[0.1] rounded-xl p-5 flex flex-col gap-4">
+                <div className="flex items-center gap-2">
+                  <CheckCircleOutlined className="text-base text-[#07c160]" />
+                  <span className="text-sm font-semibold text-white">已提交</span>
                 </div>
-                <hr className={styles.divider} />
-                <div
-                  style={{
-                    fontSize: 13,
-                    color: 'rgba(255, 255, 255, 0.45)',
-                    marginBottom: 8,
-                  }}
-                >
+                <hr className="w-full h-px bg-white/[0.04] border-none m-0" />
+                <div className="text-[13px] text-white/45 mb-2">
                   提交时间：
                   {answer?.submitTime ? new Date(answer.submitTime).toLocaleString('zh-CN') : '-'}
                 </div>
                 {answer?.fileId && (
                   <button
-                    className={styles.downloadButton}
+                    className="inline-flex items-center gap-1 px-4 py-2 rounded-lg bg-[#6677ff]/[0.15] border-none text-[#6677ff] text-[13px] font-medium cursor-pointer transition-all duration-200 w-fit hover:bg-[#6677ff]/[0.25]"
                     onClick={() => fileService.downloadFile(answer.fileId!)}
-                    style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 13 }}
                   >
-                    <DownloadOutlined style={{ fontSize: 14 }} />
+                    <DownloadOutlined className="text-sm" />
                     下载已提交的答案
                   </button>
                 )}
               </div>
             )}
 
-            {/* 提交区域 */}
-            <div className={styles.submitSection}>
+            <div className="flex flex-col gap-3">
               {isFileUpload && !isAnswered && !isExpired && (
                 <button
-                  className={styles.submitButton}
+                  className="w-full h-11 rounded-lg border-none text-white text-[15px] font-semibold cursor-pointer flex items-center justify-center gap-2 transition-opacity duration-200 hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed bg-gradient-to-b from-[#6677ff] to-[#4455dd]"
                   disabled={!uploadedFile || submitting}
                   onClick={handleSubmit}
                 >
-                  <SendOutlined className={styles.submitButtonIcon} />
+                  <SendOutlined className="text-base" />
                   {submitting ? '提交中...' : '提交答案'}
                 </button>
               )}
               {isFileUpload && isAnswered && isResubmitting && !isExpired && (
                 <>
                   <button
-                    className={styles.submitButton}
+                    className="w-full h-11 rounded-lg border-none text-white text-[15px] font-semibold cursor-pointer flex items-center justify-center gap-2 transition-opacity duration-200 hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed bg-gradient-to-b from-[#6677ff] to-[#4455dd]"
                     disabled={!uploadedFile || submitting}
                     onClick={handleResubmit}
                   >
-                    <SendOutlined className={styles.submitButtonIcon} />
+                    <SendOutlined className="text-base" />
                     {submitting ? '提交中...' : '确认重新提交'}
                   </button>
                   <button
-                    className={styles.cancelButton}
+                    className="w-full h-11 rounded-lg bg-white/[0.08] border-none text-white/45 text-[15px] font-semibold cursor-pointer flex items-center justify-center gap-2 transition-opacity duration-200 hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
                     onClick={() => {
                       setIsResubmitting(false)
                       setUploadedFile(null)
                     }}
-                    style={{ width: '100%', marginTop: 8 }}
                   >
                     取消
                   </button>
                 </>
               )}
-              <div className={styles.navRow}>
-                <button className={styles.navButton} onClick={handlePrev} disabled={!hasPrev}>
-                  <LeftOutlined style={{ fontSize: 14 }} />
+              <div className="flex gap-3 flex-col sm:flex-row">
+                <button
+                  className="flex-1 h-10 rounded-lg bg-white/[0.08] border-none text-white/45 text-[13px] cursor-pointer flex items-center justify-center gap-1.5 transition-all duration-200 hover:bg-white/[0.08] hover:text-white/65 disabled:opacity-40 disabled:cursor-not-allowed"
+                  onClick={handlePrev}
+                  disabled={!hasPrev}
+                >
+                  <LeftOutlined className="text-sm" />
                   上一题
                 </button>
-                <button className={styles.navButton} onClick={handleNext} disabled={!hasNext}>
+                <button
+                  className="flex-1 h-10 rounded-lg bg-white/[0.08] border-none text-white/45 text-[13px] cursor-pointer flex items-center justify-center gap-1.5 transition-all duration-200 hover:bg-white/[0.08] hover:text-white/65 disabled:opacity-40 disabled:cursor-not-allowed"
+                  onClick={handleNext}
+                  disabled={!hasNext}
+                >
                   下一题
-                  <RightOutlined style={{ fontSize: 14 }} />
+                  <RightOutlined className="text-sm" />
                 </button>
               </div>
             </div>

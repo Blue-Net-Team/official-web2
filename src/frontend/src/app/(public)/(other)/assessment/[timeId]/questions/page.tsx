@@ -174,11 +174,11 @@ export default function QuestionsPage() {
         align: 'center',
         render: (answered: boolean) =>
           answered ? (
-            <span className={styles.answeredBadge}>
+            <span className="inline-flex items-center gap-1 text-xs text-[#07c160]">
               <CheckCircleOutlined /> 已答
             </span>
           ) : (
-            <span className={styles.unansweredBadge}>未答</span>
+            <span className="text-xs text-[#8c8c8d]/60">未答</span>
           ),
       },
     ],
@@ -187,9 +187,9 @@ export default function QuestionsPage() {
 
   if (!isAuthenticated) {
     return (
-      <div className={styles.container}>
-        <div className={styles.pageBg} />
-        <div className={styles.loading}>
+      <div className="min-h-screen bg-[#0a0a0a] px-6 py-10 pb-20 relative overflow-x-hidden">
+        <div className={`${styles.bg} top-0 left-0 w-full h-full z-0 pointer-events-none fixed`} />
+        <div className="flex justify-center items-center min-h-[300px]">
           <Spin size="large" />
         </div>
       </div>
@@ -211,17 +211,20 @@ export default function QuestionsPage() {
   }
 
   return (
-    <div className={styles.container}>
-      <div className={styles.pageBg} />
-      <div className={styles.content}>
-        <div className={styles.header}>
-          <button className={styles.backButton} onClick={() => router.push('/assessment')}>
+    <div className="min-h-screen bg-[#0a0a0a] px-6 py-10 pb-20 relative overflow-x-hidden">
+      <div className={`${styles.bg} top-0 left-0 w-full h-full z-0 pointer-events-none fixed`} />
+      <div className="max-w-[960px] mx-auto relative z-10">
+        <div className="mb-8">
+          <button
+            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg border border-white/10 bg-white/[0.04] text-white/65 text-[13px] cursor-pointer transition-all duration-200 mb-5 hover:bg-white/[0.08] hover:text-white"
+            onClick={() => router.push('/assessment')}
+          >
             <ArrowLeftOutlined />
             <span>返回考核列表</span>
           </button>
-          <div className={styles.titleSection}>
-            <div className={styles.titleRow}>
-              <h1 className={styles.title}>
+          <div className="mt-2">
+            <div className="flex items-center gap-3 mb-2.5">
+              <h1 className="text-2xl md:text-[28px] font-bold text-white bg-gradient-to-r from-white to-white/70 bg-clip-text text-transparent">
                 {timeInfo ? getEpochLabel(timeInfo.epoch) : '考核'} · 考题目录
               </h1>
               {statusInfo && (
@@ -239,7 +242,7 @@ export default function QuestionsPage() {
                 </Tag>
               )}
             </div>
-            <div className={styles.metaRow}>
+            <div className="flex flex-wrap items-center gap-2.5 mb-3.5">
               {timeInfo && (
                 <>
                   <Tag variant="outlined">
@@ -248,7 +251,7 @@ export default function QuestionsPage() {
                   <Tag variant="outlined">
                     {timeInfo.grade === 1 ? '大一' : timeInfo.grade === 2 ? '大二' : '大三'}
                   </Tag>
-                  <span className={styles.metaItem}>
+                  <span className="flex items-center gap-1.5 text-[13px] text-white/45">
                     <CalendarOutlined />
                     <span>
                       {formatDate(timeInfo.startTime)} — {formatDate(timeInfo.endTime)}
@@ -261,38 +264,38 @@ export default function QuestionsPage() {
         </div>
 
         {loading ? (
-          <div className={styles.loading}>
+          <div className="flex justify-center items-center min-h-[300px]">
             <Spin size="large" />
           </div>
         ) : (
           <>
-            <div className={styles.statsRow}>
-              <div className={styles.statCard}>
-                <FileTextOutlined className={styles.statIcon} />
-                <div className={styles.statInfo}>
-                  <span className={styles.statValue}>{totalElements}</span>
-                  <span className={styles.statLabel}>题目总数</span>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-7">
+              <div className="flex items-center gap-3 p-4 rounded-xl bg-white/[0.04] border border-white/[0.08] backdrop-blur-xl">
+                <FileTextOutlined className="text-[22px] text-white/40" />
+                <div className="flex flex-col">
+                  <span className="text-xl font-semibold text-white">{totalElements}</span>
+                  <span className="text-xs text-white/45">题目总数</span>
                 </div>
               </div>
-              <div className={styles.statCard}>
-                <CheckCircleOutlined className={`${styles.statIcon} ${styles.statIconGreen}`} />
-                <div className={styles.statInfo}>
-                  <span className={styles.statValue}>{answeredCount}</span>
-                  <span className={styles.statLabel}>已作答</span>
+              <div className="flex items-center gap-3 p-4 rounded-xl bg-white/[0.04] border border-white/[0.08] backdrop-blur-xl">
+                <CheckCircleOutlined className="text-[22px] text-[#07c160]" />
+                <div className="flex flex-col">
+                  <span className="text-xl font-semibold text-white">{answeredCount}</span>
+                  <span className="text-xs text-white/45">已作答</span>
                 </div>
               </div>
-              <div className={styles.statCard}>
-                <MinusCircleOutlined className={`${styles.statIcon} ${styles.statIconDim}`} />
-                <div className={styles.statInfo}>
-                  <span className={styles.statValue}>{unansweredCount}</span>
-                  <span className={styles.statLabel}>未作答</span>
+              <div className="flex items-center gap-3 p-4 rounded-xl bg-white/[0.04] border border-white/[0.08] backdrop-blur-xl">
+                <MinusCircleOutlined className="text-[22px] text-[#8c8c8d]/60" />
+                <div className="flex flex-col">
+                  <span className="text-xl font-semibold text-white">{unansweredCount}</span>
+                  <span className="text-xs text-white/45">未作答</span>
                 </div>
               </div>
-              <div className={styles.statCard}>
-                <TrophyOutlined className={`${styles.statIcon} ${styles.statIconGold}`} />
-                <div className={styles.statInfo}>
-                  <span className={styles.statValue}>{totalScore}</span>
-                  <span className={styles.statLabel}>总分</span>
+              <div className="flex items-center gap-3 p-4 rounded-xl bg-white/[0.04] border border-white/[0.08] backdrop-blur-xl">
+                <TrophyOutlined className="text-[22px] text-[#fa8c16]" />
+                <div className="flex flex-col">
+                  <span className="text-xl font-semibold text-white">{totalScore}</span>
+                  <span className="text-xs text-white/45">总分</span>
                 </div>
               </div>
             </div>
@@ -315,12 +318,12 @@ export default function QuestionsPage() {
                 showTotal: (total: number) => `共 ${total} 道题目`,
               }}
               locale={{ emptyText: '该考核暂未发布考题' }}
-              className={styles.questionTable}
+              className="rounded-xl overflow-hidden border border-white/[0.08] bg-white/[0.02]"
             />
 
             {questions.length > 0 && (
-              <div className={styles.footer}>
-                <span className={styles.footerSummary}>
+              <div className="mt-6 text-center">
+                <span className="text-[13px] text-white/35">
                   共 {totalElements} 道题目 · 已作答 {answeredCount} · 未答 {unansweredCount} · 总分{' '}
                   {totalScore}
                 </span>
