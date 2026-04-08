@@ -2,7 +2,7 @@
 
 import { useState, useRef, useCallback } from 'react'
 import type { UserInfo, UserStats } from '@/types/profile'
-import { DirectionLabels } from '@/types/profile'
+import { DIRECTION_LABELS, Direction } from '@/apis/schema/enumerate'
 import { API_BASE_URL } from '@/apis/config'
 import { fileService } from '@/apis/services/file.service'
 import {
@@ -15,6 +15,9 @@ import {
 import { message } from 'antd'
 import Image from 'next/image'
 import AvatarCropModal from '../AvatarCropModal'
+import cvIcon from '@/assets/icon/direction/cv_icon.png'
+import structIcon from '@/assets/icon/direction/struct_icon.png'
+import embedIcon from '@/assets/icon/direction/embed_icon.png'
 
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
 const MAX_SIZE = 5 * 1024 * 1024
@@ -25,10 +28,16 @@ interface ProfileSidebarProps {
   onAvatarUpdate?: () => void
 }
 
-const directionAbbrMap: Record<string, string> = {
-  computer_vision: 'CV',
-  embedded: 'EM',
-  structural_design: 'SD',
+const directionIconMap: Record<Direction, string> = {
+  COMPUTER_VISION: cvIcon,
+  STRUCTURAL_DESIGN: structIcon,
+  EMBEDDED: embedIcon,
+}
+
+const directionThemeMap: Record<Direction, 'computerVision' | 'structuralDesign' | 'embedded'> = {
+  COMPUTER_VISION: 'computerVision',
+  STRUCTURAL_DESIGN: 'structuralDesign',
+  EMBEDDED: 'embedded',
 }
 
 export default function ProfileSidebar({ profile, stats, onAvatarUpdate }: ProfileSidebarProps) {
@@ -37,11 +46,10 @@ export default function ProfileSidebar({ profile, stats, onAvatarUpdate }: Profi
   const [cropImageSrc, setCropImageSrc] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const directionAbbr =
-    directionAbbrMap[profile.direction] ||
-    (profile.direction ? profile.direction.slice(0, 2).toUpperCase() : '-')
-  const directionLabel = DirectionLabels[profile.direction] || profile.direction || '-'
+  const directionLabel = DIRECTION_LABELS[profile.direction] || profile.direction || '-'
   const displayName = profile.nickname || profile.username
+  const directionIcon = directionIconMap[profile.direction as Direction]
+  const directionTheme = directionThemeMap[profile.direction as Direction]
 
   const handleAvatarClick = useCallback(() => {
     if (uploading) return
@@ -191,8 +199,18 @@ export default function ProfileSidebar({ profile, stats, onAvatarUpdate }: Profi
               报名方向
             </div>
             <div className="flex items-center gap-3 p-3 rounded-[10px] bg-white/[0.02] mb-2.5 transition-all duration-300 hover:bg-[rgba(102,119,255,0.08)]">
-              <div className="w-10 h-10 rounded-[10px] bg-[linear-gradient(135deg,#6677ff_0%,#2f27b0_100%)] flex items-center justify-center text-sm font-semibold text-white">
-                {directionAbbr}
+              <div
+                className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 overflow-hidden ${
+                  directionTheme === 'computerVision'
+                    ? 'bg-gradient-to-br from-[rgba(102,119,255,0.3)] to-[rgba(47,39,176,0.3)] shadow-[0_0_20px_rgba(102,119,255,0.3)]'
+                    : directionTheme === 'structuralDesign'
+                      ? 'bg-gradient-to-br from-[rgba(255,107,53,0.3)] to-[rgba(255,140,66,0.3)] shadow-[0_0_20px_rgba(255,107,53,0.3)]'
+                      : 'bg-gradient-to-br from-[rgba(46,204,113,0.3)] to-[rgba(39,174,96,0.3)] shadow-[0_0_20px_rgba(46,204,113,0.3)]'
+                }`}
+              >
+                {directionIcon && (
+                  <Image src={directionIcon} alt={directionLabel} width={44} height={44} />
+                )}
               </div>
               <div className="flex-1">
                 <div className="text-sm font-medium text-white">{directionLabel}</div>

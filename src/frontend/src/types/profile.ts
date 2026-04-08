@@ -5,28 +5,7 @@
  *
  * @author BlueNet Team
  */
-
-// ==================== 枚举类型 ====================
-
-/** 方向/类型枚举 */
-export type Direction = 'computer_vision' | 'structural_design' | 'embedded'
-
-/** 方向枚举描述映射 */
-export const DirectionLabels: Record<Direction, string> = {
-  computer_vision: '计算机视觉',
-  structural_design: '结构设计',
-  embedded: '嵌入式开发',
-}
-
-/** 性别枚举 */
-export type Gender = 'male' | 'female' | 'unknown'
-
-/** 性别枚举描述映射 */
-export const GenderLabels: Record<Gender, string> = {
-  male: '男',
-  female: '女',
-  unknown: '未知',
-}
+import type { Direction, Gender } from '@/apis/schema/enumerate'
 
 // ==================== 用户基础类型 ====================
 

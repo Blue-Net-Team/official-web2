@@ -14,7 +14,7 @@
 
 import { useState } from 'react'
 import type { UserInfo, UpdateProfileRequest } from '@/types/profile'
-import { DirectionLabels, GenderLabels } from '@/types/profile'
+import { DIRECTION_LABELS, GENDER_LABELS } from '@/apis/schema/enumerate'
 import {
   EditOutlined,
   MailOutlined,
@@ -84,8 +84,8 @@ export default function ProfileInfo({ profile, onUpdate }: ProfileInfoProps) {
     }
   }
 
-  const directionLabel = DirectionLabels[profile.direction] || profile.direction
-  const genderLabel = GenderLabels[profile.gender] || profile.gender
+  const directionLabel = DIRECTION_LABELS[profile.direction] || profile.direction
+  const genderLabel = GENDER_LABELS[profile.gender] || profile.gender
 
   return (
     <div className="bg-white/[0.03] backdrop-blur-[20px] border border-white/[0.05] rounded-2xl p-8 max-[640px]:p-5">

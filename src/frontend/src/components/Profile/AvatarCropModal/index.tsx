@@ -100,7 +100,7 @@ export default function AvatarCropModal({
       cancelText="取消"
       width={480}
       centered
-      destroyOnClose
+      destroyOnHidden
       afterOpenChange={() => {
         setCrop({ x: 0, y: 0 })
         setZoom(1)

@@ -38,40 +38,40 @@ export const GENDER_LABELS: Record<Gender, string> = {
  * 报名状态枚举
  * 对应后端 EnrollStatus.java
  */
-export type EnrollStatus = 'pending' | 'approved' | 'rejected'
+export type EnrollStatus = 'PENDING' | 'APPROVED' | 'REJECTED'
 
 /**
  * 文件类型枚举
  * 对应后端 FileType.java
  */
-export type FileType = 'avatar' | 'normal-img' | 'assessment-attachment' | 'work' | 'qrcode'
+export type FileType = 'AVATAR' | 'NORMAL_IMG' | 'ASSESSMENT_ATTACHMENT' | 'WORK' | 'QRCODE'
 
 /**
  * 成就类型枚举
  * 对应后端 AchievementType.java
  */
-export type AchievementType = 'paper' | 'patent' | 'competition'
+export type AchievementType = 'PAPER' | 'PATENT' | 'COMPETITION'
 
 /**
  * 成就类型标签
  */
 export const ACHIEVEMENT_TYPE_LABELS: Record<AchievementType, string> = {
-  paper: '论文',
-  patent: '专利',
-  competition: '竞赛',
+  PAPER: '论文',
+  PATENT: '专利',
+  COMPETITION: '竞赛',
 }
 
 /**
  * 奖项级别枚举
  * 对应后端 AwardLevel.java
  */
-export type AwardLevel = 'national' | 'provincial' | 'school'
+export type AwardLevel = 'NATIONAL' | 'PROVINCIAL' | 'SCHOOL'
 
 /**
  * 奖项级别标签
  */
 export const AWARD_LEVEL_LABELS: Record<AwardLevel, string> = {
-  national: '国家级',
-  provincial: '省级',
-  school: '校级',
+  NATIONAL: '国家级',
+  PROVINCIAL: '省级',
+  SCHOOL: '校级',
 }
