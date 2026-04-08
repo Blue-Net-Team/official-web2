@@ -39,13 +39,13 @@ public interface FileService {
     /**
      * 上传考题作品
      *
-     * @param answerId
-     *            答题ID
+     * @param questionId
+     *            题目ID
      * @param file
      *            上传的文件
      * @return 文件信息
      */
-    FileInfo uploadAssessmentWork(Long answerId, MultipartFile file);
+    FileInfo uploadAssessmentWork(Long questionId, MultipartFile file);
 
     /**
      * 上传二维码

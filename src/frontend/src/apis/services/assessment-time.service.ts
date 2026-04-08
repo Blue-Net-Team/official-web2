@@ -1,6 +1,6 @@
 import { apiClient } from '../client'
 import { ResponseMessage, PageDTO } from '../schema/type'
-import type { AssessmentTimeDTO, AssessmentProgressDTO } from '@/types/assessment'
+import type { AssessmentTimeDTO, AssessmentProgressDTO } from '@/apis/schema/assessment.dto'
 
 /**
  * 考核时间服务 API

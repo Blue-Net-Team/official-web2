@@ -16,4 +16,8 @@ public interface AssessmentAnswerMapper extends BaseMapper<AssessmentAnswer> {
 
     @Select("SELECT COUNT(*) FROM tb_assessment_answer WHERE user_id = #{userId} AND question_id = #{questionId}")
     int countByUserIdAndQuestionId(@Param("userId") Long userId, @Param("questionId") Long questionId);
+
+    @Select("SELECT * FROM tb_assessment_answer WHERE user_id = #{userId} AND question_id = #{questionId} LIMIT 1")
+    AssessmentAnswer selectByUserIdAndQuestionId(@Param("userId") Long userId,
+            @Param("questionId") Long questionId);
 }

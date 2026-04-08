@@ -4,6 +4,7 @@ import com.bluenet.web.api.dto.PageDTO;
 import com.bluenet.web.api.dto.assessment_question.AssessmentQuestionDTO;
 import com.bluenet.web.api.dto.assessment_question.CreateQuestionRequestDTO;
 import com.bluenet.web.api.dto.assessment_question.UpdateQuestionRequestDTO;
+import com.bluenet.web.api.dto.assessment_question.UserQuestionListResponse;
 
 /**
  * 考题应用服务接口
@@ -63,7 +64,16 @@ public interface AssessmentQuestionService {
      *            页码
      * @param size
      *            每页大小
-     * @return 分页考题DTO
+     * @return 用户考题列表响应（含分页考题和限时考核截止时间）
      */
-    PageDTO<AssessmentQuestionDTO> listQuestionsForUser(Long assessmentTimeId, Integer page, Integer size);
+    UserQuestionListResponse listQuestionsForUser(Long assessmentTimeId, Integer page, Integer size);
+
+    /**
+     * 用户端查询题目详情（包含content）
+     *
+     * @param id
+     *            题目ID
+     * @return 题目DTO
+     */
+    AssessmentQuestionDTO getQuestionDetailForUser(Long id);
 }

@@ -22,9 +22,10 @@ import io.minio.RemoveObjectArgs;
 import io.minio.errors.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.NonNull;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.core.io.InputStreamResource;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
@@ -155,8 +156,16 @@ public class MinioFileRepository implements FileRepository {
                             .object(filename)
                             .build());
 
+            byte[] data = inputStream.readAllBytes();
+            inputStream.close();
+
             log.debug("File loaded successfully: {}/{}", bucketName, filename);
-            return new InputStreamResource(inputStream);
+            return new ByteArrayResource(data) {
+                @Override
+                public @NonNull String getFilename() {
+                    return filename;
+                }
+            };
         } catch (ErrorResponseException e) {
             if (e.response().code() == 404) {
                 log.warn("File not found in MinIO: {}/{}", bucketName, filename);

@@ -8,7 +8,6 @@ import com.bluenet.web.domain.exception.GlobalException;
 import com.bluenet.web.domain.model.enumerate.FileType;
 import com.bluenet.web.domain.model.enumerate.ImageType;
 import com.bluenet.web.domain.model.enumerate.QrcodeType;
-import com.bluenet.web.domain.model.vo.AssessmentAnswerVO;
 import com.bluenet.web.domain.model.vo.AssessmentQuestionVO;
 import com.bluenet.web.domain.model.vo.FileVO;
 import com.bluenet.web.domain.service.AssessmentAnswerDomainService;
@@ -71,13 +70,13 @@ public class FileServiceImpl implements FileService {
 
     @Override
     @Transactional
-    public FileInfo uploadAssessmentWork(Long answerId, MultipartFile file) {
-        AssessmentAnswerVO answer = assessmentAnswerDomainService.getAnswerById(answerId);
+    public FileInfo uploadAssessmentWork(Long questionId, MultipartFile file) {
+        // 校验题目存在性
+        assessmentQuestionDomainService.getQuestionById(questionId);
 
         FileVO fileVO = saveFile(file, FileType.WORK);
 
-        assessmentAnswerDomainService.updateWorkFile(answer, fileVO);
-
+        log.info("考题作品上传成功，文件id: {}, 题目id: {}", fileVO.getId(), questionId);
         return convertToFileInfo(fileVO);
     }
 

@@ -61,8 +61,8 @@ public class SecurityConfig {
         // 3. 允许的头信息
         configuration.setAllowedHeaders(Collections.singletonList("*"));
 
-        // 4. 允许暴露的头信息（前端需要读取 CSRF Token）
-        configuration.setExposedHeaders(Arrays.asList("X-CSRF-Token"));
+        // 4. 允许暴露的头信息（前端需要读取 CSRF Token 和文件下载的 Content-Disposition）
+        configuration.setExposedHeaders(Arrays.asList("X-CSRF-Token", "Content-Disposition"));
 
         // 5. 允许凭证（Cookie 必须开启）
         configuration.setAllowCredentials(true);

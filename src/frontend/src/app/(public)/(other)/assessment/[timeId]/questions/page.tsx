@@ -101,8 +101,8 @@ export default function QuestionsPage() {
     try {
       const response = await assessmentQuestionService.getQuestions(timeId, currentPage, 10)
       if (response.code === 200 && response.data) {
-        setQuestions(response.data.content)
-        setTotalElements(response.data.totalElements)
+        setQuestions(response.data.questions.content ?? [])
+        setTotalElements(response.data.questions.totalElements ?? 0)
       } else {
         setQuestions([])
       }
@@ -203,6 +203,10 @@ export default function QuestionsPage() {
     router.push(`/assessment/${timeId}/questions?page=${page}`)
   }
 
+  const handleRowClick = (record: AssessmentQuestionDTO) => {
+    router.push(`/assessment/${timeId}/questions/${record.id}`)
+  }
+
   return (
     <div className={styles.container}>
       <div className={styles.pageBg} />
@@ -295,6 +299,10 @@ export default function QuestionsPage() {
               dataSource={questions}
               rowKey="id"
               scroll={{ x: 500 }}
+              onRow={(record) => ({
+                onClick: () => handleRowClick(record),
+                style: { cursor: 'pointer' },
+              })}
               pagination={{
                 current: currentPage + 1,
                 total: totalElements,

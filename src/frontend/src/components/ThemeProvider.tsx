@@ -115,6 +115,16 @@ const themeConfig = {
       fontSize: 13,
       borderRadius: 6,
     },
+    Upload: {
+      colorFillAlter: '#ffffff03',
+      colorBorder: '#ffffff1a',
+      borderRadiusLG: 12,
+      colorPrimaryHover: 'rgba(102, 119, 255, 0.4)',
+      colorTextHeading: 'rgba(255, 255, 255, 0.45)',
+      colorTextDescription: 'rgba(255, 255, 255, 0.3)',
+      padding: '32px 20px',
+      fontSizeLG: 14,
+    },
   },
 }
 

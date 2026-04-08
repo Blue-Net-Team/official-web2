@@ -1,9 +1,9 @@
 package com.bluenet.web.api.controller.v1;
 
-import com.bluenet.web.api.dto.PageDTO;
 import com.bluenet.web.api.dto.ResponseMessage;
 import com.bluenet.web.api.dto.assessment_question.AssessmentQuestionDTO;
-import com.bluenet.web.api.dto.assessment_question.ResponseMessageAssessmentQuestionList;
+import com.bluenet.web.api.dto.assessment_question.ResponseMessageUserQuestionList;
+import com.bluenet.web.api.dto.assessment_question.UserQuestionListResponse;
 import com.bluenet.web.application.service.AssessmentQuestionService;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
 import com.bluenet.web.infrastructure.security.annotation.RequiresPermission;
@@ -32,21 +32,43 @@ import org.springframework.web.bind.annotation.*;
 public class AssessmentQuestionController {
     private final AssessmentQuestionService assessmentQuestionService;
 
-    @Operation(summary = "查询考题目录", description = "分页查询指定考核时间下的考题目录。考生只能看到自己方向和年级的考题，不包含题目内容。")
+    @Operation(summary = "查询考题目录", description = "分页查询指定考核时间下的考题目录。考生只能看到自己方向和年级的考题，不包含题目内容。限时考核会同时返回截止时间。")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "查询成功", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseMessageAssessmentQuestionList.class))),
+            @ApiResponse(responseCode = "200", description = "查询成功", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseMessageUserQuestionList.class))),
             @ApiResponse(responseCode = "403", description = "无权查看", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseMessage.class)))
     })
     @RequiresPermission(name = "查询考题目录", value = "assessment-question:query", access = AccessLevel.AUTHENTICATED)
     @GetMapping
-    public ResponseMessage<PageDTO<AssessmentQuestionDTO>> listQuestions(
+    public ResponseMessage<UserQuestionListResponse> listQuestions(
             @Parameter(description = "考核时间ID", required = true) @RequestParam Long assessmentTimeId,
             @Parameter(description = "页码（从0开始，默认0）") @RequestParam(required = false, defaultValue = "0") Integer page,
             @Parameter(description = "每页大小（默认10）") @RequestParam(required = false, defaultValue = "10") Integer size) {
         try {
-            PageDTO<AssessmentQuestionDTO> result = assessmentQuestionService
+            UserQuestionListResponse result = assessmentQuestionService
                     .listQuestionsForUser(assessmentTimeId, page, size);
             return ResponseMessage.success(result);
+        } catch (IllegalArgumentException e) {
+            return ResponseMessage.error(404, e.getMessage());
+        } catch (SecurityException e) {
+            return ResponseMessage.error(403, e.getMessage());
+        }
+    }
+
+    @Operation(summary = "查询题目详情", description = "查询指定题目的完整详情（包含content）。考生只能查看自己方向和年级的题目。")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "查询成功", content = @Content(mediaType = "application/json", schema = @Schema(implementation = AssessmentQuestionDTO.class))),
+            @ApiResponse(responseCode = "403", description = "无权查看", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseMessage.class))),
+            @ApiResponse(responseCode = "404", description = "题目不存在", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseMessage.class)))
+    })
+    @RequiresPermission(name = "查询题目详情", value = "assessment-question:detail", access = AccessLevel.AUTHENTICATED)
+    @GetMapping("/{id}")
+    public ResponseMessage<AssessmentQuestionDTO> getQuestionDetail(
+            @Parameter(description = "题目ID", required = true) @PathVariable Long id) {
+        try {
+            AssessmentQuestionDTO result = assessmentQuestionService.getQuestionDetailForUser(id);
+            return ResponseMessage.success(result);
+        } catch (IllegalArgumentException e) {
+            return ResponseMessage.error(404, e.getMessage());
         } catch (SecurityException e) {
             return ResponseMessage.error(403, e.getMessage());
         }

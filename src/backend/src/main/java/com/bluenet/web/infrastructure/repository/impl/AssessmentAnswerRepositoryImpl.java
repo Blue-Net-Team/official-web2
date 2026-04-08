@@ -61,6 +61,19 @@ public class AssessmentAnswerRepositoryImpl implements AssessmentAnswerRepositor
     }
 
     @Override
+    public int updateContent(Long answerId, String content) {
+        AssessmentAnswer answer = new AssessmentAnswer();
+        answer.setId(answerId);
+        answer.setContent(content);
+        int influence = assessmentAnswerMapper.updateById(answer);
+        if (influence == 0) {
+            log.warn("更新答题内容失败，保存到数据库时没有影响任何行，answerId {}", answerId);
+            throw new GlobalException("更新答题内容失败");
+        }
+        return influence;
+    }
+
+    @Override
     public int countByUserIdAndAssessmentTimeId(Long userId, Long assessmentTimeId) {
         return assessmentAnswerMapper.countByUserIdAndAssessmentTimeId(userId, assessmentTimeId);
     }
@@ -68,6 +81,15 @@ public class AssessmentAnswerRepositoryImpl implements AssessmentAnswerRepositor
     @Override
     public boolean existsByUserIdAndQuestionId(Long userId, Long questionId) {
         return assessmentAnswerMapper.countByUserIdAndQuestionId(userId, questionId) > 0;
+    }
+
+    @Override
+    public Optional<AssessmentAnswerVO> findByUserIdAndQuestionId(Long userId, Long questionId) {
+        AssessmentAnswer answer = assessmentAnswerMapper.selectByUserIdAndQuestionId(userId, questionId);
+        if (answer == null) {
+            return Optional.empty();
+        }
+        return Optional.of(convertToVO(answer));
     }
 
     private AssessmentAnswerVO convertToVO(AssessmentAnswer answer) {

@@ -4,13 +4,16 @@ import com.bluenet.web.api.dto.PageDTO;
 import com.bluenet.web.api.dto.assessment_question.AssessmentQuestionDTO;
 import com.bluenet.web.api.dto.assessment_question.CreateQuestionRequestDTO;
 import com.bluenet.web.api.dto.assessment_question.UpdateQuestionRequestDTO;
+import com.bluenet.web.api.dto.assessment_question.UserQuestionListResponse;
 import com.bluenet.web.application.converter.AssessmentQuestionConverter;
 import com.bluenet.web.application.service.AssessmentQuestionService;
 import com.bluenet.web.domain.model.vo.AssessmentQuestionVO;
+import com.bluenet.web.domain.model.vo.AssessmentSessionVO;
 import com.bluenet.web.domain.model.vo.AssessmentTimeVO;
 import com.bluenet.web.domain.model.vo.UserVO;
 import com.bluenet.web.domain.repository.AssessmentAnswerRepository;
 import com.bluenet.web.domain.service.AssessmentQuestionDomainService;
+import com.bluenet.web.domain.service.AssessmentSessionDomainService;
 import com.bluenet.web.domain.service.AssessmentTimeDomainService;
 import com.bluenet.web.domain.util.GradeCalculator;
 import com.bluenet.web.infrastructure.security.RoleType;
@@ -34,6 +37,7 @@ public class AssessmentQuestionServiceImpl implements AssessmentQuestionService 
 
     private final AssessmentQuestionDomainService assessmentQuestionDomainService;
     private final AssessmentTimeDomainService assessmentTimeDomainService;
+    private final AssessmentSessionDomainService assessmentSessionDomainService;
     private final AssessmentQuestionConverter assessmentQuestionConverter;
     private final AssessmentAnswerRepository assessmentAnswerRepository;
     private final ObjectMapper objectMapper;
@@ -108,7 +112,7 @@ public class AssessmentQuestionServiceImpl implements AssessmentQuestionService 
     }
 
     @Override
-    public PageDTO<AssessmentQuestionDTO> listQuestionsForUser(Long assessmentTimeId, Integer page, Integer size) {
+    public UserQuestionListResponse listQuestionsForUser(Long assessmentTimeId, Integer page, Integer size) {
         int pageNum = page != null ? page : 0;
         int pageSize = size != null ? size : 10;
 
@@ -150,6 +154,43 @@ public class AssessmentQuestionServiceImpl implements AssessmentQuestionService 
             return dto;
         });
 
-        return PageDTO.from(dtoPage);
+        // 限时考核：获取或创建会话，返回截止时间
+        String deadline = null;
+        if (Boolean.TRUE.equals(timeVO.getTimeLimit()) && currentUser != null) {
+            AssessmentSessionVO session = assessmentSessionDomainService
+                    .getOrCreateSession(currentUser.getId(), assessmentTimeId);
+            deadline = session.getDeadline().toString();
+        }
+
+        return UserQuestionListResponse.builder()
+                .questions(PageDTO.from(dtoPage))
+                .deadline(deadline)
+                .build();
+    }
+
+    @Override
+    public AssessmentQuestionDTO getQuestionDetailForUser(Long id) {
+        AssessmentQuestionVO vo = assessmentQuestionDomainService.getQuestionById(id);
+
+        UserVO currentUser = UserCTX.getCurrentUser();
+
+        if (currentUser != null) {
+            // CANDIDATE 权限校验
+            RoleType roleType = RoleType.fromName(currentUser.getRoleName());
+            if (roleType == RoleType.CANDIDATE) {
+                AssessmentTimeVO timeVO = assessmentTimeDomainService.getById(vo.getAssessmentTimeId())
+                        .orElseThrow(() -> new IllegalArgumentException("考核时间不存在"));
+                if (!currentUser.getDirection().equals(timeVO.getDirection())) {
+                    throw new SecurityException("无权查看该题目");
+                }
+                Integer userGrade = GradeCalculator.calculateGrade(currentUser.getStudentId());
+                if (userGrade != null && !userGrade.equals(timeVO.getGrade())) {
+                    throw new SecurityException("无权查看该题目");
+                }
+            }
+        }
+
+        // 返回完整详情（包含content）
+        return assessmentQuestionConverter.convertToDTO(vo);
     }
 }

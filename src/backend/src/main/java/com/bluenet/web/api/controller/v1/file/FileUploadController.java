@@ -78,11 +78,11 @@ public class FileUploadController {
     @RequiresPermission(name = "上传考题作品", value = "file:upload:assessment:work", access = AccessLevel.AUTHENTICATED)
     @RequestBody(content = @Content(mediaType = "multipart/form-data", schema = @Schema(type = "object"), schemaProperties = {
             @SchemaProperty(name = "file", schema = @Schema(type = "string", format = "binary")),
-            @SchemaProperty(name = "answerId", schema = @Schema(type = "integer", format = "int64")) }))
+            @SchemaProperty(name = "questionId", schema = @Schema(type = "integer", format = "int64")) }))
     @SecurityRequirement(name = "bearer-jwt")
     public ResponseMessage<FileInfo> uploadAssessmentWork(@RequestParam("file") MultipartFile file,
-            @RequestParam("answerId") Long answerId) {
-        FileInfo fileInfo = fileService.uploadAssessmentWork(answerId, file);
+            @RequestParam("questionId") Long questionId) {
+        FileInfo fileInfo = fileService.uploadAssessmentWork(questionId, file);
         return ResponseMessage.success(fileInfo);
     }
 

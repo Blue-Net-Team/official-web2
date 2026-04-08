@@ -14,9 +14,11 @@ import lombok.NoArgsConstructor;
 @Schema(description = "成员列表查询参数")
 public class MemberListQueryDTO {
     @Schema(description = "页码，从0开始", example = "0", defaultValue = "0")
+    @Builder.Default
     private Integer page = 0;
 
     @Schema(description = "每页数量，默认20，最大100", example = "20", defaultValue = "20")
+    @Builder.Default
     private Integer size = 20;
 
     @Schema(description = "方向筛选", example = "computer_vision")

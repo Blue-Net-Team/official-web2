@@ -15,9 +15,11 @@ import lombok.NoArgsConstructor;
 @Schema(description = "报名列表查询参数")
 public class EnrollmentListQueryDTO {
     @Schema(description = "页码，从0开始", example = "0")
+    @Builder.Default
     private Integer page = 0;
 
     @Schema(description = "每页数量，默认20，最大100", example = "20")
+    @Builder.Default
     private Integer size = 20;
 
     @Schema(description = "状态筛选：pending/approved/rejected", example = "pending")

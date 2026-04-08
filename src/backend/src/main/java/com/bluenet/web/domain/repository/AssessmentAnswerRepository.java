@@ -11,6 +11,9 @@ public interface AssessmentAnswerRepository {
     Optional<AssessmentAnswerVO> findById(Long id);
     int updateFileId(Long answerId, Long fileId);
     int updateSubmitTime(Long answerId, LocalDateTime submitTime);
+    int updateContent(Long answerId, String content);
     int countByUserIdAndAssessmentTimeId(Long userId, Long assessmentTimeId);
     boolean existsByUserIdAndQuestionId(Long userId, Long questionId);
+
+    Optional<AssessmentAnswerVO> findByUserIdAndQuestionId(Long userId, Long questionId);
 }

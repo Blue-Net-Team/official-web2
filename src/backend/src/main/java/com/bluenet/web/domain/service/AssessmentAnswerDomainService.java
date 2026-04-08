@@ -26,4 +26,25 @@ public interface AssessmentAnswerDomainService {
      * @return 答题VO
      */
     AssessmentAnswerVO getAnswerById(Long answerId);
+
+    /**
+     * 创建答案（含重复提交检查）
+     *
+     * @param answer
+     *            答案VO
+     * @return 创建后的答案VO
+     */
+    AssessmentAnswerVO createAnswer(AssessmentAnswerVO answer);
+
+    /**
+     * 更新答案（重新提交）
+     *
+     * @param answer
+     *            已有答案VO
+     * @param fileId
+     *            新的文件ID（可为null）
+     * @param content
+     *            新的内容（可为null）
+     */
+    void updateAnswer(AssessmentAnswerVO answer, Long fileId, String content);
 }
