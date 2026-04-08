@@ -10,8 +10,11 @@ import type {
   Assessment,
   ExperienceType,
 } from '@/types/profile'
+import type { AssessmentTimeDTO } from '@/apis/schema/assessment.dto'
+import { DIRECTION_LABELS } from '@/apis/schema/enumerate'
 import { userService } from '@/apis/services/user.service'
-import MockProfileService from '@/mocks/services/profile.service'
+import { assessmentTimeService } from '@/apis/services/assessment-time.service'
+import { assessmentSessionService } from '@/apis/services/assessment-session.service'
 import {
   ProfileSidebar,
   ProfileTabs,
@@ -21,6 +24,10 @@ import {
 } from '@/components/Profile'
 import { Spin } from 'antd'
 import styles from './styles.module.css'
+import dayjs from 'dayjs'
+import duration from 'dayjs/plugin/duration'
+
+dayjs.extend(duration)
 
 const DEFAULT_TAB: TabName = 'profile'
 
@@ -29,6 +36,103 @@ const mockUserStats: UserStats = {
   assessmentCount: 3,
   completedCount: 1,
   averageScore: 88,
+}
+
+/**
+ * 将 AssessmentTimeDTO 转换为前端 Assessment 类型
+ */
+function convertToAssessment(dto: AssessmentTimeDTO): Assessment {
+  const directionLabel = DIRECTION_LABELS[dto.direction] || dto.direction
+  const title = `${directionLabel}方向${dto.grade}级第${dto.epoch}轮考核`
+  const round = `第${dto.epoch}轮`
+
+  return {
+    id: dto.id.toString(),
+    title,
+    round,
+    status: 'not-started', // 后续会更新
+    startDate: dto.startTime,
+    endDate: dto.endTime,
+    totalQuestions: dto.totalQuestions ?? 0,
+    completedQuestions: dto.completedQuestions ?? 0,
+  }
+}
+
+/**
+ * 计算考核状态
+ * @param startTime 开始时间 (ISO 字符串)
+ * @param endTime 结束时间 (ISO 字符串)
+ * @param deadline 限时考核截止时间 (ISO 字符串，可选)
+ * @returns 考核状态
+ */
+function calculateAssessmentStatus(
+  startTime: string,
+  endTime: string,
+  deadline?: string
+): 'not-started' | 'in-progress' | 'ended' {
+  const now = dayjs()
+  const start = dayjs(startTime)
+  const end = dayjs(endTime)
+  const deadlineDayjs = deadline ? dayjs(deadline) : null
+
+  // 限时考核使用 deadline 作为实际结束时间
+  const actualEnd = deadlineDayjs && deadlineDayjs.isBefore(end) ? deadlineDayjs : end
+
+  if (now.isBefore(start)) {
+    return 'not-started'
+  } else if (now.isAfter(actualEnd)) {
+    return 'ended'
+  } else {
+    return 'in-progress'
+  }
+}
+
+/**
+ * 格式化剩余时间
+ * @param startTime 开始时间
+ * @param endTime 结束时间
+ * @param deadline 限时考核截止时间
+ * @returns 格式化的剩余时间字符串（如 "2 天 3 小时"）或距离开始天数
+ */
+function formatTimeRemaining(
+  startTime: string,
+  endTime: string,
+  deadline?: string
+): { remainingTime?: string; daysUntilStart?: number } {
+  const now = dayjs()
+  const start = dayjs(startTime)
+  const end = dayjs(endTime)
+  const deadlineDayjs = deadline ? dayjs(deadline) : null
+
+  // 限时考核使用 deadline 作为实际结束时间
+  const actualEnd = deadlineDayjs && deadlineDayjs.isBefore(end) ? deadlineDayjs : end
+
+  if (now.isBefore(start)) {
+    // 还未开始，计算距离开始的天数
+    const diffDays = start.diff(now, 'day', true)
+    return { daysUntilStart: Math.ceil(diffDays) }
+  } else if (now.isBefore(actualEnd)) {
+    // 进行中，计算剩余时间
+    const diff = actualEnd.diff(now)
+    const duration = dayjs.duration(diff)
+    const days = duration.asDays()
+
+    if (days >= 1) {
+      const fullDays = Math.floor(days)
+      const hours = Math.floor((days - fullDays) * 24)
+      return { remainingTime: `${fullDays}天${hours}小时` }
+    } else {
+      const hours = duration.hours()
+      const minutes = duration.minutes()
+      if (hours > 0) {
+        return { remainingTime: `${hours}小时${minutes}分钟` }
+      } else {
+        return { remainingTime: `${minutes}分钟` }
+      }
+    }
+  }
+
+  return {}
 }
 
 export default function ProfilePage() {
@@ -67,9 +171,62 @@ export default function ProfilePage() {
         setExperiences(expRes.data)
       }
 
-      // 考核数据继续使用 Mock
-      const mockAssessments = await MockProfileService.getAssessments()
-      setAssessments(mockAssessments)
+      // 加载考核数据 - 使用真实 API
+      const assessmentTimeRes = await assessmentTimeService.getAssessmentTimes(0, 20)
+      if (assessmentTimeRes.code === 200 && assessmentTimeRes.data) {
+        const assessmentTimes = assessmentTimeRes.data.content || []
+
+        // 按轮次（epoch）从低到高排序
+        const sortedAssessmentTimes = [...assessmentTimes].sort((a, b) => a.epoch - b.epoch)
+
+        // 并行获取限时考核的会话信息
+        const assessmentsWithSessions = await Promise.all(
+          sortedAssessmentTimes.map(async (assessmentTime) => {
+            // 限时考核需要获取会话信息（deadline）
+            let deadline: string | undefined
+            if (assessmentTime.timeLimit) {
+              try {
+                const sessionRes = await assessmentSessionService.getSession(assessmentTime.id)
+                if (sessionRes.code === 200 && sessionRes.data) {
+                  deadline = sessionRes.data.deadline
+                }
+              } catch (sessionError) {
+                console.warn(
+                  `Failed to get session for assessment ${assessmentTime.id}:`,
+                  sessionError
+                )
+              }
+            }
+
+            // 转换为前端 Assessment 类型
+            const assessment = convertToAssessment(assessmentTime)
+
+            // 计算考核状态
+            assessment.status = calculateAssessmentStatus(
+              assessmentTime.startTime,
+              assessmentTime.endTime,
+              deadline
+            )
+
+            // 计算剩余时间或距离开始天数
+            const timeInfo = formatTimeRemaining(
+              assessmentTime.startTime,
+              assessmentTime.endTime,
+              deadline
+            )
+            if (timeInfo.remainingTime) {
+              assessment.remainingTime = timeInfo.remainingTime
+            }
+            if (timeInfo.daysUntilStart !== undefined) {
+              assessment.daysUntilStart = timeInfo.daysUntilStart
+            }
+
+            return assessment
+          })
+        )
+
+        setAssessments(assessmentsWithSessions)
+      }
     } catch (error) {
       console.error('Failed to load profile data:', error)
     } finally {
