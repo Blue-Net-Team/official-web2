@@ -218,21 +218,6 @@ export default function ProfileSidebar({ profile, stats, onAvatarUpdate }: Profi
             </div>
           </div>
         )}
-
-        <div className="grid grid-cols-3 gap-3 pt-6 border-t border-white/[0.05]">
-          <div className="text-center py-3 px-2 rounded-[10px] bg-white/[0.02] transition-all duration-300 hover:bg-[rgba(102,119,255,0.08)]">
-            <div className="text-xl font-bold text-[#6677ff] mb-1">{stats.assessmentCount}</div>
-            <div className="text-xs text-[rgba(140,140,141,1)]">考核轮次</div>
-          </div>
-          <div className="text-center py-3 px-2 rounded-[10px] bg-white/[0.02] transition-all duration-300 hover:bg-[rgba(102,119,255,0.08)]">
-            <div className="text-xl font-bold text-[#6677ff] mb-1">{stats.completedCount}</div>
-            <div className="text-xs text-[rgba(140,140,141,1)]">已完成</div>
-          </div>
-          <div className="text-center py-3 px-2 rounded-[10px] bg-white/[0.02] transition-all duration-300 hover:bg-[rgba(102,119,255,0.08)]">
-            <div className="text-xl font-bold text-[#6677ff] mb-1">{stats.averageScore}</div>
-            <div className="text-xs text-[rgba(140,140,141,1)]">平均分</div>
-          </div>
-        </div>
       </div>
 
       <AvatarCropModal
