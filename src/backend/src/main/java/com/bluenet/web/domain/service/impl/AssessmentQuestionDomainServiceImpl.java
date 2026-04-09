@@ -1,5 +1,6 @@
 package com.bluenet.web.domain.service.impl;
 
+import com.bluenet.web.domain.exception.DataConflict;
 import com.bluenet.web.domain.exception.DataNotFound;
 import com.bluenet.web.domain.exception.GlobalException;
 import com.bluenet.web.domain.model.entity.AssessmentQuestion;
@@ -58,7 +59,7 @@ public class AssessmentQuestionDomainServiceImpl implements AssessmentQuestionDo
                 question.getAssessmentTimeId(),
                 question.getQuestionNo());
         if (existing.isPresent()) {
-            throw new IllegalStateException("该考核时间下题号 " + question.getQuestionNo() + " 已存在");
+            throw new DataConflict("该考核时间下题号 " + question.getQuestionNo() + " 已存在");
         }
 
         AssessmentQuestion entity = new AssessmentQuestion();
@@ -90,7 +91,7 @@ public class AssessmentQuestionDomainServiceImpl implements AssessmentQuestionDo
                     question.getAssessmentTimeId(),
                     question.getQuestionNo());
             if (existing.isPresent() && !existing.get().getId().equals(question.getId())) {
-                throw new IllegalStateException("该考核时间下题号 " + question.getQuestionNo() + " 已存在");
+                throw new DataConflict("该考核时间下题号 " + question.getQuestionNo() + " 已存在");
             }
         }
 

@@ -354,7 +354,7 @@ public class AuthServiceImpl implements AuthService {
             throw new Unauthorized("未登录");
         }
         if (currentUser.getGithubUsername() == null) {
-            throw new IllegalStateException("未绑定 GitHub 账号");
+            throw new BadRequest("未绑定 GitHub 账号");
         }
         userRepository.clearGithubBinding(currentUser.getId());
         log.info("GitHub unbind success for userId {}", currentUser.getId());

@@ -5,6 +5,7 @@ import com.bluenet.web.api.dto.college.CreateCollegeRequestDTO;
 import com.bluenet.web.api.dto.college.UpdateCollegeRequestDTO;
 import com.bluenet.web.application.converter.CollegeConverter;
 import com.bluenet.web.application.service.CollegeService;
+import com.bluenet.web.domain.exception.GlobalException;
 import com.bluenet.web.domain.model.vo.CollegeVO;
 import com.bluenet.web.domain.service.CollegeDomainService;
 import lombok.RequiredArgsConstructor;
@@ -39,7 +40,7 @@ public class CollegeServiceImpl implements CollegeService {
 
         Optional<CollegeVO> created = collegeDomainService.getCollegeById(id);
         if (created.isEmpty()) {
-            throw new IllegalStateException("创建学院失败");
+            throw new GlobalException("创建学院失败");
         }
 
         return collegeConverter.convertToDTO(created.get());
@@ -52,7 +53,7 @@ public class CollegeServiceImpl implements CollegeService {
 
         Optional<CollegeVO> updated = collegeDomainService.getCollegeById(id);
         if (updated.isEmpty()) {
-            throw new IllegalStateException("更新学院失败");
+            throw new GlobalException("更新学院失败");
         }
 
         return collegeConverter.convertToDTO(updated.get());

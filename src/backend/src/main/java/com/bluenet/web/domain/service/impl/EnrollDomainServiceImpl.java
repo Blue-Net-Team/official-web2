@@ -1,6 +1,7 @@
 package com.bluenet.web.domain.service.impl;
 
 import com.bluenet.web.domain.exception.BadRequest;
+import com.bluenet.web.domain.exception.DataConflict;
 import com.bluenet.web.domain.exception.DataNotFound;
 import com.bluenet.web.domain.exception.GlobalException;
 import com.bluenet.web.domain.model.entity.User;
@@ -131,7 +132,7 @@ public class EnrollDomainServiceImpl implements EnrollDomainService {
                 .orElseThrow(() -> new DataNotFound("报名记录不存在"));
 
         if (enrollment.getStatus() != EnrollStatus.PENDING) {
-            throw new IllegalStateException("只能审核待审核状态的报名");
+            throw new DataConflict("只能审核待审核状态的报名");
         }
 
         Optional<UserVO> existingUser = userRepository.findByStudentId(enrollment.getStudentId());
@@ -171,7 +172,7 @@ public class EnrollDomainServiceImpl implements EnrollDomainService {
                 .orElseThrow(() -> new DataNotFound("报名记录不存在"));
 
         if (enrollment.getStatus() != EnrollStatus.PENDING) {
-            throw new IllegalStateException("只能审核待审核状态的报名");
+            throw new DataConflict("只能审核待审核状态的报名");
         }
 
         EnrollVO rejectedEnrollment = EnrollVO.builder()
@@ -210,7 +211,7 @@ public class EnrollDomainServiceImpl implements EnrollDomainService {
     private Long createUserFromEnrollment(EnrollVO enrollment) {
         // 审核通过后创建的用户应为考生角色，考核通过后才能升级为正式成员
         RoleVO candidateRole = roleRepository.findByName(RoleType.CANDIDATE.getName())
-                .orElseThrow(() -> new IllegalStateException("CANDIDATE 角色不存在，请先初始化角色数据"));
+                .orElseThrow(() -> new GlobalException("CANDIDATE 角色不存在，请先初始化角色数据"));
 
         String referralCode = referralCodeGenerator.generate();
 

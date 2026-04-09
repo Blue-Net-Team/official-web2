@@ -19,6 +19,7 @@ import com.bluenet.web.api.dto.learningpath.DirectionLearningPathDTO;
 import com.bluenet.web.api.dto.learningpath.LearningStepDTO;
 import com.bluenet.web.api.dto.learningpath.UpdateLearningStepRequestDTO;
 import com.bluenet.web.application.converter.LearningPathConverter;
+import com.bluenet.web.domain.exception.GlobalException;
 import com.bluenet.web.domain.model.enumerate.Direction;
 import com.bluenet.web.domain.model.vo.LearningStepVO;
 import com.bluenet.web.domain.service.LearningPathDomainService;
@@ -169,8 +170,8 @@ class LearningPathServiceImplTest {
         when(learningPathDomainService.getStepById(TEST_ID)).thenReturn(Optional.empty());
 
         // 执行 & 验证
-        IllegalStateException exception = assertThrows(
-                IllegalStateException.class,
+        GlobalException exception = assertThrows(
+                GlobalException.class,
                 () -> learningPathService.createStep(TEST_SLUG, request));
 
         assertTrue(exception.getMessage().contains("创建学习步骤失败"));

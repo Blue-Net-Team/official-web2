@@ -18,6 +18,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
 import com.bluenet.web.domain.exception.BadRequest;
+import com.bluenet.web.domain.exception.DataConflict;
 import com.bluenet.web.domain.exception.DataNotFound;
 import com.bluenet.web.domain.exception.GlobalException;
 import com.bluenet.web.domain.model.entity.User;
@@ -386,15 +387,15 @@ class EnrollDomainServiceImplTest {
         }
 
         @Test
-        @DisplayName("非PENDING状态：应抛出IllegalStateException")
-        void approveEnrollment_notPendingStatus_shouldThrowIllegalStateException() {
+        @DisplayName("非PENDING状态：应抛出DataConflict")
+        void approveEnrollment_notPendingStatus_shouldThrowDataConflict() {
             EnrollVO enroll = createTestEnrollVO().toBuilder()
                     .status(EnrollStatus.APPROVED)
                     .build();
 
             when(enrollRepository.findById(TEST_ID)).thenReturn(Optional.of(enroll));
 
-            assertThrows(IllegalStateException.class, () -> enrollDomainService.approveEnrollment(TEST_ID));
+            assertThrows(DataConflict.class, () -> enrollDomainService.approveEnrollment(TEST_ID));
         }
 
         @Test
@@ -413,15 +414,15 @@ class EnrollDomainServiceImplTest {
         }
 
         @Test
-        @DisplayName("CANDIDATE角色不存在：应抛出IllegalStateException")
-        void approveEnrollment_candidateRoleNotExists_shouldThrowIllegalStateException() {
+        @DisplayName("CANDIDATE角色不存在：应抛出GlobalException")
+        void approveEnrollment_candidateRoleNotExists_shouldThrowGlobalException() {
             EnrollVO enroll = createTestEnrollVO();
 
             when(enrollRepository.findById(TEST_ID)).thenReturn(Optional.of(enroll));
             when(userRepository.findByStudentId(TEST_STUDENT_ID)).thenReturn(Optional.empty());
             when(roleRepository.findByName("CANDIDATE")).thenReturn(Optional.empty());
 
-            assertThrows(IllegalStateException.class, () -> enrollDomainService.approveEnrollment(TEST_ID));
+            assertThrows(GlobalException.class, () -> enrollDomainService.approveEnrollment(TEST_ID));
         }
     }
 
@@ -450,15 +451,15 @@ class EnrollDomainServiceImplTest {
         }
 
         @Test
-        @DisplayName("非PENDING状态：应抛出IllegalStateException")
-        void rejectEnrollment_notPendingStatus_shouldThrowIllegalStateException() {
+        @DisplayName("非PENDING状态：应抛出DataConflict")
+        void rejectEnrollment_notPendingStatus_shouldThrowDataConflict() {
             EnrollVO enroll = createTestEnrollVO().toBuilder()
                     .status(EnrollStatus.REJECTED)
                     .build();
 
             when(enrollRepository.findById(TEST_ID)).thenReturn(Optional.of(enroll));
 
-            assertThrows(IllegalStateException.class, () -> enrollDomainService.rejectEnrollment(TEST_ID, "原因"));
+            assertThrows(DataConflict.class, () -> enrollDomainService.rejectEnrollment(TEST_ID, "原因"));
         }
 
         @Test

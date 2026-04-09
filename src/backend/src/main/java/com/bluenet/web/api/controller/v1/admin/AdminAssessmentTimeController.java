@@ -91,8 +91,6 @@ public class AdminAssessmentTimeController {
             return ResponseMessage.success(null);
         } catch (IllegalArgumentException e) {
             return ResponseMessage.error(404, e.getMessage());
-        } catch (IllegalStateException e) {
-            return ResponseMessage.error(409, e.getMessage());
         }
     }
 

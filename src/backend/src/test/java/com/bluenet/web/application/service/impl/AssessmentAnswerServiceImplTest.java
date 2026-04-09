@@ -9,6 +9,7 @@ import com.bluenet.web.domain.repository.AssessmentAnswerRepository;
 import com.bluenet.web.domain.repository.AssessmentSessionRepository;
 import com.bluenet.web.domain.service.AssessmentAnswerDomainService;
 import com.bluenet.web.domain.service.AssessmentQuestionDomainService;
+import com.bluenet.web.domain.exception.DataConflict;
 import com.bluenet.web.infrastructure.security.util.UserCTX;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -168,7 +169,7 @@ class AssessmentAnswerServiceImplTest {
         }
 
         @Test
-        @DisplayName("重复提交：应抛出IllegalStateException")
+        @DisplayName("重复提交：应抛出DataConflict")
         void createAnswer_duplicateSubmission_shouldThrow() {
             try (MockedStatic<UserCTX> mockedUserCTX = mockStatic(UserCTX.class)) {
                 UserVO user = createTestUser();
@@ -181,10 +182,10 @@ class AssessmentAnswerServiceImplTest {
                 when(assessmentSessionRepository.findByUserIdAndAssessmentTimeId(TEST_USER_ID, TEST_ASSESSMENT_TIME_ID))
                         .thenReturn(Optional.empty());
                 when(assessmentAnswerDomainService.createAnswer(any(AssessmentAnswerVO.class)))
-                        .thenThrow(new IllegalStateException("已经提交过该题目的答案"));
+                        .thenThrow(new DataConflict("已经提交过该题目的答案"));
 
-                IllegalStateException ex = assertThrows(
-                        IllegalStateException.class,
+                DataConflict ex = assertThrows(
+                        DataConflict.class,
                         () -> assessmentAnswerService.createAnswer(request));
                 assertEquals("已经提交过该题目的答案", ex.getMessage());
             }

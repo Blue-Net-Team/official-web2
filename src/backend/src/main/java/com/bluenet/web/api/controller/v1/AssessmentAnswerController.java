@@ -36,42 +36,28 @@ public class AssessmentAnswerController {
     @Operation(summary = "提交答案", description = "提交指定题目的答案。支持文件上传题（传fileId）和内容题（传content）。")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "提交成功", content = @Content(mediaType = "application/json", schema = @Schema(implementation = AssessmentAnswerDTO.class))),
-            @ApiResponse(responseCode = "400", description = "参数错误", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseMessage.class))),
-            @ApiResponse(responseCode = "403", description = "考核时间已到", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseMessage.class))),
+            @ApiResponse(responseCode = "400", description = "考核时间已到或参数错误", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseMessage.class))),
             @ApiResponse(responseCode = "409", description = "重复提交", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseMessage.class)))
     })
     @RequiresPermission(name = "提交答案", value = "assessment-answer:create", access = AccessLevel.AUTHENTICATED)
     @PostMapping
     public ResponseMessage<AssessmentAnswerDTO> createAnswer(
             @Valid @RequestBody CreateAnswerRequestDTO request) {
-        try {
-            AssessmentAnswerDTO result = assessmentAnswerService.createAnswer(request);
-            return ResponseMessage.success(result);
-        } catch (IllegalStateException e) {
-            return ResponseMessage.error(403, e.getMessage());
-        } catch (IllegalArgumentException e) {
-            return ResponseMessage.error(404, e.getMessage());
-        }
+        AssessmentAnswerDTO result = assessmentAnswerService.createAnswer(request);
+        return ResponseMessage.success(result);
     }
 
     @Operation(summary = "更新答案", description = "重新提交指定题目的答案。支持文件上传题（传fileId）和内容题（传content）。")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "更新成功", content = @Content(mediaType = "application/json", schema = @Schema(implementation = AssessmentAnswerDTO.class))),
-            @ApiResponse(responseCode = "400", description = "参数错误", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseMessage.class))),
-            @ApiResponse(responseCode = "403", description = "考核时间已到或尚未提交", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseMessage.class)))
+            @ApiResponse(responseCode = "400", description = "考核时间已到、尚未提交或参数错误", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseMessage.class)))
     })
     @RequiresPermission(name = "更新答案", value = "assessment-answer:update", access = AccessLevel.AUTHENTICATED)
     @PutMapping
     public ResponseMessage<AssessmentAnswerDTO> updateAnswer(
             @Valid @RequestBody CreateAnswerRequestDTO request) {
-        try {
-            AssessmentAnswerDTO result = assessmentAnswerService.updateAnswer(request);
-            return ResponseMessage.success(result);
-        } catch (IllegalStateException e) {
-            return ResponseMessage.error(403, e.getMessage());
-        } catch (IllegalArgumentException e) {
-            return ResponseMessage.error(404, e.getMessage());
-        }
+        AssessmentAnswerDTO result = assessmentAnswerService.updateAnswer(request);
+        return ResponseMessage.success(result);
     }
 
     @Operation(summary = "查询我的答案", description = "查询当前用户对指定题目的答案")

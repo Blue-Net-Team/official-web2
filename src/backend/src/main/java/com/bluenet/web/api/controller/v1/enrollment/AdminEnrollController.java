@@ -97,8 +97,6 @@ public class AdminEnrollController {
             return ResponseMessage.success("审核通过，账号已发放", result);
         } catch (DataNotFound e) {
             return ResponseMessage.error(HttpStatus.NOT_FOUND.value(), e.getMessage());
-        } catch (IllegalStateException e) {
-            return ResponseMessage.error(HttpStatus.BAD_REQUEST.value(), e.getMessage());
         }
     }
 
@@ -118,8 +116,6 @@ public class AdminEnrollController {
             return ResponseMessage.success("已拒绝", result);
         } catch (DataNotFound e) {
             return ResponseMessage.error(HttpStatus.NOT_FOUND.value(), e.getMessage());
-        } catch (IllegalStateException e) {
-            return ResponseMessage.error(HttpStatus.BAD_REQUEST.value(), e.getMessage());
         }
     }
 

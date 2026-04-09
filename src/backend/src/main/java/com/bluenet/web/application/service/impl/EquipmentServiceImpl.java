@@ -6,6 +6,7 @@ import com.bluenet.web.api.dto.equipment.UpdateEquipmentRequestDTO;
 import com.bluenet.web.application.converter.EquipmentConverter;
 import com.bluenet.web.application.service.EquipmentService;
 import com.bluenet.web.domain.exception.DataNotFound;
+import com.bluenet.web.domain.exception.GlobalException;
 import com.bluenet.web.domain.model.vo.EquipmentVO;
 import com.bluenet.web.domain.service.EquipmentDomainService;
 import lombok.RequiredArgsConstructor;
@@ -51,7 +52,7 @@ public class EquipmentServiceImpl implements EquipmentService {
 
         Optional<EquipmentVO> created = equipmentDomainService.getEquipmentById(id);
         if (created.isEmpty()) {
-            throw new IllegalStateException("创建设备失败");
+            throw new GlobalException("创建设备失败");
         }
 
         return equipmentConverter.convertToDTO(created.get());
@@ -74,7 +75,7 @@ public class EquipmentServiceImpl implements EquipmentService {
 
         Optional<EquipmentVO> updated = equipmentDomainService.getEquipmentById(id);
         if (updated.isEmpty()) {
-            throw new IllegalStateException("更新设备失败");
+            throw new GlobalException("更新设备失败");
         }
 
         return equipmentConverter.convertToDTO(updated.get());

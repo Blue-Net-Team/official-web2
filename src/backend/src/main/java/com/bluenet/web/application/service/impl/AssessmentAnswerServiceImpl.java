@@ -10,6 +10,8 @@ import com.bluenet.web.domain.repository.AssessmentAnswerRepository;
 import com.bluenet.web.domain.repository.AssessmentSessionRepository;
 import com.bluenet.web.domain.service.AssessmentAnswerDomainService;
 import com.bluenet.web.domain.service.AssessmentQuestionDomainService;
+import com.bluenet.web.domain.exception.BadRequest;
+import com.bluenet.web.domain.exception.GlobalException;
 import com.bluenet.web.infrastructure.security.util.UserCTX;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -49,7 +51,7 @@ public class AssessmentAnswerServiceImpl implements AssessmentAnswerService {
                 .ifPresent(session -> {
                     if (session.getDeadline() != null
                             && LocalDateTime.now().isAfter(session.getDeadline())) {
-                        throw new IllegalStateException("考核时间已到，无法提交答案");
+                        throw new BadRequest("考核时间已到，无法提交答案");
                     }
                 });
 
@@ -82,14 +84,14 @@ public class AssessmentAnswerServiceImpl implements AssessmentAnswerService {
                 .ifPresent(session -> {
                     if (session.getDeadline() != null
                             && LocalDateTime.now().isAfter(session.getDeadline())) {
-                        throw new IllegalStateException("考核时间已到，无法修改答案");
+                        throw new BadRequest("考核时间已到，无法修改答案");
                     }
                 });
 
         Optional<AssessmentAnswerVO> existingOpt = assessmentAnswerRepository
                 .findByUserIdAndQuestionId(currentUser.getId(), request.getQuestionId());
         if (existingOpt.isEmpty()) {
-            throw new IllegalStateException("尚未提交过该题目的答案，无法修改");
+            throw new BadRequest("尚未提交过该题目的答案，无法修改");
         }
 
         AssessmentAnswerVO existing = existingOpt.get();
@@ -97,7 +99,7 @@ public class AssessmentAnswerServiceImpl implements AssessmentAnswerService {
 
         AssessmentAnswerVO updated = assessmentAnswerRepository
                 .findByUserIdAndQuestionId(currentUser.getId(), request.getQuestionId())
-                .orElseThrow(() -> new IllegalStateException("更新答案后查询失败"));
+                .orElseThrow(() -> new GlobalException("更新答案后查询失败"));
 
         return convertToDTO(updated);
     }

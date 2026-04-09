@@ -1,5 +1,6 @@
 package com.bluenet.web.domain.service.impl;
 
+import com.bluenet.web.domain.exception.GlobalException;
 import com.bluenet.web.domain.repository.UserRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -74,7 +75,7 @@ class ReferralCodeGeneratorImplTest {
         when(userRepository.existsByInternalReferralCode(anyString())).thenReturn(true);
 
         // Act & Assert
-        assertThrows(IllegalStateException.class, () -> referralCodeGenerator.generate());
+        assertThrows(GlobalException.class, () -> referralCodeGenerator.generate());
     }
 
     @Test

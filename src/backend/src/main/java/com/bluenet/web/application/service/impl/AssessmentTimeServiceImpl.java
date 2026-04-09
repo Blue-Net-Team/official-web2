@@ -5,6 +5,7 @@ import com.bluenet.web.api.dto.assessment_time.AssessmentProgressDTO;
 import com.bluenet.web.api.dto.assessment_time.AssessmentTimeDTO;
 import com.bluenet.web.api.dto.assessment_time.CreateAssessmentTimeRequestDTO;
 import com.bluenet.web.api.dto.assessment_time.UpdateAssessmentTimeRequestDTO;
+import com.bluenet.web.domain.exception.GlobalException;
 import com.bluenet.web.application.converter.AssessmentTimeConverter;
 import com.bluenet.web.application.service.AssessmentTimeService;
 import com.bluenet.web.domain.model.enumerate.Direction;
@@ -58,7 +59,7 @@ public class AssessmentTimeServiceImpl implements AssessmentTimeService {
 
         Optional<AssessmentTimeVO> created = assessmentTimeDomainService.getById(id);
         if (created.isEmpty()) {
-            throw new IllegalStateException("创建考核时间失败");
+            throw new GlobalException("创建考核时间失败");
         }
 
         return assessmentTimeConverter.convertToDTO(created.get());
@@ -82,7 +83,7 @@ public class AssessmentTimeServiceImpl implements AssessmentTimeService {
 
         Optional<AssessmentTimeVO> updated = assessmentTimeDomainService.getById(id);
         if (updated.isEmpty()) {
-            throw new IllegalStateException("更新考核时间失败");
+            throw new GlobalException("更新考核时间失败");
         }
 
         return assessmentTimeConverter.convertToDTO(updated.get());

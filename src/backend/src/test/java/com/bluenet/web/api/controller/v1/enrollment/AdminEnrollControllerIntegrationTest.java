@@ -285,17 +285,17 @@ class AdminEnrollControllerIntegrationTest extends BaseIntegrationTest {
         }
 
         @Test
-        @DisplayName("非PENDING状态：应返回400")
+        @DisplayName("非PENDING状态：应返回409")
         @WithUserVO(userId = 1L, studentId = "admin001", username = "管理员", roleName = "SUPER_ADMIN", permissions = {
                 "enrollment:approve" })
-        void approveEnrollment_notPendingStatus_shouldReturn400() throws Exception {
+        void approveEnrollment_notPendingStatus_shouldReturn409() throws Exception {
             Enroll enroll = createTestEnroll(EnrollStatus.APPROVED);
 
             mockMvc.perform(
                     put("/api/v1/admin/enrollments/" + enroll.getId() + "/approve")
                             .contentType(MediaType.APPLICATION_JSON))
-                    .andExpect(status().isBadRequest())
-                    .andExpect(jsonPath("$.code").value(400));
+                    .andExpect(status().isConflict())
+                    .andExpect(jsonPath("$.code").value(409));
         }
 
         @Test
@@ -396,17 +396,17 @@ class AdminEnrollControllerIntegrationTest extends BaseIntegrationTest {
         }
 
         @Test
-        @DisplayName("非PENDING状态：应返回400")
+        @DisplayName("非PENDING状态：应返回409")
         @WithUserVO(userId = 1L, studentId = "admin001", username = "管理员", roleName = "SUPER_ADMIN", permissions = {
                 "enrollment:reject" })
-        void rejectEnrollment_notPendingStatus_shouldReturn400() throws Exception {
+        void rejectEnrollment_notPendingStatus_shouldReturn409() throws Exception {
             Enroll enroll = createTestEnroll(EnrollStatus.REJECTED);
 
             mockMvc.perform(
                     put("/api/v1/admin/enrollments/" + enroll.getId() + "/reject")
                             .contentType(MediaType.APPLICATION_JSON))
-                    .andExpect(status().isBadRequest())
-                    .andExpect(jsonPath("$.code").value(400));
+                    .andExpect(status().isConflict())
+                    .andExpect(jsonPath("$.code").value(409));
         }
 
         @Test

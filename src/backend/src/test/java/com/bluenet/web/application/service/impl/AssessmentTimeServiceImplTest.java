@@ -6,6 +6,8 @@ import com.bluenet.web.api.dto.assessment_time.AssessmentTimeDTO;
 import com.bluenet.web.api.dto.assessment_time.CreateAssessmentTimeRequestDTO;
 import com.bluenet.web.api.dto.assessment_time.UpdateAssessmentTimeRequestDTO;
 import com.bluenet.web.application.converter.AssessmentTimeConverter;
+import com.bluenet.web.domain.exception.DataConflict;
+import com.bluenet.web.domain.exception.GlobalException;
 import com.bluenet.web.domain.model.enumerate.Direction;
 import com.bluenet.web.domain.model.vo.AssessmentTimeVO;
 import com.bluenet.web.domain.model.vo.UserVO;
@@ -128,7 +130,7 @@ class AssessmentTimeServiceImplTest {
         }
 
         @Test
-        @DisplayName("创建后查询为空：应抛出IllegalStateException")
+        @DisplayName("创建后查询为空：应抛出GlobalException")
         void create_createFailed_shouldThrow() {
             CreateAssessmentTimeRequestDTO request = CreateAssessmentTimeRequestDTO.builder()
                     .direction(Direction.COMPUTER_VISION)
@@ -143,7 +145,7 @@ class AssessmentTimeServiceImplTest {
             when(assessmentTimeDomainService.getById(TEST_ID)).thenReturn(Optional.empty());
 
             assertThrows(
-                    IllegalStateException.class,
+                    GlobalException.class,
                     () -> assessmentTimeService.createAssessmentTime(request));
         }
 
@@ -195,7 +197,7 @@ class AssessmentTimeServiceImplTest {
         }
 
         @Test
-        @DisplayName("更新后查询为空：应抛出IllegalStateException")
+        @DisplayName("更新后查询为空：应抛出GlobalException")
         void update_failed_shouldThrow() {
             UpdateAssessmentTimeRequestDTO request = UpdateAssessmentTimeRequestDTO.builder()
                     .timeLimitMinutes(90)
@@ -204,7 +206,7 @@ class AssessmentTimeServiceImplTest {
             when(assessmentTimeDomainService.getById(TEST_ID)).thenReturn(Optional.empty());
 
             assertThrows(
-                    IllegalStateException.class,
+                    GlobalException.class,
                     () -> assessmentTimeService.updateAssessmentTime(TEST_ID, request));
         }
     }
@@ -226,14 +228,14 @@ class AssessmentTimeServiceImplTest {
         }
 
         @Test
-        @DisplayName("有关联题目：应抛出IllegalStateException")
+        @DisplayName("有关联题目：应抛出DataConflict")
         void delete_withQuestions_shouldThrow() {
-            doThrow(new IllegalStateException("存在关联的考核题目，需先删除相关题目"))
+            doThrow(new DataConflict("存在关联的考核题目，需先删除相关题目"))
                     .when(assessmentTimeDomainService)
                     .delete(TEST_ID);
 
             assertThrows(
-                    IllegalStateException.class,
+                    DataConflict.class,
                     () -> assessmentTimeService.deleteAssessmentTime(TEST_ID));
         }
     }

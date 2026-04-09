@@ -51,8 +51,6 @@ public class AdminAssessmentQuestionController {
             return ResponseMessage.success(created);
         } catch (IllegalArgumentException e) {
             return ResponseMessage.error(400, e.getMessage());
-        } catch (IllegalStateException e) {
-            return ResponseMessage.error(409, e.getMessage());
         }
     }
 
@@ -75,8 +73,6 @@ public class AdminAssessmentQuestionController {
                 return ResponseMessage.error(404, e.getMessage());
             }
             return ResponseMessage.error(400, e.getMessage());
-        } catch (IllegalStateException e) {
-            return ResponseMessage.error(409, e.getMessage());
         }
     }
 

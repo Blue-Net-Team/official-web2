@@ -6,6 +6,7 @@ import com.bluenet.web.api.dto.learningpath.LearningStepDTO;
 import com.bluenet.web.api.dto.learningpath.UpdateLearningStepRequestDTO;
 import com.bluenet.web.application.converter.LearningPathConverter;
 import com.bluenet.web.application.service.LearningPathService;
+import com.bluenet.web.domain.exception.GlobalException;
 import com.bluenet.web.domain.model.enumerate.Direction;
 import com.bluenet.web.domain.model.vo.LearningStepVO;
 import com.bluenet.web.domain.service.LearningPathDomainService;
@@ -54,7 +55,7 @@ public class LearningPathServiceImpl implements LearningPathService {
 
         Optional<LearningStepVO> created = learningPathDomainService.getStepById(id);
         if (created.isEmpty()) {
-            throw new IllegalStateException("创建学习步骤失败");
+            throw new GlobalException("创建学习步骤失败");
         }
 
         return learningPathConverter.convertToDTO(created.get());
@@ -69,7 +70,7 @@ public class LearningPathServiceImpl implements LearningPathService {
 
         Optional<LearningStepVO> existingStep = learningPathDomainService.getStepById(id);
         if (existingStep.isEmpty()) {
-            throw new IllegalStateException("获取学习步骤失败");
+            throw new GlobalException("获取学习步骤失败");
         }
 
         // 检查步骤序号是否与其他步骤冲突
@@ -88,7 +89,7 @@ public class LearningPathServiceImpl implements LearningPathService {
 
         Optional<LearningStepVO> updated = learningPathDomainService.getStepById(id);
         if (updated.isEmpty()) {
-            throw new IllegalStateException("更新学习步骤失败");
+            throw new GlobalException("更新学习步骤失败");
         }
 
         return learningPathConverter.convertToDTO(updated.get());

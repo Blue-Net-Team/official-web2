@@ -1,5 +1,6 @@
 package com.bluenet.web.domain.service.impl;
 
+import com.bluenet.web.domain.exception.DataConflict;
 import com.bluenet.web.domain.model.enumerate.Direction;
 import com.bluenet.web.domain.model.vo.AssessmentTimeVO;
 import com.bluenet.web.domain.repository.AssessmentTimeRepository;
@@ -366,13 +367,13 @@ class AssessmentTimeDomainServiceImplTest {
         }
 
         @Test
-        @DisplayName("有关联题目：应抛出IllegalStateException")
+        @DisplayName("有关联题目：应抛出DataConflict")
         void delete_withAssociatedQuestions_shouldThrow() {
             when(assessmentTimeRepository.existsById(TEST_ID)).thenReturn(true);
             when(assessmentTimeRepository.hasAssociatedQuestions(TEST_ID)).thenReturn(true);
 
-            IllegalStateException ex = assertThrows(
-                    IllegalStateException.class,
+            DataConflict ex = assertThrows(
+                    DataConflict.class,
                     () -> assessmentTimeDomainService.delete(TEST_ID));
             assertEquals("存在关联的考核题目，需先删除相关题目", ex.getMessage());
             verify(assessmentTimeRepository, never()).deleteById(any());

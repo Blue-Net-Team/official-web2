@@ -19,6 +19,7 @@ import com.bluenet.web.api.dto.college.CollegeDTO;
 import com.bluenet.web.api.dto.college.CreateCollegeRequestDTO;
 import com.bluenet.web.api.dto.college.UpdateCollegeRequestDTO;
 import com.bluenet.web.application.converter.CollegeConverter;
+import com.bluenet.web.domain.exception.GlobalException;
 import com.bluenet.web.domain.model.vo.CollegeVO;
 import com.bluenet.web.domain.service.CollegeDomainService;
 
@@ -170,7 +171,7 @@ class CollegeServiceImplTest {
         }
 
         @Test
-        @DisplayName("创建后查询为空：应抛出IllegalStateException")
+        @DisplayName("创建后查询为空：应抛出GlobalException")
         void createCollege_createFailed_shouldThrowException() {
             // 准备
             CreateCollegeRequestDTO request = createTestCreateRequest();
@@ -179,8 +180,8 @@ class CollegeServiceImplTest {
             when(collegeDomainService.getCollegeById(TEST_ID)).thenReturn(Optional.empty());
 
             // 执行 & 验证
-            IllegalStateException exception = assertThrows(
-                    IllegalStateException.class,
+            GlobalException exception = assertThrows(
+                    GlobalException.class,
                     () -> collegeService.createCollege(request));
             assertEquals("创建学院失败", exception.getMessage());
 
@@ -238,7 +239,7 @@ class CollegeServiceImplTest {
         }
 
         @Test
-        @DisplayName("更新后查询为空：应抛出IllegalStateException")
+        @DisplayName("更新后查询为空：应抛出GlobalException")
         void updateCollege_updateFailed_shouldThrowException() {
             // 准备
             UpdateCollegeRequestDTO request = createTestUpdateRequest();
@@ -246,8 +247,8 @@ class CollegeServiceImplTest {
             when(collegeDomainService.getCollegeById(TEST_ID)).thenReturn(Optional.empty());
 
             // 执行 & 验证
-            IllegalStateException exception = assertThrows(
-                    IllegalStateException.class,
+            GlobalException exception = assertThrows(
+                    GlobalException.class,
                     () -> collegeService.updateCollege(TEST_ID, request));
             assertEquals("更新学院失败", exception.getMessage());
 

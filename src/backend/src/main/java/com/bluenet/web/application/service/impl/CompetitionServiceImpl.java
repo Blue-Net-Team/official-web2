@@ -3,6 +3,7 @@ package com.bluenet.web.application.service.impl;
 import com.bluenet.web.api.dto.competition.*;
 import com.bluenet.web.application.converter.CompetitionConverter;
 import com.bluenet.web.application.service.CompetitionService;
+import com.bluenet.web.domain.exception.GlobalException;
 import com.bluenet.web.domain.model.vo.CompetitionBriefVO;
 import com.bluenet.web.domain.model.vo.CompetitionVO;
 import com.bluenet.web.domain.model.vo.IntroduceImageVO;
@@ -79,7 +80,7 @@ public class CompetitionServiceImpl implements CompetitionService {
 
         Optional<CompetitionVO> created = competitionDomainService.getCompetitionById(id);
         if (created.isEmpty()) {
-            throw new IllegalStateException("创建竞赛失败");
+            throw new GlobalException("创建竞赛失败");
         }
 
         List<IntroduceImageVO> images = introduceImageDomainService.getCompetitionImages(id);
@@ -117,7 +118,7 @@ public class CompetitionServiceImpl implements CompetitionService {
 
         Optional<CompetitionVO> updated = competitionDomainService.getCompetitionById(id);
         if (updated.isEmpty()) {
-            throw new IllegalStateException("更新竞赛失败");
+            throw new GlobalException("更新竞赛失败");
         }
 
         CompetitionBriefVO briefVO = CompetitionBriefVO.builder()

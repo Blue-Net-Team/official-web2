@@ -1,5 +1,6 @@
 package com.bluenet.web.domain.service.impl;
 
+import com.bluenet.web.domain.exception.DataConflict;
 import com.bluenet.web.domain.exception.GlobalException;
 import com.bluenet.web.domain.model.entity.AssessmentAnswer;
 import com.bluenet.web.domain.model.vo.AssessmentAnswerVO;
@@ -48,7 +49,7 @@ public class AssessmentAnswerDomainServiceImpl implements AssessmentAnswerDomain
     @Transactional
     public AssessmentAnswerVO createAnswer(AssessmentAnswerVO answer) {
         if (assessmentAnswerRepository.existsByUserIdAndQuestionId(answer.getUserId(), answer.getQuestionId())) {
-            throw new IllegalStateException("已经提交过该题目的答案");
+            throw new DataConflict("已经提交过该题目的答案");
         }
 
         AssessmentAnswer entity = new AssessmentAnswer();

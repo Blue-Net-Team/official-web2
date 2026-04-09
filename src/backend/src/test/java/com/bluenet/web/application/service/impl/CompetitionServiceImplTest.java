@@ -16,6 +16,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.bluenet.web.api.dto.competition.*;
 import com.bluenet.web.application.converter.CompetitionConverter;
+import com.bluenet.web.domain.exception.GlobalException;
 import com.bluenet.web.domain.model.vo.CompetitionBriefVO;
 import com.bluenet.web.domain.model.vo.CompetitionVO;
 import com.bluenet.web.domain.model.vo.IntroduceImageVO;
@@ -622,8 +623,8 @@ class CompetitionServiceImplTest {
         when(competitionDomainService.getCompetitionById(TEST_ID)).thenReturn(Optional.empty());
 
         // 执行 & 验证
-        IllegalStateException exception = assertThrows(
-                IllegalStateException.class,
+        GlobalException exception = assertThrows(
+                GlobalException.class,
                 () -> competitionService.createCompetition(request));
         assertEquals("创建竞赛失败", exception.getMessage());
     }
@@ -697,8 +698,8 @@ class CompetitionServiceImplTest {
         when(competitionDomainService.getCompetitionById(TEST_ID)).thenReturn(Optional.empty());
 
         // 执行 & 验证
-        IllegalStateException exception = assertThrows(
-                IllegalStateException.class,
+        GlobalException exception = assertThrows(
+                GlobalException.class,
                 () -> competitionService.updateCompetition(TEST_ID, request));
         assertEquals("更新竞赛失败", exception.getMessage());
     }

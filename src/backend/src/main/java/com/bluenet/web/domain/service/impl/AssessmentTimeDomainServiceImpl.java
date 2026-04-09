@@ -1,5 +1,6 @@
 package com.bluenet.web.domain.service.impl;
 
+import com.bluenet.web.domain.exception.DataConflict;
 import com.bluenet.web.domain.model.vo.AssessmentTimeVO;
 import com.bluenet.web.domain.repository.AssessmentTimeRepository;
 import com.bluenet.web.domain.service.AssessmentTimeDomainService;
@@ -119,7 +120,7 @@ public class AssessmentTimeDomainServiceImpl implements AssessmentTimeDomainServ
 
         // 检查是否有关联的考核题目
         if (assessmentTimeRepository.hasAssociatedQuestions(id)) {
-            throw new IllegalStateException("存在关联的考核题目，需先删除相关题目");
+            throw new DataConflict("存在关联的考核题目，需先删除相关题目");
         }
 
         assessmentTimeRepository.deleteById(id);

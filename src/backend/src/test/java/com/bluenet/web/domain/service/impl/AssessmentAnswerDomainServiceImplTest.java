@@ -1,5 +1,6 @@
 package com.bluenet.web.domain.service.impl;
 
+import com.bluenet.web.domain.exception.DataConflict;
 import com.bluenet.web.domain.model.entity.AssessmentAnswer;
 import com.bluenet.web.domain.model.vo.AssessmentAnswerVO;
 import com.bluenet.web.domain.repository.AssessmentAnswerRepository;
@@ -91,15 +92,15 @@ class AssessmentAnswerDomainServiceImplTest {
         }
 
         @Test
-        @DisplayName("重复提交：应抛出IllegalStateException")
+        @DisplayName("重复提交：应抛出DataConflict")
         void createAnswer_duplicate_shouldThrow() {
             AssessmentAnswerVO inputVO = createTestAnswerVO();
 
             when(assessmentAnswerRepository.existsByUserIdAndQuestionId(TEST_USER_ID, TEST_QUESTION_ID))
                     .thenReturn(true);
 
-            IllegalStateException ex = assertThrows(
-                    IllegalStateException.class,
+            DataConflict ex = assertThrows(
+                    DataConflict.class,
                     () -> assessmentAnswerDomainService.createAnswer(inputVO));
             assertEquals("已经提交过该题目的答案", ex.getMessage());
 

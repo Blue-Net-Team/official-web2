@@ -1,5 +1,6 @@
 package com.bluenet.web.domain.service.impl;
 
+import com.bluenet.web.domain.exception.GlobalException;
 import com.bluenet.web.domain.repository.UserRepository;
 import com.bluenet.web.domain.service.ReferralCodeGenerator;
 import lombok.RequiredArgsConstructor;
@@ -36,7 +37,7 @@ public class ReferralCodeGeneratorImpl implements ReferralCodeGenerator {
             }
             log.debug("Referral code collision detected, retrying (attempt {}/{})", attempt + 1, MAX_RETRIES);
         }
-        throw new IllegalStateException("Failed to generate unique referral code after " + MAX_RETRIES + " attempts");
+        throw new GlobalException("Failed to generate unique referral code after " + MAX_RETRIES + " attempts");
     }
 
     @Override

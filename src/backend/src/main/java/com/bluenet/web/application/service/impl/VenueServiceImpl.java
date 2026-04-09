@@ -6,6 +6,7 @@ import com.bluenet.web.api.dto.venue.VenueDTO;
 import com.bluenet.web.application.converter.VenueConverter;
 import com.bluenet.web.application.service.VenueService;
 import com.bluenet.web.domain.exception.DataNotFound;
+import com.bluenet.web.domain.exception.GlobalException;
 import com.bluenet.web.domain.model.vo.VenueVO;
 import com.bluenet.web.domain.service.VenueDomainService;
 import lombok.RequiredArgsConstructor;
@@ -51,7 +52,7 @@ public class VenueServiceImpl implements VenueService {
 
         Optional<VenueVO> created = venueDomainService.getVenueById(id);
         if (created.isEmpty()) {
-            throw new IllegalStateException("创建场地失败");
+            throw new GlobalException("创建场地失败");
         }
 
         return venueConverter.convertToDTO(created.get());
@@ -74,7 +75,7 @@ public class VenueServiceImpl implements VenueService {
 
         Optional<VenueVO> updated = venueDomainService.getVenueById(id);
         if (updated.isEmpty()) {
-            throw new IllegalStateException("更新场地失败");
+            throw new GlobalException("更新场地失败");
         }
 
         return venueConverter.convertToDTO(updated.get());
