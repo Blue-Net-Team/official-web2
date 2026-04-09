@@ -19,7 +19,7 @@ const CompetitionCard = ({ competition }: { competition: CompetitionBriefDTO }) 
       }}
     >
       <Flex align="start" gap={10}>
-        <div className="shrink-0 w-16 h-11">
+        <div className="shrink-0 w-fit h-11 mr-0 ">
           {logoImageUrl ? (
             <CompetitionLogo src={logoImageUrl} alt={competition.name} />
           ) : (

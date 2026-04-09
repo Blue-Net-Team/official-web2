@@ -56,7 +56,7 @@ const RecruitmentProcess = () => {
             onClick={handleJoinClick}
             icon={<RightOutlined />}
             iconPlacement="end"
-            className="min-h-[44px] flex items-center justify-center"
+            className="min-h-[44px] flex items-center justify-center mt-[10px]"
           >
             立即加入
           </Button>

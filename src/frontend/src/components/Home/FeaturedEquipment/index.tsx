@@ -36,7 +36,7 @@ export default function FeaturedEquipment() {
 
   return (
     <div className="w-full min-h-screen md:min-h-screen box-border mx-auto py-10 bg-[linear-gradient(180deg,rgba(0,0,0,0)_0%,rgba(29,3,1,0.57)_32.3%,rgba(51,41,206,0.43)_75.2%)] flex flex-col justify-center items-center">
-      <div className="relative w-full md:w-[70%] h-auto min-h-[300px] sm:min-h-[350px] md:h-[407px] rounded-[36px] sm:rounded-[48px] md:rounded-[72px] border-[3px] border-[#2f27b0] bg-black p-[30px_24px] sm:p-9 md:p-[42.5px_48px] box-border overflow-hidden flex items-start">
+      <div className="relative w-[90%] md:w-[70%] h-auto min-h-[300px] sm:min-h-[350px] md:h-[407px] rounded-[36px] sm:rounded-[48px] md:rounded-[72px] border-[3px] border-[#2f27b0] bg-black p-[30px_24px] sm:p-9 md:p-[42.5px_48px] box-border overflow-hidden flex items-start">
         <div
           className="absolute inset-0 opacity-50 z-[1]"
           style={{
