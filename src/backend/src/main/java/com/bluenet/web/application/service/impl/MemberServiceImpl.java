@@ -11,6 +11,7 @@ import com.bluenet.web.application.service.MemberService;
 import com.bluenet.web.domain.exception.BadRequest;
 import com.bluenet.web.domain.exception.DataNotFound;
 import com.bluenet.web.domain.model.enumerate.ExperienceType;
+import com.bluenet.web.domain.model.enumerate.RoleType;
 import com.bluenet.web.domain.model.vo.ExperienceVO;
 import com.bluenet.web.domain.model.vo.MemberVO;
 import com.bluenet.web.domain.service.MemberDomainService;
@@ -84,8 +85,8 @@ public class MemberServiceImpl implements MemberService {
                 .toList();
     }
 
-    private boolean isTeamMember(com.bluenet.web.infrastructure.security.RoleType roleType) {
-        return roleType.isAtLeast(com.bluenet.web.infrastructure.security.RoleType.MEMBER);
+    private boolean isTeamMember(RoleType roleType) {
+        return roleType.isAtLeast(RoleType.MEMBER);
     }
 
     private ExperienceType parseExperienceType(String type) {

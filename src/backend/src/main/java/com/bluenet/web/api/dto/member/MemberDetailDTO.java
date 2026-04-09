@@ -2,7 +2,7 @@ package com.bluenet.web.api.dto.member;
 
 import com.bluenet.web.domain.model.enumerate.Direction;
 import com.bluenet.web.domain.model.enumerate.Gender;
-import com.bluenet.web.infrastructure.security.RoleType;
+import com.bluenet.web.domain.model.enumerate.RoleType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

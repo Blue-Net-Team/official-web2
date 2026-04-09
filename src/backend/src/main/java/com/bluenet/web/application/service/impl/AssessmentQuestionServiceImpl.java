@@ -16,7 +16,7 @@ import com.bluenet.web.domain.service.AssessmentQuestionDomainService;
 import com.bluenet.web.domain.service.AssessmentSessionDomainService;
 import com.bluenet.web.domain.service.AssessmentTimeDomainService;
 import com.bluenet.web.domain.util.GradeCalculator;
-import com.bluenet.web.infrastructure.security.RoleType;
+import com.bluenet.web.domain.model.enumerate.RoleType;
 import com.bluenet.web.infrastructure.security.util.UserCTX;
 import com.bluenet.web.domain.model.vo.evaluation.QuestionContent;
 import com.fasterxml.jackson.databind.ObjectMapper;

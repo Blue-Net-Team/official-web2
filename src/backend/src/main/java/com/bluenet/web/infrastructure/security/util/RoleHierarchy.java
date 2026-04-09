@@ -1,6 +1,6 @@
 package com.bluenet.web.infrastructure.security.util;
 
-import com.bluenet.web.infrastructure.security.RoleType;
+import com.bluenet.web.domain.model.enumerate.RoleType;
 
 /**
  * 角色层级工具类。

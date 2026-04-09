@@ -1,7 +1,7 @@
 package com.bluenet.web.domain.service.impl;
 
+import com.bluenet.web.domain.repository.UserRepository;
 import com.bluenet.web.domain.service.ReferralCodeGenerator;
-import com.bluenet.web.infrastructure.repository.mapper.UserMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -19,7 +19,7 @@ import java.security.SecureRandom;
 @RequiredArgsConstructor
 public class ReferralCodeGeneratorImpl implements ReferralCodeGenerator {
 
-    private final UserMapper userMapper;
+    private final UserRepository userRepository;
 
     private static final int CODE_LENGTH = 8;
     private static final String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -62,6 +62,6 @@ public class ReferralCodeGeneratorImpl implements ReferralCodeGenerator {
     }
 
     private boolean isUnique(String code) {
-        return userMapper.selectByInternalReferralCode(code) == null;
+        return !userRepository.existsByInternalReferralCode(code);
     }
 }

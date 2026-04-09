@@ -59,4 +59,13 @@ public interface UserRepository {
     void clearGithubBinding(Long userId);
 
     void updateEmail(Long userId, String newEmail);
+
+    /**
+     * 检查内推码是否已存在（用于唯一性校验）
+     *
+     * @param code
+     *            内推码
+     * @return true 如果该内推码已被使用
+     */
+    boolean existsByInternalReferralCode(String code);
 }

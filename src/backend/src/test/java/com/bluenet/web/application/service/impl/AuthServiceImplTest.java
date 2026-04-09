@@ -252,7 +252,7 @@ class AuthServiceImplTest {
                 .expireAt(LocalDateTime.now().plusMinutes(5))
                 .used(false)
                 .build();
-        when(verificationCodeDomainService.generateCode(TEST_EMAIL, null))
+        when(verificationCodeDomainService.generateCode(TEST_EMAIL, null, "login"))
                 .thenReturn(verifyCodeVO);
 
         // 执行
@@ -260,7 +260,7 @@ class AuthServiceImplTest {
 
         // 验证
         verify(verificationCodeRepository).findLatestByEmailWithinSeconds(TEST_EMAIL, 60);
-        verify(verificationCodeDomainService).generateCode(TEST_EMAIL, null);
+        verify(verificationCodeDomainService).generateCode(TEST_EMAIL, null, "login");
         verify(verificationCodeRepository).save(verifyCodeVO);
         verify(emailSender).sendHtmlAsync(eq(TEST_EMAIL), eq("蓝网登录验证码"), anyString());
     }

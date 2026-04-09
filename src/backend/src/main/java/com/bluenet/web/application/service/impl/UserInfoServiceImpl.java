@@ -17,7 +17,7 @@ import com.bluenet.web.domain.repository.VerificationCodeRepository;
 import com.bluenet.web.domain.service.UserDomainService;
 import com.bluenet.web.domain.service.VerificationCodeDomainService;
 import com.bluenet.web.infrastructure.email.EmailSender;
-import com.bluenet.web.infrastructure.security.RoleType;
+import com.bluenet.web.domain.model.enumerate.RoleType;
 import com.bluenet.web.infrastructure.security.util.UserCTX;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

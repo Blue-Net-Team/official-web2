@@ -13,7 +13,7 @@ import com.bluenet.web.domain.repository.AssessmentAnswerRepository;
 import com.bluenet.web.domain.repository.AssessmentQuestionRepository;
 import com.bluenet.web.domain.repository.AssessmentTimeRepository;
 import com.bluenet.web.domain.service.AssessmentTimeDomainService;
-import com.bluenet.web.infrastructure.security.RoleType;
+import com.bluenet.web.domain.model.enumerate.RoleType;
 import com.bluenet.web.infrastructure.security.util.UserCTX;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;

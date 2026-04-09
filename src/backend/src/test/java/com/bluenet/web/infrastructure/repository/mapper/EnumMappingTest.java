@@ -1,10 +1,9 @@
-package com.bluenet.web.domain.model.enumerate;
+package com.bluenet.web.infrastructure.repository.mapper;
 
 import com.bluenet.web.BaseIntegrationTest;
 import com.bluenet.web.domain.model.entity.College;
 import com.bluenet.web.domain.model.entity.User;
-import com.bluenet.web.infrastructure.repository.mapper.CollegeMapper;
-import com.bluenet.web.infrastructure.repository.mapper.UserMapper;
+import com.bluenet.web.domain.model.enumerate.*;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 

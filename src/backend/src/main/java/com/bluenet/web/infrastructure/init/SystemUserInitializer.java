@@ -6,7 +6,7 @@ import java.security.NoSuchAlgorithmException;
 
 import com.bluenet.web.domain.model.entity.Role;
 import com.bluenet.web.domain.model.entity.User;
-import com.bluenet.web.infrastructure.security.RoleType;
+import com.bluenet.web.domain.model.enumerate.RoleType;
 import com.bluenet.web.domain.repository.UserRepository;
 import com.bluenet.web.infrastructure.config.properties.SystemUserProperties;
 import com.bluenet.web.infrastructure.repository.mapper.RoleMapper;

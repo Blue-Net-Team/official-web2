@@ -20,8 +20,6 @@ import org.springframework.data.domain.Pageable;
 import com.bluenet.web.domain.exception.BadRequest;
 import com.bluenet.web.domain.exception.DataNotFound;
 import com.bluenet.web.domain.exception.GlobalException;
-import com.bluenet.web.domain.model.entity.File;
-import com.bluenet.web.domain.model.entity.Role;
 import com.bluenet.web.domain.model.entity.User;
 import com.bluenet.web.domain.model.enumerate.Direction;
 import com.bluenet.web.domain.model.enumerate.EnrollStatus;
@@ -29,12 +27,14 @@ import com.bluenet.web.domain.model.enumerate.FileType;
 import com.bluenet.web.domain.model.vo.EnrollBriefVO;
 import com.bluenet.web.domain.model.vo.EnrollStatisticsVO;
 import com.bluenet.web.domain.model.vo.EnrollVO;
+import com.bluenet.web.domain.model.vo.FileVO;
+import com.bluenet.web.domain.model.vo.RoleVO;
+import com.bluenet.web.domain.model.vo.UserVO;
 import com.bluenet.web.domain.repository.EnrollRepository;
+import com.bluenet.web.domain.repository.FileRepository;
+import com.bluenet.web.domain.repository.RoleRepository;
 import com.bluenet.web.domain.repository.UserRepository;
 import com.bluenet.web.domain.service.ReferralCodeGenerator;
-import com.bluenet.web.infrastructure.repository.mapper.FileMapper;
-import com.bluenet.web.infrastructure.repository.mapper.RoleMapper;
-import com.bluenet.web.infrastructure.repository.mapper.UserMapper;
 
 @DisplayName("EnrollDomainServiceImpl 单元测试")
 @ExtendWith(MockitoExtension.class)
@@ -47,13 +47,10 @@ class EnrollDomainServiceImplTest {
     private UserRepository userRepository;
 
     @Mock
-    private UserMapper userMapper;
+    private FileRepository fileRepository;
 
     @Mock
-    private FileMapper fileMapper;
-
-    @Mock
-    private RoleMapper roleMapper;
+    private RoleRepository roleRepository;
 
     @Mock
     private ReferralCodeGenerator referralCodeGenerator;
@@ -101,19 +98,18 @@ class EnrollDomainServiceImplTest {
                 .build();
     }
 
-    private Role createTestRole() {
-        return Role.builder()
+    private RoleVO createTestRoleVO() {
+        return RoleVO.builder()
                 .id(TEST_ROLE_ID)
                 .name("CANDIDATE")
                 .build();
     }
 
-    private File createTestAvatarFile() {
-        return File.builder()
+    private FileVO createTestAvatarFileVO() {
+        return FileVO.builder()
                 .id(TEST_AVATAR_ID)
                 .name("avatar.jpg")
                 .type(FileType.AVATAR)
-                .url("http://example.com/avatar.jpg")
                 .build();
     }
 
@@ -368,12 +364,11 @@ class EnrollDomainServiceImplTest {
         @DisplayName("正常审核通过：应更新状态为APPROVED并创建CANDIDATE角色用户")
         void approveEnrollment_normalCase_shouldUpdateStatusToApproved() {
             EnrollVO enroll = createTestEnrollVO();
-            Role candidateRole = createTestRole();
+            RoleVO candidateRole = createTestRoleVO();
 
             when(enrollRepository.findById(TEST_ID)).thenReturn(Optional.of(enroll));
-            when(roleMapper.selectByName("CANDIDATE")).thenReturn(candidateRole);
-            when(userMapper.selectByStudentId(TEST_STUDENT_ID)).thenReturn(null);
-            when(userMapper.insert(any(User.class))).thenReturn(1);
+            when(roleRepository.findByName("CANDIDATE")).thenReturn(Optional.of(candidateRole));
+            when(userRepository.findByStudentId(TEST_STUDENT_ID)).thenReturn(Optional.empty());
             when(referralCodeGenerator.generate()).thenReturn("ABCD1234");
 
             enrollDomainService.approveEnrollment(TEST_ID);
@@ -406,14 +401,14 @@ class EnrollDomainServiceImplTest {
         @DisplayName("用户已存在：应跳过用户创建")
         void approveEnrollment_userAlreadyExists_shouldSkipUserCreation() {
             EnrollVO enroll = createTestEnrollVO();
-            User existingUser = User.builder().id(999L).studentId(TEST_STUDENT_ID).build();
+            UserVO existingUser = UserVO.builder().id(999L).studentId(TEST_STUDENT_ID).build();
 
             when(enrollRepository.findById(TEST_ID)).thenReturn(Optional.of(enroll));
-            when(userMapper.selectByStudentId(TEST_STUDENT_ID)).thenReturn(existingUser);
+            when(userRepository.findByStudentId(TEST_STUDENT_ID)).thenReturn(Optional.of(existingUser));
 
             enrollDomainService.approveEnrollment(TEST_ID);
 
-            verify(userMapper, never()).insert(any(User.class));
+            verify(userRepository, never()).save(any(User.class));
             verify(enrollRepository).update(argThat(updated -> updated.getStatus() == EnrollStatus.APPROVED));
         }
 
@@ -423,8 +418,8 @@ class EnrollDomainServiceImplTest {
             EnrollVO enroll = createTestEnrollVO();
 
             when(enrollRepository.findById(TEST_ID)).thenReturn(Optional.of(enroll));
-            when(userMapper.selectByStudentId(TEST_STUDENT_ID)).thenReturn(null);
-            when(roleMapper.selectByName("CANDIDATE")).thenReturn(null);
+            when(userRepository.findByStudentId(TEST_STUDENT_ID)).thenReturn(Optional.empty());
+            when(roleRepository.findByName("CANDIDATE")).thenReturn(Optional.empty());
 
             assertThrows(IllegalStateException.class, () -> enrollDomainService.approveEnrollment(TEST_ID));
         }
@@ -492,8 +487,8 @@ class EnrollDomainServiceImplTest {
         @Test
         @DisplayName("正常头像文件：应正常通过")
         void validateAvatar_validAvatarFile_shouldPass() {
-            File avatarFile = createTestAvatarFile();
-            when(fileMapper.selectById(TEST_AVATAR_ID)).thenReturn(avatarFile);
+            FileVO avatarFile = createTestAvatarFileVO();
+            when(fileRepository.findById(TEST_AVATAR_ID)).thenReturn(Optional.of(avatarFile));
 
             assertDoesNotThrow(() -> enrollDomainService.validateAvatar(TEST_AVATAR_ID));
         }
@@ -501,7 +496,7 @@ class EnrollDomainServiceImplTest {
         @Test
         @DisplayName("文件不存在：应抛出BadRequest异常")
         void validateAvatar_nonExistingFile_shouldThrowException() {
-            when(fileMapper.selectById(TEST_AVATAR_ID)).thenReturn(null);
+            when(fileRepository.findById(TEST_AVATAR_ID)).thenReturn(Optional.empty());
 
             BadRequest exception = assertThrows(
                     BadRequest.class,
@@ -512,13 +507,12 @@ class EnrollDomainServiceImplTest {
         @Test
         @DisplayName("文件类型不是头像：应抛出GlobalException")
         void validateAvatar_wrongFileType_shouldThrowException() {
-            File wrongTypeFile = File.builder()
+            FileVO wrongTypeFile = FileVO.builder()
                     .id(TEST_AVATAR_ID)
                     .name("document.pdf")
                     .type(FileType.WORK)
-                    .url("http://example.com/document.pdf")
                     .build();
-            when(fileMapper.selectById(TEST_AVATAR_ID)).thenReturn(wrongTypeFile);
+            when(fileRepository.findById(TEST_AVATAR_ID)).thenReturn(Optional.of(wrongTypeFile));
 
             GlobalException exception = assertThrows(
                     GlobalException.class,

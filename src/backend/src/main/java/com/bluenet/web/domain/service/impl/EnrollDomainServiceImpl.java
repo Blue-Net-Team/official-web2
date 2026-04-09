@@ -3,23 +3,23 @@ package com.bluenet.web.domain.service.impl;
 import com.bluenet.web.domain.exception.BadRequest;
 import com.bluenet.web.domain.exception.DataNotFound;
 import com.bluenet.web.domain.exception.GlobalException;
-import com.bluenet.web.domain.model.entity.File;
-import com.bluenet.web.domain.model.entity.Role;
 import com.bluenet.web.domain.model.entity.User;
-import com.bluenet.web.infrastructure.security.RoleType;
 import com.bluenet.web.domain.model.enumerate.Direction;
 import com.bluenet.web.domain.model.enumerate.EnrollStatus;
 import com.bluenet.web.domain.model.enumerate.FileType;
 import com.bluenet.web.domain.model.vo.EnrollBriefVO;
 import com.bluenet.web.domain.model.vo.EnrollStatisticsVO;
 import com.bluenet.web.domain.model.vo.EnrollVO;
+import com.bluenet.web.domain.model.vo.FileVO;
+import com.bluenet.web.domain.model.vo.RoleVO;
+import com.bluenet.web.domain.model.vo.UserVO;
 import com.bluenet.web.domain.repository.EnrollRepository;
+import com.bluenet.web.domain.repository.FileRepository;
+import com.bluenet.web.domain.repository.RoleRepository;
 import com.bluenet.web.domain.repository.UserRepository;
 import com.bluenet.web.domain.service.EnrollDomainService;
 import com.bluenet.web.domain.service.ReferralCodeGenerator;
-import com.bluenet.web.infrastructure.repository.mapper.FileMapper;
-import com.bluenet.web.infrastructure.repository.mapper.RoleMapper;
-import com.bluenet.web.infrastructure.repository.mapper.UserMapper;
+import com.bluenet.web.domain.model.enumerate.RoleType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -36,9 +36,8 @@ import java.util.Optional;
 public class EnrollDomainServiceImpl implements EnrollDomainService {
     private final EnrollRepository enrollRepository;
     private final UserRepository userRepository;
-    private final UserMapper userMapper;
-    private final FileMapper fileMapper;
-    private final RoleMapper roleMapper;
+    private final FileRepository fileRepository;
+    private final RoleRepository roleRepository;
     private final ReferralCodeGenerator referralCodeGenerator;
 
     @Override
@@ -135,7 +134,7 @@ public class EnrollDomainServiceImpl implements EnrollDomainService {
             throw new IllegalStateException("只能审核待审核状态的报名");
         }
 
-        Optional<User> existingUser = Optional.ofNullable(userMapper.selectByStudentId(enrollment.getStudentId()));
+        Optional<UserVO> existingUser = userRepository.findByStudentId(enrollment.getStudentId());
         Long createdUserId = null;
 
         if (existingUser.isEmpty()) {
@@ -201,10 +200,8 @@ public class EnrollDomainServiceImpl implements EnrollDomainService {
             return;
         }
 
-        File file = fileMapper.selectById(avatarId);
-        if (file == null) {
-            throw new BadRequest("头像文件不存在");
-        }
+        FileVO file = fileRepository.findById(avatarId)
+                .orElseThrow(() -> new BadRequest("头像文件不存在"));
         if (file.getType() != FileType.AVATAR) {
             throw new GlobalException("文件类型不是头像");
         }
@@ -212,10 +209,8 @@ public class EnrollDomainServiceImpl implements EnrollDomainService {
 
     private Long createUserFromEnrollment(EnrollVO enrollment) {
         // 审核通过后创建的用户应为考生角色，考核通过后才能升级为正式成员
-        Role candidateRole = roleMapper.selectByName(RoleType.CANDIDATE.getName());
-        if (candidateRole == null) {
-            throw new IllegalStateException("CANDIDATE 角色不存在，请先初始化角色数据");
-        }
+        RoleVO candidateRole = roleRepository.findByName(RoleType.CANDIDATE.getName())
+                .orElseThrow(() -> new IllegalStateException("CANDIDATE 角色不存在，请先初始化角色数据"));
 
         String referralCode = referralCodeGenerator.generate();
 
@@ -231,7 +226,7 @@ public class EnrollDomainServiceImpl implements EnrollDomainService {
                 .internalReferralCode(referralCode)
                 .build();
 
-        userMapper.insert(user);
+        userRepository.save(user);
         log.info("创建新用户: {}, 学号: {}, 内推码: {}", user.getId(), user.getStudentId(), referralCode);
 
         return user.getId();

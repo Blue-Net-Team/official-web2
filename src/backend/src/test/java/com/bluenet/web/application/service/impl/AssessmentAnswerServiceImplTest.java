@@ -6,6 +6,7 @@ import com.bluenet.web.domain.model.vo.AssessmentAnswerVO;
 import com.bluenet.web.domain.model.vo.AssessmentQuestionVO;
 import com.bluenet.web.domain.model.vo.UserVO;
 import com.bluenet.web.domain.repository.AssessmentAnswerRepository;
+import com.bluenet.web.domain.repository.AssessmentSessionRepository;
 import com.bluenet.web.domain.service.AssessmentAnswerDomainService;
 import com.bluenet.web.domain.service.AssessmentQuestionDomainService;
 import com.bluenet.web.infrastructure.security.util.UserCTX;
@@ -44,11 +45,15 @@ class AssessmentAnswerServiceImplTest {
     @Mock
     private AssessmentAnswerRepository assessmentAnswerRepository;
 
+    @Mock
+    private AssessmentSessionRepository assessmentSessionRepository;
+
     @InjectMocks
     private AssessmentAnswerServiceImpl assessmentAnswerService;
 
     private static final Long TEST_USER_ID = 1L;
     private static final Long TEST_QUESTION_ID = 10L;
+    private static final Long TEST_ASSESSMENT_TIME_ID = 20L;
     private static final Long TEST_ANSWER_ID = 100L;
     private static final Long TEST_FILE_ID = 50L;
     private static final LocalDateTime TEST_SUBMIT_TIME = LocalDateTime.of(2026, 4, 5, 14, 30);
@@ -83,6 +88,7 @@ class AssessmentAnswerServiceImplTest {
     private AssessmentQuestionVO createTestQuestionVO() {
         return AssessmentQuestionVO.builder()
                 .id(TEST_QUESTION_ID)
+                .assessmentTimeId(TEST_ASSESSMENT_TIME_ID)
                 .build();
     }
 
@@ -104,6 +110,8 @@ class AssessmentAnswerServiceImplTest {
                 AssessmentAnswerVO createdVO = createTestAnswerVO();
 
                 when(assessmentQuestionDomainService.getQuestionById(TEST_QUESTION_ID)).thenReturn(questionVO);
+                when(assessmentSessionRepository.findByUserIdAndAssessmentTimeId(TEST_USER_ID, TEST_ASSESSMENT_TIME_ID))
+                        .thenReturn(Optional.empty());
                 when(assessmentAnswerDomainService.createAnswer(any(AssessmentAnswerVO.class))).thenReturn(createdVO);
 
                 AssessmentAnswerDTO result = assessmentAnswerService.createAnswer(request);
@@ -170,6 +178,8 @@ class AssessmentAnswerServiceImplTest {
                 AssessmentQuestionVO questionVO = createTestQuestionVO();
 
                 when(assessmentQuestionDomainService.getQuestionById(TEST_QUESTION_ID)).thenReturn(questionVO);
+                when(assessmentSessionRepository.findByUserIdAndAssessmentTimeId(TEST_USER_ID, TEST_ASSESSMENT_TIME_ID))
+                        .thenReturn(Optional.empty());
                 when(assessmentAnswerDomainService.createAnswer(any(AssessmentAnswerVO.class)))
                         .thenThrow(new IllegalStateException("已经提交过该题目的答案"));
 
@@ -192,6 +202,8 @@ class AssessmentAnswerServiceImplTest {
                 AssessmentAnswerVO createdVO = createTestAnswerVO();
 
                 when(assessmentQuestionDomainService.getQuestionById(TEST_QUESTION_ID)).thenReturn(questionVO);
+                when(assessmentSessionRepository.findByUserIdAndAssessmentTimeId(TEST_USER_ID, TEST_ASSESSMENT_TIME_ID))
+                        .thenReturn(Optional.empty());
                 when(assessmentAnswerDomainService.createAnswer(any(AssessmentAnswerVO.class))).thenReturn(createdVO);
 
                 assessmentAnswerService.createAnswer(request);

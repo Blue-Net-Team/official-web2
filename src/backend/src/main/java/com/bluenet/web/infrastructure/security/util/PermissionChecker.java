@@ -1,6 +1,6 @@
 package com.bluenet.web.infrastructure.security.util;
 
-import com.bluenet.web.infrastructure.security.RoleType;
+import com.bluenet.web.domain.model.enumerate.RoleType;
 import com.bluenet.web.infrastructure.security.cache.PermissionCache;
 import org.springframework.stereotype.Component;
 

@@ -41,6 +41,15 @@ public class FileServiceImpl implements FileService {
     private final CompetitionDomainService competitionDomainService;
 
     @Override
+    public FileInfo uploadAvatar(Long userId, MultipartFile file) {
+        if (userId == null) {
+            return updateEnrollAvatar(file);
+        } else {
+            return updateUserAvatar(userId, file);
+        }
+    }
+
+    @Override
     @Transactional
     public FileInfo updateUserAvatar(Long userId, MultipartFile file) {
         FileVO fileVO = saveFile(file, FileType.AVATAR);

@@ -113,9 +113,9 @@ class FileUploadDownloadIntegrationTest extends BaseIntegrationTest {
     }
 
     @Test
-    @DisplayName("上传考题作品 - 应更新答题的文件ID和提交时间")
+    @DisplayName("上传考题作品 - 应创建文件记录并返回文件信息")
     @WithUserVO(userId = 2L, studentId = "2024001002", username = "李四", roleName = "CANDIDATE")
-    void uploadAssessmentWork_shouldUpdateAnswerFileIdAndSubmitTime() throws Exception {
+    void uploadAssessmentWork_shouldCreateFileAndReturnFileInfo() throws Exception {
         User u = new User();
         u.setId(2L);
         u.setStudentId("2024001002");
@@ -134,22 +134,17 @@ class FileUploadDownloadIntegrationTest extends BaseIntegrationTest {
         q.setQuestionNo(1);
         assessmentQuestionMapper.insert(q);
 
-        AssessmentAnswer a = new AssessmentAnswer();
-        a.setId(30L);
-        a.setUserId(2L);
-        a.setQuestionId(20L);
-        assessmentAnswerMapper.insert(a);
-
         MockMultipartFile file = new MockMultipartFile("file", "work.zip", "application/zip",
                 "zip".getBytes(StandardCharsets.UTF_8));
 
-        mockMvc.perform(multipart("/api/v1/file/upload/assessment/work").file(file).param("answerId", "30"))
+        mockMvc.perform(multipart("/api/v1/file/upload/assessment/work").file(file).param("questionId", "20"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value(200));
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.data.id").exists())
+                .andExpect(jsonPath("$.data.type").value("WORK"));
 
-        AssessmentAnswer after = assessmentAnswerMapper.selectById(30L);
-        assertNotNull(after.getFileId());
-        assertNotNull(after.getSubmitTime());
+        // 验证文件记录已创建到数据库
+        assertEquals(1, fileMapper.selectCount(null));
     }
 
     @Test

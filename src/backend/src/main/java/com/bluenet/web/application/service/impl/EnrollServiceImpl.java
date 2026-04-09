@@ -7,8 +7,8 @@ import com.bluenet.web.domain.model.enumerate.EnrollStatus;
 import com.bluenet.web.domain.model.vo.EnrollBriefVO;
 import com.bluenet.web.domain.model.vo.EnrollStatisticsVO;
 import com.bluenet.web.domain.model.vo.EnrollVO;
+import com.bluenet.web.domain.repository.UserRepository;
 import com.bluenet.web.domain.service.EnrollDomainService;
-import com.bluenet.web.infrastructure.repository.mapper.UserMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -24,7 +24,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class EnrollServiceImpl implements EnrollService {
     private final EnrollDomainService enrollDomainService;
-    private final UserMapper userMapper;
+    private final UserRepository userRepository;
 
     @Override
     @Transactional
@@ -119,9 +119,9 @@ public class EnrollServiceImpl implements EnrollService {
         enrollDomainService.approveEnrollment(id);
 
         Long createdUserId = null;
-        var user = userMapper.selectByStudentId(enrollment.getStudentId());
-        if (user != null) {
-            createdUserId = user.getId();
+        var user = userRepository.findByStudentId(enrollment.getStudentId());
+        if (user.isPresent()) {
+            createdUserId = user.get().getId();
         }
 
         return EnrollmentApprovalResultDTO.builder()

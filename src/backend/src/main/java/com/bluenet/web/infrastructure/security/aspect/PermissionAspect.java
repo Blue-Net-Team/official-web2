@@ -2,7 +2,7 @@ package com.bluenet.web.infrastructure.security.aspect;
 
 import com.bluenet.web.domain.model.vo.UserVO;
 import com.bluenet.web.infrastructure.security.util.UserCTX;
-import com.bluenet.web.infrastructure.security.RoleType;
+import com.bluenet.web.domain.model.enumerate.RoleType;
 import com.bluenet.web.infrastructure.security.util.RoleHierarchy;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;

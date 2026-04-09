@@ -8,7 +8,6 @@ import com.bluenet.web.domain.model.vo.QrcodeVO;
 import com.bluenet.web.domain.repository.FileRepository;
 import com.bluenet.web.domain.repository.QrcodeRepository;
 import com.bluenet.web.domain.service.QrcodeDomainService;
-import com.bluenet.web.infrastructure.repository.mapper.FileMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -28,7 +27,6 @@ public class QrcodeDomainServiceImpl implements QrcodeDomainService {
 
     private final QrcodeRepository qrcodeRepository;
     private final FileRepository fileRepository;
-    private final FileMapper fileMapper;
 
     @Override
     public void saveQrcode(FileVO fileVO, QrcodeType type) {

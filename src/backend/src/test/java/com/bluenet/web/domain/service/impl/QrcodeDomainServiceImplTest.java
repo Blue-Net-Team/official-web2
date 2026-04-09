@@ -1,7 +1,6 @@
 package com.bluenet.web.domain.service.impl;
 
 import com.bluenet.web.domain.exception.DataNotFound;
-import com.bluenet.web.domain.model.entity.File;
 import com.bluenet.web.domain.model.entity.Qrcode;
 import com.bluenet.web.domain.model.enumerate.FileType;
 import com.bluenet.web.domain.model.enumerate.QrcodeType;
@@ -9,7 +8,6 @@ import com.bluenet.web.domain.model.vo.FileVO;
 import com.bluenet.web.domain.model.vo.QrcodeVO;
 import com.bluenet.web.domain.repository.FileRepository;
 import com.bluenet.web.domain.repository.QrcodeRepository;
-import com.bluenet.web.infrastructure.repository.mapper.FileMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -38,14 +36,10 @@ class QrcodeDomainServiceImplTest {
     @Mock
     private FileRepository fileRepository;
 
-    @Mock
-    private FileMapper fileMapper;
-
     @InjectMocks
     private QrcodeDomainServiceImpl qrcodeDomainService;
 
     private FileVO fileVO;
-    private File file;
 
     @BeforeEach
     void setUp() {
@@ -53,14 +47,6 @@ class QrcodeDomainServiceImplTest {
                 .id(1L)
                 .name("test-qrcode.png")
                 .type(FileType.QRCODE)
-                .url("http://minio.example.com/qrcode/test-qrcode.png")
-                .build();
-
-        file = File.builder()
-                .id(1L)
-                .name("test-qrcode.png")
-                .type(FileType.QRCODE)
-                .url("http://minio.example.com/qrcode/test-qrcode.png")
                 .build();
     }
 

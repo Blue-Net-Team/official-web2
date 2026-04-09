@@ -157,6 +157,11 @@ public class UserRepositoryImpl implements UserRepository {
         userMapper.updateEmail(userId, newEmail);
     }
 
+    @Override
+    public boolean existsByInternalReferralCode(String code) {
+        return userMapper.selectByInternalReferralCode(code) != null;
+    }
+
     private UserVO convertToVO(User user) {
         // 学院
         String collegeName = null;

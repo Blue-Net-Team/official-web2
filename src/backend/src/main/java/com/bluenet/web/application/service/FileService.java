@@ -6,6 +6,17 @@ import org.springframework.web.multipart.MultipartFile;
 
 public interface FileService {
     /**
+     * 上传头像（自动判断用户/报名身份）
+     *
+     * @param userId
+     *            当前登录用户ID（可能为null，表示未登录的报名用户）
+     * @param file
+     *            上传的文件
+     * @return 文件信息
+     */
+    FileInfo uploadAvatar(Long userId, MultipartFile file);
+
+    /**
      * 更新用户头像
      *
      * @param userId

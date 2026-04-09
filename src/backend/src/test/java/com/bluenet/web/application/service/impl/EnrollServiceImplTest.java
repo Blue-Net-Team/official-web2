@@ -23,9 +23,9 @@ import com.bluenet.web.domain.model.enumerate.EnrollStatus;
 import com.bluenet.web.domain.model.vo.EnrollBriefVO;
 import com.bluenet.web.domain.model.vo.EnrollStatisticsVO;
 import com.bluenet.web.domain.model.vo.EnrollVO;
+import com.bluenet.web.domain.model.vo.UserVO;
+import com.bluenet.web.domain.repository.UserRepository;
 import com.bluenet.web.domain.service.EnrollDomainService;
-import com.bluenet.web.domain.model.entity.User;
-import com.bluenet.web.infrastructure.repository.mapper.UserMapper;
 
 @DisplayName("EnrollServiceImpl 单元测试")
 @ExtendWith(MockitoExtension.class)
@@ -35,7 +35,7 @@ class EnrollServiceImplTest {
     private EnrollDomainService enrollDomainService;
 
     @Mock
-    private UserMapper userMapper;
+    private UserRepository userRepository;
 
     @InjectMocks
     private EnrollServiceImpl enrollService;
@@ -325,10 +325,10 @@ class EnrollServiceImplTest {
         @DisplayName("正常审核通过：应返回审核结果")
         void approveEnrollment_normalCase_shouldReturnResult() {
             EnrollVO vo = createTestEnrollVO();
-            User createdUser = User.builder().id(999L).studentId(TEST_STUDENT_ID).build();
+            UserVO createdUser = UserVO.builder().id(999L).studentId(TEST_STUDENT_ID).build();
 
             when(enrollDomainService.getEnrollmentById(TEST_ID)).thenReturn(Optional.of(vo));
-            when(userMapper.selectByStudentId(TEST_STUDENT_ID)).thenReturn(createdUser);
+            when(userRepository.findByStudentId(TEST_STUDENT_ID)).thenReturn(Optional.of(createdUser));
 
             EnrollmentApprovalResultDTO result = enrollService.approveEnrollment(TEST_ID);
 
@@ -353,7 +353,7 @@ class EnrollServiceImplTest {
             EnrollVO vo = createTestEnrollVO();
 
             when(enrollDomainService.getEnrollmentById(TEST_ID)).thenReturn(Optional.of(vo));
-            when(userMapper.selectByStudentId(TEST_STUDENT_ID)).thenReturn(null);
+            when(userRepository.findByStudentId(TEST_STUDENT_ID)).thenReturn(Optional.empty());
 
             EnrollmentApprovalResultDTO result = enrollService.approveEnrollment(TEST_ID);
 

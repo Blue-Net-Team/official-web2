@@ -1,7 +1,6 @@
 package com.bluenet.web.domain.service.impl;
 
-import com.bluenet.web.domain.model.entity.User;
-import com.bluenet.web.infrastructure.repository.mapper.UserMapper;
+import com.bluenet.web.domain.repository.UserRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -17,7 +16,7 @@ import static org.mockito.Mockito.when;
 class ReferralCodeGeneratorImplTest {
 
     @Mock
-    private UserMapper userMapper;
+    private UserRepository userRepository;
 
     @InjectMocks
     private ReferralCodeGeneratorImpl referralCodeGenerator;
@@ -26,7 +25,7 @@ class ReferralCodeGeneratorImplTest {
     @DisplayName("生成的内推码应为8位大写字母和数字")
     void generate_shouldReturn8CharacterUppercaseAlphanumeric() {
         // Arrange
-        when(userMapper.selectByInternalReferralCode(anyString())).thenReturn(null);
+        when(userRepository.existsByInternalReferralCode(anyString())).thenReturn(false);
 
         // Act
         String code = referralCodeGenerator.generate();
@@ -41,7 +40,7 @@ class ReferralCodeGeneratorImplTest {
     @DisplayName("生成的内推码在数据库中应唯一")
     void generate_shouldReturnUniqueCode() {
         // Arrange
-        when(userMapper.selectByInternalReferralCode(anyString())).thenReturn(null);
+        when(userRepository.existsByInternalReferralCode(anyString())).thenReturn(false);
 
         // Act
         String code1 = referralCodeGenerator.generate();
@@ -55,11 +54,10 @@ class ReferralCodeGeneratorImplTest {
     @Test
     @DisplayName("当内推码已存在时应重试生成")
     void generate_shouldRetryWhenCodeExists() {
-        // Arrange - 模拟第一次返回已存在用户，后续返回null
-        User existingUser = new User();
-        when(userMapper.selectByInternalReferralCode(anyString()))
-                .thenReturn(existingUser)
-                .thenReturn(null);
+        // Arrange - 模拟第一次已存在，后续不存在
+        when(userRepository.existsByInternalReferralCode(anyString()))
+                .thenReturn(true)
+                .thenReturn(false);
 
         // Act
         String code = referralCodeGenerator.generate();
@@ -73,8 +71,7 @@ class ReferralCodeGeneratorImplTest {
     @DisplayName("当重试次数耗尽时应抛出异常")
     void generate_shouldThrowExceptionWhenMaxRetriesExceeded() {
         // Arrange
-        User existingUser = new User();
-        when(userMapper.selectByInternalReferralCode(anyString())).thenReturn(existingUser);
+        when(userRepository.existsByInternalReferralCode(anyString())).thenReturn(true);
 
         // Act & Assert
         assertThrows(IllegalStateException.class, () -> referralCodeGenerator.generate());

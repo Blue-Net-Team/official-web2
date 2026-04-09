@@ -47,14 +47,7 @@ public class FileUploadController {
     @SecurityRequirement(name = "bearer-jwt")
     public ResponseMessage<FileInfo> uploadAvatar(@RequestParam("file") MultipartFile file) {
         Long userId = UserCTX.getCurrentUserId();
-
-        FileInfo fileInfo;
-        if (userId == null) {
-            fileInfo = fileService.updateEnrollAvatar(file);
-        } else {
-            fileInfo = fileService.updateUserAvatar(userId, file);
-        }
-
+        FileInfo fileInfo = fileService.uploadAvatar(userId, file);
         return ResponseMessage.success(fileInfo);
     }
 

@@ -15,7 +15,7 @@ import com.bluenet.web.infrastructure.repository.mapper.FileMapper;
 import com.bluenet.web.infrastructure.repository.mapper.QrcodeMapper;
 import com.bluenet.web.infrastructure.repository.mapper.RoleMapper;
 import com.bluenet.web.infrastructure.repository.mapper.UserMapper;
-import com.bluenet.web.infrastructure.security.RoleType;
+import com.bluenet.web.domain.model.enumerate.RoleType;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;

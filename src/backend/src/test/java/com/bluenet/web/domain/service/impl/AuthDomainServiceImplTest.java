@@ -24,7 +24,6 @@ import com.bluenet.web.domain.model.vo.UserVO;
 import com.bluenet.web.domain.model.vo.VerifyCodeVO;
 import com.bluenet.web.domain.repository.UserRepository;
 import com.bluenet.web.domain.repository.VerificationCodeRepository;
-import com.bluenet.web.infrastructure.security.jwt.JwtUtil;
 
 /**
  * AuthDomainServiceImpl单元测试
@@ -38,9 +37,6 @@ class AuthDomainServiceImplTest {
 
     @Mock
     private PasswordEncoder passwordEncoder;
-
-    @Mock
-    private JwtUtil jwtUtil;
 
     @Mock
     private VerificationCodeRepository verificationCodeRepository;

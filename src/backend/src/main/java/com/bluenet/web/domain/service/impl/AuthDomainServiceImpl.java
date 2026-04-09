@@ -12,7 +12,6 @@ import com.bluenet.web.domain.repository.UserRepository;
 import com.bluenet.web.domain.repository.VerificationCodeRepository;
 import com.bluenet.web.domain.service.AuthDomainService;
 import com.bluenet.web.domain.exception.Unauthorized;
-import com.bluenet.web.infrastructure.security.jwt.JwtUtil;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,7 +29,6 @@ public class AuthDomainServiceImpl implements AuthDomainService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final JwtUtil jwtUtil;
     private final VerificationCodeRepository verificationCodeRepository;
 
     @Override

@@ -11,7 +11,7 @@ import com.bluenet.web.domain.model.vo.FileVO;
 import com.bluenet.web.domain.model.vo.UserVO;
 import com.bluenet.web.domain.repository.FileRepository;
 import com.bluenet.web.domain.service.FileDomainService;
-import com.bluenet.web.infrastructure.security.RoleType;
+import com.bluenet.web.domain.model.enumerate.RoleType;
 import com.bluenet.web.infrastructure.security.util.RoleHierarchy;
 import com.bluenet.web.infrastructure.security.util.UserCTX;
 import lombok.RequiredArgsConstructor;

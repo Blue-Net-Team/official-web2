@@ -1,9 +1,8 @@
 package com.bluenet.web.api.controller.v1;
 
 import com.bluenet.web.api.dto.ResponseMessage;
-import com.bluenet.web.domain.model.vo.AssessmentSessionVO;
-import com.bluenet.web.domain.model.vo.UserVO;
-import com.bluenet.web.domain.service.AssessmentSessionDomainService;
+import com.bluenet.web.api.dto.assessment_session.AssessmentSessionDTO;
+import com.bluenet.web.application.service.AssessmentSessionService;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
 import com.bluenet.web.infrastructure.security.annotation.RequiresPermission;
 import com.bluenet.web.infrastructure.security.util.UserCTX;
@@ -31,24 +30,23 @@ import org.springframework.web.bind.annotation.*;
 @SecurityRequirement(name = "bearer-jwt")
 public class AssessmentSessionController {
 
-    private final AssessmentSessionDomainService assessmentSessionDomainService;
+    private final AssessmentSessionService assessmentSessionService;
 
     @Operation(summary = "获取考核会话", description = "获取或创建当前用户对指定考核时间的会话，返回截止时间等信息。限时考核首次调用会自动创建会话。")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "查询成功", content = @Content(mediaType = "application/json", schema = @Schema(implementation = AssessmentSessionVO.class))),
+            @ApiResponse(responseCode = "200", description = "查询成功", content = @Content(mediaType = "application/json", schema = @Schema(implementation = AssessmentSessionDTO.class))),
             @ApiResponse(responseCode = "404", description = "考核时间不存在", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseMessage.class)))
     })
     @RequiresPermission(name = "查询考核会话", value = "assessment-session:query", access = AccessLevel.AUTHENTICATED)
     @GetMapping("/{assessmentTimeId}")
-    public ResponseMessage<AssessmentSessionVO> getSession(
+    public ResponseMessage<AssessmentSessionDTO> getSession(
             @Parameter(description = "考核时间ID", required = true) @PathVariable Long assessmentTimeId) {
+        Long userId = UserCTX.getCurrentUserId();
+        if (userId == null) {
+            return ResponseMessage.error(401, "未登录");
+        }
         try {
-            UserVO currentUser = UserCTX.getCurrentUser();
-            if (currentUser == null) {
-                return ResponseMessage.error(401, "未登录");
-            }
-            AssessmentSessionVO session = assessmentSessionDomainService
-                    .getOrCreateSession(currentUser.getId(), assessmentTimeId);
+            AssessmentSessionDTO session = assessmentSessionService.getOrCreateSession(userId, assessmentTimeId);
             return ResponseMessage.success(session);
         } catch (IllegalArgumentException e) {
             return ResponseMessage.error(404, e.getMessage());

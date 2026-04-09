@@ -1,4 +1,4 @@
-package com.bluenet.web.infrastructure.security;
+package com.bluenet.web.domain.model.enumerate;
 
 /**
  * 角色类型枚举 定义系统中的所有角色。
