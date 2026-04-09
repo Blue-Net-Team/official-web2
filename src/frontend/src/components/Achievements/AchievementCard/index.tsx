@@ -21,32 +21,32 @@ const AchievementCard = ({ achievement }: AchievementCardProps) => {
   }
 
   const typeGradient: Record<string, string> = {
-    paper: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-    patent: 'linear-gradient(135deg, #f093fb 0%, #f557c3 100%)',
-    competition: 'linear-gradient(135deg, #1890ff 0%, #096dd9 100%)',
+    PAPER: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    PATENT: 'linear-gradient(135deg, #f093fb 0%, #f557c3 100%)',
+    COMPETITION: 'linear-gradient(135deg, #1890ff 0%, #096dd9 100%)',
   }
 
   const typeIcon =
-    achievement.type === 'paper' ? (
+    achievement.type === 'PAPER' ? (
       <FileTextOutlined style={{ fontSize: 24, color: '#fff' }} />
-    ) : achievement.type === 'patent' ? (
+    ) : achievement.type === 'PATENT' ? (
       <BulbOutlined style={{ fontSize: 24, color: '#fff' }} />
     ) : (
       <TrophyOutlined style={{ fontSize: 24, color: '#fff' }} />
     )
 
   const typeLabel =
-    achievement.type === 'paper' ? '论文' : achievement.type === 'patent' ? '专利' : null
+    achievement.type === 'PAPER' ? '论文' : achievement.type === 'PATENT' ? '专利' : null
 
   const typeTagColor: Record<string, string> = {
-    paper: 'purple',
-    patent: 'magenta',
-    competition: 'blue',
+    PAPER: 'purple',
+    PATENT: 'magenta',
+    COMPETITION: 'blue',
   }
 
   const year = achievement.achieveAt ? new Date(achievement.achieveAt).getFullYear() : null
 
-  const isCompetition = achievement.type === 'competition'
+  const isCompetition = achievement.type === 'COMPETITION'
 
   const displayName = isCompetition
     ? achievement.competitionShortName || achievement.competitionName || achievement.title

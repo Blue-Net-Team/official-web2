@@ -1,11 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import {
-  UserInfo,
-  StudentIdLoginRequestDTO,
-  UserAuthResponseDTO,
-  ResponseMessage,
-} from '@/apis/schema/type'
+import { UserInfo, StudentIdLoginRequestDTO, UserAuthResponseDTO } from '@/apis/schema/type'
 import { authService } from '@/apis/services/auth.service'
 import { hashPassword } from '@/utils/passwordHash'
 import { setCsrfToken } from '@/apis/client'

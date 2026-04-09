@@ -13,7 +13,7 @@ import {
   LoadingOutlined,
 } from '@ant-design/icons'
 import { message } from 'antd'
-import Image from 'next/image'
+import Image, { type StaticImageData } from 'next/image'
 import AvatarCropModal from '../AvatarCropModal'
 import cvIcon from '@/assets/icon/direction/cv_icon.png'
 import structIcon from '@/assets/icon/direction/struct_icon.png'
@@ -28,7 +28,7 @@ interface ProfileSidebarProps {
   onAvatarUpdate?: () => void
 }
 
-const directionIconMap: Record<Direction, string> = {
+const directionIconMap: Record<Direction, StaticImageData> = {
   COMPUTER_VISION: cvIcon,
   STRUCTURAL_DESIGN: structIcon,
   EMBEDDED: embedIcon,
@@ -40,7 +40,11 @@ const directionThemeMap: Record<Direction, 'computerVision' | 'structuralDesign'
   EMBEDDED: 'embedded',
 }
 
-export default function ProfileSidebar({ profile, stats, onAvatarUpdate }: ProfileSidebarProps) {
+export default function ProfileSidebar({
+  profile,
+  stats: _stats,
+  onAvatarUpdate,
+}: ProfileSidebarProps) {
   const [uploading, setUploading] = useState(false)
   const [cropModalOpen, setCropModalOpen] = useState(false)
   const [cropImageSrc, setCropImageSrc] = useState<string | null>(null)

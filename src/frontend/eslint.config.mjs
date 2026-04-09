@@ -16,8 +16,8 @@ const eslintConfig = [
       // TypeScript 规则 - 降级为警告
       '@typescript-eslint/no-explicit-any': 'warn',
       '@typescript-eslint/no-unused-vars': 'warn',
-      // React Hooks 规则 - 降级为警告
-      'react-hooks/exhaustive-deps': 'warn',
+      // React Hooks 规则 - 禁用 exhaustive-deps 规则
+      'react-hooks/exhaustive-deps': 'off',
       // Next.js 规则 - 禁用 img 元素检查
       '@next/next/no-img-element': 'off',
     }

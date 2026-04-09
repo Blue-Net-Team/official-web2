@@ -122,7 +122,7 @@ export default function AssessmentCard({ assessment, status }: AssessmentCardPro
           <div className="flex flex-col gap-1">
             <span className="text-base font-semibold text-white">{getEpochLabel(epoch)}</span>
             <span className="text-[13px] text-white/45">
-              {DIRECTION_LABELS[direction] || assessment.round}
+              {DIRECTION_LABELS[direction] || (!isDTO && assessment.round)}
             </span>
           </div>
         </div>
