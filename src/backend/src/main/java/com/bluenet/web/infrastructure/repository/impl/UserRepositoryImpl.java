@@ -152,6 +152,11 @@ public class UserRepositoryImpl implements UserRepository {
         userMapper.clearGithubBinding(userId);
     }
 
+    @Override
+    public void updateEmail(Long userId, String newEmail) {
+        userMapper.updateEmail(userId, newEmail);
+    }
+
     private UserVO convertToVO(User user) {
         // 学院
         String collegeName = null;

@@ -57,4 +57,6 @@ public interface UserRepository {
     void updateGithubBinding(Long userId, String githubId, String githubUsername);
 
     void clearGithubBinding(Long userId);
+
+    void updateEmail(Long userId, String newEmail);
 }

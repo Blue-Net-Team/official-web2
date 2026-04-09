@@ -142,26 +142,23 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public void sendVerificationCode(SendVerificationCodeRequestDTO requestDTO) {
         String email = requestDTO.getEmail();
+        String scene = requestDTO.getScene() != null ? requestDTO.getScene() : "login";
 
-        // 1. 检查60秒内是否已发送
         Optional<VerifyCodeVO> recentCode = verificationCodeRepository.findLatestByEmailWithinSeconds(email, 60);
         if (recentCode.isPresent()) {
             log.warn("验证码发送过于频繁 - email={}", email);
             throw new BadRequest("发送过于频繁，请稍后再试");
         }
 
-        // 2. 调用领域服务生成验证码
-        VerifyCodeVO verifyCodeVO = verificationCodeDomainService.generateCode(email, null);
+        VerifyCodeVO verifyCodeVO = verificationCodeDomainService.generateCode(email, null, scene);
 
-        // 3. 存储验证码
         verificationCodeRepository.save(verifyCodeVO);
 
-        // 4. 异步发送验证码邮件
         String subject = "蓝网登录验证码";
         String htmlContent = buildVerificationCodeEmail(verifyCodeVO.getCode());
         emailSender.sendHtmlAsync(email, subject, htmlContent);
 
-        log.info("验证码已发送 - email={}", email);
+        log.info("验证码已发送 - email={}, scene={}", email, scene);
     }
 
     private String buildVerificationCodeEmail(String code) {

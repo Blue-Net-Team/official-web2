@@ -15,17 +15,13 @@
 import { useState } from 'react'
 import type { UserInfo, UpdateProfileRequest } from '@/types/profile'
 import { DIRECTION_LABELS, GENDER_LABELS } from '@/apis/schema/enumerate'
-import {
-  EditOutlined,
-  MailOutlined,
-  CheckCircleOutlined,
-  SaveOutlined,
-  CloseOutlined,
-} from '@ant-design/icons'
+import { EditOutlined, SaveOutlined, CloseOutlined } from '@ant-design/icons'
 import { Form, Input, Button, message, Select } from 'antd'
 import { userService } from '@/apis/services/user.service'
 import authStore from '@/stores/authStore'
 import GitHubBinding from './GitHubBinding'
+import ChangeEmailModal from './ChangeEmailModal'
+import EmailSettings from './EmailSettings'
 
 interface ProfileInfoProps {
   profile: UserInfo
@@ -42,6 +38,7 @@ function isMemberOrAbove(roleName: string | undefined): boolean {
 export default function ProfileInfo({ profile, onUpdate }: ProfileInfoProps) {
   const [isEditing, setIsEditing] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [changeEmailOpen, setChangeEmailOpen] = useState(false)
   const [form] = Form.useForm()
 
   // 判断当前用户是否可以修改扩展字段
@@ -286,38 +283,24 @@ export default function ProfileInfo({ profile, onUpdate }: ProfileInfoProps) {
             </div>
           </div>
 
-          <div className="mt-8 pt-8 border-t border-white/[0.05]">
-            <div className="text-lg font-semibold text-white mb-6 flex items-center gap-[10px] [&>svg]:w-5 [&>svg]:h-5 [&>svg]:text-[#6677ff]">
-              <MailOutlined />
-              邮箱设置
-            </div>
-            <div className="flex items-center justify-between p-4 bg-white/[0.02] rounded-[10px] mb-4 max-[640px]:flex-col max-[640px]:gap-3 max-[640px]:items-start">
-              <div className="flex items-center gap-3 [&>svg]:w-5 [&>svg]:h-5 [&>svg]:text-[#6677ff]">
-                <MailOutlined />
-                <span className="text-sm text-white">{profile.email}</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <span className="flex items-center gap-1.5 text-xs text-[#07c160] [&>svg]:w-[14px] [&>svg]:h-[14px]">
-                  <CheckCircleOutlined />
-                  已验证
-                </span>
-                <Button
-                  className="px-4 py-2 rounded-lg bg-transparent !border-[rgba(102,119,255,0.3)] text-[#6677ff] text-[13px] font-medium cursor-pointer transition-all duration-300 flex items-center gap-1.5 hover:enabled:bg-[rgba(102,119,255,0.1)] hover:enabled:!border-[#6677ff] disabled:opacity-50 disabled:cursor-not-allowed"
-                  disabled
-                >
-                  <EditOutlined />
-                  修改邮箱
-                </Button>
-              </div>
-            </div>
-          </div>
+          <EmailSettings email={profile.email} onChangeEmail={() => setChangeEmailOpen(true)} />
 
           <GitHubBinding initialGithubUsername={profile.githubUsername} />
+
+          <ChangeEmailModal
+            open={changeEmailOpen}
+            currentEmail={profile.email}
+            onSuccess={() => {
+              setChangeEmailOpen(false)
+              onUpdate?.()
+            }}
+            onCancel={() => setChangeEmailOpen(false)}
+          />
 
           <div className="flex justify-end gap-3 mt-8 pt-6 border-t border-white/[0.05]">
             <Button
               type="primary"
-              className="px-6 py-3 !rounded-[10px] text-sm font-medium cursor-pointer transition-all duration-300 !border-none !bg-[linear-gradient(135deg,#6677ff_0%,#2f27b0_100%)] text-white shadow-[0_4px_16px_rgba(102,119,255,0.3)] hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(102,119,255,0.4)] disabled:opacity-60 disabled:cursor-not-allowed disabled:translate-y-0 flex items-center gap-2"
+              className="px-6 py-3"
               onClick={handleEdit}
               icon={<EditOutlined />}
             >

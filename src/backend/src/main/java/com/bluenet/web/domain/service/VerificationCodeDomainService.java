@@ -10,14 +10,7 @@ import com.bluenet.web.domain.model.vo.VerifyCodeVO;
  */
 public interface VerificationCodeDomainService {
 
-    /**
-     * 生成验证码
-     *
-     * @param email
-     *            目标邮箱
-     * @param ipaddress
-     *            请求IP地址
-     * @return 验证码值对象
-     */
     VerifyCodeVO generateCode(String email, String ipaddress);
+
+    VerifyCodeVO generateCode(String email, String ipaddress, String scene);
 }

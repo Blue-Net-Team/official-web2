@@ -17,4 +17,5 @@ public class VerifyCode {
     private LocalDateTime expireAt;
     private LocalDateTime usedAt;
     private String ipAddress;
+    private String scene;
 }

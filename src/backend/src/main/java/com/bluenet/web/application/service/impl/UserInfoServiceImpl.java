@@ -1,20 +1,29 @@
 package com.bluenet.web.application.service.impl;
 
+import com.bluenet.web.api.dto.user.ChangeEmailRequestDTO;
+import com.bluenet.web.api.dto.user.SendEmailVerificationCodeRequestDTO;
 import com.bluenet.web.api.dto.user.TabCountsDTO;
 import com.bluenet.web.api.dto.user.UpdateProfileRequestDTO;
 import com.bluenet.web.api.dto.user.UserInfo;
 import com.bluenet.web.application.converter.UserConverter;
 import com.bluenet.web.application.service.UserInfoService;
+import com.bluenet.web.domain.exception.BadRequest;
 import com.bluenet.web.domain.exception.Forbidden;
 import com.bluenet.web.domain.exception.Unauthorized;
 import com.bluenet.web.domain.model.vo.TabCountsVO;
 import com.bluenet.web.domain.model.vo.UserVO;
+import com.bluenet.web.domain.model.vo.VerifyCodeVO;
+import com.bluenet.web.domain.repository.VerificationCodeRepository;
 import com.bluenet.web.domain.service.UserDomainService;
+import com.bluenet.web.domain.service.VerificationCodeDomainService;
+import com.bluenet.web.infrastructure.email.EmailSender;
 import com.bluenet.web.infrastructure.security.RoleType;
 import com.bluenet.web.infrastructure.security.util.UserCTX;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+
+import java.util.Optional;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -22,6 +31,9 @@ import org.springframework.stereotype.Service;
 public class UserInfoServiceImpl implements UserInfoService {
     private final UserConverter userConverter;
     private final UserDomainService userDomainService;
+    private final VerificationCodeDomainService verificationCodeDomainService;
+    private final VerificationCodeRepository verificationCodeRepository;
+    private final EmailSender emailSender;
 
     @Override
     public UserInfo getMyInfo() {
@@ -84,5 +96,59 @@ public class UserInfoServiceImpl implements UserInfoService {
                 throw new Forbidden("只有成员及以上角色才能修改用户名、性别、学院、专业和报名方向");
             }
         }
+    }
+
+    @Override
+    public void sendEmailVerificationCode(SendEmailVerificationCodeRequestDTO request) {
+        String email = request.getEmail();
+        String scene = request.getScene();
+
+        if (!"change-email-original".equals(scene) && !"change-email-new".equals(scene)) {
+            throw new BadRequest("无效的验证码场景");
+        }
+
+        Optional<VerifyCodeVO> recentCode = verificationCodeRepository
+                .findLatestByEmailAndSceneWithinSeconds(email, scene, 60);
+        if (recentCode.isPresent()) {
+            log.warn("验证码发送过于频繁 - email={}, scene={}", email, scene);
+            throw new BadRequest("发送过于频繁，请稍后再试");
+        }
+
+        VerifyCodeVO verifyCodeVO = verificationCodeDomainService.generateCode(email, null, scene);
+        verificationCodeRepository.save(verifyCodeVO);
+
+        String subject = "change-email-original".equals(scene) ? "蓝网修改邮箱 - 验证原邮箱" : "蓝网修改邮箱 - 验证新邮箱";
+        String htmlContent = buildChangeEmailVerificationCodeHtml(verifyCodeVO.getCode(), scene);
+        emailSender.sendHtmlAsync(email, subject, htmlContent);
+
+        log.info("修改邮箱验证码已发送 - email={}, scene={}", email, scene);
+    }
+
+    private String buildChangeEmailVerificationCodeHtml(String code, String scene) {
+        String action = "change-email-original".equals(scene) ? "验证原邮箱" : "验证新邮箱";
+        return """
+                <div style="max-width:400px;margin:0 auto;padding:20px;font-family:sans-serif;">
+                    <h2 style="color:#fa8c16;text-align:center;">蓝网修改邮箱 - %s</h2>
+                    <p style="text-align:center;font-size:14px;color:#666;">您的验证码为：</p>
+                    <p style="text-align:center;font-size:32px;font-weight:bold;letter-spacing:8px;color:#fa8c16;">%s</p>
+                    <p style="text-align:center;font-size:12px;color:#999;">验证码5分钟内有效，请勿泄露给他人。</p>
+                </div>
+                """
+                .formatted(action, code);
+    }
+
+    @Override
+    public void changeEmail(ChangeEmailRequestDTO request) {
+        Long userId = getCurrentUserId();
+        UserVO currentUser = UserCTX.getCurrentUser();
+
+        userDomainService.changeEmail(
+                userId,
+                currentUser.getEmail(),
+                request.getOriginalEmailVerifyCode(),
+                request.getNewEmail(),
+                request.getNewEmailVerifyCode());
+
+        log.info("用户邮箱修改成功 - userId={}", userId);
     }
 }

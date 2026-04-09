@@ -28,16 +28,22 @@ public class VerificationCodeDomainServiceImpl implements VerificationCodeDomain
 
     @Override
     public VerifyCodeVO generateCode(String email, String ipaddress) {
+        return generateCode(email, ipaddress, "login");
+    }
+
+    @Override
+    public VerifyCodeVO generateCode(String email, String ipaddress, String scene) {
         String code = generateSixDigitCode();
         LocalDateTime expireAt = LocalDateTime.now().plusMinutes(CODE_VALIDITY_MINUTES);
 
-        log.debug("验证码已生成 - target={}, code={}, expireAt={}", email, code, expireAt);
+        log.debug("验证码已生成 - target={}, scene={}, code={}, expireAt={}", email, scene, code, expireAt);
 
         return VerifyCodeVO.builder()
                 .target(email)
                 .code(code)
                 .expireAt(expireAt)
                 .used(false)
+                .scene(scene)
                 .build();
     }
 

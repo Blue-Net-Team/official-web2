@@ -1,6 +1,8 @@
 package com.bluenet.web.api.controller.v1.user;
 
 import com.bluenet.web.api.dto.ResponseMessage;
+import com.bluenet.web.api.dto.user.ChangeEmailRequestDTO;
+import com.bluenet.web.api.dto.user.SendEmailVerificationCodeRequestDTO;
 import com.bluenet.web.api.dto.user.TabCountsDTO;
 import com.bluenet.web.api.dto.user.UpdateProfileRequestDTO;
 import com.bluenet.web.api.dto.user.UserInfo;
@@ -15,6 +17,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -72,6 +75,33 @@ class UserProfileController {
     public ResponseMessage<TabCountsDTO> getTabCounts() {
         try {
             return ResponseMessage.success(userInfoService.getTabCounts());
+        } catch (GlobalException e) {
+            return ResponseMessage.error(e);
+        }
+    }
+
+    @Operation(summary = "发送修改邮箱验证码", description = "向指定邮箱发送修改邮箱场景的验证码，需要已登录。场景值：change-email-original（验证原邮箱）、change-email-new（验证新邮箱）")
+    @SecurityRequirement(name = "cookie-auth")
+    @RequiresPermission(name = "发送修改邮箱验证码", value = "user:email:send-code", access = AccessLevel.AUTHENTICATED)
+    @PostMapping("/email/verification-code/send")
+    public ResponseMessage<Void> sendEmailVerificationCode(
+            @Valid @RequestBody SendEmailVerificationCodeRequestDTO request) {
+        try {
+            userInfoService.sendEmailVerificationCode(request);
+            return ResponseMessage.success();
+        } catch (GlobalException e) {
+            return ResponseMessage.error(e);
+        }
+    }
+
+    @Operation(summary = "修改邮箱", description = "通过验证原邮箱和新邮箱的验证码修改绑定邮箱")
+    @SecurityRequirement(name = "cookie-auth")
+    @RequiresPermission(name = "修改邮箱", value = "user:email:update", access = AccessLevel.AUTHENTICATED)
+    @PutMapping("/email")
+    public ResponseMessage<Void> changeEmail(@Valid @RequestBody ChangeEmailRequestDTO request) {
+        try {
+            userInfoService.changeEmail(request);
+            return ResponseMessage.success();
         } catch (GlobalException e) {
             return ResponseMessage.error(e);
         }

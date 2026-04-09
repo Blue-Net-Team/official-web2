@@ -1,12 +1,15 @@
 package com.bluenet.web.domain.service.impl;
 
+import com.bluenet.web.domain.exception.BadRequest;
 import com.bluenet.web.domain.exception.DataNotFound;
 import com.bluenet.web.domain.model.enumerate.Direction;
 import com.bluenet.web.domain.model.enumerate.Gender;
 import com.bluenet.web.domain.model.vo.FileVO;
 import com.bluenet.web.domain.model.vo.TabCountsVO;
 import com.bluenet.web.domain.model.vo.UserVO;
+import com.bluenet.web.domain.model.vo.VerifyCodeVO;
 import com.bluenet.web.domain.repository.UserRepository;
+import com.bluenet.web.domain.repository.VerificationCodeRepository;
 import com.bluenet.web.domain.service.UserDomainService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -18,6 +21,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class UserDomainServiceImpl implements UserDomainService {
     private final UserRepository userRepository;
+    private final VerificationCodeRepository verificationCodeRepository;
 
     @Override
     @Transactional
@@ -45,5 +49,43 @@ public class UserDomainServiceImpl implements UserDomainService {
     @Override
     public TabCountsVO getTabCounts(Long userId) {
         return userRepository.getTabCounts(userId);
+    }
+
+    @Override
+    @Transactional
+    public void changeEmail(Long userId, String currentEmail, String originalEmailVerifyCode,
+            String newEmail, String newEmailVerifyCode) {
+        UserVO user = userRepository.findById(userId)
+                .orElseThrow(() -> new DataNotFound("用户不存在"));
+
+        if (!user.getEmail().equals(currentEmail)) {
+            throw new BadRequest("当前邮箱已变更，请刷新页面重试");
+        }
+
+        verifyCode(currentEmail, originalEmailVerifyCode, "change-email-original");
+        verifyCode(newEmail, newEmailVerifyCode, "change-email-new");
+
+        Optional<UserVO> existingUser = userRepository.findByEmail(newEmail);
+        if (existingUser.isPresent()) {
+            throw new BadRequest("该邮箱已被其他账号绑定");
+        }
+
+        userRepository.updateEmail(userId, newEmail);
+
+        verificationCodeRepository.markAsUsed(currentEmail, originalEmailVerifyCode, "change-email-original");
+        verificationCodeRepository.markAsUsed(newEmail, newEmailVerifyCode, "change-email-new");
+    }
+
+    private void verifyCode(String email, String code, String scene) {
+        Optional<VerifyCodeVO> verifyCodeVO = verificationCodeRepository.findByEmailAndCodeAndScene(email, code, scene);
+        if (verifyCodeVO.isEmpty()) {
+            throw new BadRequest("验证码错误");
+        }
+        if (verifyCodeVO.get().isExpired()) {
+            throw new BadRequest("验证码已过期");
+        }
+        if (verifyCodeVO.get().isUsed()) {
+            throw new BadRequest("验证码已被使用");
+        }
     }
 }

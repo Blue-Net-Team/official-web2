@@ -92,4 +92,21 @@ export const userService = {
     const response = await apiClient.delete<ResponseMessage<void>>(`/user/experiences/${id}`)
     return response.data
   },
+
+  async sendEmailVerificationCode(email: string, scene: string): Promise<ResponseMessage<void>> {
+    const response = await apiClient.post<ResponseMessage<void>>(
+      '/user/email/verification-code/send',
+      { email, scene }
+    )
+    return response.data
+  },
+
+  async changeEmail(data: {
+    originalEmailVerifyCode: string
+    newEmail: string
+    newEmailVerifyCode: string
+  }): Promise<ResponseMessage<void>> {
+    const response = await apiClient.put<ResponseMessage<void>>('/user/email', data)
+    return response.data
+  },
 }
