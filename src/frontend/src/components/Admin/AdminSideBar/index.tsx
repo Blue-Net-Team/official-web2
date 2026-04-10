@@ -15,6 +15,8 @@ import {
   FileTextOutlined,
   CheckCircleOutlined,
   QuestionCircleOutlined,
+  DashboardOutlined,
+  LineChartOutlined,
 } from '@ant-design/icons'
 
 interface MenuItemConfig {
@@ -33,6 +35,13 @@ const menuConfig: MenuItemConfig[] = [
     label: '回到首页',
     path: '/',
     icon: <HomeOutlined />,
+    minLevel: 1,
+  },
+  {
+    key: 'panel',
+    label: '仪表盘',
+    path: '/admin/panel',
+    icon: <LineChartOutlined />,
     minLevel: 1,
   },
   {
@@ -139,7 +148,7 @@ const AdminSideBar = () => {
         (item.path && pathname === item.path) ||
         item.children?.some((child) => child.path && pathname === child.path)
     )
-    if (!matched) return ['home']
+    if (!matched) return ['panel']
     const childMatch = matched.children?.find((child) => child.path && pathname === child.path)
     return [childMatch ? childMatch.key : matched.key]
   }, [pathname])
