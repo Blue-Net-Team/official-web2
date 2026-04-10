@@ -1,5 +1,6 @@
 import { ReactNode } from 'react'
-import { FileSearchOutlined, StopOutlined } from '@ant-design/icons'
+import { StopOutlined } from '@ant-design/icons'
+import { Empty } from 'antd'
 
 export type ErrorPageConfig = {
   icon: ReactNode
@@ -14,7 +15,7 @@ export const ERROR_CONFIGS: Record<number, ErrorPageConfig> = {
     description: '您没有权限访问此页面',
   },
   404: {
-    icon: <FileSearchOutlined />,
+    icon: <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={false} />,
     statusCode: 404,
     description: '您访问的页面不存在',
   },

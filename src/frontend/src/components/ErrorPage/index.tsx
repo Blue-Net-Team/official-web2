@@ -1,11 +1,13 @@
 'use client'
 
-import { Flex, Typography } from 'antd'
+import { Button, Flex, Typography } from 'antd'
 import { ErrorPageConfig } from './configs'
+import { useRouter } from 'next/navigation'
 
 const { Title, Text } = Typography
 
 export default function ErrorPage({ config }: { config: ErrorPageConfig }) {
+  const router = useRouter()
   return (
     <Flex
       vertical
@@ -21,6 +23,9 @@ export default function ErrorPage({ config }: { config: ErrorPageConfig }) {
       <Text type="secondary" style={{ fontSize: 16 }}>
         {config.description}
       </Text>
+      <Button type="primary" onClick={() => router.push('/')}>
+        返回首页
+      </Button>
     </Flex>
   )
 }

@@ -18,10 +18,10 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
 
   if (roleLevel < 1) {
     return (
-      <>
-        <NavBar />
+      <Layout style={{ minHeight: '100vh' }}>
+        <AdminHeadBar />
         <ErrorPage config={ERROR_CONFIGS[403]} />
-      </>
+      </Layout>
     )
   }
 
