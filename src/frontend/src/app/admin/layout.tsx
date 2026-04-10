@@ -26,11 +26,11 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   }
 
   return (
-    <Layout style={{ minHeight: '100vh' }}>
+    <Layout style={{ height: '100vh', overflow: 'hidden' }}>
       <AdminHeadBar />
-      <Layout style={{ flex: 1 }}>
+      <Layout style={{ flex: 1, overflow: 'hidden' }}>
         <AdminSideBar />
-        <Content style={{ padding: 24, flex: 1 }}>{children}</Content>
+        <Content style={{ padding: 24, flex: 1, overflow: 'auto' }}>{children}</Content>
       </Layout>
     </Layout>
   )

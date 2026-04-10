@@ -174,7 +174,8 @@ const AdminSideBar = () => {
       collapsible
       collapsed={collapsed}
       onCollapse={(value: boolean) => setCollapsed(value)}
-      className="admin-sider h-screen overflow-auto sticky top-0 [inset-inline-start:0] [scrollbar-gutter:stable]"
+      className="admin-sider overflow-auto [scrollbar-gutter:stable]"
+      style={{ height: 'calc(100vh - 64px)' }}
     >
       <Menu
         theme="dark"
