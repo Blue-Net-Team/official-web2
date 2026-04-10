@@ -112,4 +112,74 @@ export const authService = {
     const response = await apiClient.delete<ResponseMessage<void>>('/auth/github/bind')
     return response.data
   },
+
+  // ==================== 密码重置 ====================
+
+  /**
+   * 密码重置 - 验证学号 - 公开接口
+   * 对应后端 POST /api/v1/auth/reset-password/verify-student
+   */
+  async resetPasswordVerifyStudent(studentId: string): Promise<ResponseMessage<string>> {
+    const response = await publicClient.post<ResponseMessage<string>>(
+      '/auth/reset-password/verify-student',
+      { studentId }
+    )
+    return response.data
+  },
+
+  /**
+   * 密码重置 - 验证邮箱 - 公开接口
+   * 对应后端 POST /api/v1/auth/reset-password/verify-email
+   */
+  async resetPasswordVerifyEmail(
+    resetToken: string,
+    email: string
+  ): Promise<ResponseMessage<string>> {
+    const response = await publicClient.post<ResponseMessage<string>>(
+      '/auth/reset-password/verify-email',
+      { resetToken, email }
+    )
+    return response.data
+  },
+
+  /**
+   * 密码重置 - 发送验证码 - 公开接口
+   * 对应后端 POST /api/v1/auth/reset-password/send-code
+   */
+  async resetPasswordSendCode(resetToken: string): Promise<ResponseMessage<void>> {
+    const response = await publicClient.post<ResponseMessage<void>>(
+      '/auth/reset-password/send-code',
+      { resetToken }
+    )
+    return response.data
+  },
+
+  /**
+   * 密码重置 - 验证验证码 - 公开接口
+   * 对应后端 POST /api/v1/auth/reset-password/verify-code
+   */
+  async resetPasswordVerifyCode(resetToken: string, code: string): Promise<ResponseMessage<void>> {
+    const response = await publicClient.post<ResponseMessage<void>>(
+      '/auth/reset-password/verify-code',
+      { resetToken, code }
+    )
+    return response.data
+  },
+
+  /**
+   * 密码重置 - 重置密码 - 公开接口
+   * 对应后端 POST /api/v1/auth/reset-password/reset
+   */
+  async resetPassword(
+    resetToken: string,
+    newPassword: string,
+    confirmPassword: string
+  ): Promise<ResponseMessage<void>> {
+    const response = await publicClient.post<ResponseMessage<void>>('/auth/reset-password/reset', {
+      resetToken,
+      newPassword,
+      confirmPassword,
+    })
+    return response.data
+  },
 }

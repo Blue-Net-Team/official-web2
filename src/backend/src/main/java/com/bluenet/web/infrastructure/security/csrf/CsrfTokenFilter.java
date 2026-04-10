@@ -38,6 +38,8 @@ public class CsrfTokenFilter extends OncePerRequestFilter {
             "/api/v1/auth/login/**",
             "/api/v1/auth/logout",
             "/api/v1/auth/verification-code/send",
+            // 密码重置
+            "/api/v1/auth/reset-password/**",
             // 公开报名
             "/api/v1/enrollments",
             // 公开文件上传（头像上传，报名时使用）

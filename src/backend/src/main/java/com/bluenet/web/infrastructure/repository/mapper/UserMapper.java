@@ -49,4 +49,6 @@ public interface UserMapper extends BaseMapper<User> {
     int clearGithubBinding(@Param("userId") Long userId);
 
     int updateEmail(@Param("userId") Long userId, @Param("email") String email);
+
+    int updatePassword(@Param("userId") Long userId, @Param("password") String encodedPassword);
 }

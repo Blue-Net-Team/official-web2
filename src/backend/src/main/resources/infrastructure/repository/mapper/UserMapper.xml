@@ -129,4 +129,10 @@
         SET email = #{email}
         WHERE id = #{userId}
     </update>
+
+    <update id="updatePassword">
+        UPDATE tb_user
+        SET password = #{password}
+        WHERE id = #{userId}
+    </update>
 </mapper>

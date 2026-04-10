@@ -60,6 +60,8 @@ public interface UserRepository {
 
     void updateEmail(Long userId, String newEmail);
 
+    void updatePassword(Long userId, String encodedPassword);
+
     /**
      * 检查内推码是否已存在（用于唯一性校验）
      *

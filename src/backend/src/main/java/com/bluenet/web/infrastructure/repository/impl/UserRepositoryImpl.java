@@ -158,6 +158,11 @@ public class UserRepositoryImpl implements UserRepository {
     }
 
     @Override
+    public void updatePassword(Long userId, String encodedPassword) {
+        userMapper.updatePassword(userId, encodedPassword);
+    }
+
+    @Override
     public boolean existsByInternalReferralCode(String code) {
         return userMapper.selectByInternalReferralCode(code) != null;
     }
