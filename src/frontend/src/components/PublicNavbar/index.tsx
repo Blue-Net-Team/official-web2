@@ -116,7 +116,7 @@ const NavBar = () => {
         router.push('/assessment')
         return
       case 'managementPlatform':
-        router.push('/management')
+        router.push('/admin')
         return
       case 'repository':
         window.open('https://github.com/Blue-Net-Team', '_blank')
