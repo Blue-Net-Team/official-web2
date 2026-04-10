@@ -431,3 +431,44 @@ export interface EquipmentDTO {
   /** 图片文件ID */
   imageFileId: number | null
 }
+
+/**
+ * 审计统计 - 请求量趋势数据点
+ * 对应后端 TrendPointDTO.java
+ */
+export interface TrendPointDTO {
+  /** 时间桶起始时间 */
+  time: string
+  /** 该时间段内的请求数量 */
+  count: number
+}
+
+/**
+ * 审计统计 - 接口访问排名条目
+ * 对应后端 EndpointRankingDTO.java
+ */
+export interface EndpointRankingDTO {
+  /** URI 路径模板 */
+  pattern: string
+  /** 总请求数 */
+  count: number
+  /** 平均响应时间（毫秒） */
+  avgDurationMs: number
+  /** 失败请求数 */
+  errorCount: number
+}
+
+/**
+ * 审计统计 - 接口响应时间排名条目
+ * 对应后端 EndpointLatencyDTO.java
+ */
+export interface EndpointLatencyDTO {
+  /** URI 路径模板 */
+  pattern: string
+  /** 平均响应时间（毫秒） */
+  avgDurationMs: number
+  /** 最大响应时间（毫秒） */
+  maxDurationMs: number
+  /** 总请求数 */
+  count: number
+}

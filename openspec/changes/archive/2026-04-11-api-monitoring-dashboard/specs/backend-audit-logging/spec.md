@@ -1,8 +1,4 @@
-## Purpose
-
-Comprehensive audit logging system for recording all system operations for security auditing and troubleshooting.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Comprehensive audit logging
 The Audit entity SHALL record all system operations for security auditing and troubleshooting.
@@ -26,12 +22,3 @@ The Audit entity SHALL record all system operations for security auditing and tr
 #### Scenario: URI pattern extraction fallback
 - **WHEN** `BEST_MATCHING_PATTERN_ATTRIBUTE` is null
 - **THEN** request_uri_pattern SHALL fall back to the raw request_uri value
-
-### Requirement: Audit data retention
-The system SHALL retain audit logs without soft deletion.
-
-#### Scenario: Audit table constraints
-- **WHEN** creating the Audit table
-- **THEN** it SHALL NOT have deleted field
-- **THEN** it SHALL NOT have create_time or update_time fields
-- **THEN** action_time SHALL serve as the primary temporal reference

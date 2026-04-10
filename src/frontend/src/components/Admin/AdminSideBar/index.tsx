@@ -140,6 +140,13 @@ const AdminSideBar = () => {
 
   const roleLevel = useMemo(() => getRoleLevel(userInfo?.roleName || ''), [userInfo?.roleName])
 
+  React.useEffect(() => {
+    const mediaQuery = window.matchMedia('(max-width: 767px)')
+    if (mediaQuery.matches) {
+      setCollapsed(true)
+    }
+  }, [])
+
   const menuItems = useMemo(() => filterMenuItems(menuConfig, roleLevel), [roleLevel])
 
   const selectedKeys = useMemo(() => {

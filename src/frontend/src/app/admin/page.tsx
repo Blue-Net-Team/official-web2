@@ -1,9 +1,7 @@
+import { redirect } from 'next/navigation'
+
 const AdminHome = () => {
-  return (
-    <div>
-      <h1>Admin Home</h1>
-    </div>
-  )
+  redirect('/admin/panel')
 }
 
 export default AdminHome

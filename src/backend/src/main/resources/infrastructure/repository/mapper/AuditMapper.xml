@@ -3,13 +3,114 @@
 <mapper namespace="com.bluenet.web.infrastructure.repository.mapper.AuditMapper">
     <resultMap id="BaseResultMap" type="com.bluenet.web.domain.model.entity.Audit">
         <id column="id" property="id"/>
-        <result column="action" property="action"/>
+        <result column="request_method" property="requestMethod"/>
+        <result column="request_uri" property="requestUri"/>
+        <result column="request_uri_pattern" property="requestUriPattern"/>
         <result column="action_arg" property="actionArg"/>
         <result column="action_user_id" property="actionUserId"/>
         <result column="action_time" property="actionTime"/>
         <result column="ip_address" property="ipAddress"/>
         <result column="user_agent" property="userAgent"/>
-        <result column="remarks" property="remarks"/>
+        <result column="http_status" property="httpStatus"/>
+        <result column="response_message" property="responseMessage"/>
+        <result column="stack_trace" property="stackTrace"/>
+        <result column="duration_ms" property="durationMs"/>
         <result column="success_state" property="successState"/>
     </resultMap>
+
+    <select id="selectTrends" resultType="com.bluenet.web.api.dto.audit.TrendPointDTO">
+        <choose>
+            <when test="period.name() == 'H24'">
+                SELECT bucket::timestamp AS time, COALESCE(a.cnt, 0) AS count
+                FROM generate_series(
+                    date_trunc('hour', NOW() - INTERVAL '23 hours'),
+                    date_trunc('hour', NOW()),
+                    INTERVAL '1 hour'
+                ) AS bucket
+                LEFT JOIN (
+                    SELECT date_trunc('hour', action_time) AS hr, COUNT(*) AS cnt
+                    FROM tb_audit
+                    WHERE action_time >= NOW() - INTERVAL '24 hours'
+                    GROUP BY date_trunc('hour', action_time)
+                ) a ON a.hr = bucket
+                ORDER BY bucket
+            </when>
+            <when test="period.name() == 'D7'">
+                SELECT bucket::timestamp AS time, COALESCE(a.cnt, 0) AS count
+                FROM generate_series(
+                    date_trunc('day', NOW() - INTERVAL '6 days'),
+                    date_trunc('day', NOW()),
+                    INTERVAL '1 day'
+                ) AS bucket
+                LEFT JOIN (
+                    SELECT date_trunc('day', action_time) AS dy, COUNT(*) AS cnt
+                    FROM tb_audit
+                    WHERE action_time >= NOW() - INTERVAL '7 days'
+                    GROUP BY date_trunc('day', action_time)
+                ) a ON a.dy = bucket
+                ORDER BY bucket
+            </when>
+            <when test="period.name() == 'D30'">
+                SELECT bucket::timestamp AS time, COALESCE(a.cnt, 0) AS count
+                FROM generate_series(
+                    date_trunc('day', NOW() - INTERVAL '29 days'),
+                    date_trunc('day', NOW()),
+                    INTERVAL '1 day'
+                ) AS bucket
+                LEFT JOIN (
+                    SELECT date_trunc('day', action_time) AS dy, COUNT(*) AS cnt
+                    FROM tb_audit
+                    WHERE action_time >= NOW() - INTERVAL '30 days'
+                    GROUP BY date_trunc('day', action_time)
+                ) a ON a.dy = bucket
+                ORDER BY bucket
+            </when>
+        </choose>
+    </select>
+
+    <select id="selectEndpointRanking" resultType="com.bluenet.web.api.dto.audit.EndpointRankingDTO">
+        SELECT request_uri_pattern AS pattern,
+               COUNT(*) AS count,
+               AVG(duration_ms) AS avgDurationMs,
+               SUM(CASE WHEN success_state = false THEN 1 ELSE 0 END) AS errorCount
+        FROM tb_audit
+        WHERE request_uri_pattern IS NOT NULL
+        <choose>
+            <when test="period.name() == 'H24'">
+                AND action_time >= NOW() - INTERVAL '24 hours'
+            </when>
+            <when test="period.name() == 'D7'">
+                AND action_time >= NOW() - INTERVAL '7 days'
+            </when>
+            <when test="period.name() == 'D30'">
+                AND action_time >= NOW() - INTERVAL '30 days'
+            </when>
+        </choose>
+        GROUP BY request_uri_pattern
+        ORDER BY count DESC
+        LIMIT #{limit}
+    </select>
+
+    <select id="selectEndpointLatencyRanking" resultType="com.bluenet.web.api.dto.audit.EndpointLatencyDTO">
+        SELECT request_uri_pattern AS pattern,
+               AVG(duration_ms) AS avgDurationMs,
+               MAX(duration_ms) AS maxDurationMs,
+               COUNT(*) AS count
+        FROM tb_audit
+        WHERE request_uri_pattern IS NOT NULL
+        <choose>
+            <when test="period.name() == 'H24'">
+                AND action_time >= NOW() - INTERVAL '24 hours'
+            </when>
+            <when test="period.name() == 'D7'">
+                AND action_time >= NOW() - INTERVAL '7 days'
+            </when>
+            <when test="period.name() == 'D30'">
+                AND action_time >= NOW() - INTERVAL '30 days'
+            </when>
+        </choose>
+        GROUP BY request_uri_pattern
+        ORDER BY avgDurationMs DESC
+        LIMIT #{limit}
+    </select>
 </mapper>

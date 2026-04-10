@@ -30,6 +30,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.web.servlet.HandlerMapping;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
@@ -266,5 +267,68 @@ class AuditAspectTest {
 
         Audit audit = captor.getValue();
         assertNull(audit.getActionUserId());
+    }
+
+    // ==================== requestUriPattern ====================
+
+    @Test
+    @DisplayName("存在 BEST_MATCHING_PATTERN_ATTRIBUTE 时应记录 URI 模板")
+    void withPatternAttribute_shouldRecordPattern() throws Throwable {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setRequestURI("/api/v1/file/download/1001");
+        request.setMethod("GET");
+        request.setAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE, "/api/v1/file/download/{fileId}");
+        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
+
+        when(joinPoint.proceed()).thenReturn(ResponseEntity.ok(ResponseMessage.success()));
+
+        aspect.audit(joinPoint, requiresPermission);
+
+        ArgumentCaptor<Audit> captor = ArgumentCaptor.forClass(Audit.class);
+        verify(auditService).save(captor.capture());
+
+        Audit audit = captor.getValue();
+        assertEquals("/api/v1/file/download/{fileId}", audit.getRequestUriPattern());
+        assertEquals("/api/v1/file/download/1001", audit.getRequestUri());
+    }
+
+    @Test
+    @DisplayName("BEST_MATCHING_PATTERN_ATTRIBUTE 为 null 时应回退到原始 requestUri")
+    void withoutPatternAttribute_shouldFallbackToRequestUri() throws Throwable {
+        setUpRequest("/api/v1/test", "GET");
+
+        when(joinPoint.proceed()).thenReturn(ResponseEntity.ok(ResponseMessage.success()));
+
+        aspect.audit(joinPoint, requiresPermission);
+
+        ArgumentCaptor<Audit> captor = ArgumentCaptor.forClass(Audit.class);
+        verify(auditService).save(captor.capture());
+
+        Audit audit = captor.getValue();
+        assertEquals("/api/v1/test", audit.getRequestUriPattern());
+        assertEquals("/api/v1/test", audit.getRequestUri());
+    }
+
+    @Test
+    @DisplayName("多路径参数的 URI 模板应被正确记录")
+    void multiPathVariable_shouldRecordFullPattern() throws Throwable {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setRequestURI("/api/v1/admin/competitions/5/images/10");
+        request.setMethod("DELETE");
+        request.setAttribute(
+                HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE,
+                "/api/v1/admin/competitions/{id}/images/{imageId}");
+        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
+
+        when(joinPoint.proceed()).thenReturn(ResponseEntity.ok(ResponseMessage.success()));
+
+        aspect.audit(joinPoint, requiresPermission);
+
+        ArgumentCaptor<Audit> captor = ArgumentCaptor.forClass(Audit.class);
+        verify(auditService).save(captor.capture());
+
+        Audit audit = captor.getValue();
+        assertEquals("/api/v1/admin/competitions/{id}/images/{imageId}", audit.getRequestUriPattern());
+        assertEquals("/api/v1/admin/competitions/5/images/10", audit.getRequestUri());
     }
 }

@@ -22,6 +22,7 @@ import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import org.springframework.web.servlet.HandlerMapping;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
@@ -77,6 +78,8 @@ public class AuditAspect {
         Audit audit = new Audit();
         audit.setRequestMethod(request.getMethod());
         audit.setRequestUri(request.getRequestURI());
+        String pattern = (String) request.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
+        audit.setRequestUriPattern(pattern != null ? pattern : request.getRequestURI());
         audit.setIpAddress(IpUtils.getClientIp(request));
         audit.setUserAgent(truncate(request.getHeader("User-Agent"), 500));
         audit.setActionUserId(UserCTX.getCurrentUserId());

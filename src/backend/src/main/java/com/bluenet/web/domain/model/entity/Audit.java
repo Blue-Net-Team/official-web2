@@ -16,6 +16,7 @@ public class Audit {
     private Long id;
     private String requestMethod;
     private String requestUri;
+    private String requestUriPattern;
     @TableField(typeHandler = JsonbTypeHandler.class)
     private String actionArg;
     private Long actionUserId;
