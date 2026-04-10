@@ -84,7 +84,7 @@ public class ResetPasswordServiceImpl implements ResetPasswordService {
     }
 
     @Override
-    public void sendCode(String resetToken, String clientIp) {
+    public void sendCode(String resetToken) {
         validateToken(resetToken, 2);
 
         String email = stateService.getField(resetToken, FIELD_EMAIL);
@@ -92,15 +92,8 @@ public class ResetPasswordServiceImpl implements ResetPasswordService {
             throw new BadRequest("重置流程状态异常，请重新开始");
         }
 
-        // 检查发送频率（60秒内不能重复）
-        Optional<VerifyCodeVO> recentCode = verificationCodeRepository
-                .findLatestByEmailAndSceneWithinSeconds(email, SCENE, 60);
-        if (recentCode.isPresent()) {
-            throw new BadRequest("发送过于频繁，请稍后再试");
-        }
-
         // 生成验证码
-        VerifyCodeVO verifyCodeVO = verificationCodeDomainService.generateCode(email, clientIp, SCENE);
+        VerifyCodeVO verifyCodeVO = verificationCodeDomainService.generateCode(email, SCENE);
         verificationCodeRepository.save(verifyCodeVO);
 
         // 发送邮件

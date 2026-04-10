@@ -10,7 +10,5 @@ import com.bluenet.web.domain.model.vo.VerifyCodeVO;
  */
 public interface VerificationCodeDomainService {
 
-    VerifyCodeVO generateCode(String email, String ipaddress);
-
-    VerifyCodeVO generateCode(String email, String ipaddress, String scene);
+    VerifyCodeVO generateCode(String email, String scene);
 }

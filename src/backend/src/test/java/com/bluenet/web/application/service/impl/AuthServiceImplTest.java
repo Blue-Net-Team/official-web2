@@ -5,7 +5,6 @@ import com.bluenet.web.api.dto.auth.StudentIdLoginRequestDTO;
 import com.bluenet.web.api.dto.auth.UserAuthResponseDTO;
 import com.bluenet.web.api.dto.user.UserInfo;
 import com.bluenet.web.application.converter.UserConverter;
-import com.bluenet.web.domain.exception.BadRequest;
 import com.bluenet.web.domain.exception.Unauthorized;
 import com.bluenet.web.domain.model.enumerate.Direction;
 import com.bluenet.web.domain.model.enumerate.LocalLoginType;
@@ -238,57 +237,27 @@ class AuthServiceImplTest {
 
     @Test
     @DisplayName("发送验证码：正常发送应生成、存储并发送邮件")
-    void sendVerificationCode_withNoRecentCode_shouldSendEmail() {
+    void sendVerificationCode_shouldGenerateStoreAndSendEmail() {
         // 准备
         SendVerificationCodeRequestDTO request = new SendVerificationCodeRequestDTO();
         request.setEmail(TEST_EMAIL);
-
-        when(verificationCodeRepository.findLatestByEmailWithinSeconds(TEST_EMAIL, 60))
-                .thenReturn(Optional.empty());
 
         VerifyCodeVO verifyCodeVO = VerifyCodeVO.builder()
                 .target(TEST_EMAIL)
                 .code(TEST_VERIFY_CODE)
                 .expireAt(LocalDateTime.now().plusMinutes(5))
                 .used(false)
+                .scene("login")
                 .build();
-        when(verificationCodeDomainService.generateCode(TEST_EMAIL, null, "login"))
+        when(verificationCodeDomainService.generateCode(TEST_EMAIL, "login"))
                 .thenReturn(verifyCodeVO);
 
         // 执行
         authService.sendVerificationCode(request);
 
         // 验证
-        verify(verificationCodeRepository).findLatestByEmailWithinSeconds(TEST_EMAIL, 60);
-        verify(verificationCodeDomainService).generateCode(TEST_EMAIL, null, "login");
+        verify(verificationCodeDomainService).generateCode(TEST_EMAIL, "login");
         verify(verificationCodeRepository).save(verifyCodeVO);
         verify(emailSender).sendHtmlAsync(eq(TEST_EMAIL), eq("蓝网登录验证码"), anyString());
-    }
-
-    @Test
-    @DisplayName("发送验证码：60秒内重复发送应抛出 BadRequest")
-    void sendVerificationCode_withRecentCode_shouldThrowBadRequest() {
-        // 准备
-        SendVerificationCodeRequestDTO request = new SendVerificationCodeRequestDTO();
-        request.setEmail(TEST_EMAIL);
-
-        VerifyCodeVO recentCode = VerifyCodeVO.builder()
-                .target(TEST_EMAIL)
-                .code("654321")
-                .expireAt(LocalDateTime.now().plusMinutes(5))
-                .used(false)
-                .build();
-        when(verificationCodeRepository.findLatestByEmailWithinSeconds(TEST_EMAIL, 60))
-                .thenReturn(Optional.of(recentCode));
-
-        // 执行 & 验证
-        BadRequest exception = assertThrows(
-                BadRequest.class,
-                () -> authService.sendVerificationCode(request));
-        assertEquals("发送过于频繁，请稍后再试", exception.getMessage());
-
-        verify(verificationCodeDomainService, never()).generateCode(any(), any());
-        verify(verificationCodeRepository, never()).save(any());
-        verify(emailSender, never()).sendHtmlAsync(any(), any(), any());
     }
 }

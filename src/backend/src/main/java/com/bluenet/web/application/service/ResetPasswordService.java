@@ -33,10 +33,8 @@ public interface ResetPasswordService {
      *
      * @param resetToken
      *            重置令牌
-     * @param clientIp
-     *            客户端IP
      */
-    void sendCode(String resetToken, String clientIp);
+    void sendCode(String resetToken);
 
     /**
      * 步骤3.5：验证验证码是否正确

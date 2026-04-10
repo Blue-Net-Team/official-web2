@@ -14,8 +14,4 @@ public interface VerificationCodeRepository {
     void markAsUsed(String email, String code);
 
     void markAsUsed(String email, String code, String scene);
-
-    Optional<VerifyCodeVO> findLatestByEmailWithinSeconds(String email, int seconds);
-
-    Optional<VerifyCodeVO> findLatestByEmailAndSceneWithinSeconds(String email, String scene, int seconds);
 }

@@ -25,7 +25,7 @@ class VerificationCodeDomainServiceImplTest {
     @Test
     @DisplayName("生成的验证码应为6位数字字符串")
     void generateCode_shouldBeSixDigits() {
-        VerifyCodeVO result = service.generateCode(TEST_EMAIL, null);
+        VerifyCodeVO result = service.generateCode(TEST_EMAIL, "login");
 
         assertNotNull(result.getCode());
         assertEquals(6, result.getCode().length(), "验证码长度应为6位");
@@ -35,7 +35,7 @@ class VerificationCodeDomainServiceImplTest {
     @Test
     @DisplayName("生成的验证码目标应为传入的邮箱")
     void generateCode_targetShouldBeEmail() {
-        VerifyCodeVO result = service.generateCode(TEST_EMAIL, null);
+        VerifyCodeVO result = service.generateCode(TEST_EMAIL, "login");
 
         assertEquals(TEST_EMAIL, result.getTarget());
     }
@@ -43,7 +43,7 @@ class VerificationCodeDomainServiceImplTest {
     @Test
     @DisplayName("生成的验证码应为未使用状态")
     void generateCode_shouldBeUnused() {
-        VerifyCodeVO result = service.generateCode(TEST_EMAIL, null);
+        VerifyCodeVO result = service.generateCode(TEST_EMAIL, "login");
 
         assertFalse(result.isUsed(), "新生成的验证码不应为已使用");
     }
@@ -52,7 +52,7 @@ class VerificationCodeDomainServiceImplTest {
     @DisplayName("生成的验证码有效期应为5分钟")
     void generateCode_shouldExpireIn5Minutes() {
         LocalDateTime before = LocalDateTime.now().plusMinutes(5).minusSeconds(2);
-        VerifyCodeVO result = service.generateCode(TEST_EMAIL, null);
+        VerifyCodeVO result = service.generateCode(TEST_EMAIL, "login");
         LocalDateTime after = LocalDateTime.now().plusMinutes(5).plusSeconds(2);
 
         assertNotNull(result.getExpireAt());
@@ -66,8 +66,8 @@ class VerificationCodeDomainServiceImplTest {
     @RepeatedTest(10)
     @DisplayName("多次生成的验证码应不相同（随机性验证）")
     void generateCode_shouldGenerateDifferentCodes() {
-        VerifyCodeVO first = service.generateCode(TEST_EMAIL, null);
-        VerifyCodeVO second = service.generateCode(TEST_EMAIL, null);
+        VerifyCodeVO first = service.generateCode(TEST_EMAIL, "login");
+        VerifyCodeVO second = service.generateCode(TEST_EMAIL, "login");
 
         // 10次重复中偶尔可能相同，但概率极低（百万分之一）
         // 如果这个测试偶尔失败，是正常概率事件

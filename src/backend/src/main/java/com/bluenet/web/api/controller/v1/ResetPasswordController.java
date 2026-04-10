@@ -9,6 +9,7 @@ import com.bluenet.web.api.dto.auth.VerifyStudentRequestDTO;
 import com.bluenet.web.application.service.ResetPasswordService;
 import com.bluenet.web.domain.exception.BadRequest;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
+import com.bluenet.web.infrastructure.security.annotation.RateLimit;
 import com.bluenet.web.infrastructure.security.annotation.RequiresPermission;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -17,7 +18,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -67,12 +67,11 @@ public class ResetPasswordController {
             @ApiResponse(responseCode = "200", description = "验证码已发送"),
             @ApiResponse(responseCode = "400", description = "流程已过期或跳步访问", content = @Content(schema = @Schema(implementation = ResponseMessage.class))) })
     @RequiresPermission(value = "auth:reset-password:send-code", name = "密码重置-发送验证码", access = AccessLevel.PUBLIC)
+    @RateLimit(interval = 60)
     @PostMapping("/send-code")
     public ResponseMessage<Void> sendCode(
-            @Valid @RequestBody SendResetCodeRequestDTO requestDTO,
-            HttpServletRequest httpRequest) {
-        String clientIp = httpRequest.getRemoteAddr();
-        resetPasswordService.sendCode(requestDTO.getResetToken(), clientIp);
+            @Valid @RequestBody SendResetCodeRequestDTO requestDTO) {
+        resetPasswordService.sendCode(requestDTO.getResetToken());
         return ResponseMessage.success();
     }
 

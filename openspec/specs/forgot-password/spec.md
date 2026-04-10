@@ -41,18 +41,18 @@
 - **THEN** 系统 SHALL 返回 `{ code: 400, msg: "请先完成上一步验证" }`
 
 ### Requirement: 发送验证码接口
-系统 SHALL 提供公开接口 `POST /api/v1/auth/reset-password/send-code`，接收 resetToken，向流程中已验证的邮箱发送 6 位验证码。使用现有 `VerificationCodeDomainService`，scene=`reset_password`。
+系统 SHALL 提供公开接口 `POST /api/v1/auth/reset-password/send-code`，接收 resetToken，向流程中已验证的邮箱发送 6 位验证码。使用 `VerificationCodeDomainService`，scene=`reset_password`。该接口 SHALL 添加 `@RateLimit(interval=60)` 注解实现 IP 级限频。
 
 #### Scenario: 成功发送验证码
 - **WHEN** 用户提交有效 resetToken，Redis 流程状态 step >= 2
 - **THEN** 系统 SHALL 从 Redis 获取已验证邮箱
-- **THEN** 系统 SHALL 调用 `VerificationCodeDomainService.generateCode(email, ip, "reset_password")`
+- **THEN** 系统 SHALL 调用 `VerificationCodeDomainService.generateCode(email, "reset_password")`
 - **THEN** 系统 SHALL 更新 Redis 流程状态 step=3
 - **THEN** 系统 SHALL 返回 `{ code: 200, msg: "验证码已发送" }`
 
-#### Scenario: 60 秒内重复发送
-- **WHEN** 同一邮箱在 60 秒内再次请求发送验证码
-- **THEN** 系统 SHALL 返回 `{ code: 429, msg: "发送过于频繁，请稍后再试" }`
+#### Scenario: IP 限频拒绝
+- **WHEN** 同一 IP 在 60 秒内再次请求发送验证码（无论邮箱是否相同）
+- **THEN** 系统 SHALL 由 `@RateLimit` 注解拦截，返回 HTTP 429
 
 #### Scenario: resetToken 无效或过期
 - **WHEN** resetToken 在 Redis 中不存在

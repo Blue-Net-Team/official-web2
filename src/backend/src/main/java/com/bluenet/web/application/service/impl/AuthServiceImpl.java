@@ -144,13 +144,7 @@ public class AuthServiceImpl implements AuthService {
         String email = requestDTO.getEmail();
         String scene = requestDTO.getScene() != null ? requestDTO.getScene() : "login";
 
-        Optional<VerifyCodeVO> recentCode = verificationCodeRepository.findLatestByEmailWithinSeconds(email, 60);
-        if (recentCode.isPresent()) {
-            log.warn("验证码发送过于频繁 - email={}", email);
-            throw new BadRequest("发送过于频繁，请稍后再试");
-        }
-
-        VerifyCodeVO verifyCodeVO = verificationCodeDomainService.generateCode(email, null, scene);
+        VerifyCodeVO verifyCodeVO = verificationCodeDomainService.generateCode(email, scene);
 
         verificationCodeRepository.save(verifyCodeVO);
 

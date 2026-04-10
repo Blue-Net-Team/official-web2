@@ -386,7 +386,6 @@ class AuthControllerIntegrationTest extends BaseIntegrationTest {
         verifyCode.setCode(code);
         verifyCode.setExpireAt(expireAt);
         verifyCode.setUsedAt(usedAt);
-        verifyCode.setIpAddress("127.0.0.1");
         verifyCodeMapper.insert(verifyCode);
     }
 }

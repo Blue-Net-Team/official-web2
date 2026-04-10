@@ -27,12 +27,7 @@ public class VerificationCodeDomainServiceImpl implements VerificationCodeDomain
     private final SecureRandom secureRandom = new SecureRandom();
 
     @Override
-    public VerifyCodeVO generateCode(String email, String ipaddress) {
-        return generateCode(email, ipaddress, "login");
-    }
-
-    @Override
-    public VerifyCodeVO generateCode(String email, String ipaddress, String scene) {
+    public VerifyCodeVO generateCode(String email, String scene) {
         String code = generateSixDigitCode();
         LocalDateTime expireAt = LocalDateTime.now().plusMinutes(CODE_VALIDITY_MINUTES);
 

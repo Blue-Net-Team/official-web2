@@ -3,6 +3,7 @@ package com.bluenet.web.api.controller.v1;
 import com.bluenet.web.application.service.ResetPasswordService;
 import com.bluenet.web.testcontainers.TestcontainersConfiguration;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -11,6 +12,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
@@ -35,6 +37,14 @@ class ResetPasswordControllerTest {
 
     @MockBean
     private ResetPasswordService resetPasswordService;
+
+    @Autowired
+    private StringRedisTemplate redisTemplate;
+
+    @BeforeEach
+    void clearRateLimitKeys() {
+        redisTemplate.delete(redisTemplate.keys("rate_limit:*"));
+    }
 
     private static final String BASE_URL = "/api/v1/auth/reset-password";
     private static final String TEST_TOKEN = "test-uuid-token";
@@ -141,7 +151,7 @@ class ResetPasswordControllerTest {
         @Test
         @DisplayName("正常请求：应返回 200")
         void sendCode_validRequest_shouldReturn200() throws Exception {
-            doNothing().when(resetPasswordService).sendCode(eq(TEST_TOKEN), any());
+            doNothing().when(resetPasswordService).sendCode(TEST_TOKEN);
 
             mockMvc.perform(
                     post(BASE_URL + "/send-code")
@@ -150,7 +160,7 @@ class ResetPasswordControllerTest {
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.code").value(200));
 
-            verify(resetPasswordService).sendCode(eq(TEST_TOKEN), any());
+            verify(resetPasswordService).sendCode(TEST_TOKEN);
         }
 
         @Test
@@ -168,7 +178,7 @@ class ResetPasswordControllerTest {
         void sendCode_expiredToken_shouldReturn400() throws Exception {
             doThrow(new com.bluenet.web.domain.exception.BadRequest("重置流程已过期，请重新开始"))
                     .when(resetPasswordService)
-                    .sendCode(eq("expired-token"), any());
+                    .sendCode("expired-token");
 
             mockMvc.perform(
                     post(BASE_URL + "/send-code")

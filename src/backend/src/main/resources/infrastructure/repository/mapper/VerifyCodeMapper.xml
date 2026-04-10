@@ -7,6 +7,5 @@
         <result column="code" property="code"/>
         <result column="expire_at" property="expireAt"/>
         <result column="used_at" property="usedAt"/>
-        <result column="ip_address" property="ipAddress"/>
     </resultMap>
 </mapper>

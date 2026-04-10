@@ -9,6 +9,7 @@ import com.bluenet.web.api.dto.user.UserInfo;
 import com.bluenet.web.application.service.UserInfoService;
 import com.bluenet.web.domain.exception.GlobalException;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
+import com.bluenet.web.infrastructure.security.annotation.RateLimit;
 import com.bluenet.web.infrastructure.security.annotation.RequiresPermission;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -83,6 +84,7 @@ class UserProfileController {
     @Operation(summary = "发送修改邮箱验证码", description = "向指定邮箱发送修改邮箱场景的验证码，需要已登录。场景值：change-email-original（验证原邮箱）、change-email-new（验证新邮箱）")
     @SecurityRequirement(name = "cookie-auth")
     @RequiresPermission(name = "发送修改邮箱验证码", value = "user:email:send-code", access = AccessLevel.AUTHENTICATED)
+    @RateLimit(interval = 60)
     @PostMapping("/email/verification-code/send")
     public ResponseMessage<Void> sendEmailVerificationCode(
             @Valid @RequestBody SendEmailVerificationCodeRequestDTO request) {

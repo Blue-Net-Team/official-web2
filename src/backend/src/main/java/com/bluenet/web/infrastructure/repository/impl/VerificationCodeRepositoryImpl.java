@@ -91,39 +91,6 @@ public class VerificationCodeRepositoryImpl implements VerificationCodeRepositor
         log.debug("验证码已标记为已使用 - target={}, scene={}", email, scene);
     }
 
-    @Override
-    public Optional<VerifyCodeVO> findLatestByEmailWithinSeconds(String email, int seconds) {
-        LocalDateTime threshold = LocalDateTime.now().minusSeconds(seconds);
-        LambdaQueryWrapper<VerifyCode> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(VerifyCode::getTarget, email)
-                .ge(VerifyCode::getExpireAt, threshold)
-                .orderByDesc(VerifyCode::getId)
-                .last("LIMIT 1");
-
-        VerifyCode verifyCode = verifyCodeMapper.selectOne(wrapper);
-        if (verifyCode == null) {
-            return Optional.empty();
-        }
-        return Optional.of(convert(verifyCode));
-    }
-
-    @Override
-    public Optional<VerifyCodeVO> findLatestByEmailAndSceneWithinSeconds(String email, String scene, int seconds) {
-        LocalDateTime threshold = LocalDateTime.now().minusSeconds(seconds);
-        LambdaQueryWrapper<VerifyCode> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(VerifyCode::getTarget, email)
-                .eq(VerifyCode::getScene, scene)
-                .ge(VerifyCode::getExpireAt, threshold)
-                .orderByDesc(VerifyCode::getId)
-                .last("LIMIT 1");
-
-        VerifyCode verifyCode = verifyCodeMapper.selectOne(wrapper);
-        if (verifyCode == null) {
-            return Optional.empty();
-        }
-        return Optional.of(convert(verifyCode));
-    }
-
     private VerifyCodeVO convert(VerifyCode verifyCode) {
         return VerifyCodeVO.builder()
                 .target(verifyCode.getTarget())

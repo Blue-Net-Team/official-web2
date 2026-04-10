@@ -10,6 +10,7 @@ import com.bluenet.web.api.dto.auth.UserAuthResponseDTO;
 import com.bluenet.web.application.service.AuthService;
 import com.bluenet.web.domain.exception.Unauthorized;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
+import com.bluenet.web.infrastructure.security.annotation.RateLimit;
 import com.bluenet.web.infrastructure.security.annotation.RequiresPermission;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -86,6 +87,7 @@ public class AuthController {
             @ApiResponse(responseCode = "200", description = "发送成功", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseMessage.class))),
             @ApiResponse(responseCode = "400", description = "发送过于频繁", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseMessage.class), examples = @ExampleObject(value = "{\"code\":400,\"msg\":\"发送过于频繁，请稍后再试\",\"data\":null}"))) })
     @RequiresPermission(value = "auth:verification-code:send", name = "发送验证码", access = AccessLevel.PUBLIC)
+    @RateLimit(interval = 60)
     @PostMapping("/verification-code/send")
     public ResponseMessage<Void> sendVerificationCode(
             @Valid @RequestBody SendVerificationCodeRequestDTO requestDTO) {

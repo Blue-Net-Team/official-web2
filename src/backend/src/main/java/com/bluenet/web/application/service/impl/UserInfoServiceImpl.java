@@ -23,8 +23,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.util.Optional;
-
 @Slf4j
 @RequiredArgsConstructor
 @Service
@@ -107,14 +105,7 @@ public class UserInfoServiceImpl implements UserInfoService {
             throw new BadRequest("无效的验证码场景");
         }
 
-        Optional<VerifyCodeVO> recentCode = verificationCodeRepository
-                .findLatestByEmailAndSceneWithinSeconds(email, scene, 60);
-        if (recentCode.isPresent()) {
-            log.warn("验证码发送过于频繁 - email={}, scene={}", email, scene);
-            throw new BadRequest("发送过于频繁，请稍后再试");
-        }
-
-        VerifyCodeVO verifyCodeVO = verificationCodeDomainService.generateCode(email, null, scene);
+        VerifyCodeVO verifyCodeVO = verificationCodeDomainService.generateCode(email, scene);
         verificationCodeRepository.save(verifyCodeVO);
 
         String subject = "change-email-original".equals(scene) ? "蓝网修改邮箱 - 验证原邮箱" : "蓝网修改邮箱 - 验证新邮箱";

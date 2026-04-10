@@ -188,40 +188,14 @@ class ResetPasswordServiceImplTest {
             when(stateService.exists(TEST_TOKEN)).thenReturn(true);
             when(stateService.getStep(TEST_TOKEN)).thenReturn(2);
             when(stateService.getField(TEST_TOKEN, "email")).thenReturn(TEST_EMAIL);
-            when(
-                    verificationCodeRepository.findLatestByEmailAndSceneWithinSeconds(
-                            TEST_EMAIL,
-                            "reset_password",
-                            60)).thenReturn(Optional.empty());
-            when(verificationCodeDomainService.generateCode(TEST_EMAIL, "127.0.0.1", "reset_password"))
+            when(verificationCodeDomainService.generateCode(TEST_EMAIL, "reset_password"))
                     .thenReturn(codeVO);
 
-            assertDoesNotThrow(() -> resetPasswordService.sendCode(TEST_TOKEN, "127.0.0.1"));
+            assertDoesNotThrow(() -> resetPasswordService.sendCode(TEST_TOKEN));
 
             verify(verificationCodeRepository).save(codeVO);
             verify(emailSender).sendHtmlAsync(eq(TEST_EMAIL), any(), any());
             verify(stateService).update(eq(TEST_TOKEN), any(Map.class));
-        }
-
-        @Test
-        @DisplayName("发送频率过快：应抛出 BadRequest")
-        void sendCode_tooFrequent_shouldThrowBadRequest() {
-            VerifyCodeVO recentCode = createTestVerifyCodeVO();
-            when(stateService.exists(TEST_TOKEN)).thenReturn(true);
-            when(stateService.getStep(TEST_TOKEN)).thenReturn(2);
-            when(stateService.getField(TEST_TOKEN, "email")).thenReturn(TEST_EMAIL);
-            when(
-                    verificationCodeRepository.findLatestByEmailAndSceneWithinSeconds(
-                            TEST_EMAIL,
-                            "reset_password",
-                            60)).thenReturn(Optional.of(recentCode));
-
-            BadRequest exception = assertThrows(
-                    BadRequest.class,
-                    () -> resetPasswordService.sendCode(TEST_TOKEN, "127.0.0.1"));
-
-            assertEquals("发送过于频繁，请稍后再试", exception.getMessage());
-            verify(verificationCodeDomainService, never()).generateCode(any(), any(), any());
         }
 
         @Test
@@ -233,7 +207,7 @@ class ResetPasswordServiceImplTest {
 
             BadRequest exception = assertThrows(
                     BadRequest.class,
-                    () -> resetPasswordService.sendCode(TEST_TOKEN, "127.0.0.1"));
+                    () -> resetPasswordService.sendCode(TEST_TOKEN));
 
             assertEquals("重置流程状态异常，请重新开始", exception.getMessage());
         }
