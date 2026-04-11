@@ -3,13 +3,17 @@ package com.bluenet.web.application.service.impl;
 import com.bluenet.web.api.dto.user.UpdateProfileRequestDTO;
 import com.bluenet.web.api.dto.user.UserInfo;
 import com.bluenet.web.application.converter.UserConverter;
+import com.bluenet.web.domain.exception.BadRequest;
 import com.bluenet.web.domain.exception.Forbidden;
 import com.bluenet.web.domain.exception.Unauthorized;
 import com.bluenet.web.domain.model.enumerate.Direction;
 import com.bluenet.web.domain.model.enumerate.Gender;
 import com.bluenet.web.domain.model.vo.UserVO;
 import com.bluenet.web.domain.service.UserDomainService;
+import com.bluenet.web.infrastructure.security.auth.AuthTokenService;
+import com.bluenet.web.infrastructure.security.change.ChangePasswordStateService;
 import com.bluenet.web.infrastructure.security.util.UserCTX;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -18,8 +22,11 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
+
+import com.bluenet.web.domain.repository.VerificationCodeRepository;
+import com.bluenet.web.domain.service.VerificationCodeDomainService;
+import com.bluenet.web.infrastructure.email.EmailSender;
 
 /**
  * UserInfoServiceImpl 单元测试
@@ -33,6 +40,24 @@ class UserInfoServiceImplTest {
     @Mock
     private UserDomainService userDomainService;
 
+    @Mock
+    private VerificationCodeDomainService verificationCodeDomainService;
+
+    @Mock
+    private VerificationCodeRepository verificationCodeRepository;
+
+    @Mock
+    private EmailSender emailSender;
+
+    @Mock
+    private PasswordEncoder passwordEncoder;
+
+    @Mock
+    private ChangePasswordStateService changePasswordStateService;
+
+    @Mock
+    private AuthTokenService authTokenService;
+
     @InjectMocks
     private UserInfoServiceImpl userInfoService;
 
@@ -41,6 +66,7 @@ class UserInfoServiceImplTest {
     private static final String TEST_USERNAME = "测试用户";
     private static final String TEST_EMAIL = "test@example.com";
     private static final String TEST_ROLE_NAME = "MEMBER";
+    private static final String TEST_PASSWORD = "encoded_old_pwd";
 
     @AfterEach
     void tearDown() {
@@ -139,5 +165,113 @@ class UserInfoServiceImplTest {
                 null,
                 null,
                 null);
+    }
+
+    // --- changePassword tests ---
+
+    @Test
+    void verifyCurrentPassword_whenPasswordCorrect_returnsToken() {
+        UserVO user = UserVO.builder()
+                .id(TEST_USER_ID)
+                .password(TEST_PASSWORD)
+                .build();
+        UserCTX.setCurrentUser(user);
+        when(passwordEncoder.matches("correctPwd", TEST_PASSWORD)).thenReturn(true);
+        when(changePasswordStateService.create(TEST_USER_ID)).thenReturn("test-token");
+
+        String token = userInfoService.verifyCurrentPassword(TEST_USER_ID, "correctPwd");
+
+        assertEquals("test-token", token);
+        verify(changePasswordStateService).create(TEST_USER_ID);
+    }
+
+    @Test
+    void verifyCurrentPassword_whenPasswordWrong_throwsBadRequest() {
+        UserVO user = UserVO.builder()
+                .id(TEST_USER_ID)
+                .password(TEST_PASSWORD)
+                .build();
+        UserCTX.setCurrentUser(user);
+        when(passwordEncoder.matches("wrongPwd", TEST_PASSWORD)).thenReturn(false);
+
+        BadRequest ex = assertThrows(
+                BadRequest.class,
+                () -> userInfoService.verifyCurrentPassword(TEST_USER_ID, "wrongPwd"));
+
+        assertEquals("当前密码不正确", ex.getMessage());
+        verify(changePasswordStateService, never()).create(anyLong());
+    }
+
+    @Test
+    void verifyCurrentPassword_whenNotAuthenticated_throwsUnauthorized() {
+        UserCTX.clear();
+
+        assertThrows(
+                Unauthorized.class,
+                () -> userInfoService.verifyCurrentPassword(TEST_USER_ID, "somePwd"));
+    }
+
+    @Test
+    void changePassword_whenValid_succeeds() {
+        when(changePasswordStateService.exists("valid-token")).thenReturn(true);
+        when(changePasswordStateService.getStep("valid-token")).thenReturn(1);
+        when(changePasswordStateService.getField("valid-token", "userId")).thenReturn("1");
+
+        userInfoService.changePassword(TEST_USER_ID, "valid-token", "newPwd123", "newPwd123");
+
+        verify(userDomainService).changePassword(TEST_USER_ID, "newPwd123");
+        verify(authTokenService).revokeAllUserTokens(TEST_USER_ID);
+        verify(changePasswordStateService).delete("valid-token");
+    }
+
+    @Test
+    void changePassword_whenTokenExpired_throwsBadRequest() {
+        when(changePasswordStateService.exists("expired-token")).thenReturn(false);
+
+        BadRequest ex = assertThrows(
+                BadRequest.class,
+                () -> userInfoService.changePassword(TEST_USER_ID, "expired-token", "newPwd", "newPwd"));
+
+        assertEquals("验证已过期，请重新开始", ex.getMessage());
+        verify(userDomainService, never()).changePassword(anyLong(), anyString());
+    }
+
+    @Test
+    void changePassword_whenStepNotVerified_throwsBadRequest() {
+        when(changePasswordStateService.exists("token")).thenReturn(true);
+        when(changePasswordStateService.getStep("token")).thenReturn(0);
+
+        BadRequest ex = assertThrows(
+                BadRequest.class,
+                () -> userInfoService.changePassword(TEST_USER_ID, "token", "newPwd", "newPwd"));
+
+        assertEquals("请先验证当前密码", ex.getMessage());
+    }
+
+    @Test
+    void changePassword_whenPasswordsMismatch_throwsBadRequest() {
+        when(changePasswordStateService.exists("token")).thenReturn(true);
+        when(changePasswordStateService.getStep("token")).thenReturn(1);
+        when(changePasswordStateService.getField("token", "userId")).thenReturn("1");
+
+        BadRequest ex = assertThrows(
+                BadRequest.class,
+                () -> userInfoService.changePassword(TEST_USER_ID, "token", "newPwd1", "newPwd2"));
+
+        assertEquals("两次输入的密码不一致", ex.getMessage());
+        verify(userDomainService, never()).changePassword(anyLong(), anyString());
+    }
+
+    @Test
+    void changePassword_whenUserIdMismatch_throwsBadRequest() {
+        when(changePasswordStateService.exists("token")).thenReturn(true);
+        when(changePasswordStateService.getStep("token")).thenReturn(1);
+        when(changePasswordStateService.getField("token", "userId")).thenReturn("999");
+
+        BadRequest ex = assertThrows(
+                BadRequest.class,
+                () -> userInfoService.changePassword(TEST_USER_ID, "token", "newPwd", "newPwd"));
+
+        assertEquals("验证信息不匹配", ex.getMessage());
     }
 }

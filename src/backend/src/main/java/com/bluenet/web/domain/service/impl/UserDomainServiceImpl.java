@@ -12,6 +12,7 @@ import com.bluenet.web.domain.repository.UserRepository;
 import com.bluenet.web.domain.repository.VerificationCodeRepository;
 import com.bluenet.web.domain.service.UserDomainService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,6 +23,7 @@ import java.util.Optional;
 public class UserDomainServiceImpl implements UserDomainService {
     private final UserRepository userRepository;
     private final VerificationCodeRepository verificationCodeRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     @Transactional
@@ -74,6 +76,15 @@ public class UserDomainServiceImpl implements UserDomainService {
 
         verificationCodeRepository.markAsUsed(currentEmail, originalEmailVerifyCode, "change-email-original");
         verificationCodeRepository.markAsUsed(newEmail, newEmailVerifyCode, "change-email-new");
+    }
+
+    @Override
+    @Transactional
+    public void changePassword(Long userId, String rawNewPassword) {
+        userRepository.findById(userId)
+                .orElseThrow(() -> new DataNotFound("用户不存在"));
+        String encodedPassword = passwordEncoder.encode(rawNewPassword);
+        userRepository.updatePassword(userId, encodedPassword);
     }
 
     private void verifyCode(String email, String code, String scene) {

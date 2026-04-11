@@ -10,6 +10,7 @@ import { AxiosError } from 'axios'
 import logo from '@/assets/logo.png'
 import loginBg from '@/assets/Login/bg.png'
 import { authService } from '@/apis/services/auth.service'
+import { hashPassword } from '@/utils/passwordHash'
 import { ResponseMessage } from '@/apis/schema/type'
 
 /** 从 AxiosError 中提取后端返回的错误消息 */
@@ -190,7 +191,9 @@ export default function ForgotPasswordPage() {
     }
     setLoading(true)
     try {
-      await authService.resetPassword(resetToken, newPassword, confirmPassword)
+      const hashedNew = await hashPassword(newPassword)
+      const hashedConfirm = await hashPassword(confirmPassword)
+      await authService.resetPassword(resetToken, hashedNew, hashedConfirm)
       messageApi.success('密码重置成功，即将跳转到登录页')
       setTimeout(() => router.push('/login'), 3000)
     } catch (error: unknown) {
@@ -298,7 +301,7 @@ export default function ForgotPasswordPage() {
                     <label className="text-sm text-white/60">新密码</label>
                     <Input
                       type={showNewPassword ? 'text' : 'password'}
-                      placeholder="请输入新密码（6-32位）"
+                      placeholder="请输入新密码（6位+）"
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
                       maxLength={32}

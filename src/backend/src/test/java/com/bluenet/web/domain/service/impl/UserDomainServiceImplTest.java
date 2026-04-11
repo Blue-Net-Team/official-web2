@@ -7,11 +7,13 @@ import com.bluenet.web.domain.model.vo.FileVO;
 import com.bluenet.web.domain.model.vo.TabCountsVO;
 import com.bluenet.web.domain.model.vo.UserVO;
 import com.bluenet.web.domain.repository.UserRepository;
+import com.bluenet.web.domain.repository.VerificationCodeRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Optional;
 
@@ -26,6 +28,12 @@ class UserDomainServiceImplTest {
 
     @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private VerificationCodeRepository verificationCodeRepository;
+
+    @Mock
+    private PasswordEncoder passwordEncoder;
 
     @InjectMocks
     private UserDomainServiceImpl userDomainService;
@@ -207,5 +215,29 @@ class UserDomainServiceImplTest {
 
         verify(userRepository).findById(TEST_USER_ID);
         verify(userRepository).updateAvatar(any(UserVO.class), any(FileVO.class));
+    }
+
+    @Test
+    void changePassword_whenUserExists_encodesAndUpdates() {
+        UserVO userVO = UserVO.builder().id(TEST_USER_ID).build();
+        when(userRepository.findById(TEST_USER_ID)).thenReturn(Optional.of(userVO));
+        when(passwordEncoder.encode("newPassword123")).thenReturn("encoded_new_pwd");
+
+        userDomainService.changePassword(TEST_USER_ID, "newPassword123");
+
+        verify(passwordEncoder).encode("newPassword123");
+        verify(userRepository).updatePassword(TEST_USER_ID, "encoded_new_pwd");
+    }
+
+    @Test
+    void changePassword_whenUserNotExists_throwsDataNotFound() {
+        when(userRepository.findById(TEST_USER_ID)).thenReturn(Optional.empty());
+
+        assertThrows(
+                DataNotFound.class,
+                () -> userDomainService.changePassword(TEST_USER_ID, "newPassword123"));
+
+        verify(passwordEncoder, never()).encode(anyString());
+        verify(userRepository, never()).updatePassword(anyLong(), anyString());
     }
 }

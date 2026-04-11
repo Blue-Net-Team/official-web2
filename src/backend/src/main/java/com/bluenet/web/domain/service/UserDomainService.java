@@ -20,4 +20,6 @@ public interface UserDomainService {
 
     void changeEmail(Long userId, String currentEmail, String originalEmailVerifyCode,
             String newEmail, String newEmailVerifyCode);
+
+    void changePassword(Long userId, String rawNewPassword);
 }

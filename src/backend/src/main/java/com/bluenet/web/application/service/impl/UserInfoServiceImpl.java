@@ -18,10 +18,14 @@ import com.bluenet.web.domain.service.UserDomainService;
 import com.bluenet.web.domain.service.VerificationCodeDomainService;
 import com.bluenet.web.infrastructure.email.EmailSender;
 import com.bluenet.web.domain.model.enumerate.RoleType;
+import com.bluenet.web.infrastructure.security.auth.AuthTokenService;
+import com.bluenet.web.infrastructure.security.change.ChangePasswordStateService;
 import com.bluenet.web.infrastructure.security.util.UserCTX;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -32,6 +36,9 @@ public class UserInfoServiceImpl implements UserInfoService {
     private final VerificationCodeDomainService verificationCodeDomainService;
     private final VerificationCodeRepository verificationCodeRepository;
     private final EmailSender emailSender;
+    private final PasswordEncoder passwordEncoder;
+    private final ChangePasswordStateService changePasswordStateService;
+    private final AuthTokenService authTokenService;
 
     @Override
     public UserInfo getMyInfo() {
@@ -141,5 +148,49 @@ public class UserInfoServiceImpl implements UserInfoService {
                 request.getNewEmailVerifyCode());
 
         log.info("用户邮箱修改成功 - userId={}", userId);
+    }
+
+    @Override
+    public String verifyCurrentPassword(Long userId, String currentPassword) {
+        UserVO user = UserCTX.getCurrentUser();
+        if (user == null) {
+            throw new Unauthorized("未认证");
+        }
+
+        if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
+            throw new BadRequest("当前密码不正确");
+        }
+
+        String token = changePasswordStateService.create(userId);
+        log.info("修改密码 - 原密码验证通过, userId={}", userId);
+        return token;
+    }
+
+    @Override
+    @Transactional
+    public void changePassword(Long userId, String token, String newPassword, String confirmPassword) {
+        if (!changePasswordStateService.exists(token)) {
+            throw new BadRequest("验证已过期，请重新开始");
+        }
+
+        int step = changePasswordStateService.getStep(token);
+        if (step < 1) {
+            throw new BadRequest("请先验证当前密码");
+        }
+
+        String storedUserId = changePasswordStateService.getField(token, "userId");
+        if (!userId.toString().equals(storedUserId)) {
+            throw new BadRequest("验证信息不匹配");
+        }
+
+        if (!newPassword.equals(confirmPassword)) {
+            throw new BadRequest("两次输入的密码不一致");
+        }
+
+        userDomainService.changePassword(userId, newPassword);
+        authTokenService.revokeAllUserTokens(userId);
+        changePasswordStateService.delete(token);
+
+        log.info("密码修改成功 - userId={}", userId);
     }
 }

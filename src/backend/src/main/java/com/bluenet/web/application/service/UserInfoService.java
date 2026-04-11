@@ -16,4 +16,8 @@ public interface UserInfoService {
     void sendEmailVerificationCode(SendEmailVerificationCodeRequestDTO request);
 
     void changeEmail(ChangeEmailRequestDTO request);
+
+    String verifyCurrentPassword(Long userId, String currentPassword);
+
+    void changePassword(Long userId, String token, String newPassword, String confirmPassword);
 }

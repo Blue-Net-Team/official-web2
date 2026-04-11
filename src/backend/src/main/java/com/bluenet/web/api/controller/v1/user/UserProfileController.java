@@ -2,15 +2,18 @@ package com.bluenet.web.api.controller.v1.user;
 
 import com.bluenet.web.api.dto.ResponseMessage;
 import com.bluenet.web.api.dto.user.ChangeEmailRequestDTO;
+import com.bluenet.web.api.dto.user.ChangePasswordRequestDTO;
 import com.bluenet.web.api.dto.user.SendEmailVerificationCodeRequestDTO;
 import com.bluenet.web.api.dto.user.TabCountsDTO;
 import com.bluenet.web.api.dto.user.UpdateProfileRequestDTO;
 import com.bluenet.web.api.dto.user.UserInfo;
+import com.bluenet.web.api.dto.user.VerifyPasswordRequestDTO;
 import com.bluenet.web.application.service.UserInfoService;
 import com.bluenet.web.domain.exception.GlobalException;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
 import com.bluenet.web.infrastructure.security.annotation.RateLimit;
 import com.bluenet.web.infrastructure.security.annotation.RequiresPermission;
+import com.bluenet.web.infrastructure.security.util.UserCTX;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -103,6 +106,38 @@ class UserProfileController {
     public ResponseMessage<Void> changeEmail(@Valid @RequestBody ChangeEmailRequestDTO request) {
         try {
             userInfoService.changeEmail(request);
+            return ResponseMessage.success();
+        } catch (GlobalException e) {
+            return ResponseMessage.error(e);
+        }
+    }
+
+    @Operation(summary = "验证当前密码", description = "已登录用户验证当前密码，验证通过返回令牌用于后续修改密码")
+    @SecurityRequirement(name = "cookie-auth")
+    @RequiresPermission(name = "验证当前密码", value = "user:password:verify", access = AccessLevel.AUTHENTICATED)
+    @PostMapping("/password/verify")
+    public ResponseMessage<String> verifyCurrentPassword(@Valid @RequestBody VerifyPasswordRequestDTO request) {
+        try {
+            Long userId = UserCTX.getCurrentUser().getId();
+            String token = userInfoService.verifyCurrentPassword(userId, request.getCurrentPassword());
+            return ResponseMessage.success(token);
+        } catch (GlobalException e) {
+            return ResponseMessage.error(e);
+        }
+    }
+
+    @Operation(summary = "修改密码", description = "通过验证令牌提交新密码，修改成功后需重新登录")
+    @SecurityRequirement(name = "cookie-auth")
+    @RequiresPermission(name = "修改密码", value = "user:password:update", access = AccessLevel.AUTHENTICATED)
+    @PutMapping("/password")
+    public ResponseMessage<Void> changePassword(@Valid @RequestBody ChangePasswordRequestDTO request) {
+        try {
+            Long userId = UserCTX.getCurrentUser().getId();
+            userInfoService.changePassword(
+                    userId,
+                    request.getToken(),
+                    request.getNewPassword(),
+                    request.getConfirmPassword());
             return ResponseMessage.success();
         } catch (GlobalException e) {
             return ResponseMessage.error(e);

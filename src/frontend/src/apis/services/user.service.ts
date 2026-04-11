@@ -109,4 +109,37 @@ export const userService = {
     const response = await apiClient.put<ResponseMessage<void>>('/user/email', data)
     return response.data
   },
+
+  /**
+   * 验证当前密码
+   * 对应后端 POST /api/v1/user/password/verify
+   * @param currentPassword 当前密码
+   * @returns 验证令牌
+   */
+  async verifyPassword(currentPassword: string): Promise<ResponseMessage<string>> {
+    const response = await apiClient.post<ResponseMessage<string>>('/user/password/verify', {
+      currentPassword,
+    })
+    return response.data
+  },
+
+  /**
+   * 修改密码
+   * 对应后端 PUT /api/v1/user/password
+   * @param token 验证令牌
+   * @param newPassword 新密码
+   * @param confirmPassword 确认新密码
+   */
+  async changePassword(
+    token: string,
+    newPassword: string,
+    confirmPassword: string
+  ): Promise<ResponseMessage<void>> {
+    const response = await apiClient.put<ResponseMessage<void>>('/user/password', {
+      token,
+      newPassword,
+      confirmPassword,
+    })
+    return response.data
+  },
 }
