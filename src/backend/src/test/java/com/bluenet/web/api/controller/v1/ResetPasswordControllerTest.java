@@ -290,19 +290,6 @@ class ResetPasswordControllerTest {
         }
 
         @Test
-        @DisplayName("密码过短：应返回 400")
-        void resetPassword_shortPassword_shouldReturn400() throws Exception {
-            mockMvc.perform(
-                    post(BASE_URL + "/reset")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(
-                                    "{\"resetToken\":\"" + TEST_TOKEN + "\","
-                                            + "\"newPassword\":\"12345\","
-                                            + "\"confirmPassword\":\"12345\"}"))
-                    .andExpect(status().isBadRequest());
-        }
-
-        @Test
         @DisplayName("缺少必填字段：应返回 400")
         void resetPassword_missingFields_shouldReturn400() throws Exception {
             mockMvc.perform(

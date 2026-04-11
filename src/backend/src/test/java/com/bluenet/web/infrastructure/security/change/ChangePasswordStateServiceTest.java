@@ -31,7 +31,7 @@ class ChangePasswordStateServiceTest {
 
     @BeforeEach
     void setUp() {
-        when(redisTemplate.opsForHash()).thenReturn(hashOperations);
+        lenient().when(redisTemplate.opsForHash()).thenReturn(hashOperations);
     }
 
     @Test
