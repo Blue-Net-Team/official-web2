@@ -28,10 +28,10 @@ public class CreateAssessmentTimeRequestDTO {
     @Schema(description = "届次", required = true, example = "1")
     private Integer epoch;
 
-    @NotNull(message = "年级不能为空")
-    @Min(value = 1, message = "年级必须为1-3")
-    @Max(value = 3, message = "年级必须为1-3")
-    @Schema(description = "年级（1=大一, 2=大二, 3=大三）", required = true, example = "1")
+    @NotNull(message = "入学年份不能为空")
+    @Min(value = 2000, message = "入学年份不合法")
+    @Max(value = 2100, message = "入学年份不合法")
+    @Schema(description = "入学年份（如 2024、2025）", required = true, example = "2024")
     private Integer grade;
 
     @NotNull(message = "开始时间不能为空")

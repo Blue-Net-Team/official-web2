@@ -19,7 +19,7 @@ export interface AssessmentTimeDTO {
   direction: Direction
   /** 届次（第几轮） */
   epoch: number
-  /** 年级（1=大一, 2=大二, 3=大三） */
+  /** 入学年份（如 2024、2025） */
   grade: number
   /** 开始时间 */
   startTime: string

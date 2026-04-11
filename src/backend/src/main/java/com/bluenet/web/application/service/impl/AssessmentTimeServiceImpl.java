@@ -21,10 +21,12 @@ import com.bluenet.web.infrastructure.security.util.RoleHierarchy;
 import com.bluenet.web.infrastructure.security.util.UserCTX;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -111,8 +113,8 @@ public class AssessmentTimeServiceImpl implements AssessmentTimeService {
                 direction = currentUser.getDirection();
 
                 if (roleType == RoleType.CANDIDATE) {
-                    // CANDIDATE：还需要按年级过滤
-                    grade = GradeCalculator.calculateGrade(currentUser.getStudentId());
+                    // CANDIDATE：按入学年份过滤
+                    grade = GradeCalculator.extractEnrollmentYear(currentUser.getStudentId());
                 }
             }
         }
@@ -127,20 +129,36 @@ public class AssessmentTimeServiceImpl implements AssessmentTimeService {
 
     @Override
     public PageDTO<AssessmentTimeDTO> listAssessmentTimesForUser(Integer page, Integer size) {
-        PageDTO<AssessmentTimeDTO> result = listAssessmentTimes(page, size);
+        int pageNum = page != null ? page : 0;
+        int pageSize = size != null ? size : 5;
 
         UserVO currentUser = UserCTX.getCurrentUser();
-        if (currentUser != null) {
-            for (AssessmentTimeDTO dto : result.getContent()) {
-                int totalQuestions = assessmentQuestionRepository.countByAssessmentTimeId(dto.getId());
-                int completedQuestions = assessmentAnswerRepository
-                        .countByUserIdAndAssessmentTimeId(currentUser.getId(), dto.getId());
-                dto.setTotalQuestions(totalQuestions);
-                dto.setCompletedQuestions(completedQuestions);
-            }
+        if (currentUser == null) {
+            Page<AssessmentTimeVO> emptyPage = new PageImpl<>(
+                    List.of(), PageRequest.of(pageNum, pageSize), 0);
+            return PageDTO.from(emptyPage.map(assessmentTimeConverter::convertToDTO));
         }
 
-        return result;
+        Integer enrollmentYear = GradeCalculator.extractEnrollmentYear(currentUser.getStudentId());
+        Direction direction = currentUser.getDirection();
+
+        Page<AssessmentTimeVO> voPage = assessmentTimeRepository.findByUserParticipation(
+                currentUser.getId(),
+                direction,
+                enrollmentYear,
+                PageRequest.of(pageNum, pageSize));
+
+        Page<AssessmentTimeDTO> dtoPage = voPage.map(assessmentTimeConverter::convertToDTO);
+
+        for (AssessmentTimeDTO dto : dtoPage.getContent()) {
+            int totalQuestions = assessmentQuestionRepository.countByAssessmentTimeId(dto.getId());
+            int completedQuestions = assessmentAnswerRepository
+                    .countByUserIdAndAssessmentTimeId(currentUser.getId(), dto.getId());
+            dto.setTotalQuestions(totalQuestions);
+            dto.setCompletedQuestions(completedQuestions);
+        }
+
+        return PageDTO.from(dtoPage);
     }
 
     @Override

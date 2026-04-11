@@ -8,6 +8,7 @@ import com.bluenet.web.domain.model.entity.AssessmentTime;
 import com.bluenet.web.domain.model.enumerate.Direction;
 import com.bluenet.web.domain.model.vo.AssessmentTimeVO;
 import com.bluenet.web.domain.repository.AssessmentTimeRepository;
+import com.bluenet.web.infrastructure.repository.mapper.AssessmentAnswerMapper;
 import com.bluenet.web.infrastructure.repository.mapper.AssessmentQuestionMapper;
 import com.bluenet.web.infrastructure.repository.mapper.AssessmentTimeMapper;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +30,7 @@ import java.util.stream.Collectors;
 public class AssessmentTimeRepositoryImpl implements AssessmentTimeRepository {
     private final AssessmentTimeMapper assessmentTimeMapper;
     private final AssessmentQuestionMapper assessmentQuestionMapper;
+    private final AssessmentAnswerMapper assessmentAnswerMapper;
 
     @Override
     public Optional<AssessmentTimeVO> findById(Long id) {
@@ -122,6 +124,45 @@ public class AssessmentTimeRepositoryImpl implements AssessmentTimeRepository {
         if (grade != null) {
             wrapper.eq(AssessmentTime::getGrade, grade);
         }
+        wrapper.orderByDesc(AssessmentTime::getId);
+        IPage<AssessmentTime> result = assessmentTimeMapper.selectPage(page, wrapper);
+
+        List<AssessmentTimeVO> content = result.getRecords()
+                .stream()
+                .map(this::convertToVO)
+                .collect(Collectors.toList());
+        return new PageImpl<>(content, pageable, result.getTotal());
+    }
+
+    @Override
+    public org.springframework.data.domain.Page<AssessmentTimeVO> findByUserParticipation(
+            Long userId, Direction direction, Integer enrollmentYear,
+            org.springframework.data.domain.Pageable pageable) {
+        Page<AssessmentTime> page = new Page<>(pageable.getPageNumber() + 1, pageable.getPageSize());
+        LambdaQueryWrapper<AssessmentTime> wrapper = new LambdaQueryWrapper<>();
+
+        // Condition: (direction = ? AND grade = ?) OR EXISTS (answer subquery)
+        wrapper.and(w -> {
+            if (direction != null && enrollmentYear != null) {
+                w.eq(AssessmentTime::getDirection, direction)
+                        .eq(AssessmentTime::getGrade, enrollmentYear);
+            } else if (direction != null) {
+                w.eq(AssessmentTime::getDirection, direction);
+            } else if (enrollmentYear != null) {
+                w.eq(AssessmentTime::getGrade, enrollmentYear);
+            } else {
+                // No direction/grade filter possible, use impossible condition so only EXISTS
+                // applies
+                w.eq(AssessmentTime::getId, -1);
+            }
+        })
+                .or(
+                        w -> w.inSql(
+                                AssessmentTime::getId,
+                                "SELECT q.assessment_time_id FROM tb_assessment_question q "
+                                        + "JOIN tb_assessment_answer a ON a.question_id = q.id "
+                                        + "WHERE a.user_id = " + String.valueOf(userId)));
+
         wrapper.orderByDesc(AssessmentTime::getId);
         IPage<AssessmentTime> result = assessmentTimeMapper.selectPage(page, wrapper);
 

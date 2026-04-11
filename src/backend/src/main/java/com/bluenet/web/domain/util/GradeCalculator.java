@@ -56,7 +56,7 @@ public class GradeCalculator {
      *            学号
      * @return 入学年份，无法提取时返回null
      */
-    static Integer extractEnrollmentYear(String studentId) {
+    public static Integer extractEnrollmentYear(String studentId) {
         if (studentId == null || studentId.length() < 4) {
             return null;
         }

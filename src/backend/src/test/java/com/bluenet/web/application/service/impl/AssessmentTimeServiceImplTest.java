@@ -299,8 +299,8 @@ class AssessmentTimeServiceImplTest {
         }
 
         @Test
-        @DisplayName("CANDIDATE角色：应按方向和年级过滤")
-        void list_candidate_shouldFilterByDirectionAndGrade() {
+        @DisplayName("CANDIDATE角色：应按方向和入学年份过滤")
+        void list_candidate_shouldFilterByDirectionAndEnrollmentYear() {
             try (MockedStatic<UserCTX> mockedUserCTX = mockStatic(UserCTX.class)) {
 
                 com.bluenet.web.domain.model.vo.UserVO userVO = com.bluenet.web.domain.model.vo.UserVO.builder()
@@ -313,7 +313,7 @@ class AssessmentTimeServiceImplTest {
 
                 List<AssessmentTimeVO> voList = List.of(createTestVO());
                 Page<AssessmentTimeVO> voPage = new PageImpl<>(voList);
-                when(assessmentTimeRepository.findByFilters(eq(Direction.COMPUTER_VISION), any(Integer.class), any()))
+                when(assessmentTimeRepository.findByFilters(eq(Direction.COMPUTER_VISION), eq(2024), any()))
                         .thenReturn(voPage);
                 when(assessmentTimeConverter.convertToDTO(any())).thenReturn(createTestDTO());
 
@@ -321,7 +321,7 @@ class AssessmentTimeServiceImplTest {
 
                 assertNotNull(result);
                 verify(assessmentTimeRepository)
-                        .findByFilters(eq(Direction.COMPUTER_VISION), any(Integer.class), any());
+                        .findByFilters(eq(Direction.COMPUTER_VISION), eq(2024), any());
             }
         }
 
@@ -367,8 +367,8 @@ class AssessmentTimeServiceImplTest {
     class ListForUserTests {
 
         @Test
-        @DisplayName("已登录用户：应为每个DTO填充进度数据")
-        void listForUser_authenticatedUser_shouldPopulateProgress() {
+        @DisplayName("CANDIDATE用户：应调用findByUserParticipation并填充进度")
+        void listForUser_candidate_shouldUseParticipationQuery() {
             try (MockedStatic<UserCTX> mockedUserCTX = mockStatic(UserCTX.class)) {
                 UserVO userVO = UserVO.builder()
                         .id(1L)
@@ -380,8 +380,13 @@ class AssessmentTimeServiceImplTest {
 
                 List<AssessmentTimeVO> voList = List.of(createTestVO());
                 Page<AssessmentTimeVO> voPage = new PageImpl<>(voList);
-                when(assessmentTimeRepository.findByFilters(eq(Direction.COMPUTER_VISION), any(Integer.class), any()))
-                        .thenReturn(voPage);
+                when(
+                        assessmentTimeRepository.findByUserParticipation(
+                                eq(1L),
+                                eq(Direction.COMPUTER_VISION),
+                                eq(2024),
+                                any()))
+                                        .thenReturn(voPage);
 
                 AssessmentTimeDTO dto = createTestDTO();
                 when(assessmentTimeConverter.convertToDTO(any())).thenReturn(dto);
@@ -394,25 +399,135 @@ class AssessmentTimeServiceImplTest {
                 assertEquals(1, result.getContent().size());
                 assertEquals(8, result.getContent().get(0).getTotalQuestions());
                 assertEquals(5, result.getContent().get(0).getCompletedQuestions());
-                verify(assessmentQuestionRepository).countByAssessmentTimeId(TEST_ID);
-                verify(assessmentAnswerRepository).countByUserIdAndAssessmentTimeId(1L, TEST_ID);
+                verify(assessmentTimeRepository).findByUserParticipation(
+                        eq(1L),
+                        eq(Direction.COMPUTER_VISION),
+                        eq(2024),
+                        any());
             }
         }
 
         @Test
-        @DisplayName("未登录用户：不应填充进度数据")
-        void listForUser_noUser_shouldNotPopulateProgress() {
+        @DisplayName("MEMBER用户：应使用个人参与视角而非角色权限过滤")
+        void listForUser_member_shouldUseParticipationQuery() {
+            try (MockedStatic<UserCTX> mockedUserCTX = mockStatic(UserCTX.class)) {
+                UserVO userVO = UserVO.builder()
+                        .id(2L)
+                        .roleName("MEMBER")
+                        .direction(Direction.COMPUTER_VISION)
+                        .studentId("2023123456")
+                        .build();
+                mockedUserCTX.when(UserCTX::getCurrentUser).thenReturn(userVO);
+
+                List<AssessmentTimeVO> voList = List.of(createTestVO());
+                Page<AssessmentTimeVO> voPage = new PageImpl<>(voList);
+                when(
+                        assessmentTimeRepository.findByUserParticipation(
+                                eq(2L),
+                                eq(Direction.COMPUTER_VISION),
+                                eq(2023),
+                                any()))
+                                        .thenReturn(voPage);
+                when(assessmentTimeConverter.convertToDTO(any())).thenReturn(createTestDTO());
+                when(assessmentQuestionRepository.countByAssessmentTimeId(TEST_ID)).thenReturn(5);
+                when(assessmentAnswerRepository.countByUserIdAndAssessmentTimeId(2L, TEST_ID)).thenReturn(5);
+
+                PageDTO<AssessmentTimeDTO> result = assessmentTimeService.listAssessmentTimesForUser(0, 5);
+
+                assertNotNull(result);
+                verify(assessmentTimeRepository).findByUserParticipation(
+                        eq(2L),
+                        eq(Direction.COMPUTER_VISION),
+                        eq(2023),
+                        any());
+                verify(assessmentTimeRepository, never()).findByFilters(any(), any(), any());
+            }
+        }
+
+        @Test
+        @DisplayName("ADMIN用户：应使用个人参与视角而非看全部")
+        void listForUser_admin_shouldUseParticipationQuery() {
+            try (MockedStatic<UserCTX> mockedUserCTX = mockStatic(UserCTX.class)) {
+                UserVO userVO = UserVO.builder()
+                        .id(10L)
+                        .roleName("SUPER_ADMIN")
+                        .direction(Direction.COMPUTER_VISION)
+                        .studentId("2022123456")
+                        .build();
+                mockedUserCTX.when(UserCTX::getCurrentUser).thenReturn(userVO);
+
+                List<AssessmentTimeVO> voList = List.of(createTestVO());
+                Page<AssessmentTimeVO> voPage = new PageImpl<>(voList);
+                when(
+                        assessmentTimeRepository.findByUserParticipation(
+                                eq(10L),
+                                eq(Direction.COMPUTER_VISION),
+                                eq(2022),
+                                any()))
+                                        .thenReturn(voPage);
+                when(assessmentTimeConverter.convertToDTO(any())).thenReturn(createTestDTO());
+                when(assessmentQuestionRepository.countByAssessmentTimeId(TEST_ID)).thenReturn(3);
+                when(assessmentAnswerRepository.countByUserIdAndAssessmentTimeId(10L, TEST_ID)).thenReturn(2);
+
+                PageDTO<AssessmentTimeDTO> result = assessmentTimeService.listAssessmentTimesForUser(0, 5);
+
+                assertNotNull(result);
+                verify(assessmentTimeRepository).findByUserParticipation(
+                        eq(10L),
+                        eq(Direction.COMPUTER_VISION),
+                        eq(2022),
+                        any());
+                verify(assessmentTimeRepository, never()).findByFilters(any(), any(), any());
+            }
+        }
+
+        @Test
+        @DisplayName("学号异常（null enrollmentYear）：应仅按answer过滤")
+        void listForUser_invalidStudentId_shouldFilterByAnswerOnly() {
+            try (MockedStatic<UserCTX> mockedUserCTX = mockStatic(UserCTX.class)) {
+                UserVO userVO = UserVO.builder()
+                        .id(4L)
+                        .roleName("CANDIDATE")
+                        .direction(Direction.COMPUTER_VISION)
+                        .studentId("abc")
+                        .build();
+                mockedUserCTX.when(UserCTX::getCurrentUser).thenReturn(userVO);
+
+                List<AssessmentTimeVO> voList = List.of(createTestVO());
+                Page<AssessmentTimeVO> voPage = new PageImpl<>(voList);
+                when(
+                        assessmentTimeRepository.findByUserParticipation(
+                                eq(4L),
+                                eq(Direction.COMPUTER_VISION),
+                                isNull(),
+                                any()))
+                                        .thenReturn(voPage);
+                when(assessmentTimeConverter.convertToDTO(any())).thenReturn(createTestDTO());
+                when(assessmentQuestionRepository.countByAssessmentTimeId(TEST_ID)).thenReturn(0);
+                when(assessmentAnswerRepository.countByUserIdAndAssessmentTimeId(4L, TEST_ID)).thenReturn(0);
+
+                PageDTO<AssessmentTimeDTO> result = assessmentTimeService.listAssessmentTimesForUser(0, 5);
+
+                assertNotNull(result);
+                verify(assessmentTimeRepository).findByUserParticipation(
+                        eq(4L),
+                        eq(Direction.COMPUTER_VISION),
+                        isNull(),
+                        any());
+            }
+        }
+
+        @Test
+        @DisplayName("未登录用户：应返回空列表")
+        void listForUser_noUser_shouldReturnEmpty() {
             try (MockedStatic<UserCTX> mockedUserCTX = mockStatic(UserCTX.class)) {
                 mockedUserCTX.when(UserCTX::getCurrentUser).thenReturn(null);
-
-                Page<AssessmentTimeVO> voPage = new PageImpl<>(new ArrayList<>());
-                when(assessmentTimeRepository.findByFilters(isNull(), isNull(), any()))
-                        .thenReturn(voPage);
 
                 PageDTO<AssessmentTimeDTO> result = assessmentTimeService.listAssessmentTimesForUser(0, 5);
 
                 assertNotNull(result);
                 assertTrue(result.getContent().isEmpty());
+                verifyNoInteractions(assessmentTimeRepository);
                 verifyNoInteractions(assessmentQuestionRepository);
                 verifyNoInteractions(assessmentAnswerRepository);
             }
@@ -426,6 +541,7 @@ class AssessmentTimeServiceImplTest {
                         .id(1L)
                         .roleName("MEMBER")
                         .direction(Direction.COMPUTER_VISION)
+                        .studentId("2024123456")
                         .build();
                 mockedUserCTX.when(UserCTX::getCurrentUser).thenReturn(userVO);
 
@@ -433,7 +549,7 @@ class AssessmentTimeServiceImplTest {
                         .id(1L)
                         .direction(Direction.COMPUTER_VISION)
                         .epoch(1)
-                        .grade(1)
+                        .grade(2024)
                         .startTime(futureStart)
                         .endTime(futureEnd)
                         .timeLimit(false)
@@ -442,15 +558,20 @@ class AssessmentTimeServiceImplTest {
                         .id(2L)
                         .direction(Direction.COMPUTER_VISION)
                         .epoch(2)
-                        .grade(1)
+                        .grade(2024)
                         .startTime(futureStart)
                         .endTime(futureEnd)
                         .timeLimit(true)
                         .timeLimitMinutes(90)
                         .build();
                 Page<AssessmentTimeVO> voPage = new PageImpl<>(List.of(vo1, vo2));
-                when(assessmentTimeRepository.findByFilters(eq(Direction.COMPUTER_VISION), isNull(), any()))
-                        .thenReturn(voPage);
+                when(
+                        assessmentTimeRepository.findByUserParticipation(
+                                eq(1L),
+                                eq(Direction.COMPUTER_VISION),
+                                eq(2024),
+                                any()))
+                                        .thenReturn(voPage);
 
                 AssessmentTimeDTO dto1 = AssessmentTimeDTO.builder().id(1L).build();
                 AssessmentTimeDTO dto2 = AssessmentTimeDTO.builder().id(2L).build();

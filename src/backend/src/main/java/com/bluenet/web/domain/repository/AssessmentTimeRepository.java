@@ -107,4 +107,20 @@ public interface AssessmentTimeRepository {
      * @return 考核时间分页结果
      */
     Page<AssessmentTimeVO> findByFilters(Direction direction, Integer grade, Pageable pageable);
+
+    /**
+     * 按用户参与视角查询考核时间（分配给用户的 + 用户参与过的）
+     *
+     * @param userId
+     *            当前用户ID
+     * @param direction
+     *            当前用户方向（null时仅按answer过滤）
+     * @param enrollmentYear
+     *            当前用户入学年份（null时仅按answer过滤）
+     * @param pageable
+     *            分页参数
+     * @return 考核时间分页结果
+     */
+    Page<AssessmentTimeVO> findByUserParticipation(Long userId, Direction direction, Integer enrollmentYear,
+            Pageable pageable);
 }
