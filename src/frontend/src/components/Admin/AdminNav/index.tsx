@@ -1,8 +1,6 @@
 'use client'
 
-import { Menu, MenuProps } from 'antd'
-import Sider from 'antd/es/layout/Sider'
-import React, { useMemo } from 'react'
+import { useState, useEffect, useMemo, createContext, useContext } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import authStore from '@/stores/authStore'
 import { getRoleLevel } from '@/utils/RoleUtils'
@@ -15,11 +13,11 @@ import {
   FileTextOutlined,
   CheckCircleOutlined,
   QuestionCircleOutlined,
-  DashboardOutlined,
   LineChartOutlined,
 } from '@ant-design/icons'
+import type { MenuProps } from 'antd'
 
-interface MenuItemConfig {
+export interface MenuItemConfig {
   key: string
   label: string
   path?: string
@@ -29,7 +27,7 @@ interface MenuItemConfig {
   children?: MenuItemConfig[]
 }
 
-const menuConfig: MenuItemConfig[] = [
+export const menuConfig: MenuItemConfig[] = [
   {
     key: 'home',
     label: '回到首页',
@@ -104,7 +102,7 @@ const menuConfig: MenuItemConfig[] = [
   },
 ]
 
-function filterMenuItems(items: MenuItemConfig[], roleLevel: number): MenuProps['items'] {
+export function filterMenuItems(items: MenuItemConfig[], roleLevel: number): MenuProps['items'] {
   return items
     .filter((item) => roleLevel >= item.minLevel)
     .map((item) => {
@@ -132,19 +130,49 @@ function filterMenuItems(items: MenuItemConfig[], roleLevel: number): MenuProps[
     .filter(Boolean)
 }
 
-const AdminSideBar = () => {
-  const [collapsed, setCollapsed] = React.useState(false)
+interface AdminNavContextType {
+  isMobile: boolean
+  drawerVisible: boolean
+  openDrawer: () => void
+  closeDrawer: () => void
+  collapsed: boolean
+  onCollapse: (collapsed: boolean) => void
+  menuItems: MenuProps['items']
+  selectedKeys: string[]
+  onMenuClick: MenuProps['onClick']
+}
+
+const AdminNavContext = createContext<AdminNavContextType | null>(null)
+
+export const useAdminNav = () => {
+  const context = useContext(AdminNavContext)
+  if (!context) {
+    throw new Error('useAdminNav must be used within AdminNav')
+  }
+  return context
+}
+
+const AdminNav = ({ children }: { children: React.ReactNode }) => {
+  const [isMobile, setIsMobile] = useState(false)
+  const [drawerVisible, setDrawerVisible] = useState(false)
+  const [collapsed, setCollapsed] = useState(false)
   const router = useRouter()
   const pathname = usePathname()
   const userInfo = authStore((state) => state.userInfo)
 
   const roleLevel = useMemo(() => getRoleLevel(userInfo?.roleName || ''), [userInfo?.roleName])
 
-  React.useEffect(() => {
-    const mediaQuery = window.matchMedia('(max-width: 767px)')
-    if (mediaQuery.matches) {
-      setCollapsed(true)
+  useEffect(() => {
+    const checkMobile = () => {
+      const mobile = window.matchMedia('(max-width: 767px)').matches
+      setIsMobile(mobile)
+      if (mobile) {
+        setCollapsed(true)
+      }
     }
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
   }, [])
 
   const menuItems = useMemo(() => filterMenuItems(menuConfig, roleLevel), [roleLevel])
@@ -172,28 +200,27 @@ const AdminSideBar = () => {
       return undefined
     }
     const path = findPath(menuConfig)
-    if (path) router.push(path)
+    if (path) {
+      router.push(path)
+      if (isMobile) {
+        setDrawerVisible(false)
+      }
+    }
   }
 
-  return (
-    <Sider
-      width={200}
-      collapsible
-      collapsed={collapsed}
-      onCollapse={(value: boolean) => setCollapsed(value)}
-      className="admin-sider overflow-auto [scrollbar-gutter:stable]"
-      style={{ height: 'calc(100vh - 64px)' }}
-    >
-      <Menu
-        theme="dark"
-        mode="inline"
-        selectedKeys={selectedKeys}
-        defaultOpenKeys={['assessment']}
-        items={menuItems}
-        onClick={handleMenuClick}
-      />
-    </Sider>
-  )
+  const contextValue: AdminNavContextType = {
+    isMobile,
+    drawerVisible,
+    openDrawer: () => setDrawerVisible(true),
+    closeDrawer: () => setDrawerVisible(false),
+    collapsed,
+    onCollapse: setCollapsed,
+    menuItems,
+    selectedKeys,
+    onMenuClick: handleMenuClick,
+  }
+
+  return <AdminNavContext.Provider value={contextValue}>{children}</AdminNavContext.Provider>
 }
 
-export default AdminSideBar
+export default AdminNav
