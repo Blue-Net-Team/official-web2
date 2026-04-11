@@ -472,3 +472,65 @@ export interface EndpointLatencyDTO {
   /** 总请求数 */
   count: number
 }
+
+/**
+ * 管理端报名详情
+ * 对应后端 EnrollmentDetailDTO.java
+ */
+export interface EnrollmentDetailDTO {
+  id: number
+  username: string
+  studentId: string
+  email: string
+  collegeId: number
+  collegeName: string
+  major: string
+  grade: number
+  direction: Direction
+  status: EnrollStatus
+  avatarFileId: number | null
+  introduction: string
+  internalReferralCode: string | null
+  referralUserName: string | null
+}
+
+/**
+ * 报名统计
+ * 对应后端 EnrollmentStatisticsDTO.java
+ */
+export interface EnrollmentStatisticsDTO {
+  total: number
+  pending: number
+  approved: number
+  rejected: number
+  byDirection: Record<string, number>
+}
+
+/**
+ * 报名审批结果
+ * 对应后端 EnrollmentApprovalResultDTO.java
+ */
+export interface EnrollmentApprovalResultDTO {
+  id: number
+  status: EnrollStatus
+  createdUserId: number | null
+}
+
+/**
+ * 拒绝报名请求
+ * 对应后端 RejectEnrollmentRequestDTO.java
+ */
+export interface RejectEnrollmentRequestDTO {
+  reason?: string
+}
+
+/**
+ * 管理端报名列表查询参数
+ */
+export interface EnrollmentListQueryDTO {
+  page?: number
+  size?: number
+  keyword?: string
+  status?: EnrollStatus
+  direction?: Direction
+}
