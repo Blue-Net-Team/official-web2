@@ -294,7 +294,12 @@ export default function ProfilePage() {
         <ProfileSidebar profile={profile} stats={mockUserStats} onAvatarUpdate={loadData} />
 
         <div className="flex-1 min-w-0">
-          <ProfileTabs activeTab={currentTab} tabCounts={tabCounts} onTabChange={handleTabChange} />
+          <ProfileTabs
+            activeTab={currentTab}
+            tabCounts={tabCounts}
+            roleName={profile.roleName}
+            onTabChange={handleTabChange}
+          />
 
           {currentTab === 'profile' && <ProfileInfo profile={profile} onUpdate={loadData} />}
 

@@ -12,7 +12,7 @@ import {
   CameraOutlined,
   LoadingOutlined,
 } from '@ant-design/icons'
-import { message } from 'antd'
+import { message, Tag } from 'antd'
 import Image, { type StaticImageData } from 'next/image'
 import AvatarCropModal from '../AvatarCropModal'
 import cvIcon from '@/assets/icon/direction/cv_icon.png'
@@ -21,6 +21,13 @@ import embedIcon from '@/assets/icon/direction/embed_icon.png'
 
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
 const MAX_SIZE = 5 * 1024 * 1024
+
+const ROLE_LABELS: Record<string, string> = {
+  CANDIDATE: '考生',
+  MEMBER: '成员',
+  DIRECTION_ADMIN: '方向管理员',
+  SUPER_ADMIN: '超级管理员',
+}
 
 interface ProfileSidebarProps {
   profile: UserInfo
@@ -146,6 +153,7 @@ export default function ProfileSidebar({
               )}
             </div>
             <input
+              title="点击上传头像"
               ref={fileInputRef}
               type="file"
               accept="image/jpeg,image/png,image/gif,image/webp"
@@ -159,15 +167,22 @@ export default function ProfileSidebar({
               <span className="text-sm text-[rgba(140,140,141,1)]">@{profile.username}</span>
             )}
           </div>
-          <span
-            className={`inline-flex items-center gap-1.5 px-[14px] py-1.5 rounded-[20px] text-xs font-semibold mt-3 ${
-              profile.roleName === 'candidate'
-                ? 'bg-[linear-gradient(135deg,#ff6b35_0%,#ff8c42_100%)] text-white'
-                : 'bg-[linear-gradient(135deg,#6677ff_0%,#2f27b0_100%)] text-white'
-            }`}
+          <Tag
+            color={
+              profile.roleName === 'CANDIDATE'
+                ? 'orange'
+                : profile.roleName === 'MEMBER'
+                  ? 'blue'
+                  : profile.roleName === 'DIRECTION_ADMIN'
+                    ? 'purple'
+                    : profile.roleName === 'SUPER_ADMIN'
+                      ? 'red'
+                      : 'default'
+            }
+            className="mt-3"
           >
-            {profile.roleName === 'candidate' ? '考生' : '成员'}
-          </span>
+            {ROLE_LABELS[profile.roleName as keyof typeof ROLE_LABELS] ?? profile.roleName}
+          </Tag>
         </div>
 
         {profile.bio && (

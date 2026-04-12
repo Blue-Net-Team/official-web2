@@ -26,6 +26,7 @@ import {
 interface ProfileTabsProps {
   activeTab: TabName
   tabCounts: TabCounts
+  roleName?: string
   onTabChange?: (tab: TabName) => void
 }
 
@@ -35,9 +36,10 @@ interface TabItem {
   icon: React.ReactNode
   showCount?: boolean
   countKey?: keyof TabCounts
+  requireMember?: boolean
 }
 
-const tabs: TabItem[] = [
+const allTabs: TabItem[] = [
   { key: 'profile', label: '个人信息', icon: <UserOutlined /> },
   { key: 'assessment', label: '我的考核', icon: <FileTextOutlined />, showCount: false },
   {
@@ -46,6 +48,7 @@ const tabs: TabItem[] = [
     icon: <FolderOutlined />,
     showCount: true,
     countKey: 'projects',
+    requireMember: true,
   },
   {
     key: 'competitions',
@@ -53,6 +56,7 @@ const tabs: TabItem[] = [
     icon: <TrophyOutlined />,
     showCount: true,
     countKey: 'competitions',
+    requireMember: true,
   },
   {
     key: 'internships',
@@ -60,10 +64,18 @@ const tabs: TabItem[] = [
     icon: <SolutionOutlined />,
     showCount: true,
     countKey: 'internships',
+    requireMember: true,
   },
 ]
 
-export default function ProfileTabs({ activeTab, tabCounts, onTabChange }: ProfileTabsProps) {
+export default function ProfileTabs({
+  activeTab,
+  tabCounts,
+  roleName,
+  onTabChange,
+}: ProfileTabsProps) {
+  const isMemberOrAbove = roleName !== 'CANDIDATE'
+  const tabs = allTabs.filter((tab) => !tab.requireMember || isMemberOrAbove)
   const getCount = (tab: TabItem): number => {
     if (tab.countKey) {
       return tabCounts[tab.countKey] || 0

@@ -17,7 +17,7 @@ import type { UserInfo } from '@/types/profile'
 import type { UpdateProfileRequestDTO } from '@/apis/schema/profile.dto'
 import { DIRECTION_LABELS, GENDER_LABELS } from '@/apis/schema/enumerate'
 import { EditOutlined, SaveOutlined, CloseOutlined } from '@ant-design/icons'
-import { Form, Input, Button, message, Select } from 'antd'
+import { Form, Input, Button, message, Select, Tag } from 'antd'
 import { userService } from '@/apis/services/user.service'
 import authStore from '@/stores/authStore'
 import GitHubBinding from './GitHubBinding'
@@ -34,6 +34,13 @@ function isMemberOrAbove(roleName: string | undefined): boolean {
   if (!roleName) return false
   const memberRoles = ['member', 'direction_admin', 'super_admin']
   return memberRoles.includes(roleName.toLowerCase())
+}
+
+const ROLE_LABELS: Record<string, string> = {
+  CANDIDATE: '考生',
+  MEMBER: '成员',
+  DIRECTION_ADMIN: '方向管理员',
+  SUPER_ADMIN: '超级管理员',
 }
 
 export default function ProfileInfo({ profile, onUpdate }: ProfileInfoProps) {
@@ -273,7 +280,21 @@ export default function ProfileInfo({ profile, onUpdate }: ProfileInfoProps) {
                 角色
               </div>
               <div className="text-sm text-white">
-                {profile.roleName === 'candidate' ? '考生' : '成员'}
+                <Tag
+                  color={
+                    profile.roleName === 'CANDIDATE'
+                      ? 'orange'
+                      : profile.roleName === 'MEMBER'
+                        ? 'blue'
+                        : profile.roleName === 'DIRECTION_ADMIN'
+                          ? 'purple'
+                          : profile.roleName === 'SUPER_ADMIN'
+                            ? 'red'
+                            : 'default'
+                  }
+                >
+                  {ROLE_LABELS[profile.roleName] ?? profile.roleName}
+                </Tag>
               </div>
             </div>
             <div className="flex flex-col gap-1.5 col-span-full">
