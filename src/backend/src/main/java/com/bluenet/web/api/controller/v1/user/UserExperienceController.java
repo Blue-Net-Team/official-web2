@@ -39,7 +39,7 @@ class UserExperienceController {
     @RequiresPermission(name = "获取用户经历", value = "user:experience:read", access = AccessLevel.AUTHENTICATED)
     @GetMapping
     public ResponseMessage<List<ExperienceDTO>> getExperiences(
-            @Parameter(description = "经历类型：project/competition/internship") @RequestParam(required = false) String type) {
+            @Parameter(description = "经历类型：PROJECT/COMPETITION/INTERNSHIP") @RequestParam(required = false) String type) {
         try {
             return ResponseMessage.success(userExperienceService.getExperiences(type));
         } catch (GlobalException e) {

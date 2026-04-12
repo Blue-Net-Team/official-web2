@@ -5,6 +5,7 @@ import com.bluenet.web.api.dto.member.MemberBriefDTO;
 import com.bluenet.web.api.dto.member.MemberDetailDTO;
 import com.bluenet.web.domain.model.enumerate.Direction;
 import com.bluenet.web.domain.model.vo.MemberVO;
+import com.bluenet.web.domain.util.GradeCalculator;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -31,9 +32,12 @@ public class MemberConverter {
     }
 
     public MemberDetailDTO toDetailDTO(MemberVO vo) {
+        String gradeLabel = GradeCalculator.getGradeLabel(vo.getStudentId());
+
         return MemberDetailDTO.builder()
                 .id(vo.getId())
                 .enrollmentYear(vo.getEnrollmentYear())
+                .grade(gradeLabel)
                 .studentId(vo.getStudentId())
                 .username(vo.getUsername())
                 .nickname(vo.getNickname())

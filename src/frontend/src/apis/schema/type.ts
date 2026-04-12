@@ -337,6 +337,8 @@ export interface MemberDetailDTO {
   major: string
   /** 入学年份 */
   enrollmentYear: number
+  /** 年级 */
+  grade: string
   /** 性别 */
   gender: Gender
   /** 角色名称 */

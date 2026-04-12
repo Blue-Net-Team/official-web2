@@ -4,9 +4,26 @@ import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { MemberService } from '@/apis/services/member.service'
 import { MemberDetailDTO, TabCounts } from '@/apis/schema/type'
-import { MemberProfileSidebar, MemberProfileContent } from '@/components/MemberProfile'
+import { ProfileSidebar } from '@/components/Profile'
+import type { SidebarProfile } from '@/components/Profile/ProfileSidebar'
+import { MemberProfileContent } from '@/components/MemberProfile'
 import { ArrowLeftOutlined } from '@ant-design/icons'
 import { Spin } from 'antd'
+
+/** 将 MemberDetailDTO 适配为 SidebarProfile */
+function adaptToSidebarProfile(member: MemberDetailDTO): SidebarProfile {
+  return {
+    username: member.username,
+    nickname: member.nickname,
+    college: member.college,
+    major: member.major,
+    grade: member.grade,
+    bio: member.bio || '',
+    avatarFileId: member.avatarFileId,
+    roleName: member.role,
+    direction: member.direction,
+  }
+}
 
 export default function MemberProfilePage() {
   const params = useParams()
@@ -100,6 +117,8 @@ export default function MemberProfilePage() {
     )
   }
 
+  const sidebarProfile = adaptToSidebarProfile(member)
+
   return (
     <div className="w-full min-h-screen relative overflow-x-hidden">
       <div
@@ -110,11 +129,12 @@ export default function MemberProfilePage() {
         }}
       />
       <main className="flex max-w-[1400px] mx-auto px-16 py-10 gap-8 relative z-1 max-[1024px]:flex-col max-[1024px]:p-6 max-md:p-4">
-        <MemberProfileSidebar
-          member={member}
+        <ProfileSidebar
+          profile={sidebarProfile}
+          allowAvatarUpload={false}
+          tabCounts={tabCounts}
           activeTab={activeTab}
           onTabChange={setActiveTab}
-          tabCounts={tabCounts}
         />
         <MemberProfileContent
           member={member}

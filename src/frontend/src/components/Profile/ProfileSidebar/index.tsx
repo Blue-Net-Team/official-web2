@@ -12,7 +12,7 @@ import {
   CameraOutlined,
   LoadingOutlined,
 } from '@ant-design/icons'
-import { message, Tag } from 'antd'
+import { App, Tag } from 'antd'
 import Image, { type StaticImageData } from 'next/image'
 import AvatarCropModal from '../AvatarCropModal'
 import cvIcon from '@/assets/icon/direction/cv_icon.png'
@@ -69,6 +69,7 @@ export default function ProfileSidebar({
   activeTab,
   onAvatarUpdate,
 }: ProfileSidebarProps) {
+  const { message: messageApi } = App.useApp()
   const [uploading, setUploading] = useState(false)
   const [cropModalOpen, setCropModalOpen] = useState(false)
   const [cropImageSrc, setCropImageSrc] = useState<string | null>(null)
@@ -91,12 +92,12 @@ export default function ProfileSidebar({
     e.target.value = ''
 
     if (!ALLOWED_TYPES.includes(file.type)) {
-      message.error('请选择图片文件（JPG/PNG/GIF/WEBP）')
+      messageApi.error('请选择图片文件（JPG/PNG/GIF/WEBP）')
       return
     }
 
     if (file.size > MAX_SIZE) {
-      message.error('图片大小不能超过 5MB')
+      messageApi.error('图片大小不能超过 5MB')
       return
     }
 
@@ -113,13 +114,13 @@ export default function ProfileSidebar({
         const file = new File([blob], 'avatar.jpg', { type: 'image/jpeg' })
         const res = await fileService.uploadAvatar(file)
         if (res.code === 200) {
-          message.success('头像更新成功')
+          messageApi.success('头像更新成功')
           onAvatarUpdate?.()
         } else {
-          message.error(res.msg || '头像上传失败，请重试')
+          messageApi.error(res.msg || '头像上传失败，请重试')
         }
       } catch {
-        message.error('头像上传失败，请重试')
+        messageApi.error('头像上传失败，请重试')
       } finally {
         setUploading(false)
         if (cropImageSrc) {

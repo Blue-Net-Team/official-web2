@@ -21,6 +21,9 @@ public class MemberDetailDTO {
     @Schema(description = "入学年份", example = "2021")
     private Integer enrollmentYear;
 
+    @Schema(description = "年级", example = "大二")
+    private String grade;
+
     @Schema(description = "学号", example = "202511520254")
     private String studentId;
 

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import type { TabName, UserStats, Assessment } from '@/types/profile'
+import type { TabName, Assessment } from '@/types/profile'
 import type { UserInfo, TabCounts, UserExperience } from '@/apis/schema/type'
 import type { ExperienceType } from '@/apis/schema/enumerate'
 import type { AssessmentTimeDTO } from '@/apis/schema/assessment.dto'
@@ -24,13 +24,6 @@ import duration from 'dayjs/plugin/duration'
 dayjs.extend(duration)
 
 const DEFAULT_TAB: TabName = 'profile'
-
-/** Mock 用户统计数据（后端暂无对应 API） */
-const mockUserStats: UserStats = {
-  assessmentCount: 3,
-  completedCount: 1,
-  averageScore: 88,
-}
 
 /**
  * 将 AssessmentTimeDTO 转换为前端 Assessment 类型
@@ -291,7 +284,7 @@ export default function ProfilePage() {
       <div className={`fixed w-full h-full pointer-events-none z-0 ${styles.pageBg}`} />
 
       <main className="flex max-w-[1400px] mx-auto pt-[104px] px-16 pb-10 gap-8 relative z-[1] flex-row max-lg:flex-col md:px-6 max-sm:pt-20 max-sm:px-4 max-sm:pb-6">
-        <ProfileSidebar profile={profile} stats={mockUserStats} onAvatarUpdate={loadData} />
+        <ProfileSidebar profile={profile} onAvatarUpdate={loadData} />
 
         <div className="flex-1 min-w-0">
           <ProfileTabs

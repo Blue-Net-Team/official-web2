@@ -100,12 +100,12 @@ public class MemberServiceImpl implements MemberService {
     private ExperienceDTO convertToDTO(ExperienceVO vo) {
         ExperienceDTO dto = ExperienceDTO.builder()
                 .id(String.valueOf(vo.getId()))
-                .type(vo.getType().getValue())
+                .type(vo.getType().name())
                 .startDate(vo.getStartTime())
                 .endDate(vo.getEndTime())
                 .build();
 
-        dto.setNameByType(vo.getType().getValue(), vo.getTitle());
+        dto.setNameByType(vo.getType().name(), vo.getTitle());
 
         try {
             com.fasterxml.jackson.databind.ObjectMapper objectMapper = new com.fasterxml.jackson.databind.ObjectMapper();

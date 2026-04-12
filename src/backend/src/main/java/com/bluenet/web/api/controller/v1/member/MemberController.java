@@ -83,7 +83,7 @@ public class MemberController {
     @GetMapping("/{memberId}/experiences")
     public ResponseMessage<List<ExperienceDTO>> getMemberExperiences(
             @Parameter(description = "成员ID") @PathVariable Long memberId,
-            @Parameter(description = "经历类型：project/competition/internship") @RequestParam(required = false) String type) {
+            @Parameter(description = "经历类型：PROJECT/COMPETITION/INTERNSHIP") @RequestParam(required = false) String type) {
         try {
             return ResponseMessage.success(memberService.getMemberExperiences(memberId, type));
         } catch (GlobalException e) {

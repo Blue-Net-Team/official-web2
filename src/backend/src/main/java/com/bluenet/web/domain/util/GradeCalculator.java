@@ -3,6 +3,7 @@ package com.bluenet.web.domain.util;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDate;
+import java.util.Map;
 
 /**
  * 年级计算工具类
@@ -12,6 +13,18 @@ import java.time.LocalDate;
  */
 @Slf4j
 public class GradeCalculator {
+
+    private static final Map<Integer, String> GRADE_LABELS = Map.of(
+            1,
+            "大一",
+            2,
+            "大二",
+            3,
+            "大三",
+            4,
+            "大四");
+
+    private static final String GRADE_GRADUATED = "已毕业";
 
     private GradeCalculator() {
     }
@@ -47,6 +60,21 @@ public class GradeCalculator {
         int referenceYear = currentMonth >= 9 ? currentYear : currentYear - 1;
         int grade = referenceYear - enrollmentYear + 1;
         return Math.max(1, grade);
+    }
+
+    /**
+     * 根据学号计算年级标签
+     *
+     * @param studentId
+     *            学号
+     * @return 年级标签（如"大一"、"大二"、"已毕业"），无法计算时返回null
+     */
+    public static String getGradeLabel(String studentId) {
+        Integer gradeNum = calculateGrade(studentId);
+        if (gradeNum == null) {
+            return null;
+        }
+        return gradeNum > 4 ? GRADE_GRADUATED : GRADE_LABELS.getOrDefault(gradeNum, gradeNum + "年级");
     }
 
     /**
