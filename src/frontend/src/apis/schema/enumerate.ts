@@ -5,6 +5,34 @@
 export type Role = 'SUPER_ADMIN' | 'DIRECTION_ADMIN' | 'MEMBER' | 'CANDIDATE'
 
 /**
+ * 角色标签
+ */
+export const ROLE_LABELS: Record<string, string> = {
+  CANDIDATE: '考生',
+  MEMBER: '成员',
+  DIRECTION_ADMIN: '方向管理员',
+  SUPER_ADMIN: '超级管理员',
+}
+
+/**
+ * 获取角色对应的 antd Tag 颜色
+ */
+export const getRoleTagColor = (roleName: string): string => {
+  switch (roleName) {
+    case 'CANDIDATE':
+      return 'orange'
+    case 'MEMBER':
+      return 'blue'
+    case 'DIRECTION_ADMIN':
+      return 'purple'
+    case 'SUPER_ADMIN':
+      return 'red'
+    default:
+      return 'default'
+  }
+}
+
+/**
  * 方向枚举
  * 对应后端 Direction.java
  */

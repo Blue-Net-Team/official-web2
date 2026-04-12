@@ -3,7 +3,7 @@
 import React from 'react'
 import { UserExperience } from '@/apis/schema/type'
 import type { ExperienceType } from '@/apis/schema/enumerate'
-import { ExperienceCard } from './ExperienceCard'
+import { ExperienceCard } from '@/components/Profile'
 import { FolderOutlined, TrophyOutlined, SolutionOutlined } from '@ant-design/icons'
 
 interface ExperiencePanelProps {

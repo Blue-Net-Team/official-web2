@@ -1,5 +1,3 @@
-export { MemberProfileSidebar } from './MemberProfileSidebar'
 export { MemberProfileContent } from './MemberProfileContent'
 export { ProfilePanel } from './ProfilePanel'
 export { ExperiencePanel } from './ExperiencePanel'
-export { ExperienceCard } from './ExperienceCard'

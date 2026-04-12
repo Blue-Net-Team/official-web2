@@ -2,7 +2,13 @@
 
 import React from 'react'
 import { MemberDetailDTO } from '@/apis/schema/type'
-import { DIRECTION_LABELS, GENDER_LABELS } from '@/apis/schema/enumerate'
+import {
+  DIRECTION_LABELS,
+  GENDER_LABELS,
+  ROLE_LABELS,
+  getRoleTagColor,
+} from '@/apis/schema/enumerate'
+import { Tag } from 'antd'
 
 interface ProfilePanelProps {
   member: MemberDetailDTO
@@ -23,18 +29,10 @@ const calculateGrade = (enrollmentYear: number): string => {
   return GRADE_LABELS[grade] || `${enrollmentYear}级`
 }
 
-const ROLE_LABELS: Record<string, string> = {
-  CANDIDATE: '考生',
-  MEMBER: '成员',
-  SUPER_ADMIN: '超级管理员',
-  DIRECTION_ADMIN: '方向管理员',
-}
-
 export const ProfilePanel: React.FC<ProfilePanelProps> = ({ member }) => {
   const gradeLabel = calculateGrade(member.enrollmentYear)
   const directionLabel = DIRECTION_LABELS[member.direction] || member.direction
   const genderLabel = GENDER_LABELS[member.gender] || '未知'
-  const roleLabel = ROLE_LABELS[member.role] || member.role
 
   return (
     <div className="bg-white/[0.03] backdrop-blur-[20px] border border-white/[0.05] rounded-2xl p-8 animate-[fadeIn_0.3s_ease] max-[480px]:p-4">
@@ -93,7 +91,11 @@ export const ProfilePanel: React.FC<ProfilePanelProps> = ({ member }) => {
           <span className="text-xs font-medium text-[#8c8c8d] uppercase tracking-[0.5px]">
             角色
           </span>
-          <span className="text-sm text-white">{roleLabel}</span>
+          <span className="text-sm text-white">
+            <Tag color={getRoleTagColor(member.role)}>
+              {ROLE_LABELS[member.role] || member.role}
+            </Tag>
+          </span>
         </div>
         {member.bio && (
           <div className="col-span-1 md:col-span-2 flex flex-col gap-1.5">

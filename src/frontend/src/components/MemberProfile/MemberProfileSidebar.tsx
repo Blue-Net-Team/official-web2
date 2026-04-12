@@ -3,8 +3,9 @@
 import React, { useState } from 'react'
 import Image from 'next/image'
 import { MemberDetailDTO, TabCounts } from '@/apis/schema/type'
-import { DIRECTION_LABELS } from '@/apis/schema/enumerate'
+import { DIRECTION_LABELS, ROLE_LABELS, getRoleTagColor } from '@/apis/schema/enumerate'
 import { API_BASE_URL } from '@/apis/config'
+import { Tag } from 'antd'
 
 interface MemberProfileSidebarProps {
   member: MemberDetailDTO
@@ -17,24 +18,6 @@ const DIRECTION_ABBR: Record<string, string> = {
   COMPUTER_VISION: 'CV',
   STRUCTURAL_DESIGN: 'SD',
   EMBEDDED: 'EM',
-}
-
-const getRoleBadgeClass = (roleName: string): string => {
-  switch (roleName) {
-    case 'CANDIDATE':
-      return 'bg-gradient-to-br from-[#ff6b35] to-[#ff8c42] text-white'
-    case 'MEMBER':
-      return 'bg-gradient-to-br from-[#6677ff] to-[#2f27b0] text-white'
-    default:
-      return 'bg-gradient-to-br from-[#10b981] to-[#059669] text-white'
-  }
-}
-
-const ROLE_LABELS: Record<string, string> = {
-  CANDIDATE: '考生',
-  MEMBER: '成员',
-  SUPER_ADMIN: '超级管理员',
-  DIRECTION_ADMIN: '方向管理员',
 }
 
 const GRADE_LABELS: Record<number, string> = {
@@ -103,11 +86,12 @@ export const MemberProfileSidebar: React.FC<MemberProfileSidebarProps> = ({
             </h1>
             {member.nickname && <span className="text-sm text-[#8c8c8d]">@{member.username}</span>}
           </div>
-          <span
-            className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold mt-3 ${getRoleBadgeClass(member.role)}`}
+          <Tag
+            color={getRoleTagColor(member.role)}
+            className="mt-3"
           >
             {ROLE_LABELS[member.role] || member.role}
-          </span>
+          </Tag>
         </div>
 
         {member.bio && (

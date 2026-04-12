@@ -2,6 +2,7 @@
 
 import React from 'react'
 import { UserExperience } from '@/apis/schema/type'
+import type { InternshipStatus } from '@/apis/schema/enumerate'
 import {
   FolderOutlined,
   TrophyOutlined,
@@ -12,6 +13,7 @@ import {
 
 interface ExperienceCardProps {
   experience: UserExperience
+  actions?: React.ReactNode
 }
 
 const ICON_CLASS_MAP: Record<string, string> = {
@@ -20,12 +22,34 @@ const ICON_CLASS_MAP: Record<string, string> = {
   INTERNSHIP: 'bg-gradient-to-br from-[#10b981] to-[#059669]',
 }
 
-const ROLE_CLASS_MAP: Record<string, string> = {
-  COMPETITION: 'text-[#ff6b35]',
-  INTERNSHIP: 'text-[#10b981]',
+function getAwardBadgeClass(award: string): string {
+  switch (award) {
+    case '一等奖':
+    case 'first':
+      return 'bg-[linear-gradient(135deg,#ffd700_0%,#ffa500_100%)] text-black'
+    case '二等奖':
+    case 'second':
+      return 'bg-[linear-gradient(135deg,#c0c0c0_0%,#a0a0a0_100%)] text-black'
+    case '三等奖':
+    case 'third':
+    case '铜牌':
+      return 'bg-[linear-gradient(135deg,#cd7f32_0%,#b87333_100%)] text-white'
+    default:
+      return ''
+  }
 }
 
-export const ExperienceCard: React.FC<ExperienceCardProps> = ({ experience }) => {
+function getInternshipBadgeClass(status: InternshipStatus): string {
+  return status === 'ACTIVE'
+    ? 'bg-[rgba(102,119,255,0.15)] text-[#6677ff]'
+    : 'bg-[rgba(140,140,141,0.2)] text-[rgba(140,140,141,1)]'
+}
+
+function getInternshipStatusText(status: InternshipStatus): string {
+  return status === 'ACTIVE' ? '在职' : '已离职'
+}
+
+export default function ExperienceCard({ experience, actions }: ExperienceCardProps) {
   const isProject = experience.type === 'PROJECT'
   const isCompetition = experience.type === 'COMPETITION'
   const isInternship = experience.type === 'INTERNSHIP'
@@ -58,12 +82,26 @@ export const ExperienceCard: React.FC<ExperienceCardProps> = ({ experience }) =>
         <div className="flex-1 min-w-0">
           <div className="text-base font-semibold text-white mb-1">{displayName}</div>
           {displayRole && (
-            <div className={`text-[13px] text-[#6677ff] ${ROLE_CLASS_MAP[experience.type] || ''}`}>
+            <div className="text-[13px] text-[#6677ff]">
               {displayRole}
               {isCompetition && experience.award && ` · ${experience.award}`}
             </div>
           )}
         </div>
+        {isCompetition && experience.award && (
+          <div
+            className={`px-3.5 py-1.5 rounded-[20px] text-xs font-semibold whitespace-nowrap shrink-0 ${getAwardBadgeClass(experience.award)}`}
+          >
+            {experience.award}
+          </div>
+        )}
+        {isInternship && experience.status && (
+          <div
+            className={`px-3.5 py-1.5 rounded-[20px] text-xs font-semibold whitespace-nowrap shrink-0 max-[640px]:ml-auto ${getInternshipBadgeClass(experience.status)}`}
+          >
+            {getInternshipStatusText(experience.status)}
+          </div>
+        )}
         <div className="text-[13px] text-[#8c8c8d] whitespace-nowrap max-md:w-full max-md:mt-1">
           {displayDate}
         </div>
@@ -139,6 +177,7 @@ export const ExperienceCard: React.FC<ExperienceCardProps> = ({ experience }) =>
             </a>
           )}
         </div>
+        {actions}
       </div>
     </div>
   )

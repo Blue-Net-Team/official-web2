@@ -1,8 +1,8 @@
 'use client'
 
 import { useState, useRef, useCallback } from 'react'
-import type { UserInfo, UserStats } from '@/types/profile'
-import { DIRECTION_LABELS, Direction } from '@/apis/schema/enumerate'
+import type { TabCounts } from '@/apis/schema/type'
+import { DIRECTION_LABELS, ROLE_LABELS, getRoleTagColor, Direction } from '@/apis/schema/enumerate'
 import { API_BASE_URL } from '@/apis/config'
 import { fileService } from '@/apis/services/file.service'
 import {
@@ -22,16 +22,30 @@ import embedIcon from '@/assets/icon/direction/embed_icon.png'
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
 const MAX_SIZE = 5 * 1024 * 1024
 
-const ROLE_LABELS: Record<string, string> = {
-  CANDIDATE: '考生',
-  MEMBER: '成员',
-  DIRECTION_ADMIN: '方向管理员',
-  SUPER_ADMIN: '超级管理员',
+/**
+ * 统一的侧边栏用户数据接口
+ * 适配 UserInfo（个人主页）和 MemberDetailDTO（成员详情页）
+ */
+export interface SidebarProfile {
+  username: string
+  nickname: string
+  college: string
+  major: string
+  grade: string
+  bio: string
+  avatarFileId: number | null
+  roleName: string
+  direction: Direction | null
 }
 
 interface ProfileSidebarProps {
-  profile: UserInfo
-  stats: UserStats
+  profile: SidebarProfile
+  /** 是否允许上传头像（个人主页为 true，查看他人为 false） */
+  allowAvatarUpload?: boolean
+  /** 经历统计 + 点击可切换 tab（成员详情页需要） */
+  tabCounts?: TabCounts
+  onTabChange?: (tab: string) => void
+  activeTab?: string
   onAvatarUpdate?: () => void
 }
 
@@ -49,7 +63,10 @@ const directionThemeMap: Record<Direction, 'computerVision' | 'structuralDesign'
 
 export default function ProfileSidebar({
   profile,
-  stats: _stats,
+  allowAvatarUpload = true,
+  tabCounts,
+  onTabChange,
+  activeTab,
   onAvatarUpdate,
 }: ProfileSidebarProps) {
   const [uploading, setUploading] = useState(false)
@@ -122,14 +139,20 @@ export default function ProfileSidebar({
     }
   }, [cropImageSrc])
 
+  const handleStatClick = (tab: string) => {
+    if (tabCounts && tabCounts[tab as keyof TabCounts] > 0) {
+      onTabChange?.(tab)
+    }
+  }
+
   return (
     <aside className="w-[340px] shrink-0 max-lg:w-full max-lg:shrink">
       <div className="sticky top-[104px] bg-white/[0.03] backdrop-blur-[20px] border border-white/[0.05] rounded-2xl p-8 transition-all duration-300 max-lg:relative max-lg:top-auto max-[640px]:p-5">
         <div className="text-center mb-6">
           <div className="relative inline-block mb-5">
             <div
-              className={`relative w-[120px] h-[120px] rounded-full bg-[linear-gradient(135deg,#6677ff_0%,#ff6b35_100%)] p-1 overflow-hidden group ${uploading ? '' : 'cursor-pointer'}`}
-              onClick={handleAvatarClick}
+              className={`relative w-[120px] h-[120px] rounded-full bg-[linear-gradient(135deg,#6677ff_0%,#ff6b35_100%)] p-1 overflow-hidden ${allowAvatarUpload ? 'group' : ''} ${uploading ? '' : allowAvatarUpload ? 'cursor-pointer' : ''}`}
+              onClick={allowAvatarUpload ? handleAvatarClick : undefined}
             >
               <div className="w-[112px] h-[112px] rounded-full bg-[linear-gradient(135deg,#1a1a1a_0%,#2a2a2a_100%)] flex items-center justify-center text-[48px] font-bold text-white overflow-hidden [&>img]:w-full [&>img]:h-full [&>img]:object-cover">
                 {uploading ? (
@@ -145,21 +168,23 @@ export default function ProfileSidebar({
                   displayName.charAt(0)
                 )}
               </div>
-              {!uploading && (
+              {allowAvatarUpload && !uploading && (
                 <div className="absolute inset-1 rounded-full bg-black/55 flex flex-col items-center justify-center gap-1 opacity-0 transition-opacity duration-250 pointer-events-none group-hover:opacity-100">
                   <CameraOutlined className="text-[20px] text-white" />
                   <span className="text-[11px] text-white/85 whitespace-nowrap">更换头像</span>
                 </div>
               )}
             </div>
-            <input
-              title="点击上传头像"
-              ref={fileInputRef}
-              type="file"
-              accept="image/jpeg,image/png,image/gif,image/webp"
-              onChange={handleFileChange}
-              className="hidden"
-            />
+            {allowAvatarUpload && (
+              <input
+                title="点击上传头像"
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/gif,image/webp"
+                onChange={handleFileChange}
+                className="hidden"
+              />
+            )}
           </div>
           <div>
             <h1 className="text-2xl font-bold text-white mb-1.5">{displayName}</h1>
@@ -167,20 +192,7 @@ export default function ProfileSidebar({
               <span className="text-sm text-[rgba(140,140,141,1)]">@{profile.username}</span>
             )}
           </div>
-          <Tag
-            color={
-              profile.roleName === 'CANDIDATE'
-                ? 'orange'
-                : profile.roleName === 'MEMBER'
-                  ? 'blue'
-                  : profile.roleName === 'DIRECTION_ADMIN'
-                    ? 'purple'
-                    : profile.roleName === 'SUPER_ADMIN'
-                      ? 'red'
-                      : 'default'
-            }
-            className="mt-3"
-          >
+          <Tag color={getRoleTagColor(profile.roleName)} className="mt-3">
             {ROLE_LABELS[profile.roleName as keyof typeof ROLE_LABELS] ?? profile.roleName}
           </Tag>
         </div>
@@ -237,14 +249,38 @@ export default function ProfileSidebar({
             </div>
           </div>
         )}
+
+        {tabCounts && (
+          <div className="grid grid-cols-3 gap-3 pt-6 border-t border-white/[0.05]">
+            {(['projects', 'competitions', 'internships'] as const).map((tab) => {
+              const labelMap = {
+                projects: '项目经历',
+                competitions: '竞赛经历',
+                internships: '实习经历',
+              }
+              return (
+                <div
+                  key={tab}
+                  className={`text-center py-3 px-2 rounded-[10px] bg-white/[0.02] transition-all duration-300 cursor-pointer hover:bg-[#6677ff]/[0.08] ${activeTab === tab ? 'bg-[#6677ff]/[0.1]' : ''}`}
+                  onClick={() => handleStatClick(tab)}
+                >
+                  <div className="text-xl font-bold text-[#6677ff] mb-1">{tabCounts[tab]}</div>
+                  <div className="text-xs text-[#8c8c8d]">{labelMap[tab]}</div>
+                </div>
+              )
+            })}
+          </div>
+        )}
       </div>
 
-      <AvatarCropModal
-        open={cropModalOpen}
-        imageSrc={cropImageSrc}
-        onConfirm={handleCropConfirm}
-        onCancel={handleCropCancel}
-      />
+      {allowAvatarUpload && (
+        <AvatarCropModal
+          open={cropModalOpen}
+          imageSrc={cropImageSrc}
+          onConfirm={handleCropConfirm}
+          onCancel={handleCropCancel}
+        />
+      )}
     </aside>
   )
 }

@@ -2,20 +2,17 @@
 
 import { useState } from 'react'
 import type { UserExperience } from '@/apis/schema/type'
-import type { ExperienceType, InternshipStatus } from '@/apis/schema/enumerate'
+import type { ExperienceType } from '@/apis/schema/enumerate'
 import {
   FolderOutlined,
   TrophyOutlined,
   SolutionOutlined,
-  LinkOutlined,
   EditOutlined,
   DeleteOutlined,
   PlusOutlined,
-  FileTextOutlined,
-  TeamOutlined,
-  StarOutlined,
 } from '@ant-design/icons'
 import { Button, Modal, Form, Input, Select, message, Popconfirm } from 'antd'
+import ExperienceCard from '../ExperienceCard'
 
 interface ExperienceSectionProps {
   type: ExperienceType
@@ -24,33 +21,6 @@ interface ExperienceSectionProps {
   onAdd: (data: Omit<UserExperience, 'id'>) => Promise<void>
   onUpdate: (id: string, data: Partial<UserExperience>) => Promise<void>
   onDelete: (id: string) => Promise<void>
-}
-
-function getAwardBadgeClass(award: string): string {
-  switch (award) {
-    case '一等奖':
-    case 'first':
-      return 'bg-[linear-gradient(135deg,#ffd700_0%,#ffa500_100%)] text-black'
-    case '二等奖':
-    case 'second':
-      return 'bg-[linear-gradient(135deg,#c0c0c0_0%,#a0a0a0_100%)] text-black'
-    case '三等奖':
-    case 'third':
-    case '铜牌':
-      return 'bg-[linear-gradient(135deg,#cd7f32_0%,#b87333_100%)] text-white'
-    default:
-      return ''
-  }
-}
-
-function getInternshipBadgeClass(status: InternshipStatus): string {
-  return status === 'ACTIVE'
-    ? 'bg-[rgba(102,119,255,0.15)] text-[#6677ff]'
-    : 'bg-[rgba(140,140,141,0.2)] text-[rgba(140,140,141,1)]'
-}
-
-function getInternshipStatusText(status: InternshipStatus): string {
-  return status === 'ACTIVE' ? '在职' : '已离职'
 }
 
 export default function ExperienceSection({
@@ -119,17 +89,6 @@ export default function ExperienceSection({
         return <TrophyOutlined />
       case 'INTERNSHIP':
         return <SolutionOutlined />
-    }
-  }
-
-  const getIconClass = () => {
-    switch (type) {
-      case 'PROJECT':
-        return 'bg-[linear-gradient(135deg,#6677ff_0%,#2f27b0_100%)]'
-      case 'COMPETITION':
-        return 'bg-[linear-gradient(135deg,#ff6b35_0%,#ff8c42_100%)]'
-      case 'INTERNSHIP':
-        return 'bg-[linear-gradient(135deg,#059669_0%,#10b981_100%)]'
     }
   }
 
@@ -264,143 +223,27 @@ export default function ExperienceSection({
     }
   }
 
-  const renderItem = (item: UserExperience) => {
-    const isCompetition = type === 'COMPETITION'
-    const isInternship = type === 'INTERNSHIP'
-    const displayName = isInternship ? item.company || item.name : item.name
-    const displayRole = isInternship ? item.position : item.role
-    const displayDate = item.startDate
-      ? `${item.startDate} - ${item.endDate || '至今'}`
-      : item.date || ''
-
-    return (
-      <div
-        key={item.id}
-        className={`bg-white/[0.03] backdrop-blur-[20px] border border-white/[0.05] rounded-2xl p-6 transition-all duration-300 mb-4 last:mb-0 hover:-translate-y-1 hover:border-[rgba(102,119,255,0.2)] hover:shadow-[0_8px_32px_rgba(102,119,255,0.1)] max-[640px]:p-4
-          ${isCompetition ? 'border-l-4 border-l-[#ff6b35]' : ''}
-          ${isInternship ? 'border-l-4 border-l-[#059669]' : ''}
-        `}
+  const renderCardActions = (item: UserExperience) => (
+    <div className="flex gap-2">
+      <button
+        className="w-8 h-8 rounded-lg bg-transparent border border-[rgba(255,255,255,0.1)] flex items-center justify-center cursor-pointer transition-all duration-300 hover:bg-[rgba(102,119,255,0.1)] hover:border-[#6677ff] [&>svg]:w-4 [&>svg]:h-4 [&>svg]:text-[#6677ff]"
+        onClick={() => handleOpenModal(item)}
       >
-        <div className="flex items-center gap-3 mb-4 max-[640px]:flex-wrap">
-          <div
-            className={`w-11 h-11 rounded-[10px] flex items-center justify-center shrink-0 [&>svg]:w-5 [&>svg]:h-5 [&>svg]:text-white ${getIconClass()}`}
-          >
-            {getIcon()}
-          </div>
-          <div className="flex flex-col gap-1 flex-1 min-w-0">
-            <div className="text-base font-semibold text-white">{displayName}</div>
-            {displayRole && <div className="text-sm text-[rgba(140,140,141,1)]">{displayRole}</div>}
-          </div>
-          {isCompetition && item.award && (
-            <div
-              className={`px-3.5 py-1.5 rounded-[20px] text-xs font-semibold whitespace-nowrap shrink-0 ${getAwardBadgeClass(item.award)}`}
-            >
-              {item.award}
-            </div>
-          )}
-          {isInternship && item.status && (
-            <div
-              className={`px-3.5 py-1.5 rounded-[20px] text-xs font-semibold whitespace-nowrap shrink-0 max-[640px]:ml-auto ${getInternshipBadgeClass(item.status)}`}
-            >
-              {getInternshipStatusText(item.status)}
-            </div>
-          )}
-          <div className="text-sm text-[rgba(140,140,141,1)] whitespace-nowrap shrink-0 max-[640px]:w-full max-[640px]:mt-1">
-            {displayDate}
-          </div>
-        </div>
-
-        {isCompetition && (
-          <div className="flex flex-wrap gap-4 mb-4 max-[640px]:flex-col max-[640px]:gap-2">
-            {item.date && (
-              <div className="flex items-center gap-2 text-[13px] text-[rgba(140,140,141,1)] [&>svg]:w-4 [&>svg]:h-4">
-                <FileTextOutlined />
-                <span>{item.date}</span>
-              </div>
-            )}
-            {item.teamSize && (
-              <div className="flex items-center gap-2 text-[13px] text-[rgba(140,140,141,1)] [&>svg]:w-4 [&>svg]:h-4">
-                <TeamOutlined />
-                <span>{item.teamSize}人团队</span>
-              </div>
-            )}
-          </div>
-        )}
-
-        {isInternship && item.achievements && item.achievements.length > 0 && (
-          <div className="flex items-center gap-2 py-2.5 px-3.5 bg-[rgba(255,193,7,0.1)] border border-[rgba(255,193,7,0.2)] rounded-lg mb-4">
-            <StarOutlined className="w-4 h-4 text-[#ffc107]" />
-            <span className="text-[13px] text-[#ffc107] font-medium">
-              {item.achievements.join('；')}
-            </span>
-          </div>
-        )}
-
-        {item.description && (
-          <p className="text-sm text-white/70 leading-relaxed m-0 mb-4">{item.description}</p>
-        )}
-
-        {type === 'PROJECT' && item.techStack && item.techStack.length > 0 && (
-          <div className="flex flex-wrap gap-2 mb-4">
-            {item.techStack.map((tech) => (
-              <span
-                key={tech}
-                className="px-2.5 py-1 rounded-md text-xs bg-[rgba(102,119,255,0.1)] text-[#6677ff] border border-[rgba(102,119,255,0.2)]"
-              >
-                {tech}
-              </span>
-            ))}
-          </div>
-        )}
-
-        <div className="flex items-center justify-between pt-4 border-t border-white/[0.05] max-[640px]:flex-col max-[640px]:gap-3 max-[640px]:items-start">
-          <div className="flex gap-4">
-            {type === 'PROJECT' && item.demoUrl && (
-              <a
-                href={item.demoUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-1.5 text-[13px] text-[#6677ff] no-underline transition-colors duration-300 hover:text-[#8895ff]"
-              >
-                <LinkOutlined />
-                项目演示
-              </a>
-            )}
-            {isCompetition && item.certificateUrl && (
-              <a
-                href={item.certificateUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-1.5 text-[13px] text-[#6677ff] no-underline transition-colors duration-300 hover:text-[#8895ff]"
-              >
-                <FileTextOutlined />
-                获奖证书
-              </a>
-            )}
-          </div>
-          <div className="flex gap-2">
-            <button
-              className="w-8 h-8 rounded-lg bg-transparent border border-[rgba(255,255,255,0.1)] flex items-center justify-center cursor-pointer transition-all duration-300 hover:bg-[rgba(102,119,255,0.1)] hover:border-[#6677ff] [&>svg]:w-4 [&>svg]:h-4 [&>svg]:text-[#6677ff]"
-              onClick={() => handleOpenModal(item)}
-            >
-              <EditOutlined />
-            </button>
-            <Popconfirm
-              title="确认删除"
-              description="确定要删除这条记录吗？"
-              onConfirm={() => handleDelete(item.id)}
-              okText="确定"
-              cancelText="取消"
-            >
-              <button className="w-8 h-8 rounded-lg bg-transparent border border-[rgba(255,255,255,0.1)] flex items-center justify-center cursor-pointer transition-all duration-300 hover:bg-[rgba(255,107,53,0.1)] hover:border-[#ff6b35] [&>svg]:w-4 [&>svg]:h-4 [&>svg]:text-[#ff6b35]">
-                <DeleteOutlined />
-              </button>
-            </Popconfirm>
-          </div>
-        </div>
-      </div>
-    )
-  }
+        <EditOutlined />
+      </button>
+      <Popconfirm
+        title="确认删除"
+        description="确定要删除这条记录吗？"
+        onConfirm={() => handleDelete(item.id)}
+        okText="确定"
+        cancelText="取消"
+      >
+        <button className="w-8 h-8 rounded-lg bg-transparent border border-[rgba(255,255,255,0.1)] flex items-center justify-center cursor-pointer transition-all duration-300 hover:bg-[rgba(255,107,53,0.1)] hover:border-[#ff6b35] [&>svg]:w-4 [&>svg]:h-4 [&>svg]:text-[#ff6b35]">
+          <DeleteOutlined />
+        </button>
+      </Popconfirm>
+    </div>
+  )
 
   return (
     <div className="bg-white/[0.03] backdrop-blur-[20px] border border-white/[0.05] rounded-2xl p-6 max-[640px]:p-4">
@@ -417,7 +260,11 @@ export default function ExperienceSection({
       </div>
 
       {data.length > 0 ? (
-        <div className="flex flex-col">{data.map((item) => renderItem(item))}</div>
+        <div className="flex flex-col gap-4">
+          {data.map((item) => (
+            <ExperienceCard key={item.id} experience={item} actions={renderCardActions(item)} />
+          ))}
+        </div>
       ) : (
         <div className="text-center py-[60px] px-5 bg-white/[0.03] backdrop-blur-[20px] border border-white/[0.05] rounded-2xl">
           <div className="w-20 h-20 mx-auto mb-5 rounded-full bg-[rgba(102,119,255,0.1)] flex items-center justify-center [&>svg]:w-10 [&>svg]:h-10 [&>svg]:text-[#6677ff]">
