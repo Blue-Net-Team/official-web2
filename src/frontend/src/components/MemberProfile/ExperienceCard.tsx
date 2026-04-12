@@ -15,20 +15,20 @@ interface ExperienceCardProps {
 }
 
 const ICON_CLASS_MAP: Record<string, string> = {
-  project: 'bg-gradient-to-br from-[#6677ff] to-[#2f27b0]',
-  competition: 'bg-gradient-to-br from-[#ff6b35] to-[#ff8c42]',
-  internship: 'bg-gradient-to-br from-[#10b981] to-[#059669]',
+  PROJECT: 'bg-gradient-to-br from-[#6677ff] to-[#2f27b0]',
+  COMPETITION: 'bg-gradient-to-br from-[#ff6b35] to-[#ff8c42]',
+  INTERNSHIP: 'bg-gradient-to-br from-[#10b981] to-[#059669]',
 }
 
 const ROLE_CLASS_MAP: Record<string, string> = {
-  competition: 'text-[#ff6b35]',
-  internship: 'text-[#10b981]',
+  COMPETITION: 'text-[#ff6b35]',
+  INTERNSHIP: 'text-[#10b981]',
 }
 
 export const ExperienceCard: React.FC<ExperienceCardProps> = ({ experience }) => {
-  const isProject = experience.type === 'project'
-  const isCompetition = experience.type === 'competition'
-  const isInternship = experience.type === 'internship'
+  const isProject = experience.type === 'PROJECT'
+  const isCompetition = experience.type === 'COMPETITION'
+  const isInternship = experience.type === 'INTERNSHIP'
 
   const displayName = isInternship ? experience.company || experience.name : experience.name
   const displayRole = isInternship ? experience.position : experience.role
@@ -38,11 +38,11 @@ export const ExperienceCard: React.FC<ExperienceCardProps> = ({ experience }) =>
 
   const getIcon = () => {
     switch (experience.type) {
-      case 'project':
+      case 'PROJECT':
         return <FolderOutlined />
-      case 'competition':
+      case 'COMPETITION':
         return <TrophyOutlined />
-      case 'internship':
+      case 'INTERNSHIP':
         return <SolutionOutlined />
     }
   }

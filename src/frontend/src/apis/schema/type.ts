@@ -1,6 +1,24 @@
-import { Direction, Gender, EnrollStatus, FileType, AchievementType, AwardLevel } from './enumerate'
+import {
+  Direction,
+  Gender,
+  EnrollStatus,
+  FileType,
+  AchievementType,
+  AwardLevel,
+  ExperienceType,
+  InternshipStatus,
+} from './enumerate'
 
-export type { Direction, Gender, EnrollStatus, FileType, AchievementType, AwardLevel }
+export type {
+  Direction,
+  Gender,
+  EnrollStatus,
+  FileType,
+  AchievementType,
+  AwardLevel,
+  ExperienceType,
+  InternshipStatus,
+}
 
 /**
  * 统一 API 响应包装
@@ -24,6 +42,8 @@ export interface UserInfo {
   id: number
   /** 用户名 */
   username: string
+  /** 昵称 */
+  nickname: string
   /** 学院 */
   college: string
   /** 专业 */
@@ -32,14 +52,18 @@ export interface UserInfo {
   grade: string
   /** 邮箱 */
   email: string
-  /** 头像 URL */
-  avatarUrl: string | null
+  /** 头像文件ID */
+  avatarFileId: number | null
   /** 角色名称 */
   roleName: string
   /** 方向/类型 */
   direction: Direction | null
   /** 性别 */
   gender: Gender | null
+  /** 个人简介 */
+  bio: string
+  /** GitHub 用户名 */
+  githubUsername: string | null
 }
 
 /**
@@ -240,8 +264,8 @@ export interface FileInfo {
 export interface UserExperience {
   /** 经历ID */
   id: string
-  /** 经历类型: project/competition/internship */
-  type: 'project' | 'competition' | 'internship'
+  /** 经历类型 */
+  type: ExperienceType
   /** 名称（项目名/竞赛名/公司名） */
   name: string
   /** 开始时间 */
@@ -271,7 +295,7 @@ export interface UserExperience {
   /** 职位（实习） */
   position?: string
   /** 实习状态 */
-  status?: 'active' | 'ended'
+  status?: InternshipStatus
   /** 主要成就 */
   achievements?: string[]
 }

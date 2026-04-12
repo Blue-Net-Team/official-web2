@@ -1,15 +1,9 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import type {
-  TabName,
-  UserInfo,
-  Experience,
-  TabCounts,
-  UserStats,
-  Assessment,
-  ExperienceType,
-} from '@/types/profile'
+import type { TabName, UserStats, Assessment } from '@/types/profile'
+import type { UserInfo, TabCounts, UserExperience } from '@/apis/schema/type'
+import type { ExperienceType } from '@/apis/schema/enumerate'
 import type { AssessmentTimeDTO } from '@/apis/schema/assessment.dto'
 import { DIRECTION_LABELS } from '@/apis/schema/enumerate'
 import { userService } from '@/apis/services/user.service'
@@ -144,7 +138,7 @@ export default function ProfilePage() {
     internships: 0,
   })
   const [assessments, setAssessments] = useState<Assessment[]>([])
-  const [experiences, setExperiences] = useState<Experience[]>([])
+  const [experiences, setExperiences] = useState<UserExperience[]>([])
   const [loading, setLoading] = useState(true)
 
   // 加载数据
@@ -244,7 +238,7 @@ export default function ProfilePage() {
   }
 
   // 处理经历添加
-  const handleAddExperience = async (type: string, data: Omit<Experience, 'id'>) => {
+  const handleAddExperience = async (type: string, data: Omit<UserExperience, 'id'>) => {
     const res = await userService.createExperience({ ...data, type: type as ExperienceType })
     if (res.code === 200) {
       await loadData()
@@ -252,7 +246,7 @@ export default function ProfilePage() {
   }
 
   // 处理经历更新
-  const handleUpdateExperience = async (id: string, data: Partial<Experience>) => {
+  const handleUpdateExperience = async (id: string, data: Partial<UserExperience>) => {
     const res = await userService.updateExperience(id, data)
     if (res.code === 200) {
       await loadData() // 刷新数据
@@ -308,10 +302,10 @@ export default function ProfilePage() {
 
           {currentTab === 'projects' && (
             <ExperienceSection
-              type="project"
+              type="PROJECT"
               title="项目经历"
-              data={getExperiencesByType('project')}
-              onAdd={(data) => handleAddExperience('project', data)}
+              data={getExperiencesByType('PROJECT')}
+              onAdd={(data) => handleAddExperience('PROJECT', data)}
               onUpdate={handleUpdateExperience}
               onDelete={handleDeleteExperience}
             />
@@ -319,10 +313,10 @@ export default function ProfilePage() {
 
           {currentTab === 'competitions' && (
             <ExperienceSection
-              type="competition"
+              type="COMPETITION"
               title="竞赛经历"
-              data={getExperiencesByType('competition')}
-              onAdd={(data) => handleAddExperience('competition', data)}
+              data={getExperiencesByType('COMPETITION')}
+              onAdd={(data) => handleAddExperience('COMPETITION', data)}
               onUpdate={handleUpdateExperience}
               onDelete={handleDeleteExperience}
             />
@@ -330,10 +324,10 @@ export default function ProfilePage() {
 
           {currentTab === 'internships' && (
             <ExperienceSection
-              type="internship"
+              type="INTERNSHIP"
               title="实习经历"
-              data={getExperiencesByType('internship')}
-              onAdd={(data) => handleAddExperience('internship', data)}
+              data={getExperiencesByType('INTERNSHIP')}
+              onAdd={(data) => handleAddExperience('INTERNSHIP', data)}
               onUpdate={handleUpdateExperience}
               onDelete={handleDeleteExperience}
             />

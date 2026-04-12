@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react'
 import { MemberDetailDTO, TabCounts, UserExperience } from '@/apis/schema/type'
+import type { ExperienceType } from '@/apis/schema/enumerate'
 import { ProfilePanel } from './ProfilePanel'
 import { ExperiencePanel } from './ExperiencePanel'
 import { MemberService } from '@/apis/services/member.service'
@@ -95,8 +96,13 @@ export const MemberProfileContent: React.FC<MemberProfileContentProps> = ({
     return tabCounts[key as keyof typeof tabCounts]
   }
 
-  const renderExperiencePanel = (type: 'project' | 'competition' | 'internship', title: string) => {
-    const cacheKey = `${type}s` as keyof ExperienceCache
+  const renderExperiencePanel = (type: ExperienceType, title: string) => {
+    const cacheKeyMap: Record<ExperienceType, keyof ExperienceCache> = {
+      PROJECT: 'projects',
+      COMPETITION: 'competitions',
+      INTERNSHIP: 'internships',
+    }
+    const cacheKey = cacheKeyMap[type]
     const isLoading = loading[cacheKey]
     const experiences = experienceCache[cacheKey]
 
@@ -140,9 +146,9 @@ export const MemberProfileContent: React.FC<MemberProfileContentProps> = ({
       </nav>
 
       {activeTab === 'profile' && <ProfilePanel member={member} />}
-      {activeTab === 'projects' && renderExperiencePanel('project', '项目经历')}
-      {activeTab === 'competitions' && renderExperiencePanel('competition', '竞赛经历')}
-      {activeTab === 'internships' && renderExperiencePanel('internship', '实习经历')}
+      {activeTab === 'projects' && renderExperiencePanel('PROJECT', '项目经历')}
+      {activeTab === 'competitions' && renderExperiencePanel('COMPETITION', '竞赛经历')}
+      {activeTab === 'internships' && renderExperiencePanel('INTERNSHIP', '实习经历')}
     </div>
   )
 }

@@ -13,7 +13,8 @@
 'use client'
 
 import { useState } from 'react'
-import type { UserInfo, UpdateProfileRequest } from '@/types/profile'
+import type { UserInfo } from '@/types/profile'
+import type { UpdateProfileRequestDTO } from '@/apis/schema/profile.dto'
 import { DIRECTION_LABELS, GENDER_LABELS } from '@/apis/schema/enumerate'
 import { EditOutlined, SaveOutlined, CloseOutlined } from '@ant-design/icons'
 import { Form, Input, Button, message, Select } from 'antd'
@@ -63,7 +64,7 @@ export default function ProfileInfo({ profile, onUpdate }: ProfileInfoProps) {
     setIsEditing(false)
   }
 
-  const handleSubmit = async (values: UpdateProfileRequest) => {
+  const handleSubmit = async (values: UpdateProfileRequestDTO) => {
     setIsSubmitting(true)
     try {
       const res = await userService.updateProfile(values)
@@ -81,8 +82,8 @@ export default function ProfileInfo({ profile, onUpdate }: ProfileInfoProps) {
     }
   }
 
-  const directionLabel = DIRECTION_LABELS[profile.direction] || profile.direction
-  const genderLabel = GENDER_LABELS[profile.gender] || profile.gender
+  const directionLabel = profile.direction ? DIRECTION_LABELS[profile.direction] : '-'
+  const genderLabel = profile.gender ? GENDER_LABELS[profile.gender] : '-'
 
   return (
     <div className="bg-white/[0.03] backdrop-blur-[20px] border border-white/[0.05] rounded-2xl p-8 max-[640px]:p-5">
@@ -158,9 +159,9 @@ export default function ProfileInfo({ profile, onUpdate }: ProfileInfoProps) {
                   placeholder="请选择方向"
                   className="w-full"
                   options={[
-                    { value: 'computer_vision', label: '计算机视觉' },
-                    { value: 'structural_design', label: '结构设计' },
-                    { value: 'embedded', label: '嵌入式开发' },
+                    { value: 'COMPUTER_VISION', label: '计算机视觉' },
+                    { value: 'STRUCTURAL_DESIGN', label: '结构设计' },
+                    { value: 'EMBEDDED', label: '嵌入式开发' },
                   ]}
                 />
               ) : (
@@ -178,9 +179,9 @@ export default function ProfileInfo({ profile, onUpdate }: ProfileInfoProps) {
                   placeholder="请选择性别"
                   className="w-full"
                   options={[
-                    { value: 'male', label: '男' },
-                    { value: 'female', label: '女' },
-                    { value: 'unknown', label: '未知' },
+                    { value: 'MALE', label: '男' },
+                    { value: 'FEMALE', label: '女' },
+                    { value: 'UNKNOWN', label: '未知' },
                   ]}
                 />
               ) : (

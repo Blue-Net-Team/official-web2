@@ -2,11 +2,12 @@
 
 import React from 'react'
 import { UserExperience } from '@/apis/schema/type'
+import type { ExperienceType } from '@/apis/schema/enumerate'
 import { ExperienceCard } from './ExperienceCard'
 import { FolderOutlined, TrophyOutlined, SolutionOutlined } from '@ant-design/icons'
 
 interface ExperiencePanelProps {
-  type: 'project' | 'competition' | 'internship'
+  type: ExperienceType
   title: string
   experiences: UserExperience[]
 }
@@ -14,22 +15,22 @@ interface ExperiencePanelProps {
 export const ExperiencePanel: React.FC<ExperiencePanelProps> = ({ type, title, experiences }) => {
   const getIcon = () => {
     switch (type) {
-      case 'project':
+      case 'PROJECT':
         return <FolderOutlined />
-      case 'competition':
+      case 'COMPETITION':
         return <TrophyOutlined />
-      case 'internship':
+      case 'INTERNSHIP':
         return <SolutionOutlined />
     }
   }
 
   const getEmptyText = () => {
     switch (type) {
-      case 'project':
+      case 'PROJECT':
         return '暂无项目经历'
-      case 'competition':
+      case 'COMPETITION':
         return '暂无竞赛经历'
-      case 'internship':
+      case 'INTERNSHIP':
         return '暂无实习经历'
     }
   }

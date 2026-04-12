@@ -112,7 +112,7 @@ class UserExperienceServiceImplTest {
             when(userExperienceDomainService.getExperiencesByType(USER_ID, ExperienceType.PROJECT))
                     .thenReturn(experiences);
 
-            List<ExperienceDTO> result = userExperienceService.getExperiences("project");
+            List<ExperienceDTO> result = userExperienceService.getExperiences("PROJECT");
 
             assertNotNull(result);
             assertEquals(1, result.size());
@@ -152,7 +152,7 @@ class UserExperienceServiceImplTest {
             userCTXMockedStatic.when(UserCTX::getCurrentUser).thenReturn(null);
 
             CreateExperienceRequestDTO request = new CreateExperienceRequestDTO();
-            request.setType("project");
+            request.setType("PROJECT");
             request.setName("测试项目");
 
             assertThrows(Unauthorized.class, () -> userExperienceService.createExperience(request));
@@ -164,7 +164,7 @@ class UserExperienceServiceImplTest {
             mockCurrentUser(USER_ID);
 
             CreateExperienceRequestDTO request = new CreateExperienceRequestDTO();
-            request.setType("project");
+            request.setType("PROJECT");
             request.setName("测试项目");
             request.setRole("开发者");
             request.setStartDate("2024.01");
@@ -186,7 +186,7 @@ class UserExperienceServiceImplTest {
 
             assertNotNull(result);
             assertEquals(String.valueOf(EXPERIENCE_ID), result.getId());
-            assertEquals("project", result.getType());
+            assertEquals("PROJECT", result.getType());
             verify(userExperienceDomainService).createExperience(
                     eq(USER_ID),
                     eq(ExperienceType.PROJECT),
@@ -202,7 +202,7 @@ class UserExperienceServiceImplTest {
             mockCurrentUser(USER_ID);
 
             CreateExperienceRequestDTO request = new CreateExperienceRequestDTO();
-            request.setType("competition");
+            request.setType("COMPETITION");
             request.setName("全国大学生创新创业大赛");
             request.setDate("2024年8月");
             request.setLevel("国家级");
@@ -225,7 +225,7 @@ class UserExperienceServiceImplTest {
             ExperienceDTO result = userExperienceService.createExperience(request);
 
             assertNotNull(result);
-            assertEquals("competition", result.getType());
+            assertEquals("COMPETITION", result.getType());
         }
 
         @Test
@@ -234,7 +234,7 @@ class UserExperienceServiceImplTest {
             mockCurrentUser(USER_ID);
 
             CreateExperienceRequestDTO request = new CreateExperienceRequestDTO();
-            request.setType("internship");
+            request.setType("INTERNSHIP");
             request.setCompany("字节跳动");
             request.setPosition("后端开发实习生");
             request.setStartDate("2024.03");
@@ -254,7 +254,7 @@ class UserExperienceServiceImplTest {
             ExperienceDTO result = userExperienceService.createExperience(request);
 
             assertNotNull(result);
-            assertEquals("internship", result.getType());
+            assertEquals("INTERNSHIP", result.getType());
         }
 
         @Test

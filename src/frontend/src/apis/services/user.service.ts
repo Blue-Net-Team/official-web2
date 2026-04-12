@@ -1,14 +1,12 @@
 import { apiClient } from '../client'
 import { ResponseMessage } from '../schema/type'
+import type { UserInfo, TabCounts, UserExperience } from '../schema/type'
+import type { ExperienceType } from '../schema/enumerate'
 import type {
-  UserInfo,
-  UpdateProfileRequest,
-  TabCounts,
-  Experience,
-  CreateExperienceRequest,
-  UpdateExperienceRequest,
-  ExperienceType,
-} from '@/types/profile'
+  UpdateProfileRequestDTO,
+  CreateExperienceRequestDTO,
+  UpdateExperienceRequestDTO,
+} from '../schema/profile.dto'
 
 /**
  * 用户服务 API
@@ -29,7 +27,7 @@ export const userService = {
    * 对应后端 PUT /api/v1/user/info
    * @param data 更新请求
    */
-  async updateProfile(data: UpdateProfileRequest): Promise<ResponseMessage<void>> {
+  async updateProfile(data: UpdateProfileRequestDTO): Promise<ResponseMessage<void>> {
     const response = await apiClient.put<ResponseMessage<void>>('/user/info', data)
     return response.data
   },
@@ -48,9 +46,9 @@ export const userService = {
    * 对应后端 GET /api/v1/user/experiences
    * @param type 经历类型过滤（可选）
    */
-  async getExperiences(type?: ExperienceType): Promise<ResponseMessage<Experience[]>> {
+  async getExperiences(type?: ExperienceType): Promise<ResponseMessage<UserExperience[]>> {
     const params = type ? { type } : {}
-    const response = await apiClient.get<ResponseMessage<Experience[]>>('/user/experiences', {
+    const response = await apiClient.get<ResponseMessage<UserExperience[]>>('/user/experiences', {
       params,
     })
     return response.data
@@ -61,8 +59,13 @@ export const userService = {
    * 对应后端 POST /api/v1/user/experiences
    * @param data 创建请求
    */
-  async createExperience(data: CreateExperienceRequest): Promise<ResponseMessage<Experience>> {
-    const response = await apiClient.post<ResponseMessage<Experience>>('/user/experiences', data)
+  async createExperience(
+    data: CreateExperienceRequestDTO
+  ): Promise<ResponseMessage<UserExperience>> {
+    const response = await apiClient.post<ResponseMessage<UserExperience>>(
+      '/user/experiences',
+      data
+    )
     return response.data
   },
 
@@ -74,9 +77,9 @@ export const userService = {
    */
   async updateExperience(
     id: string,
-    data: UpdateExperienceRequest
-  ): Promise<ResponseMessage<Experience>> {
-    const response = await apiClient.put<ResponseMessage<Experience>>(
+    data: UpdateExperienceRequestDTO
+  ): Promise<ResponseMessage<UserExperience>> {
+    const response = await apiClient.put<ResponseMessage<UserExperience>>(
       `/user/experiences/${id}`,
       data
     )

@@ -50,10 +50,10 @@ export default function ProfileSidebar({
   const [cropImageSrc, setCropImageSrc] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const directionLabel = DIRECTION_LABELS[profile.direction] || profile.direction || '-'
+  const directionLabel = profile.direction ? DIRECTION_LABELS[profile.direction] : '-'
   const displayName = profile.nickname || profile.username
-  const directionIcon = directionIconMap[profile.direction as Direction]
-  const directionTheme = directionThemeMap[profile.direction as Direction]
+  const directionIcon = profile.direction ? directionIconMap[profile.direction] : undefined
+  const directionTheme = profile.direction ? directionThemeMap[profile.direction] : undefined
 
   const handleAvatarClick = useCallback(() => {
     if (uploading) return

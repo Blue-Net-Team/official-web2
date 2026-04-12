@@ -8,6 +8,7 @@ import { LockOutlined, LogoutOutlined, MenuOutlined, UserOutlined } from '@ant-d
 import Image from 'next/image'
 import logoImage from '@/assets/logo.png'
 import authStore from '@/stores/authStore'
+import { API_BASE_URL } from '@/apis/config'
 import { getRoleLevel } from '@/utils/RoleUtils'
 
 type MenuItem = Required<MenuProps>['items'][number]
@@ -18,7 +19,7 @@ const DEFAULT_USER_INFO = {
   username: '',
   roleName: '',
   direction: null,
-  avatarUrl: null,
+  avatarFileId: null,
 }
 
 const loginButtonStyle: React.CSSProperties = {
@@ -227,9 +228,9 @@ const NavBar = () => {
     return (
       <Flex align="center" gap={10}>
         {/* 头像 */}
-        {userInfo?.avatarUrl ? (
+        {userInfo?.avatarFileId ? (
           <Image
-            src={userInfo.avatarUrl}
+            src={`${API_BASE_URL}/file/download/${userInfo.avatarFileId}`}
             alt="user avatar"
             className="w-10 h-10 rounded-full object-cover"
             width={40}

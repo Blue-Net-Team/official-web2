@@ -107,7 +107,7 @@ public class UserExperienceServiceImpl implements UserExperienceService {
 
     private ExperienceType parseExperienceType(String type) {
         try {
-            return ExperienceType.valueOf(type.toUpperCase());
+            return ExperienceType.valueOf(type);
         } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException("无效的经历类型: " + type);
         }
@@ -211,13 +211,13 @@ public class UserExperienceServiceImpl implements UserExperienceService {
     private ExperienceDTO convertToDTO(ExperienceVO vo) {
         ExperienceDTO dto = ExperienceDTO.builder()
                 .id(String.valueOf(vo.getId()))
-                .type(vo.getType().getValue())
+                .type(vo.getType().name())
                 .startDate(vo.getStartTime())
                 .endDate(vo.getEndTime())
                 .build();
 
         // 设置名称
-        dto.setNameByType(vo.getType().getValue(), vo.getTitle());
+        dto.setNameByType(vo.getType().name(), vo.getTitle());
 
         // 解析内容
         try {

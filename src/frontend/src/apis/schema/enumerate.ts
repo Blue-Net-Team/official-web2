@@ -75,3 +75,15 @@ export const AWARD_LEVEL_LABELS: Record<AwardLevel, string> = {
   PROVINCIAL: '省级',
   SCHOOL: '校级',
 }
+
+/**
+ * 经历类型枚举
+ * 对应后端 ExperienceType.java
+ */
+export type ExperienceType = 'COMPETITION' | 'PROJECT' | 'INTERNSHIP'
+
+/**
+ * 实习状态枚举
+ * 对应后端 ExperienceDTO.status 字段值
+ */
+export type InternshipStatus = 'ACTIVE' | 'ENDED'

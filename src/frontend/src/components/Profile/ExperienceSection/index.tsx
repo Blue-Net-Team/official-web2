@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import type { Experience, ExperienceType, InternshipStatus } from '@/types/profile'
+import type { UserExperience } from '@/apis/schema/type'
+import type { ExperienceType, InternshipStatus } from '@/apis/schema/enumerate'
 import {
   FolderOutlined,
   TrophyOutlined,
@@ -19,9 +20,9 @@ import { Button, Modal, Form, Input, Select, message, Popconfirm } from 'antd'
 interface ExperienceSectionProps {
   type: ExperienceType
   title: string
-  data: Experience[]
-  onAdd: (data: Omit<Experience, 'id'>) => Promise<void>
-  onUpdate: (id: string, data: Partial<Experience>) => Promise<void>
+  data: UserExperience[]
+  onAdd: (data: Omit<UserExperience, 'id'>) => Promise<void>
+  onUpdate: (id: string, data: Partial<UserExperience>) => Promise<void>
   onDelete: (id: string) => Promise<void>
 }
 
@@ -43,13 +44,13 @@ function getAwardBadgeClass(award: string): string {
 }
 
 function getInternshipBadgeClass(status: InternshipStatus): string {
-  return status === 'active'
+  return status === 'ACTIVE'
     ? 'bg-[rgba(102,119,255,0.15)] text-[#6677ff]'
     : 'bg-[rgba(140,140,141,0.2)] text-[rgba(140,140,141,1)]'
 }
 
 function getInternshipStatusText(status: InternshipStatus): string {
-  return status === 'active' ? '在职' : '已离职'
+  return status === 'ACTIVE' ? '在职' : '已离职'
 }
 
 export default function ExperienceSection({
@@ -61,11 +62,11 @@ export default function ExperienceSection({
   onDelete,
 }: ExperienceSectionProps) {
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const [editingItem, setEditingItem] = useState<Experience | null>(null)
+  const [editingItem, setEditingItem] = useState<UserExperience | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [form] = Form.useForm()
 
-  const handleOpenModal = (item?: Experience) => {
+  const handleOpenModal = (item?: UserExperience) => {
     if (item) {
       setEditingItem(item)
       form.setFieldsValue(item)
@@ -85,9 +86,9 @@ export default function ExperienceSection({
   const handleSubmit = async (values: Record<string, unknown>) => {
     setIsSubmitting(true)
     try {
-      const submitData = { ...values, type } as Omit<Experience, 'id'>
+      const submitData = { ...values, type } as Omit<UserExperience, 'id'>
       if (editingItem) {
-        await onUpdate(editingItem.id, values as Partial<Experience>)
+        await onUpdate(editingItem.id, values as Partial<UserExperience>)
         message.success('更新成功')
       } else {
         await onAdd(submitData)
@@ -112,29 +113,29 @@ export default function ExperienceSection({
 
   const getIcon = () => {
     switch (type) {
-      case 'project':
+      case 'PROJECT':
         return <FolderOutlined />
-      case 'competition':
+      case 'COMPETITION':
         return <TrophyOutlined />
-      case 'internship':
+      case 'INTERNSHIP':
         return <SolutionOutlined />
     }
   }
 
   const getIconClass = () => {
     switch (type) {
-      case 'project':
+      case 'PROJECT':
         return 'bg-[linear-gradient(135deg,#6677ff_0%,#2f27b0_100%)]'
-      case 'competition':
+      case 'COMPETITION':
         return 'bg-[linear-gradient(135deg,#ff6b35_0%,#ff8c42_100%)]'
-      case 'internship':
+      case 'INTERNSHIP':
         return 'bg-[linear-gradient(135deg,#059669_0%,#10b981_100%)]'
     }
   }
 
   const renderFormItems = () => {
     switch (type) {
-      case 'project':
+      case 'PROJECT':
         return (
           <>
             <Form.Item name="name" label="项目名称" rules={[{ required: true }]}>
@@ -167,7 +168,7 @@ export default function ExperienceSection({
             </Form.Item>
           </>
         )
-      case 'competition':
+      case 'COMPETITION':
         return (
           <>
             <Form.Item name="name" label="竞赛名称" rules={[{ required: true }]}>
@@ -221,7 +222,7 @@ export default function ExperienceSection({
             </Form.Item>
           </>
         )
-      case 'internship':
+      case 'INTERNSHIP':
         return (
           <>
             <Form.Item name="company" label="公司名称" rules={[{ required: true }]}>
@@ -246,8 +247,8 @@ export default function ExperienceSection({
             <Form.Item name="status" label="实习状态" rules={[{ required: true }]}>
               <Select
                 options={[
-                  { value: 'active', label: '在职' },
-                  { value: 'ended', label: '已离职' },
+                  { value: 'ACTIVE', label: '在职' },
+                  { value: 'ENDED', label: '已离职' },
                 ]}
                 placeholder="请选择状态"
               />
@@ -263,9 +264,9 @@ export default function ExperienceSection({
     }
   }
 
-  const renderItem = (item: Experience) => {
-    const isCompetition = type === 'competition'
-    const isInternship = type === 'internship'
+  const renderItem = (item: UserExperience) => {
+    const isCompetition = type === 'COMPETITION'
+    const isInternship = type === 'INTERNSHIP'
     const displayName = isInternship ? item.company || item.name : item.name
     const displayRole = isInternship ? item.position : item.role
     const displayDate = item.startDate
@@ -339,7 +340,7 @@ export default function ExperienceSection({
           <p className="text-sm text-white/70 leading-relaxed m-0 mb-4">{item.description}</p>
         )}
 
-        {type === 'project' && item.techStack && item.techStack.length > 0 && (
+        {type === 'PROJECT' && item.techStack && item.techStack.length > 0 && (
           <div className="flex flex-wrap gap-2 mb-4">
             {item.techStack.map((tech) => (
               <span
@@ -354,7 +355,7 @@ export default function ExperienceSection({
 
         <div className="flex items-center justify-between pt-4 border-t border-white/[0.05] max-[640px]:flex-col max-[640px]:gap-3 max-[640px]:items-start">
           <div className="flex gap-4">
-            {type === 'project' && item.demoUrl && (
+            {type === 'PROJECT' && item.demoUrl && (
               <a
                 href={item.demoUrl}
                 target="_blank"
@@ -411,7 +412,7 @@ export default function ExperienceSection({
           icon={<PlusOutlined />}
           onClick={() => handleOpenModal()}
         >
-          添加{type === 'project' ? '项目' : type === 'competition' ? '竞赛' : '实习'}
+          添加{type === 'PROJECT' ? '项目' : type === 'COMPETITION' ? '竞赛' : '实习'}
         </Button>
       </div>
 
@@ -423,7 +424,7 @@ export default function ExperienceSection({
             {getIcon()}
           </div>
           <h3 className="text-lg font-semibold text-white mb-2 m-0">
-            暂无{type === 'project' ? '项目' : type === 'competition' ? '竞赛' : '实习'}经历
+            暂无{type === 'PROJECT' ? '项目' : type === 'COMPETITION' ? '竞赛' : '实习'}经历
           </h3>
           <p className="text-sm text-[rgba(140,140,141,1)] m-0">点击上方按钮添加你的经历</p>
         </div>

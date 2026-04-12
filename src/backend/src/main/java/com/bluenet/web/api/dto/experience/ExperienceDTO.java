@@ -69,7 +69,7 @@ public class ExperienceDTO {
     @Schema(description = "实习岗位（实习类型）")
     private String position;
 
-    @Schema(description = "状态（实习类型）: active/ended")
+    @Schema(description = "状态（实习类型）: ACTIVE/ENDED")
     private String status;
 
     @Schema(description = "成就列表（实习类型）")
@@ -80,7 +80,7 @@ public class ExperienceDTO {
      */
     public void setNameByType(String type, String title) {
         this.type = type;
-        if ("internship".equals(type)) {
+        if ("INTERNSHIP".equals(type)) {
             this.company = title;
         }
         this.name = title;

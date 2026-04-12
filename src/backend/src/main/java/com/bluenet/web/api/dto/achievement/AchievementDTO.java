@@ -23,13 +23,13 @@ public class AchievementDTO {
     @Schema(description = "关联项：竞赛为赛项名，论文为期刊名，专利为null")
     private String relateTo;
 
-    @Schema(description = "成就类型：paper/patent/competition")
+    @Schema(description = "成就类型：PAPER/PATENT/COMPETITION")
     private String type;
 
     @Schema(description = "获奖日期")
     private LocalDate achieveAt;
 
-    @Schema(description = "奖项级别：national/provincial/school")
+    @Schema(description = "奖项级别：NATIONAL/PROVINCIAL/SCHOOL")
     private String awardLevel;
 
     @Schema(description = "奖项级别名称：国家级/省级/校级")

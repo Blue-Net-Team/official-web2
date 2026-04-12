@@ -7,7 +7,7 @@ import {
   TabCounts,
   UserExperience,
 } from '../schema/type'
-import { Direction } from '../schema/enumerate'
+import { Direction, ExperienceType } from '../schema/enumerate'
 
 export interface MemberListParams {
   page?: number
@@ -15,7 +15,7 @@ export interface MemberListParams {
   direction?: Direction
 }
 
-export type ExperienceType = 'project' | 'competition' | 'internship'
+export type { ExperienceType } from '../schema/enumerate'
 
 export const MemberService = {
   /**
@@ -71,9 +71,9 @@ export const MemberService = {
   getMemberTabCounts: async (memberId: number): Promise<TabCounts> => {
     const experiences = await MemberService.getMemberExperiences(memberId)
     return {
-      projects: experiences.filter((e) => e.type === 'project').length,
-      competitions: experiences.filter((e) => e.type === 'competition').length,
-      internships: experiences.filter((e) => e.type === 'internship').length,
+      projects: experiences.filter((e) => e.type === 'PROJECT').length,
+      competitions: experiences.filter((e) => e.type === 'COMPETITION').length,
+      internships: experiences.filter((e) => e.type === 'INTERNSHIP').length,
     }
   },
 
@@ -83,7 +83,7 @@ export const MemberService = {
    * @param memberId 成员ID
    */
   getMemberProjects: async (memberId: number): Promise<UserExperience[]> => {
-    return MemberService.getMemberExperiences(memberId, 'project')
+    return MemberService.getMemberExperiences(memberId, 'PROJECT')
   },
 
   /**
@@ -92,7 +92,7 @@ export const MemberService = {
    * @param memberId 成员ID
    */
   getMemberCompetitions: async (memberId: number): Promise<UserExperience[]> => {
-    return MemberService.getMemberExperiences(memberId, 'competition')
+    return MemberService.getMemberExperiences(memberId, 'COMPETITION')
   },
 
   /**
@@ -101,6 +101,6 @@ export const MemberService = {
    * @param memberId 成员ID
    */
   getMemberInternships: async (memberId: number): Promise<UserExperience[]> => {
-    return MemberService.getMemberExperiences(memberId, 'internship')
+    return MemberService.getMemberExperiences(memberId, 'INTERNSHIP')
   },
 }

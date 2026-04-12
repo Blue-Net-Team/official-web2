@@ -237,7 +237,7 @@ class UserExperienceControllerIntegrationTest extends BaseIntegrationTest {
         AuthCookies auth = loginAndGetCookies();
 
         CreateExperienceRequestDTO request = new CreateExperienceRequestDTO();
-        request.setType("project");
+        request.setType("PROJECT");
         request.setName("测试项目");
         request.setRole("开发者");
         request.setStartDate("2024.01");
@@ -260,7 +260,7 @@ class UserExperienceControllerIntegrationTest extends BaseIntegrationTest {
         ExperienceDTO created = response.getBody().getData();
         assertNotNull(created);
         assertNotNull(created.getId());
-        assertEquals("project", created.getType());
+        assertEquals("PROJECT", created.getType());
         assertEquals("测试项目", created.getName());
         assertEquals("开发者", created.getRole());
         assertEquals("2024.01", created.getStartDate());
@@ -275,7 +275,7 @@ class UserExperienceControllerIntegrationTest extends BaseIntegrationTest {
         AuthCookies auth = loginAndGetCookies();
 
         CreateExperienceRequestDTO request = new CreateExperienceRequestDTO();
-        request.setType("competition");
+        request.setType("COMPETITION");
         request.setName("全国大学生创新创业大赛");
         request.setDate("2024年8月");
         request.setLevel("国家级");
@@ -296,7 +296,7 @@ class UserExperienceControllerIntegrationTest extends BaseIntegrationTest {
 
         ExperienceDTO created = response.getBody().getData();
         assertNotNull(created);
-        assertEquals("competition", created.getType());
+        assertEquals("COMPETITION", created.getType());
         assertEquals("全国大学生创新创业大赛", created.getName());
         assertEquals("国家级", created.getLevel());
         assertEquals("一等奖", created.getAward());
@@ -310,13 +310,13 @@ class UserExperienceControllerIntegrationTest extends BaseIntegrationTest {
         AuthCookies auth = loginAndGetCookies();
 
         CreateExperienceRequestDTO request = new CreateExperienceRequestDTO();
-        request.setType("internship");
+        request.setType("INTERNSHIP");
         request.setName("字节跳动");
         request.setCompany("字节跳动");
         request.setPosition("后端开发实习生");
         request.setStartDate("2024.03");
         request.setEndDate("2024.09");
-        request.setStatus("active");
+        request.setStatus("ACTIVE");
         request.setAchievements(Arrays.asList("完成了核心模块开发", "优化了系统性能"));
 
         ResponseEntity<ResponseMessage<ExperienceDTO>> response = restTemplate.exchange(
@@ -332,7 +332,7 @@ class UserExperienceControllerIntegrationTest extends BaseIntegrationTest {
 
         ExperienceDTO created = response.getBody().getData();
         assertNotNull(created);
-        assertEquals("internship", created.getType());
+        assertEquals("INTERNSHIP", created.getType());
         assertEquals("字节跳动", created.getName());
         assertEquals("字节跳动", created.getCompany());
         assertEquals("后端开发实习生", created.getPosition());
@@ -344,7 +344,7 @@ class UserExperienceControllerIntegrationTest extends BaseIntegrationTest {
     @Test
     void createExperience_whenNotAuthenticated_returns401() {
         CreateExperienceRequestDTO request = new CreateExperienceRequestDTO();
-        request.setType("project");
+        request.setType("PROJECT");
         request.setName("测试项目");
 
         ResponseEntity<ResponseMessage> response = restTemplate.postForEntity(
@@ -364,7 +364,7 @@ class UserExperienceControllerIntegrationTest extends BaseIntegrationTest {
 
         // 先创建一个经历
         CreateExperienceRequestDTO createRequest = new CreateExperienceRequestDTO();
-        createRequest.setType("project");
+        createRequest.setType("PROJECT");
         createRequest.setName("原项目名");
         createRequest.setRole("开发者");
 
@@ -431,7 +431,7 @@ class UserExperienceControllerIntegrationTest extends BaseIntegrationTest {
 
         // 先创建一个经历
         CreateExperienceRequestDTO createRequest = new CreateExperienceRequestDTO();
-        createRequest.setType("project");
+        createRequest.setType("PROJECT");
         createRequest.setName("要删除的项目");
 
         ResponseEntity<ResponseMessage<ExperienceDTO>> createResponse = restTemplate.exchange(
@@ -494,7 +494,7 @@ class UserExperienceControllerIntegrationTest extends BaseIntegrationTest {
 
         // 创建项目经历
         CreateExperienceRequestDTO projectRequest = new CreateExperienceRequestDTO();
-        projectRequest.setType("project");
+        projectRequest.setType("PROJECT");
         projectRequest.setName("项目1");
         restTemplate.exchange(
                 "/api/v1/user/experiences",
@@ -505,7 +505,7 @@ class UserExperienceControllerIntegrationTest extends BaseIntegrationTest {
 
         // 创建竞赛经历
         CreateExperienceRequestDTO competitionRequest = new CreateExperienceRequestDTO();
-        competitionRequest.setType("competition");
+        competitionRequest.setType("COMPETITION");
         competitionRequest.setName("竞赛1");
         restTemplate.exchange(
                 "/api/v1/user/experiences",
@@ -516,7 +516,7 @@ class UserExperienceControllerIntegrationTest extends BaseIntegrationTest {
 
         // 按类型过滤
         ResponseEntity<ResponseMessage<List<ExperienceDTO>>> response = restTemplate.exchange(
-                "/api/v1/user/experiences?type=project",
+                "/api/v1/user/experiences?type=PROJECT",
                 HttpMethod.GET,
                 withAuth(auth),
                 new ParameterizedTypeReference<ResponseMessage<List<ExperienceDTO>>>() {
@@ -526,7 +526,7 @@ class UserExperienceControllerIntegrationTest extends BaseIntegrationTest {
         List<ExperienceDTO> experiences = response.getBody().getData();
         assertNotNull(experiences);
         assertEquals(1, experiences.size());
-        assertEquals("project", experiences.get(0).getType());
+        assertEquals("PROJECT", experiences.get(0).getType());
     }
 
     // ==================== 权限控制测试 ====================
@@ -547,7 +547,7 @@ class UserExperienceControllerIntegrationTest extends BaseIntegrationTest {
             AuthCookies auth = loginAndGetCookies(candidateStudentId);
 
             CreateExperienceRequestDTO request = new CreateExperienceRequestDTO();
-            request.setType("project");
+            request.setType("PROJECT");
             request.setName("测试项目");
             request.setRole("开发者");
 
@@ -569,7 +569,7 @@ class UserExperienceControllerIntegrationTest extends BaseIntegrationTest {
             AuthCookies auth = loginAndGetCookies(); // 默认用户是MEMBER角色
 
             CreateExperienceRequestDTO request = new CreateExperienceRequestDTO();
-            request.setType("project");
+            request.setType("PROJECT");
             request.setName("测试项目");
             request.setRole("开发者");
 
@@ -593,7 +593,7 @@ class UserExperienceControllerIntegrationTest extends BaseIntegrationTest {
             // 先用MEMBER创建经历
             AuthCookies memberAuth = loginAndGetCookies();
             CreateExperienceRequestDTO createRequest = new CreateExperienceRequestDTO();
-            createRequest.setType("project");
+            createRequest.setType("PROJECT");
             createRequest.setName("原项目");
 
             ResponseEntity<ResponseMessage<ExperienceDTO>> createResponse = restTemplate.exchange(
@@ -631,7 +631,7 @@ class UserExperienceControllerIntegrationTest extends BaseIntegrationTest {
             // 先用MEMBER创建经历
             AuthCookies memberAuth = loginAndGetCookies();
             CreateExperienceRequestDTO createRequest = new CreateExperienceRequestDTO();
-            createRequest.setType("project");
+            createRequest.setType("PROJECT");
             createRequest.setName("要删除的项目");
 
             ResponseEntity<ResponseMessage<ExperienceDTO>> createResponse = restTemplate.exchange(

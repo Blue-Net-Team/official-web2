@@ -1,4 +1,5 @@
 import { CompetitionBriefDTO } from '@/apis/schema/type'
+import { API_BASE_URL } from '@/apis/config'
 import { COMPETITION_LEVEL_LABELS, COMPETITION_LEVEL_COLORS } from '@/types/competition'
 
 interface CompetitionCardProps {
@@ -21,7 +22,7 @@ export default function CompetitionCard({
     animationDelay: `${index * 0.1}s`,
     ...(hasImage
       ? {
-          backgroundImage: `url(/api/v1/file/download/${competition.introduceImageFileId})`,
+          backgroundImage: `url(${API_BASE_URL}/file/download/${competition.introduceImageFileId})`,
         }
       : {}),
   }
