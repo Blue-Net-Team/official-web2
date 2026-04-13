@@ -30,7 +30,7 @@ public class AssessmentTimeDTO {
     @Schema(description = "届次")
     private Integer epoch;
 
-    @Schema(description = "年级（1=大一, 2=大二, 3=大三）")
+    @Schema(description = "入学年份（如 2024、2025）")
     private Integer grade;
 
     @Schema(description = "开始时间")

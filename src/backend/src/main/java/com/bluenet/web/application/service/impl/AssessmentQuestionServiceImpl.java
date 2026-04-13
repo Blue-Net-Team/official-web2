@@ -131,12 +131,12 @@ public class AssessmentQuestionServiceImpl implements AssessmentQuestionService 
         if (currentUser != null) {
             RoleType roleType = RoleType.fromName(currentUser.getRoleName());
             if (roleType == RoleType.CANDIDATE) {
-                // 考生只能看自己方向+年级的考题
+                // 考生只能看自己方向+入学年份的考题
                 if (!currentUser.getDirection().equals(timeVO.getDirection())) {
                     throw new SecurityException("无权查看该考核的题目");
                 }
-                Integer userGrade = GradeCalculator.calculateGrade(currentUser.getStudentId());
-                if (userGrade != null && !userGrade.equals(timeVO.getGrade())) {
+                Integer userEnrollmentYear = GradeCalculator.extractEnrollmentYear(currentUser.getStudentId());
+                if (userEnrollmentYear != null && !userEnrollmentYear.equals(timeVO.getGrade())) {
                     throw new SecurityException("无权查看该考核的题目");
                 }
             }
@@ -189,8 +189,8 @@ public class AssessmentQuestionServiceImpl implements AssessmentQuestionService 
                 if (!currentUser.getDirection().equals(timeVO.getDirection())) {
                     throw new SecurityException("无权查看该题目");
                 }
-                Integer userGrade = GradeCalculator.calculateGrade(currentUser.getStudentId());
-                if (userGrade != null && !userGrade.equals(timeVO.getGrade())) {
+                Integer userEnrollmentYear = GradeCalculator.extractEnrollmentYear(currentUser.getStudentId());
+                if (userEnrollmentYear != null && !userEnrollmentYear.equals(timeVO.getGrade())) {
                     throw new SecurityException("无权查看该题目");
                 }
             }

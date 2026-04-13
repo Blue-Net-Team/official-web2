@@ -37,7 +37,7 @@ function convertToAssessment(dto: AssessmentTimeDTO): Assessment {
     id: dto.id.toString(),
     title,
     round,
-    status: 'not-started', // 后续会更新
+    status: 'NOT_STARTED', // 后续会更新
     startDate: dto.startTime,
     endDate: dto.endTime,
     totalQuestions: dto.totalQuestions ?? 0,
@@ -56,7 +56,7 @@ function calculateAssessmentStatus(
   startTime: string,
   endTime: string,
   deadline?: string
-): 'not-started' | 'in-progress' | 'ended' {
+): 'NOT_STARTED' | 'IN_PROGRESS' | 'ENDED' {
   const now = dayjs()
   const start = dayjs(startTime)
   const end = dayjs(endTime)
@@ -66,11 +66,11 @@ function calculateAssessmentStatus(
   const actualEnd = deadlineDayjs && deadlineDayjs.isBefore(end) ? deadlineDayjs : end
 
   if (now.isBefore(start)) {
-    return 'not-started'
+    return 'NOT_STARTED'
   } else if (now.isAfter(actualEnd)) {
-    return 'ended'
+    return 'ENDED'
   } else {
-    return 'in-progress'
+    return 'IN_PROGRESS'
   }
 }
 

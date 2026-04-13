@@ -40,7 +40,7 @@ public class AssessmentTimeDomainServiceImpl implements AssessmentTimeDomainServ
             throw new IllegalArgumentException("限时考核必须设置有效的限时分钟数");
         }
 
-        // 校验唯一性：(direction, epoch, grade) 组合唯一
+        // 校验唯一性：(direction, epoch, grade) 组合唯一，grade为入学年份
         if (assessmentTime.getDirection() != null && assessmentTime.getEpoch() != null
                 && assessmentTime.getGrade() != null
                 && assessmentTimeRepository.existsByDirectionAndEpochAndGrade(

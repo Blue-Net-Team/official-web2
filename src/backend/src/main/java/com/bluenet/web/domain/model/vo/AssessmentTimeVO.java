@@ -31,7 +31,7 @@ public class AssessmentTimeVO {
     private Integer epoch;
 
     /**
-     * 年级（1=大一, 2=大二, 3=大三）
+     * 入学年份（如 2024、2025）
      */
     private Integer grade;
 

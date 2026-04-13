@@ -6,10 +6,10 @@
 import type { Direction } from './enumerate'
 
 /** 考核状态 */
-export type AssessmentStatus = 'not-started' | 'in-progress' | 'ended'
+export type AssessmentStatus = 'NOT_STARTED' | 'IN_PROGRESS' | 'ENDED'
 
 /** 题型枚举 */
-export type QuestionType = 'single_choice' | 'multiple_choice' | 'file_upload' | 'algorithm'
+export type QuestionType = 'SINGLE_CHOICE' | 'MULTIPLE_CHOICE' | 'FILE_UPLOAD' | 'ALGORITHM'
 
 /** 考核时间信息 - 对应后端 AssessmentTimeDTO */
 export interface AssessmentTimeDTO {

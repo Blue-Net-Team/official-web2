@@ -49,9 +49,9 @@ function getStatusInfo(
   const now = Date.now()
   const start = new Date(startTime).getTime()
   const end = new Date(endTime).getTime()
-  if (now < start) return { text: '未开始', status: 'not-started' }
-  if (now > end) return { text: '已结束', status: 'ended' }
-  return { text: '进行中', status: 'in-progress' }
+  if (now < start) return { text: '未开始', status: 'NOT_STARTED' }
+  if (now > end) return { text: '已结束', status: 'ENDED' }
+  return { text: '进行中', status: 'IN_PROGRESS' }
 }
 
 function formatDate(dateStr: string): string {
@@ -329,7 +329,7 @@ export default function QuestionDetailPage() {
   }
 
   const fileContent = question.content as FileUploadContent | null
-  const isFileUpload = question.questionType === 'file_upload'
+  const isFileUpload = question.questionType === 'FILE_UPLOAD'
   const isAnswered = !!answer
   const isTimed = session !== null
   const deadline = session?.deadline ?? null
@@ -577,7 +577,7 @@ export default function QuestionDetailPage() {
                     color: 'rgba(255,255,255,0.45)',
                   }}
                 >
-                  {timeInfo.grade ? ['大一', '大二', '大三'][timeInfo.grade - 1] : ''}
+                  {timeInfo.grade ? `${timeInfo.grade}级` : ''}
                 </Tag>
               )}
             </div>

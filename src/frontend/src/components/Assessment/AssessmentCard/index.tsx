@@ -12,7 +12,6 @@ import {
 import type { Assessment } from '@/types/profile'
 import type { AssessmentTimeDTO, AssessmentStatus } from '@/apis/schema/assessment.dto'
 import { DIRECTION_LABELS } from '@/apis/schema/enumerate'
-import type { Direction } from '@/apis/schema/enumerate'
 
 interface AssessmentCardProps {
   assessment: Assessment | AssessmentTimeDTO
@@ -38,9 +37,9 @@ function getAssessmentStatus(startTime: string, endTime: string): AssessmentStat
   const now = new Date().getTime()
   const start = new Date(startTime).getTime()
   const end = new Date(endTime).getTime()
-  if (now < start) return 'not-started'
-  if (now > end) return 'ended'
-  return 'in-progress'
+  if (now < start) return 'NOT_STARTED'
+  if (now > end) return 'ENDED'
+  return 'IN_PROGRESS'
 }
 
 function extractEpochFromTitle(title: string): number {
@@ -51,14 +50,6 @@ function extractEpochFromTitle(title: string): number {
     return index >= 0 ? index + 1 : parseInt(match[1]) || 1
   }
   return 1
-}
-
-function extractDirectionFromTitle(title: string): Direction {
-  if (title.includes('嵌入式')) return 'embedded' as Direction
-  if (title.includes('物联网')) return 'iot' as Direction
-  if (title.includes('大数据')) return 'bigdata' as Direction
-  if (title.includes('人工智能')) return 'ai' as Direction
-  return 'iot' as Direction
 }
 
 export default function AssessmentCard({ assessment, status }: AssessmentCardProps) {
@@ -74,12 +65,12 @@ export default function AssessmentCard({ assessment, status }: AssessmentCardPro
     status ??
     (isDTO ? getAssessmentStatus(assessment.startTime, assessment.endTime) : assessment.status)
 
-  const isInProgress = actualStatus === 'in-progress'
-  const isEnded = actualStatus === 'ended'
-  const isNotStarted = actualStatus === 'not-started'
+  const isInProgress = actualStatus === 'IN_PROGRESS'
+  const isEnded = actualStatus === 'ENDED'
+  const isNotStarted = actualStatus === 'NOT_STARTED'
 
   const epoch = isDTO ? assessment.epoch : extractEpochFromTitle(assessment.title)
-  const direction = isDTO ? assessment.direction : extractDirectionFromTitle(assessment.title)
+  const direction = isDTO ? assessment.direction : null
   const timeLimit = isDTO ? assessment.timeLimit : false
   const timeLimitMinutes = isDTO ? assessment.timeLimitMinutes : undefined
 
@@ -122,7 +113,7 @@ export default function AssessmentCard({ assessment, status }: AssessmentCardPro
           <div className="flex flex-col gap-1">
             <span className="text-base font-semibold text-white">{getEpochLabel(epoch)}</span>
             <span className="text-[13px] text-white/45">
-              {DIRECTION_LABELS[direction] || (!isDTO && assessment.round)}
+              {direction ? DIRECTION_LABELS[direction] : !isDTO && assessment.round}
             </span>
           </div>
         </div>
@@ -135,9 +126,9 @@ export default function AssessmentCard({ assessment, status }: AssessmentCardPro
                 : 'bg-[rgba(140,140,141,0.1)] text-[#8c8c8d] border border-[rgba(140,140,141,0.15)]'
           }`}
         >
-          {actualStatus === 'ended'
+          {actualStatus === 'ENDED'
             ? '已结束'
-            : actualStatus === 'in-progress'
+            : actualStatus === 'IN_PROGRESS'
               ? '进行中'
               : '未开始'}
         </span>

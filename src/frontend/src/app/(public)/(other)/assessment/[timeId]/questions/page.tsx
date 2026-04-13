@@ -29,13 +29,13 @@ import styles from './styles.module.css'
 function getStatusText(
   startTime: string,
   endTime: string
-): { text: string; status: 'not-started' | 'in-progress' | 'ended' } {
+): { text: string; status: 'NOT_STARTED' | 'IN_PROGRESS' | 'ENDED' } {
   const now = new Date().getTime()
   const start = new Date(startTime).getTime()
   const end = new Date(endTime).getTime()
-  if (now < start) return { text: '未开始', status: 'not-started' }
-  if (now > end) return { text: '已结束', status: 'ended' }
-  return { text: '进行中', status: 'in-progress' }
+  if (now < start) return { text: '未开始', status: 'NOT_STARTED' }
+  if (now > end) return { text: '已结束', status: 'ENDED' }
+  return { text: '进行中', status: 'IN_PROGRESS' }
 }
 
 /** 格式化日期 */
@@ -46,10 +46,10 @@ function formatDate(dateStr: string): string {
 }
 
 const QuestionTypePresetColor: Record<QuestionType, string> = {
-  single_choice: 'geekblue',
-  multiple_choice: 'purple',
-  file_upload: 'orange',
-  algorithm: 'cyan',
+  SINGLE_CHOICE: 'geekblue',
+  MULTIPLE_CHOICE: 'purple',
+  FILE_UPLOAD: 'orange',
+  ALGORITHM: 'cyan',
 }
 
 function getQuestionTypeColor(type: QuestionType): string {
@@ -231,9 +231,9 @@ export default function QuestionsPage() {
                 <Tag
                   variant="outlined"
                   color={
-                    statusInfo.status === 'not-started'
+                    statusInfo.status === 'NOT_STARTED'
                       ? 'default'
-                      : statusInfo.status === 'in-progress'
+                      : statusInfo.status === 'IN_PROGRESS'
                         ? 'processing'
                         : 'success'
                   }
@@ -248,9 +248,7 @@ export default function QuestionsPage() {
                   <Tag variant="outlined">
                     {DirectionLabels[timeInfo.direction as Direction] || timeInfo.direction}
                   </Tag>
-                  <Tag variant="outlined">
-                    {timeInfo.grade === 1 ? '大一' : timeInfo.grade === 2 ? '大二' : '大三'}
-                  </Tag>
+                  <Tag variant="outlined">{timeInfo.grade ? `${timeInfo.grade}级` : ''}</Tag>
                   <span className="flex items-center gap-1.5 text-[13px] text-white/45">
                     <CalendarOutlined />
                     <span>

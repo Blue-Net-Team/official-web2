@@ -18,7 +18,7 @@ export interface UserProfileWithStats extends UserInfo {
   tabCounts: TabCounts
 }
 
-export type AssessmentStatus = 'not-started' | 'in-progress' | 'ended'
+export type AssessmentStatus = 'NOT_STARTED' | 'IN_PROGRESS' | 'ENDED'
 
 export interface Assessment {
   id: string

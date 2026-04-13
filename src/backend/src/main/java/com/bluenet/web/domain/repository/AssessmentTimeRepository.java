@@ -58,27 +58,27 @@ public interface AssessmentTimeRepository {
     boolean existsById(Long id);
 
     /**
-     * 检查方向+届次+年级组合是否已存在
+     * 检查方向+届次+入学年份组合是否已存在
      *
      * @param direction
      *            方向
      * @param epoch
      *            届次
      * @param grade
-     *            年级
+     *            入学年份（如 2024、2025）
      * @return 如果存在返回true，否则返回false
      */
     boolean existsByDirectionAndEpochAndGrade(Direction direction, Integer epoch, Integer grade);
 
     /**
-     * 检查方向+届次+年级组合是否已存在（排除指定ID）
+     * 检查方向+届次+入学年份组合是否已存在（排除指定ID）
      *
      * @param direction
      *            方向
      * @param epoch
      *            届次
      * @param grade
-     *            年级
+     *            入学年份（如 2024、2025）
      * @param excludeId
      *            排除的考核时间ID
      * @return 如果存在返回true，否则返回false
@@ -101,7 +101,7 @@ public interface AssessmentTimeRepository {
      * @param direction
      *            方向（null表示不过滤）
      * @param grade
-     *            年级（null表示不过滤）
+     *            入学年份（如 2024、2025，null表示不过滤）
      * @param pageable
      *            分页参数
      * @return 考核时间分页结果

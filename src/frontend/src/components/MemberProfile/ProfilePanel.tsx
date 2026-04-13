@@ -14,23 +14,7 @@ interface ProfilePanelProps {
   member: MemberDetailDTO
 }
 
-const GRADE_LABELS: Record<number, string> = {
-  1: '大一',
-  2: '大二',
-  3: '大三',
-  4: '大四',
-  5: '研一',
-  6: '研二',
-}
-
-const calculateGrade = (enrollmentYear: number): string => {
-  const currentYear = new Date().getFullYear()
-  const grade = currentYear - enrollmentYear + 1
-  return GRADE_LABELS[grade] || `${enrollmentYear}级`
-}
-
 export const ProfilePanel: React.FC<ProfilePanelProps> = ({ member }) => {
-  const gradeLabel = calculateGrade(member.enrollmentYear)
   const directionLabel = DIRECTION_LABELS[member.direction] || member.direction
   const genderLabel = GENDER_LABELS[member.gender] || '未知'
 
@@ -61,7 +45,7 @@ export const ProfilePanel: React.FC<ProfilePanelProps> = ({ member }) => {
           <span className="text-xs font-medium text-[#8c8c8d] uppercase tracking-[0.5px]">
             年级
           </span>
-          <span className="text-sm text-white">{gradeLabel}</span>
+          <span className="text-sm text-white">{member.grade || '未知'}</span>
         </div>
         <div className="flex flex-col gap-1.5">
           <span className="text-xs font-medium text-[#8c8c8d] uppercase tracking-[0.5px]">
