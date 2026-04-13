@@ -466,10 +466,7 @@ export default function QuestionDetailPage() {
       case 'resubmitting':
         return (
           <>
-            <Upload.Dragger
-              {...draggerProps}
-              rootClassName="min-h-[200px] bg-white/[0.02] border border-dashed border-white/10 rounded-xl transition-all duration-300 ease hover:border-[#6677ff]/40 hover:bg-[#6677ff]/[0.03]"
-            >
+            <Upload.Dragger {...draggerProps}>
               <p className="text-[36px] text-white/30 m-0">
                 <InboxOutlined />
               </p>
@@ -502,10 +499,7 @@ export default function QuestionDetailPage() {
       default:
         return (
           <>
-            <Upload.Dragger
-              {...draggerProps}
-              rootClassName="min-h-[200px] bg-white/[0.02] border border-dashed border-white/10 rounded-xl transition-all duration-300 ease hover:border-[#6677ff]/40 hover:bg-[#6677ff]/[0.03]"
-            >
+            <Upload.Dragger {...draggerProps}>
               <p className="text-[36px] text-white/30 m-0">
                 <InboxOutlined />
               </p>
