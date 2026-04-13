@@ -5,6 +5,7 @@ import com.bluenet.web.api.dto.user.ChangeEmailRequestDTO;
 import com.bluenet.web.api.dto.user.ChangePasswordRequestDTO;
 import com.bluenet.web.api.dto.user.SendEmailVerificationCodeRequestDTO;
 import com.bluenet.web.api.dto.user.TabCountsDTO;
+import com.bluenet.web.api.dto.user.UpdateAvatarRequestDTO;
 import com.bluenet.web.api.dto.user.UpdateProfileRequestDTO;
 import com.bluenet.web.api.dto.user.UserInfo;
 import com.bluenet.web.api.dto.user.VerifyPasswordRequestDTO;
@@ -138,6 +139,19 @@ class UserProfileController {
                     request.getToken(),
                     request.getNewPassword(),
                     request.getConfirmPassword());
+            return ResponseMessage.success();
+        } catch (GlobalException e) {
+            return ResponseMessage.error(e);
+        }
+    }
+
+    @Operation(summary = "更新用户头像", description = "通过已上传的 fileId 更新当前用户头像，文件类型必须为 AVATAR")
+    @SecurityRequirement(name = "cookie-auth")
+    @RequiresPermission(name = "更新用户头像", value = "user:avatar:update", access = AccessLevel.AUTHENTICATED)
+    @PutMapping("/avatar")
+    public ResponseMessage<Void> updateAvatar(@Valid @RequestBody UpdateAvatarRequestDTO request) {
+        try {
+            userInfoService.updateAvatar(request.getFileId());
             return ResponseMessage.success();
         } catch (GlobalException e) {
             return ResponseMessage.error(e);

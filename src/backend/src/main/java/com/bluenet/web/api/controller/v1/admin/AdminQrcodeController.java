@@ -1,29 +1,29 @@
 package com.bluenet.web.api.controller.v1.admin;
 
 import com.bluenet.web.api.dto.ResponseMessage;
-import com.bluenet.web.api.dto.file.FileInfo;
 import com.bluenet.web.application.service.QrcodeService;
+import com.bluenet.web.domain.exception.GlobalException;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
 import com.bluenet.web.infrastructure.security.annotation.RequiresPermission;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.media.SchemaProperty;
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 /**
  * 咨询群二维码管理接口
  * <p>
- * 管理员上传和删除咨询群二维码
+ * 管理员创建和删除咨询群二维码
  * </p>
  */
-@Tag(name = "咨询群二维码管理", description = "管理员上传和删除咨询群二维码")
+@Tag(name = "咨询群二维码管理", description = "管理员创建和删除咨询群二维码")
 @RestController
 @RequestMapping("/api/v1/admin/qrcodes/consultation")
 @RequiredArgsConstructor
@@ -32,23 +32,35 @@ public class AdminQrcodeController {
 
     private final QrcodeService qrcodeService;
 
-    @Operation(summary = "上传咨询群二维码", description = "管理员上传咨询群二维码图片")
-    @RequiresPermission(name = "上传咨询群二维码", value = "admin:qrcode:consultation:upload", access = AccessLevel.PROTECTED)
-    @RequestBody(content = @Content(mediaType = "multipart/form-data", schema = @Schema(type = "object"), schemaProperties = {
-            @SchemaProperty(name = "file", schema = @Schema(type = "string", format = "binary")) }))
-    @SecurityRequirement(name = "bearer-jwt")
+    @Operation(summary = "创建咨询群二维码", description = "通过已上传的 fileId 创建咨询群二维码，文件类型必须为 QRCODE")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "创建成功"),
+            @ApiResponse(responseCode = "400", description = "文件类型不匹配", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseMessage.class))),
+            @ApiResponse(responseCode = "404", description = "文件不存在", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseMessage.class)))
+    })
+    @RequiresPermission(name = "创建咨询群二维码", value = "admin:qrcode:consultation:create", access = AccessLevel.PROTECTED)
+    @SecurityRequirement(name = "cookie-auth")
     @PostMapping
-    public ResponseMessage<FileInfo> uploadConsultationQrcode(@RequestParam("file") MultipartFile file) {
-        FileInfo fileInfo = qrcodeService.uploadConsultationQrcode(file);
-        return ResponseMessage.success(fileInfo);
+    public ResponseMessage<Void> createConsultationQrcode(
+            @Parameter(description = "文件ID", required = true) @RequestParam("fileId") Long fileId) {
+        try {
+            qrcodeService.createQrcode(fileId);
+            return ResponseMessage.success();
+        } catch (GlobalException e) {
+            return ResponseMessage.error(e);
+        }
     }
 
     @Operation(summary = "删除咨询群二维码", description = "管理员删除咨询群二维码")
     @RequiresPermission(name = "删除咨询群二维码", value = "admin:qrcode:consultation:delete", access = AccessLevel.PROTECTED)
-    @SecurityRequirement(name = "bearer-jwt")
+    @SecurityRequirement(name = "cookie-auth")
     @DeleteMapping("/{id}")
     public ResponseMessage<Void> deleteConsultationQrcode(@PathVariable Long id) {
-        qrcodeService.deleteConsultationQrcode(id);
-        return ResponseMessage.success();
+        try {
+            qrcodeService.deleteConsultationQrcode(id);
+            return ResponseMessage.success();
+        } catch (GlobalException e) {
+            return ResponseMessage.error(e);
+        }
     }
 }

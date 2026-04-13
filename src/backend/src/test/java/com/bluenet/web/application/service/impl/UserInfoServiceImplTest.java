@@ -4,17 +4,23 @@ import com.bluenet.web.api.dto.user.UpdateProfileRequestDTO;
 import com.bluenet.web.api.dto.user.UserInfo;
 import com.bluenet.web.application.converter.UserConverter;
 import com.bluenet.web.domain.exception.BadRequest;
+import com.bluenet.web.domain.exception.DataNotFound;
 import com.bluenet.web.domain.exception.Forbidden;
 import com.bluenet.web.domain.exception.Unauthorized;
 import com.bluenet.web.domain.model.enumerate.Direction;
+import com.bluenet.web.domain.model.enumerate.FileType;
 import com.bluenet.web.domain.model.enumerate.Gender;
+import com.bluenet.web.domain.model.vo.FileVO;
 import com.bluenet.web.domain.model.vo.UserVO;
+import com.bluenet.web.domain.service.FileDomainService;
 import com.bluenet.web.domain.service.UserDomainService;
 import com.bluenet.web.infrastructure.security.auth.AuthTokenService;
 import com.bluenet.web.infrastructure.security.change.ChangePasswordStateService;
 import com.bluenet.web.infrastructure.security.util.UserCTX;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -57,6 +63,9 @@ class UserInfoServiceImplTest {
 
     @Mock
     private AuthTokenService authTokenService;
+
+    @Mock
+    private FileDomainService fileDomainService;
 
     @InjectMocks
     private UserInfoServiceImpl userInfoService;
@@ -273,5 +282,64 @@ class UserInfoServiceImplTest {
                 () -> userInfoService.changePassword(TEST_USER_ID, "token", "newPwd", "newPwd"));
 
         assertEquals("验证信息不匹配", ex.getMessage());
+    }
+
+    // ==================== updateAvatar 测试 ====================
+
+    @Nested
+    @DisplayName("updateAvatar 方法测试")
+    class UpdateAvatarTests {
+
+        @Test
+        @DisplayName("TC-201: 成功更新头像")
+        void updateAvatar_success() {
+            UserVO user = UserVO.builder().id(TEST_USER_ID).build();
+            UserCTX.setCurrentUser(user);
+
+            FileVO fileVO = FileVO.builder().id(100L).type(FileType.AVATAR).build();
+            when(fileDomainService.getFileById(100L)).thenReturn(fileVO);
+
+            userInfoService.updateAvatar(100L);
+
+            verify(fileDomainService).getFileById(100L);
+            verify(userDomainService).updateUserAvatar(TEST_USER_ID, fileVO);
+        }
+
+        @Test
+        @DisplayName("TC-202: 文件不存在应抛出DataNotFound")
+        void updateAvatar_fileNotFound_throwsDataNotFound() {
+            UserVO user = UserVO.builder().id(TEST_USER_ID).build();
+            UserCTX.setCurrentUser(user);
+
+            when(fileDomainService.getFileById(9999L)).thenReturn(null);
+
+            DataNotFound ex = assertThrows(DataNotFound.class, () -> userInfoService.updateAvatar(9999L));
+            assertEquals("文件不存在", ex.getMessage());
+            verify(userDomainService, never()).updateUserAvatar(anyLong(), any());
+        }
+
+        @Test
+        @DisplayName("TC-203: 文件类型不匹配应抛出BadRequest")
+        void updateAvatar_fileTypeMismatch_throwsBadRequest() {
+            UserVO user = UserVO.builder().id(TEST_USER_ID).build();
+            UserCTX.setCurrentUser(user);
+
+            FileVO fileVO = FileVO.builder().id(100L).type(FileType.WORK).build();
+            when(fileDomainService.getFileById(100L)).thenReturn(fileVO);
+
+            BadRequest ex = assertThrows(BadRequest.class, () -> userInfoService.updateAvatar(100L));
+            assertEquals("文件类型不匹配，期望 AVATAR", ex.getMessage());
+            verify(userDomainService, never()).updateUserAvatar(anyLong(), any());
+        }
+
+        @Test
+        @DisplayName("TC-204: 未登录应抛出Unauthorized")
+        void updateAvatar_notAuthenticated_throwsUnauthorized() {
+            UserCTX.clear();
+
+            assertThrows(Unauthorized.class, () -> userInfoService.updateAvatar(100L));
+            verify(fileDomainService, never()).getFileById(anyLong());
+            verify(userDomainService, never()).updateUserAvatar(anyLong(), any());
+        }
     }
 }

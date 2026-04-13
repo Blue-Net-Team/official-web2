@@ -15,11 +15,11 @@ public class CompetitionVO {
     private String shortName;
     private String logoUrl;
     private Long logoFileId;
+    private Long coverFileId;
     private String summary;
     private String detail;
     private String level;
     private String month;
     private String organizer;
     private Integer sortOrder;
-    private Boolean enabled;
 }

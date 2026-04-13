@@ -16,13 +16,15 @@ export default function CompetitionCard({
   const levelColor = COMPETITION_LEVEL_COLORS[competition.level]
   const levelLabel = COMPETITION_LEVEL_LABELS[competition.level]
 
-  const hasImage = showImage && !!competition.introduceImageFileId
+  const hasImage = showImage && !!(competition.coverFileId ?? competition.introduceImageFileId)
+
+  const imageFileId = competition.coverFileId ?? competition.introduceImageFileId
 
   const cardStyle: React.CSSProperties = {
     animationDelay: `${index * 0.1}s`,
     ...(hasImage
       ? {
-          backgroundImage: `url(${API_BASE_URL}/file/download/${competition.introduceImageFileId})`,
+          backgroundImage: `url(${API_BASE_URL}/file/download/${imageFileId})`,
         }
       : {}),
   }

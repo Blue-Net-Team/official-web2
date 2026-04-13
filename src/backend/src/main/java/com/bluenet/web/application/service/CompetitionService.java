@@ -21,7 +21,7 @@ public interface CompetitionService {
     List<CompetitionBriefDTO> getCompetitionList(int limit);
 
     /**
-     * 获取竞赛响应列表（包含新字段和图片信息）
+     * 获取竞赛响应列表（包含封面信息）
      *
      * @param limit
      *            限制返回数量，如果为0则返回全部
@@ -77,23 +77,22 @@ public interface CompetitionService {
     void updateSortOrder(Long id, UpdateSortOrderRequestDTO request);
 
     /**
-     * 添加竞赛图片
+     * 更新竞赛Logo
      *
      * @param id
      *            竞赛ID
-     * @param request
-     *            添加图片请求DTO
-     * @return 添加的图片信息DTO
+     * @param fileId
+     *            Logo文件ID（必须为 NORMAL_IMG 类型）
      */
-    CompetitionImageDTO addCompetitionImage(Long id, AddCompetitionImageRequestDTO request);
+    void updateLogo(Long id, Long fileId);
 
     /**
-     * 删除竞赛图片
+     * 更新竞赛封面
      *
      * @param id
      *            竞赛ID
-     * @param imageId
-     *            图片ID
+     * @param fileId
+     *            封面文件ID（必须为 NORMAL_IMG 类型）
      */
-    void removeCompetitionImage(Long id, Long imageId);
+    void updateCover(Long id, Long fileId);
 }

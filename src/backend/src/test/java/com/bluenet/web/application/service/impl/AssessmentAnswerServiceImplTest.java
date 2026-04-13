@@ -2,14 +2,21 @@ package com.bluenet.web.application.service.impl;
 
 import com.bluenet.web.api.dto.assessment_answer.AssessmentAnswerDTO;
 import com.bluenet.web.api.dto.assessment_answer.CreateAnswerRequestDTO;
+import com.bluenet.web.domain.model.enumerate.Direction;
 import com.bluenet.web.domain.model.vo.AssessmentAnswerVO;
 import com.bluenet.web.domain.model.vo.AssessmentQuestionVO;
+import com.bluenet.web.domain.model.vo.AssessmentTimeVO;
+import com.bluenet.web.domain.model.vo.FileVO;
 import com.bluenet.web.domain.model.vo.UserVO;
 import com.bluenet.web.domain.repository.AssessmentAnswerRepository;
 import com.bluenet.web.domain.repository.AssessmentSessionRepository;
 import com.bluenet.web.domain.service.AssessmentAnswerDomainService;
 import com.bluenet.web.domain.service.AssessmentQuestionDomainService;
+import com.bluenet.web.domain.service.AssessmentTimeDomainService;
+import com.bluenet.web.domain.service.FileDomainService;
 import com.bluenet.web.domain.exception.DataConflict;
+import com.bluenet.web.domain.exception.Forbidden;
+import com.bluenet.web.domain.model.enumerate.FileType;
 import com.bluenet.web.infrastructure.security.util.UserCTX;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -44,6 +51,12 @@ class AssessmentAnswerServiceImplTest {
     private AssessmentQuestionDomainService assessmentQuestionDomainService;
 
     @Mock
+    private AssessmentTimeDomainService assessmentTimeDomainService;
+
+    @Mock
+    private FileDomainService fileDomainService;
+
+    @Mock
     private AssessmentAnswerRepository assessmentAnswerRepository;
 
     @Mock
@@ -64,6 +77,7 @@ class AssessmentAnswerServiceImplTest {
                 .id(TEST_USER_ID)
                 .studentId("2024123456")
                 .roleName("CANDIDATE")
+                .direction(Direction.COMPUTER_VISION)
                 .build();
     }
 
@@ -93,6 +107,20 @@ class AssessmentAnswerServiceImplTest {
                 .build();
     }
 
+    private AssessmentTimeVO createTestTimeVO() {
+        return AssessmentTimeVO.builder()
+                .id(TEST_ASSESSMENT_TIME_ID)
+                .direction(Direction.COMPUTER_VISION)
+                .build();
+    }
+
+    private void stubDirectionAndFileValidation() {
+        when(assessmentTimeDomainService.getById(TEST_ASSESSMENT_TIME_ID))
+                .thenReturn(Optional.of(createTestTimeVO()));
+        when(fileDomainService.getFileById(TEST_FILE_ID))
+                .thenReturn(FileVO.builder().id(TEST_FILE_ID).type(FileType.WORK).build());
+    }
+
     // ==================== createAnswer 测试 ====================
 
     @Nested
@@ -111,6 +139,7 @@ class AssessmentAnswerServiceImplTest {
                 AssessmentAnswerVO createdVO = createTestAnswerVO();
 
                 when(assessmentQuestionDomainService.getQuestionById(TEST_QUESTION_ID)).thenReturn(questionVO);
+                stubDirectionAndFileValidation();
                 when(assessmentSessionRepository.findByUserIdAndAssessmentTimeId(TEST_USER_ID, TEST_ASSESSMENT_TIME_ID))
                         .thenReturn(Optional.empty());
                 when(assessmentAnswerDomainService.createAnswer(any(AssessmentAnswerVO.class))).thenReturn(createdVO);
@@ -179,6 +208,7 @@ class AssessmentAnswerServiceImplTest {
                 AssessmentQuestionVO questionVO = createTestQuestionVO();
 
                 when(assessmentQuestionDomainService.getQuestionById(TEST_QUESTION_ID)).thenReturn(questionVO);
+                stubDirectionAndFileValidation();
                 when(assessmentSessionRepository.findByUserIdAndAssessmentTimeId(TEST_USER_ID, TEST_ASSESSMENT_TIME_ID))
                         .thenReturn(Optional.empty());
                 when(assessmentAnswerDomainService.createAnswer(any(AssessmentAnswerVO.class)))
@@ -203,6 +233,7 @@ class AssessmentAnswerServiceImplTest {
                 AssessmentAnswerVO createdVO = createTestAnswerVO();
 
                 when(assessmentQuestionDomainService.getQuestionById(TEST_QUESTION_ID)).thenReturn(questionVO);
+                stubDirectionAndFileValidation();
                 when(assessmentSessionRepository.findByUserIdAndAssessmentTimeId(TEST_USER_ID, TEST_ASSESSMENT_TIME_ID))
                         .thenReturn(Optional.empty());
                 when(assessmentAnswerDomainService.createAnswer(any(AssessmentAnswerVO.class))).thenReturn(createdVO);
@@ -215,6 +246,132 @@ class AssessmentAnswerServiceImplTest {
                                         && answerVO.getQuestionId().equals(TEST_QUESTION_ID)
                                         && answerVO.getFileId().equals(TEST_FILE_ID)
                                         && "test answer content".equals(answerVO.getContent())));
+            }
+        }
+    }
+
+    // ==================== 方向匹配 + fileId 校验测试 ====================
+
+    @Nested
+    @DisplayName("方向匹配和 fileId 校验测试")
+    class ValidationTests {
+
+        @Test
+        @DisplayName("TC-402: 方向不匹配应抛出Forbidden")
+        void createAnswer_directionMismatch_shouldThrowForbidden() {
+            try (MockedStatic<UserCTX> mockedUserCTX = mockStatic(UserCTX.class)) {
+                UserVO user = UserVO.builder()
+                        .id(TEST_USER_ID)
+                        .studentId("2024123456")
+                        .roleName("CANDIDATE")
+                        .direction(Direction.EMBEDDED)
+                        .build();
+                mockedUserCTX.when(UserCTX::getCurrentUser).thenReturn(user);
+
+                CreateAnswerRequestDTO request = CreateAnswerRequestDTO.builder()
+                        .questionId(TEST_QUESTION_ID)
+                        .content("answer")
+                        .build();
+                AssessmentQuestionVO questionVO = createTestQuestionVO();
+
+                when(assessmentQuestionDomainService.getQuestionById(TEST_QUESTION_ID)).thenReturn(questionVO);
+                // AssessmentTime has COMPUTER_VISION direction, user has FRONTEND
+                when(assessmentTimeDomainService.getById(TEST_ASSESSMENT_TIME_ID))
+                        .thenReturn(Optional.of(createTestTimeVO()));
+
+                Forbidden ex = assertThrows(
+                        Forbidden.class,
+                        () -> assessmentAnswerService.createAnswer(request));
+                assertEquals("方向不匹配", ex.getMessage());
+
+                verify(assessmentAnswerDomainService, never()).createAnswer(any());
+            }
+        }
+
+        @Test
+        @DisplayName("TC-403: fileId 对应文件不存在应抛出BadRequest")
+        void createAnswer_fileNotFound_shouldThrowBadRequest() {
+            try (MockedStatic<UserCTX> mockedUserCTX = mockStatic(UserCTX.class)) {
+                UserVO user = createTestUser();
+                mockedUserCTX.when(UserCTX::getCurrentUser).thenReturn(user);
+
+                CreateAnswerRequestDTO request = CreateAnswerRequestDTO.builder()
+                        .questionId(TEST_QUESTION_ID)
+                        .fileId(9999L)
+                        .content("answer")
+                        .build();
+                AssessmentQuestionVO questionVO = createTestQuestionVO();
+
+                when(assessmentQuestionDomainService.getQuestionById(TEST_QUESTION_ID)).thenReturn(questionVO);
+                when(assessmentTimeDomainService.getById(TEST_ASSESSMENT_TIME_ID))
+                        .thenReturn(Optional.of(createTestTimeVO()));
+                when(fileDomainService.getFileById(9999L)).thenReturn(null);
+
+                com.bluenet.web.domain.exception.BadRequest ex = assertThrows(
+                        com.bluenet.web.domain.exception.BadRequest.class,
+                        () -> assessmentAnswerService.createAnswer(request));
+                assertEquals("文件不存在", ex.getMessage());
+
+                verify(assessmentAnswerDomainService, never()).createAnswer(any());
+            }
+        }
+
+        @Test
+        @DisplayName("TC-404: fileId 类型不是 WORK 应抛出BadRequest")
+        void createAnswer_fileTypeMismatch_shouldThrowBadRequest() {
+            try (MockedStatic<UserCTX> mockedUserCTX = mockStatic(UserCTX.class)) {
+                UserVO user = createTestUser();
+                mockedUserCTX.when(UserCTX::getCurrentUser).thenReturn(user);
+
+                CreateAnswerRequestDTO request = createTestRequest();
+                AssessmentQuestionVO questionVO = createTestQuestionVO();
+
+                when(assessmentQuestionDomainService.getQuestionById(TEST_QUESTION_ID)).thenReturn(questionVO);
+                when(assessmentTimeDomainService.getById(TEST_ASSESSMENT_TIME_ID))
+                        .thenReturn(Optional.of(createTestTimeVO()));
+                when(fileDomainService.getFileById(TEST_FILE_ID))
+                        .thenReturn(FileVO.builder().id(TEST_FILE_ID).type(FileType.AVATAR).build());
+
+                com.bluenet.web.domain.exception.BadRequest ex = assertThrows(
+                        com.bluenet.web.domain.exception.BadRequest.class,
+                        () -> assessmentAnswerService.createAnswer(request));
+                assertEquals("文件类型不匹配，期望 WORK", ex.getMessage());
+
+                verify(assessmentAnswerDomainService, never()).createAnswer(any());
+            }
+        }
+
+        @Test
+        @DisplayName("TC-405: fileId 为 null 但 content 有值应正常创建")
+        void createAnswer_noFileId_shouldSucceed() {
+            try (MockedStatic<UserCTX> mockedUserCTX = mockStatic(UserCTX.class)) {
+                UserVO user = createTestUser();
+                mockedUserCTX.when(UserCTX::getCurrentUser).thenReturn(user);
+
+                CreateAnswerRequestDTO request = CreateAnswerRequestDTO.builder()
+                        .questionId(TEST_QUESTION_ID)
+                        .content("text answer")
+                        .build();
+                AssessmentQuestionVO questionVO = createTestQuestionVO();
+                AssessmentAnswerVO createdVO = AssessmentAnswerVO.builder()
+                        .id(TEST_ANSWER_ID)
+                        .userId(TEST_USER_ID)
+                        .questionId(TEST_QUESTION_ID)
+                        .content("text answer")
+                        .submitTime(TEST_SUBMIT_TIME)
+                        .build();
+
+                when(assessmentQuestionDomainService.getQuestionById(TEST_QUESTION_ID)).thenReturn(questionVO);
+                when(assessmentTimeDomainService.getById(TEST_ASSESSMENT_TIME_ID))
+                        .thenReturn(Optional.of(createTestTimeVO()));
+                when(assessmentSessionRepository.findByUserIdAndAssessmentTimeId(TEST_USER_ID, TEST_ASSESSMENT_TIME_ID))
+                        .thenReturn(Optional.empty());
+                when(assessmentAnswerDomainService.createAnswer(any(AssessmentAnswerVO.class))).thenReturn(createdVO);
+
+                AssessmentAnswerDTO result = assessmentAnswerService.createAnswer(request);
+
+                assertNotNull(result);
+                verify(fileDomainService, never()).getFileById(anyLong());
             }
         }
     }

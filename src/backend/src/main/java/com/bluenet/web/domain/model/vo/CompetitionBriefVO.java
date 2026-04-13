@@ -15,9 +15,9 @@ public class CompetitionBriefVO {
     private String shortName;
     private String logoUrl;
     private Long logoFileId;
+    private Long coverFileId;
     private String summary;
     private String level;
     private String month;
     private String organizer;
-    private Long introduceImageFileId;
 }

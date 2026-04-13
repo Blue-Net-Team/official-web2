@@ -25,12 +25,9 @@ import com.bluenet.web.api.dto.competition.CompetitionDetailDTO;
 import com.bluenet.web.api.dto.competition.CompetitionResponseDTO;
 import com.bluenet.web.domain.model.entity.Competition;
 import com.bluenet.web.domain.model.entity.File;
-import com.bluenet.web.domain.model.entity.IntroduceImage;
 import com.bluenet.web.domain.model.enumerate.FileType;
-import com.bluenet.web.domain.model.enumerate.ImageType;
 import com.bluenet.web.infrastructure.repository.mapper.CompetitionMapper;
 import com.bluenet.web.infrastructure.repository.mapper.FileMapper;
-import com.bluenet.web.infrastructure.repository.mapper.IntroduceImageMapper;
 import com.bluenet.web.testcontainers.TestcontainersConfiguration;
 
 /**
@@ -48,9 +45,6 @@ class CompetitionControllerIntegrationTest extends BaseIntegrationTest {
 
     @Autowired
     private CompetitionMapper competitionMapper;
-
-    @Autowired
-    private IntroduceImageMapper introduceImageMapper;
 
     @Autowired
     private FileMapper fileMapper;
@@ -75,18 +69,18 @@ class CompetitionControllerIntegrationTest extends BaseIntegrationTest {
                 .build();
         fileMapper.insert(file);
 
-        // 创建测试竞赛1
+        // 创建测试竞赛1（带封面）
         Competition competition1 = new Competition();
         competition1.setName(TEST_NAME);
         competition1.setShortName(TEST_SHORT_NAME);
         competition1.setLogoFileId(TEST_FILE_ID);
+        competition1.setCoverFileId(TEST_FILE_ID);
         competition1.setSummary(TEST_SUMMARY);
         competition1.setDetail(TEST_DETAIL);
         competition1.setSortOrder(100);
-        competition1.setEnabled(true);
         competitionMapper.insert(competition1);
 
-        // 创建测试竞赛2
+        // 创建测试竞赛2（无封面）
         Competition competition2 = new Competition();
         competition2.setName("ACM程序设计大赛");
         competition2.setShortName("ACM");
@@ -94,34 +88,8 @@ class CompetitionControllerIntegrationTest extends BaseIntegrationTest {
         competition2.setSummary("ACM国际大学生程序设计竞赛");
         competition2.setDetail("ACM国际大学生程序设计竞赛是全球最具影响力的大学生程序设计竞赛");
         competition2.setSortOrder(50);
-        competition2.setEnabled(true);
         competitionMapper.insert(competition2);
 
-        // 创建禁用的竞赛
-        Competition disabledCompetition = new Competition();
-        disabledCompetition.setName("已禁用的竞赛");
-        disabledCompetition.setShortName("DISABLED");
-        disabledCompetition.setSummary("这个竞赛已被禁用");
-        disabledCompetition.setSortOrder(0);
-        disabledCompetition.setEnabled(false);
-        competitionMapper.insert(disabledCompetition);
-
-        // 为竞赛1创建测试图片
-        IntroduceImage image1 = new IntroduceImage();
-        image1.setType(ImageType.COMPETITION);
-        image1.setCompetitionId(competition1.getId());
-        image1.setFileId(TEST_FILE_ID);
-        image1.setDescription("竞赛照片1");
-        image1.setSortOrder(1);
-        introduceImageMapper.insert(image1);
-
-        IntroduceImage image2 = new IntroduceImage();
-        image2.setType(ImageType.COMPETITION);
-        image2.setCompetitionId(competition1.getId());
-        image2.setFileId(TEST_FILE_ID);
-        image2.setDescription("竞赛照片2");
-        image2.setSortOrder(2);
-        introduceImageMapper.insert(image2);
     }
 
     // ==================== GET /api/v1/competitions ====================
@@ -294,12 +262,12 @@ class CompetitionControllerIntegrationTest extends BaseIntegrationTest {
     }
 
     /**
-     * 集成测试：获取竞赛详情应包含关联图片
+     * 集成测试：获取有封面的竞赛详情应包含coverFileId
      */
     @Test
-    @DisplayName("集成测试：获取竞赛详情应包含关联图片")
-    void getCompetitionDetail_shouldIncludeImages() {
-        // 准备：获取蓝桥杯竞赛ID
+    @DisplayName("集成测试：获取有封面的竞赛详情应包含coverFileId")
+    void getCompetitionDetail_shouldIncludeCoverFileId() {
+        // 准备：获取蓝桥杯竞赛ID（有封面）
         ResponseEntity<ResponseMessage<List<CompetitionBriefDTO>>> listResponse = restTemplate.exchange(
                 "/api/v1/competitions?limit=10",
                 HttpMethod.GET,
@@ -325,13 +293,8 @@ class CompetitionControllerIntegrationTest extends BaseIntegrationTest {
         // 验证
         assertEquals(HttpStatus.OK, response.getStatusCode());
         CompetitionDetailDTO detail = response.getBody().getData();
-        assertNotNull(detail.getImages());
-        assertEquals(2, detail.getImages().size());
-
-        // 验证图片信息
-        assertNotNull(detail.getImages().get(0).getId());
-        assertEquals(TEST_FILE_URL, detail.getImages().get(0).getUrl());
-        assertNotNull(detail.getImages().get(0).getDescription());
+        assertNotNull(detail.getCoverFileId());
+        assertEquals(TEST_FILE_ID, detail.getCoverFileId());
     }
 
     /**
@@ -356,12 +319,12 @@ class CompetitionControllerIntegrationTest extends BaseIntegrationTest {
     }
 
     /**
-     * 集成测试：无图片的竞赛应返回空图片列表
+     * 集成测试：无封面的竞赛coverFileId应为null
      */
     @Test
-    @DisplayName("集成测试：无图片的竞赛应返回空图片列表")
-    void getCompetitionDetail_noImages_shouldReturnEmptyList() {
-        // 准备：获取ACM竞赛ID（没有图片）
+    @DisplayName("集成测试：无封面的竞赛coverFileId应为null")
+    void getCompetitionDetail_noCover_shouldReturnNullCoverFileId() {
+        // 准备：获取ACM竞赛ID（没有封面）
         ResponseEntity<ResponseMessage<List<CompetitionBriefDTO>>> listResponse = restTemplate.exchange(
                 "/api/v1/competitions?limit=10",
                 HttpMethod.GET,
@@ -387,8 +350,7 @@ class CompetitionControllerIntegrationTest extends BaseIntegrationTest {
         // 验证
         assertEquals(HttpStatus.OK, response.getStatusCode());
         CompetitionDetailDTO detail = response.getBody().getData();
-        assertNotNull(detail.getImages());
-        assertTrue(detail.getImages().isEmpty());
+        assertNull(detail.getCoverFileId());
     }
 
     /**
@@ -429,30 +391,9 @@ class CompetitionControllerIntegrationTest extends BaseIntegrationTest {
         assertEquals(TEST_SHORT_NAME, detail.getShortName());
         assertEquals(TEST_FILE_URL, detail.getLogoUrl());
         assertEquals(TEST_FILE_ID, detail.getLogoFileId());
+        assertEquals(TEST_FILE_ID, detail.getCoverFileId());
         assertEquals(TEST_SUMMARY, detail.getSummary());
         assertEquals(TEST_DETAIL, detail.getDetail());
     }
 
-    /**
-     * 集成测试：禁用的竞赛不应在列表中显示
-     */
-    @Test
-    @DisplayName("集成测试：禁用的竞赛不应在列表中显示")
-    void getCompetitionList_shouldNotIncludeDisabledCompetitions() {
-        // 执行
-        ResponseEntity<ResponseMessage<List<CompetitionBriefDTO>>> response = restTemplate.exchange(
-                "/api/v1/competitions?limit=10",
-                HttpMethod.GET,
-                null,
-                new ParameterizedTypeReference<ResponseMessage<List<CompetitionBriefDTO>>>() {
-                });
-
-        // 验证
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        List<CompetitionBriefDTO> competitions = response.getBody().getData();
-
-        // 验证禁用的竞赛不在列表中
-        boolean hasDisabledCompetition = competitions.stream().anyMatch(c -> "已禁用的竞赛".equals(c.getName()));
-        assertFalse(hasDisabledCompetition);
-    }
 }

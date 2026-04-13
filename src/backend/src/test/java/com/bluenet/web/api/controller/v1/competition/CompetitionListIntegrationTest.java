@@ -5,12 +5,9 @@ import com.bluenet.web.api.dto.ResponseMessage;
 import com.bluenet.web.api.dto.competition.CompetitionResponseDTO;
 import com.bluenet.web.domain.model.entity.Competition;
 import com.bluenet.web.domain.model.entity.File;
-import com.bluenet.web.domain.model.entity.IntroduceImage;
 import com.bluenet.web.domain.model.enumerate.FileType;
-import com.bluenet.web.domain.model.enumerate.ImageType;
 import com.bluenet.web.infrastructure.repository.mapper.CompetitionMapper;
 import com.bluenet.web.infrastructure.repository.mapper.FileMapper;
-import com.bluenet.web.infrastructure.repository.mapper.IntroduceImageMapper;
 import com.bluenet.web.testcontainers.TestcontainersConfiguration;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -34,8 +31,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * 竞赛列表页面集成测试
  * <p>
  * 测试竞赛列表接口的完整功能，包括： - 正常查询竞赛列表（包含 level、month、organizer 字段） -
- * 竞赛列表关联介绍图片查询（tb_introduce_image 表，type='competition'） - 无介绍图片时的处理 - 多张介绍图片时按
- * sort_order 取第一张 - 边界条件：空列表、limit 参数校验
+ * 竞赛封面文件查询（tb_competition.cover_file_id） - 无封面时的处理 - 边界条件：空列表、limit 参数校验
  * </p>
  */
 @DisplayName("竞赛列表页面集成测试")
@@ -52,9 +48,6 @@ class CompetitionListIntegrationTest extends BaseIntegrationTest {
     private CompetitionMapper competitionMapper;
 
     @Autowired
-    private IntroduceImageMapper introduceImageMapper;
-
-    @Autowired
     private FileMapper fileMapper;
 
     private static final String TEST_LEVEL = "国家级";
@@ -62,8 +55,6 @@ class CompetitionListIntegrationTest extends BaseIntegrationTest {
     private static final String TEST_ORGANIZER = "工业和信息化部人才交流中心";
 
     private Long logoFileId;
-    private Long imageFileId1;
-    private Long imageFileId2;
 
     @BeforeEach
     void setUpTestData() {
@@ -75,22 +66,6 @@ class CompetitionListIntegrationTest extends BaseIntegrationTest {
                 .build();
         fileMapper.insert(logoFile);
         logoFileId = logoFile.getId();
-
-        File imageFile1 = File.builder()
-                .name("image1.jpg")
-                .url("http://example.com/image1.jpg")
-                .type(FileType.NORMAL_IMG)
-                .build();
-        fileMapper.insert(imageFile1);
-        imageFileId1 = imageFile1.getId();
-
-        File imageFile2 = File.builder()
-                .name("image2.jpg")
-                .url("http://example.com/image2.jpg")
-                .type(FileType.NORMAL_IMG)
-                .build();
-        fileMapper.insert(imageFile2);
-        imageFileId2 = imageFile2.getId();
     }
 
     // ==================== 正常查询竞赛列表 ====================
@@ -112,7 +87,6 @@ class CompetitionListIntegrationTest extends BaseIntegrationTest {
         competition.setMonth(TEST_MONTH);
         competition.setOrganizer(TEST_ORGANIZER);
         competition.setSortOrder(100);
-        competition.setEnabled(true);
         competitionMapper.insert(competition);
 
         // 执行
@@ -140,33 +114,32 @@ class CompetitionListIntegrationTest extends BaseIntegrationTest {
         assertEquals("全国软件和信息技术专业人才大赛", dto.getSummary());
     }
 
-    // ==================== 介绍图片关联查询 ====================
+    // ==================== 封面文件关联查询 ====================
 
     /**
-     * 集成测试：竞赛列表应关联查询介绍图片（tb_introduce_image 表，type='competition'）
+     * 集成测试：竞赛列表有coverFileId时应正确返回
      */
     @Test
-    @DisplayName("集成测试：竞赛列表应关联查询介绍图片")
-    void getCompetitionList_withIntroduceImage_shouldReturnImageFileId() {
-        // 准备：创建竞赛和介绍图片
+    @DisplayName("集成测试：竞赛列表有coverFileId时应正确返回")
+    void getCompetitionList_withCoverFile_shouldReturnCoverFileId() {
+        // 创建封面文件
+        File coverFile = File.builder()
+                .name("cover.jpg")
+                .url("http://example.com/cover.jpg")
+                .type(FileType.NORMAL_IMG)
+                .build();
+        fileMapper.insert(coverFile);
+
+        // 准备：创建竞赛并设置封面
         Competition competition = new Competition();
         competition.setName("蓝桥杯");
         competition.setShortName("蓝桥杯");
         competition.setLogoFileId(logoFileId);
+        competition.setCoverFileId(coverFile.getId());
         competition.setSummary("全国软件和信息技术专业人才大赛");
         competition.setLevel(TEST_LEVEL);
         competition.setSortOrder(100);
-        competition.setEnabled(true);
         competitionMapper.insert(competition);
-
-        // 创建介绍图片
-        IntroduceImage image = new IntroduceImage();
-        image.setType(ImageType.COMPETITION);
-        image.setCompetitionId(competition.getId());
-        image.setFileId(imageFileId1);
-        image.setDescription("竞赛照片");
-        image.setSortOrder(10);
-        introduceImageMapper.insert(image);
 
         // 执行
         ResponseEntity<ResponseMessage<List<CompetitionResponseDTO>>> response = restTemplate.exchange(
@@ -182,23 +155,22 @@ class CompetitionListIntegrationTest extends BaseIntegrationTest {
         assertEquals(1, competitions.size());
 
         CompetitionResponseDTO dto = competitions.get(0);
-        assertEquals(2L, dto.getIntroduceImageFileId());
+        assertEquals(coverFile.getId(), dto.getCoverFileId());
     }
 
     /**
-     * 集成测试：无介绍图片时 introduceImageFileId 应为 null
+     * 集成测试：无封面时 coverFileId 应为 null
      */
     @Test
-    @DisplayName("集成测试：无介绍图片时 introduceImageFileId 应为 null")
-    void getCompetitionList_noIntroduceImage_shouldReturnNullImageFileId() {
-        // 准备：创建竞赛但不创建介绍图片
+    @DisplayName("集成测试：无封面时 coverFileId 应为 null")
+    void getCompetitionList_noCoverFile_shouldReturnNullCoverFileId() {
+        // 准备：创建竞赛但不设置封面
         Competition competition = new Competition();
-        competition.setName("无图片竞赛");
-        competition.setShortName("无图片");
+        competition.setName("无封面竞赛");
+        competition.setShortName("无封面");
         competition.setLogoFileId(logoFileId);
-        competition.setSummary("这个竞赛没有介绍图片");
+        competition.setSummary("这个竞赛没有封面");
         competition.setSortOrder(100);
-        competition.setEnabled(true);
         competitionMapper.insert(competition);
 
         // 执行
@@ -215,60 +187,7 @@ class CompetitionListIntegrationTest extends BaseIntegrationTest {
         assertEquals(1, competitions.size());
 
         CompetitionResponseDTO dto = competitions.get(0);
-        assertNull(dto.getIntroduceImageFileId());
-    }
-
-    /**
-     * 集成测试：多张介绍图片时应按 sort_order 取第一张（sort_order 最大的）
-     */
-    @Test
-    @DisplayName("集成测试：多张介绍图片时应按 sort_order 取第一张")
-    void getCompetitionList_multipleImages_shouldReturnFirstBySortOrder() {
-        // 准备：创建竞赛和多张介绍图片
-        Competition competition = new Competition();
-        competition.setName("多图片竞赛");
-        competition.setShortName("多图片");
-        competition.setLogoFileId(logoFileId);
-        competition.setSummary("这个竞赛有多张介绍图片");
-        competition.setSortOrder(100);
-        competition.setEnabled(true);
-        competitionMapper.insert(competition);
-
-        Long competitionId = competition.getId();
-
-        // 创建多张介绍图片，sort_order 不同
-        IntroduceImage image1 = new IntroduceImage();
-        image1.setType(ImageType.COMPETITION);
-        image1.setCompetitionId(competitionId);
-        image1.setFileId(imageFileId1); // sort_order=5
-        image1.setDescription("图片1");
-        image1.setSortOrder(5);
-        introduceImageMapper.insert(image1);
-
-        IntroduceImage image2 = new IntroduceImage();
-        image2.setType(ImageType.COMPETITION);
-        image2.setCompetitionId(competitionId);
-        image2.setFileId(imageFileId2); // sort_order=20，应该取这张
-        image2.setDescription("图片2");
-        image2.setSortOrder(20);
-        introduceImageMapper.insert(image2);
-
-        // 执行
-        ResponseEntity<ResponseMessage<List<CompetitionResponseDTO>>> response = restTemplate.exchange(
-                "/api/v1/competitions?limit=10",
-                HttpMethod.GET,
-                null,
-                new ParameterizedTypeReference<ResponseMessage<List<CompetitionResponseDTO>>>() {
-                });
-
-        // 验证
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        List<CompetitionResponseDTO> competitions = response.getBody().getData();
-        assertEquals(1, competitions.size());
-
-        CompetitionResponseDTO dto = competitions.get(0);
-        // 应该返回 sort_order=20 的图片 fileId
-        assertEquals(3L, dto.getIntroduceImageFileId());
+        assertNull(dto.getCoverFileId());
     }
 
     // ==================== 边界条件测试 ====================
@@ -313,7 +232,6 @@ class CompetitionListIntegrationTest extends BaseIntegrationTest {
             competition.setLogoFileId(logoFileId);
             competition.setSummary("竞赛" + i + "简介");
             competition.setSortOrder(100 - i);
-            competition.setEnabled(true);
             competitionMapper.insert(competition);
         }
 
@@ -346,7 +264,6 @@ class CompetitionListIntegrationTest extends BaseIntegrationTest {
             competition.setLogoFileId(logoFileId);
             competition.setSummary("竞赛" + i + "简介");
             competition.setSortOrder(100 - i);
-            competition.setEnabled(true);
             competitionMapper.insert(competition);
         }
 
@@ -379,7 +296,6 @@ class CompetitionListIntegrationTest extends BaseIntegrationTest {
             competition.setLogoFileId(logoFileId);
             competition.setSummary("竞赛" + i + "简介");
             competition.setSortOrder(100 - i);
-            competition.setEnabled(true);
             competitionMapper.insert(competition);
         }
 
@@ -399,88 +315,44 @@ class CompetitionListIntegrationTest extends BaseIntegrationTest {
     }
 
     /**
-     * 集成测试：禁用的竞赛不应出现在列表中
+     * 集成测试：多个竞赛各自应有正确的封面
      */
     @Test
-    @DisplayName("集成测试：禁用的竞赛不应出现在列表中")
-    void getCompetitionList_disabledCompetition_shouldNotAppear() {
-        // 准备：创建启用的竞赛
-        Competition enabledCompetition = new Competition();
-        enabledCompetition.setName("启用的竞赛");
-        enabledCompetition.setShortName("启用");
-        enabledCompetition.setLogoFileId(logoFileId);
-        enabledCompetition.setSummary("这个竞赛是启用的");
-        enabledCompetition.setSortOrder(100);
-        enabledCompetition.setEnabled(true);
-        competitionMapper.insert(enabledCompetition);
+    @DisplayName("集成测试：多个竞赛各自应有正确的封面")
+    void getCompetitionList_multipleCompetitionsWithCovers_shouldReturnCorrectCovers() {
+        // 创建封面文件
+        File coverFile1 = File.builder()
+                .name("cover1.jpg")
+                .url("http://example.com/cover1.jpg")
+                .type(FileType.NORMAL_IMG)
+                .build();
+        fileMapper.insert(coverFile1);
 
-        // 创建禁用的竞赛
-        Competition disabledCompetition = new Competition();
-        disabledCompetition.setName("禁用的竞赛");
-        disabledCompetition.setShortName("禁用");
-        disabledCompetition.setLogoFileId(logoFileId);
-        disabledCompetition.setSummary("这个竞赛是禁用的");
-        disabledCompetition.setSortOrder(90);
-        disabledCompetition.setEnabled(false);
-        competitionMapper.insert(disabledCompetition);
+        File coverFile2 = File.builder()
+                .name("cover2.jpg")
+                .url("http://example.com/cover2.jpg")
+                .type(FileType.NORMAL_IMG)
+                .build();
+        fileMapper.insert(coverFile2);
 
-        // 执行
-        ResponseEntity<ResponseMessage<List<CompetitionResponseDTO>>> response = restTemplate.exchange(
-                "/api/v1/competitions?limit=10",
-                HttpMethod.GET,
-                null,
-                new ParameterizedTypeReference<ResponseMessage<List<CompetitionResponseDTO>>>() {
-                });
-
-        // 验证
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        List<CompetitionResponseDTO> competitions = response.getBody().getData();
-        assertEquals(1, competitions.size());
-        assertEquals("启用的竞赛", competitions.get(0).getName());
-    }
-
-    /**
-     * 集成测试：多个竞赛各自应有正确的介绍图片
-     */
-    @Test
-    @DisplayName("集成测试：多个竞赛各自应有正确的介绍图片")
-    void getCompetitionList_multipleCompetitionsWithImages_shouldReturnCorrectImages() {
-        // 准备：创建两个竞赛，各自有介绍图片
+        // 准备：创建两个竞赛，各自有封面
         Competition competition1 = new Competition();
         competition1.setName("竞赛1");
         competition1.setShortName("C1");
         competition1.setLogoFileId(logoFileId);
+        competition1.setCoverFileId(coverFile1.getId());
         competition1.setSummary("竞赛1简介");
         competition1.setSortOrder(100);
-        competition1.setEnabled(true);
         competitionMapper.insert(competition1);
 
         Competition competition2 = new Competition();
         competition2.setName("竞赛2");
         competition2.setShortName("C2");
         competition2.setLogoFileId(logoFileId);
+        competition2.setCoverFileId(coverFile2.getId());
         competition2.setSummary("竞赛2简介");
         competition2.setSortOrder(90);
-        competition2.setEnabled(true);
         competitionMapper.insert(competition2);
-
-        // 为竞赛1创建介绍图片
-        IntroduceImage image1 = new IntroduceImage();
-        image1.setType(ImageType.COMPETITION);
-        image1.setCompetitionId(competition1.getId());
-        image1.setFileId(imageFileId1);
-        image1.setDescription("竞赛1图片");
-        image1.setSortOrder(10);
-        introduceImageMapper.insert(image1);
-
-        // 为竞赛2创建介绍图片
-        IntroduceImage image2 = new IntroduceImage();
-        image2.setType(ImageType.COMPETITION);
-        image2.setCompetitionId(competition2.getId());
-        image2.setFileId(imageFileId2);
-        image2.setDescription("竞赛2图片");
-        image2.setSortOrder(10);
-        introduceImageMapper.insert(image2);
 
         // 执行
         ResponseEntity<ResponseMessage<List<CompetitionResponseDTO>>> response = restTemplate.exchange(
@@ -497,9 +369,9 @@ class CompetitionListIntegrationTest extends BaseIntegrationTest {
 
         // 按排序顺序，竞赛1应该在前面
         assertEquals("竞赛1", competitions.get(0).getName());
-        assertEquals(2L, competitions.get(0).getIntroduceImageFileId());
+        assertEquals(coverFile1.getId(), competitions.get(0).getCoverFileId());
 
         assertEquals("竞赛2", competitions.get(1).getName());
-        assertEquals(3L, competitions.get(1).getIntroduceImageFileId());
+        assertEquals(coverFile2.getId(), competitions.get(1).getCoverFileId());
     }
 }

@@ -1,8 +1,6 @@
 package com.bluenet.web.application.service;
 
-import com.bluenet.web.api.dto.file.FileInfo;
 import com.bluenet.web.api.dto.qrcode.ConsultationQrcodeDTO;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -19,13 +17,12 @@ public interface QrcodeService {
     List<ConsultationQrcodeDTO> getConsultationQrcodes();
 
     /**
-     * 上传咨询群二维码
+     * 创建二维码记录（通过已上传的 fileId）
      *
-     * @param file
-     *            二维码图片文件
-     * @return 文件信息
+     * @param fileId
+     *            文件ID（必须为 QRCODE 类型）
      */
-    FileInfo uploadConsultationQrcode(MultipartFile file);
+    void createQrcode(Long fileId);
 
     /**
      * 删除咨询群二维码

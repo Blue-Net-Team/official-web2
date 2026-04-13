@@ -1,7 +1,6 @@
 package com.bluenet.web.api.controller.v1.competition;
 
 import com.bluenet.web.api.dto.competition.CompetitionDetailDTO;
-import com.bluenet.web.api.dto.competition.CompetitionImageDTO;
 import com.bluenet.web.api.dto.competition.CompetitionResponseDTO;
 import com.bluenet.web.application.service.CompetitionService;
 import com.bluenet.web.testcontainers.TestcontainersConfiguration;
@@ -54,7 +53,7 @@ class CompetitionControllerTest {
     private static final String TEST_ORGANIZER = "工业和信息化部人才交流中心";
     private static final String TEST_SUMMARY = "全国软件和信息技术专业人才大赛";
     private static final String TEST_DETAIL = "蓝桥杯全国软件和信息技术专业人才大赛详情";
-    private static final Long TEST_IMAGE_FILE_ID = 100L;
+    private static final Long TEST_COVER_FILE_ID = 100L;
 
     private CompetitionResponseDTO createTestCompetitionResponseDTO() {
         return CompetitionResponseDTO.builder()
@@ -64,7 +63,7 @@ class CompetitionControllerTest {
                 .month(TEST_MONTH)
                 .organizer(TEST_ORGANIZER)
                 .summary(TEST_SUMMARY)
-                .introduceImageFileId(TEST_IMAGE_FILE_ID)
+                .coverFileId(TEST_COVER_FILE_ID)
                 .build();
     }
 
@@ -78,7 +77,7 @@ class CompetitionControllerTest {
                 .organizer(TEST_ORGANIZER)
                 .summary(TEST_SUMMARY)
                 .detail(TEST_DETAIL)
-                .images(new ArrayList<>())
+                .coverFileId(TEST_COVER_FILE_ID)
                 .build();
     }
 
@@ -111,7 +110,7 @@ class CompetitionControllerTest {
                 .andExpect(jsonPath("$.data[0].month").value(TEST_MONTH))
                 .andExpect(jsonPath("$.data[0].organizer").value(TEST_ORGANIZER))
                 .andExpect(jsonPath("$.data[0].summary").value(TEST_SUMMARY))
-                .andExpect(jsonPath("$.data[0].introduceImageFileId").value(TEST_IMAGE_FILE_ID));
+                .andExpect(jsonPath("$.data[0].coverFileId").value(TEST_COVER_FILE_ID));
 
         verify(competitionService).getCompetitionResponseList(10);
     }
@@ -211,7 +210,8 @@ class CompetitionControllerTest {
                 .andExpect(jsonPath("$.data.month").value(TEST_MONTH))
                 .andExpect(jsonPath("$.data.organizer").value(TEST_ORGANIZER))
                 .andExpect(jsonPath("$.data.summary").value(TEST_SUMMARY))
-                .andExpect(jsonPath("$.data.detail").value(TEST_DETAIL));
+                .andExpect(jsonPath("$.data.detail").value(TEST_DETAIL))
+                .andExpect(jsonPath("$.data.coverFileId").value(TEST_COVER_FILE_ID));
 
         verify(competitionService).getCompetitionDetail(TEST_ID);
     }
@@ -238,19 +238,16 @@ class CompetitionControllerTest {
     }
 
     /**
-     * 获取竞赛详情：包含图片列表时应正确返回
+     * 获取竞赛详情：有封面时应正确返回coverFileId
      */
     @Test
-    @DisplayName("获取竞赛详情：包含图片列表时应正确返回")
-    void getCompetitionDetail_withImages_shouldReturnImages() throws Exception {
+    @DisplayName("获取竞赛详情：有封面时应正确返回coverFileId")
+    void getCompetitionDetail_withCover_shouldReturnCoverFileId() throws Exception {
         // 准备
-        List<CompetitionImageDTO> images = Arrays.asList(
-                CompetitionImageDTO.builder().id(1L).url("http://example.com/img1.jpg").description("图片1").build(),
-                CompetitionImageDTO.builder().id(2L).url("http://example.com/img2.jpg").description("图片2").build());
         CompetitionDetailDTO detail = CompetitionDetailDTO.builder()
                 .id(TEST_ID)
                 .name(TEST_NAME)
-                .images(images)
+                .coverFileId(200L)
                 .build();
 
         when(competitionService.getCompetitionDetail(eq(TEST_ID))).thenReturn(detail);
@@ -260,26 +257,22 @@ class CompetitionControllerTest {
                 get("/api/v1/competitions/{id}", TEST_ID)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.images").isArray())
-                .andExpect(jsonPath("$.data.images.length()").value(2))
-                .andExpect(jsonPath("$.data.images[0].id").value(1))
-                .andExpect(jsonPath("$.data.images[0].url").value("http://example.com/img1.jpg"))
-                .andExpect(jsonPath("$.data.images[0].description").value("图片1"));
+                .andExpect(jsonPath("$.data.coverFileId").value(200));
 
         verify(competitionService).getCompetitionDetail(TEST_ID);
     }
 
     /**
-     * 获取竞赛详情：无图片时应返回空数组
+     * 获取竞赛详情：无封面时coverFileId应为null
      */
     @Test
-    @DisplayName("获取竞赛详情：无图片时应返回空数组")
-    void getCompetitionDetail_noImages_shouldReturnEmptyImages() throws Exception {
+    @DisplayName("获取竞赛详情：无封面时coverFileId应为null")
+    void getCompetitionDetail_noCover_shouldReturnNullCoverFileId() throws Exception {
         // 准备
         CompetitionDetailDTO detail = CompetitionDetailDTO.builder()
                 .id(TEST_ID)
                 .name(TEST_NAME)
-                .images(new ArrayList<>())
+                .coverFileId(null)
                 .build();
 
         when(competitionService.getCompetitionDetail(eq(TEST_ID))).thenReturn(detail);
@@ -289,8 +282,7 @@ class CompetitionControllerTest {
                 get("/api/v1/competitions/{id}", TEST_ID)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.images").isArray())
-                .andExpect(jsonPath("$.data.images").isEmpty());
+                .andExpect(jsonPath("$.data.coverFileId").isEmpty());
 
         verify(competitionService).getCompetitionDetail(TEST_ID);
     }

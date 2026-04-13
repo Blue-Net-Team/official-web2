@@ -214,13 +214,6 @@ class EntityCrudTest extends BaseIntegrationTest {
 
         assertEquals(AchievementType.COMPETITION, achievement.getType());
 
-        // ImageType 在 IntroduceImage 中
-        IntroduceImage image = new IntroduceImage();
-        image.setType(ImageType.COMPETITION);
-        image.setDescription("竞赛照片");
-
-        assertEquals(ImageType.COMPETITION, image.getType());
-
         // ProgrammingLanguage 在 AssessmentAnswer 中
         AssessmentAnswer answer = new AssessmentAnswer();
         answer.setLanguage(ProgrammingLanguage.JAVA);

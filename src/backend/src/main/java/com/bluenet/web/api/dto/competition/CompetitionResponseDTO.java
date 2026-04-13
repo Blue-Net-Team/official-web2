@@ -30,6 +30,6 @@ public class CompetitionResponseDTO {
     @Schema(description = "竞赛简介")
     private String summary;
 
-    @Schema(description = "介绍图片文件ID，通过 tb_introduce_image 表关联查询获取")
-    private Long introduceImageFileId;
+    @Schema(description = "封面文件ID")
+    private Long coverFileId;
 }

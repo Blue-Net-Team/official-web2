@@ -357,7 +357,7 @@ const EnrollPageContent: React.FC = () => {
 
       setUploadingAvatar(true)
       try {
-        const response = await fileService.uploadAvatar(file)
+        const response = await fileService.upload(file, 'AVATAR')
         if (response.code === 200 && response.data) {
           setAvatarId(response.data.id)
           setUploadProgress(100)

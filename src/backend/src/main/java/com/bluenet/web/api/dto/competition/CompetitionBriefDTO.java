@@ -28,6 +28,9 @@ public class CompetitionBriefDTO {
     @Schema(description = "Logo 文件ID")
     private Long logoFileId;
 
+    @Schema(description = "封面文件ID")
+    private Long coverFileId;
+
     @Schema(description = "竞赛简介")
     private String summary;
 

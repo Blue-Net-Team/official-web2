@@ -29,7 +29,7 @@ import com.bluenet.web.api.dto.competition.*;
 import com.bluenet.web.domain.model.entity.*;
 import com.bluenet.web.domain.model.enumerate.Direction;
 import com.bluenet.web.domain.model.enumerate.FileType;
-import com.bluenet.web.domain.model.enumerate.ImageType;
+
 import com.bluenet.web.infrastructure.repository.mapper.*;
 import com.bluenet.web.infrastructure.security.cache.PermissionCache;
 import com.bluenet.web.testcontainers.TestcontainersConfiguration;
@@ -49,9 +49,6 @@ class AdminCompetitionControllerIntegrationTest extends BaseIntegrationTest {
 
     @Autowired
     private CompetitionMapper competitionMapper;
-
-    @Autowired
-    private IntroduceImageMapper introduceImageMapper;
 
     @Autowired
     private FileMapper fileMapper;
@@ -104,8 +101,8 @@ class AdminCompetitionControllerIntegrationTest extends BaseIntegrationTest {
         createPermission("competition:update", "更新竞赛");
         createPermission("competition:delete", "删除竞赛");
         createPermission("competition:sort", "调整竞赛排序");
-        createPermission("competition:image:add", "添加竞赛照片");
-        createPermission("competition:image:delete", "删除竞赛照片");
+        createPermission("competition:update-logo", "更新竞赛Logo");
+        createPermission("competition:update-cover", "更新竞赛封面");
 
         // 刷新权限缓存
         permissionCache.refresh();
@@ -270,14 +267,12 @@ class AdminCompetitionControllerIntegrationTest extends BaseIntegrationTest {
         competition.setShortName("OLD");
         competition.setSummary("原简介");
         competition.setSortOrder(0);
-        competition.setEnabled(true);
         competitionMapper.insert(competition);
 
         UpdateCompetitionRequestDTO request = UpdateCompetitionRequestDTO.builder()
                 .name("更新后的竞赛名")
                 .shortName("NEW")
                 .summary("更新后的简介")
-                .enabled(true)
                 .build();
 
         HttpHeaders headers = createAuthHeadersWithCsrf();
@@ -338,7 +333,6 @@ class AdminCompetitionControllerIntegrationTest extends BaseIntegrationTest {
         Competition competition = new Competition();
         competition.setName("要删除的竞赛");
         competition.setSortOrder(0);
-        competition.setEnabled(true);
         competitionMapper.insert(competition);
         Long competitionId = competition.getId();
 
@@ -385,26 +379,17 @@ class AdminCompetitionControllerIntegrationTest extends BaseIntegrationTest {
     }
 
     /**
-     * 集成测试：删除竞赛时应同时删除关联图片
+     * 集成测试：删除竞赛应成功
      */
     @Test
-    @DisplayName("集成测试：删除竞赛时应同时删除关联图片")
-    void deleteCompetition_shouldAlsoDeleteImages() {
-        // 准备：创建竞赛和关联图片
+    @DisplayName("集成测试：删除竞赛应成功")
+    void deleteCompetition_shouldSucceed() {
+        // 准备：创建竞赛
         Competition competition = new Competition();
         competition.setName("要删除的竞赛");
         competition.setSortOrder(0);
-        competition.setEnabled(true);
         competitionMapper.insert(competition);
         Long competitionId = competition.getId();
-
-        IntroduceImage image = new IntroduceImage();
-        image.setType(ImageType.COMPETITION);
-        image.setCompetitionId(competitionId);
-        image.setFileId(testFileId);
-        image.setDescription("关联图片");
-        introduceImageMapper.insert(image);
-        Long imageId = image.getId();
 
         HttpHeaders headers = createAuthHeadersWithCsrf();
         HttpEntity<Void> entity = new HttpEntity<>(headers);
@@ -420,9 +405,9 @@ class AdminCompetitionControllerIntegrationTest extends BaseIntegrationTest {
         // 验证
         assertEquals(HttpStatus.OK, response.getStatusCode());
 
-        // 验证图片也被删除
-        IntroduceImage deletedImage = introduceImageMapper.selectById(imageId);
-        assertNull(deletedImage);
+        // 验证竞赛已被删除
+        Competition deletedCompetition = competitionMapper.selectById(competitionId);
+        assertNull(deletedCompetition);
     }
 
     // ==================== PUT /api/v1/admin/competitions/{id}/sort
@@ -438,7 +423,6 @@ class AdminCompetitionControllerIntegrationTest extends BaseIntegrationTest {
         Competition competition = new Competition();
         competition.setName("要调整排序的竞赛");
         competition.setSortOrder(0);
-        competition.setEnabled(true);
         competitionMapper.insert(competition);
 
         UpdateSortOrderRequestDTO request = UpdateSortOrderRequestDTO.builder().sortOrder(100).build();
@@ -487,220 +471,184 @@ class AdminCompetitionControllerIntegrationTest extends BaseIntegrationTest {
         assertEquals(404, response.getBody().getCode());
     }
 
-    // ==================== POST /api/v1/admin/competitions/{id}/images
+    // ==================== PUT /api/v1/admin/competitions/{id}/logo
     // ====================
 
     /**
-     * 集成测试：添加竞赛照片应成功
+     * 集成测试：更新竞赛Logo应成功
      */
     @Test
-    @DisplayName("集成测试：添加竞赛照片应成功")
-    void addCompetitionImage_shouldAddSuccessfully() {
-        // 准备：先创建一个竞赛
+    @DisplayName("集成测试：更新竞赛Logo应成功")
+    void updateLogo_shouldUpdateSuccessfully() {
+        // 准备：创建竞赛
         Competition competition = new Competition();
-        competition.setName("要添加照片的竞赛");
+        competition.setName("要更新Logo的竞赛");
         competition.setSortOrder(0);
-        competition.setEnabled(true);
         competitionMapper.insert(competition);
 
-        // 创建另一个文件用于图片
-        File imageFile = File.builder()
-                .name("image.jpg")
-                .url("http://example.com/image.jpg")
+        // 创建Logo文件
+        File logoFile = File.builder()
+                .name("new-logo.png")
+                .url("http://example.com/new-logo.png")
                 .type(FileType.NORMAL_IMG)
                 .build();
-        fileMapper.insert(imageFile);
-
-        AddCompetitionImageRequestDTO request = AddCompetitionImageRequestDTO.builder()
-                .fileId(imageFile.getId())
-                .description("竞赛照片描述")
-                .build();
-
-        HttpHeaders headers = createAuthHeadersWithCsrf();
-        HttpEntity<AddCompetitionImageRequestDTO> entity = new HttpEntity<>(request, headers);
-
-        // 执行
-        ResponseEntity<ResponseMessage<CompetitionImageDTO>> response = restTemplate.exchange(
-                "/api/v1/admin/competitions/" + competition.getId() + "/images",
-                HttpMethod.POST,
-                entity,
-                new ParameterizedTypeReference<ResponseMessage<CompetitionImageDTO>>() {
-                });
-
-        // 验证
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertNotNull(response.getBody());
-        assertEquals(200, response.getBody().getCode());
-
-        CompetitionImageDTO image = response.getBody().getData();
-        assertNotNull(image);
-        assertNotNull(image.getId());
-        assertEquals("竞赛照片描述", image.getDescription());
-    }
-
-    /**
-     * 集成测试：为不存在的竞赛添加照片应返回404
-     */
-    @Test
-    @DisplayName("集成测试：为不存在的竞赛添加照片应返回404")
-    void addCompetitionImage_competitionNotFound_shouldReturn404() {
-        AddCompetitionImageRequestDTO request = AddCompetitionImageRequestDTO.builder()
-                .fileId(testFileId)
-                .description("照片描述")
-                .build();
-
-        HttpHeaders headers = createAuthHeadersWithCsrf();
-        HttpEntity<AddCompetitionImageRequestDTO> entity = new HttpEntity<>(request, headers);
-
-        // 执行
-        ResponseEntity<ResponseMessage<CompetitionImageDTO>> response = restTemplate.exchange(
-                "/api/v1/admin/competitions/99999/images",
-                HttpMethod.POST,
-                entity,
-                new ParameterizedTypeReference<ResponseMessage<CompetitionImageDTO>>() {
-                });
-
-        // 验证
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        assertEquals(404, response.getBody().getCode());
-    }
-
-    /**
-     * 集成测试：添加超过20张照片应返回400
-     */
-    @Test
-    @DisplayName("集成测试：添加超过20张照片应返回400")
-    void addCompetitionImage_exceedLimit_shouldReturn400() {
-        // 准备：创建竞赛并添加20张图片
-        Competition competition = new Competition();
-        competition.setName("已有20张照片的竞赛");
-        competition.setSortOrder(0);
-        competition.setEnabled(true);
-        competitionMapper.insert(competition);
-
-        for (int i = 0; i < 20; i++) {
-            IntroduceImage image = new IntroduceImage();
-            image.setType(ImageType.COMPETITION);
-            image.setCompetitionId(competition.getId());
-            image.setFileId(testFileId);
-            image.setDescription("照片" + i);
-            introduceImageMapper.insert(image);
-        }
-
-        AddCompetitionImageRequestDTO request = AddCompetitionImageRequestDTO.builder()
-                .fileId(testFileId)
-                .description("第21张照片")
-                .build();
-
-        HttpHeaders headers = createAuthHeadersWithCsrf();
-        HttpEntity<AddCompetitionImageRequestDTO> entity = new HttpEntity<>(request, headers);
-
-        // 执行
-        ResponseEntity<ResponseMessage<CompetitionImageDTO>> response = restTemplate.exchange(
-                "/api/v1/admin/competitions/" + competition.getId() + "/images",
-                HttpMethod.POST,
-                entity,
-                new ParameterizedTypeReference<ResponseMessage<CompetitionImageDTO>>() {
-                });
-
-        // 验证
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertEquals(400, response.getBody().getCode());
-        assertTrue(response.getBody().getMsg().contains("20"));
-    }
-
-    // ==================== DELETE /api/v1/admin/competitions/{id}/images/{imageId}
-    // ====================
-
-    /**
-     * 集成测试：删除竞赛照片应成功
-     */
-    @Test
-    @DisplayName("集成测试：删除竞赛照片应成功")
-    void removeCompetitionImage_shouldRemoveSuccessfully() {
-        // 准备：创建竞赛和图片
-        Competition competition = new Competition();
-        competition.setName("要删除照片的竞赛");
-        competition.setSortOrder(0);
-        competition.setEnabled(true);
-        competitionMapper.insert(competition);
-
-        IntroduceImage image = new IntroduceImage();
-        image.setType(ImageType.COMPETITION);
-        image.setCompetitionId(competition.getId());
-        image.setFileId(testFileId);
-        image.setDescription("要删除的照片");
-        introduceImageMapper.insert(image);
-        Long imageId = image.getId();
+        fileMapper.insert(logoFile);
 
         HttpHeaders headers = createAuthHeadersWithCsrf();
         HttpEntity<Void> entity = new HttpEntity<>(headers);
 
         // 执行
         ResponseEntity<ResponseMessage<Void>> response = restTemplate.exchange(
-                "/api/v1/admin/competitions/" + competition.getId() + "/images/" + imageId,
-                HttpMethod.DELETE,
+                "/api/v1/admin/competitions/" + competition.getId() + "/logo?fileId=" + logoFile.getId(),
+                HttpMethod.PUT,
                 entity,
                 new ParameterizedTypeReference<ResponseMessage<Void>>() {
                 });
 
         // 验证
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(200, response.getBody().getCode());
 
-        // 验证图片已删除
-        IntroduceImage deletedImage = introduceImageMapper.selectById(imageId);
-        assertNull(deletedImage);
+        // 验证数据库中Logo已更新
+        Competition updated = competitionMapper.selectById(competition.getId());
+        assertEquals(logoFile.getId(), updated.getLogoFileId());
     }
 
     /**
-     * 集成测试：删除不存在的照片应返回404
+     * 集成测试：为不存在的竞赛更新Logo应返回404
      */
     @Test
-    @DisplayName("集成测试：删除不存在的照片应返回404")
-    void removeCompetitionImage_imageNotFound_shouldReturn404() {
+    @DisplayName("集成测试：为不存在的竞赛更新Logo应返回404")
+    void updateLogo_competitionNotFound_shouldReturn404() {
+        HttpHeaders headers = createAuthHeadersWithCsrf();
+        HttpEntity<Void> entity = new HttpEntity<>(headers);
+
+        // 执行
+        ResponseEntity<ResponseMessage<Void>> response = restTemplate.exchange(
+                "/api/v1/admin/competitions/99999/logo?fileId=" + testFileId,
+                HttpMethod.PUT,
+                entity,
+                new ParameterizedTypeReference<ResponseMessage<Void>>() {
+                });
+
+        // 验证
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+    }
+
+    /**
+     * 集成测试：使用不存在的文件更新Logo应返回404
+     */
+    @Test
+    @DisplayName("集成测试：使用不存在的文件更新Logo应返回404")
+    void updateLogo_fileNotFound_shouldReturn404() {
         // 准备：创建竞赛
         Competition competition = new Competition();
         competition.setName("竞赛");
         competition.setSortOrder(0);
-        competition.setEnabled(true);
         competitionMapper.insert(competition);
 
         HttpHeaders headers = createAuthHeadersWithCsrf();
         HttpEntity<Void> entity = new HttpEntity<>(headers);
 
-        // 执行
+        // 执行：使用不存在的文件ID
         ResponseEntity<ResponseMessage<Void>> response = restTemplate.exchange(
-                "/api/v1/admin/competitions/" + competition.getId() + "/images/99999",
-                HttpMethod.DELETE,
+                "/api/v1/admin/competitions/" + competition.getId() + "/logo?fileId=99999",
+                HttpMethod.PUT,
                 entity,
                 new ParameterizedTypeReference<ResponseMessage<Void>>() {
                 });
 
         // 验证
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        assertEquals(404, response.getBody().getCode());
     }
 
+    // ==================== PUT /api/v1/admin/competitions/{id}/cover
+    // ====================
+
     /**
-     * 集成测试：从不存在的竞赛删除照片应返回404
+     * 集成测试：更新竞赛封面应成功
      */
     @Test
-    @DisplayName("集成测试：从不存在的竞赛删除照片应返回404")
-    void removeCompetitionImage_competitionNotFound_shouldReturn404() {
+    @DisplayName("集成测试：更新竞赛封面应成功")
+    void updateCover_shouldUpdateSuccessfully() {
+        // 准备：创建竞赛
+        Competition competition = new Competition();
+        competition.setName("要更新封面的竞赛");
+        competition.setSortOrder(0);
+        competitionMapper.insert(competition);
+
+        // 创建封面文件
+        File coverFile = File.builder()
+                .name("cover.jpg")
+                .url("http://example.com/cover.jpg")
+                .type(FileType.NORMAL_IMG)
+                .build();
+        fileMapper.insert(coverFile);
+
         HttpHeaders headers = createAuthHeadersWithCsrf();
         HttpEntity<Void> entity = new HttpEntity<>(headers);
 
         // 执行
         ResponseEntity<ResponseMessage<Void>> response = restTemplate.exchange(
-                "/api/v1/admin/competitions/99999/images/1",
-                HttpMethod.DELETE,
+                "/api/v1/admin/competitions/" + competition.getId() + "/cover?fileId=" + coverFile.getId(),
+                HttpMethod.PUT,
+                entity,
+                new ParameterizedTypeReference<ResponseMessage<Void>>() {
+                });
+
+        // 验证
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+
+        // 验证数据库中封面已更新
+        Competition updated = competitionMapper.selectById(competition.getId());
+        assertEquals(coverFile.getId(), updated.getCoverFileId());
+    }
+
+    /**
+     * 集成测试：为不存在的竞赛更新封面应返回404
+     */
+    @Test
+    @DisplayName("集成测试：为不存在的竞赛更新封面应返回404")
+    void updateCover_competitionNotFound_shouldReturn404() {
+        HttpHeaders headers = createAuthHeadersWithCsrf();
+        HttpEntity<Void> entity = new HttpEntity<>(headers);
+
+        // 执行
+        ResponseEntity<ResponseMessage<Void>> response = restTemplate.exchange(
+                "/api/v1/admin/competitions/99999/cover?fileId=" + testFileId,
+                HttpMethod.PUT,
                 entity,
                 new ParameterizedTypeReference<ResponseMessage<Void>>() {
                 });
 
         // 验证
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        assertEquals(404, response.getBody().getCode());
     }
+
+    /**
+     * 集成测试：使用不存在的文件更新封面应返回404
+     */
+    @Test
+    @DisplayName("集成测试：使用不存在的文件更新封面应返回404")
+    void updateCover_fileNotFound_shouldReturn404() {
+        // 准备：创建竞赛
+        Competition competition = new Competition();
+        competition.setName("竞赛");
+        competition.setSortOrder(0);
+        competitionMapper.insert(competition);
+
+        HttpHeaders headers = createAuthHeadersWithCsrf();
+        HttpEntity<Void> entity = new HttpEntity<>(headers);
+
+        // 执行：使用不存在的文件ID
+        ResponseEntity<ResponseMessage<Void>> response = restTemplate.exchange(
+                "/api/v1/admin/competitions/" + competition.getId() + "/cover?fileId=99999",
+                HttpMethod.PUT,
+                entity,
+                new ParameterizedTypeReference<ResponseMessage<Void>>() {
+                });
+
+        // 验证
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+    }
+
 }

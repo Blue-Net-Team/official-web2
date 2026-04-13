@@ -42,8 +42,8 @@ public class CsrfTokenFilter extends OncePerRequestFilter {
             "/api/v1/auth/reset-password/**",
             // 公开报名
             "/api/v1/enrollments",
-            // 公开文件上传（头像上传，报名时使用）
-            "/api/v1/file/upload/avatar",
+            // 公开文件上传（统一上传接口，报名时使用）
+            "/api/v1/file/upload",
             // OpenAPI 文档
             "/v3/api-docs/**",
             "/swagger-ui/**",

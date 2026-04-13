@@ -42,7 +42,4 @@ public class UpdateCompetitionRequestDTO {
     @Size(max = 200, message = "主办单位最多200个字符")
     @Schema(description = "主办单位")
     private String organizer;
-
-    @Schema(description = "是否启用")
-    private Boolean enabled;
 }

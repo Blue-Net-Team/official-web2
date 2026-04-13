@@ -20,4 +20,12 @@ public interface UserInfoService {
     String verifyCurrentPassword(Long userId, String currentPassword);
 
     void changePassword(Long userId, String token, String newPassword, String confirmPassword);
+
+    /**
+     * 更新当前用户头像
+     *
+     * @param fileId
+     *            文件ID（必须为 AVATAR 类型）
+     */
+    void updateAvatar(Long fileId);
 }

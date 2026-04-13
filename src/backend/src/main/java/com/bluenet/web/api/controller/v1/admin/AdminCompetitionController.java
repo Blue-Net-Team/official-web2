@@ -3,6 +3,7 @@ package com.bluenet.web.api.controller.v1.admin;
 import com.bluenet.web.api.dto.ResponseMessage;
 import com.bluenet.web.api.dto.competition.*;
 import com.bluenet.web.application.service.CompetitionService;
+import com.bluenet.web.domain.exception.GlobalException;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
 import com.bluenet.web.infrastructure.security.annotation.RequiresPermission;
 import io.swagger.v3.oas.annotations.Operation;
@@ -59,7 +60,7 @@ public class AdminCompetitionController {
         }
     }
 
-    @Operation(summary = "删除竞赛", description = "删除竞赛及其关联的照片")
+    @Operation(summary = "删除竞赛", description = "删除竞赛")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "删除成功", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseMessage.class))),
             @ApiResponse(responseCode = "404", description = "竞赛不存在", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseMessage.class))) })
@@ -92,41 +93,31 @@ public class AdminCompetitionController {
         }
     }
 
-    @Operation(summary = "添加竞赛照片", description = "为竞赛添加照片")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "添加成功", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseMessageCompetitionImage.class))),
-            @ApiResponse(responseCode = "400", description = "参数错误或超过限制", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseMessage.class), examples = @ExampleObject(value = "{\"code\":400,\"msg\":\"每个竞赛最多关联20张照片\",\"data\":null}"))),
-            @ApiResponse(responseCode = "404", description = "竞赛不存在", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseMessage.class))) })
-    @RequiresPermission(name = "添加竞赛照片", value = "competition:image:add", access = AccessLevel.PROTECTED)
-    @PostMapping("/{id}/images")
-    public ResponseMessage<CompetitionImageDTO> addCompetitionImage(
+    @Operation(summary = "更新竞赛Logo", description = "通过已上传的 fileId 更新竞赛Logo，文件类型必须为 NORMAL_IMG")
+    @RequiresPermission(name = "更新竞赛Logo", value = "competition:update-logo", access = AccessLevel.PROTECTED)
+    @PutMapping("/{id}/logo")
+    public ResponseMessage<Void> updateLogo(
             @Parameter(description = "竞赛ID", required = true) @PathVariable Long id,
-            @Valid @RequestBody AddCompetitionImageRequestDTO request) {
+            @Parameter(description = "Logo文件ID", required = true) @RequestParam("fileId") Long fileId) {
         try {
-            CompetitionImageDTO image = competitionService.addCompetitionImage(id, request);
-            return ResponseMessage.success(image);
-        } catch (IllegalArgumentException e) {
-            if (e.getMessage().contains("不存在")) {
-                return ResponseMessage.error(404, e.getMessage());
-            }
-            return ResponseMessage.error(400, e.getMessage());
+            competitionService.updateLogo(id, fileId);
+            return ResponseMessage.success();
+        } catch (GlobalException e) {
+            return ResponseMessage.error(e);
         }
     }
 
-    @Operation(summary = "删除竞赛照片", description = "删除竞赛的指定照片")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "删除成功", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseMessage.class))),
-            @ApiResponse(responseCode = "404", description = "竞赛或图片不存在", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseMessage.class))) })
-    @RequiresPermission(name = "删除竞赛照片", value = "competition:image:delete", access = AccessLevel.PROTECTED)
-    @DeleteMapping("/{id}/images/{imageId}")
-    public ResponseMessage<Void> removeCompetitionImage(
+    @Operation(summary = "更新竞赛封面", description = "通过已上传的 fileId 更新竞赛封面，文件类型必须为 NORMAL_IMG")
+    @RequiresPermission(name = "更新竞赛封面", value = "competition:update-cover", access = AccessLevel.PROTECTED)
+    @PutMapping("/{id}/cover")
+    public ResponseMessage<Void> updateCover(
             @Parameter(description = "竞赛ID", required = true) @PathVariable Long id,
-            @Parameter(description = "图片ID", required = true) @PathVariable Long imageId) {
+            @Parameter(description = "封面文件ID", required = true) @RequestParam("fileId") Long fileId) {
         try {
-            competitionService.removeCompetitionImage(id, imageId);
-            return ResponseMessage.success(null);
-        } catch (IllegalArgumentException e) {
-            return ResponseMessage.error(404, e.getMessage());
+            competitionService.updateCover(id, fileId);
+            return ResponseMessage.success();
+        } catch (GlobalException e) {
+            return ResponseMessage.error(e);
         }
     }
 }

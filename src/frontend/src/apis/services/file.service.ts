@@ -1,5 +1,6 @@
 import { publicClient, apiClient } from '../client'
 import { ResponseMessage, FileInfo } from '../schema/type'
+import type { FileType } from '../schema/enumerate'
 
 function extractFilenameFromHeaders(headers: Record<string, string>): string {
   const disposition = headers['content-disposition'] || ''
@@ -16,57 +17,45 @@ function extractFilenameFromHeaders(headers: Record<string, string>): string {
 
 export const fileService = {
   /**
-   * 上传头像 - 公开接口，无需认证头
-   * 对应后端 POST /api/v1/file/upload/avatar
-   * 未登录用户上传会作为报名头像处理
+   * 统一文件上传接口
+   * 对应后端 POST /api/v1/file/upload
    * @param file 文件对象
+   * @param type 文件类型枚举
+   * @param onProgress 上传进度回调（可选）
    */
-  async uploadAvatar(file: File): Promise<ResponseMessage<FileInfo>> {
-    const formData = new FormData()
-    formData.append('file', file)
-
-    const response = await publicClient.post<ResponseMessage<FileInfo>>(
-      '/file/upload/avatar',
-      formData,
-      {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      }
-    )
-    return response.data
-  },
-
-  /**
-   * 上传考题作品 - 需要登录
-   * 对应后端 POST /api/v1/file/upload/assessment/work
-   * @param file 文件对象
-   * @param questionId 题目ID
-   * @param onProgress 上传进度回调
-   */
-  async uploadWork(
+  async upload(
     file: File,
-    questionId: number,
+    type: FileType,
     onProgress?: (progress: number) => void
   ): Promise<ResponseMessage<FileInfo>> {
     const formData = new FormData()
     formData.append('file', file)
-    formData.append('questionId', String(questionId))
+    formData.append('type', type)
 
-    const response = await apiClient.post<ResponseMessage<FileInfo>>(
-      '/file/upload/assessment/work',
-      formData,
-      {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-        onUploadProgress: (event) => {
-          if (event.total && onProgress) {
-            onProgress(Math.round((event.loaded * 100) / event.total))
+    const client = type === 'AVATAR' ? publicClient : apiClient
+
+    const response = await client.post<ResponseMessage<FileInfo>>('/file/upload', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+      onUploadProgress: onProgress
+        ? (event) => {
+            if (event.total) {
+              onProgress(Math.round((event.loaded * 100) / event.total))
+            }
           }
-        },
-      }
-    )
+        : undefined,
+    })
+    return response.data
+  },
+
+  /**
+   * 更新用户头像
+   * 对应后端 PUT /api/v1/user/avatar
+   * @param fileId 文件ID
+   */
+  async updateAvatar(fileId: number): Promise<ResponseMessage<void>> {
+    const response = await apiClient.put<ResponseMessage<void>>('/user/avatar', { fileId })
     return response.data
   },
 

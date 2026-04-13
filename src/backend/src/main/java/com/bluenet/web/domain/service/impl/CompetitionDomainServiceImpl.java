@@ -39,13 +39,12 @@ public class CompetitionDomainServiceImpl implements CompetitionDomainService {
         competition.setMonth(month);
         competition.setOrganizer(organizer);
         competition.setSortOrder(0);
-        competition.setEnabled(true);
         return competitionRepository.save(competition);
     }
 
     @Override
     public void updateCompetition(Long id, String name, String shortName, Long logoFileId, String summary,
-            String detail, String level, String month, String organizer, Boolean enabled) {
+            String detail, String level, String month, String organizer) {
         Competition competition = new Competition();
         competition.setId(id);
         competition.setName(name);
@@ -56,7 +55,6 @@ public class CompetitionDomainServiceImpl implements CompetitionDomainService {
         competition.setLevel(level);
         competition.setMonth(month);
         competition.setOrganizer(organizer);
-        competition.setEnabled(enabled);
         competitionRepository.update(competition);
     }
 
@@ -83,6 +81,14 @@ public class CompetitionDomainServiceImpl implements CompetitionDomainService {
         Competition competition = new Competition();
         competition.setId(id);
         competition.setLogoFileId(logoFileId);
+        competitionRepository.update(competition);
+    }
+
+    @Override
+    public void updateCover(Long id, Long coverFileId) {
+        Competition competition = new Competition();
+        competition.setId(id);
+        competition.setCoverFileId(coverFileId);
         competitionRepository.update(competition);
     }
 }

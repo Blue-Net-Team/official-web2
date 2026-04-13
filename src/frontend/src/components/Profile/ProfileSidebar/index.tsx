@@ -112,8 +112,9 @@ export default function ProfileSidebar({
       setCropModalOpen(false)
       try {
         const file = new File([blob], 'avatar.jpg', { type: 'image/jpeg' })
-        const res = await fileService.uploadAvatar(file)
-        if (res.code === 200) {
+        const res = await fileService.upload(file, 'AVATAR')
+        if (res.code === 200 && res.data) {
+          await fileService.updateAvatar(res.data.id)
           messageApi.success('头像更新成功')
           onAvatarUpdate?.()
         } else {

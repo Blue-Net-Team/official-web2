@@ -3,27 +3,30 @@ package com.bluenet.web.application.service.impl;
 import com.bluenet.web.api.dto.competition.*;
 import com.bluenet.web.application.converter.CompetitionConverter;
 import com.bluenet.web.application.service.CompetitionService;
+import com.bluenet.web.domain.exception.BadRequest;
+import com.bluenet.web.domain.exception.DataNotFound;
 import com.bluenet.web.domain.exception.GlobalException;
+import com.bluenet.web.domain.model.enumerate.FileType;
 import com.bluenet.web.domain.model.vo.CompetitionBriefVO;
 import com.bluenet.web.domain.model.vo.CompetitionVO;
-import com.bluenet.web.domain.model.vo.IntroduceImageVO;
+import com.bluenet.web.domain.model.vo.FileVO;
 import com.bluenet.web.domain.service.CompetitionDomainService;
-import com.bluenet.web.domain.service.IntroduceImageDomainService;
+import com.bluenet.web.domain.service.FileDomainService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class CompetitionServiceImpl implements CompetitionService {
-    private static final int MAX_IMAGES_PER_COMPETITION = 20;
-
     private final CompetitionDomainService competitionDomainService;
-    private final IntroduceImageDomainService introduceImageDomainService;
     private final CompetitionConverter competitionConverter;
+    private final FileDomainService fileDomainService;
 
     @Override
     public List<CompetitionBriefDTO> getCompetitionList(int limit) {
@@ -36,21 +39,6 @@ public class CompetitionServiceImpl implements CompetitionService {
     public List<CompetitionResponseDTO> getCompetitionResponseList(int limit) {
         int validLimit = Math.min(Math.max(limit, 1), 50);
         List<CompetitionBriefVO> voList = competitionDomainService.getCompetitionList(validLimit);
-
-        // 为每个竞赛查询第一张介绍图片
-        for (CompetitionBriefVO vo : voList) {
-            List<IntroduceImageVO> images = introduceImageDomainService.getCompetitionImages(vo.getId());
-            if (!images.isEmpty()) {
-                // 按 sort_order 排序取第一张
-                images.sort((a, b) -> {
-                    int sortA = a.getSortOrder() != null ? a.getSortOrder() : 0;
-                    int sortB = b.getSortOrder() != null ? b.getSortOrder() : 0;
-                    return Integer.compare(sortB, sortA); // 降序，sort_order 越大越靠前
-                });
-                vo.setIntroduceImageFileId(images.get(0).getFileId());
-            }
-        }
-
         return competitionConverter.convertToResponseDTOList(voList);
     }
 
@@ -60,9 +48,7 @@ public class CompetitionServiceImpl implements CompetitionService {
         if (competitionOpt.isEmpty()) {
             throw new IllegalArgumentException("竞赛不存在");
         }
-
-        List<IntroduceImageVO> images = introduceImageDomainService.getCompetitionImages(id);
-        return competitionConverter.convertToDetailDTO(competitionOpt.get(), images);
+        return competitionConverter.convertToDetailDTO(competitionOpt.get());
     }
 
     @Override
@@ -83,12 +69,13 @@ public class CompetitionServiceImpl implements CompetitionService {
             throw new GlobalException("创建竞赛失败");
         }
 
-        List<IntroduceImageVO> images = introduceImageDomainService.getCompetitionImages(id);
         CompetitionBriefVO briefVO = CompetitionBriefVO.builder()
                 .id(created.get().getId())
                 .name(created.get().getName())
                 .shortName(created.get().getShortName())
                 .logoUrl(created.get().getLogoUrl())
+                .logoFileId(created.get().getLogoFileId())
+                .coverFileId(created.get().getCoverFileId())
                 .summary(created.get().getSummary())
                 .level(created.get().getLevel())
                 .month(created.get().getMonth())
@@ -113,8 +100,7 @@ public class CompetitionServiceImpl implements CompetitionService {
                 request.getDetail(),
                 request.getLevel(),
                 request.getMonth(),
-                request.getOrganizer(),
-                request.getEnabled());
+                request.getOrganizer());
 
         Optional<CompetitionVO> updated = competitionDomainService.getCompetitionById(id);
         if (updated.isEmpty()) {
@@ -126,6 +112,8 @@ public class CompetitionServiceImpl implements CompetitionService {
                 .name(updated.get().getName())
                 .shortName(updated.get().getShortName())
                 .logoUrl(updated.get().getLogoUrl())
+                .logoFileId(updated.get().getLogoFileId())
+                .coverFileId(updated.get().getCoverFileId())
                 .summary(updated.get().getSummary())
                 .level(updated.get().getLevel())
                 .month(updated.get().getMonth())
@@ -140,12 +128,6 @@ public class CompetitionServiceImpl implements CompetitionService {
         if (!competitionDomainService.existsById(id)) {
             throw new IllegalArgumentException("竞赛不存在");
         }
-
-        List<IntroduceImageVO> images = introduceImageDomainService.getCompetitionImages(id);
-        for (IntroduceImageVO image : images) {
-            introduceImageDomainService.removeCompetitionImage(image.getId());
-        }
-
         competitionDomainService.deleteCompetition(id);
     }
 
@@ -160,38 +142,35 @@ public class CompetitionServiceImpl implements CompetitionService {
 
     @Override
     @Transactional
-    public CompetitionImageDTO addCompetitionImage(Long id, AddCompetitionImageRequestDTO request) {
+    public void updateLogo(Long id, Long fileId) {
         if (!competitionDomainService.existsById(id)) {
-            throw new IllegalArgumentException("竞赛不存在");
+            throw new DataNotFound("竞赛不存在");
         }
-
-        int currentCount = introduceImageDomainService.countCompetitionImages(id);
-        if (currentCount >= MAX_IMAGES_PER_COMPETITION) {
-            throw new IllegalArgumentException("每个竞赛最多关联20张照片");
+        FileVO fileVO = fileDomainService.getFileById(fileId);
+        if (fileVO == null) {
+            throw new DataNotFound("文件不存在");
         }
-
-        Long imageId = introduceImageDomainService.addCompetitionImage(
-                id,
-                request.getFileId(),
-                request.getDescription());
-
-        return CompetitionImageDTO.builder()
-                .id(imageId)
-                .description(request.getDescription())
-                .build();
+        if (fileVO.getType() != FileType.NORMAL_IMG) {
+            throw new BadRequest("文件类型不匹配，期望 NORMAL_IMG");
+        }
+        competitionDomainService.updateLogo(id, fileId);
+        log.info("竞赛Logo更新成功 - competitionId={}, fileId={}", id, fileId);
     }
 
     @Override
     @Transactional
-    public void removeCompetitionImage(Long id, Long imageId) {
+    public void updateCover(Long id, Long fileId) {
         if (!competitionDomainService.existsById(id)) {
-            throw new IllegalArgumentException("竞赛不存在");
+            throw new DataNotFound("竞赛不存在");
         }
-
-        if (!introduceImageDomainService.existsById(imageId)) {
-            throw new IllegalArgumentException("图片不存在");
+        FileVO fileVO = fileDomainService.getFileById(fileId);
+        if (fileVO == null) {
+            throw new DataNotFound("文件不存在");
         }
-
-        introduceImageDomainService.removeCompetitionImage(imageId);
+        if (fileVO.getType() != FileType.NORMAL_IMG) {
+            throw new BadRequest("文件类型不匹配，期望 NORMAL_IMG");
+        }
+        competitionDomainService.updateCover(id, fileId);
+        log.info("竞赛封面更新成功 - competitionId={}, fileId={}", id, fileId);
     }
 }

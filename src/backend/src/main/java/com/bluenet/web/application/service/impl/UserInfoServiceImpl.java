@@ -8,12 +8,16 @@ import com.bluenet.web.api.dto.user.UserInfo;
 import com.bluenet.web.application.converter.UserConverter;
 import com.bluenet.web.application.service.UserInfoService;
 import com.bluenet.web.domain.exception.BadRequest;
+import com.bluenet.web.domain.exception.DataNotFound;
 import com.bluenet.web.domain.exception.Forbidden;
 import com.bluenet.web.domain.exception.Unauthorized;
+import com.bluenet.web.domain.model.enumerate.FileType;
+import com.bluenet.web.domain.model.vo.FileVO;
 import com.bluenet.web.domain.model.vo.TabCountsVO;
 import com.bluenet.web.domain.model.vo.UserVO;
 import com.bluenet.web.domain.model.vo.VerifyCodeVO;
 import com.bluenet.web.domain.repository.VerificationCodeRepository;
+import com.bluenet.web.domain.service.FileDomainService;
 import com.bluenet.web.domain.service.UserDomainService;
 import com.bluenet.web.domain.service.VerificationCodeDomainService;
 import com.bluenet.web.infrastructure.email.EmailSender;
@@ -33,6 +37,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class UserInfoServiceImpl implements UserInfoService {
     private final UserConverter userConverter;
     private final UserDomainService userDomainService;
+    private final FileDomainService fileDomainService;
     private final VerificationCodeDomainService verificationCodeDomainService;
     private final VerificationCodeRepository verificationCodeRepository;
     private final EmailSender emailSender;
@@ -192,5 +197,27 @@ public class UserInfoServiceImpl implements UserInfoService {
         changePasswordStateService.delete(token);
 
         log.info("密码修改成功 - userId={}", userId);
+    }
+
+    @Override
+    @Transactional
+    public void updateAvatar(Long fileId) {
+        Long userId = getCurrentUserId();
+
+        // 校验文件存在
+        FileVO fileVO = fileDomainService.getFileById(fileId);
+        if (fileVO == null) {
+            throw new DataNotFound("文件不存在");
+        }
+
+        // 校验文件类型为 AVATAR
+        if (fileVO.getType() != FileType.AVATAR) {
+            throw new BadRequest("文件类型不匹配，期望 AVATAR");
+        }
+
+        // 调用领域服务更新头像
+        userDomainService.updateUserAvatar(userId, fileVO);
+
+        log.info("用户头像更新成功 - userId={}, fileId={}", userId, fileId);
     }
 }

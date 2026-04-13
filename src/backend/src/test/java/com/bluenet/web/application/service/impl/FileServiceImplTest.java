@@ -8,13 +8,13 @@ import static org.mockito.Mockito.*;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 
-import com.bluenet.web.domain.exception.DataConflict;
-import com.bluenet.web.domain.exception.DataNotFound;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -22,16 +22,13 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.bluenet.web.api.dto.file.FileInfo;
 import com.bluenet.web.domain.model.enumerate.FileType;
-import com.bluenet.web.domain.model.enumerate.ImageType;
 import com.bluenet.web.domain.model.vo.FileVO;
-import com.bluenet.web.domain.service.CompetitionDomainService;
 import com.bluenet.web.domain.service.FileDomainService;
-import com.bluenet.web.domain.service.IntroduceImageDomainService;
 
 /**
  * FileServiceImpl 单元测试
  * <p>
- * 测试介绍图片上传接口相关的业务逻辑
+ * 测试统一文件上传的纯存储逻辑，验证 FileService 无业务依赖。
  * </p>
  */
 @DisplayName("FileServiceImpl 单元测试")
@@ -41,33 +38,22 @@ class FileServiceImplTest {
     @Mock
     private FileDomainService fileDomainService;
 
-    @Mock
-    private IntroduceImageDomainService introduceImageDomainService;
-
-    @Mock
-    private CompetitionDomainService competitionDomainService;
-
     @InjectMocks
     private FileServiceImpl fileService;
 
     private static final Long TEST_FILE_ID = 100L;
     private static final String TEST_FILE_NAME = "test.jpg";
     private static final String TEST_FILE_URL = "http://example.com/test.jpg";
-    private static final Long TEST_COMPETITION_ID = 1L;
-    private static final String TEST_DESCRIPTION = "测试图片描述";
 
     private MultipartFile mockFile;
     private FileVO testFileVO;
 
     @BeforeEach
     void setUp() throws IOException {
-        // 创建模拟的MultipartFile
         mockFile = mock(MultipartFile.class);
-        // 使用lenient()放宽stubbing限制，因为某些测试用例不会调用这些方法
         lenient().when(mockFile.getOriginalFilename()).thenReturn(TEST_FILE_NAME);
         lenient().when(mockFile.getInputStream()).thenReturn(new ByteArrayInputStream("test content".getBytes()));
 
-        // 创建测试用的FileVO
         testFileVO = FileVO.builder()
                 .id(TEST_FILE_ID)
                 .name(TEST_FILE_NAME)
@@ -76,244 +62,111 @@ class FileServiceImplTest {
                 .build();
     }
 
-    // ==================== uploadIntroduceImage 测试 ====================
+    // ==================== uploadFile 测试 ====================
 
     @Nested
-    @DisplayName("uploadIntroduceImage 方法测试")
-    class UploadIntroduceImageTests {
+    @DisplayName("uploadFile 方法测试")
+    class UploadFileTests {
 
         /**
-         * 上传竞赛介绍图片：应成功上传并返回文件信息
+         * TC-101~105: 上传各类型文件应成功
          */
-        @Test
-        @DisplayName("上传竞赛介绍图片：应成功上传并返回文件信息")
-        void uploadIntroduceImage_competitionType_shouldUploadSuccessfully() throws IOException {
+        @ParameterizedTest(name = "上传 {0} 类型文件应成功")
+        @EnumSource(FileType.class)
+        @DisplayName("上传各类型文件应成功返回FileInfo")
+        void uploadFile_eachFileType_shouldReturnFileInfo(FileType fileType) throws IOException {
             // 准备
-            when(fileDomainService.generateFilename(eq(FileType.NORMAL_IMG), any())).thenReturn(TEST_FILE_NAME);
-            when(fileDomainService.saveFile(eq(FileType.NORMAL_IMG), any(), any())).thenReturn(testFileVO);
-            when(introduceImageDomainService.addIntroduceImage(eq(ImageType.COMPETITION), eq(TEST_FILE_ID), isNull()))
-                    .thenReturn(1L);
+            FileVO fileVO = FileVO.builder()
+                    .id(TEST_FILE_ID)
+                    .name(TEST_FILE_NAME)
+                    .url(TEST_FILE_URL)
+                    .type(fileType)
+                    .build();
+
+            when(fileDomainService.generateFilename(eq(fileType), any())).thenReturn(TEST_FILE_NAME);
+            when(fileDomainService.saveFile(eq(fileType), any(), any())).thenReturn(fileVO);
 
             // 执行
-            FileInfo result = fileService.uploadIntroduceImage(ImageType.COMPETITION, null, null, mockFile);
+            FileInfo result = fileService.uploadFile(mockFile, fileType);
 
             // 验证
             assertNotNull(result);
             assertEquals(TEST_FILE_ID, result.getId());
             assertEquals(TEST_FILE_NAME, result.getName());
-            assertEquals(FileType.NORMAL_IMG, result.getType());
+            assertEquals(fileType, result.getType());
             assertEquals(TEST_FILE_URL, result.getUrl());
 
-            verify(fileDomainService).saveFile(eq(FileType.NORMAL_IMG), any(), any());
-            verify(introduceImageDomainService).addIntroduceImage(ImageType.COMPETITION, TEST_FILE_ID, null);
+            verify(fileDomainService).generateFilename(eq(fileType), any());
+            verify(fileDomainService).saveFile(eq(fileType), any(), any());
         }
 
         /**
-         * 上传介绍图片带描述：应成功上传并保存描述
+         * 上传文件时 IOException 应抛出 RuntimeException
          */
         @Test
-        @DisplayName("上传介绍图片带描述：应成功上传并保存描述")
-        void uploadIntroduceImage_withDescription_shouldUploadWithDescription() throws IOException {
-            // 准备
-            when(fileDomainService.generateFilename(eq(FileType.NORMAL_IMG), any())).thenReturn(TEST_FILE_NAME);
-            when(fileDomainService.saveFile(eq(FileType.NORMAL_IMG), any(), any())).thenReturn(testFileVO);
-            when(
-                    introduceImageDomainService.addIntroduceImage(
-                            eq(ImageType.COMPETITION),
-                            eq(TEST_FILE_ID),
-                            eq(TEST_DESCRIPTION)))
-                                    .thenReturn(1L);
+        @DisplayName("上传文件时 IO 异常应抛出 RuntimeException")
+        void uploadFile_ioException_shouldThrowRuntimeException() throws IOException {
+            when(fileDomainService.generateFilename(eq(FileType.AVATAR), any())).thenReturn(TEST_FILE_NAME);
+            when(mockFile.getInputStream()).thenThrow(new IOException("IO error"));
 
-            // 执行
-            FileInfo result = fileService.uploadIntroduceImage(ImageType.COMPETITION, null, TEST_DESCRIPTION, mockFile);
+            RuntimeException exception = assertThrows(
+                    RuntimeException.class,
+                    () -> fileService.uploadFile(mockFile, FileType.AVATAR));
 
-            // 验证
-            assertNotNull(result);
-            assertEquals(TEST_FILE_ID, result.getId());
-
-            verify(introduceImageDomainService)
-                    .addIntroduceImage(ImageType.COMPETITION, TEST_FILE_ID, TEST_DESCRIPTION);
+            assertTrue(exception.getMessage().contains("Failed to save file"));
         }
     }
 
-    // ==================== uploadCompetitionImage 测试 ====================
+    // ==================== 依赖检查 ====================
 
     @Nested
-    @DisplayName("uploadCompetitionImage 方法测试")
-    class UploadCompetitionImageTests {
+    @DisplayName("依赖检查")
+    class DependencyCheckTests {
 
         /**
-         * 上传竞赛图片：应成功上传并返回文件信息
+         * TC-106: FileService 无业务依赖 FileServiceImpl 应仅依赖 FileDomainService，不依赖
+         * UserDomainService 等领域服务。
          */
         @Test
-        @DisplayName("上传竞赛图片：应成功上传并返回文件信息")
-        void uploadCompetitionImage_validCompetition_shouldUploadSuccessfully() throws IOException {
-            // 准备
-            when(competitionDomainService.existsById(TEST_COMPETITION_ID)).thenReturn(true);
-            when(introduceImageDomainService.countCompetitionImages(TEST_COMPETITION_ID)).thenReturn(0);
-            when(fileDomainService.generateFilename(eq(FileType.NORMAL_IMG), any())).thenReturn(TEST_FILE_NAME);
-            when(fileDomainService.saveFile(eq(FileType.NORMAL_IMG), any(), any())).thenReturn(testFileVO);
-            when(introduceImageDomainService.addCompetitionImage(eq(TEST_COMPETITION_ID), eq(TEST_FILE_ID), isNull()))
-                    .thenReturn(1L);
+        @DisplayName("FileServiceImpl 应仅依赖 FileDomainService")
+        void fileService_shouldOnlyDependOnFileDomainService() {
+            // 验证通过 @InjectMocks 注入的 mock 只有 FileDomainService
+            // FileServiceImpl 的字段应只有 fileDomainService
+            var fields = FileServiceImpl.class.getDeclaredFields();
+            long serviceCount = 0;
+            for (var field : fields) {
+                if (field.getName().equals("fileDomainService")) {
+                    serviceCount++;
+                }
+            }
+            // 确保只有一个依赖（fileDomainService）
+            assertEquals(1, serviceCount, "FileServiceImpl 应只有一个 fileDomainService 依赖");
 
-            // 执行
-            FileInfo result = fileService.uploadCompetitionImage(TEST_COMPETITION_ID, null, mockFile);
+            // 确保不包含业务领域服务的依赖
+            assertDoesNotThrow(() -> {
+                var field = FileServiceImpl.class.getDeclaredField("fileDomainService");
+                assertNotNull(field);
+            });
 
-            // 验证
-            assertNotNull(result);
-            assertEquals(TEST_FILE_ID, result.getId());
-            assertEquals(TEST_FILE_NAME, result.getName());
-            assertEquals(FileType.NORMAL_IMG, result.getType());
-
-            verify(competitionDomainService).existsById(TEST_COMPETITION_ID);
-            verify(introduceImageDomainService).countCompetitionImages(TEST_COMPETITION_ID);
-            verify(introduceImageDomainService).addCompetitionImage(TEST_COMPETITION_ID, TEST_FILE_ID, null);
-        }
-
-        /**
-         * 上传竞赛图片带描述：应成功上传并保存描述
-         */
-        @Test
-        @DisplayName("上传竞赛图片带描述：应成功上传并保存描述")
-        void uploadCompetitionImage_withDescription_shouldUploadWithDescription() throws IOException {
-            // 准备
-            when(competitionDomainService.existsById(TEST_COMPETITION_ID)).thenReturn(true);
-            when(introduceImageDomainService.countCompetitionImages(TEST_COMPETITION_ID)).thenReturn(5);
-            when(fileDomainService.generateFilename(eq(FileType.NORMAL_IMG), any())).thenReturn(TEST_FILE_NAME);
-            when(fileDomainService.saveFile(eq(FileType.NORMAL_IMG), any(), any())).thenReturn(testFileVO);
-            when(
-                    introduceImageDomainService
-                            .addCompetitionImage(eq(TEST_COMPETITION_ID), eq(TEST_FILE_ID), eq(TEST_DESCRIPTION)))
-                                    .thenReturn(1L);
-
-            // 执行
-            FileInfo result = fileService.uploadCompetitionImage(TEST_COMPETITION_ID, TEST_DESCRIPTION, mockFile);
-
-            // 验证
-            assertNotNull(result);
-            assertEquals(TEST_FILE_ID, result.getId());
-
-            verify(introduceImageDomainService)
-                    .addCompetitionImage(TEST_COMPETITION_ID, TEST_FILE_ID, TEST_DESCRIPTION);
-        }
-
-        /**
-         * 上传竞赛图片：竞赛不存在应抛出异常
-         */
-        @Test
-        @DisplayName("上传竞赛图片：竞赛不存在应抛出异常")
-        void uploadCompetitionImage_nonExistentCompetition_shouldThrowException() {
-            // 准备
-            when(competitionDomainService.existsById(TEST_COMPETITION_ID)).thenReturn(false);
-
-            // 执行 & 验证
-            DataNotFound exception = assertThrows(
-                    DataNotFound.class,
-                    () -> fileService.uploadCompetitionImage(TEST_COMPETITION_ID, null, mockFile));
-
-            assertEquals("竞赛不存在", exception.getMessage());
-
-            verify(competitionDomainService).existsById(TEST_COMPETITION_ID);
-            verify(introduceImageDomainService, never()).countCompetitionImages(any());
-            verify(fileDomainService, never()).saveFile(any(), any(), any());
-        }
-
-        /**
-         * 上传竞赛图片：图片数量已达上限应抛出异常
-         */
-        @Test
-        @DisplayName("上传竞赛图片：图片数量已达上限应抛出异常")
-        void uploadCompetitionImage_exceedLimit_shouldThrowException() {
-            // 准备
-            when(competitionDomainService.existsById(TEST_COMPETITION_ID)).thenReturn(true);
-            when(introduceImageDomainService.countCompetitionImages(TEST_COMPETITION_ID)).thenReturn(20);
-
-            // 执行 & 验证
-            DataConflict exception = assertThrows(
-                    DataConflict.class,
-                    () -> fileService.uploadCompetitionImage(TEST_COMPETITION_ID, null, mockFile));
-
-            assertEquals("竞赛图片数量已达上限（最多20张）", exception.getMessage());
-
-            verify(competitionDomainService).existsById(TEST_COMPETITION_ID);
-            verify(introduceImageDomainService).countCompetitionImages(TEST_COMPETITION_ID);
-            verify(fileDomainService, never()).saveFile(any(), any(), any());
-        }
-
-        /**
-         * 上传竞赛图片：已有19张图片时应允许上传
-         */
-        @Test
-        @DisplayName("上传竞赛图片：已有19张图片时应允许上传")
-        void uploadCompetitionImage_19Images_shouldAllowUpload() throws IOException {
-            // 准备
-            when(competitionDomainService.existsById(TEST_COMPETITION_ID)).thenReturn(true);
-            when(introduceImageDomainService.countCompetitionImages(TEST_COMPETITION_ID)).thenReturn(19);
-            when(fileDomainService.generateFilename(eq(FileType.NORMAL_IMG), any())).thenReturn(TEST_FILE_NAME);
-            when(fileDomainService.saveFile(eq(FileType.NORMAL_IMG), any(), any())).thenReturn(testFileVO);
-            when(introduceImageDomainService.addCompetitionImage(eq(TEST_COMPETITION_ID), eq(TEST_FILE_ID), isNull()))
-                    .thenReturn(1L);
-
-            // 执行
-            FileInfo result = fileService.uploadCompetitionImage(TEST_COMPETITION_ID, null, mockFile);
-
-            // 验证
-            assertNotNull(result);
-            assertEquals(TEST_FILE_ID, result.getId());
-        }
-    }
-
-    // ==================== uploadCompetitionLogo 测试 ====================
-
-    @Nested
-    @DisplayName("uploadCompetitionLogo 方法测试")
-    class UploadCompetitionLogoTests {
-
-        /**
-         * 上传竞赛Logo：应成功上传并更新竞赛Logo
-         */
-        @Test
-        @DisplayName("上传竞赛Logo：应成功上传并更新竞赛Logo")
-        void uploadCompetitionLogo_validCompetition_shouldUploadSuccessfully() throws IOException {
-            // 准备
-            when(competitionDomainService.existsById(TEST_COMPETITION_ID)).thenReturn(true);
-            when(fileDomainService.generateFilename(eq(FileType.NORMAL_IMG), any())).thenReturn(TEST_FILE_NAME);
-            when(fileDomainService.saveFile(eq(FileType.NORMAL_IMG), any(), any())).thenReturn(testFileVO);
-            doNothing().when(competitionDomainService).updateLogo(TEST_COMPETITION_ID, TEST_FILE_ID);
-
-            // 执行
-            FileInfo result = fileService.uploadCompetitionLogo(TEST_COMPETITION_ID, mockFile);
-
-            // 验证
-            assertNotNull(result);
-            assertEquals(TEST_FILE_ID, result.getId());
-            assertEquals(TEST_FILE_NAME, result.getName());
-            assertEquals(FileType.NORMAL_IMG, result.getType());
-
-            verify(competitionDomainService).existsById(TEST_COMPETITION_ID);
-            verify(fileDomainService).saveFile(eq(FileType.NORMAL_IMG), any(), any());
-            verify(competitionDomainService).updateLogo(TEST_COMPETITION_ID, TEST_FILE_ID);
-        }
-
-        /**
-         * 上传竞赛Logo：竞赛不存在应抛出异常
-         */
-        @Test
-        @DisplayName("上传竞赛Logo：竞赛不存在应抛出异常")
-        void uploadCompetitionLogo_nonExistentCompetition_shouldThrowException() {
-            // 准备
-            when(competitionDomainService.existsById(TEST_COMPETITION_ID)).thenReturn(false);
-
-            // 执行 & 验证
-            DataNotFound exception = assertThrows(
-                    DataNotFound.class,
-                    () -> fileService.uploadCompetitionLogo(TEST_COMPETITION_ID, mockFile));
-
-            assertEquals("竞赛不存在", exception.getMessage());
-
-            verify(competitionDomainService).existsById(TEST_COMPETITION_ID);
-            verify(fileDomainService, never()).saveFile(any(), any(), any());
-            verify(competitionDomainService, never()).updateLogo(any(), any());
+            // 确保不存在 UserDomainService、AssessmentQuestionDomainService 等依赖
+            assertThrows(
+                    NoSuchFieldException.class,
+                    () -> FileServiceImpl.class.getDeclaredField("userDomainService"));
+            assertThrows(
+                    NoSuchFieldException.class,
+                    () -> FileServiceImpl.class.getDeclaredField("assessmentQuestionDomainService"));
+            assertThrows(
+                    NoSuchFieldException.class,
+                    () -> FileServiceImpl.class.getDeclaredField("assessmentAnswerDomainService"));
+            assertThrows(
+                    NoSuchFieldException.class,
+                    () -> FileServiceImpl.class.getDeclaredField("qrcodeDomainService"));
+            assertThrows(
+                    NoSuchFieldException.class,
+                    () -> FileServiceImpl.class.getDeclaredField("introduceImageDomainService"));
+            assertThrows(
+                    NoSuchFieldException.class,
+                    () -> FileServiceImpl.class.getDeclaredField("competitionDomainService"));
         }
     }
 }

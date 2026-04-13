@@ -8,6 +8,7 @@ import com.bluenet.web.api.dto.assessment_question.ResponseMessageAssessmentQues
 import com.bluenet.web.api.dto.assessment_question.ResponseMessageAssessmentQuestionList;
 import com.bluenet.web.api.dto.assessment_question.UpdateQuestionRequestDTO;
 import com.bluenet.web.application.service.AssessmentQuestionService;
+import com.bluenet.web.domain.exception.GlobalException;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
 import com.bluenet.web.infrastructure.security.annotation.RequiresPermission;
 import io.swagger.v3.oas.annotations.Operation;
@@ -106,5 +107,20 @@ public class AdminAssessmentQuestionController {
         PageDTO<AssessmentQuestionDTO> result = assessmentQuestionService
                 .listQuestionsForAdmin(assessmentTimeId, page, size);
         return ResponseMessage.success(result);
+    }
+
+    @Operation(summary = "更新题目附件", description = "通过已上传的 fileId 更新指定题目的附件，文件类型必须为 ASSESSMENT_ATTACHMENT")
+    @SecurityRequirement(name = "cookie-auth")
+    @RequiresPermission(name = "更新题目附件", value = "assessment-question:update-attachment", access = AccessLevel.PROTECTED)
+    @PutMapping("/{id}/attachment")
+    public ResponseMessage<Void> updateAttachment(
+            @Parameter(description = "考题ID", required = true) @PathVariable Long id,
+            @Parameter(description = "文件ID", required = true) @RequestParam("fileId") Long fileId) {
+        try {
+            assessmentQuestionService.updateAttachment(id, fileId);
+            return ResponseMessage.success();
+        } catch (GlobalException e) {
+            return ResponseMessage.error(e);
+        }
     }
 }

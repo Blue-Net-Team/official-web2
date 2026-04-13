@@ -76,11 +76,9 @@ public interface CompetitionDomainService {
      *            举办月份
      * @param organizer
      *            主办单位
-     * @param enabled
-     *            是否启用
      */
     void updateCompetition(Long id, String name, String shortName, Long logoFileId, String summary, String detail,
-            String level, String month, String organizer, Boolean enabled);
+            String level, String month, String organizer);
 
     /**
      * 删除竞赛
@@ -118,4 +116,14 @@ public interface CompetitionDomainService {
      *            Logo文件ID
      */
     void updateLogo(Long id, Long logoFileId);
+
+    /**
+     * 更新竞赛封面
+     *
+     * @param id
+     *            竞赛ID
+     * @param coverFileId
+     *            封面文件ID
+     */
+    void updateCover(Long id, Long coverFileId);
 }

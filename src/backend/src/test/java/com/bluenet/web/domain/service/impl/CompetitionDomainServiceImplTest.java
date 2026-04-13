@@ -57,7 +57,6 @@ class CompetitionDomainServiceImplTest {
                 .summary(TEST_SUMMARY)
                 .detail(TEST_DETAIL)
                 .sortOrder(0)
-                .enabled(true)
                 .build();
     }
 
@@ -211,7 +210,7 @@ class CompetitionDomainServiceImplTest {
                                 && competition.getLevel().equals(level)
                                 && competition.getMonth().equals(month)
                                 && competition.getOrganizer().equals(organizer)
-                                && competition.getSortOrder().equals(0) && competition.getEnabled().equals(true)));
+                                && competition.getSortOrder().equals(0)));
     }
 
     /**
@@ -254,7 +253,6 @@ class CompetitionDomainServiceImplTest {
     void updateCompetition_shouldUpdateSuccessfully() {
         // 准备
         Long logoFileId = 100L;
-        Boolean enabled = true;
         String level = "国家级";
         String month = "4月";
         String organizer = "工信部";
@@ -269,8 +267,7 @@ class CompetitionDomainServiceImplTest {
                 TEST_DETAIL,
                 level,
                 month,
-                organizer,
-                enabled);
+                organizer);
 
         // 验证
         verify(competitionRepository).update(
@@ -283,37 +280,7 @@ class CompetitionDomainServiceImplTest {
                                 && competition.getDetail().equals(TEST_DETAIL)
                                 && competition.getLevel().equals(level)
                                 && competition.getMonth().equals(month)
-                                && competition.getOrganizer().equals(organizer)
-                                && competition.getEnabled().equals(enabled)));
-    }
-
-    /**
-     * 更新竞赛：enabled为false时应成功更新
-     */
-    @Test
-    @DisplayName("更新竞赛：enabled为false时应成功更新")
-    void updateCompetition_disableCompetition_shouldUpdateSuccessfully() {
-        // 准备
-        Boolean enabled = false;
-        String level = "国家级";
-        String month = "4月";
-        String organizer = "工信部";
-
-        // 执行
-        competitionDomainService.updateCompetition(
-                TEST_ID,
-                TEST_NAME,
-                TEST_SHORT_NAME,
-                null,
-                TEST_SUMMARY,
-                TEST_DETAIL,
-                level,
-                month,
-                organizer,
-                enabled);
-
-        // 验证
-        verify(competitionRepository).update(argThat(competition -> competition.getEnabled().equals(false)));
+                                && competition.getOrganizer().equals(organizer)));
     }
 
     // ==================== deleteCompetition ====================
@@ -459,5 +426,62 @@ class CompetitionDomainServiceImplTest {
                 argThat(
                         competition -> competition.getId().equals(differentCompetitionId)
                                 && competition.getLogoFileId().equals(logoFileId)));
+    }
+
+    // ==================== updateCover ====================
+
+    /**
+     * 更新封面：应成功更新竞赛封面
+     */
+    @Test
+    @DisplayName("更新封面：应成功更新竞赛封面")
+    void updateCover_shouldUpdateSuccessfully() {
+        // 准备
+        Long newCoverFileId = 400L;
+
+        // 执行
+        competitionDomainService.updateCover(TEST_ID, newCoverFileId);
+
+        // 验证
+        verify(competitionRepository).update(
+                argThat(
+                        competition -> competition.getId().equals(TEST_ID)
+                                && competition.getCoverFileId().equals(newCoverFileId)));
+    }
+
+    /**
+     * 更新封面：封面文件ID为null时应成功更新
+     */
+    @Test
+    @DisplayName("更新封面：封面文件ID为null时应成功更新")
+    void updateCover_withNullCoverFileId_shouldUpdateSuccessfully() {
+        // 执行
+        competitionDomainService.updateCover(TEST_ID, null);
+
+        // 验证
+        verify(competitionRepository).update(
+                argThat(
+                        competition -> competition.getId().equals(TEST_ID)
+                                && competition.getCoverFileId() == null));
+    }
+
+    /**
+     * 更新封面：更新不同竞赛的封面应调用正确的ID
+     */
+    @Test
+    @DisplayName("更新封面：更新不同竞赛的封面应调用正确的ID")
+    void updateCover_differentCompetition_shouldUpdateCorrectId() {
+        // 准备
+        Long differentCompetitionId = 999L;
+        Long coverFileId = 500L;
+
+        // 执行
+        competitionDomainService.updateCover(differentCompetitionId, coverFileId);
+
+        // 验证
+        verify(competitionRepository).update(
+                argThat(
+                        competition -> competition.getId().equals(differentCompetitionId)
+                                && competition.getCoverFileId().equals(coverFileId)));
     }
 }

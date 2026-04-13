@@ -248,21 +248,9 @@ openspec/
 
 **注意**：MinIO 存储桶名称与 FileType 枚举的存储值（value）完全一致。`MinioConfig` 在应用启动时自动创建这些存储桶。`application.yml` 中的 `bucket-names` 配置项仅供参考，实际代码中使用 `FileType.getValue()` 作为存储桶名称。
 
-#### 普通图片分类（ImageType 枚举）
+#### 介绍图片
 
-普通图片（`NORMAL_IMG`）进一步细分为以下类型：
-
-| 枚举值           | 存储值           | 描述    | 使用场景    |
-| ------------- | ------------- | ----- | ------- |
-| `LABORATORY`  | `laboratory`  | 实验室介绍 | 实验室环境展示 |
-| `EQUIPMENT`   | `equipment`   | 设备介绍  | 实验设备展示  |
-| `TEAM_PHOTO`  | `team_photo`  | 团队合照  | 团队风采展示  |
-| `DIRECTION`   | `direction`   | 方向介绍  | 各技术方向介绍 |
-| `COMPETITION` | `competition` | 竞赛介绍  | 竞赛成果展示  |
-| `PATENT`      | `patent`      | 专利介绍  | 专利成果展示  |
-| `PAPER`       | `paper`       | 论文介绍  | 学术论文展示  |
-
-**关系**：`ImageType` 是 `FileType.NORMAL_IMG` 的子分类，通过 `tb_introduce_image` 表关联。
+介绍图片（`FileType.NORMAL_IMG`）通过 `tb_introduce_image` 表管理，包含 `file_id` 和 `description` 字段。竞赛封面通过 `tb_competition.cover_file_id` 直接关联。
 
 #### 文件命名规则
 
@@ -290,14 +278,14 @@ openspec/
 
 #### 文件上传接口
 
-- `POST /api/v1/file/upload/avatar` - 上传头像（公开/已登录）
-- `POST /api/v1/file/upload/assessment/attachment` - 上传考题附件（需登录）
-- `POST /api/v1/file/upload/assessment/work` - 上传考题作品（需登录）
-- `POST /api/v1/file/upload/qrcode/self` - 上传个人二维码（需登录）
-- `POST /api/v1/file/upload/qrcode/group` - 上传群聊二维码（需登录）
-- `POST /api/v1/file/upload/introduce-image` - 上传介绍图片（需管理员权限）
-- `POST /api/v1/file/upload/competition/image` - 上传竞赛合照（需管理员权限）
-- `POST /api/v1/file/upload/competition/logo` - 上传竞赛 Logo（需管理员权限）
+- `POST /api/v1/file/upload` - 统一文件上传，接受 `file` + `type`（FileType 枚举），纯文件存储，不涉及业务逻辑
+- 业务关联通过独立接口完成：
+  - `PUT /api/v1/user/avatar` - 更新用户头像（传 fileId）
+  - `PUT /api/v1/admin/assessment-questions/{id}/attachment` - 更新考题附件（传 fileId）
+  - `POST /api/v1/admin/qrcodes` - 创建二维码记录（传 fileId + type）
+  - `POST /api/v1/admin/introduce-images` - 创建介绍图片（传 fileId + description）
+  - `PUT /api/v1/admin/competitions/{id}/logo` - 更新竞赛 Logo（传 fileId）
+  - `PUT /api/v1/admin/competitions/{id}/cover` - 更新竞赛封面（传 fileId）
 
 #### 文件下载接口
 
@@ -367,7 +355,7 @@ cp .env.example .env
   - `/api/v1/auth/login/**` - 登录接口
   - `/api/v1/auth/logout` - 登出接口
   - `/api/v1/enrollments` - 公开报名
-  - `/api/v1/file/upload/avatar` - 头像上传（报名时使用）
+  - `/api/v1/file/upload` - 统一文件上传（报名时使用）
 
 ### 认证流程
 

@@ -6,8 +6,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
-
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -30,6 +28,9 @@ public class CompetitionDetailDTO {
     @Schema(description = "Logo 文件ID")
     private Long logoFileId;
 
+    @Schema(description = "封面文件ID")
+    private Long coverFileId;
+
     @Schema(description = "竞赛简介")
     private String summary;
 
@@ -44,7 +45,4 @@ public class CompetitionDetailDTO {
 
     @Schema(description = "主办单位")
     private String organizer;
-
-    @Schema(description = "竞赛相关照片")
-    private List<CompetitionImageDTO> images;
 }

@@ -14,7 +14,6 @@ import com.bluenet.web.infrastructure.repository.mapper.AssessmentAnswerMapper;
 import com.bluenet.web.infrastructure.repository.mapper.AssessmentQuestionMapper;
 import com.bluenet.web.infrastructure.repository.mapper.AssessmentTimeMapper;
 import com.bluenet.web.infrastructure.repository.mapper.FileMapper;
-import com.bluenet.web.infrastructure.repository.mapper.QrcodeMapper;
 import com.bluenet.web.infrastructure.repository.mapper.UserMapper;
 import com.bluenet.web.infrastructure.security.WithUserVO;
 import com.bluenet.web.infrastructure.security.util.UserCTX;
@@ -22,6 +21,7 @@ import com.bluenet.web.testcontainers.TestcontainersConfiguration;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -39,6 +39,13 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+/**
+ * 文件上传下载集成测试
+ * <p>
+ * 上传部分使用统一接口 POST /api/v1/file/upload， 下载部分使用 GET
+ * /api/v1/file/download/{fileId}。
+ * </p>
+ */
 @AutoConfigureMockMvc
 @Testcontainers
 @Import(TestcontainersConfiguration.class)
@@ -60,9 +67,6 @@ class FileUploadDownloadIntegrationTest extends BaseIntegrationTest {
     private AssessmentAnswerMapper assessmentAnswerMapper;
 
     @Autowired
-    private QrcodeMapper qrcodeMapper;
-
-    @Autowired
     private FileMapper fileMapper;
 
     @Autowired
@@ -75,7 +79,6 @@ class FileUploadDownloadIntegrationTest extends BaseIntegrationTest {
         assessmentTimeMapper.delete(null);
         assessmentQuestionMapper.delete(null);
         assessmentAnswerMapper.delete(null);
-        qrcodeMapper.delete(null);
     }
 
     @AfterEach
@@ -89,127 +92,68 @@ class FileUploadDownloadIntegrationTest extends BaseIntegrationTest {
         return fileRepository.saveFile(inputStream, file);
     }
 
-    @Test
-    @DisplayName("上传头像 - 应更新用户头像ID")
-    @WithUserVO(userId = 1L, studentId = "2024001001", username = "张三", roleName = "CANDIDATE")
-    void uploadAvatar_shouldUpdateUserAvatarId() throws Exception {
-        User u = new User();
-        u.setId(1L);
-        u.setStudentId("2024001001");
-        u.setUsername("张三");
-        u.setDirection(Direction.COMPUTER_VISION);
-        userMapper.insert(u);
+    // ==================== 上传测试 ====================
 
-        MockMultipartFile file = new MockMultipartFile("file", "a.png", "image/png",
-                "png".getBytes(StandardCharsets.UTF_8));
+    @Nested
+    @DisplayName("统一文件上传测试")
+    class UploadTests {
 
-        mockMvc.perform(multipart("/api/v1/file/upload/avatar").file(file))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value(200))
-                .andExpect(jsonPath("$.data.id").isNumber());
+        @Test
+        @DisplayName("上传头像文件 - 应创建文件记录并返回FileInfo")
+        void uploadAvatar_shouldCreateFileRecord() throws Exception {
+            MockMultipartFile file = new MockMultipartFile("file", "avatar.png", "image/png",
+                    "png".getBytes(StandardCharsets.UTF_8));
 
-        User after = userMapper.selectById(1L);
-        assertNotNull(after.getAvatarId());
+            mockMvc.perform(
+                    multipart("/api/v1/file/upload")
+                            .file(file)
+                            .param("type", "AVATAR"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.code").value(200))
+                    .andExpect(jsonPath("$.data.id").isNumber())
+                    .andExpect(jsonPath("$.data.type").value("AVATAR"));
+
+            // 验证文件记录已创建
+            assertEquals(1, fileMapper.selectCount(null));
+        }
+
+        @Test
+        @DisplayName("上传作品文件 - 已登录用户应成功")
+        @WithUserVO(userId = 2L, studentId = "2024001002", username = "李四", roleName = "CANDIDATE")
+        void uploadWork_authenticated_shouldCreateFileRecord() throws Exception {
+            MockMultipartFile file = new MockMultipartFile("file", "work.zip", "application/zip",
+                    "zip".getBytes(StandardCharsets.UTF_8));
+
+            mockMvc.perform(
+                    multipart("/api/v1/file/upload")
+                            .file(file)
+                            .param("type", "WORK"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.code").value(200))
+                    .andExpect(jsonPath("$.data.id").exists())
+                    .andExpect(jsonPath("$.data.type").value("WORK"));
+
+            assertEquals(1, fileMapper.selectCount(null));
+        }
+
+        @Test
+        @DisplayName("上传作品文件 - 未登录应返回401")
+        void uploadWork_unauthenticated_shouldReturn401() throws Exception {
+            MockMultipartFile file = new MockMultipartFile("file", "work.zip", "application/zip",
+                    "zip".getBytes(StandardCharsets.UTF_8));
+
+            mockMvc.perform(
+                    multipart("/api/v1/file/upload")
+                            .file(file)
+                            .param("type", "WORK"))
+                    .andExpect(status().isUnauthorized());
+
+            // 不应创建文件记录
+            assertEquals(0, fileMapper.selectCount(null));
+        }
     }
 
-    @Test
-    @DisplayName("上传考题作品 - 应创建文件记录并返回文件信息")
-    @WithUserVO(userId = 2L, studentId = "2024001002", username = "李四", roleName = "CANDIDATE")
-    void uploadAssessmentWork_shouldCreateFileAndReturnFileInfo() throws Exception {
-        User u = new User();
-        u.setId(2L);
-        u.setStudentId("2024001002");
-        u.setUsername("李四");
-        u.setDirection(Direction.COMPUTER_VISION);
-        userMapper.insert(u);
-
-        AssessmentTime time = new AssessmentTime();
-        time.setId(10L);
-        time.setDirection(Direction.COMPUTER_VISION);
-        assessmentTimeMapper.insert(time);
-
-        AssessmentQuestion q = new AssessmentQuestion();
-        q.setId(20L);
-        q.setAssessmentTimeId(10L);
-        q.setQuestionNo(1);
-        assessmentQuestionMapper.insert(q);
-
-        MockMultipartFile file = new MockMultipartFile("file", "work.zip", "application/zip",
-                "zip".getBytes(StandardCharsets.UTF_8));
-
-        mockMvc.perform(multipart("/api/v1/file/upload/assessment/work").file(file).param("questionId", "20"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value(200))
-                .andExpect(jsonPath("$.data.id").exists())
-                .andExpect(jsonPath("$.data.type").value("WORK"));
-
-        // 验证文件记录已创建到数据库
-        assertEquals(1, fileMapper.selectCount(null));
-    }
-
-    @Test
-    @DisplayName("上传考题附件 - 应更新题目的附件ID")
-    @WithUserVO(userId = 3L, studentId = "2024001003", username = "王五", roleName = "MEMBER")
-    void uploadAssessmentAttachment_shouldUpdateQuestionAttachmentId() throws Exception {
-        User u = new User();
-        u.setId(3L);
-        u.setStudentId("2024001003");
-        u.setUsername("王五");
-        u.setDirection(Direction.EMBEDDED);
-        userMapper.insert(u);
-
-        AssessmentTime time = new AssessmentTime();
-        time.setId(11L);
-        time.setDirection(Direction.EMBEDDED);
-        assessmentTimeMapper.insert(time);
-
-        AssessmentQuestion q = new AssessmentQuestion();
-        q.setId(21L);
-        q.setAssessmentTimeId(11L);
-        q.setQuestionNo(1);
-        assessmentQuestionMapper.insert(q);
-
-        MockMultipartFile file = new MockMultipartFile("file", "a.pdf", "application/pdf",
-                "%PDF".getBytes(StandardCharsets.UTF_8));
-
-        mockMvc.perform(multipart("/api/v1/file/upload/assessment/attachment").file(file).param("questionId", "21"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value(200));
-
-        AssessmentQuestion after = assessmentQuestionMapper.selectById(21L);
-        assertNotNull(after.getAttachmentId());
-    }
-
-    @Test
-    @DisplayName("上传个人二维码 - 应创建二维码记录")
-    @WithUserVO(userId = 4L, studentId = "2024001004", username = "赵六", roleName = "CANDIDATE")
-    void uploadSelfQrcode_shouldCreateQrcodeRecord() throws Exception {
-        User u = new User();
-        u.setId(4L);
-        u.setStudentId("2024001004");
-        u.setUsername("赵六");
-        u.setDirection(Direction.STRUCTURAL_DESIGN);
-        userMapper.insert(u);
-
-        MockMultipartFile file = new MockMultipartFile("file", "q.png", "image/png",
-                "png".getBytes(StandardCharsets.UTF_8));
-
-        mockMvc.perform(multipart("/api/v1/file/upload/qrcode/self").file(file))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value(200));
-    }
-
-    @Test
-    @DisplayName("上传群组二维码 - 应创建二维码记录")
-    @WithUserVO(userId = 5L, studentId = "2024001005", username = "钱七", roleName = "MEMBER")
-    void uploadGroupQrcode_shouldCreateQrcodeRecord() throws Exception {
-        MockMultipartFile file = new MockMultipartFile("file", "q.png", "image/png",
-                "png".getBytes(StandardCharsets.UTF_8));
-
-        mockMvc.perform(multipart("/api/v1/file/upload/qrcode/group").file(file))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value(200));
-    }
+    // ==================== 下载测试 ====================
 
     @Test
     @DisplayName("下载文件 - 文件不存在应返回404")

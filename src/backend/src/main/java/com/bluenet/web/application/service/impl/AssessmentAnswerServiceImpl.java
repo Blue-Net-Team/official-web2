@@ -3,14 +3,20 @@ package com.bluenet.web.application.service.impl;
 import com.bluenet.web.api.dto.assessment_answer.AssessmentAnswerDTO;
 import com.bluenet.web.api.dto.assessment_answer.CreateAnswerRequestDTO;
 import com.bluenet.web.application.service.AssessmentAnswerService;
+import com.bluenet.web.domain.model.enumerate.FileType;
 import com.bluenet.web.domain.model.vo.AssessmentAnswerVO;
 import com.bluenet.web.domain.model.vo.AssessmentQuestionVO;
+import com.bluenet.web.domain.model.vo.AssessmentTimeVO;
+import com.bluenet.web.domain.model.vo.FileVO;
 import com.bluenet.web.domain.model.vo.UserVO;
 import com.bluenet.web.domain.repository.AssessmentAnswerRepository;
 import com.bluenet.web.domain.repository.AssessmentSessionRepository;
 import com.bluenet.web.domain.service.AssessmentAnswerDomainService;
 import com.bluenet.web.domain.service.AssessmentQuestionDomainService;
+import com.bluenet.web.domain.service.AssessmentTimeDomainService;
+import com.bluenet.web.domain.service.FileDomainService;
 import com.bluenet.web.domain.exception.BadRequest;
+import com.bluenet.web.domain.exception.Forbidden;
 import com.bluenet.web.domain.exception.GlobalException;
 import com.bluenet.web.infrastructure.security.util.UserCTX;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +37,8 @@ public class AssessmentAnswerServiceImpl implements AssessmentAnswerService {
 
     private final AssessmentAnswerDomainService assessmentAnswerDomainService;
     private final AssessmentQuestionDomainService assessmentQuestionDomainService;
+    private final AssessmentTimeDomainService assessmentTimeDomainService;
+    private final FileDomainService fileDomainService;
     private final AssessmentAnswerRepository assessmentAnswerRepository;
     private final AssessmentSessionRepository assessmentSessionRepository;
 
@@ -44,6 +52,12 @@ public class AssessmentAnswerServiceImpl implements AssessmentAnswerService {
 
         // 校验题目存在性
         AssessmentQuestionVO question = assessmentQuestionDomainService.getQuestionById(request.getQuestionId());
+
+        // 校验方向匹配
+        validateDirectionMatch(currentUser, question);
+
+        // 校验 fileId 有效性和类型
+        validateFileId(request.getFileId());
 
         // 校验限时考核是否已过期
         assessmentSessionRepository
@@ -78,6 +92,12 @@ public class AssessmentAnswerServiceImpl implements AssessmentAnswerService {
         }
 
         AssessmentQuestionVO question = assessmentQuestionDomainService.getQuestionById(request.getQuestionId());
+
+        // 校验方向匹配
+        validateDirectionMatch(currentUser, question);
+
+        // 校验 fileId 有效性和类型
+        validateFileId(request.getFileId());
 
         assessmentSessionRepository
                 .findByUserIdAndAssessmentTimeId(currentUser.getId(), question.getAssessmentTimeId())
@@ -115,6 +135,27 @@ public class AssessmentAnswerServiceImpl implements AssessmentAnswerService {
                 .findByUserIdAndQuestionId(currentUser.getId(), questionId);
 
         return answerOpt.map(this::convertToDTO).orElse(null);
+    }
+
+    private void validateDirectionMatch(UserVO user, AssessmentQuestionVO question) {
+        AssessmentTimeVO timeVO = assessmentTimeDomainService.getById(question.getAssessmentTimeId())
+                .orElseThrow(() -> new BadRequest("考核时间不存在"));
+        if (user.getDirection() != null && !user.getDirection().equals(timeVO.getDirection())) {
+            throw new Forbidden("方向不匹配");
+        }
+    }
+
+    private void validateFileId(Long fileId) {
+        if (fileId == null) {
+            return;
+        }
+        FileVO fileVO = fileDomainService.getFileById(fileId);
+        if (fileVO == null) {
+            throw new BadRequest("文件不存在");
+        }
+        if (fileVO.getType() != FileType.WORK) {
+            throw new BadRequest("文件类型不匹配，期望 WORK");
+        }
     }
 
     private AssessmentAnswerDTO convertToDTO(AssessmentAnswerVO vo) {

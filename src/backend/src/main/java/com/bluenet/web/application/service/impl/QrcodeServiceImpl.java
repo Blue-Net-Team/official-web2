@@ -1,16 +1,19 @@
 package com.bluenet.web.application.service.impl;
 
-import com.bluenet.web.api.dto.file.FileInfo;
 import com.bluenet.web.api.dto.qrcode.ConsultationQrcodeDTO;
-import com.bluenet.web.application.service.FileService;
 import com.bluenet.web.application.service.QrcodeService;
+import com.bluenet.web.domain.exception.BadRequest;
+import com.bluenet.web.domain.exception.DataNotFound;
 import com.bluenet.web.domain.model.entity.Qrcode;
+import com.bluenet.web.domain.model.enumerate.FileType;
+import com.bluenet.web.domain.model.enumerate.QrcodeType;
+import com.bluenet.web.domain.model.vo.FileVO;
+import com.bluenet.web.domain.service.FileDomainService;
 import com.bluenet.web.domain.service.QrcodeDomainService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -24,7 +27,7 @@ import java.util.stream.Collectors;
 public class QrcodeServiceImpl implements QrcodeService {
 
     private final QrcodeDomainService qrcodeDomainService;
-    private final FileService fileService;
+    private final FileDomainService fileDomainService;
 
     @Override
     public List<ConsultationQrcodeDTO> getConsultationQrcodes() {
@@ -40,11 +43,17 @@ public class QrcodeServiceImpl implements QrcodeService {
 
     @Override
     @Transactional
-    public FileInfo uploadConsultationQrcode(MultipartFile file) {
-        // 调用 FileService 的 uploadQrcode 方法，它会同时保存文件和二维码记录
-        FileInfo fileInfo = fileService.uploadQrcode("CONSULTATION", file);
-        log.info("咨询群二维码上传成功，fileId={}", fileInfo.getId());
-        return fileInfo;
+    public void createQrcode(Long fileId) {
+        FileVO fileVO = fileDomainService.getFileById(fileId);
+        if (fileVO == null) {
+            throw new DataNotFound("文件不存在");
+        }
+        if (fileVO.getType() != FileType.QRCODE) {
+            throw new BadRequest("文件类型不匹配，期望 QRCODE");
+        }
+
+        qrcodeDomainService.saveQrcode(fileVO, QrcodeType.CONSULTATION);
+        log.info("二维码创建成功，fileId={}", fileId);
     }
 
     @Override

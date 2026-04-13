@@ -17,11 +17,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.context.annotation.Import;
-import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 import org.testcontainers.junit.jupiter.Testcontainers;
-
-import java.nio.charset.StandardCharsets;
 
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -144,42 +141,60 @@ class QrcodeControllerIntegrationTest extends BaseIntegrationTest {
                 .andExpect(jsonPath("$.data[2].id").value(third.getId()));
     }
 
-    // ==================== 管理接口测试 - 上传 ====================
+    // ==================== 管理接口测试 - 创建 ====================
 
     @Test
-    @DisplayName("上传咨询群二维码 - 超管应成功")
+    @DisplayName("创建咨询群二维码 - 超管应成功")
     @WithUserVO(userId = 1L, studentId = "2024001001", username = "管理员", roleName = "SUPER_ADMIN")
-    void uploadConsultationQrcode_asAdmin_shouldSucceed() throws Exception {
-        MockMultipartFile file = new MockMultipartFile("file", "qrcode.png", "image/png",
-                "png".getBytes(StandardCharsets.UTF_8));
+    void createConsultationQrcode_asAdmin_shouldSucceed() throws Exception {
+        File file = createTestFile("qrcode.png");
 
-        mockMvc.perform(multipart("/api/v1/admin/qrcodes/consultation").file(file))
+        mockMvc.perform(
+                post("/api/v1/admin/qrcodes/consultation")
+                        .param("fileId", file.getId().toString()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value(200))
-                .andExpect(jsonPath("$.data.id").isNumber())
-                .andExpect(jsonPath("$.data.name").value(startsWith("qrcode-")))
-                .andExpect(jsonPath("$.data.type").value("QRCODE"));
+                .andExpect(jsonPath("$.code").value(200));
     }
 
     @Test
-    @DisplayName("上传咨询群二维码 - 未登录应返回401")
-    void uploadConsultationQrcode_notAuthenticated_shouldReturn401() throws Exception {
-        MockMultipartFile file = new MockMultipartFile("file", "qrcode.png", "image/png",
-                "png".getBytes(StandardCharsets.UTF_8));
-
-        mockMvc.perform(multipart("/api/v1/admin/qrcodes/consultation").file(file))
+    @DisplayName("创建咨询群二维码 - 未登录应返回401")
+    void createConsultationQrcode_notAuthenticated_shouldReturn401() throws Exception {
+        mockMvc.perform(
+                post("/api/v1/admin/qrcodes/consultation")
+                        .param("fileId", "1"))
                 .andExpect(status().isUnauthorized());
     }
 
     @Test
-    @DisplayName("上传咨询群二维码 - 普通用户应返回403")
+    @DisplayName("创建咨询群二维码 - 普通用户应返回403")
     @WithUserVO(userId = 2L, studentId = "2024001002", username = "普通用户", roleName = "CANDIDATE")
-    void uploadConsultationQrcode_asCandidate_shouldReturn403() throws Exception {
-        MockMultipartFile file = new MockMultipartFile("file", "qrcode.png", "image/png",
-                "png".getBytes(StandardCharsets.UTF_8));
-
-        mockMvc.perform(multipart("/api/v1/admin/qrcodes/consultation").file(file))
+    void createConsultationQrcode_asCandidate_shouldReturn403() throws Exception {
+        mockMvc.perform(
+                post("/api/v1/admin/qrcodes/consultation")
+                        .param("fileId", "1"))
                 .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("创建咨询群二维码 - 文件不存在应返回404")
+    @WithUserVO(userId = 1L, studentId = "2024001001", username = "管理员", roleName = "SUPER_ADMIN")
+    void createConsultationQrcode_fileNotFound_shouldReturn404() throws Exception {
+        mockMvc.perform(
+                post("/api/v1/admin/qrcodes/consultation")
+                        .param("fileId", "99999"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("创建咨询群二维码 - 文件类型不匹配应返回400")
+    @WithUserVO(userId = 1L, studentId = "2024001001", username = "管理员", roleName = "SUPER_ADMIN")
+    void createConsultationQrcode_fileTypeMismatch_shouldReturn400() throws Exception {
+        File file = createTestFileWithType("avatar.png", FileType.AVATAR);
+
+        mockMvc.perform(
+                post("/api/v1/admin/qrcodes/consultation")
+                        .param("fileId", file.getId().toString()))
+                .andExpect(status().isBadRequest());
     }
 
     // ==================== 管理接口测试 - 删除 ====================
@@ -248,7 +263,11 @@ class QrcodeControllerIntegrationTest extends BaseIntegrationTest {
     // ==================== 辅助方法 ====================
 
     private File createTestFile(String filename) {
-        File file = new File(null, filename, FileType.QRCODE, "test-url/" + filename);
+        return createTestFileWithType(filename, FileType.QRCODE);
+    }
+
+    private File createTestFileWithType(String filename, FileType type) {
+        File file = new File(null, filename, type, "test-url/" + filename);
         fileMapper.insert(file);
         return file;
     }

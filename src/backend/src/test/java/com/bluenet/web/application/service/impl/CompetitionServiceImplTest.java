@@ -16,12 +16,15 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.bluenet.web.api.dto.competition.*;
 import com.bluenet.web.application.converter.CompetitionConverter;
+import com.bluenet.web.domain.exception.BadRequest;
+import com.bluenet.web.domain.exception.DataNotFound;
 import com.bluenet.web.domain.exception.GlobalException;
+import com.bluenet.web.domain.model.enumerate.FileType;
 import com.bluenet.web.domain.model.vo.CompetitionBriefVO;
 import com.bluenet.web.domain.model.vo.CompetitionVO;
-import com.bluenet.web.domain.model.vo.IntroduceImageVO;
+import com.bluenet.web.domain.model.vo.FileVO;
 import com.bluenet.web.domain.service.CompetitionDomainService;
-import com.bluenet.web.domain.service.IntroduceImageDomainService;
+import com.bluenet.web.domain.service.FileDomainService;
 
 /**
  * CompetitionServiceImpl单元测试
@@ -34,7 +37,7 @@ class CompetitionServiceImplTest {
     private CompetitionDomainService competitionDomainService;
 
     @Mock
-    private IntroduceImageDomainService introduceImageDomainService;
+    private FileDomainService fileDomainService;
 
     @Mock
     private CompetitionConverter competitionConverter;
@@ -50,8 +53,6 @@ class CompetitionServiceImplTest {
     private static final String TEST_SUMMARY = "全国软件和信息技术专业人才大赛";
     private static final String TEST_DETAIL = "蓝桥杯全国软件和信息技术专业人才大赛是由工业和信息化部人才交流中心举办的全国性IT学科赛事。";
     private static final Long TEST_FILE_ID = 100L;
-    private static final String TEST_FILE_URL = "http://example.com/image.jpg";
-    private static final String TEST_DESCRIPTION = "竞赛照片";
 
     private CompetitionBriefVO createTestCompetitionBriefVO() {
         return CompetitionBriefVO.builder()
@@ -74,7 +75,6 @@ class CompetitionServiceImplTest {
                 .summary(TEST_SUMMARY)
                 .detail(TEST_DETAIL)
                 .sortOrder(0)
-                .enabled(true)
                 .build();
     }
 
@@ -98,16 +98,6 @@ class CompetitionServiceImplTest {
                 .logoFileId(TEST_LOGO_FILE_ID)
                 .summary(TEST_SUMMARY)
                 .detail(TEST_DETAIL)
-                .images(new ArrayList<>())
-                .build();
-    }
-
-    private IntroduceImageVO createTestIntroduceImageVO() {
-        return IntroduceImageVO.builder()
-                .id(1L)
-                .fileId(TEST_FILE_ID)
-                .fileUrl(TEST_FILE_URL)
-                .description(TEST_DESCRIPTION)
                 .build();
     }
 
@@ -134,7 +124,6 @@ class CompetitionServiceImplTest {
                 .level("国家级")
                 .month("4月")
                 .organizer("工信部")
-                .enabled(true)
                 .build();
     }
 
@@ -236,47 +225,26 @@ class CompetitionServiceImplTest {
     // ==================== getCompetitionResponseList ====================
 
     /**
-     * 获取竞赛响应列表：应返回包含介绍图片的响应DTO列表
+     * 获取竞赛响应列表：应返回响应DTO列表
      */
     @Test
-    @DisplayName("获取竞赛响应列表：应返回包含介绍图片的响应DTO列表")
-    void getCompetitionResponseList_shouldReturnResponseDTOsWithImages() {
+    @DisplayName("获取竞赛响应列表：应返回响应DTO列表")
+    void getCompetitionResponseList_shouldReturnResponseDTOs() {
         // 准备
         int limit = 10;
         List<CompetitionBriefVO> voList = new ArrayList<>();
-        CompetitionBriefVO vo = CompetitionBriefVO.builder()
-                .id(TEST_ID)
-                .name(TEST_NAME)
-                .level("国家级")
-                .month("4月")
-                .organizer("工信部")
-                .summary(TEST_SUMMARY)
-                .build();
-        voList.add(vo);
-
-        List<IntroduceImageVO> images = new ArrayList<>();
-        images.add(
-                IntroduceImageVO.builder()
-                        .id(1L)
-                        .fileId(TEST_FILE_ID)
-                        .sortOrder(10)
-                        .build());
+        voList.add(createTestCompetitionBriefVO());
 
         List<CompetitionResponseDTO> expectedDTOs = new ArrayList<>();
         expectedDTOs.add(
                 CompetitionResponseDTO.builder()
                         .id(TEST_ID)
                         .name(TEST_NAME)
-                        .level("国家级")
-                        .month("4月")
-                        .organizer("工信部")
                         .summary(TEST_SUMMARY)
-                        .introduceImageFileId(TEST_FILE_ID)
                         .build());
 
         when(competitionDomainService.getCompetitionList(limit)).thenReturn(voList);
-        when(introduceImageDomainService.getCompetitionImages(TEST_ID)).thenReturn(images);
-        when(competitionConverter.convertToResponseDTOList(anyList())).thenReturn(expectedDTOs);
+        when(competitionConverter.convertToResponseDTOList(voList)).thenReturn(expectedDTOs);
 
         // 执行
         List<CompetitionResponseDTO> result = competitionService.getCompetitionResponseList(limit);
@@ -285,132 +253,8 @@ class CompetitionServiceImplTest {
         assertNotNull(result);
         assertEquals(1, result.size());
         assertEquals(TEST_ID, result.get(0).getId());
-        assertEquals(TEST_FILE_ID, result.get(0).getIntroduceImageFileId());
         verify(competitionDomainService).getCompetitionList(limit);
-        verify(introduceImageDomainService).getCompetitionImages(TEST_ID);
-        verify(competitionConverter).convertToResponseDTOList(anyList());
-    }
-
-    /**
-     * 获取竞赛响应列表：无介绍图片时应返回 null 的 introduceImageFileId
-     */
-    @Test
-    @DisplayName("获取竞赛响应列表：无介绍图片时应返回 null 的 introduceImageFileId")
-    void getCompetitionResponseList_noImages_shouldReturnNullImageFileId() {
-        // 准备
-        int limit = 10;
-        List<CompetitionBriefVO> voList = new ArrayList<>();
-        CompetitionBriefVO vo = CompetitionBriefVO.builder()
-                .id(TEST_ID)
-                .name(TEST_NAME)
-                .level("国家级")
-                .build();
-        voList.add(vo);
-
-        List<IntroduceImageVO> emptyImages = new ArrayList<>();
-
-        List<CompetitionResponseDTO> expectedDTOs = new ArrayList<>();
-        expectedDTOs.add(
-                CompetitionResponseDTO.builder()
-                        .id(TEST_ID)
-                        .name(TEST_NAME)
-                        .level("国家级")
-                        .introduceImageFileId(null)
-                        .build());
-
-        when(competitionDomainService.getCompetitionList(limit)).thenReturn(voList);
-        when(introduceImageDomainService.getCompetitionImages(TEST_ID)).thenReturn(emptyImages);
-        when(competitionConverter.convertToResponseDTOList(anyList())).thenReturn(expectedDTOs);
-
-        // 执行
-        List<CompetitionResponseDTO> result = competitionService.getCompetitionResponseList(limit);
-
-        // 验证
-        assertNotNull(result);
-        assertEquals(1, result.size());
-        assertNull(result.get(0).getIntroduceImageFileId());
-        verify(introduceImageDomainService).getCompetitionImages(TEST_ID);
-    }
-
-    /**
-     * 获取竞赛响应列表：多张介绍图片时应按 sort_order 取第一张（sort_order 最大的）
-     */
-    @Test
-    @DisplayName("获取竞赛响应列表：多张介绍图片时应按 sort_order 取第一张")
-    void getCompetitionResponseList_multipleImages_shouldReturnFirstBySortOrder() {
-        // 准备
-        int limit = 10;
-        List<CompetitionBriefVO> voList = new ArrayList<>();
-        CompetitionBriefVO vo = CompetitionBriefVO.builder()
-                .id(TEST_ID)
-                .name(TEST_NAME)
-                .build();
-        voList.add(vo);
-
-        // 多张图片，sort_order 不同
-        List<IntroduceImageVO> images = new ArrayList<>();
-        images.add(IntroduceImageVO.builder().id(1L).fileId(101L).sortOrder(5).build());
-        images.add(IntroduceImageVO.builder().id(2L).fileId(102L).sortOrder(20).build()); // sort_order 最大
-        images.add(IntroduceImageVO.builder().id(3L).fileId(103L).sortOrder(10).build());
-
-        List<CompetitionResponseDTO> expectedDTOs = new ArrayList<>();
-        expectedDTOs.add(
-                CompetitionResponseDTO.builder()
-                        .id(TEST_ID)
-                        .name(TEST_NAME)
-                        .introduceImageFileId(102L) // 应该取 sort_order=20 的图片
-                        .build());
-
-        when(competitionDomainService.getCompetitionList(limit)).thenReturn(voList);
-        when(introduceImageDomainService.getCompetitionImages(TEST_ID)).thenReturn(images);
-        when(competitionConverter.convertToResponseDTOList(anyList())).thenReturn(expectedDTOs);
-
-        // 执行
-        List<CompetitionResponseDTO> result = competitionService.getCompetitionResponseList(limit);
-
-        // 验证
-        assertNotNull(result);
-        assertEquals(102L, result.get(0).getIntroduceImageFileId());
-    }
-
-    /**
-     * 获取竞赛响应列表：sort_order 为 null 时应按 0 处理
-     */
-    @Test
-    @DisplayName("获取竞赛响应列表：sort_order 为 null 时应按 0 处理")
-    void getCompetitionResponseList_nullSortOrder_shouldTreatAsZero() {
-        // 准备
-        int limit = 10;
-        List<CompetitionBriefVO> voList = new ArrayList<>();
-        CompetitionBriefVO vo = CompetitionBriefVO.builder()
-                .id(TEST_ID)
-                .name(TEST_NAME)
-                .build();
-        voList.add(vo);
-
-        // 一张 sort_order 为 null，一张有值
-        List<IntroduceImageVO> images = new ArrayList<>();
-        images.add(IntroduceImageVO.builder().id(1L).fileId(101L).sortOrder(null).build());
-        images.add(IntroduceImageVO.builder().id(2L).fileId(102L).sortOrder(10).build());
-
-        List<CompetitionResponseDTO> expectedDTOs = new ArrayList<>();
-        expectedDTOs.add(
-                CompetitionResponseDTO.builder()
-                        .id(TEST_ID)
-                        .name(TEST_NAME)
-                        .introduceImageFileId(102L) // 应该取 sort_order=10 的图片
-                        .build());
-
-        when(competitionDomainService.getCompetitionList(limit)).thenReturn(voList);
-        when(introduceImageDomainService.getCompetitionImages(TEST_ID)).thenReturn(images);
-        when(competitionConverter.convertToResponseDTOList(anyList())).thenReturn(expectedDTOs);
-
-        // 执行
-        List<CompetitionResponseDTO> result = competitionService.getCompetitionResponseList(limit);
-
-        // 验证
-        assertNotNull(result);
-        assertEquals(102L, result.get(0).getIntroduceImageFileId());
+        verify(competitionConverter).convertToResponseDTOList(voList);
     }
 
     /**
@@ -425,7 +269,7 @@ class CompetitionServiceImplTest {
         List<CompetitionResponseDTO> expectedDTOs = new ArrayList<>();
 
         when(competitionDomainService.getCompetitionList(1)).thenReturn(voList);
-        when(competitionConverter.convertToResponseDTOList(anyList())).thenReturn(expectedDTOs);
+        when(competitionConverter.convertToResponseDTOList(voList)).thenReturn(expectedDTOs);
 
         // 执行
         List<CompetitionResponseDTO> result = competitionService.getCompetitionResponseList(limit);
@@ -447,7 +291,7 @@ class CompetitionServiceImplTest {
         List<CompetitionResponseDTO> expectedDTOs = new ArrayList<>();
 
         when(competitionDomainService.getCompetitionList(50)).thenReturn(voList);
-        when(competitionConverter.convertToResponseDTOList(anyList())).thenReturn(expectedDTOs);
+        when(competitionConverter.convertToResponseDTOList(voList)).thenReturn(expectedDTOs);
 
         // 执行
         List<CompetitionResponseDTO> result = competitionService.getCompetitionResponseList(limit);
@@ -469,7 +313,7 @@ class CompetitionServiceImplTest {
         List<CompetitionResponseDTO> expectedDTOs = new ArrayList<>();
 
         when(competitionDomainService.getCompetitionList(limit)).thenReturn(voList);
-        when(competitionConverter.convertToResponseDTOList(anyList())).thenReturn(expectedDTOs);
+        when(competitionConverter.convertToResponseDTOList(voList)).thenReturn(expectedDTOs);
 
         // 执行
         List<CompetitionResponseDTO> result = competitionService.getCompetitionResponseList(limit);
@@ -477,15 +321,14 @@ class CompetitionServiceImplTest {
         // 验证
         assertNotNull(result);
         assertTrue(result.isEmpty());
-        verify(introduceImageDomainService, never()).getCompetitionImages(anyLong());
     }
 
     /**
-     * 获取竞赛响应列表：多个竞赛时每个都应查询介绍图片
+     * 获取竞赛响应列表：多个竞赛时应全部转换
      */
     @Test
-    @DisplayName("获取竞赛响应列表：多个竞赛时每个都应查询介绍图片")
-    void getCompetitionResponseList_multipleCompetitions_shouldQueryImagesForEach() {
+    @DisplayName("获取竞赛响应列表：多个竞赛时应全部转换")
+    void getCompetitionResponseList_multipleCompetitions_shouldConvertAll() {
         // 准备
         int limit = 10;
         List<CompetitionBriefVO> voList = new ArrayList<>();
@@ -494,16 +337,13 @@ class CompetitionServiceImplTest {
         voList.add(CompetitionBriefVO.builder().id(3L).name("竞赛3").build());
 
         when(competitionDomainService.getCompetitionList(limit)).thenReturn(voList);
-        when(introduceImageDomainService.getCompetitionImages(anyLong())).thenReturn(new ArrayList<>());
-        when(competitionConverter.convertToResponseDTOList(anyList())).thenReturn(new ArrayList<>());
+        when(competitionConverter.convertToResponseDTOList(voList)).thenReturn(new ArrayList<>());
 
         // 执行
         competitionService.getCompetitionResponseList(limit);
 
         // 验证
-        verify(introduceImageDomainService).getCompetitionImages(1L);
-        verify(introduceImageDomainService).getCompetitionImages(2L);
-        verify(introduceImageDomainService).getCompetitionImages(3L);
+        verify(competitionConverter).convertToResponseDTOList(voList);
     }
 
     // ==================== getCompetitionDetail ====================
@@ -516,12 +356,10 @@ class CompetitionServiceImplTest {
     void getCompetitionDetail_shouldReturnDetailDTO() {
         // 准备
         CompetitionVO competitionVO = createTestCompetitionVO();
-        List<IntroduceImageVO> images = new ArrayList<>();
         CompetitionDetailDTO expectedDTO = createTestCompetitionDetailDTO();
 
         when(competitionDomainService.getCompetitionById(TEST_ID)).thenReturn(Optional.of(competitionVO));
-        when(introduceImageDomainService.getCompetitionImages(TEST_ID)).thenReturn(images);
-        when(competitionConverter.convertToDetailDTO(competitionVO, images)).thenReturn(expectedDTO);
+        when(competitionConverter.convertToDetailDTO(competitionVO)).thenReturn(expectedDTO);
 
         // 执行
         CompetitionDetailDTO result = competitionService.getCompetitionDetail(TEST_ID);
@@ -531,8 +369,7 @@ class CompetitionServiceImplTest {
         assertEquals(TEST_ID, result.getId());
         assertEquals(TEST_NAME, result.getName());
         verify(competitionDomainService).getCompetitionById(TEST_ID);
-        verify(introduceImageDomainService).getCompetitionImages(TEST_ID);
-        verify(competitionConverter).convertToDetailDTO(competitionVO, images);
+        verify(competitionConverter).convertToDetailDTO(competitionVO);
     }
 
     /**
@@ -563,7 +400,6 @@ class CompetitionServiceImplTest {
         CreateCompetitionRequestDTO request = createTestCreateRequest();
         CompetitionVO createdVO = createTestCompetitionVO();
         CompetitionBriefDTO expectedDTO = createTestCompetitionBriefDTO();
-        List<IntroduceImageVO> images = new ArrayList<>();
 
         when(
                 competitionDomainService.createCompetition(
@@ -577,7 +413,6 @@ class CompetitionServiceImplTest {
                         anyString()))
                                 .thenReturn(TEST_ID);
         when(competitionDomainService.getCompetitionById(TEST_ID)).thenReturn(Optional.of(createdVO));
-        when(introduceImageDomainService.getCompetitionImages(TEST_ID)).thenReturn(images);
         when(competitionConverter.convertToBriefDTO(any(CompetitionBriefVO.class))).thenReturn(expectedDTO);
 
         // 执行
@@ -662,8 +497,7 @@ class CompetitionServiceImplTest {
                 TEST_DETAIL,
                 request.getLevel(),
                 request.getMonth(),
-                request.getOrganizer(),
-                request.getEnabled());
+                request.getOrganizer());
         verify(competitionConverter).convertToBriefDTO(any(CompetitionBriefVO.class));
     }
 
@@ -707,26 +541,19 @@ class CompetitionServiceImplTest {
     // ==================== deleteCompetition ====================
 
     /**
-     * 删除竞赛：应成功删除竞赛和关联图片
+     * 删除竞赛：应成功删除竞赛
      */
     @Test
-    @DisplayName("删除竞赛：应成功删除竞赛和关联图片")
-    void deleteCompetition_shouldDeleteCompetitionAndImages() {
+    @DisplayName("删除竞赛：应成功删除竞赛")
+    void deleteCompetition_shouldDeleteCompetition() {
         // 准备
-        List<IntroduceImageVO> images = new ArrayList<>();
-        IntroduceImageVO image = createTestIntroduceImageVO();
-        images.add(image);
-
         when(competitionDomainService.existsById(TEST_ID)).thenReturn(true);
-        when(introduceImageDomainService.getCompetitionImages(TEST_ID)).thenReturn(images);
 
         // 执行
         competitionService.deleteCompetition(TEST_ID);
 
         // 验证
         verify(competitionDomainService).existsById(TEST_ID);
-        verify(introduceImageDomainService).getCompetitionImages(TEST_ID);
-        verify(introduceImageDomainService).removeCompetitionImage(image.getId());
         verify(competitionDomainService).deleteCompetition(TEST_ID);
     }
 
@@ -744,26 +571,6 @@ class CompetitionServiceImplTest {
                 IllegalArgumentException.class,
                 () -> competitionService.deleteCompetition(TEST_ID));
         assertEquals("竞赛不存在", exception.getMessage());
-    }
-
-    /**
-     * 删除竞赛：无关联图片时应成功删除
-     */
-    @Test
-    @DisplayName("删除竞赛：无关联图片时应成功删除")
-    void deleteCompetition_noImages_shouldDeleteSuccessfully() {
-        // 准备
-        List<IntroduceImageVO> images = new ArrayList<>();
-
-        when(competitionDomainService.existsById(TEST_ID)).thenReturn(true);
-        when(introduceImageDomainService.getCompetitionImages(TEST_ID)).thenReturn(images);
-
-        // 执行
-        competitionService.deleteCompetition(TEST_ID);
-
-        // 验证
-        verify(competitionDomainService).deleteCompetition(TEST_ID);
-        verify(introduceImageDomainService, never()).removeCompetitionImage(any());
     }
 
     // ==================== updateSortOrder ====================
@@ -804,159 +611,161 @@ class CompetitionServiceImplTest {
         assertEquals("竞赛不存在", exception.getMessage());
     }
 
-    // ==================== addCompetitionImage ====================
+    // ==================== updateLogo ====================
 
     /**
-     * 添加竞赛照片：应成功添加并返回DTO
+     * 更新Logo：应成功更新竞赛Logo
      */
     @Test
-    @DisplayName("添加竞赛照片：应成功添加并返回DTO")
-    void addCompetitionImage_shouldAddAndReturnDTO() {
+    @DisplayName("更新Logo：应成功更新竞赛Logo")
+    void updateLogo_shouldUpdateSuccessfully() {
         // 准备
-        AddCompetitionImageRequestDTO request = AddCompetitionImageRequestDTO.builder()
-                .fileId(TEST_FILE_ID)
-                .description(TEST_DESCRIPTION)
-                .build();
-        Long imageId = 1L;
+        Long fileId = 200L;
+        FileVO fileVO = FileVO.builder().id(fileId).type(FileType.NORMAL_IMG).build();
 
         when(competitionDomainService.existsById(TEST_ID)).thenReturn(true);
-        when(introduceImageDomainService.countCompetitionImages(TEST_ID)).thenReturn(0);
-        when(introduceImageDomainService.addCompetitionImage(TEST_ID, TEST_FILE_ID, TEST_DESCRIPTION))
-                .thenReturn(imageId);
+        when(fileDomainService.getFileById(fileId)).thenReturn(fileVO);
 
         // 执行
-        CompetitionImageDTO result = competitionService.addCompetitionImage(TEST_ID, request);
+        competitionService.updateLogo(TEST_ID, fileId);
 
         // 验证
-        assertNotNull(result);
-        assertEquals(imageId, result.getId());
-        assertEquals(TEST_DESCRIPTION, result.getDescription());
+        verify(competitionDomainService).updateLogo(TEST_ID, fileId);
     }
 
     /**
-     * 添加竞赛照片：竞赛不存在应抛出异常
+     * 更新Logo：竞赛不存在应抛出DataNotFound
      */
     @Test
-    @DisplayName("添加竞赛照片：竞赛不存在应抛出异常")
-    void addCompetitionImage_competitionNotFound_shouldThrowException() {
+    @DisplayName("更新Logo：竞赛不存在应抛出DataNotFound")
+    void updateLogo_competitionNotFound_shouldThrowDataNotFound() {
         // 准备
-        AddCompetitionImageRequestDTO request = AddCompetitionImageRequestDTO.builder()
-                .fileId(TEST_FILE_ID)
-                .description(TEST_DESCRIPTION)
-                .build();
+        Long fileId = 200L;
 
         when(competitionDomainService.existsById(TEST_ID)).thenReturn(false);
 
         // 执行 & 验证
-        IllegalArgumentException exception = assertThrows(
-                IllegalArgumentException.class,
-                () -> competitionService.addCompetitionImage(TEST_ID, request));
+        DataNotFound exception = assertThrows(
+                DataNotFound.class,
+                () -> competitionService.updateLogo(TEST_ID, fileId));
         assertEquals("竞赛不存在", exception.getMessage());
     }
 
     /**
-     * 添加竞赛照片：超过20张限制应抛出异常
+     * 更新Logo：文件不存在应抛出DataNotFound
      */
     @Test
-    @DisplayName("添加竞赛照片：超过20张限制应抛出异常")
-    void addCompetitionImage_exceedLimit_shouldThrowException() {
+    @DisplayName("更新Logo：文件不存在应抛出DataNotFound")
+    void updateLogo_fileNotFound_shouldThrowDataNotFound() {
         // 准备
-        AddCompetitionImageRequestDTO request = AddCompetitionImageRequestDTO.builder()
-                .fileId(TEST_FILE_ID)
-                .description(TEST_DESCRIPTION)
-                .build();
+        Long fileId = 200L;
 
         when(competitionDomainService.existsById(TEST_ID)).thenReturn(true);
-        when(introduceImageDomainService.countCompetitionImages(TEST_ID)).thenReturn(20);
+        when(fileDomainService.getFileById(fileId)).thenReturn(null);
 
         // 执行 & 验证
-        IllegalArgumentException exception = assertThrows(
-                IllegalArgumentException.class,
-                () -> competitionService.addCompetitionImage(TEST_ID, request));
-        assertEquals("每个竞赛最多关联20张照片", exception.getMessage());
+        DataNotFound exception = assertThrows(
+                DataNotFound.class,
+                () -> competitionService.updateLogo(TEST_ID, fileId));
+        assertEquals("文件不存在", exception.getMessage());
     }
 
     /**
-     * 添加竞赛照片：已有19张时应允许添加
+     * 更新Logo：文件类型不匹配应抛出BadRequest
      */
     @Test
-    @DisplayName("添加竞赛照片：已有19张时应允许添加")
-    void addCompetitionImage_with19Images_shouldAllowAdd() {
+    @DisplayName("更新Logo：文件类型不匹配应抛出BadRequest")
+    void updateLogo_fileTypeMismatch_shouldThrowBadRequest() {
         // 准备
-        AddCompetitionImageRequestDTO request = AddCompetitionImageRequestDTO.builder()
-                .fileId(TEST_FILE_ID)
-                .description(TEST_DESCRIPTION)
-                .build();
-        Long imageId = 1L;
+        Long fileId = 200L;
+        FileVO fileVO = FileVO.builder().id(fileId).type(FileType.AVATAR).build();
 
         when(competitionDomainService.existsById(TEST_ID)).thenReturn(true);
-        when(introduceImageDomainService.countCompetitionImages(TEST_ID)).thenReturn(19);
-        when(introduceImageDomainService.addCompetitionImage(TEST_ID, TEST_FILE_ID, TEST_DESCRIPTION))
-                .thenReturn(imageId);
+        when(fileDomainService.getFileById(fileId)).thenReturn(fileVO);
 
-        // 执行
-        CompetitionImageDTO result = competitionService.addCompetitionImage(TEST_ID, request);
-
-        // 验证
-        assertNotNull(result);
-        assertEquals(imageId, result.getId());
+        // 执行 & 验证
+        BadRequest exception = assertThrows(
+                BadRequest.class,
+                () -> competitionService.updateLogo(TEST_ID, fileId));
+        assertEquals("文件类型不匹配，期望 NORMAL_IMG", exception.getMessage());
     }
 
-    // ==================== removeCompetitionImage ====================
+    // ==================== updateCover ====================
 
     /**
-     * 删除竞赛照片：应成功删除
+     * 更新封面：应成功更新竞赛封面
      */
     @Test
-    @DisplayName("删除竞赛照片：应成功删除")
-    void removeCompetitionImage_shouldRemoveSuccessfully() {
+    @DisplayName("更新封面：应成功更新竞赛封面")
+    void updateCover_shouldUpdateSuccessfully() {
         // 准备
-        Long imageId = 1L;
+        Long fileId = 300L;
+        FileVO fileVO = FileVO.builder().id(fileId).type(FileType.NORMAL_IMG).build();
 
         when(competitionDomainService.existsById(TEST_ID)).thenReturn(true);
-        when(introduceImageDomainService.existsById(imageId)).thenReturn(true);
+        when(fileDomainService.getFileById(fileId)).thenReturn(fileVO);
 
         // 执行
-        competitionService.removeCompetitionImage(TEST_ID, imageId);
+        competitionService.updateCover(TEST_ID, fileId);
 
         // 验证
-        verify(introduceImageDomainService).removeCompetitionImage(imageId);
+        verify(competitionDomainService).updateCover(TEST_ID, fileId);
     }
 
     /**
-     * 删除竞赛照片：竞赛不存在应抛出异常
+     * 更新封面：竞赛不存在应抛出DataNotFound
      */
     @Test
-    @DisplayName("删除竞赛照片：竞赛不存在应抛出异常")
-    void removeCompetitionImage_competitionNotFound_shouldThrowException() {
+    @DisplayName("更新封面：竞赛不存在应抛出DataNotFound")
+    void updateCover_competitionNotFound_shouldThrowDataNotFound() {
         // 准备
-        Long imageId = 1L;
+        Long fileId = 300L;
 
         when(competitionDomainService.existsById(TEST_ID)).thenReturn(false);
 
         // 执行 & 验证
-        IllegalArgumentException exception = assertThrows(
-                IllegalArgumentException.class,
-                () -> competitionService.removeCompetitionImage(TEST_ID, imageId));
+        DataNotFound exception = assertThrows(
+                DataNotFound.class,
+                () -> competitionService.updateCover(TEST_ID, fileId));
         assertEquals("竞赛不存在", exception.getMessage());
     }
 
     /**
-     * 删除竞赛照片：图片不存在应抛出异常
+     * 更新封面：文件不存在应抛出DataNotFound
      */
     @Test
-    @DisplayName("删除竞赛照片：图片不存在应抛出异常")
-    void removeCompetitionImage_imageNotFound_shouldThrowException() {
+    @DisplayName("更新封面：文件不存在应抛出DataNotFound")
+    void updateCover_fileNotFound_shouldThrowDataNotFound() {
         // 准备
-        Long imageId = 1L;
+        Long fileId = 300L;
 
         when(competitionDomainService.existsById(TEST_ID)).thenReturn(true);
-        when(introduceImageDomainService.existsById(imageId)).thenReturn(false);
+        when(fileDomainService.getFileById(fileId)).thenReturn(null);
 
         // 执行 & 验证
-        IllegalArgumentException exception = assertThrows(
-                IllegalArgumentException.class,
-                () -> competitionService.removeCompetitionImage(TEST_ID, imageId));
-        assertEquals("图片不存在", exception.getMessage());
+        DataNotFound exception = assertThrows(
+                DataNotFound.class,
+                () -> competitionService.updateCover(TEST_ID, fileId));
+        assertEquals("文件不存在", exception.getMessage());
+    }
+
+    /**
+     * 更新封面：文件类型不匹配应抛出BadRequest
+     */
+    @Test
+    @DisplayName("更新封面：文件类型不匹配应抛出BadRequest")
+    void updateCover_fileTypeMismatch_shouldThrowBadRequest() {
+        // 准备
+        Long fileId = 300L;
+        FileVO fileVO = FileVO.builder().id(fileId).type(FileType.AVATAR).build();
+
+        when(competitionDomainService.existsById(TEST_ID)).thenReturn(true);
+        when(fileDomainService.getFileById(fileId)).thenReturn(fileVO);
+
+        // 执行 & 验证
+        BadRequest exception = assertThrows(
+                BadRequest.class,
+                () -> competitionService.updateCover(TEST_ID, fileId));
+        assertEquals("文件类型不匹配，期望 NORMAL_IMG", exception.getMessage());
     }
 }

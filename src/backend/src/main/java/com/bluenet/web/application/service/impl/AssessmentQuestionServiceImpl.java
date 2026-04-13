@@ -10,11 +10,16 @@ import com.bluenet.web.application.service.AssessmentQuestionService;
 import com.bluenet.web.domain.model.vo.AssessmentQuestionVO;
 import com.bluenet.web.domain.model.vo.AssessmentSessionVO;
 import com.bluenet.web.domain.model.vo.AssessmentTimeVO;
+import com.bluenet.web.domain.model.vo.FileVO;
 import com.bluenet.web.domain.model.vo.UserVO;
 import com.bluenet.web.domain.repository.AssessmentAnswerRepository;
 import com.bluenet.web.domain.service.AssessmentQuestionDomainService;
 import com.bluenet.web.domain.service.AssessmentSessionDomainService;
 import com.bluenet.web.domain.service.AssessmentTimeDomainService;
+import com.bluenet.web.domain.service.FileDomainService;
+import com.bluenet.web.domain.exception.BadRequest;
+import com.bluenet.web.domain.exception.DataNotFound;
+import com.bluenet.web.domain.model.enumerate.FileType;
 import com.bluenet.web.domain.util.GradeCalculator;
 import com.bluenet.web.domain.model.enumerate.RoleType;
 import com.bluenet.web.infrastructure.security.util.UserCTX;
@@ -40,6 +45,7 @@ public class AssessmentQuestionServiceImpl implements AssessmentQuestionService 
     private final AssessmentSessionDomainService assessmentSessionDomainService;
     private final AssessmentQuestionConverter assessmentQuestionConverter;
     private final AssessmentAnswerRepository assessmentAnswerRepository;
+    private final FileDomainService fileDomainService;
     private final ObjectMapper objectMapper;
 
     @Override
@@ -192,5 +198,22 @@ public class AssessmentQuestionServiceImpl implements AssessmentQuestionService 
 
         // 返回完整详情（包含content）
         return assessmentQuestionConverter.convertToDTO(vo);
+    }
+
+    @Override
+    @Transactional
+    public void updateAttachment(Long questionId, Long fileId) {
+        AssessmentQuestionVO question = assessmentQuestionDomainService.getQuestionById(questionId);
+
+        FileVO fileVO = fileDomainService.getFileById(fileId);
+        if (fileVO == null) {
+            throw new DataNotFound("文件不存在");
+        }
+        if (fileVO.getType() != FileType.ASSESSMENT_ATTACHMENT) {
+            throw new BadRequest("文件类型不匹配，期望 ASSESSMENT_ATTACHMENT");
+        }
+
+        assessmentQuestionDomainService.updateAttachment(question, fileVO);
+        log.info("题目附件更新成功 - questionId={}, fileId={}", questionId, fileId);
     }
 }

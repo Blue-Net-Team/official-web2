@@ -142,7 +142,9 @@ export interface CompetitionBriefDTO {
   month?: string
   /** 主办单位（可选） */
   organizer?: string
-  /** 介绍图片文件ID（可选） */
+  /** 封面图片文件ID */
+  coverFileId: number | null
+  /** @deprecated 请使用 coverFileId */
   introduceImageFileId?: number | null
 }
 

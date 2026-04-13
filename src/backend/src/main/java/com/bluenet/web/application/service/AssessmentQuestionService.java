@@ -76,4 +76,14 @@ public interface AssessmentQuestionService {
      * @return 题目DTO
      */
     AssessmentQuestionDTO getQuestionDetailForUser(Long id);
+
+    /**
+     * 更新题目附件
+     *
+     * @param questionId
+     *            题目ID
+     * @param fileId
+     *            文件ID（必须为 ASSESSMENT_ATTACHMENT 类型）
+     */
+    void updateAttachment(Long questionId, Long fileId);
 }

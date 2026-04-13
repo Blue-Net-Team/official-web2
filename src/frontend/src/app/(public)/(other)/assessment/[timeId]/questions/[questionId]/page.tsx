@@ -353,7 +353,7 @@ export default function QuestionDetailPage() {
     customRequest: async ({ file, onSuccess, onError }) => {
       try {
         setUploadProgress(0)
-        const response = await fileService.uploadWork(file as File, questionId, (progress) => {
+        const response = await fileService.upload(file as File, 'WORK', (progress) => {
           setUploadProgress(progress)
         })
         if (response.code === 200 && response.data) {
