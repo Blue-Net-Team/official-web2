@@ -19,38 +19,38 @@ import static org.junit.jupiter.api.Assertions.*;
 @DisplayName("GradeCalculator 单元测试")
 class GradeCalculatorTest {
 
-    // ==================== calculateGrade(studentId) 测试 ====================
+    // ==================== getGradeLabel(studentId) 测试 ====================
 
     @Nested
-    @DisplayName("calculateGrade(studentId) 方法测试")
-    class CalculateGradeByStudentIdTests {
+    @DisplayName("getGradeLabel(studentId) 方法测试")
+    class GetGradeLabelTests {
 
         @Test
-        @DisplayName("正常学号：应返回正确年级")
-        void calculateGrade_validStudentId_shouldReturnGrade() {
-            // 2023级学生，2026年4月（9月前），参考年=2025，年级=2025-2023+1=3
-            Integer grade = GradeCalculator.calculateGrade("2023123456");
-            assertNotNull(grade);
-            assertTrue(grade >= 1);
+        @DisplayName("正常学号：应返回正确年级标签")
+        void getGradeLabel_validStudentId_shouldReturnLabel() {
+            // 2023级学生，2026年4月（9月前），参考年=2025，年级=3，应返回"大三"
+            String label = GradeCalculator.getGradeLabel("2023123456");
+            assertNotNull(label);
+            assertEquals("大三", label);
         }
 
         @Test
         @DisplayName("学号为null：应返回null")
-        void calculateGrade_nullStudentId_shouldReturnNull() {
-            assertNull(GradeCalculator.calculateGrade(null));
+        void getGradeLabel_nullStudentId_shouldReturnNull() {
+            assertNull(GradeCalculator.getGradeLabel(null));
         }
 
         @Test
         @DisplayName("学号长度不足4位：应返回null")
-        void calculateGrade_shortStudentId_shouldReturnNull() {
-            assertNull(GradeCalculator.calculateGrade("123"));
-            assertNull(GradeCalculator.calculateGrade(""));
+        void getGradeLabel_shortStudentId_shouldReturnNull() {
+            assertNull(GradeCalculator.getGradeLabel("123"));
+            assertNull(GradeCalculator.getGradeLabel(""));
         }
 
         @Test
         @DisplayName("学号前4位非数字：应返回null")
-        void calculateGrade_nonNumericStudentId_shouldReturnNull() {
-            assertNull(GradeCalculator.calculateGrade("abcd5678"));
+        void getGradeLabel_nonNumericStudentId_shouldReturnNull() {
+            assertNull(GradeCalculator.getGradeLabel("abcd5678"));
         }
     }
 

@@ -37,7 +37,7 @@ class AssessmentTimeDomainServiceImplTest {
     private static final Long TEST_ID = 1L;
     private static final Direction TEST_DIRECTION = Direction.COMPUTER_VISION;
     private static final Integer TEST_EPOCH = 1;
-    private static final Integer TEST_GRADE = 1;
+    private static final Integer TEST_GRADE = 2024;
 
     private LocalDateTime futureStart = LocalDateTime.of(2099, 1, 1, 9, 0);
     private LocalDateTime futureEnd = LocalDateTime.of(2099, 1, 1, 11, 0);
@@ -202,13 +202,13 @@ class AssessmentTimeDomainServiceImplTest {
             AssessmentTimeVO vo = AssessmentTimeVO.builder()
                     .direction(Direction.STRUCTURAL_DESIGN)
                     .epoch(2)
-                    .grade(2)
+                    .grade(2025)
                     .startTime(futureStart)
                     .endTime(futureEnd)
                     .timeLimit(false)
                     .build();
 
-            when(assessmentTimeRepository.existsByDirectionAndEpochAndGrade(Direction.STRUCTURAL_DESIGN, 2, 2))
+            when(assessmentTimeRepository.existsByDirectionAndEpochAndGrade(Direction.STRUCTURAL_DESIGN, 2, 2025))
                     .thenReturn(false);
             when(assessmentTimeRepository.save(any())).thenReturn(2L);
 
@@ -319,7 +319,7 @@ class AssessmentTimeDomainServiceImplTest {
                     .id(TEST_ID)
                     .direction(Direction.STRUCTURAL_DESIGN)
                     .epoch(2)
-                    .grade(2)
+                    .grade(2025)
                     .build();
 
             when(assessmentTimeRepository.findById(TEST_ID)).thenReturn(Optional.of(existing));
@@ -327,7 +327,7 @@ class AssessmentTimeDomainServiceImplTest {
                     assessmentTimeRepository.existsByDirectionAndEpochAndGradeAndIdNot(
                             Direction.STRUCTURAL_DESIGN,
                             2,
-                            2,
+                            2025,
                             TEST_ID)).thenReturn(true);
 
             IllegalArgumentException ex = assertThrows(

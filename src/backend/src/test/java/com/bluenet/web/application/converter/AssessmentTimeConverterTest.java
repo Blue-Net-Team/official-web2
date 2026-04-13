@@ -29,7 +29,7 @@ class AssessmentTimeConverterTest {
                 .id(1L)
                 .direction(Direction.COMPUTER_VISION)
                 .epoch(1)
-                .grade(2)
+                .grade(2025)
                 .startTime(LocalDateTime.of(2026, 6, 1, 9, 0))
                 .endTime(LocalDateTime.of(2026, 6, 1, 11, 0))
                 .timeLimit(true)
@@ -54,7 +54,7 @@ class AssessmentTimeConverterTest {
             assertEquals(1L, dto.getId());
             assertEquals(Direction.COMPUTER_VISION, dto.getDirection());
             assertEquals(1, dto.getEpoch());
-            assertEquals(2, dto.getGrade());
+            assertEquals(2025, dto.getGrade());
             assertEquals(LocalDateTime.of(2026, 6, 1, 9, 0), dto.getStartTime());
             assertEquals(LocalDateTime.of(2026, 6, 1, 11, 0), dto.getEndTime());
             assertTrue(dto.getTimeLimit());
@@ -68,7 +68,7 @@ class AssessmentTimeConverterTest {
                     .id(2L)
                     .direction(Direction.EMBEDDED)
                     .epoch(2)
-                    .grade(1)
+                    .grade(2024)
                     .startTime(LocalDateTime.of(2026, 7, 1, 9, 0))
                     .endTime(LocalDateTime.of(2026, 7, 1, 12, 0))
                     .timeLimit(false)
@@ -89,7 +89,7 @@ class AssessmentTimeConverterTest {
                     .id(3L)
                     .direction(Direction.COMPUTER_VISION)
                     .epoch(1)
-                    .grade(1)
+                    .grade(2024)
                     .startTime(LocalDateTime.of(2026, 6, 1, 9, 0))
                     .endTime(LocalDateTime.of(2026, 6, 1, 11, 0))
                     .timeLimit(true)
@@ -112,7 +112,7 @@ class AssessmentTimeConverterTest {
                     .id(4L)
                     .direction(Direction.STRUCTURAL_DESIGN)
                     .epoch(1)
-                    .grade(2)
+                    .grade(2025)
                     .startTime(LocalDateTime.of(2026, 8, 1, 9, 0))
                     .endTime(LocalDateTime.of(2026, 8, 1, 11, 0))
                     .timeLimit(false)
@@ -142,7 +142,7 @@ class AssessmentTimeConverterTest {
                             .id(2L)
                             .direction(Direction.STRUCTURAL_DESIGN)
                             .epoch(1)
-                            .grade(3)
+                            .grade(2023)
                             .startTime(LocalDateTime.of(2026, 8, 1, 9, 0))
                             .endTime(LocalDateTime.of(2026, 8, 1, 11, 0))
                             .timeLimit(false)
