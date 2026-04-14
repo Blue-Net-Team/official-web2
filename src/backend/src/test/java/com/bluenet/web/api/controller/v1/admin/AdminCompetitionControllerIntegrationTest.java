@@ -34,9 +34,6 @@ import com.bluenet.web.infrastructure.repository.mapper.*;
 import com.bluenet.web.infrastructure.security.cache.PermissionCache;
 import com.bluenet.web.testcontainers.TestcontainersConfiguration;
 
-/**
- * AdminCompetitionController集成测试
- */
 @DisplayName("AdminCompetitionController 集成测试")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
@@ -84,19 +81,16 @@ class AdminCompetitionControllerIntegrationTest extends BaseIntegrationTest {
 
     @BeforeEach
     void setUpTestData() {
-        // 创建测试文件（不指定ID，让数据库自动生成）
         File file = File.builder().name(TEST_FILE_NAME).url(TEST_FILE_URL).type(TEST_FILE_TYPE).build();
         fileMapper.insert(file);
         testFileId = file.getId();
 
-        // 查询已存在的管理员角色（由 Flyway 迁移脚本初始化）
         Role adminRole = roleMapper.selectByName("SUPER_ADMIN");
         if (adminRole == null) {
             throw new IllegalStateException("SUPER_ADMIN 角色不存在，请检查数据库迁移脚本");
         }
         adminRoleId = adminRole.getId();
 
-        // 创建竞赛相关权限
         createPermission("competition:create", "创建竞赛");
         createPermission("competition:update", "更新竞赛");
         createPermission("competition:delete", "删除竞赛");
@@ -104,10 +98,8 @@ class AdminCompetitionControllerIntegrationTest extends BaseIntegrationTest {
         createPermission("competition:update-logo", "更新竞赛Logo");
         createPermission("competition:update-cover", "更新竞赛封面");
 
-        // 刷新权限缓存
         permissionCache.refresh();
 
-        // 创建管理员用户
         User adminUser = new User();
         adminUser.setStudentId(TEST_STUDENT_ID);
         adminUser.setUsername("管理员");
@@ -118,7 +110,6 @@ class AdminCompetitionControllerIntegrationTest extends BaseIntegrationTest {
         adminUser.setDirection(Direction.COMPUTER_VISION);
         userMapper.insert(adminUser);
 
-        // 登录获取 Cookie 和 CSRF Token
         loginAndGetCookies();
     }
 
@@ -128,7 +119,6 @@ class AdminCompetitionControllerIntegrationTest extends BaseIntegrationTest {
         permission.setValue(value);
         permissionMapper.insert(permission);
 
-        // 关联到管理员角色
         RolePermission rolePermission = new RolePermission();
         rolePermission.setRoleId(adminRoleId);
         rolePermission.setPermissionId(permission.getId());
@@ -166,102 +156,75 @@ class AdminCompetitionControllerIntegrationTest extends BaseIntegrationTest {
         return headers;
     }
 
-    // ==================== POST /api/v1/admin/competitions ====================
-
-    /**
-     * 集成测试：创建竞赛应成功
-     */
     @Test
     @DisplayName("集成测试：创建竞赛应成功")
     void createCompetition_shouldCreateSuccessfully() {
-        // 准备
-        CreateCompetitionRequestDTO request = CreateCompetitionRequestDTO.builder()
+        CompetitionRequestDTO request = CompetitionRequestDTO.builder()
                 .name("新竞赛")
                 .shortName("NEW")
                 .logoFileId(testFileId)
                 .summary("新竞赛简介")
-                .detail("新竞赛详细介绍")
                 .build();
 
         HttpHeaders headers = createAuthHeadersWithCsrf();
-        HttpEntity<CreateCompetitionRequestDTO> entity = new HttpEntity<>(request, headers);
+        HttpEntity<CompetitionRequestDTO> entity = new HttpEntity<>(request, headers);
 
-        // 执行
-        ResponseEntity<ResponseMessage<CompetitionBriefDTO>> response = restTemplate.exchange(
+        ResponseEntity<ResponseMessage<CompetitionResponseDTO>> response = restTemplate.exchange(
                 "/api/v1/admin/competitions",
                 HttpMethod.POST,
                 entity,
-                new ParameterizedTypeReference<ResponseMessage<CompetitionBriefDTO>>() {
+                new ParameterizedTypeReference<ResponseMessage<CompetitionResponseDTO>>() {
                 });
 
-        // 验证
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
         assertEquals(200, response.getBody().getCode());
 
-        CompetitionBriefDTO created = response.getBody().getData();
+        CompetitionResponseDTO created = response.getBody().getData();
         assertNotNull(created);
         assertNotNull(created.getId());
         assertEquals("新竞赛", created.getName());
         assertEquals("NEW", created.getShortName());
     }
 
-    /**
-     * 集成测试：创建竞赛时名称为空应返回400
-     */
     @Test
     @DisplayName("集成测试：创建竞赛时名称为空应返回400")
     void createCompetition_withEmptyName_shouldReturn400() {
-        // 准备
-        CreateCompetitionRequestDTO request = CreateCompetitionRequestDTO.builder().name("").build();
+        CompetitionRequestDTO request = CompetitionRequestDTO.builder().name("").build();
 
         HttpHeaders headers = createAuthHeadersWithCsrf();
-        HttpEntity<CreateCompetitionRequestDTO> entity = new HttpEntity<>(request, headers);
+        HttpEntity<CompetitionRequestDTO> entity = new HttpEntity<>(request, headers);
 
-        // 执行
-        ResponseEntity<ResponseMessage<CompetitionBriefDTO>> response = restTemplate.exchange(
+        ResponseEntity<ResponseMessage<CompetitionResponseDTO>> response = restTemplate.exchange(
                 "/api/v1/admin/competitions",
                 HttpMethod.POST,
                 entity,
-                new ParameterizedTypeReference<ResponseMessage<CompetitionBriefDTO>>() {
+                new ParameterizedTypeReference<ResponseMessage<CompetitionResponseDTO>>() {
                 });
 
-        // 验证
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
     }
 
-    /**
-     * 集成测试：未认证用户创建竞赛应返回401
-     */
     @Test
     @DisplayName("集成测试：未认证用户创建竞赛应返回401")
     void createCompetition_withoutAuth_shouldReturn401() {
-        // 准备
-        CreateCompetitionRequestDTO request = CreateCompetitionRequestDTO.builder().name("新竞赛").build();
+        CompetitionRequestDTO request = CompetitionRequestDTO.builder().name("新竞赛").build();
 
-        HttpEntity<CreateCompetitionRequestDTO> entity = new HttpEntity<>(request);
+        HttpEntity<CompetitionRequestDTO> entity = new HttpEntity<>(request);
 
-        // 执行
-        ResponseEntity<ResponseMessage<CompetitionBriefDTO>> response = restTemplate.exchange(
+        ResponseEntity<ResponseMessage<CompetitionResponseDTO>> response = restTemplate.exchange(
                 "/api/v1/admin/competitions",
                 HttpMethod.POST,
                 entity,
-                new ParameterizedTypeReference<ResponseMessage<CompetitionBriefDTO>>() {
+                new ParameterizedTypeReference<ResponseMessage<CompetitionResponseDTO>>() {
                 });
 
-        // 验证
         assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
     }
 
-    // ==================== PUT /api/v1/admin/competitions/{id} ====================
-
-    /**
-     * 集成测试：更新竞赛应成功
-     */
     @Test
     @DisplayName("集成测试：更新竞赛应成功")
     void updateCompetition_shouldUpdateSuccessfully() {
-        // 准备：先创建一个竞赛
         Competition competition = new Competition();
         competition.setName("原竞赛名");
         competition.setShortName("OLD");
@@ -269,67 +232,52 @@ class AdminCompetitionControllerIntegrationTest extends BaseIntegrationTest {
         competition.setSortOrder(0);
         competitionMapper.insert(competition);
 
-        UpdateCompetitionRequestDTO request = UpdateCompetitionRequestDTO.builder()
+        CompetitionRequestDTO request = CompetitionRequestDTO.builder()
                 .name("更新后的竞赛名")
                 .shortName("NEW")
                 .summary("更新后的简介")
                 .build();
 
         HttpHeaders headers = createAuthHeadersWithCsrf();
-        HttpEntity<UpdateCompetitionRequestDTO> entity = new HttpEntity<>(request, headers);
+        HttpEntity<CompetitionRequestDTO> entity = new HttpEntity<>(request, headers);
 
-        // 执行
-        ResponseEntity<ResponseMessage<CompetitionBriefDTO>> response = restTemplate.exchange(
+        ResponseEntity<ResponseMessage<CompetitionResponseDTO>> response = restTemplate.exchange(
                 "/api/v1/admin/competitions/" + competition.getId(),
                 HttpMethod.PUT,
                 entity,
-                new ParameterizedTypeReference<ResponseMessage<CompetitionBriefDTO>>() {
+                new ParameterizedTypeReference<ResponseMessage<CompetitionResponseDTO>>() {
                 });
 
-        // 验证
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
         assertEquals(200, response.getBody().getCode());
 
-        CompetitionBriefDTO updated = response.getBody().getData();
+        CompetitionResponseDTO updated = response.getBody().getData();
         assertEquals("更新后的竞赛名", updated.getName());
     }
 
-    /**
-     * 集成测试：更新不存在的竞赛应返回404
-     */
     @Test
     @DisplayName("集成测试：更新不存在的竞赛应返回404")
     void updateCompetition_notFound_shouldReturn404() {
-        // 准备
-        UpdateCompetitionRequestDTO request = UpdateCompetitionRequestDTO.builder().name("更新后的竞赛名").build();
+        CompetitionRequestDTO request = CompetitionRequestDTO.builder().name("更新后的竞赛名").build();
 
         HttpHeaders headers = createAuthHeadersWithCsrf();
-        HttpEntity<UpdateCompetitionRequestDTO> entity = new HttpEntity<>(request, headers);
+        HttpEntity<CompetitionRequestDTO> entity = new HttpEntity<>(request, headers);
 
-        // 执行
-        ResponseEntity<ResponseMessage<CompetitionBriefDTO>> response = restTemplate.exchange(
+        ResponseEntity<ResponseMessage<CompetitionResponseDTO>> response = restTemplate.exchange(
                 "/api/v1/admin/competitions/99999",
                 HttpMethod.PUT,
                 entity,
-                new ParameterizedTypeReference<ResponseMessage<CompetitionBriefDTO>>() {
+                new ParameterizedTypeReference<ResponseMessage<CompetitionResponseDTO>>() {
                 });
 
-        // 验证
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
         assertEquals(404, response.getBody().getCode());
     }
 
-    // ==================== DELETE /api/v1/admin/competitions/{id}
-    // ====================
-
-    /**
-     * 集成测试：删除竞赛应成功
-     */
     @Test
     @DisplayName("集成测试：删除竞赛应成功")
     void deleteCompetition_shouldDeleteSuccessfully() {
-        // 准备：先创建一个竞赛
         Competition competition = new Competition();
         competition.setName("要删除的竞赛");
         competition.setSortOrder(0);
@@ -339,7 +287,6 @@ class AdminCompetitionControllerIntegrationTest extends BaseIntegrationTest {
         HttpHeaders headers = createAuthHeadersWithCsrf();
         HttpEntity<Void> entity = new HttpEntity<>(headers);
 
-        // 执行
         ResponseEntity<ResponseMessage<Void>> response = restTemplate.exchange(
                 "/api/v1/admin/competitions/" + competitionId,
                 HttpMethod.DELETE,
@@ -347,25 +294,19 @@ class AdminCompetitionControllerIntegrationTest extends BaseIntegrationTest {
                 new ParameterizedTypeReference<ResponseMessage<Void>>() {
                 });
 
-        // 验证
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(200, response.getBody().getCode());
 
-        // 验证数据库中已删除
         Competition deleted = competitionMapper.selectById(competitionId);
         assertNull(deleted);
     }
 
-    /**
-     * 集成测试：删除不存在的竞赛应返回404
-     */
     @Test
     @DisplayName("集成测试：删除不存在的竞赛应返回404")
     void deleteCompetition_notFound_shouldReturn404() {
         HttpHeaders headers = createAuthHeadersWithCsrf();
         HttpEntity<Void> entity = new HttpEntity<>(headers);
 
-        // 执行
         ResponseEntity<ResponseMessage<Void>> response = restTemplate.exchange(
                 "/api/v1/admin/competitions/99999",
                 HttpMethod.DELETE,
@@ -373,18 +314,13 @@ class AdminCompetitionControllerIntegrationTest extends BaseIntegrationTest {
                 new ParameterizedTypeReference<ResponseMessage<Void>>() {
                 });
 
-        // 验证
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
         assertEquals(404, response.getBody().getCode());
     }
 
-    /**
-     * 集成测试：删除竞赛应成功
-     */
     @Test
     @DisplayName("集成测试：删除竞赛应成功")
     void deleteCompetition_shouldSucceed() {
-        // 准备：创建竞赛
         Competition competition = new Competition();
         competition.setName("要删除的竞赛");
         competition.setSortOrder(0);
@@ -394,7 +330,6 @@ class AdminCompetitionControllerIntegrationTest extends BaseIntegrationTest {
         HttpHeaders headers = createAuthHeadersWithCsrf();
         HttpEntity<Void> entity = new HttpEntity<>(headers);
 
-        // 执行
         ResponseEntity<ResponseMessage<Void>> response = restTemplate.exchange(
                 "/api/v1/admin/competitions/" + competitionId,
                 HttpMethod.DELETE,
@@ -402,24 +337,15 @@ class AdminCompetitionControllerIntegrationTest extends BaseIntegrationTest {
                 new ParameterizedTypeReference<ResponseMessage<Void>>() {
                 });
 
-        // 验证
         assertEquals(HttpStatus.OK, response.getStatusCode());
 
-        // 验证竞赛已被删除
         Competition deletedCompetition = competitionMapper.selectById(competitionId);
         assertNull(deletedCompetition);
     }
 
-    // ==================== PUT /api/v1/admin/competitions/{id}/sort
-    // ====================
-
-    /**
-     * 集成测试：调整排序应成功
-     */
     @Test
     @DisplayName("集成测试：调整排序应成功")
     void updateSortOrder_shouldUpdateSuccessfully() {
-        // 准备：先创建一个竞赛
         Competition competition = new Competition();
         competition.setName("要调整排序的竞赛");
         competition.setSortOrder(0);
@@ -430,7 +356,6 @@ class AdminCompetitionControllerIntegrationTest extends BaseIntegrationTest {
         HttpHeaders headers = createAuthHeadersWithCsrf();
         HttpEntity<UpdateSortOrderRequestDTO> entity = new HttpEntity<>(request, headers);
 
-        // 执行
         ResponseEntity<ResponseMessage<Void>> response = restTemplate.exchange(
                 "/api/v1/admin/competitions/" + competition.getId() + "/sort",
                 HttpMethod.PUT,
@@ -438,18 +363,13 @@ class AdminCompetitionControllerIntegrationTest extends BaseIntegrationTest {
                 new ParameterizedTypeReference<ResponseMessage<Void>>() {
                 });
 
-        // 验证
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(200, response.getBody().getCode());
 
-        // 验证数据库中排序已更新
         Competition updated = competitionMapper.selectById(competition.getId());
         assertEquals(100, updated.getSortOrder());
     }
 
-    /**
-     * 集成测试：调整不存在的竞赛排序应返回404
-     */
     @Test
     @DisplayName("集成测试：调整不存在的竞赛排序应返回404")
     void updateSortOrder_notFound_shouldReturn404() {
@@ -458,7 +378,6 @@ class AdminCompetitionControllerIntegrationTest extends BaseIntegrationTest {
         HttpHeaders headers = createAuthHeadersWithCsrf();
         HttpEntity<UpdateSortOrderRequestDTO> entity = new HttpEntity<>(request, headers);
 
-        // 执行
         ResponseEntity<ResponseMessage<Void>> response = restTemplate.exchange(
                 "/api/v1/admin/competitions/99999/sort",
                 HttpMethod.PUT,
@@ -466,27 +385,18 @@ class AdminCompetitionControllerIntegrationTest extends BaseIntegrationTest {
                 new ParameterizedTypeReference<ResponseMessage<Void>>() {
                 });
 
-        // 验证
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
         assertEquals(404, response.getBody().getCode());
     }
 
-    // ==================== PUT /api/v1/admin/competitions/{id}/logo
-    // ====================
-
-    /**
-     * 集成测试：更新竞赛Logo应成功
-     */
     @Test
     @DisplayName("集成测试：更新竞赛Logo应成功")
     void updateLogo_shouldUpdateSuccessfully() {
-        // 准备：创建竞赛
         Competition competition = new Competition();
         competition.setName("要更新Logo的竞赛");
         competition.setSortOrder(0);
         competitionMapper.insert(competition);
 
-        // 创建Logo文件
         File logoFile = File.builder()
                 .name("new-logo.png")
                 .url("http://example.com/new-logo.png")
@@ -497,7 +407,6 @@ class AdminCompetitionControllerIntegrationTest extends BaseIntegrationTest {
         HttpHeaders headers = createAuthHeadersWithCsrf();
         HttpEntity<Void> entity = new HttpEntity<>(headers);
 
-        // 执行
         ResponseEntity<ResponseMessage<Void>> response = restTemplate.exchange(
                 "/api/v1/admin/competitions/" + competition.getId() + "/logo?fileId=" + logoFile.getId(),
                 HttpMethod.PUT,
@@ -505,24 +414,18 @@ class AdminCompetitionControllerIntegrationTest extends BaseIntegrationTest {
                 new ParameterizedTypeReference<ResponseMessage<Void>>() {
                 });
 
-        // 验证
         assertEquals(HttpStatus.OK, response.getStatusCode());
 
-        // 验证数据库中Logo已更新
         Competition updated = competitionMapper.selectById(competition.getId());
         assertEquals(logoFile.getId(), updated.getLogoFileId());
     }
 
-    /**
-     * 集成测试：为不存在的竞赛更新Logo应返回404
-     */
     @Test
     @DisplayName("集成测试：为不存在的竞赛更新Logo应返回404")
     void updateLogo_competitionNotFound_shouldReturn404() {
         HttpHeaders headers = createAuthHeadersWithCsrf();
         HttpEntity<Void> entity = new HttpEntity<>(headers);
 
-        // 执行
         ResponseEntity<ResponseMessage<Void>> response = restTemplate.exchange(
                 "/api/v1/admin/competitions/99999/logo?fileId=" + testFileId,
                 HttpMethod.PUT,
@@ -530,17 +433,12 @@ class AdminCompetitionControllerIntegrationTest extends BaseIntegrationTest {
                 new ParameterizedTypeReference<ResponseMessage<Void>>() {
                 });
 
-        // 验证
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
     }
 
-    /**
-     * 集成测试：使用不存在的文件更新Logo应返回404
-     */
     @Test
     @DisplayName("集成测试：使用不存在的文件更新Logo应返回404")
     void updateLogo_fileNotFound_shouldReturn404() {
-        // 准备：创建竞赛
         Competition competition = new Competition();
         competition.setName("竞赛");
         competition.setSortOrder(0);
@@ -549,7 +447,6 @@ class AdminCompetitionControllerIntegrationTest extends BaseIntegrationTest {
         HttpHeaders headers = createAuthHeadersWithCsrf();
         HttpEntity<Void> entity = new HttpEntity<>(headers);
 
-        // 执行：使用不存在的文件ID
         ResponseEntity<ResponseMessage<Void>> response = restTemplate.exchange(
                 "/api/v1/admin/competitions/" + competition.getId() + "/logo?fileId=99999",
                 HttpMethod.PUT,
@@ -557,26 +454,17 @@ class AdminCompetitionControllerIntegrationTest extends BaseIntegrationTest {
                 new ParameterizedTypeReference<ResponseMessage<Void>>() {
                 });
 
-        // 验证
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
     }
 
-    // ==================== PUT /api/v1/admin/competitions/{id}/cover
-    // ====================
-
-    /**
-     * 集成测试：更新竞赛封面应成功
-     */
     @Test
     @DisplayName("集成测试：更新竞赛封面应成功")
     void updateCover_shouldUpdateSuccessfully() {
-        // 准备：创建竞赛
         Competition competition = new Competition();
         competition.setName("要更新封面的竞赛");
         competition.setSortOrder(0);
         competitionMapper.insert(competition);
 
-        // 创建封面文件
         File coverFile = File.builder()
                 .name("cover.jpg")
                 .url("http://example.com/cover.jpg")
@@ -587,7 +475,6 @@ class AdminCompetitionControllerIntegrationTest extends BaseIntegrationTest {
         HttpHeaders headers = createAuthHeadersWithCsrf();
         HttpEntity<Void> entity = new HttpEntity<>(headers);
 
-        // 执行
         ResponseEntity<ResponseMessage<Void>> response = restTemplate.exchange(
                 "/api/v1/admin/competitions/" + competition.getId() + "/cover?fileId=" + coverFile.getId(),
                 HttpMethod.PUT,
@@ -595,24 +482,18 @@ class AdminCompetitionControllerIntegrationTest extends BaseIntegrationTest {
                 new ParameterizedTypeReference<ResponseMessage<Void>>() {
                 });
 
-        // 验证
         assertEquals(HttpStatus.OK, response.getStatusCode());
 
-        // 验证数据库中封面已更新
         Competition updated = competitionMapper.selectById(competition.getId());
         assertEquals(coverFile.getId(), updated.getCoverFileId());
     }
 
-    /**
-     * 集成测试：为不存在的竞赛更新封面应返回404
-     */
     @Test
     @DisplayName("集成测试：为不存在的竞赛更新封面应返回404")
     void updateCover_competitionNotFound_shouldReturn404() {
         HttpHeaders headers = createAuthHeadersWithCsrf();
         HttpEntity<Void> entity = new HttpEntity<>(headers);
 
-        // 执行
         ResponseEntity<ResponseMessage<Void>> response = restTemplate.exchange(
                 "/api/v1/admin/competitions/99999/cover?fileId=" + testFileId,
                 HttpMethod.PUT,
@@ -620,17 +501,12 @@ class AdminCompetitionControllerIntegrationTest extends BaseIntegrationTest {
                 new ParameterizedTypeReference<ResponseMessage<Void>>() {
                 });
 
-        // 验证
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
     }
 
-    /**
-     * 集成测试：使用不存在的文件更新封面应返回404
-     */
     @Test
     @DisplayName("集成测试：使用不存在的文件更新封面应返回404")
     void updateCover_fileNotFound_shouldReturn404() {
-        // 准备：创建竞赛
         Competition competition = new Competition();
         competition.setName("竞赛");
         competition.setSortOrder(0);
@@ -639,7 +515,6 @@ class AdminCompetitionControllerIntegrationTest extends BaseIntegrationTest {
         HttpHeaders headers = createAuthHeadersWithCsrf();
         HttpEntity<Void> entity = new HttpEntity<>(headers);
 
-        // 执行：使用不存在的文件ID
         ResponseEntity<ResponseMessage<Void>> response = restTemplate.exchange(
                 "/api/v1/admin/competitions/" + competition.getId() + "/cover?fileId=99999",
                 HttpMethod.PUT,
@@ -647,7 +522,6 @@ class AdminCompetitionControllerIntegrationTest extends BaseIntegrationTest {
                 new ParameterizedTypeReference<ResponseMessage<Void>>() {
                 });
 
-        // 验证
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
     }
 

@@ -29,14 +29,14 @@ public class AdminCompetitionController {
 
     @Operation(summary = "创建竞赛", description = "创建新的竞赛")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "创建成功", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseMessageCompetition.class))),
+            @ApiResponse(responseCode = "200", description = "创建成功", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseMessageCompetitionResponse.class))),
             @ApiResponse(responseCode = "400", description = "参数错误", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseMessage.class))) })
     @RequiresPermission(name = "创建竞赛", value = "competition:create", access = AccessLevel.PROTECTED)
     @PostMapping
-    public ResponseMessage<CompetitionBriefDTO> createCompetition(
-            @Valid @RequestBody CreateCompetitionRequestDTO request) {
+    public ResponseMessage<CompetitionResponseDTO> createCompetition(
+            @Valid @RequestBody CompetitionRequestDTO request) {
         try {
-            CompetitionBriefDTO created = competitionService.createCompetition(request);
+            CompetitionResponseDTO created = competitionService.createCompetition(request);
             return ResponseMessage.success(created);
         } catch (IllegalArgumentException e) {
             return ResponseMessage.error(400, e.getMessage());
@@ -45,15 +45,15 @@ public class AdminCompetitionController {
 
     @Operation(summary = "更新竞赛", description = "更新竞赛信息")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "更新成功", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseMessageCompetition.class))),
+            @ApiResponse(responseCode = "200", description = "更新成功", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseMessageCompetitionResponse.class))),
             @ApiResponse(responseCode = "404", description = "竞赛不存在", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseMessage.class), examples = @ExampleObject(value = "{\"code\":404,\"msg\":\"竞赛不存在\",\"data\":null}"))) })
     @RequiresPermission(name = "更新竞赛", value = "competition:update", access = AccessLevel.PROTECTED)
     @PutMapping("/{id}")
-    public ResponseMessage<CompetitionBriefDTO> updateCompetition(
+    public ResponseMessage<CompetitionResponseDTO> updateCompetition(
             @Parameter(description = "竞赛ID", required = true) @PathVariable Long id,
-            @Valid @RequestBody UpdateCompetitionRequestDTO request) {
+            @Valid @RequestBody CompetitionRequestDTO request) {
         try {
-            CompetitionBriefDTO updated = competitionService.updateCompetition(id, request);
+            CompetitionResponseDTO updated = competitionService.updateCompetition(id, request);
             return ResponseMessage.success(updated);
         } catch (IllegalArgumentException e) {
             return ResponseMessage.error(404, e.getMessage());

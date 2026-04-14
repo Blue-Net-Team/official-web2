@@ -2,7 +2,7 @@ import { Suspense } from 'react'
 import { Spin, Empty } from 'antd'
 import { CompetitionService } from '@/apis/services/competition.service'
 import CompetitionCard from '@/components/CompetitionCard'
-import { CompetitionBriefDTO } from '@/apis/schema/type'
+import { CompetitionResponseDTO } from '@/apis/schema/type'
 import BackgroundDecorations from './BackgroundDecorations'
 
 export const revalidate = 3600
@@ -23,7 +23,7 @@ function EmptyState() {
   )
 }
 
-function CompetitionsContent({ competitions }: { competitions: CompetitionBriefDTO[] }) {
+function CompetitionsContent({ competitions }: { competitions: CompetitionResponseDTO[] }) {
   if (competitions.length === 0) {
     return <EmptyState />
   }
@@ -49,7 +49,7 @@ async function CompetitionsList() {
     return <EmptyState />
   }
 
-  const competitions: CompetitionBriefDTO[] = response.data
+  const competitions: CompetitionResponseDTO[] = response.data
 
   return <CompetitionsContent competitions={competitions} />
 }

@@ -12,15 +12,6 @@ import java.util.List;
  */
 public interface CompetitionService {
     /**
-     * 获取竞赛简要列表
-     *
-     * @param limit
-     *            限制返回数量，如果为0则返回全部
-     * @return 竞赛简要信息DTO列表
-     */
-    List<CompetitionBriefDTO> getCompetitionList(int limit);
-
-    /**
      * 获取竞赛响应列表（包含封面信息）
      *
      * @param limit
@@ -30,22 +21,13 @@ public interface CompetitionService {
     List<CompetitionResponseDTO> getCompetitionResponseList(int limit);
 
     /**
-     * 获取竞赛详情
-     *
-     * @param id
-     *            竞赛ID
-     * @return 竞赛详情DTO
-     */
-    CompetitionDetailDTO getCompetitionDetail(Long id);
-
-    /**
      * 创建竞赛
      *
      * @param request
      *            创建请求DTO
-     * @return 创建后的竞赛简要信息DTO
+     * @return 创建后的竞赛响应DTO
      */
-    CompetitionBriefDTO createCompetition(CreateCompetitionRequestDTO request);
+    CompetitionResponseDTO createCompetition(CompetitionRequestDTO request);
 
     /**
      * 更新竞赛
@@ -54,9 +36,9 @@ public interface CompetitionService {
      *            竞赛ID
      * @param request
      *            更新请求DTO
-     * @return 更新后的竞赛简要信息DTO
+     * @return 更新后的竞赛响应DTO
      */
-    CompetitionBriefDTO updateCompetition(Long id, UpdateCompetitionRequestDTO request);
+    CompetitionResponseDTO updateCompetition(Long id, CompetitionRequestDTO request);
 
     /**
      * 删除竞赛

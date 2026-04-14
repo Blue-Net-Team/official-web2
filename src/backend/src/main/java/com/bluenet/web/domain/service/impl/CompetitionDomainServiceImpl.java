@@ -2,14 +2,12 @@ package com.bluenet.web.domain.service.impl;
 
 import com.bluenet.web.domain.model.entity.Competition;
 import com.bluenet.web.domain.model.vo.CompetitionBriefVO;
-import com.bluenet.web.domain.model.vo.CompetitionVO;
 import com.bluenet.web.domain.repository.CompetitionRepository;
 import com.bluenet.web.domain.service.CompetitionDomainService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -22,19 +20,13 @@ public class CompetitionDomainServiceImpl implements CompetitionDomainService {
     }
 
     @Override
-    public Optional<CompetitionVO> getCompetitionById(Long id) {
-        return competitionRepository.findCompetitionById(id);
-    }
-
-    @Override
-    public Long createCompetition(String name, String shortName, Long logoFileId, String summary, String detail,
-            String level, String month, String organizer) {
+    public Long createCompetition(String name, String shortName, Long logoFileId, String summary, String level,
+            String month, String organizer) {
         Competition competition = new Competition();
         competition.setName(name);
         competition.setShortName(shortName);
         competition.setLogoFileId(logoFileId);
         competition.setSummary(summary);
-        competition.setDetail(detail);
         competition.setLevel(level != null ? level : "省级");
         competition.setMonth(month);
         competition.setOrganizer(organizer);
@@ -44,14 +36,13 @@ public class CompetitionDomainServiceImpl implements CompetitionDomainService {
 
     @Override
     public void updateCompetition(Long id, String name, String shortName, Long logoFileId, String summary,
-            String detail, String level, String month, String organizer) {
+            String level, String month, String organizer) {
         Competition competition = new Competition();
         competition.setId(id);
         competition.setName(name);
         competition.setShortName(shortName);
         competition.setLogoFileId(logoFileId);
         competition.setSummary(summary);
-        competition.setDetail(detail);
         competition.setLevel(level);
         competition.setMonth(month);
         competition.setOrganizer(organizer);

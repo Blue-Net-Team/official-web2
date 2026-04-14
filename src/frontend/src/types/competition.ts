@@ -1,7 +1,7 @@
 /**
  * 竞赛前端显示常量
  *
- * 后端 DTO 类型请使用 @/apis/schema/type 中的 CompetitionBriefDTO
+ * 后端 DTO 类型请使用 @/apis/schema/type 中的 CompetitionResponseDTO
  */
 import type { CompetitionLevel } from '@/apis/schema/type'
 

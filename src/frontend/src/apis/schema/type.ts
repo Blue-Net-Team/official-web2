@@ -124,15 +124,13 @@ export interface AuthMeResponseDTO {
 export type CompetitionLevel = 'national' | 'provincial' | 'school' | '国家级' | '省级' | '校级'
 
 /**
- * 竞赛简介
- * 对应后端 CompetitionBriefDTO.java
+ * 竞赛信息
+ * 对应后端 CompetitionResponseDTO.java
  */
-export interface CompetitionBriefDTO {
+export interface CompetitionResponseDTO {
   id: number
   name: string
   shortName: string
-  /** @deprecated 请使用 logoFileId */
-  logoUrl: string | null
   /** Logo文件ID，用于调用下载接口 */
   logoFileId: number | null
   summary: string
@@ -144,8 +142,6 @@ export interface CompetitionBriefDTO {
   organizer?: string
   /** 封面图片文件ID */
   coverFileId: number | null
-  /** @deprecated 请使用 coverFileId */
-  introduceImageFileId?: number | null
 }
 
 /**

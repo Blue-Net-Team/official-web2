@@ -11,8 +11,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-@Schema(description = "更新竞赛请求")
-public class UpdateCompetitionRequestDTO {
+@Schema(description = "竞赛请求")
+public class CompetitionRequestDTO {
     @Size(max = 100, message = "竞赛名称最多100个字符")
     @Schema(description = "竞赛名称")
     private String name;
@@ -27,9 +27,6 @@ public class UpdateCompetitionRequestDTO {
     @Size(max = 500, message = "竞赛简介最多500个字符")
     @Schema(description = "竞赛简介")
     private String summary;
-
-    @Schema(description = "竞赛详细介绍")
-    private String detail;
 
     @Size(max = 20, message = "竞赛级别最多20个字符")
     @Schema(description = "竞赛级别，如：国家级、省级、校级等")

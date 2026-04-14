@@ -82,7 +82,6 @@ class CompetitionListIntegrationTest extends BaseIntegrationTest {
         competition.setShortName("蓝桥杯");
         competition.setLogoFileId(logoFileId);
         competition.setSummary("全国软件和信息技术专业人才大赛");
-        competition.setDetail("蓝桥杯详情");
         competition.setLevel(TEST_LEVEL);
         competition.setMonth(TEST_MONTH);
         competition.setOrganizer(TEST_ORGANIZER);

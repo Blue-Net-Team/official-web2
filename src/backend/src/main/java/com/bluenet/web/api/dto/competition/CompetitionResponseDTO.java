@@ -18,6 +18,9 @@ public class CompetitionResponseDTO {
     @Schema(description = "竞赛名称")
     private String name;
 
+    @Schema(description = "竞赛简称")
+    private String shortName;
+
     @Schema(description = "竞赛级别，如：国家级、省级、校级等")
     private String level;
 
@@ -29,6 +32,9 @@ public class CompetitionResponseDTO {
 
     @Schema(description = "竞赛简介")
     private String summary;
+
+    @Schema(description = "Logo 文件ID")
+    private Long logoFileId;
 
     @Schema(description = "封面文件ID")
     private Long coverFileId;

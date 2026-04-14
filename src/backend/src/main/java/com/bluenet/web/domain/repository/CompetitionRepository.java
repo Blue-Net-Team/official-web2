@@ -1,10 +1,8 @@
 package com.bluenet.web.domain.repository;
 
 import com.bluenet.web.domain.model.vo.CompetitionBriefVO;
-import com.bluenet.web.domain.model.vo.CompetitionVO;
 
 import java.util.List;
-import java.util.Optional;
 
 /**
  * 竞赛仓库接口
@@ -21,15 +19,6 @@ public interface CompetitionRepository {
      * @return 竞赛简要信息列表
      */
     List<CompetitionBriefVO> findEnabledCompetitionsWithLimit(int limit);
-
-    /**
-     * 根据ID查询竞赛详情
-     *
-     * @param id
-     *            竞赛ID
-     * @return 竞赛详细信息，如果不存在则返回Optional.empty()
-     */
-    Optional<CompetitionVO> findCompetitionById(Long id);
 
     /**
      * 保存竞赛

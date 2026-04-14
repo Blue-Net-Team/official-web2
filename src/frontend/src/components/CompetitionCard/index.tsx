@@ -1,9 +1,9 @@
-import { CompetitionBriefDTO } from '@/apis/schema/type'
+import { CompetitionResponseDTO } from '@/apis/schema/type'
 import { API_BASE_URL } from '@/apis/config'
 import { COMPETITION_LEVEL_LABELS, COMPETITION_LEVEL_COLORS } from '@/types/competition'
 
 interface CompetitionCardProps {
-  competition: CompetitionBriefDTO
+  competition: CompetitionResponseDTO
   showImage?: boolean
   index?: number
 }
@@ -16,9 +16,9 @@ export default function CompetitionCard({
   const levelColor = COMPETITION_LEVEL_COLORS[competition.level]
   const levelLabel = COMPETITION_LEVEL_LABELS[competition.level]
 
-  const hasImage = showImage && !!(competition.coverFileId ?? competition.introduceImageFileId)
+  const hasImage = showImage && !!competition.coverFileId
 
-  const imageFileId = competition.coverFileId ?? competition.introduceImageFileId
+  const imageFileId = competition.coverFileId
 
   const cardStyle: React.CSSProperties = {
     animationDelay: `${index * 0.1}s`,

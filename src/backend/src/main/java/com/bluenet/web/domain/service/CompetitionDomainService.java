@@ -1,10 +1,8 @@
 package com.bluenet.web.domain.service;
 
 import com.bluenet.web.domain.model.vo.CompetitionBriefVO;
-import com.bluenet.web.domain.model.vo.CompetitionVO;
 
 import java.util.List;
-import java.util.Optional;
 
 /**
  * 竞赛领域服务接口
@@ -23,15 +21,6 @@ public interface CompetitionDomainService {
     List<CompetitionBriefVO> getCompetitionList(int limit);
 
     /**
-     * 根据ID获取竞赛详情
-     *
-     * @param id
-     *            竞赛ID
-     * @return 竞赛详细信息，如果不存在则返回Optional.empty()
-     */
-    Optional<CompetitionVO> getCompetitionById(Long id);
-
-    /**
      * 创建竞赛
      *
      * @param name
@@ -42,8 +31,6 @@ public interface CompetitionDomainService {
      *            Logo文件ID
      * @param summary
      *            竞赛简介
-     * @param detail
-     *            竞赛详细介绍
      * @param level
      *            竞赛级别
      * @param month
@@ -52,8 +39,8 @@ public interface CompetitionDomainService {
      *            主办单位
      * @return 创建后的竞赛ID
      */
-    Long createCompetition(String name, String shortName, Long logoFileId, String summary, String detail,
-            String level, String month, String organizer);
+    Long createCompetition(String name, String shortName, Long logoFileId, String summary, String level,
+            String month, String organizer);
 
     /**
      * 更新竞赛
@@ -68,8 +55,6 @@ public interface CompetitionDomainService {
      *            Logo文件ID
      * @param summary
      *            竞赛简介
-     * @param detail
-     *            竞赛详细介绍
      * @param level
      *            竞赛级别
      * @param month
@@ -77,8 +62,8 @@ public interface CompetitionDomainService {
      * @param organizer
      *            主办单位
      */
-    void updateCompetition(Long id, String name, String shortName, Long logoFileId, String summary, String detail,
-            String level, String month, String organizer);
+    void updateCompetition(Long id, String name, String shortName, Long logoFileId, String summary, String level,
+            String month, String organizer);
 
     /**
      * 删除竞赛

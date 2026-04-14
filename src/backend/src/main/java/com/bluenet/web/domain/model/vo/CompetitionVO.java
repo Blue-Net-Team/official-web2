@@ -17,7 +17,6 @@ public class CompetitionVO {
     private Long logoFileId;
     private Long coverFileId;
     private String summary;
-    private String detail;
     private String level;
     private String month;
     private String organizer;

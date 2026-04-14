@@ -2,7 +2,7 @@ import { Col, Flex, Row, ConfigProvider } from 'antd'
 import CompetitionCard from './CompetitionCard'
 import Link from 'next/link'
 import { RightOutlined } from '@ant-design/icons'
-import { CompetitionBriefDTO } from '@/apis/schema/type'
+import { CompetitionResponseDTO } from '@/apis/schema/type'
 import { competitionTitle, moreDescription, title } from './constant'
 
 const themeConfig = {
@@ -11,7 +11,7 @@ const themeConfig = {
   },
 }
 
-const Competitions = ({ competitions }: { competitions: CompetitionBriefDTO[] }) => {
+const Competitions = ({ competitions }: { competitions: CompetitionResponseDTO[] }) => {
   const competitionsToShow = competitions.slice(0, 6)
 
   return (
