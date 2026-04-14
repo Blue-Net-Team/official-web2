@@ -1,5 +1,6 @@
 package com.bluenet.web.domain.service;
 
+import com.bluenet.web.domain.model.enumerate.AwardLevel;
 import com.bluenet.web.domain.model.vo.CompetitionVO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -53,7 +54,7 @@ public interface CompetitionDomainService {
      * @return 创建后的竞赛ID
      */
     Long createCompetition(String name, String shortName, Long logoFileId, Long coverFileId, String summary,
-            String level, String month, String organizer);
+            AwardLevel level, String month, String organizer);
 
     /**
      * 更新竞赛
@@ -78,7 +79,7 @@ public interface CompetitionDomainService {
      *            主办单位
      */
     void updateCompetition(Long id, String name, String shortName, Long logoFileId, Long coverFileId, String summary,
-            String level, String month, String organizer);
+            AwardLevel level, String month, String organizer);
 
     /**
      * 删除竞赛

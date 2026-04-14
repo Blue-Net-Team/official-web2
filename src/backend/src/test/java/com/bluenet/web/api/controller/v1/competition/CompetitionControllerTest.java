@@ -40,7 +40,7 @@ class CompetitionControllerTest {
 
     private static final Long TEST_ID = 1L;
     private static final String TEST_NAME = "蓝桥杯";
-    private static final String TEST_LEVEL = "国家级";
+    private static final String TEST_LEVEL = "national";
     private static final String TEST_MONTH = "4月";
     private static final String TEST_ORGANIZER = "工业和信息化部人才交流中心";
     private static final String TEST_SUMMARY = "全国软件和信息技术专业人才大赛";
@@ -121,9 +121,9 @@ class CompetitionControllerTest {
     @DisplayName("获取竞赛列表：多个竞赛时应返回全部")
     void getCompetitionList_multipleCompetitions_shouldReturnAll() throws Exception {
         List<CompetitionResponseDTO> competitions = Arrays.asList(
-                CompetitionResponseDTO.builder().id(1L).name("蓝桥杯").level("国家级").build(),
-                CompetitionResponseDTO.builder().id(2L).name("ACM").level("国际级").build(),
-                CompetitionResponseDTO.builder().id(3L).name("数学建模").level("省级").build());
+                CompetitionResponseDTO.builder().id(1L).name("蓝桥杯").level("national").build(),
+                CompetitionResponseDTO.builder().id(2L).name("ACM").level("national").build(),
+                CompetitionResponseDTO.builder().id(3L).name("数学建模").level("provincial").build());
 
         when(competitionService.getCompetitionResponseList(anyInt())).thenReturn(competitions);
 

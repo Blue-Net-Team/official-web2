@@ -13,6 +13,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import com.bluenet.web.domain.model.enumerate.AwardLevel;
 import com.bluenet.web.domain.model.vo.CompetitionVO;
 import com.bluenet.web.domain.repository.CompetitionRepository;
 import org.springframework.data.domain.Page;
@@ -99,7 +100,7 @@ class CompetitionDomainServiceImplTest {
         Long logoFileId = 100L;
         Long coverFileId = 200L;
         Long expectedId = 1L;
-        String level = "国家级";
+        AwardLevel level = AwardLevel.NATIONAL;
         String month = "4月";
         String organizer = "工信部";
 
@@ -133,7 +134,7 @@ class CompetitionDomainServiceImplTest {
     @DisplayName("创建竞赛：logoFileId为null时应成功创建")
     void createCompetition_withNullLogoFileId_shouldCreateSuccessfully() {
         Long expectedId = 1L;
-        String level = "国家级";
+        AwardLevel level = AwardLevel.NATIONAL;
         String month = "4月";
         String organizer = "工信部";
 
@@ -158,7 +159,7 @@ class CompetitionDomainServiceImplTest {
     void updateCompetition_shouldUpdateSuccessfully() {
         Long logoFileId = 100L;
         Long coverFileId = 200L;
-        String level = "国家级";
+        AwardLevel level = AwardLevel.NATIONAL;
         String month = "4月";
         String organizer = "工信部";
 

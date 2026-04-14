@@ -7,6 +7,7 @@ import com.bluenet.web.application.service.CompetitionService;
 import com.bluenet.web.domain.exception.BadRequest;
 import com.bluenet.web.domain.exception.DataNotFound;
 import com.bluenet.web.domain.exception.GlobalException;
+import com.bluenet.web.domain.model.enumerate.AwardLevel;
 import com.bluenet.web.domain.model.enumerate.FileType;
 import com.bluenet.web.domain.model.vo.CompetitionVO;
 import com.bluenet.web.domain.model.vo.FileVO;
@@ -61,7 +62,7 @@ public class CompetitionServiceImpl implements CompetitionService {
                 request.getLogoFileId(),
                 request.getCoverFileId(),
                 request.getSummary(),
-                request.getLevel(),
+                parseLevel(request.getLevel()),
                 request.getMonth(),
                 request.getOrganizer());
 
@@ -72,7 +73,7 @@ public class CompetitionServiceImpl implements CompetitionService {
                 .logoFileId(request.getLogoFileId())
                 .coverFileId(request.getCoverFileId())
                 .summary(request.getSummary())
-                .level(request.getLevel() != null ? request.getLevel() : "省级")
+                .level(request.getLevel() != null ? request.getLevel() : "provincial")
                 .month(request.getMonth())
                 .organizer(request.getOrganizer())
                 .build();
@@ -96,7 +97,7 @@ public class CompetitionServiceImpl implements CompetitionService {
                 request.getLogoFileId(),
                 request.getCoverFileId(),
                 request.getSummary(),
-                request.getLevel(),
+                parseLevel(request.getLevel()),
                 request.getMonth(),
                 request.getOrganizer());
 
@@ -125,6 +126,13 @@ public class CompetitionServiceImpl implements CompetitionService {
             throw new IllegalArgumentException("竞赛不存在");
         }
         competitionDomainService.updateSortOrder(id, request.getSortOrder());
+    }
+
+    private AwardLevel parseLevel(String level) {
+        if (level == null) {
+            return null;
+        }
+        return AwardLevel.valueOf(level.toUpperCase());
     }
 
     private void validateFileId(Long fileId, String fieldName) {

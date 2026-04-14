@@ -1,6 +1,7 @@
 package com.bluenet.web.domain.service.impl;
 
 import com.bluenet.web.domain.model.entity.Competition;
+import com.bluenet.web.domain.model.enumerate.AwardLevel;
 import com.bluenet.web.domain.model.vo.CompetitionVO;
 import com.bluenet.web.domain.repository.CompetitionRepository;
 import com.bluenet.web.domain.service.CompetitionDomainService;
@@ -27,14 +28,14 @@ public class CompetitionDomainServiceImpl implements CompetitionDomainService {
 
     @Override
     public Long createCompetition(String name, String shortName, Long logoFileId, Long coverFileId, String summary,
-            String level, String month, String organizer) {
+            AwardLevel level, String month, String organizer) {
         Competition competition = new Competition();
         competition.setName(name);
         competition.setShortName(shortName);
         competition.setLogoFileId(logoFileId);
         competition.setCoverFileId(coverFileId);
         competition.setSummary(summary);
-        competition.setLevel(level != null ? level : "省级");
+        competition.setLevel(level != null ? level : AwardLevel.PROVINCIAL);
         competition.setMonth(month);
         competition.setOrganizer(organizer);
         competition.setSortOrder(0);
@@ -43,7 +44,7 @@ public class CompetitionDomainServiceImpl implements CompetitionDomainService {
 
     @Override
     public void updateCompetition(Long id, String name, String shortName, Long logoFileId, Long coverFileId,
-            String summary, String level, String month, String organizer) {
+            String summary, AwardLevel level, String month, String organizer) {
         Competition competition = new Competition();
         competition.setId(id);
         competition.setName(name);

@@ -119,9 +119,9 @@ export interface AuthMeResponseDTO {
 
 /**
  * 竞赛级别
- * 对应后端存储的中文值
+ * 对应后端 AwardLevel 枚举值
  */
-export type CompetitionLevel = 'national' | 'provincial' | 'school' | '国家级' | '省级' | '校级'
+export type CompetitionLevel = 'national' | 'provincial' | 'school'
 
 /**
  * 竞赛信息

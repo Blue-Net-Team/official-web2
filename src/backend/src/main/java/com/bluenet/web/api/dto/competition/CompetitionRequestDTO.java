@@ -32,7 +32,7 @@ public class CompetitionRequestDTO {
     private String summary;
 
     @Size(max = 20, message = "竞赛级别最多20个字符")
-    @Schema(description = "竞赛级别，如：国家级、省级、校级等")
+    @Schema(description = "竞赛级别，对应 AwardLevel 枚举值：national/provincial/school")
     private String level;
 
     @Size(max = 10, message = "举办月份最多10个字符")

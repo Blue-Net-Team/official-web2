@@ -21,7 +21,7 @@ public class CompetitionResponseDTO {
     @Schema(description = "竞赛简称")
     private String shortName;
 
-    @Schema(description = "竞赛级别，如：国家级、省级、校级等")
+    @Schema(description = "竞赛级别，对应 AwardLevel 枚举值：national/provincial/school")
     private String level;
 
     @Schema(description = "举办月份，如：1月、2月等")

@@ -10,7 +10,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
@@ -33,15 +32,12 @@ public class CompetitionRepositoryImpl implements CompetitionRepository {
 
     @Override
     public Long save(Competition competition) {
-        competition.setCreatedAt(LocalDateTime.now());
-        competition.setUpdatedAt(LocalDateTime.now());
         competitionMapper.insert(competition);
         return competition.getId();
     }
 
     @Override
     public void update(Competition competition) {
-        competition.setUpdatedAt(LocalDateTime.now());
         competitionMapper.updateById(competition);
     }
 

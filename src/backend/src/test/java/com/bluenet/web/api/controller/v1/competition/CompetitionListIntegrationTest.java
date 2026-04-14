@@ -5,6 +5,7 @@ import com.bluenet.web.api.dto.ResponseMessage;
 import com.bluenet.web.api.dto.competition.CompetitionResponseDTO;
 import com.bluenet.web.domain.model.entity.Competition;
 import com.bluenet.web.domain.model.entity.File;
+import com.bluenet.web.domain.model.enumerate.AwardLevel;
 import com.bluenet.web.domain.model.enumerate.FileType;
 import com.bluenet.web.infrastructure.repository.mapper.CompetitionMapper;
 import com.bluenet.web.infrastructure.repository.mapper.FileMapper;
@@ -50,7 +51,7 @@ class CompetitionListIntegrationTest extends BaseIntegrationTest {
     @Autowired
     private FileMapper fileMapper;
 
-    private static final String TEST_LEVEL = "国家级";
+    private static final AwardLevel TEST_LEVEL = AwardLevel.NATIONAL;
     private static final String TEST_MONTH = "4月";
     private static final String TEST_ORGANIZER = "工业和信息化部人才交流中心";
 
@@ -107,7 +108,7 @@ class CompetitionListIntegrationTest extends BaseIntegrationTest {
 
         CompetitionResponseDTO dto = competitions.get(0);
         assertEquals("蓝桥杯", dto.getName());
-        assertEquals(TEST_LEVEL, dto.getLevel());
+        assertEquals("national", dto.getLevel());
         assertEquals(TEST_MONTH, dto.getMonth());
         assertEquals(TEST_ORGANIZER, dto.getOrganizer());
         assertEquals("全国软件和信息技术专业人才大赛", dto.getSummary());

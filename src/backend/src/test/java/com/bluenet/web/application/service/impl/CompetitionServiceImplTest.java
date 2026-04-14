@@ -18,6 +18,7 @@ import com.bluenet.web.api.dto.PageDTO;
 import com.bluenet.web.api.dto.competition.*;
 import com.bluenet.web.application.converter.CompetitionConverter;
 import com.bluenet.web.domain.exception.GlobalException;
+import com.bluenet.web.domain.model.enumerate.AwardLevel;
 import com.bluenet.web.domain.model.vo.CompetitionVO;
 import com.bluenet.web.domain.service.CompetitionDomainService;
 import com.bluenet.web.domain.service.FileDomainService;
@@ -66,7 +67,7 @@ class CompetitionServiceImplTest {
                 .logoFileId(null)
                 .coverFileId(null)
                 .summary(TEST_SUMMARY)
-                .level("国家级")
+                .level("national")
                 .month("4月")
                 .organizer("工信部")
                 .build();
@@ -79,7 +80,7 @@ class CompetitionServiceImplTest {
                 .logoFileId(TEST_LOGO_FILE_ID)
                 .coverFileId(TEST_COVER_FILE_ID)
                 .summary(TEST_SUMMARY)
-                .level("国家级")
+                .level("national")
                 .month("4月")
                 .organizer("工信部")
                 .build();
@@ -198,7 +199,7 @@ class CompetitionServiceImplTest {
                         any(),
                         any(),
                         anyString(),
-                        anyString(),
+                        any(),
                         anyString(),
                         anyString()))
                                 .thenReturn(TEST_ID);
@@ -215,7 +216,7 @@ class CompetitionServiceImplTest {
                 null,
                 null,
                 TEST_SUMMARY,
-                request.getLevel(),
+                AwardLevel.NATIONAL,
                 request.getMonth(),
                 request.getOrganizer());
         verify(competitionConverter).convertToResponseDTO(any(CompetitionVO.class));
@@ -250,7 +251,7 @@ class CompetitionServiceImplTest {
                 eq(null),
                 eq(null),
                 eq(TEST_SUMMARY),
-                eq(request.getLevel()),
+                eq(AwardLevel.NATIONAL),
                 eq(request.getMonth()),
                 eq(request.getOrganizer()));
         verify(competitionConverter).convertToResponseDTO(any(CompetitionVO.class));
