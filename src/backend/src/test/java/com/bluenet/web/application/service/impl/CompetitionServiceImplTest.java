@@ -17,7 +17,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import com.bluenet.web.api.dto.competition.*;
 import com.bluenet.web.application.converter.CompetitionConverter;
 import com.bluenet.web.domain.exception.GlobalException;
-import com.bluenet.web.domain.model.vo.CompetitionBriefVO;
+import com.bluenet.web.domain.model.vo.CompetitionVO;
 import com.bluenet.web.domain.service.CompetitionDomainService;
 import com.bluenet.web.domain.service.FileDomainService;
 
@@ -44,8 +44,8 @@ class CompetitionServiceImplTest {
     private static final Long TEST_COVER_FILE_ID = 200L;
     private static final String TEST_SUMMARY = "全国软件和信息技术专业人才大赛";
 
-    private CompetitionBriefVO createTestCompetitionBriefVO() {
-        return CompetitionBriefVO.builder()
+    private CompetitionVO createTestCompetitionBriefVO() {
+        return CompetitionVO.builder()
                 .id(TEST_ID)
                 .name(TEST_NAME)
                 .shortName(TEST_SHORT_NAME)
@@ -87,7 +87,7 @@ class CompetitionServiceImplTest {
     @DisplayName("获取竞赛响应列表：应返回响应DTO列表")
     void getCompetitionResponseList_shouldReturnResponseDTOs() {
         int limit = 10;
-        List<CompetitionBriefVO> voList = new ArrayList<>();
+        List<CompetitionVO> voList = new ArrayList<>();
         voList.add(createTestCompetitionBriefVO());
 
         List<CompetitionResponseDTO> expectedDTOs = new ArrayList<>();
@@ -114,7 +114,7 @@ class CompetitionServiceImplTest {
     @DisplayName("获取竞赛响应列表：limit小于1时应使用1")
     void getCompetitionResponseList_limitLessThanOne_shouldUseOne() {
         int limit = 0;
-        List<CompetitionBriefVO> voList = new ArrayList<>();
+        List<CompetitionVO> voList = new ArrayList<>();
         List<CompetitionResponseDTO> expectedDTOs = new ArrayList<>();
 
         when(competitionDomainService.getCompetitionList(1)).thenReturn(voList);
@@ -130,7 +130,7 @@ class CompetitionServiceImplTest {
     @DisplayName("获取竞赛响应列表：limit大于50时应使用50")
     void getCompetitionResponseList_limitGreaterThan50_shouldUse50() {
         int limit = 100;
-        List<CompetitionBriefVO> voList = new ArrayList<>();
+        List<CompetitionVO> voList = new ArrayList<>();
         List<CompetitionResponseDTO> expectedDTOs = new ArrayList<>();
 
         when(competitionDomainService.getCompetitionList(50)).thenReturn(voList);
@@ -146,7 +146,7 @@ class CompetitionServiceImplTest {
     @DisplayName("获取竞赛响应列表：空列表时应返回空列表")
     void getCompetitionResponseList_emptyList_shouldReturnEmptyList() {
         int limit = 10;
-        List<CompetitionBriefVO> voList = new ArrayList<>();
+        List<CompetitionVO> voList = new ArrayList<>();
         List<CompetitionResponseDTO> expectedDTOs = new ArrayList<>();
 
         when(competitionDomainService.getCompetitionList(limit)).thenReturn(voList);
@@ -162,10 +162,10 @@ class CompetitionServiceImplTest {
     @DisplayName("获取竞赛响应列表：多个竞赛时应全部转换")
     void getCompetitionResponseList_multipleCompetitions_shouldConvertAll() {
         int limit = 10;
-        List<CompetitionBriefVO> voList = new ArrayList<>();
-        voList.add(CompetitionBriefVO.builder().id(1L).name("竞赛1").build());
-        voList.add(CompetitionBriefVO.builder().id(2L).name("竞赛2").build());
-        voList.add(CompetitionBriefVO.builder().id(3L).name("竞赛3").build());
+        List<CompetitionVO> voList = new ArrayList<>();
+        voList.add(CompetitionVO.builder().id(1L).name("竞赛1").build());
+        voList.add(CompetitionVO.builder().id(2L).name("竞赛2").build());
+        voList.add(CompetitionVO.builder().id(3L).name("竞赛3").build());
 
         when(competitionDomainService.getCompetitionList(limit)).thenReturn(voList);
         when(competitionConverter.convertToResponseDTOList(voList)).thenReturn(new ArrayList<>());
@@ -198,7 +198,7 @@ class CompetitionServiceImplTest {
                         anyString(),
                         anyString()))
                                 .thenReturn(TEST_ID);
-        when(competitionConverter.convertToResponseDTO(any(CompetitionBriefVO.class))).thenReturn(expectedDTO);
+        when(competitionConverter.convertToResponseDTO(any(CompetitionVO.class))).thenReturn(expectedDTO);
 
         CompetitionResponseDTO result = competitionService.createCompetition(request);
 
@@ -214,7 +214,7 @@ class CompetitionServiceImplTest {
                 request.getLevel(),
                 request.getMonth(),
                 request.getOrganizer());
-        verify(competitionConverter).convertToResponseDTO(any(CompetitionBriefVO.class));
+        verify(competitionConverter).convertToResponseDTO(any(CompetitionVO.class));
     }
 
     // ==================== updateCompetition ====================
@@ -223,7 +223,7 @@ class CompetitionServiceImplTest {
     @DisplayName("更新竞赛：应成功更新并返回DTO")
     void updateCompetition_shouldUpdateAndReturnDTO() {
         CompetitionRequestDTO request = createTestRequest();
-        CompetitionBriefVO updatedVO = createTestCompetitionBriefVO();
+        CompetitionVO updatedVO = createTestCompetitionBriefVO();
         CompetitionResponseDTO expectedDTO = CompetitionResponseDTO.builder()
                 .id(TEST_ID)
                 .name(TEST_NAME)
@@ -232,7 +232,7 @@ class CompetitionServiceImplTest {
 
         when(competitionDomainService.existsById(TEST_ID)).thenReturn(true);
         when(competitionDomainService.getCompetitionList(50)).thenReturn(Collections.singletonList(updatedVO));
-        when(competitionConverter.convertToResponseDTO(any(CompetitionBriefVO.class))).thenReturn(expectedDTO);
+        when(competitionConverter.convertToResponseDTO(any(CompetitionVO.class))).thenReturn(expectedDTO);
 
         CompetitionResponseDTO result = competitionService.updateCompetition(TEST_ID, request);
 
@@ -249,7 +249,7 @@ class CompetitionServiceImplTest {
                 eq(request.getLevel()),
                 eq(request.getMonth()),
                 eq(request.getOrganizer()));
-        verify(competitionConverter).convertToResponseDTO(any(CompetitionBriefVO.class));
+        verify(competitionConverter).convertToResponseDTO(any(CompetitionVO.class));
     }
 
     @Test

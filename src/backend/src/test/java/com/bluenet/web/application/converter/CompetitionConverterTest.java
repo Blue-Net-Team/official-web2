@@ -9,7 +9,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import com.bluenet.web.api.dto.competition.CompetitionResponseDTO;
-import com.bluenet.web.domain.model.vo.CompetitionBriefVO;
+import com.bluenet.web.domain.model.vo.CompetitionVO;
 
 @DisplayName("CompetitionConverter 单元测试")
 class CompetitionConverterTest {
@@ -24,8 +24,8 @@ class CompetitionConverterTest {
     private static final Long TEST_COVER_FILE_ID = 200L;
     private static final String TEST_SUMMARY = "全国软件和信息技术专业人才大赛";
 
-    private CompetitionBriefVO createTestCompetitionBriefVO() {
-        return CompetitionBriefVO.builder()
+    private CompetitionVO createTestCompetitionBriefVO() {
+        return CompetitionVO.builder()
                 .id(TEST_ID)
                 .name(TEST_NAME)
                 .shortName(TEST_SHORT_NAME)
@@ -39,7 +39,7 @@ class CompetitionConverterTest {
     @Test
     @DisplayName("转换为响应DTO：应正确转换所有字段")
     void convertToResponseDTO_shouldConvertAllFields() {
-        CompetitionBriefVO vo = createTestCompetitionBriefVO();
+        CompetitionVO vo = createTestCompetitionBriefVO();
 
         CompetitionResponseDTO dto = converter.convertToResponseDTO(vo);
 
@@ -54,7 +54,7 @@ class CompetitionConverterTest {
     @Test
     @DisplayName("转换为响应DTO：null字段应保持null")
     void convertToResponseDTO_withNullFields_shouldKeepNull() {
-        CompetitionBriefVO vo = CompetitionBriefVO.builder()
+        CompetitionVO vo = CompetitionVO.builder()
                 .id(TEST_ID)
                 .name(TEST_NAME)
                 .build();
@@ -72,10 +72,10 @@ class CompetitionConverterTest {
     @Test
     @DisplayName("转换为响应DTO列表：应正确转换列表")
     void convertToResponseDTOList_shouldConvertList() {
-        List<CompetitionBriefVO> voList = new ArrayList<>();
+        List<CompetitionVO> voList = new ArrayList<>();
         voList.add(createTestCompetitionBriefVO());
         voList.add(
-                CompetitionBriefVO.builder()
+                CompetitionVO.builder()
                         .id(2L)
                         .name("ACM程序设计大赛")
                         .summary("ACM国际大学生程序设计竞赛")
@@ -92,7 +92,7 @@ class CompetitionConverterTest {
     @Test
     @DisplayName("转换为响应DTO列表：空列表应返回空列表")
     void convertToResponseDTOList_emptyList_shouldReturnEmptyList() {
-        List<CompetitionBriefVO> voList = new ArrayList<>();
+        List<CompetitionVO> voList = new ArrayList<>();
 
         List<CompetitionResponseDTO> dtoList = converter.convertToResponseDTOList(voList);
 
@@ -103,7 +103,7 @@ class CompetitionConverterTest {
     @Test
     @DisplayName("转换为响应DTO列表：单元素列表应正确转换")
     void convertToResponseDTOList_singleElement_shouldConvertCorrectly() {
-        List<CompetitionBriefVO> voList = new ArrayList<>();
+        List<CompetitionVO> voList = new ArrayList<>();
         voList.add(createTestCompetitionBriefVO());
 
         List<CompetitionResponseDTO> dtoList = converter.convertToResponseDTOList(voList);
@@ -117,7 +117,7 @@ class CompetitionConverterTest {
     @DisplayName("转换为响应DTO：超长名称应正确转换")
     void convertToResponseDTO_withLongName_shouldConvertCorrectly() {
         String longName = "A".repeat(100);
-        CompetitionBriefVO vo = CompetitionBriefVO.builder().id(TEST_ID).name(longName).build();
+        CompetitionVO vo = CompetitionVO.builder().id(TEST_ID).name(longName).build();
 
         CompetitionResponseDTO dto = converter.convertToResponseDTO(vo);
 

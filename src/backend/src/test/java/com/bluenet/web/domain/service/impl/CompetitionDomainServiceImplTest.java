@@ -13,7 +13,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.bluenet.web.domain.model.vo.CompetitionBriefVO;
+import com.bluenet.web.domain.model.vo.CompetitionVO;
 import com.bluenet.web.domain.repository.CompetitionRepository;
 
 @DisplayName("CompetitionDomainServiceImpl 单元测试")
@@ -31,8 +31,8 @@ class CompetitionDomainServiceImplTest {
     private static final String TEST_SHORT_NAME = "蓝桥杯";
     private static final String TEST_SUMMARY = "全国软件和信息技术专业人才大赛";
 
-    private CompetitionBriefVO createTestCompetitionBriefVO() {
-        return CompetitionBriefVO.builder()
+    private CompetitionVO createTestCompetitionBriefVO() {
+        return CompetitionVO.builder()
                 .id(TEST_ID)
                 .name(TEST_NAME)
                 .shortName(TEST_SHORT_NAME)
@@ -44,12 +44,12 @@ class CompetitionDomainServiceImplTest {
     @DisplayName("获取竞赛列表：应返回所有启用的竞赛")
     void getCompetitionList_shouldReturnEnabledCompetitions() {
         int limit = 10;
-        List<CompetitionBriefVO> expectedList = new ArrayList<>();
+        List<CompetitionVO> expectedList = new ArrayList<>();
         expectedList.add(createTestCompetitionBriefVO());
 
         when(competitionRepository.findEnabledCompetitionsWithLimit(limit)).thenReturn(expectedList);
 
-        List<CompetitionBriefVO> result = competitionDomainService.getCompetitionList(limit);
+        List<CompetitionVO> result = competitionDomainService.getCompetitionList(limit);
 
         assertNotNull(result);
         assertEquals(1, result.size());
@@ -62,11 +62,11 @@ class CompetitionDomainServiceImplTest {
     @DisplayName("获取竞赛列表：无竞赛时应返回空列表")
     void getCompetitionList_noCompetitions_shouldReturnEmptyList() {
         int limit = 10;
-        List<CompetitionBriefVO> expectedList = new ArrayList<>();
+        List<CompetitionVO> expectedList = new ArrayList<>();
 
         when(competitionRepository.findEnabledCompetitionsWithLimit(limit)).thenReturn(expectedList);
 
-        List<CompetitionBriefVO> result = competitionDomainService.getCompetitionList(limit);
+        List<CompetitionVO> result = competitionDomainService.getCompetitionList(limit);
 
         assertNotNull(result);
         assertTrue(result.isEmpty());
@@ -77,12 +77,12 @@ class CompetitionDomainServiceImplTest {
     @DisplayName("获取竞赛列表：限制为1时应返回1条记录")
     void getCompetitionList_withLimitOne_shouldReturnOneRecord() {
         int limit = 1;
-        List<CompetitionBriefVO> expectedList = new ArrayList<>();
+        List<CompetitionVO> expectedList = new ArrayList<>();
         expectedList.add(createTestCompetitionBriefVO());
 
         when(competitionRepository.findEnabledCompetitionsWithLimit(limit)).thenReturn(expectedList);
 
-        List<CompetitionBriefVO> result = competitionDomainService.getCompetitionList(limit);
+        List<CompetitionVO> result = competitionDomainService.getCompetitionList(limit);
 
         assertNotNull(result);
         assertEquals(1, result.size());

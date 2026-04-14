@@ -7,7 +7,7 @@ import com.bluenet.web.domain.exception.BadRequest;
 import com.bluenet.web.domain.exception.DataNotFound;
 import com.bluenet.web.domain.exception.GlobalException;
 import com.bluenet.web.domain.model.enumerate.FileType;
-import com.bluenet.web.domain.model.vo.CompetitionBriefVO;
+import com.bluenet.web.domain.model.vo.CompetitionVO;
 import com.bluenet.web.domain.model.vo.FileVO;
 import com.bluenet.web.domain.service.CompetitionDomainService;
 import com.bluenet.web.domain.service.FileDomainService;
@@ -29,7 +29,7 @@ public class CompetitionServiceImpl implements CompetitionService {
     @Override
     public List<CompetitionResponseDTO> getCompetitionResponseList(int limit) {
         int validLimit = Math.min(Math.max(limit, 1), 50);
-        List<CompetitionBriefVO> voList = competitionDomainService.getCompetitionList(validLimit);
+        List<CompetitionVO> voList = competitionDomainService.getCompetitionList(validLimit);
         return competitionConverter.convertToResponseDTOList(voList);
     }
 
@@ -51,7 +51,7 @@ public class CompetitionServiceImpl implements CompetitionService {
                 request.getMonth(),
                 request.getOrganizer());
 
-        CompetitionBriefVO briefVO = CompetitionBriefVO.builder()
+        CompetitionVO briefVO = CompetitionVO.builder()
                 .id(id)
                 .name(request.getName())
                 .shortName(request.getShortName())
@@ -86,8 +86,8 @@ public class CompetitionServiceImpl implements CompetitionService {
                 request.getMonth(),
                 request.getOrganizer());
 
-        List<CompetitionBriefVO> voList = competitionDomainService.getCompetitionList(50);
-        CompetitionBriefVO updated = voList.stream()
+        List<CompetitionVO> voList = competitionDomainService.getCompetitionList(50);
+        CompetitionVO updated = voList.stream()
                 .filter(vo -> vo.getId().equals(id))
                 .findFirst()
                 .orElseThrow(() -> new GlobalException("更新竞赛失败"));

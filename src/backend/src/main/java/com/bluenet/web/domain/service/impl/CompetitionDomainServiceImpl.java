@@ -1,7 +1,7 @@
 package com.bluenet.web.domain.service.impl;
 
 import com.bluenet.web.domain.model.entity.Competition;
-import com.bluenet.web.domain.model.vo.CompetitionBriefVO;
+import com.bluenet.web.domain.model.vo.CompetitionVO;
 import com.bluenet.web.domain.repository.CompetitionRepository;
 import com.bluenet.web.domain.service.CompetitionDomainService;
 import lombok.RequiredArgsConstructor;
@@ -15,7 +15,7 @@ public class CompetitionDomainServiceImpl implements CompetitionDomainService {
     private final CompetitionRepository competitionRepository;
 
     @Override
-    public List<CompetitionBriefVO> getCompetitionList(int limit) {
+    public List<CompetitionVO> getCompetitionList(int limit) {
         return competitionRepository.findEnabledCompetitionsWithLimit(limit);
     }
 

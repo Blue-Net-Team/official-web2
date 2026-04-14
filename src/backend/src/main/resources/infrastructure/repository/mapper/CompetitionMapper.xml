@@ -16,7 +16,7 @@
         <result column="updated_at" property="updatedAt"/>
     </resultMap>
 
-    <resultMap id="CompetitionBriefVOResultMap" type="com.bluenet.web.domain.model.vo.CompetitionBriefVO">
+    <resultMap id="CompetitionVOResultMap" type="com.bluenet.web.domain.model.vo.CompetitionVO">
         <id column="id" property="id"/>
         <result column="name" property="name"/>
         <result column="short_name" property="shortName"/>
@@ -27,9 +27,10 @@
         <result column="level" property="level"/>
         <result column="month" property="month"/>
         <result column="organizer" property="organizer"/>
+        <result column="sort_order" property="sortOrder"/>
     </resultMap>
 
-    <select id="selectEnabledCompetitionsWithLimit" resultMap="CompetitionBriefVOResultMap">
+    <select id="selectEnabledCompetitionsWithLimit" resultMap="CompetitionVOResultMap">
         SELECT
             c.id,
             c.name,
@@ -40,7 +41,8 @@
             c.summary,
             c.level,
             c.month,
-            c.organizer
+            c.organizer,
+            c.sort_order
         FROM tb_competition c
         LEFT JOIN tb_file f ON c.logo_file_id = f.id
         ORDER BY c.sort_order DESC, c.created_at DESC

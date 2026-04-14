@@ -1,6 +1,6 @@
 package com.bluenet.web.domain.repository;
 
-import com.bluenet.web.domain.model.vo.CompetitionBriefVO;
+import com.bluenet.web.domain.model.vo.CompetitionVO;
 
 import java.util.List;
 
@@ -18,7 +18,7 @@ public interface CompetitionRepository {
      *            限制返回数量，如果为0则返回全部
      * @return 竞赛简要信息列表
      */
-    List<CompetitionBriefVO> findEnabledCompetitionsWithLimit(int limit);
+    List<CompetitionVO> findEnabledCompetitionsWithLimit(int limit);
 
     /**
      * 保存竞赛
