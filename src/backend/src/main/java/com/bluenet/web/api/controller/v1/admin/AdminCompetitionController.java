@@ -3,7 +3,6 @@ package com.bluenet.web.api.controller.v1.admin;
 import com.bluenet.web.api.dto.ResponseMessage;
 import com.bluenet.web.api.dto.competition.*;
 import com.bluenet.web.application.service.CompetitionService;
-import com.bluenet.web.domain.exception.GlobalException;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
 import com.bluenet.web.infrastructure.security.annotation.RequiresPermission;
 import io.swagger.v3.oas.annotations.Operation;
@@ -93,31 +92,4 @@ public class AdminCompetitionController {
         }
     }
 
-    @Operation(summary = "更新竞赛Logo", description = "通过已上传的 fileId 更新竞赛Logo，文件类型必须为 NORMAL_IMG")
-    @RequiresPermission(name = "更新竞赛Logo", value = "competition:update-logo", access = AccessLevel.PROTECTED)
-    @PutMapping("/{id}/logo")
-    public ResponseMessage<Void> updateLogo(
-            @Parameter(description = "竞赛ID", required = true) @PathVariable Long id,
-            @Parameter(description = "Logo文件ID", required = true) @RequestParam("fileId") Long fileId) {
-        try {
-            competitionService.updateLogo(id, fileId);
-            return ResponseMessage.success();
-        } catch (GlobalException e) {
-            return ResponseMessage.error(e);
-        }
-    }
-
-    @Operation(summary = "更新竞赛封面", description = "通过已上传的 fileId 更新竞赛封面，文件类型必须为 NORMAL_IMG")
-    @RequiresPermission(name = "更新竞赛封面", value = "competition:update-cover", access = AccessLevel.PROTECTED)
-    @PutMapping("/{id}/cover")
-    public ResponseMessage<Void> updateCover(
-            @Parameter(description = "竞赛ID", required = true) @PathVariable Long id,
-            @Parameter(description = "封面文件ID", required = true) @RequestParam("fileId") Long fileId) {
-        try {
-            competitionService.updateCover(id, fileId);
-            return ResponseMessage.success();
-        } catch (GlobalException e) {
-            return ResponseMessage.error(e);
-        }
-    }
 }

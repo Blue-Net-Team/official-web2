@@ -29,6 +29,8 @@ public interface CompetitionDomainService {
      *            竞赛简称
      * @param logoFileId
      *            Logo文件ID
+     * @param coverFileId
+     *            封面文件ID
      * @param summary
      *            竞赛简介
      * @param level
@@ -39,8 +41,8 @@ public interface CompetitionDomainService {
      *            主办单位
      * @return 创建后的竞赛ID
      */
-    Long createCompetition(String name, String shortName, Long logoFileId, String summary, String level,
-            String month, String organizer);
+    Long createCompetition(String name, String shortName, Long logoFileId, Long coverFileId, String summary,
+            String level, String month, String organizer);
 
     /**
      * 更新竞赛
@@ -53,6 +55,8 @@ public interface CompetitionDomainService {
      *            竞赛简称
      * @param logoFileId
      *            Logo文件ID
+     * @param coverFileId
+     *            封面文件ID
      * @param summary
      *            竞赛简介
      * @param level
@@ -62,8 +66,8 @@ public interface CompetitionDomainService {
      * @param organizer
      *            主办单位
      */
-    void updateCompetition(Long id, String name, String shortName, Long logoFileId, String summary, String level,
-            String month, String organizer);
+    void updateCompetition(Long id, String name, String shortName, Long logoFileId, Long coverFileId, String summary,
+            String level, String month, String organizer);
 
     /**
      * 删除竞赛
@@ -91,24 +95,4 @@ public interface CompetitionDomainService {
      * @return 如果存在返回true，否则返回false
      */
     boolean existsById(Long id);
-
-    /**
-     * 更新竞赛Logo
-     *
-     * @param id
-     *            竞赛ID
-     * @param logoFileId
-     *            Logo文件ID
-     */
-    void updateLogo(Long id, Long logoFileId);
-
-    /**
-     * 更新竞赛封面
-     *
-     * @param id
-     *            竞赛ID
-     * @param coverFileId
-     *            封面文件ID
-     */
-    void updateCover(Long id, Long coverFileId);
 }

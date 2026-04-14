@@ -16,12 +16,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.bluenet.web.api.dto.competition.*;
 import com.bluenet.web.application.converter.CompetitionConverter;
-import com.bluenet.web.domain.exception.BadRequest;
-import com.bluenet.web.domain.exception.DataNotFound;
 import com.bluenet.web.domain.exception.GlobalException;
-import com.bluenet.web.domain.model.enumerate.FileType;
 import com.bluenet.web.domain.model.vo.CompetitionBriefVO;
-import com.bluenet.web.domain.model.vo.FileVO;
 import com.bluenet.web.domain.service.CompetitionDomainService;
 import com.bluenet.web.domain.service.FileDomainService;
 
@@ -47,7 +43,6 @@ class CompetitionServiceImplTest {
     private static final Long TEST_LOGO_FILE_ID = 100L;
     private static final Long TEST_COVER_FILE_ID = 200L;
     private static final String TEST_SUMMARY = "全国软件和信息技术专业人才大赛";
-    private static final Long TEST_FILE_ID = 100L;
 
     private CompetitionBriefVO createTestCompetitionBriefVO() {
         return CompetitionBriefVO.builder()
@@ -64,7 +59,21 @@ class CompetitionServiceImplTest {
         return CompetitionRequestDTO.builder()
                 .name(TEST_NAME)
                 .shortName(TEST_SHORT_NAME)
-                .logoFileId(TEST_FILE_ID)
+                .logoFileId(null)
+                .coverFileId(null)
+                .summary(TEST_SUMMARY)
+                .level("国家级")
+                .month("4月")
+                .organizer("工信部")
+                .build();
+    }
+
+    private CompetitionRequestDTO createTestRequestWithFileIds() {
+        return CompetitionRequestDTO.builder()
+                .name(TEST_NAME)
+                .shortName(TEST_SHORT_NAME)
+                .logoFileId(TEST_LOGO_FILE_ID)
+                .coverFileId(TEST_COVER_FILE_ID)
                 .summary(TEST_SUMMARY)
                 .level("国家级")
                 .month("4月")
@@ -183,6 +192,7 @@ class CompetitionServiceImplTest {
                         anyString(),
                         any(),
                         any(),
+                        any(),
                         anyString(),
                         anyString(),
                         anyString(),
@@ -198,7 +208,8 @@ class CompetitionServiceImplTest {
         verify(competitionDomainService).createCompetition(
                 TEST_NAME,
                 TEST_SHORT_NAME,
-                TEST_FILE_ID,
+                null,
+                null,
                 TEST_SUMMARY,
                 request.getLevel(),
                 request.getMonth(),
@@ -232,7 +243,8 @@ class CompetitionServiceImplTest {
                 eq(TEST_ID),
                 eq(TEST_NAME),
                 eq(TEST_SHORT_NAME),
-                eq(TEST_FILE_ID),
+                eq(null),
+                eq(null),
                 eq(TEST_SUMMARY),
                 eq(request.getLevel()),
                 eq(request.getMonth()),
@@ -318,119 +330,4 @@ class CompetitionServiceImplTest {
         assertEquals("竞赛不存在", exception.getMessage());
     }
 
-    // ==================== updateLogo ====================
-
-    @Test
-    @DisplayName("更新Logo：应成功更新竞赛Logo")
-    void updateLogo_shouldUpdateSuccessfully() {
-        Long fileId = 200L;
-        FileVO fileVO = FileVO.builder().id(fileId).type(FileType.NORMAL_IMG).build();
-
-        when(competitionDomainService.existsById(TEST_ID)).thenReturn(true);
-        when(fileDomainService.getFileById(fileId)).thenReturn(fileVO);
-
-        competitionService.updateLogo(TEST_ID, fileId);
-
-        verify(competitionDomainService).updateLogo(TEST_ID, fileId);
-    }
-
-    @Test
-    @DisplayName("更新Logo：竞赛不存在应抛出DataNotFound")
-    void updateLogo_competitionNotFound_shouldThrowDataNotFound() {
-        Long fileId = 200L;
-
-        when(competitionDomainService.existsById(TEST_ID)).thenReturn(false);
-
-        DataNotFound exception = assertThrows(
-                DataNotFound.class,
-                () -> competitionService.updateLogo(TEST_ID, fileId));
-        assertEquals("竞赛不存在", exception.getMessage());
-    }
-
-    @Test
-    @DisplayName("更新Logo：文件不存在应抛出DataNotFound")
-    void updateLogo_fileNotFound_shouldThrowDataNotFound() {
-        Long fileId = 200L;
-
-        when(competitionDomainService.existsById(TEST_ID)).thenReturn(true);
-        when(fileDomainService.getFileById(fileId)).thenReturn(null);
-
-        DataNotFound exception = assertThrows(
-                DataNotFound.class,
-                () -> competitionService.updateLogo(TEST_ID, fileId));
-        assertEquals("文件不存在", exception.getMessage());
-    }
-
-    @Test
-    @DisplayName("更新Logo：文件类型不匹配应抛出BadRequest")
-    void updateLogo_fileTypeMismatch_shouldThrowBadRequest() {
-        Long fileId = 200L;
-        FileVO fileVO = FileVO.builder().id(fileId).type(FileType.AVATAR).build();
-
-        when(competitionDomainService.existsById(TEST_ID)).thenReturn(true);
-        when(fileDomainService.getFileById(fileId)).thenReturn(fileVO);
-
-        BadRequest exception = assertThrows(
-                BadRequest.class,
-                () -> competitionService.updateLogo(TEST_ID, fileId));
-        assertEquals("文件类型不匹配，期望 NORMAL_IMG", exception.getMessage());
-    }
-
-    // ==================== updateCover ====================
-
-    @Test
-    @DisplayName("更新封面：应成功更新竞赛封面")
-    void updateCover_shouldUpdateSuccessfully() {
-        Long fileId = 300L;
-        FileVO fileVO = FileVO.builder().id(fileId).type(FileType.NORMAL_IMG).build();
-
-        when(competitionDomainService.existsById(TEST_ID)).thenReturn(true);
-        when(fileDomainService.getFileById(fileId)).thenReturn(fileVO);
-
-        competitionService.updateCover(TEST_ID, fileId);
-
-        verify(competitionDomainService).updateCover(TEST_ID, fileId);
-    }
-
-    @Test
-    @DisplayName("更新封面：竞赛不存在应抛出DataNotFound")
-    void updateCover_competitionNotFound_shouldThrowDataNotFound() {
-        Long fileId = 300L;
-
-        when(competitionDomainService.existsById(TEST_ID)).thenReturn(false);
-
-        DataNotFound exception = assertThrows(
-                DataNotFound.class,
-                () -> competitionService.updateCover(TEST_ID, fileId));
-        assertEquals("竞赛不存在", exception.getMessage());
-    }
-
-    @Test
-    @DisplayName("更新封面：文件不存在应抛出DataNotFound")
-    void updateCover_fileNotFound_shouldThrowDataNotFound() {
-        Long fileId = 300L;
-
-        when(competitionDomainService.existsById(TEST_ID)).thenReturn(true);
-        when(fileDomainService.getFileById(fileId)).thenReturn(null);
-
-        DataNotFound exception = assertThrows(
-                DataNotFound.class,
-                () -> competitionService.updateCover(TEST_ID, fileId));
-        assertEquals("文件不存在", exception.getMessage());
-    }
-
-    @Test
-    @DisplayName("更新封面：文件类型不匹配应抛出BadRequest")
-    void updateCover_fileTypeMismatch_shouldThrowBadRequest() {
-        Long fileId = 300L;
-        FileVO fileVO = FileVO.builder().id(fileId).type(FileType.AVATAR).build();
-
-        when(competitionDomainService.existsById(TEST_ID)).thenReturn(true);
-        when(fileDomainService.getFileById(fileId)).thenReturn(fileVO);
-
-        BadRequest exception = assertThrows(
-                BadRequest.class,
-                () -> competitionService.updateCover(TEST_ID, fileId));
-        assertEquals("文件类型不匹配，期望 NORMAL_IMG", exception.getMessage());
-    }
 }

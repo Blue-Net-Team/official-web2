@@ -93,6 +93,7 @@ class CompetitionDomainServiceImplTest {
     @DisplayName("创建竞赛：应成功创建并返回ID")
     void createCompetition_shouldCreateAndReturnId() {
         Long logoFileId = 100L;
+        Long coverFileId = 200L;
         Long expectedId = 1L;
         String level = "国家级";
         String month = "4月";
@@ -104,6 +105,7 @@ class CompetitionDomainServiceImplTest {
                 TEST_NAME,
                 TEST_SHORT_NAME,
                 logoFileId,
+                coverFileId,
                 TEST_SUMMARY,
                 level,
                 month,
@@ -115,6 +117,7 @@ class CompetitionDomainServiceImplTest {
                         competition -> competition.getName().equals(TEST_NAME)
                                 && competition.getShortName().equals(TEST_SHORT_NAME)
                                 && competition.getLogoFileId().equals(logoFileId)
+                                && competition.getCoverFileId().equals(coverFileId)
                                 && competition.getSummary().equals(TEST_SUMMARY)
                                 && competition.getLevel().equals(level)
                                 && competition.getMonth().equals(month)
@@ -136,6 +139,7 @@ class CompetitionDomainServiceImplTest {
                 TEST_NAME,
                 TEST_SHORT_NAME,
                 null,
+                null,
                 TEST_SUMMARY,
                 level,
                 month,
@@ -149,6 +153,7 @@ class CompetitionDomainServiceImplTest {
     @DisplayName("更新竞赛：应成功更新竞赛信息")
     void updateCompetition_shouldUpdateSuccessfully() {
         Long logoFileId = 100L;
+        Long coverFileId = 200L;
         String level = "国家级";
         String month = "4月";
         String organizer = "工信部";
@@ -158,6 +163,7 @@ class CompetitionDomainServiceImplTest {
                 TEST_NAME,
                 TEST_SHORT_NAME,
                 logoFileId,
+                coverFileId,
                 TEST_SUMMARY,
                 level,
                 month,
@@ -169,6 +175,7 @@ class CompetitionDomainServiceImplTest {
                                 && competition.getName().equals(TEST_NAME)
                                 && competition.getShortName().equals(TEST_SHORT_NAME)
                                 && competition.getLogoFileId().equals(logoFileId)
+                                && competition.getCoverFileId().equals(coverFileId)
                                 && competition.getSummary().equals(TEST_SUMMARY)
                                 && competition.getLevel().equals(level)
                                 && competition.getMonth().equals(month)
@@ -228,79 +235,4 @@ class CompetitionDomainServiceImplTest {
         verify(competitionRepository).existsById(TEST_ID);
     }
 
-    @Test
-    @DisplayName("更新Logo：应成功更新竞赛Logo")
-    void updateLogo_shouldUpdateSuccessfully() {
-        Long newLogoFileId = 200L;
-
-        competitionDomainService.updateLogo(TEST_ID, newLogoFileId);
-
-        verify(competitionRepository).update(
-                argThat(
-                        competition -> competition.getId().equals(TEST_ID)
-                                && competition.getLogoFileId().equals(newLogoFileId)));
-    }
-
-    @Test
-    @DisplayName("更新Logo：Logo文件ID为null时应成功更新")
-    void updateLogo_withNullLogoFileId_shouldUpdateSuccessfully() {
-        competitionDomainService.updateLogo(TEST_ID, null);
-
-        verify(competitionRepository).update(
-                argThat(
-                        competition -> competition.getId().equals(TEST_ID)
-                                && competition.getLogoFileId() == null));
-    }
-
-    @Test
-    @DisplayName("更新Logo：更新不同竞赛的Logo应调用正确的ID")
-    void updateLogo_differentCompetition_shouldUpdateCorrectId() {
-        Long differentCompetitionId = 999L;
-        Long logoFileId = 300L;
-
-        competitionDomainService.updateLogo(differentCompetitionId, logoFileId);
-
-        verify(competitionRepository).update(
-                argThat(
-                        competition -> competition.getId().equals(differentCompetitionId)
-                                && competition.getLogoFileId().equals(logoFileId)));
-    }
-
-    @Test
-    @DisplayName("更新封面：应成功更新竞赛封面")
-    void updateCover_shouldUpdateSuccessfully() {
-        Long newCoverFileId = 400L;
-
-        competitionDomainService.updateCover(TEST_ID, newCoverFileId);
-
-        verify(competitionRepository).update(
-                argThat(
-                        competition -> competition.getId().equals(TEST_ID)
-                                && competition.getCoverFileId().equals(newCoverFileId)));
-    }
-
-    @Test
-    @DisplayName("更新封面：封面文件ID为null时应成功更新")
-    void updateCover_withNullCoverFileId_shouldUpdateSuccessfully() {
-        competitionDomainService.updateCover(TEST_ID, null);
-
-        verify(competitionRepository).update(
-                argThat(
-                        competition -> competition.getId().equals(TEST_ID)
-                                && competition.getCoverFileId() == null));
-    }
-
-    @Test
-    @DisplayName("更新封面：更新不同竞赛的封面应调用正确的ID")
-    void updateCover_differentCompetition_shouldUpdateCorrectId() {
-        Long differentCompetitionId = 999L;
-        Long coverFileId = 500L;
-
-        competitionDomainService.updateCover(differentCompetitionId, coverFileId);
-
-        verify(competitionRepository).update(
-                argThat(
-                        competition -> competition.getId().equals(differentCompetitionId)
-                                && competition.getCoverFileId().equals(coverFileId)));
-    }
 }

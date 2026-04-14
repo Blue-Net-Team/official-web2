@@ -24,6 +24,9 @@ public class CompetitionRequestDTO {
     @Schema(description = "Logo文件ID")
     private Long logoFileId;
 
+    @Schema(description = "封面文件ID")
+    private Long coverFileId;
+
     @Size(max = 500, message = "竞赛简介最多500个字符")
     @Schema(description = "竞赛简介")
     private String summary;

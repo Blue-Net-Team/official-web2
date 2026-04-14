@@ -57,24 +57,4 @@ public interface CompetitionService {
      *            排序更新请求DTO
      */
     void updateSortOrder(Long id, UpdateSortOrderRequestDTO request);
-
-    /**
-     * 更新竞赛Logo
-     *
-     * @param id
-     *            竞赛ID
-     * @param fileId
-     *            Logo文件ID（必须为 NORMAL_IMG 类型）
-     */
-    void updateLogo(Long id, Long fileId);
-
-    /**
-     * 更新竞赛封面
-     *
-     * @param id
-     *            竞赛ID
-     * @param fileId
-     *            封面文件ID（必须为 NORMAL_IMG 类型）
-     */
-    void updateCover(Long id, Long fileId);
 }

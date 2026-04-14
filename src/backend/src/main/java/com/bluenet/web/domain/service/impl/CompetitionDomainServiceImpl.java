@@ -20,12 +20,13 @@ public class CompetitionDomainServiceImpl implements CompetitionDomainService {
     }
 
     @Override
-    public Long createCompetition(String name, String shortName, Long logoFileId, String summary, String level,
-            String month, String organizer) {
+    public Long createCompetition(String name, String shortName, Long logoFileId, Long coverFileId, String summary,
+            String level, String month, String organizer) {
         Competition competition = new Competition();
         competition.setName(name);
         competition.setShortName(shortName);
         competition.setLogoFileId(logoFileId);
+        competition.setCoverFileId(coverFileId);
         competition.setSummary(summary);
         competition.setLevel(level != null ? level : "省级");
         competition.setMonth(month);
@@ -35,13 +36,14 @@ public class CompetitionDomainServiceImpl implements CompetitionDomainService {
     }
 
     @Override
-    public void updateCompetition(Long id, String name, String shortName, Long logoFileId, String summary,
-            String level, String month, String organizer) {
+    public void updateCompetition(Long id, String name, String shortName, Long logoFileId, Long coverFileId,
+            String summary, String level, String month, String organizer) {
         Competition competition = new Competition();
         competition.setId(id);
         competition.setName(name);
         competition.setShortName(shortName);
         competition.setLogoFileId(logoFileId);
+        competition.setCoverFileId(coverFileId);
         competition.setSummary(summary);
         competition.setLevel(level);
         competition.setMonth(month);
@@ -65,21 +67,5 @@ public class CompetitionDomainServiceImpl implements CompetitionDomainService {
     @Override
     public boolean existsById(Long id) {
         return competitionRepository.existsById(id);
-    }
-
-    @Override
-    public void updateLogo(Long id, Long logoFileId) {
-        Competition competition = new Competition();
-        competition.setId(id);
-        competition.setLogoFileId(logoFileId);
-        competitionRepository.update(competition);
-    }
-
-    @Override
-    public void updateCover(Long id, Long coverFileId) {
-        Competition competition = new Competition();
-        competition.setId(id);
-        competition.setCoverFileId(coverFileId);
-        competitionRepository.update(competition);
     }
 }

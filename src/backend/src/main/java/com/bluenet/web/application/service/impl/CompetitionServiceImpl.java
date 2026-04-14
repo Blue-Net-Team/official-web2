@@ -39,10 +39,13 @@ public class CompetitionServiceImpl implements CompetitionService {
         if (request.getName() == null || request.getName().isBlank()) {
             throw new IllegalArgumentException("竞赛名称不能为空");
         }
+        validateFileId(request.getLogoFileId(), "Logo");
+        validateFileId(request.getCoverFileId(), "封面");
         Long id = competitionDomainService.createCompetition(
                 request.getName(),
                 request.getShortName(),
                 request.getLogoFileId(),
+                request.getCoverFileId(),
                 request.getSummary(),
                 request.getLevel(),
                 request.getMonth(),
@@ -53,6 +56,7 @@ public class CompetitionServiceImpl implements CompetitionService {
                 .name(request.getName())
                 .shortName(request.getShortName())
                 .logoFileId(request.getLogoFileId())
+                .coverFileId(request.getCoverFileId())
                 .summary(request.getSummary())
                 .level(request.getLevel() != null ? request.getLevel() : "省级")
                 .month(request.getMonth())
@@ -68,11 +72,15 @@ public class CompetitionServiceImpl implements CompetitionService {
             throw new IllegalArgumentException("竞赛不存在");
         }
 
+        validateFileId(request.getLogoFileId(), "Logo");
+        validateFileId(request.getCoverFileId(), "封面");
+
         competitionDomainService.updateCompetition(
                 id,
                 request.getName(),
                 request.getShortName(),
                 request.getLogoFileId(),
+                request.getCoverFileId(),
                 request.getSummary(),
                 request.getLevel(),
                 request.getMonth(),
@@ -105,37 +113,16 @@ public class CompetitionServiceImpl implements CompetitionService {
         competitionDomainService.updateSortOrder(id, request.getSortOrder());
     }
 
-    @Override
-    @Transactional
-    public void updateLogo(Long id, Long fileId) {
-        if (!competitionDomainService.existsById(id)) {
-            throw new DataNotFound("竞赛不存在");
+    private void validateFileId(Long fileId, String fieldName) {
+        if (fileId == null) {
+            return;
         }
         FileVO fileVO = fileDomainService.getFileById(fileId);
         if (fileVO == null) {
-            throw new DataNotFound("文件不存在");
+            throw new DataNotFound(fieldName + "文件不存在");
         }
         if (fileVO.getType() != FileType.NORMAL_IMG) {
-            throw new BadRequest("文件类型不匹配，期望 NORMAL_IMG");
+            throw new BadRequest(fieldName + "文件类型不匹配，期望 NORMAL_IMG");
         }
-        competitionDomainService.updateLogo(id, fileId);
-        log.info("竞赛Logo更新成功 - competitionId={}, fileId={}", id, fileId);
-    }
-
-    @Override
-    @Transactional
-    public void updateCover(Long id, Long fileId) {
-        if (!competitionDomainService.existsById(id)) {
-            throw new DataNotFound("竞赛不存在");
-        }
-        FileVO fileVO = fileDomainService.getFileById(fileId);
-        if (fileVO == null) {
-            throw new DataNotFound("文件不存在");
-        }
-        if (fileVO.getType() != FileType.NORMAL_IMG) {
-            throw new BadRequest("文件类型不匹配，期望 NORMAL_IMG");
-        }
-        competitionDomainService.updateCover(id, fileId);
-        log.info("竞赛封面更新成功 - competitionId={}, fileId={}", id, fileId);
     }
 }
