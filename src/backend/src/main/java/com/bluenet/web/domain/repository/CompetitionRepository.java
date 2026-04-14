@@ -12,13 +12,13 @@ import java.util.List;
  */
 public interface CompetitionRepository {
     /**
-     * 查询启用的竞赛列表（按排序号升序）
+     * 查询竞赛列表（按排序号降序）
      *
      * @param limit
      *            限制返回数量，如果为0则返回全部
      * @return 竞赛简要信息列表
      */
-    List<CompetitionVO> findEnabledCompetitionsWithLimit(int limit);
+    List<CompetitionVO> findCompetitionsWithLimit(int limit);
 
     /**
      * 保存竞赛

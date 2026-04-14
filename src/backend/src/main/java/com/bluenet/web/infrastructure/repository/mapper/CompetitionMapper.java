@@ -10,5 +10,5 @@ import java.util.List;
 
 @Mapper
 public interface CompetitionMapper extends BaseMapper<Competition> {
-    List<CompetitionVO> selectEnabledCompetitionsWithLimit(@Param("limit") int limit);
+    List<CompetitionVO> selectCompetitionsWithLimit(@Param("limit") int limit);
 }

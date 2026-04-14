@@ -12,7 +12,7 @@ import java.util.List;
  */
 public interface CompetitionDomainService {
     /**
-     * 获取启用的竞赛列表
+     * 获取竞赛列表
      *
      * @param limit
      *            限制返回数量，如果为0则返回全部

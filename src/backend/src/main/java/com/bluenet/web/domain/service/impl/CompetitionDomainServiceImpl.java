@@ -16,7 +16,7 @@ public class CompetitionDomainServiceImpl implements CompetitionDomainService {
 
     @Override
     public List<CompetitionVO> getCompetitionList(int limit) {
-        return competitionRepository.findEnabledCompetitionsWithLimit(limit);
+        return competitionRepository.findCompetitionsWithLimit(limit);
     }
 
     @Override

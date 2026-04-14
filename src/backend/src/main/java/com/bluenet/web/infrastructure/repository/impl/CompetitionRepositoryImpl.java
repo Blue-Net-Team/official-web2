@@ -16,8 +16,8 @@ public class CompetitionRepositoryImpl implements CompetitionRepository {
     private final CompetitionMapper competitionMapper;
 
     @Override
-    public List<CompetitionVO> findEnabledCompetitionsWithLimit(int limit) {
-        return competitionMapper.selectEnabledCompetitionsWithLimit(limit);
+    public List<CompetitionVO> findCompetitionsWithLimit(int limit) {
+        return competitionMapper.selectCompetitionsWithLimit(limit);
     }
 
     @Override

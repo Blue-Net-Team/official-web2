@@ -81,8 +81,8 @@ class CompetitionControllerIntegrationTest extends BaseIntegrationTest {
     }
 
     @Test
-    @DisplayName("集成测试：获取竞赛列表应返回启用的竞赛")
-    void getCompetitionList_shouldReturnEnabledCompetitions() {
+    @DisplayName("集成测试：获取竞赛列表应返回竞赛列表")
+    void getCompetitionList_shouldReturnCompetitions() {
         ResponseEntity<ResponseMessage<List<CompetitionResponseDTO>>> response = restTemplate.exchange(
                 "/api/v1/competitions?limit=10",
                 HttpMethod.GET,

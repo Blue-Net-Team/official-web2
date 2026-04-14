@@ -41,13 +41,13 @@ class CompetitionDomainServiceImplTest {
     }
 
     @Test
-    @DisplayName("获取竞赛列表：应返回所有启用的竞赛")
+    @DisplayName("获取竞赛列表：应返回所有竞赛")
     void getCompetitionList_shouldReturnEnabledCompetitions() {
         int limit = 10;
         List<CompetitionVO> expectedList = new ArrayList<>();
         expectedList.add(createTestCompetitionBriefVO());
 
-        when(competitionRepository.findEnabledCompetitionsWithLimit(limit)).thenReturn(expectedList);
+        when(competitionRepository.findCompetitionsWithLimit(limit)).thenReturn(expectedList);
 
         List<CompetitionVO> result = competitionDomainService.getCompetitionList(limit);
 
@@ -55,7 +55,7 @@ class CompetitionDomainServiceImplTest {
         assertEquals(1, result.size());
         assertEquals(TEST_ID, result.get(0).getId());
         assertEquals(TEST_NAME, result.get(0).getName());
-        verify(competitionRepository).findEnabledCompetitionsWithLimit(limit);
+        verify(competitionRepository).findCompetitionsWithLimit(limit);
     }
 
     @Test
@@ -64,13 +64,13 @@ class CompetitionDomainServiceImplTest {
         int limit = 10;
         List<CompetitionVO> expectedList = new ArrayList<>();
 
-        when(competitionRepository.findEnabledCompetitionsWithLimit(limit)).thenReturn(expectedList);
+        when(competitionRepository.findCompetitionsWithLimit(limit)).thenReturn(expectedList);
 
         List<CompetitionVO> result = competitionDomainService.getCompetitionList(limit);
 
         assertNotNull(result);
         assertTrue(result.isEmpty());
-        verify(competitionRepository).findEnabledCompetitionsWithLimit(limit);
+        verify(competitionRepository).findCompetitionsWithLimit(limit);
     }
 
     @Test
@@ -80,13 +80,13 @@ class CompetitionDomainServiceImplTest {
         List<CompetitionVO> expectedList = new ArrayList<>();
         expectedList.add(createTestCompetitionBriefVO());
 
-        when(competitionRepository.findEnabledCompetitionsWithLimit(limit)).thenReturn(expectedList);
+        when(competitionRepository.findCompetitionsWithLimit(limit)).thenReturn(expectedList);
 
         List<CompetitionVO> result = competitionDomainService.getCompetitionList(limit);
 
         assertNotNull(result);
         assertEquals(1, result.size());
-        verify(competitionRepository).findEnabledCompetitionsWithLimit(limit);
+        verify(competitionRepository).findCompetitionsWithLimit(limit);
     }
 
     @Test

@@ -30,7 +30,7 @@
         <result column="sort_order" property="sortOrder"/>
     </resultMap>
 
-    <select id="selectEnabledCompetitionsWithLimit" resultMap="CompetitionVOResultMap">
+    <select id="selectCompetitionsWithLimit" resultMap="CompetitionVOResultMap">
         SELECT
             c.id,
             c.name,
