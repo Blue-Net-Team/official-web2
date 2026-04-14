@@ -20,6 +20,12 @@ public class CompetitionDomainServiceImpl implements CompetitionDomainService {
     }
 
     @Override
+    public org.springframework.data.domain.Page<CompetitionVO> getCompetitionPage(
+            org.springframework.data.domain.Pageable pageable) {
+        return competitionRepository.findCompetitionsPage(pageable);
+    }
+
+    @Override
     public Long createCompetition(String name, String shortName, Long logoFileId, Long coverFileId, String summary,
             String level, String month, String organizer) {
         Competition competition = new Competition();

@@ -14,12 +14,16 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import com.bluenet.web.api.dto.PageDTO;
 import com.bluenet.web.api.dto.competition.*;
 import com.bluenet.web.application.converter.CompetitionConverter;
 import com.bluenet.web.domain.exception.GlobalException;
 import com.bluenet.web.domain.model.vo.CompetitionVO;
 import com.bluenet.web.domain.service.CompetitionDomainService;
 import com.bluenet.web.domain.service.FileDomainService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 
 @DisplayName("CompetitionServiceImpl 单元测试")
 @ExtendWith(MockitoExtension.class)
@@ -328,6 +332,77 @@ class CompetitionServiceImplTest {
                 IllegalArgumentException.class,
                 () -> competitionService.updateSortOrder(TEST_ID, request));
         assertEquals("竞赛不存在", exception.getMessage());
+    }
+
+    // ==================== getCompetitionPage ====================
+
+    @Test
+    @DisplayName("分页查询：默认参数时应返回分页数据")
+    void getCompetitionPage_defaultParams_shouldReturnPagedData() {
+        List<CompetitionVO> voList = new ArrayList<>();
+        voList.add(createTestCompetitionBriefVO());
+        Page<CompetitionVO> voPage = new PageImpl<>(voList, PageRequest.of(0, 10), 1);
+
+        List<CompetitionResponseDTO> dtoList = new ArrayList<>();
+        dtoList.add(
+                CompetitionResponseDTO.builder().id(TEST_ID).name(TEST_NAME).summary(TEST_SUMMARY).build());
+        Page<CompetitionResponseDTO> dtoPage = new PageImpl<>(dtoList, PageRequest.of(0, 10), 1);
+
+        when(competitionDomainService.getCompetitionPage(PageRequest.of(0, 10))).thenReturn(voPage);
+        when(competitionConverter.convertToDTOPage(voPage)).thenReturn(dtoPage);
+
+        PageDTO<CompetitionResponseDTO> result = competitionService.getCompetitionPage(null, null);
+
+        assertNotNull(result);
+        assertEquals(1, result.getTotalElements());
+        assertEquals(1, result.getContent().size());
+        verify(competitionDomainService).getCompetitionPage(PageRequest.of(0, 10));
+    }
+
+    @Test
+    @DisplayName("分页查询：自定义参数应正确透传")
+    void getCompetitionPage_customParams_shouldPassCorrectly() {
+        Page<CompetitionVO> voPage = new PageImpl<>(new ArrayList<>(), PageRequest.of(1, 5), 10);
+        Page<CompetitionResponseDTO> dtoPage = new PageImpl<>(new ArrayList<>(), PageRequest.of(1, 5), 10);
+
+        when(competitionDomainService.getCompetitionPage(PageRequest.of(1, 5))).thenReturn(voPage);
+        when(competitionConverter.convertToDTOPage(voPage)).thenReturn(dtoPage);
+
+        PageDTO<CompetitionResponseDTO> result = competitionService.getCompetitionPage(1, 5);
+
+        assertNotNull(result);
+        assertEquals(10, result.getTotalElements());
+        verify(competitionDomainService).getCompetitionPage(PageRequest.of(1, 5));
+    }
+
+    @Test
+    @DisplayName("分页查询：size超过50应clamp为50")
+    void getCompetitionPage_sizeOverMax_shouldClampTo50() {
+        Page<CompetitionVO> voPage = new PageImpl<>(new ArrayList<>(), PageRequest.of(0, 50), 0);
+        Page<CompetitionResponseDTO> dtoPage = new PageImpl<>(new ArrayList<>(), PageRequest.of(0, 50), 0);
+
+        when(competitionDomainService.getCompetitionPage(PageRequest.of(0, 50))).thenReturn(voPage);
+        when(competitionConverter.convertToDTOPage(voPage)).thenReturn(dtoPage);
+
+        competitionService.getCompetitionPage(0, 100);
+
+        verify(competitionDomainService).getCompetitionPage(PageRequest.of(0, 50));
+    }
+
+    @Test
+    @DisplayName("分页查询：空数据应返回空PageDTO")
+    void getCompetitionPage_emptyData_shouldReturnEmptyPageDTO() {
+        Page<CompetitionVO> voPage = new PageImpl<>(new ArrayList<>(), PageRequest.of(0, 10), 0);
+        Page<CompetitionResponseDTO> dtoPage = new PageImpl<>(new ArrayList<>(), PageRequest.of(0, 10), 0);
+
+        when(competitionDomainService.getCompetitionPage(PageRequest.of(0, 10))).thenReturn(voPage);
+        when(competitionConverter.convertToDTOPage(voPage)).thenReturn(dtoPage);
+
+        PageDTO<CompetitionResponseDTO> result = competitionService.getCompetitionPage(0, 10);
+
+        assertNotNull(result);
+        assertTrue(result.getContent().isEmpty());
+        assertEquals(0, result.getTotalElements());
     }
 
 }

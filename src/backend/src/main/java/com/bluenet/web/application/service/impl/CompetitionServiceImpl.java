@@ -1,5 +1,6 @@
 package com.bluenet.web.application.service.impl;
 
+import com.bluenet.web.api.dto.PageDTO;
 import com.bluenet.web.api.dto.competition.*;
 import com.bluenet.web.application.converter.CompetitionConverter;
 import com.bluenet.web.application.service.CompetitionService;
@@ -13,6 +14,8 @@ import com.bluenet.web.domain.service.CompetitionDomainService;
 import com.bluenet.web.domain.service.FileDomainService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,6 +34,17 @@ public class CompetitionServiceImpl implements CompetitionService {
         int validLimit = Math.min(Math.max(limit, 1), 50);
         List<CompetitionVO> voList = competitionDomainService.getCompetitionList(validLimit);
         return competitionConverter.convertToResponseDTOList(voList);
+    }
+
+    @Override
+    public PageDTO<CompetitionResponseDTO> getCompetitionPage(Integer page, Integer size) {
+        int pageNum = page != null ? page : 0;
+        int pageSize = size != null ? size : 10;
+        pageSize = Math.min(Math.max(pageSize, 1), 50);
+
+        Page<CompetitionVO> voPage = competitionDomainService.getCompetitionPage(PageRequest.of(pageNum, pageSize));
+        Page<CompetitionResponseDTO> dtoPage = competitionConverter.convertToDTOPage(voPage);
+        return PageDTO.from(dtoPage);
     }
 
     @Override

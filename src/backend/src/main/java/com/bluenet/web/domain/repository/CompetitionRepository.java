@@ -1,6 +1,8 @@
 package com.bluenet.web.domain.repository;
 
 import com.bluenet.web.domain.model.vo.CompetitionVO;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
@@ -19,6 +21,15 @@ public interface CompetitionRepository {
      * @return 竞赛简要信息列表
      */
     List<CompetitionVO> findCompetitionsWithLimit(int limit);
+
+    /**
+     * 分页查询竞赛列表
+     *
+     * @param pageable
+     *            分页参数
+     * @return 竞赛分页数据
+     */
+    Page<CompetitionVO> findCompetitionsPage(Pageable pageable);
 
     /**
      * 保存竞赛

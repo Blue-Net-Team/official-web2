@@ -48,4 +48,22 @@
         ORDER BY c.sort_order DESC, c.created_at DESC
         LIMIT #{limit}
     </select>
+
+    <select id="selectCompetitionsPage" resultMap="CompetitionVOResultMap">
+        SELECT
+            c.id,
+            c.name,
+            c.short_name,
+            f.url AS logo_url,
+            c.logo_file_id,
+            c.cover_file_id,
+            c.summary,
+            c.level,
+            c.month,
+            c.organizer,
+            c.sort_order
+        FROM tb_competition c
+        LEFT JOIN tb_file f ON c.logo_file_id = f.id
+        ORDER BY c.sort_order DESC, c.created_at DESC
+    </select>
 </mapper>

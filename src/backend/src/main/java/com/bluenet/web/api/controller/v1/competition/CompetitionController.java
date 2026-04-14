@@ -1,5 +1,6 @@
 package com.bluenet.web.api.controller.v1.competition;
 
+import com.bluenet.web.api.dto.PageDTO;
 import com.bluenet.web.api.dto.ResponseMessage;
 import com.bluenet.web.api.dto.competition.CompetitionResponseDTO;
 import com.bluenet.web.api.dto.competition.ResponseMessageCompetitionList;
@@ -34,5 +35,15 @@ public class CompetitionController {
             @Parameter(description = "返回数量限制，默认10，最大50", example = "10") @RequestParam(defaultValue = "10") int limit) {
         List<CompetitionResponseDTO> competitions = competitionService.getCompetitionResponseList(limit);
         return ResponseMessage.success(competitions);
+    }
+
+    @Operation(summary = "分页获取竞赛列表", description = "分页查询竞赛列表，按排序权重降序排列")
+    @RequiresPermission(name = "分页获取竞赛列表", value = "competition:page", access = AccessLevel.PUBLIC)
+    @GetMapping("/page")
+    public ResponseMessage<PageDTO<CompetitionResponseDTO>> getCompetitionPage(
+            @Parameter(description = "页码，从0开始，默认0", example = "0") @RequestParam(required = false) Integer page,
+            @Parameter(description = "每页数量，默认10，最大50", example = "10") @RequestParam(required = false) Integer size) {
+        PageDTO<CompetitionResponseDTO> result = competitionService.getCompetitionPage(page, size);
+        return ResponseMessage.success(result);
     }
 }

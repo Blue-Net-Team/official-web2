@@ -2,6 +2,7 @@ package com.bluenet.web.application.converter;
 
 import com.bluenet.web.api.dto.competition.CompetitionResponseDTO;
 import com.bluenet.web.domain.model.vo.CompetitionVO;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -31,5 +32,9 @@ public class CompetitionConverter {
 
     public List<CompetitionResponseDTO> convertToResponseDTOList(List<CompetitionVO> voList) {
         return voList.stream().map(this::convertToResponseDTO).collect(Collectors.toList());
+    }
+
+    public Page<CompetitionResponseDTO> convertToDTOPage(Page<CompetitionVO> voPage) {
+        return voPage.map(this::convertToResponseDTO);
     }
 }

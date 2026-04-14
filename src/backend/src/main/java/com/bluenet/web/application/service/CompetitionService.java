@@ -1,5 +1,6 @@
 package com.bluenet.web.application.service;
 
+import com.bluenet.web.api.dto.PageDTO;
 import com.bluenet.web.api.dto.competition.*;
 
 import java.util.List;
@@ -19,6 +20,17 @@ public interface CompetitionService {
      * @return 竞赛响应DTO列表
      */
     List<CompetitionResponseDTO> getCompetitionResponseList(int limit);
+
+    /**
+     * 分页查询竞赛列表
+     *
+     * @param page
+     *            页码（从0开始），为null时默认0
+     * @param size
+     *            每页数量，为null时默认10，最大50
+     * @return 分页竞赛响应DTO
+     */
+    PageDTO<CompetitionResponseDTO> getCompetitionPage(Integer page, Integer size);
 
     /**
      * 创建竞赛

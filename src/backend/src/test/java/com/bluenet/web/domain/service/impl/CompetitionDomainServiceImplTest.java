@@ -15,6 +15,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.bluenet.web.domain.model.vo.CompetitionVO;
 import com.bluenet.web.domain.repository.CompetitionRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 @DisplayName("CompetitionDomainServiceImpl 单元测试")
 @ExtendWith(MockitoExtension.class)
@@ -233,6 +237,59 @@ class CompetitionDomainServiceImplTest {
 
         assertFalse(result);
         verify(competitionRepository).existsById(TEST_ID);
+    }
+
+    @Test
+    @DisplayName("分页查询：应返回分页数据")
+    void getCompetitionPage_shouldReturnPagedData() {
+        Pageable pageable = PageRequest.of(0, 10);
+        List<CompetitionVO> competitions = new ArrayList<>();
+        competitions.add(createTestCompetitionBriefVO());
+        Page<CompetitionVO> expectedPage = new PageImpl<>(competitions, pageable, 1);
+
+        when(competitionRepository.findCompetitionsPage(pageable)).thenReturn(expectedPage);
+
+        Page<CompetitionVO> result = competitionDomainService.getCompetitionPage(pageable);
+
+        assertNotNull(result);
+        assertEquals(1, result.getTotalElements());
+        assertEquals(1, result.getContent().size());
+        assertEquals(TEST_NAME, result.getContent().get(0).getName());
+        verify(competitionRepository).findCompetitionsPage(pageable);
+    }
+
+    @Test
+    @DisplayName("分页查询：自定义分页参数")
+    void getCompetitionPage_withCustomPageable_shouldReturnCorrectPage() {
+        Pageable pageable = PageRequest.of(2, 5);
+        List<CompetitionVO> competitions = new ArrayList<>();
+        Page<CompetitionVO> expectedPage = new PageImpl<>(competitions, pageable, 15);
+
+        when(competitionRepository.findCompetitionsPage(pageable)).thenReturn(expectedPage);
+
+        Page<CompetitionVO> result = competitionDomainService.getCompetitionPage(pageable);
+
+        assertNotNull(result);
+        assertEquals(2, result.getNumber());
+        assertEquals(5, result.getSize());
+        assertEquals(15, result.getTotalElements());
+        verify(competitionRepository).findCompetitionsPage(pageable);
+    }
+
+    @Test
+    @DisplayName("分页查询：无数据时应返回空页")
+    void getCompetitionPage_noData_shouldReturnEmptyPage() {
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<CompetitionVO> expectedPage = new PageImpl<>(new ArrayList<>(), pageable, 0);
+
+        when(competitionRepository.findCompetitionsPage(pageable)).thenReturn(expectedPage);
+
+        Page<CompetitionVO> result = competitionDomainService.getCompetitionPage(pageable);
+
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+        assertEquals(0, result.getTotalElements());
+        verify(competitionRepository).findCompetitionsPage(pageable);
     }
 
 }

@@ -19,6 +19,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import com.bluenet.web.BaseIntegrationTest;
+import com.bluenet.web.api.dto.PageDTO;
 import com.bluenet.web.api.dto.ResponseMessage;
 import com.bluenet.web.api.dto.competition.CompetitionResponseDTO;
 import com.bluenet.web.domain.model.entity.Competition;
@@ -27,6 +28,8 @@ import com.bluenet.web.domain.model.enumerate.FileType;
 import com.bluenet.web.infrastructure.repository.mapper.CompetitionMapper;
 import com.bluenet.web.infrastructure.repository.mapper.FileMapper;
 import com.bluenet.web.testcontainers.TestcontainersConfiguration;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @DisplayName("CompetitionController 集成测试")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -43,6 +46,9 @@ class CompetitionControllerIntegrationTest extends BaseIntegrationTest {
 
     @Autowired
     private FileMapper fileMapper;
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     private static final Long TEST_FILE_ID = 1L;
     private static final String TEST_FILE_URL = "http://example.com/logo.png";
@@ -180,5 +186,102 @@ class CompetitionControllerIntegrationTest extends BaseIntegrationTest {
         assertNotNull(firstCompetition.getId());
         assertEquals(TEST_NAME, firstCompetition.getName());
         assertEquals(TEST_SUMMARY, firstCompetition.getSummary());
+    }
+
+    // ==================== GET /api/v1/competitions/page ====================
+
+    @Test
+    @DisplayName("集成测试：分页接口默认参数应返回分页数据")
+    void getCompetitionPage_defaultParams_shouldReturnPagedData() throws Exception {
+        ResponseEntity<String> response = restTemplate.exchange(
+                "/api/v1/competitions/page",
+                HttpMethod.GET,
+                null,
+                String.class);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        ResponseMessage<PageDTO<CompetitionResponseDTO>> result = objectMapper.readValue(
+                response.getBody(),
+                new TypeReference<ResponseMessage<PageDTO<CompetitionResponseDTO>>>() {
+                });
+        assertEquals(200, result.getCode());
+
+        PageDTO<CompetitionResponseDTO> page = result.getData();
+        assertNotNull(page);
+        assertEquals(0, page.getNumber());
+        assertEquals(10, page.getSize());
+        assertTrue(page.getContent().size() >= 2);
+    }
+
+    @Test
+    @DisplayName("集成测试：分页接口自定义参数应限制返回数量")
+    void getCompetitionPage_withSize_shouldLimitResults() throws Exception {
+        ResponseEntity<String> response = restTemplate.exchange(
+                "/api/v1/competitions/page?page=0&size=1",
+                HttpMethod.GET,
+                null,
+                String.class);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        ResponseMessage<PageDTO<CompetitionResponseDTO>> result = objectMapper.readValue(
+                response.getBody(),
+                new TypeReference<ResponseMessage<PageDTO<CompetitionResponseDTO>>>() {
+                });
+
+        PageDTO<CompetitionResponseDTO> page = result.getData();
+        assertNotNull(page);
+        assertEquals(1, page.getContent().size());
+    }
+
+    @Test
+    @DisplayName("集成测试：分页接口应按排序权重降序排列")
+    void getCompetitionPage_shouldOrderBySortOrderDesc() throws Exception {
+        ResponseEntity<String> response = restTemplate.exchange(
+                "/api/v1/competitions/page?page=0&size=10",
+                HttpMethod.GET,
+                null,
+                String.class);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        ResponseMessage<PageDTO<CompetitionResponseDTO>> result = objectMapper.readValue(
+                response.getBody(),
+                new TypeReference<ResponseMessage<PageDTO<CompetitionResponseDTO>>>() {
+                });
+
+        PageDTO<CompetitionResponseDTO> page = result.getData();
+        assertNotNull(page);
+        assertTrue(page.getContent().size() >= 2);
+
+        CompetitionResponseDTO first = page.getContent().get(0);
+        assertEquals(TEST_NAME, first.getName());
+    }
+
+    @Test
+    @DisplayName("集成测试：分页接口返回的竞赛应包含完整字段")
+    void getCompetitionPage_shouldContainRequiredFields() throws Exception {
+        ResponseEntity<String> response = restTemplate.exchange(
+                "/api/v1/competitions/page?page=0&size=10",
+                HttpMethod.GET,
+                null,
+                String.class);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        ResponseMessage<PageDTO<CompetitionResponseDTO>> result = objectMapper.readValue(
+                response.getBody(),
+                new TypeReference<ResponseMessage<PageDTO<CompetitionResponseDTO>>>() {
+                });
+
+        CompetitionResponseDTO competition = result.getData()
+                .getContent()
+                .stream()
+                .filter(c -> TEST_NAME.equals(c.getName()))
+                .findFirst()
+                .orElse(null);
+
+        assertNotNull(competition);
+        assertNotNull(competition.getId());
+        assertEquals(TEST_NAME, competition.getName());
+        assertEquals(TEST_SHORT_NAME, competition.getShortName());
+        assertEquals(TEST_SUMMARY, competition.getSummary());
     }
 }
