@@ -5,7 +5,8 @@ import type {
   PageDTO,
   CompetitionResponseDTO,
   CompetitionRequestDTO,
-  UpdateSortOrderRequestDTO,
+  BatchSortRequestDTO,
+  MoveCompetitionRequestDTO,
 } from '../schema/type'
 
 export const adminCompetitionService = {
@@ -61,15 +62,24 @@ export const adminCompetitionService = {
   },
 
   /**
-   * 调整竞赛排序权重
-   * PUT /admin/competitions/{id}/sort
+   * 批量调整竞赛排序
+   * PUT /admin/competitions/sort
    */
-  async updateSortOrder(
+  async batchUpdateSortOrder(data: BatchSortRequestDTO): Promise<ResponseMessage<void>> {
+    const response = await apiClient.put<ResponseMessage<void>>('/admin/competitions/sort', data)
+    return response.data
+  },
+
+  /**
+   * 移动竞赛排序（上移/下移一位）
+   * PUT /admin/competitions/{id}/move
+   */
+  async moveCompetition(
     id: number,
-    data: UpdateSortOrderRequestDTO
+    data: MoveCompetitionRequestDTO
   ): Promise<ResponseMessage<void>> {
     const response = await apiClient.put<ResponseMessage<void>>(
-      `/admin/competitions/${id}/sort`,
+      `/admin/competitions/${id}/move`,
       data
     )
     return response.data

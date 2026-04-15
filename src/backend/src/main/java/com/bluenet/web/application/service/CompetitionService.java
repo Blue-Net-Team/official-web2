@@ -69,4 +69,22 @@ public interface CompetitionService {
      *            排序更新请求DTO
      */
     void updateSortOrder(Long id, UpdateSortOrderRequestDTO request);
+
+    /**
+     * 批量更新竞赛排序号
+     *
+     * @param request
+     *            批量排序请求DTO
+     */
+    void batchUpdateSortOrder(BatchSortRequestDTO request);
+
+    /**
+     * 移动竞赛排序（上移或下移一位）
+     *
+     * @param id
+     *            竞赛ID
+     * @param request
+     *            移动请求DTO
+     */
+    void moveCompetition(Long id, MoveCompetitionRequestDTO request);
 }

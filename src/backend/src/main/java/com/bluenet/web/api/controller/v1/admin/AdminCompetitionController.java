@@ -75,20 +75,41 @@ public class AdminCompetitionController {
         }
     }
 
-    @Operation(summary = "调整竞赛排序", description = "调整竞赛的排序权重")
+    @Operation(summary = "批量调整竞赛排序", description = "批量更新竞赛的排序号，数值越小越靠前")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "调整成功", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseMessage.class))),
             @ApiResponse(responseCode = "404", description = "竞赛不存在", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseMessage.class))) })
     @RequiresPermission(name = "调整竞赛排序", value = "competition:sort", access = AccessLevel.PROTECTED)
-    @PutMapping("/{id}/sort")
-    public ResponseMessage<Void> updateSortOrder(
-            @Parameter(description = "竞赛ID", required = true) @PathVariable Long id,
-            @Valid @RequestBody UpdateSortOrderRequestDTO request) {
+    @PutMapping("/sort")
+    public ResponseMessage<Void> batchUpdateSortOrder(
+            @Valid @RequestBody BatchSortRequestDTO request) {
         try {
-            competitionService.updateSortOrder(id, request);
+            competitionService.batchUpdateSortOrder(request);
             return ResponseMessage.success(null);
         } catch (IllegalArgumentException e) {
             return ResponseMessage.error(404, e.getMessage());
+        }
+    }
+
+    @Operation(summary = "移动竞赛排序", description = "将竞赛上移或下移一位，与相邻竞赛交换排序号")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "移动成功", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseMessage.class))),
+            @ApiResponse(responseCode = "400", description = "已在最前/最后或参数错误", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseMessage.class))),
+            @ApiResponse(responseCode = "404", description = "竞赛不存在", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseMessage.class))) })
+    @RequiresPermission(name = "调整竞赛排序", value = "competition:sort", access = AccessLevel.PROTECTED)
+    @PutMapping("/{id}/move")
+    public ResponseMessage<Void> moveCompetition(
+            @Parameter(description = "竞赛ID", required = true) @PathVariable Long id,
+            @Valid @RequestBody MoveCompetitionRequestDTO request) {
+        try {
+            competitionService.moveCompetition(id, request);
+            return ResponseMessage.success(null);
+        } catch (IllegalArgumentException e) {
+            String msg = e.getMessage();
+            if ("竞赛不存在".equals(msg)) {
+                return ResponseMessage.error(404, msg);
+            }
+            return ResponseMessage.error(400, msg);
         }
     }
 

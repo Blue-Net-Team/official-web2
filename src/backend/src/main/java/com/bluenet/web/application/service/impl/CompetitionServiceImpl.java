@@ -11,6 +11,7 @@ import com.bluenet.web.domain.model.enumerate.AwardLevel;
 import com.bluenet.web.domain.model.enumerate.FileType;
 import com.bluenet.web.domain.model.vo.CompetitionVO;
 import com.bluenet.web.domain.model.vo.FileVO;
+import com.bluenet.web.domain.repository.CompetitionRepository;
 import com.bluenet.web.domain.service.CompetitionDomainService;
 import com.bluenet.web.domain.service.FileDomainService;
 import lombok.RequiredArgsConstructor;
@@ -126,6 +127,26 @@ public class CompetitionServiceImpl implements CompetitionService {
             throw new IllegalArgumentException("竞赛不存在");
         }
         competitionDomainService.updateSortOrder(id, request.getSortOrder());
+    }
+
+    @Override
+    @Transactional
+    public void batchUpdateSortOrder(BatchSortRequestDTO request) {
+        List<CompetitionRepository.SortItem> sortItems = request.getItems()
+                .stream()
+                .map(item -> new CompetitionRepository.SortItem(item.getId(), item.getSortOrder()))
+                .toList();
+        competitionDomainService.batchUpdateSortOrder(sortItems);
+    }
+
+    @Override
+    @Transactional
+    public void moveCompetition(Long id, MoveCompetitionRequestDTO request) {
+        String direction = request.getDirection().toUpperCase();
+        if (!"UP".equals(direction) && !"DOWN".equals(direction)) {
+            throw new IllegalArgumentException("移动方向必须是 UP 或 DOWN");
+        }
+        competitionDomainService.moveCompetition(id, direction);
     }
 
     private AwardLevel parseLevel(String level) {

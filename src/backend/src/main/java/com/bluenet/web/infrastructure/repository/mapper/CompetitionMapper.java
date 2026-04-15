@@ -15,4 +15,12 @@ public interface CompetitionMapper extends BaseMapper<Competition> {
     List<CompetitionVO> selectCompetitionsWithLimit(@Param("limit") int limit);
 
     IPage<CompetitionVO> selectCompetitionsPage(Page<CompetitionVO> page);
+
+    Integer selectMaxSortOrder();
+
+    void updateSortOrderById(@Param("id") Long id, @Param("sortOrder") Integer sortOrder);
+
+    Competition selectAdjacentUp(@Param("sortOrder") Integer sortOrder);
+
+    Competition selectAdjacentDown(@Param("sortOrder") Integer sortOrder);
 }

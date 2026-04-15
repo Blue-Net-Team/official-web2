@@ -142,7 +142,7 @@ export interface CompetitionResponseDTO {
   organizer?: string
   /** 封面图片文件ID */
   coverFileId: number | null
-  /** 排序权重，值越大越靠前 */
+  /** 排序号，数值越小越靠前 */
   sortOrder?: number
 }
 
@@ -162,11 +162,24 @@ export interface CompetitionRequestDTO {
 }
 
 /**
- * 竞赛排序权重更新请求
- * 对应后端 UpdateSortOrderRequestDTO.java
+ * 批量排序请求
+ * 对应后端 BatchSortRequestDTO.java
  */
-export interface UpdateSortOrderRequestDTO {
+export interface BatchSortRequestDTO {
+  items: BatchSortItemDTO[]
+}
+
+export interface BatchSortItemDTO {
+  id: number
   sortOrder: number
+}
+
+/**
+ * 移动竞赛排序请求
+ * 对应后端 MoveCompetitionRequestDTO.java
+ */
+export interface MoveCompetitionRequestDTO {
+  direction: 'UP' | 'DOWN'
 }
 
 /**

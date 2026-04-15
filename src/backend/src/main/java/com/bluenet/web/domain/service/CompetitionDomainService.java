@@ -2,6 +2,7 @@ package com.bluenet.web.domain.service;
 
 import com.bluenet.web.domain.model.enumerate.AwardLevel;
 import com.bluenet.web.domain.model.vo.CompetitionVO;
+import com.bluenet.web.domain.repository.CompetitionRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -98,6 +99,26 @@ public interface CompetitionDomainService {
      *            排序号（数值越小越靠前）
      */
     void updateSortOrder(Long id, Integer sortOrder);
+
+    /**
+     * 批量更新竞赛排序号
+     *
+     * @param sortItems
+     *            竞赛ID与新排序号的列表
+     */
+    void batchUpdateSortOrder(List<CompetitionRepository.SortItem> sortItems);
+
+    /**
+     * 移动竞赛排序（上移或下移一位）
+     *
+     * @param id
+     *            竞赛ID
+     * @param direction
+     *            移动方向：UP 或 DOWN
+     * @throws IllegalArgumentException
+     *             竞赛不存在或已在最前/最后
+     */
+    void moveCompetition(Long id, String direction);
 
     /**
      * 检查竞赛是否存在

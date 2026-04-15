@@ -50,4 +50,28 @@ public class CompetitionRepositoryImpl implements CompetitionRepository {
     public boolean existsById(Long id) {
         return competitionMapper.selectById(id) != null;
     }
+
+    @Override
+    public Integer findMaxSortOrder() {
+        return competitionMapper.selectMaxSortOrder();
+    }
+
+    @Override
+    public void batchUpdateSortOrder(List<com.bluenet.web.domain.repository.CompetitionRepository.SortItem> sortItems) {
+        sortItems.forEach(item -> competitionMapper.updateSortOrderById(item.id(), item.sortOrder()));
+    }
+
+    @Override
+    public com.bluenet.web.domain.model.entity.Competition findById(Long id) {
+        return competitionMapper.selectById(id);
+    }
+
+    @Override
+    public com.bluenet.web.domain.model.entity.Competition findAdjacent(Integer sortOrder, String direction) {
+        if ("UP".equals(direction)) {
+            return competitionMapper.selectAdjacentUp(sortOrder);
+        } else {
+            return competitionMapper.selectAdjacentDown(sortOrder);
+        }
+    }
 }

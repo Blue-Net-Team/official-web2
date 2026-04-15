@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { App, Button, Grid, Modal, Pagination, Spin, Table, Tag } from 'antd'
-import { PlusOutlined, HolderOutlined } from '@ant-design/icons'
+import { PlusOutlined, HolderOutlined, UpOutlined, DownOutlined } from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
 import { DndContext, PointerSensor, useSensor, useSensors, closestCenter } from '@dnd-kit/core'
 import type { DragEndEvent } from '@dnd-kit/core'
@@ -130,7 +130,7 @@ export default function CompetitionManagementPage() {
     fetchList()
   }
 
-  // Drag end handler
+  // Drag end handler - batch update current page sort orders
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event
     if (!over || active.id === over.id) return
@@ -143,14 +143,15 @@ export default function CompetitionManagementPage() {
     const newList = arrayMove(list, oldIndex, newIndex)
     setList(newList)
 
-    // Calculate new sortOrder for the moved item
-    const movedItem = list[oldIndex]
-    const newSortOrder = list[newIndex].sortOrder ?? (list.length - newIndex) * 10
+    // Recalculate sortOrder for all items on current page
+    const baseSortOrder = (page - 1) * PAGE_SIZE
+    const sortItems = newList.map((item, index) => ({
+      id: item.id,
+      sortOrder: baseSortOrder + index + 1,
+    }))
 
     try {
-      await adminCompetitionService.updateSortOrder(movedItem.id, {
-        sortOrder: newSortOrder,
-      })
+      await adminCompetitionService.batchUpdateSortOrder({ items: sortItems })
     } catch {
       // Revert on failure
       setList(list)
@@ -158,8 +159,24 @@ export default function CompetitionManagementPage() {
     }
   }
 
+  // Move up/down handler
+  const handleMove = async (id: number, direction: 'UP' | 'DOWN') => {
+    try {
+      await adminCompetitionService.moveCompetition(id, { direction })
+      fetchList()
+    } catch {
+      messageApi.error(direction === 'UP' ? '上移失败' : '下移失败')
+    }
+  }
+
   // Table columns
   const columns: ColumnsType<CompetitionResponseDTO> = useMemo(() => {
+    const isFirst = (index: number) => page === 1 && index === 0
+    const isLast = (index: number) => {
+      const totalPages = Math.ceil(totalElements / PAGE_SIZE)
+      return page >= totalPages && index === list.length - 1
+    }
+
     const cols: ColumnsType<CompetitionResponseDTO> = [
       {
         title: '',
@@ -221,8 +238,39 @@ export default function CompetitionManagementPage() {
       })
     }
 
+    // Move up/down buttons column
+    cols.push({
+      title: '',
+      key: 'move',
+      width: 60,
+      render: (_: unknown, __: CompetitionResponseDTO, index: number) => (
+        <div className="flex gap-1">
+          <Button
+            type="text"
+            size="small"
+            icon={<UpOutlined />}
+            disabled={isFirst(index)}
+            onClick={(e) => {
+              e.stopPropagation()
+              handleMove(list[index].id, 'UP')
+            }}
+          />
+          <Button
+            type="text"
+            size="small"
+            icon={<DownOutlined />}
+            disabled={isLast(index)}
+            onClick={(e) => {
+              e.stopPropagation()
+              handleMove(list[index].id, 'DOWN')
+            }}
+          />
+        </div>
+      ),
+    })
+
     return cols
-  }, [isMobile])
+  }, [isMobile, page, totalElements, list])
 
   return (
     <div className="flex flex-col gap-4">

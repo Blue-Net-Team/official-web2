@@ -38,7 +38,8 @@ public class CompetitionDomainServiceImpl implements CompetitionDomainService {
         competition.setLevel(level != null ? level : AwardLevel.PROVINCIAL);
         competition.setMonth(month);
         competition.setOrganizer(organizer);
-        competition.setSortOrder(0);
+        Integer maxSortOrder = competitionRepository.findMaxSortOrder();
+        competition.setSortOrder(maxSortOrder != null ? maxSortOrder + 1 : 1);
         return competitionRepository.save(competition);
     }
 
@@ -69,6 +70,44 @@ public class CompetitionDomainServiceImpl implements CompetitionDomainService {
         competition.setId(id);
         competition.setSortOrder(sortOrder);
         competitionRepository.update(competition);
+    }
+
+    @Override
+    public void batchUpdateSortOrder(List<com.bluenet.web.domain.repository.CompetitionRepository.SortItem> sortItems) {
+        sortItems.forEach(item -> {
+            if (!competitionRepository.existsById(item.id())) {
+                throw new IllegalArgumentException("竞赛不存在: " + item.id());
+            }
+        });
+        competitionRepository.batchUpdateSortOrder(sortItems);
+    }
+
+    @Override
+    public void moveCompetition(Long id, String direction) {
+        Competition competition = competitionRepository.findById(id);
+        if (competition == null) {
+            throw new IllegalArgumentException("竞赛不存在");
+        }
+        Integer currentSortOrder = competition.getSortOrder();
+        if (currentSortOrder == null) {
+            throw new IllegalArgumentException("竞赛排序号缺失");
+        }
+
+        Competition adjacent = competitionRepository.findAdjacent(currentSortOrder, direction);
+        if (adjacent == null) {
+            if ("UP".equals(direction)) {
+                throw new IllegalArgumentException("已是第一个");
+            } else {
+                throw new IllegalArgumentException("已是最后一个");
+            }
+        }
+
+        // Swap sortOrders
+        Integer tempSortOrder = currentSortOrder;
+        competition.setSortOrder(adjacent.getSortOrder());
+        adjacent.setSortOrder(tempSortOrder);
+        competitionRepository.update(competition);
+        competitionRepository.update(adjacent);
     }
 
     @Override
