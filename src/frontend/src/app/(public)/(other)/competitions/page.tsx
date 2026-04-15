@@ -25,12 +25,7 @@ function CompetitionsContent({ competitions }: { competitions: CompetitionRespon
   return (
     <div className="flex flex-col gap-5 max-sm:gap-4 relative z-1">
       {competitions.map((competition, index) => (
-        <CompetitionCard
-          key={competition.id}
-          competition={competition}
-          showImage={index === 0}
-          index={index}
-        />
+        <CompetitionCard key={competition.id} competition={competition} />
       ))}
     </div>
   )

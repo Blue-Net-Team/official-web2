@@ -1,81 +1,82 @@
+'use client'
+
+import { useState } from 'react'
+import Image from 'next/image'
+import { Tag } from 'antd'
 import { CompetitionResponseDTO } from '@/apis/schema/type'
 import { API_BASE_URL } from '@/apis/config'
 import { COMPETITION_LEVEL_LABELS, COMPETITION_LEVEL_COLORS } from '@/types/competition'
 
 interface CompetitionCardProps {
   competition: CompetitionResponseDTO
-  showImage?: boolean
   index?: number
 }
 
-export default function CompetitionCard({
-  competition,
-  showImage = false,
-  index = 0,
-}: CompetitionCardProps) {
+export default function CompetitionCard({ competition }: CompetitionCardProps) {
   const levelColor = COMPETITION_LEVEL_COLORS[competition.level]
   const levelLabel = COMPETITION_LEVEL_LABELS[competition.level]
 
-  const hasImage = showImage && !!competition.coverFileId
+  const hasCover = !!competition.coverFileId
+  const [logoError, setLogoError] = useState(false)
 
-  const imageFileId = competition.coverFileId
-
-  const cardStyle: React.CSSProperties = {
-    animationDelay: `${index * 0.1}s`,
-    ...(hasImage
-      ? {
-          backgroundImage: `url(${API_BASE_URL}/file/download/${imageFileId})`,
-        }
-      : {}),
-  }
+  const coverUrl = hasCover ? `${API_BASE_URL}/file/download/${competition.coverFileId}` : null
+  const logoUrl =
+    competition.logoFileId && !logoError
+      ? `${API_BASE_URL}/file/download/${competition.logoFileId}`
+      : null
 
   return (
     <div
-      className={`group relative w-full h-[200px] rounded-3xl p-10 px-8 flex flex-col gap-8 overflow-hidden
-        opacity-0 animate-[fadeInUp_0.6s_ease_forwards]
-        hover:-translate-y-1
-        max-md:h-auto max-md:min-h-[200px] max-md:p-8 max-md:px-6 max-md:rounded-[20px] max-md:gap-6
-        ${hasImage ? 'bg-cover bg-center' : 'glass-card'}
-      `}
-      style={cardStyle}
+      className={
+        'w-full glass-card md:min-h-[150px] rounded-3xl md:px-8 flex flex-col md:flex-row md:items-center relative overflow-hidden'
+      }
     >
-      {hasImage && (
+      {coverUrl && (
         <div
-          className="absolute inset-0 rounded-3xl z-[1] glass-card
-            group-hover:bg-[rgba(255,255,255,0.12)]"
-        />
+          className="z-[1] overflow-hidden
+              w-full h-[140px] shrink-0 relative rounded-t-3xl
+              md:absolute md:top-0 md:right-0 md:bottom-0 md:w-[70%] md:left-auto md:rounded-r-3xl md:rounded-t-none md:h-full
+              md:[-webkit-mask-image:linear-gradient(to_right,transparent,black_75%)]
+              md:[mask-image:linear-gradient(to_right,transparent,black_75%)]"
+        >
+          <Image src={coverUrl} alt="" fill className="object-cover" />
+        </div>
       )}
-      <div className="relative z-[2] flex flex-col gap-3 h-full justify-center">
+      {/* 内容区域 */}
+      <div
+        className={`relative z-[2] flex flex-col gap-3 justify-center h-fit py-6 md:py-0 px-8 md:px-0`}
+      >
         <div
           className="flex justify-between items-center gap-4
           max-md:flex-col max-md:items-start max-md:gap-3"
         >
           <div
             className="flex items-center gap-4 flex-1 min-w-0
-            max-md:w-full max-md:justify-between max-md:gap-3"
+            max-md:w-full max-md:justify-start max-md:gap-3"
           >
+            {/* Logo */}
+            {logoUrl && (
+              <img
+                src={logoUrl}
+                alt={competition.name}
+                className="h-[28px] w-auto object-contain shrink-0 max-md:h-5"
+                onError={() => setLogoError(true)}
+              />
+            )}
             <h3
               className="text-[28px] font-bold text-white m-0 font-[Inter,sans-serif]
               max-md:text-xl"
             >
               {competition.name}
             </h3>
-            <span
-              className="w-20 h-7 rounded-[14px] flex items-center justify-center
-                text-xs font-bold text-white shrink-0 font-[Inter,sans-serif]
-                relative overflow-hidden
-                transition-[transform,box-shadow] duration-200
-                group-hover:scale-105 group-hover:shadow-[0_0_20px_rgba(255,255,255,0.1)]
-                max-md:w-16 max-md:h-6 max-md:rounded-xl
-                before:content-[''] before:absolute before:top-0 before:-left-full
-                before:w-full before:h-full
-                before:bg-[linear-gradient(90deg,transparent,rgba(255,255,255,0.2),transparent)]
-                before:transition-[left] before:duration-500
-                group-hover:before:left-full"
-              style={{ backgroundColor: levelColor }}
+            <Tag
+              color={levelColor}
+              variant="outlined"
+              className="!rounded-[14px] !px-3 !py-0.5 !text-xs !font-bold
+                !shrink-0 font-[Inter,sans-serif] max-md:!rounded-xl"
             >
               {levelLabel}
-            </span>
+            </Tag>
           </div>
           {competition.month && (
             <span

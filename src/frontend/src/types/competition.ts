@@ -14,7 +14,7 @@ export const COMPETITION_LEVEL_LABELS: Record<CompetitionLevel, string> = {
 }
 
 export const COMPETITION_LEVEL_COLORS: Record<CompetitionLevel, string> = {
-  national: '#E86835',
-  provincial: '#4A90E2',
-  school: '#52C41A',
+  national: 'orange',
+  provincial: 'blue',
+  school: 'green',
 }

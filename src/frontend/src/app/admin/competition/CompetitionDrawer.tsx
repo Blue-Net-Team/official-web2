@@ -11,6 +11,7 @@ import {
   Input,
   Select,
   Spin,
+  Tag,
   Upload,
 } from 'antd'
 import { DeleteOutlined, EditOutlined, PlusOutlined } from '@ant-design/icons'
@@ -189,13 +190,13 @@ function DetailView({ competition }: { competition: CompetitionResponseDTO }) {
           <Descriptions.Item label="简称">{competition.shortName}</Descriptions.Item>
         )}
         <Descriptions.Item label="级别">
-          <span
-            style={{
-              color: COMPETITION_LEVEL_COLORS[competition.level as CompetitionLevel],
-            }}
+          <Tag
+            color={COMPETITION_LEVEL_COLORS[competition.level as CompetitionLevel]}
+            variant="outlined"
+            bordered={false}
           >
             {COMPETITION_LEVEL_LABELS[competition.level as CompetitionLevel]}
-          </span>
+          </Tag>
         </Descriptions.Item>
         {competition.month && (
           <Descriptions.Item label="月份">{competition.month}</Descriptions.Item>
@@ -300,6 +301,7 @@ function FormView({
               </Spin>
             ) : (
               <button
+                title="上传Logo"
                 className="flex items-center justify-center w-[100px] h-[100px] rounded-lg border border-dashed border-white/20 hover:border-white/40 transition-colors"
                 type="button"
               >
@@ -327,6 +329,7 @@ function FormView({
               </Spin>
             ) : (
               <button
+                title="上传封面"
                 className="flex items-center justify-center w-[200px] h-[120px] rounded-lg border border-dashed border-white/20 hover:border-white/40 transition-colors"
                 type="button"
               >
