@@ -38,4 +38,7 @@ public class CompetitionResponseDTO {
 
     @Schema(description = "封面文件ID")
     private Long coverFileId;
+
+    @Schema(description = "排序权重，值越大越靠前")
+    private Integer sortOrder;
 }

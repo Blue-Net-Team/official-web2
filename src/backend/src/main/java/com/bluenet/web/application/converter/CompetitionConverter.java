@@ -27,6 +27,7 @@ public class CompetitionConverter {
                 .summary(vo.getSummary())
                 .logoFileId(vo.getLogoFileId())
                 .coverFileId(vo.getCoverFileId())
+                .sortOrder(vo.getSortOrder())
                 .build();
     }
 

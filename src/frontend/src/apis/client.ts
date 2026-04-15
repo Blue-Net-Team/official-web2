@@ -2,16 +2,20 @@ import axios, { AxiosInstance, AxiosError, InternalAxiosRequestConfig } from 'ax
 import { API_BASE_URL } from './config'
 import { ResponseMessage } from './schema/type'
 
-/** 获取 CSRF Token（从内存/store） */
-let csrfToken: string | null = null
+/** 获取 CSRF Token（从 cookie 读取，保证与 cookie 始终一致） */
+function getCsrfTokenFromCookie(): string | null {
+  if (typeof document === 'undefined') return null
+  const match = document.cookie.match(/(?:^|;\s*)csrf_token=([^;]*)/)
+  return match ? decodeURIComponent(match[1]) : null
+}
 
-/** 设置 CSRF Token */
-export const setCsrfToken = (token: string | null) => {
-  csrfToken = token
+/** 设置 CSRF Token（保留兼容，但实际从 cookie 读取） */
+export const setCsrfToken = (_token: string | null) => {
+  // 不再需要存储到内存变量
 }
 
 /** 获取 CSRF Token */
-export const getCsrfToken = () => csrfToken
+export const getCsrfToken = () => getCsrfTokenFromCookie()
 
 /** 需要添加 CSRF Token 的请求方法 */
 const CSRF_METHODS = ['post', 'put', 'delete', 'patch']
@@ -26,13 +30,15 @@ const apiClient: AxiosInstance = axios.create({
   },
 })
 
-/** 请求拦截器 - 自动添加 CSRF Token */
+/** 请求拦截器 - 自动从 cookie 读取 CSRF Token */
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    // 对 POST/PUT/DELETE/PATCH 请求添加 CSRF Token
     const method = config.method?.toLowerCase()
-    if (method && CSRF_METHODS.includes(method) && csrfToken && config.headers) {
-      config.headers['X-CSRF-Token'] = csrfToken
+    if (method && CSRF_METHODS.includes(method) && config.headers) {
+      const token = getCsrfTokenFromCookie()
+      if (token) {
+        config.headers['X-CSRF-Token'] = token
+      }
     }
     return config
   },
@@ -53,8 +59,7 @@ apiClient.interceptors.response.use(
       })
     }
     if (error.response?.status === 401) {
-      // 401 时清除 CSRF Token
-      csrfToken = null
+      // 401 时跳转登录
       if (typeof window !== 'undefined') {
         window.location.href = '/login'
       }
@@ -73,12 +78,15 @@ const publicClient: AxiosInstance = axios.create({
   },
 })
 
-/** 公开客户端请求拦截器 - 自动添加 CSRF Token（登录后可能需要） */
+/** 公开客户端请求拦截器 - 自动从 cookie 读取 CSRF Token */
 publicClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const method = config.method?.toLowerCase()
-    if (method && CSRF_METHODS.includes(method) && csrfToken && config.headers) {
-      config.headers['X-CSRF-Token'] = csrfToken
+    if (method && CSRF_METHODS.includes(method) && config.headers) {
+      const token = getCsrfTokenFromCookie()
+      if (token) {
+        config.headers['X-CSRF-Token'] = token
+      }
     }
     return config
   },

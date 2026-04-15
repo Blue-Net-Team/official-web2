@@ -142,6 +142,31 @@ export interface CompetitionResponseDTO {
   organizer?: string
   /** 封面图片文件ID */
   coverFileId: number | null
+  /** 排序权重，值越大越靠前 */
+  sortOrder?: number
+}
+
+/**
+ * 竞赛创建/更新请求
+ * 对应后端 CompetitionRequestDTO.java
+ */
+export interface CompetitionRequestDTO {
+  name?: string
+  shortName?: string
+  logoFileId?: number | null
+  coverFileId?: number | null
+  summary?: string
+  level?: CompetitionLevel
+  month?: string
+  organizer?: string
+}
+
+/**
+ * 竞赛排序权重更新请求
+ * 对应后端 UpdateSortOrderRequestDTO.java
+ */
+export interface UpdateSortOrderRequestDTO {
+  sortOrder: number
 }
 
 /**
