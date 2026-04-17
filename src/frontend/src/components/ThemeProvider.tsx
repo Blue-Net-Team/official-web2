@@ -124,6 +124,16 @@ const themeConfig = {
       colorTextDescription: 'rgba(255, 255, 255, 0.3)',
       fontSizeLG: 14,
     },
+    Tree: {
+      colorBgContainer: 'rgba(255, 255, 255, 0.02)',
+      nodeHoverBg: 'rgba(255, 255, 255, 0.06)',
+      nodeSelectedBg: `rgba(250, 140, 22, 0.1)`,
+      directoryNodeSelectedBg: `rgba(250, 140, 22, 0.1)`,
+      directoryNodeSelectedColor: primaryColor,
+      colorText: 'rgba(255, 255, 255, 0.8)',
+      titleHeight: 32,
+      indentSize: 20,
+    },
   },
 }
 

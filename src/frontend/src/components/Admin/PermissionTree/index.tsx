@@ -180,7 +180,6 @@ const PermissionTree = ({ assignedPermissions, onSelectionChange }: PermissionTr
           treeData={antdTreeData}
           defaultExpandAll={!!searchKeyword}
           showLine={{ showLeafIcon: false }}
-          style={{ background: '#fafafa', borderRadius: 6, padding: 8 }}
         />
       ) : (
         <Empty description="暂无权限数据" />
