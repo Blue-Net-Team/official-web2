@@ -14,6 +14,9 @@ import {
   CheckCircleOutlined,
   QuestionCircleOutlined,
   LineChartOutlined,
+  SafetyOutlined,
+  TeamOutlined,
+  KeyOutlined,
 } from '@ant-design/icons'
 import type { MenuProps } from 'antd'
 
@@ -89,6 +92,28 @@ export const menuConfig: MenuItemConfig[] = [
         path: '/admin/assessment/judge',
         icon: <CheckCircleOutlined />,
         minLevel: 1,
+      },
+    ],
+  },
+  {
+    key: 'permission',
+    label: '权限管理',
+    icon: <SafetyOutlined />,
+    minLevel: 4,
+    children: [
+      {
+        key: 'permissionRole',
+        label: '角色权限',
+        path: '/admin/permissions/role',
+        icon: <TeamOutlined />,
+        minLevel: 4,
+      },
+      {
+        key: 'permissionPermission',
+        label: '权限角色',
+        path: '/admin/permissions/permission',
+        icon: <KeyOutlined />,
+        minLevel: 4,
       },
     ],
   },

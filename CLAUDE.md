@@ -18,6 +18,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - 团队知识库问答
 - 文件存储与权限控制
 - 用户认证与授权
+- 权限分配管理（SUPER_ADMIN 可视化管理角色权限）
 
 ### 项目结构
 
@@ -333,6 +334,64 @@ cp .env.example .env
 - `JWT_SECRET` 必须使用强密钥
 
 > 📖 详细配置请参考 [环境配置指南](./docs/环境配置指南.md)
+
+## 权限分配管理
+
+### 概述
+
+系统提供可视化的权限分配管理功能，允许 SUPER_ADMIN 通过界面为固定角色（SUPER_ADMIN、DIRECTION_ADMIN、MEMBER、CANDIDATE）分配权限。提供两种管理视角：**角色视角**（为角色分配权限）和**权限视角**（为权限指定角色）。
+
+### 后端 API
+
+所有权限管理 API 位于 `/api/v1/admin/` 路径下，仅限 SUPER_ADMIN 访问。
+
+| 方法 | 路径 | 说明 | 权限标识 |
+|------|------|------|----------|
+| GET | `/admin/permissions` | 分页查询权限列表 | `permission:list` |
+| GET | `/admin/permissions/{id}` | 权限详情（含已分配角色） | `permission:detail` |
+| GET | `/admin/permissions/tree` | 权限树形结构 | `permission:tree` |
+| GET | `/admin/permissions/{id}/roles` | 查询权限对应的角色 | `permission:role:list` |
+| POST | `/admin/permissions/{id}/roles/batch` | 批量添加角色到权限 | `permission:role:assign` |
+| DELETE | `/admin/permissions/{id}/roles/batch` | 批量从权限移除角色 | `permission:role:remove` |
+| GET | `/admin/roles/{roleName}/permissions` | 查询角色权限列表 | `role:permission:list` |
+| POST | `/admin/roles/{roleName}/permissions/batch` | 批量分配权限给角色 | `role:permission:assign` |
+| DELETE | `/admin/roles/{roleName}/permissions/batch` | 批量从角色移除权限 | `role:permission:remove` |
+
+### 关键约束
+
+- **SUPER_ADMIN 特殊处理**：SUPER_ADMIN 角色绕过权限检查，不能通过界面为其分配/移除权限
+- **批量操作事务性**：批量分配/移除操作在单个事务中执行，失败时全部回滚
+- **幂等性**：批量分配时自动跳过已存在的关联，不会报错
+- **数据来源**：权限通过 `PermissionScanner` 启动时自动扫描 `@RequiresPermission` 注解生成
+
+### 后端代码结构
+
+```
+api/controller/v1/admin/
+├── PermissionAdminController.java      # 权限查询 + 权限角色管理
+└── RolePermissionAdminController.java  # 角色权限管理
+
+application/
+├── converter/PermissionConverter.java  # VO→DTO 转换
+└── service/
+    ├── PermissionService.java          # 权限查询接口
+    ├── RolePermissionManageService.java # 角色权限管理接口
+    └── impl/
+        ├── PermissionServiceImpl.java
+        └── RolePermissionManageServiceImpl.java
+
+domain/service/
+└── RolePermissionDomainService.java    # 领域服务（SUPER_ADMIN校验、事务）
+
+infrastructure/security/util/
+└── PermissionTreeBuilder.java          # 权限树构建工具
+```
+
+### 前端页面
+
+- **角色权限管理**：`/admin/permissions/role` — 左侧选择角色，右侧权限树勾选
+- **权限角色管理**：`/admin/permissions/permission` — 左侧选择权限，右侧勾选角色
+- 导航菜单"权限管理"仅对 SUPER_ADMIN 可见（minLevel=4）
 
 ## 认证机制
 

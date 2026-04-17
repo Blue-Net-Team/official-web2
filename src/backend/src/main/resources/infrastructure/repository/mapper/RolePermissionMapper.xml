@@ -6,4 +6,49 @@
         <result column="role_id" property="roleId"/>
         <result column="permission_id" property="permissionId"/>
     </resultMap>
+    
+    <insert id="batchInsert" parameterType="java.util.List">
+        INSERT INTO tb_role_permission (role_id, permission_id)
+        VALUES
+        <foreach collection="list" item="item" separator=",">
+            (#{item.roleId}, #{item.permissionId})
+        </foreach>
+    </insert>
+    
+    <delete id="batchDelete">
+        DELETE FROM tb_role_permission
+        WHERE role_id = #{roleId}
+        AND permission_id IN
+        <foreach collection="permissionIds" item="permissionId" open="(" separator="," close=")">
+            #{permissionId}
+        </foreach>
+    </delete>
+    
+    <delete id="batchDeleteByPermissionId">
+        DELETE FROM tb_role_permission
+        WHERE permission_id = #{permissionId}
+        AND role_id IN
+        <foreach collection="roleIds" item="roleId" open="(" separator="," close=")">
+            #{roleId}
+        </foreach>
+    </delete>
+    
+    <select id="selectPermissionIdsByRoleId" resultType="java.lang.Long">
+        SELECT permission_id
+        FROM tb_role_permission
+        WHERE role_id = #{roleId}
+    </select>
+    
+    <select id="selectRoleIdsByPermissionId" resultType="java.lang.Long">
+        SELECT role_id
+        FROM tb_role_permission
+        WHERE permission_id = #{permissionId}
+    </select>
+    
+    <select id="existsByRoleIdAndPermissionId" resultType="boolean">
+        SELECT COUNT(*) > 0
+        FROM tb_role_permission
+        WHERE role_id = #{roleId}
+        AND permission_id = #{permissionId}
+    </select>
 </mapper>

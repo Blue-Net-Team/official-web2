@@ -638,3 +638,47 @@ export interface EnrollmentListQueryDTO {
   status?: EnrollStatus
   direction?: Direction
 }
+
+export interface PermissionDTO {
+  id: number
+  value: string
+  name: string
+  url: string | null
+  method: string | null
+  assignedRoles: string[]
+}
+
+export interface PermissionQueryDTO {
+  page?: number
+  size?: number
+  keyword?: string
+  format?: string
+}
+
+export interface PermissionTreeDTO {
+  key: string
+  title: string
+  value: string | null
+  permissionId: number | null
+  leaf: boolean
+  children: PermissionTreeDTO[]
+  permissionCount: number
+}
+
+export interface RolePermissionBatchRequestDTO {
+  permissionIds: number[]
+}
+
+export interface PermissionRoleBatchRequestDTO {
+  roleNames: string[]
+}
+
+export interface RolePermissionResponseDTO {
+  successCount: number
+  currentPermissions: string[]
+}
+
+export interface PermissionRoleResponseDTO {
+  successCount: number
+  currentRoles: string[]
+}
