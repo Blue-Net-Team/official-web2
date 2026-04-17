@@ -96,7 +96,7 @@ public class AdminCompetitionController {
             @ApiResponse(responseCode = "200", description = "移动成功", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseMessage.class))),
             @ApiResponse(responseCode = "400", description = "已在最前/最后或参数错误", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseMessage.class))),
             @ApiResponse(responseCode = "404", description = "竞赛不存在", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseMessage.class))) })
-    @RequiresPermission(name = "调整竞赛排序", value = "competition:sort", access = AccessLevel.PROTECTED)
+    @RequiresPermission(name = "调整竞赛排序", value = "competition:move", access = AccessLevel.PROTECTED)
     @PutMapping("/{id}/move")
     public ResponseMessage<Void> moveCompetition(
             @Parameter(description = "竞赛ID", required = true) @PathVariable Long id,

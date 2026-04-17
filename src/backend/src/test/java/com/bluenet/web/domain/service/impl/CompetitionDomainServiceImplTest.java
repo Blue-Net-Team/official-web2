@@ -127,7 +127,7 @@ class CompetitionDomainServiceImplTest {
                                 && competition.getLevel().equals(level)
                                 && competition.getMonth().equals(month)
                                 && competition.getOrganizer().equals(organizer)
-                                && competition.getSortOrder().equals(0)));
+                                && competition.getSortOrder().equals(1)));
     }
 
     @Test

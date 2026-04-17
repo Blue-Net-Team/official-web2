@@ -457,6 +457,48 @@ export interface AchievementStatsDTO {
 }
 
 /**
+ * 创建成就请求
+ * 对应后端 CreateAchievementRequestDTO.java
+ */
+export interface CreateAchievementRequestDTO {
+  /** 成就标题 */
+  title: string
+  /** 成就类型：PAPER/PATENT/COMPETITION */
+  type: AchievementType
+  /** 关联信息（竞赛赛项名/期刊名） */
+  relateTo?: string | null
+  /** 获奖日期 */
+  achieveAt: string
+  /** 奖项级别：NATIONAL/PROVINCIAL/SCHOOL */
+  awardLevel?: AwardLevel | null
+  /** 奖项名称 */
+  awardName?: string | null
+  /** 成就图片文件ID */
+  fileId: number
+}
+
+/**
+ * 更新成就请求
+ * 对应后端 UpdateAchievementRequestDTO.java
+ */
+export interface UpdateAchievementRequestDTO {
+  /** 成就标题 */
+  title?: string
+  /** 成就类型：PAPER/PATENT/COMPETITION */
+  type?: AchievementType
+  /** 关联信息（竞赛赛项名/期刊名） */
+  relateTo?: string | null
+  /** 获奖日期 */
+  achieveAt?: string
+  /** 奖项级别：NATIONAL/PROVINCIAL/SCHOOL */
+  awardLevel?: AwardLevel | null
+  /** 奖项名称 */
+  awardName?: string | null
+  /** 成就图片文件ID */
+  fileId?: number
+}
+
+/**
  * 场地信息
  * 对应后端 VenueDTO.java
  */

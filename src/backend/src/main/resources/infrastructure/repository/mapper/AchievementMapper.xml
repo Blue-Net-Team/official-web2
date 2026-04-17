@@ -51,10 +51,10 @@
         LEFT JOIN tb_competition c ON a.relate_to = c.name
         LEFT JOIN tb_file f ON a.file_id = f.id
         <where>
-            <if test="type != null and type != ''">
+            <if test="type != null">
                 AND a.type = #{type}
             </if>
-            <if test="awardLevel != null and awardLevel != ''">
+            <if test="awardLevel != null">
                 AND a.award_level = #{awardLevel}
             </if>
             <if test="year != null">
@@ -78,10 +78,10 @@
         SELECT COUNT(*)
         FROM tb_achievement
         <where>
-            <if test="type != null and type != ''">
+            <if test="type != null">
                 AND type = #{type}
             </if>
-            <if test="awardLevel != null and awardLevel != ''">
+            <if test="awardLevel != null">
                 AND award_level = #{awardLevel}
             </if>
         </where>

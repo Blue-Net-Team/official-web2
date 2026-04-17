@@ -342,7 +342,7 @@ class CompetitionListIntegrationTest extends BaseIntegrationTest {
         competition1.setLogoFileId(logoFileId);
         competition1.setCoverFileId(coverFile1.getId());
         competition1.setSummary("竞赛1简介");
-        competition1.setSortOrder(100);
+        competition1.setSortOrder(0);
         competitionMapper.insert(competition1);
 
         Competition competition2 = new Competition();
@@ -351,7 +351,7 @@ class CompetitionListIntegrationTest extends BaseIntegrationTest {
         competition2.setLogoFileId(logoFileId);
         competition2.setCoverFileId(coverFile2.getId());
         competition2.setSummary("竞赛2简介");
-        competition2.setSortOrder(90);
+        competition2.setSortOrder(1);
         competitionMapper.insert(competition2);
 
         // 执行

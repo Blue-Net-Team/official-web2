@@ -74,7 +74,7 @@ class CompetitionControllerIntegrationTest extends BaseIntegrationTest {
         competition1.setLogoFileId(TEST_FILE_ID);
         competition1.setCoverFileId(TEST_FILE_ID);
         competition1.setSummary(TEST_SUMMARY);
-        competition1.setSortOrder(100);
+        competition1.setSortOrder(0);
         competitionMapper.insert(competition1);
 
         Competition competition2 = new Competition();
@@ -82,7 +82,7 @@ class CompetitionControllerIntegrationTest extends BaseIntegrationTest {
         competition2.setShortName("ACM");
         competition2.setLogoFileId(TEST_FILE_ID);
         competition2.setSummary("ACM国际大学生程序设计竞赛");
-        competition2.setSortOrder(50);
+        competition2.setSortOrder(1);
         competitionMapper.insert(competition2);
     }
 

@@ -17,9 +17,9 @@ public class AchievementConverter {
                 .id(vo.getId())
                 .title(vo.getTitle())
                 .relateTo(vo.getRelateTo())
-                .type(vo.getType() != null ? vo.getType().name() : null)
+                .type(vo.getType())
                 .achieveAt(vo.getAchieveAt())
-                .awardLevel(vo.getAwardLevel() != null ? vo.getAwardLevel().name() : null)
+                .awardLevel(vo.getAwardLevel())
                 .awardLevelName(vo.getAwardLevel() != null ? vo.getAwardLevel().getDescription() : null)
                 .awardName(vo.getAwardName())
                 .competitionName(vo.getCompetitionName())
@@ -47,5 +47,39 @@ public class AchievementConverter {
                 .provincialCount(vo.getProvincialCount())
                 .schoolCount(vo.getSchoolCount())
                 .build();
+    }
+
+    /**
+     * 将Achievement实体转换为AchievementVO
+     *
+     * @param entity
+     *            成就实体
+     * @return 成就VO
+     */
+    public AchievementVO toVO(com.bluenet.web.domain.model.entity.Achievement entity) {
+        if (entity == null) {
+            return null;
+        }
+        return AchievementVO.builder()
+                .id(entity.getId())
+                .title(entity.getTitle())
+                .type(entity.getType())
+                .relateTo(entity.getRelateTo())
+                .achieveAt(entity.getAchieveAt())
+                .awardLevel(entity.getAwardLevel())
+                .awardName(entity.getAwardName())
+                .fileId(entity.getFileId())
+                .build();
+    }
+
+    /**
+     * 将AchievementVO转换为AchievementDTO
+     *
+     * @param vo
+     *            成就VO
+     * @return 成就DTO
+     */
+    public AchievementDTO toDTO(AchievementVO vo) {
+        return convertToDTO(vo);
     }
 }

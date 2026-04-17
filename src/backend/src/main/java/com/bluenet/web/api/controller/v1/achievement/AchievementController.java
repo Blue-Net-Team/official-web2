@@ -5,6 +5,8 @@ import com.bluenet.web.api.dto.ResponseMessage;
 import com.bluenet.web.api.dto.achievement.AchievementDTO;
 import com.bluenet.web.api.dto.achievement.AchievementStatsDTO;
 import com.bluenet.web.application.service.AchievementService;
+import com.bluenet.web.domain.model.enumerate.AchievementType;
+import com.bluenet.web.domain.model.enumerate.AwardLevel;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
 import com.bluenet.web.infrastructure.security.annotation.RequiresPermission;
 import io.swagger.v3.oas.annotations.Operation;
@@ -33,8 +35,8 @@ public class AchievementController {
     public ResponseMessage<PageDTO<AchievementDTO>> getAchievements(
             @Parameter(description = "页码，从0开始") @RequestParam(defaultValue = "0") Integer page,
             @Parameter(description = "每页数量，默认12") @RequestParam(defaultValue = "12") Integer size,
-            @Parameter(description = "成就类型：paper/patent/competition，默认返回全部") @RequestParam(required = false) String type,
-            @Parameter(description = "奖项级别：national/provincial/school，仅对竞赛成就有效") @RequestParam(required = false) String awardLevel,
+            @Parameter(description = "成就类型，默认返回全部") @RequestParam(required = false) AchievementType type,
+            @Parameter(description = "奖项级别，仅对竞赛成就有效") @RequestParam(required = false) AwardLevel awardLevel,
             @Parameter(description = "获奖年份") @RequestParam(required = false) Integer year) {
         PageDTO<AchievementDTO> achievements = achievementService.getAchievements(page, size, type, awardLevel, year);
         return ResponseMessage.success(achievements);
