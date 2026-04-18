@@ -8,11 +8,16 @@ import com.bluenet.web.api.dto.auth.UserAuthResponseDTO;
 import com.bluenet.web.api.dto.experience.CreateExperienceRequestDTO;
 import com.bluenet.web.api.dto.experience.ExperienceDTO;
 import com.bluenet.web.api.dto.experience.UpdateExperienceRequestDTO;
+import com.bluenet.web.domain.model.entity.Permission;
 import com.bluenet.web.domain.model.entity.Role;
+import com.bluenet.web.domain.model.entity.RolePermission;
 import com.bluenet.web.domain.model.entity.User;
 import com.bluenet.web.domain.model.enumerate.Direction;
+import com.bluenet.web.infrastructure.repository.mapper.PermissionMapper;
 import com.bluenet.web.infrastructure.repository.mapper.RoleMapper;
+import com.bluenet.web.infrastructure.repository.mapper.RolePermissionMapper;
 import com.bluenet.web.infrastructure.repository.mapper.UserMapper;
+import com.bluenet.web.infrastructure.security.cache.PermissionCache;
 import com.bluenet.web.testcontainers.TestcontainersConfiguration;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
@@ -58,6 +63,15 @@ class UserExperienceControllerIntegrationTest extends BaseIntegrationTest {
     private RoleMapper roleMapper;
 
     @Autowired
+    private PermissionMapper permissionMapper;
+
+    @Autowired
+    private RolePermissionMapper rolePermissionMapper;
+
+    @Autowired
+    private PermissionCache permissionCache;
+
+    @Autowired
     private PasswordEncoder passwordEncoder;
 
     private static final String TEST_STUDENT_ID = "2024001001";
@@ -70,6 +84,7 @@ class UserExperienceControllerIntegrationTest extends BaseIntegrationTest {
     void setUp() {
         // 创建角色
         createRoles();
+        createExperiencePermissions();
 
         // 创建测试用户（默认为MEMBER角色）
         User user = new User();
@@ -83,6 +98,35 @@ class UserExperienceControllerIntegrationTest extends BaseIntegrationTest {
 
         userMapper.insert(user);
         testUserId = user.getId();
+    }
+
+    private void createExperiencePermissions() {
+        assignPermissionToMemberRole("user:experience:create");
+        assignPermissionToMemberRole("user:experience:update");
+        assignPermissionToMemberRole("user:experience:delete");
+        permissionCache.refresh();
+    }
+
+    private void assignPermissionToMemberRole(String value) {
+        Permission permission = permissionMapper.selectOne(
+                new LambdaQueryWrapper<Permission>().eq(Permission::getValue, value));
+        if (permission == null) {
+            permission = new Permission();
+            permission.setName(value);
+            permission.setValue(value);
+            permissionMapper.insert(permission);
+        }
+
+        Long existingCount = rolePermissionMapper.selectCount(
+                new LambdaQueryWrapper<RolePermission>()
+                        .eq(RolePermission::getRoleId, memberRoleId)
+                        .eq(RolePermission::getPermissionId, permission.getId()));
+        if (existingCount == 0) {
+            RolePermission rolePermission = new RolePermission();
+            rolePermission.setRoleId(memberRoleId);
+            rolePermission.setPermissionId(permission.getId());
+            rolePermissionMapper.insert(rolePermission);
+        }
     }
 
     private void createRoles() {

@@ -16,6 +16,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.bluenet.web.domain.exception.BadRequest;
 import com.bluenet.web.domain.exception.DataConflict;
@@ -36,6 +37,7 @@ import com.bluenet.web.domain.repository.FileRepository;
 import com.bluenet.web.domain.repository.RoleRepository;
 import com.bluenet.web.domain.repository.UserRepository;
 import com.bluenet.web.domain.service.ReferralCodeGenerator;
+import com.bluenet.web.infrastructure.email.EmailSender;
 
 @DisplayName("EnrollDomainServiceImpl 单元测试")
 @ExtendWith(MockitoExtension.class)
@@ -55,6 +57,12 @@ class EnrollDomainServiceImplTest {
 
     @Mock
     private ReferralCodeGenerator referralCodeGenerator;
+
+    @Mock
+    private PasswordEncoder passwordEncoder;
+
+    @Mock
+    private EmailSender emailSender;
 
     @InjectMocks
     private EnrollDomainServiceImpl enrollDomainService;
@@ -371,6 +379,7 @@ class EnrollDomainServiceImplTest {
             when(roleRepository.findByName("CANDIDATE")).thenReturn(Optional.of(candidateRole));
             when(userRepository.findByStudentId(TEST_STUDENT_ID)).thenReturn(Optional.empty());
             when(referralCodeGenerator.generate()).thenReturn("ABCD1234");
+            when(passwordEncoder.encode(anyString())).thenReturn("encoded-password");
 
             enrollDomainService.approveEnrollment(TEST_ID);
 
