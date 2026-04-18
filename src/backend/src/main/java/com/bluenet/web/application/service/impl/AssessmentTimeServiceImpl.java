@@ -5,6 +5,8 @@ import com.bluenet.web.api.dto.assessment_time.AssessmentProgressDTO;
 import com.bluenet.web.api.dto.assessment_time.AssessmentTimeDTO;
 import com.bluenet.web.api.dto.assessment_time.CreateAssessmentTimeRequestDTO;
 import com.bluenet.web.api.dto.assessment_time.UpdateAssessmentTimeRequestDTO;
+import com.bluenet.web.domain.exception.DataNotFound;
+import com.bluenet.web.domain.exception.Forbidden;
 import com.bluenet.web.domain.exception.GlobalException;
 import com.bluenet.web.application.converter.AssessmentTimeConverter;
 import com.bluenet.web.application.service.AssessmentTimeService;
@@ -47,6 +49,8 @@ public class AssessmentTimeServiceImpl implements AssessmentTimeService {
     @Override
     @Transactional
     public AssessmentTimeDTO createAssessmentTime(CreateAssessmentTimeRequestDTO request) {
+        validateDirectionPermission(request.getDirection());
+
         AssessmentTimeVO vo = AssessmentTimeVO.builder()
                 .direction(request.getDirection())
                 .epoch(request.getEpoch())
@@ -70,6 +74,10 @@ public class AssessmentTimeServiceImpl implements AssessmentTimeService {
     @Override
     @Transactional
     public AssessmentTimeDTO updateAssessmentTime(Long id, UpdateAssessmentTimeRequestDTO request) {
+        AssessmentTimeVO existing = assessmentTimeDomainService.getById(id)
+                .orElseThrow(() -> new DataNotFound("考核时间不存在"));
+        validateDirectionPermission(existing.getDirection());
+
         AssessmentTimeVO vo = AssessmentTimeVO.builder()
                 .id(id)
                 .direction(request.getDirection())
@@ -94,7 +102,26 @@ public class AssessmentTimeServiceImpl implements AssessmentTimeService {
     @Override
     @Transactional
     public void deleteAssessmentTime(Long id) {
+        AssessmentTimeVO existing = assessmentTimeDomainService.getById(id)
+                .orElseThrow(() -> new DataNotFound("考核时间不存在"));
+        validateDirectionPermission(existing.getDirection());
         assessmentTimeDomainService.delete(id);
+    }
+
+    /**
+     * 校验 DIRECTION_ADMIN 方向权限：只能操作自己方向的考核时间
+     */
+    private void validateDirectionPermission(Direction targetDirection) {
+        UserVO currentUser = UserCTX.getCurrentUser();
+        if (currentUser == null)
+            return;
+
+        RoleType roleType = RoleType.fromName(currentUser.getRoleName());
+        if (roleType == RoleType.DIRECTION_ADMIN) {
+            if (!targetDirection.equals(currentUser.getDirection())) {
+                throw new Forbidden("只能操作本方向的考核时间");
+            }
+        }
     }
 
     @Override

@@ -11,6 +11,42 @@ export type AssessmentStatus = 'NOT_STARTED' | 'IN_PROGRESS' | 'ENDED'
 /** 题型枚举 */
 export type QuestionType = 'SINGLE_CHOICE' | 'MULTIPLE_CHOICE' | 'FILE_UPLOAD' | 'ALGORITHM'
 
+/** 创建考核时间请求 - 对应后端 CreateAssessmentTimeRequestDTO */
+export interface CreateAssessmentTimeRequestDTO {
+  /** 方向 */
+  direction: Direction
+  /** 届次（第几轮） */
+  epoch: number
+  /** 入学年份 */
+  grade: number
+  /** 开始时间 */
+  startTime: string
+  /** 结束时间 */
+  endTime: string
+  /** 是否限时 */
+  timeLimit: boolean
+  /** 限时分钟数（timeLimit为true时必填） */
+  timeLimitMinutes?: number | null
+}
+
+/** 更新考核时间请求 - 对应后端 UpdateAssessmentTimeRequestDTO */
+export interface UpdateAssessmentTimeRequestDTO {
+  /** 方向 */
+  direction?: Direction
+  /** 届次 */
+  epoch?: number
+  /** 入学年份 */
+  grade?: number
+  /** 开始时间 */
+  startTime?: string
+  /** 结束时间 */
+  endTime?: string
+  /** 是否限时 */
+  timeLimit?: boolean
+  /** 限时分钟数 */
+  timeLimitMinutes?: number | null
+}
+
 /** 考核时间信息 - 对应后端 AssessmentTimeDTO */
 export interface AssessmentTimeDTO {
   /** 考核时间ID */

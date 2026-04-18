@@ -7,6 +7,8 @@ import com.bluenet.web.api.dto.assessment_time.CreateAssessmentTimeRequestDTO;
 import com.bluenet.web.api.dto.assessment_time.UpdateAssessmentTimeRequestDTO;
 import com.bluenet.web.application.converter.AssessmentTimeConverter;
 import com.bluenet.web.domain.exception.DataConflict;
+import com.bluenet.web.domain.exception.DataNotFound;
+import com.bluenet.web.domain.exception.Forbidden;
 import com.bluenet.web.domain.exception.GlobalException;
 import com.bluenet.web.domain.model.enumerate.Direction;
 import com.bluenet.web.domain.model.vo.AssessmentTimeVO;
@@ -197,8 +199,8 @@ class AssessmentTimeServiceImplTest {
         }
 
         @Test
-        @DisplayName("更新后查询为空：应抛出GlobalException")
-        void update_failed_shouldThrow() {
+        @DisplayName("更新不存在记录：应抛出DataNotFound")
+        void update_notFound_shouldThrow() {
             UpdateAssessmentTimeRequestDTO request = UpdateAssessmentTimeRequestDTO.builder()
                     .timeLimitMinutes(90)
                     .build();
@@ -206,7 +208,7 @@ class AssessmentTimeServiceImplTest {
             when(assessmentTimeDomainService.getById(TEST_ID)).thenReturn(Optional.empty());
 
             assertThrows(
-                    GlobalException.class,
+                    DataNotFound.class,
                     () -> assessmentTimeService.updateAssessmentTime(TEST_ID, request));
         }
     }
@@ -220,6 +222,7 @@ class AssessmentTimeServiceImplTest {
         @Test
         @DisplayName("正常删除：应成功")
         void delete_valid_shouldSucceed() {
+            when(assessmentTimeDomainService.getById(TEST_ID)).thenReturn(Optional.of(createTestVO()));
             doNothing().when(assessmentTimeDomainService).delete(TEST_ID);
 
             assessmentTimeService.deleteAssessmentTime(TEST_ID);
@@ -230,6 +233,7 @@ class AssessmentTimeServiceImplTest {
         @Test
         @DisplayName("有关联题目：应抛出DataConflict")
         void delete_withQuestions_shouldThrow() {
+            when(assessmentTimeDomainService.getById(TEST_ID)).thenReturn(Optional.of(createTestVO()));
             doThrow(new DataConflict("存在关联的考核题目，需先删除相关题目"))
                     .when(assessmentTimeDomainService)
                     .delete(TEST_ID);
@@ -237,6 +241,238 @@ class AssessmentTimeServiceImplTest {
             assertThrows(
                     DataConflict.class,
                     () -> assessmentTimeService.deleteAssessmentTime(TEST_ID));
+        }
+
+        @Test
+        @DisplayName("考核时间不存在：应抛出DataNotFound")
+        void delete_notFound_shouldThrow() {
+            when(assessmentTimeDomainService.getById(999L)).thenReturn(Optional.empty());
+
+            assertThrows(
+                    DataNotFound.class,
+                    () -> assessmentTimeService.deleteAssessmentTime(999L));
+        }
+    }
+
+    // ==================== DIRECTION_ADMIN 方向权限校验测试 ====================
+
+    @Nested
+    @DisplayName("DIRECTION_ADMIN 方向权限校验测试")
+    class DirectionPermissionTests {
+
+        private void mockDirectionAdmin(Direction direction) {
+            // 用于在 create/update/delete 测试中模拟 DIRECTION_ADMIN 用户
+            // 通过 UserCTX mock 设置当前用户
+        }
+
+        @Test
+        @DisplayName("DIRECTION_ADMIN 创建自己方向的考核时间：应成功")
+        void create_ownDirection_shouldSucceed() {
+            try (MockedStatic<UserCTX> mockedUserCTX = mockStatic(UserCTX.class)) {
+                UserVO userVO = UserVO.builder()
+                        .id(1L)
+                        .roleName("DIRECTION_ADMIN")
+                        .direction(Direction.COMPUTER_VISION)
+                        .build();
+                mockedUserCTX.when(UserCTX::getCurrentUser).thenReturn(userVO);
+
+                CreateAssessmentTimeRequestDTO request = CreateAssessmentTimeRequestDTO.builder()
+                        .direction(Direction.COMPUTER_VISION)
+                        .epoch(1)
+                        .grade(2025)
+                        .startTime(futureStart)
+                        .endTime(futureEnd)
+                        .timeLimit(false)
+                        .build();
+
+                when(assessmentTimeDomainService.create(any(AssessmentTimeVO.class))).thenReturn(TEST_ID);
+                when(assessmentTimeDomainService.getById(TEST_ID)).thenReturn(Optional.of(createTestVO()));
+                when(assessmentTimeConverter.convertToDTO(any())).thenReturn(createTestDTO());
+
+                AssessmentTimeDTO result = assessmentTimeService.createAssessmentTime(request);
+
+                assertNotNull(result);
+                verify(assessmentTimeDomainService).create(any(AssessmentTimeVO.class));
+            }
+        }
+
+        @Test
+        @DisplayName("DIRECTION_ADMIN 创建其他方向的考核时间：应抛出Forbidden")
+        void create_otherDirection_shouldThrowForbidden() {
+            try (MockedStatic<UserCTX> mockedUserCTX = mockStatic(UserCTX.class)) {
+                UserVO userVO = UserVO.builder()
+                        .id(1L)
+                        .roleName("DIRECTION_ADMIN")
+                        .direction(Direction.COMPUTER_VISION)
+                        .build();
+                mockedUserCTX.when(UserCTX::getCurrentUser).thenReturn(userVO);
+
+                CreateAssessmentTimeRequestDTO request = CreateAssessmentTimeRequestDTO.builder()
+                        .direction(Direction.STRUCTURAL_DESIGN)
+                        .epoch(1)
+                        .grade(2025)
+                        .startTime(futureStart)
+                        .endTime(futureEnd)
+                        .timeLimit(false)
+                        .build();
+
+                Forbidden ex = assertThrows(
+                        Forbidden.class,
+                        () -> assessmentTimeService.createAssessmentTime(request));
+                assertEquals("只能操作本方向的考核时间", ex.getMessage());
+                verify(assessmentTimeDomainService, never()).create(any());
+            }
+        }
+
+        @Test
+        @DisplayName("SUPER_ADMIN 创建任意方向的考核时间：应成功")
+        void create_superAdminAnyDirection_shouldSucceed() {
+            try (MockedStatic<UserCTX> mockedUserCTX = mockStatic(UserCTX.class)) {
+                UserVO userVO = UserVO.builder()
+                        .id(1L)
+                        .roleName("SUPER_ADMIN")
+                        .direction(Direction.COMPUTER_VISION)
+                        .build();
+                mockedUserCTX.when(UserCTX::getCurrentUser).thenReturn(userVO);
+
+                CreateAssessmentTimeRequestDTO request = CreateAssessmentTimeRequestDTO.builder()
+                        .direction(Direction.STRUCTURAL_DESIGN)
+                        .epoch(1)
+                        .grade(2025)
+                        .startTime(futureStart)
+                        .endTime(futureEnd)
+                        .timeLimit(false)
+                        .build();
+
+                when(assessmentTimeDomainService.create(any(AssessmentTimeVO.class))).thenReturn(TEST_ID);
+                AssessmentTimeVO createdVO = AssessmentTimeVO.builder()
+                        .id(TEST_ID)
+                        .direction(Direction.STRUCTURAL_DESIGN)
+                        .epoch(1)
+                        .grade(2025)
+                        .startTime(futureStart)
+                        .endTime(futureEnd)
+                        .timeLimit(false)
+                        .build();
+                when(assessmentTimeDomainService.getById(TEST_ID)).thenReturn(Optional.of(createdVO));
+                when(assessmentTimeConverter.convertToDTO(any())).thenReturn(
+                        AssessmentTimeDTO.builder().id(TEST_ID).direction(Direction.STRUCTURAL_DESIGN).build());
+
+                AssessmentTimeDTO result = assessmentTimeService.createAssessmentTime(request);
+
+                assertNotNull(result);
+                verify(assessmentTimeDomainService).create(any(AssessmentTimeVO.class));
+            }
+        }
+
+        @Test
+        @DisplayName("DIRECTION_ADMIN 更新自己方向的考核时间：应成功")
+        void update_ownDirection_shouldSucceed() {
+            try (MockedStatic<UserCTX> mockedUserCTX = mockStatic(UserCTX.class)) {
+                UserVO userVO = UserVO.builder()
+                        .id(1L)
+                        .roleName("DIRECTION_ADMIN")
+                        .direction(Direction.COMPUTER_VISION)
+                        .build();
+                mockedUserCTX.when(UserCTX::getCurrentUser).thenReturn(userVO);
+
+                AssessmentTimeVO existingVO = createTestVO();
+                when(assessmentTimeDomainService.getById(TEST_ID)).thenReturn(Optional.of(existingVO));
+                when(assessmentTimeConverter.convertToDTO(any())).thenReturn(createTestDTO());
+
+                UpdateAssessmentTimeRequestDTO request = UpdateAssessmentTimeRequestDTO.builder()
+                        .timeLimitMinutes(90)
+                        .build();
+
+                AssessmentTimeDTO result = assessmentTimeService.updateAssessmentTime(TEST_ID, request);
+
+                assertNotNull(result);
+                verify(assessmentTimeDomainService).update(any(AssessmentTimeVO.class));
+            }
+        }
+
+        @Test
+        @DisplayName("DIRECTION_ADMIN 更新其他方向的考核时间：应抛出Forbidden")
+        void update_otherDirection_shouldThrowForbidden() {
+            try (MockedStatic<UserCTX> mockedUserCTX = mockStatic(UserCTX.class)) {
+                UserVO userVO = UserVO.builder()
+                        .id(1L)
+                        .roleName("DIRECTION_ADMIN")
+                        .direction(Direction.COMPUTER_VISION)
+                        .build();
+                mockedUserCTX.when(UserCTX::getCurrentUser).thenReturn(userVO);
+
+                AssessmentTimeVO existingVO = AssessmentTimeVO.builder()
+                        .id(TEST_ID)
+                        .direction(Direction.STRUCTURAL_DESIGN)
+                        .epoch(1)
+                        .grade(2025)
+                        .startTime(futureStart)
+                        .endTime(futureEnd)
+                        .timeLimit(false)
+                        .build();
+                when(assessmentTimeDomainService.getById(TEST_ID)).thenReturn(Optional.of(existingVO));
+
+                UpdateAssessmentTimeRequestDTO request = UpdateAssessmentTimeRequestDTO.builder()
+                        .timeLimitMinutes(90)
+                        .build();
+
+                Forbidden ex = assertThrows(
+                        Forbidden.class,
+                        () -> assessmentTimeService.updateAssessmentTime(TEST_ID, request));
+                assertEquals("只能操作本方向的考核时间", ex.getMessage());
+                verify(assessmentTimeDomainService, never()).update(any());
+            }
+        }
+
+        @Test
+        @DisplayName("DIRECTION_ADMIN 删除自己方向的考核时间：应成功")
+        void delete_ownDirection_shouldSucceed() {
+            try (MockedStatic<UserCTX> mockedUserCTX = mockStatic(UserCTX.class)) {
+                UserVO userVO = UserVO.builder()
+                        .id(1L)
+                        .roleName("DIRECTION_ADMIN")
+                        .direction(Direction.COMPUTER_VISION)
+                        .build();
+                mockedUserCTX.when(UserCTX::getCurrentUser).thenReturn(userVO);
+
+                when(assessmentTimeDomainService.getById(TEST_ID)).thenReturn(Optional.of(createTestVO()));
+                doNothing().when(assessmentTimeDomainService).delete(TEST_ID);
+
+                assessmentTimeService.deleteAssessmentTime(TEST_ID);
+
+                verify(assessmentTimeDomainService).delete(TEST_ID);
+            }
+        }
+
+        @Test
+        @DisplayName("DIRECTION_ADMIN 删除其他方向的考核时间：应抛出Forbidden")
+        void delete_otherDirection_shouldThrowForbidden() {
+            try (MockedStatic<UserCTX> mockedUserCTX = mockStatic(UserCTX.class)) {
+                UserVO userVO = UserVO.builder()
+                        .id(1L)
+                        .roleName("DIRECTION_ADMIN")
+                        .direction(Direction.COMPUTER_VISION)
+                        .build();
+                mockedUserCTX.when(UserCTX::getCurrentUser).thenReturn(userVO);
+
+                AssessmentTimeVO existingVO = AssessmentTimeVO.builder()
+                        .id(TEST_ID)
+                        .direction(Direction.EMBEDDED)
+                        .epoch(1)
+                        .grade(2025)
+                        .startTime(futureStart)
+                        .endTime(futureEnd)
+                        .timeLimit(false)
+                        .build();
+                when(assessmentTimeDomainService.getById(TEST_ID)).thenReturn(Optional.of(existingVO));
+
+                Forbidden ex = assertThrows(
+                        Forbidden.class,
+                        () -> assessmentTimeService.deleteAssessmentTime(TEST_ID));
+                assertEquals("只能操作本方向的考核时间", ex.getMessage());
+                verify(assessmentTimeDomainService, never()).delete(any());
+            }
         }
     }
 
