@@ -411,7 +411,7 @@ const EnrollPageContent: React.FC = () => {
           ? await enrollService.updateEnrollment(data)
           : await enrollService.submitEnrollment(data)
 
-        if (response.code === 201) {
+        if (response.code === 201 || response.code === 200) {
           messageApi.success(forceUpdate ? '报名信息更新成功！' : '报名成功！')
           form.resetFields()
           setAvatarPreview('')
