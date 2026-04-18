@@ -22,7 +22,7 @@ interface AntdTreeNode {
   isLeaf?: boolean
   permissionId?: number | null
   accessLevel?: string | null
-  disabled?: boolean
+  disableCheckbox?: boolean
   children?: AntdTreeNode[]
 }
 
@@ -58,8 +58,6 @@ function treeToAntdNodes(
       }
 
       const isAssigned = node.value != null && assignedSet.has(node.value)
-      const alwaysEnabled = isAlwaysEnabled(node.accessLevel)
-
       const accessTag =
         node.leaf && node.accessLevel ? (
           <Tag
@@ -85,7 +83,9 @@ function treeToAntdNodes(
         isLeaf: node.leaf,
         permissionId: node.permissionId,
         accessLevel: node.accessLevel,
-        disabled: mode === 'checkable' && alwaysEnabled,
+        // Keep always-enabled leaves checkable so AntD can compute parent half-check state correctly.
+        // They are still enforced as selected in handleCheck via alwaysEnabledKeys union.
+        disableCheckbox: false,
         children: childNodes.length > 0 ? childNodes : undefined,
       }
     })
@@ -137,6 +137,58 @@ function collectAlwaysEnabledKeys(nodes: PermissionTreeDTO[]): string[] {
   return keys
 }
 
+/** Extract leaf keys from a raw key set by walking the tree */
+function filterLeafKeys(nodes: PermissionTreeDTO[], rawKeys: Set<string>): Set<string> {
+  const leaves = new Set<string>()
+  const walk = (list: PermissionTreeDTO[]) => {
+    for (const node of list) {
+      if (node.leaf && rawKeys.has(node.key)) leaves.add(node.key)
+      if (node.children) walk(node.children)
+    }
+  }
+  walk(nodes)
+  return leaves
+}
+
+/** Tri-state walk: true = all checked, 'half' = some, false = none */
+type WalkResult = true | 'half' | false
+
+function computeCheckState(
+  nodes: PermissionTreeDTO[],
+  checkedLeaves: Set<string>
+): { checked: string[]; halfChecked: string[] } {
+  const checked: string[] = []
+  const halfChecked: string[] = []
+
+  const walk = (node: PermissionTreeDTO): WalkResult => {
+    if (node.leaf) {
+      if (checkedLeaves.has(node.key)) {
+        checked.push(node.key)
+        return true
+      }
+      return false
+    }
+    if (!node.children || node.children.length === 0) return false
+
+    const childResults: WalkResult[] = node.children.map(walk)
+    const allChecked = childResults.length > 0 && childResults.every((r) => r === true)
+    const anyHit = childResults.some((r) => r !== false)
+
+    if (allChecked) {
+      checked.push(node.key)
+      return true
+    }
+    if (anyHit) {
+      halfChecked.push(node.key)
+      return 'half'
+    }
+    return false
+  }
+
+  nodes.forEach(walk)
+  return { checked, halfChecked }
+}
+
 const PermissionTree = ({
   assignedPermissions,
   onSelectionChange,
@@ -146,7 +198,10 @@ const PermissionTree = ({
   const [treeData, setTreeData] = useState<PermissionTreeDTO[]>([])
   const [loading, setLoading] = useState(false)
   const [searchKeyword, setSearchKeyword] = useState('')
-  const [checkedKeys, setCheckedKeys] = useState<string[]>([])
+  const [checkedKeys, setCheckedKeys] = useState<{ checked: string[]; halfChecked: string[] }>({
+    checked: [],
+    halfChecked: [],
+  })
   const [selectedKey, setSelectedKey] = useState<string | null>(null)
 
   useEffect(() => {
@@ -170,21 +225,19 @@ const PermissionTree = ({
   const alwaysEnabledKeys = useMemo(() => new Set(collectAlwaysEnabledKeys(treeData)), [treeData])
 
   useEffect(() => {
-    const assignedKeys: string[] = []
-    // Include always-enabled keys
-    for (const key of alwaysEnabledKeys) {
-      assignedKeys.push(key)
-    }
+    if (treeData.length === 0) return
+
+    const checkedLeaves = new Set<string>(alwaysEnabledKeys)
     const walk = (nodes: PermissionTreeDTO[]) => {
       for (const node of nodes) {
         if (node.leaf && node.value != null && assignedSet.has(node.value)) {
-          assignedKeys.push(node.key)
+          checkedLeaves.add(node.key)
         }
         if (node.children) walk(node.children)
       }
     }
     walk(treeData)
-    setCheckedKeys(assignedKeys)
+    setCheckedKeys(computeCheckState(treeData, checkedLeaves))
   }, [assignedSet, treeData, alwaysEnabledKeys])
 
   const antdTreeData = useMemo(
@@ -194,22 +247,27 @@ const PermissionTree = ({
 
   const handleCheck: TreeProps['onCheck'] = useCallback(
     (checked: React.Key[] | { checked: React.Key[]; halfChecked: React.Key[] }) => {
-      const keys = (Array.isArray(checked) ? checked : []) as string[]
-      // Always keep always-enabled keys checked
-      const finalKeys = Array.from(new Set([...keys, ...alwaysEnabledKeys]))
-      setCheckedKeys(finalKeys)
+      const keys: string[] = Array.isArray(checked)
+        ? (checked as string[])
+        : (checked as { checked: React.Key[] }).checked.map(String)
+
+      const rawKeys = new Set(keys)
+      for (const k of alwaysEnabledKeys) rawKeys.add(k)
+
+      const leafKeys = filterLeafKeys(treeData, rawKeys)
+      setCheckedKeys(computeCheckState(treeData, leafKeys))
 
       if (onSelectionChange) {
         const selectedIds: number[] = []
-        const walk = (nodes: PermissionTreeDTO[]) => {
+        const walkIds = (nodes: PermissionTreeDTO[]) => {
           for (const node of nodes) {
-            if (node.leaf && finalKeys.includes(node.key) && node.permissionId != null) {
+            if (node.leaf && leafKeys.has(node.key) && node.permissionId != null) {
               selectedIds.push(node.permissionId)
             }
-            if (node.children) walk(node.children)
+            if (node.children) walkIds(node.children)
           }
         }
-        walk(treeData)
+        walkIds(treeData)
         onSelectionChange(selectedIds)
       }
     },
