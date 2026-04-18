@@ -26,5 +26,6 @@ public class MemberVO {
     private String githubUsername;
     private String wechatQrcode;
     private Integer enrollmentYear;
+    private Integer assessmentGradeYear;
     private String roleName;
 }

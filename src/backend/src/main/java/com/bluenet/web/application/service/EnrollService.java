@@ -12,6 +12,7 @@ public interface EnrollService {
     Page<EnrollmentBriefDTO> getEnrollmentList(EnrollmentListQueryDTO query);
     EnrollmentDetailDTO getEnrollmentDetail(Long id);
     EnrollmentApprovalResultDTO approveEnrollment(Long id);
+    EnrollmentApprovalResultDTO approveEnrollment(Long id, ApproveEnrollmentRequestDTO request);
     EnrollmentApprovalResultDTO rejectEnrollment(Long id, RejectEnrollmentRequestDTO request);
     EnrollmentStatisticsDTO getStatistics();
     Optional<EnrollVO> checkEnrollmentExists(String studentId);

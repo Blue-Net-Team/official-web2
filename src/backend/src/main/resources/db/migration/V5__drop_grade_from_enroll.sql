@@ -1,0 +1,2 @@
+ALTER TABLE tb_enroll
+    DROP COLUMN IF EXISTS grade;

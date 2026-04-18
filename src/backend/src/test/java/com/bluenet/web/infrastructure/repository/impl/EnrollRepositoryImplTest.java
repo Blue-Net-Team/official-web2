@@ -52,7 +52,6 @@ class EnrollRepositoryImplTest {
     private static final Long TEST_COLLEGE_ID = 1L;
     private static final String TEST_COLLEGE_NAME = "计算机学院";
     private static final String TEST_MAJOR = "计算机科学与技术";
-    private static final Integer TEST_GRADE = 2;
     private static final Direction TEST_DIRECTION = Direction.COMPUTER_VISION;
     private static final Long TEST_AVATAR_ID = 100L;
     private static final String TEST_REFERRAL_CODE = "ABC12345";
@@ -64,7 +63,6 @@ class EnrollRepositoryImplTest {
                 .studentId(TEST_STUDENT_ID)
                 .collegeId(TEST_COLLEGE_ID)
                 .major(TEST_MAJOR)
-                .grade(TEST_GRADE)
                 .direction(TEST_DIRECTION)
                 .avatarId(TEST_AVATAR_ID)
                 .status(EnrollStatus.PENDING)
@@ -199,7 +197,6 @@ class EnrollRepositoryImplTest {
                     .studentId(TEST_STUDENT_ID)
                     .collegeId(TEST_COLLEGE_ID)
                     .major(TEST_MAJOR)
-                    .grade(TEST_GRADE)
                     .direction(TEST_DIRECTION)
                     .avatarFileId(TEST_AVATAR_ID)
                     .status(EnrollStatus.PENDING)

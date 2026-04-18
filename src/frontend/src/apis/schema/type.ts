@@ -226,8 +226,8 @@ export interface CreateEnrollmentRequestDTO {
   collegeId: number
   /** 专业 */
   major: string
-  /** 年级，1-6 */
-  grade: number
+  /** 性别 */
+  gender: Gender
   /** 报名方向 */
   direction: Direction
   /** 头像文件ID（需先调用文件上传接口获取） */
@@ -257,8 +257,8 @@ export interface EnrollmentBriefDTO {
   collegeName: string
   /** 专业 */
   major: string
-  /** 年级 */
-  grade: number
+  /** 性别 */
+  gender: Gender
   /** 报名方向 */
   direction: Direction
   /** 报名状态 */
@@ -589,7 +589,7 @@ export interface EnrollmentDetailDTO {
   collegeId: number
   collegeName: string
   major: string
-  grade: number
+  gender: Gender
   direction: Direction
   status: EnrollStatus
   avatarFileId: number | null
@@ -618,6 +618,10 @@ export interface EnrollmentApprovalResultDTO {
   id: number
   status: EnrollStatus
   createdUserId: number | null
+}
+
+export interface ApproveEnrollmentRequestDTO {
+  assessmentGradeYear?: number
 }
 
 /**

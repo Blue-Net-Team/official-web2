@@ -216,6 +216,7 @@ public class UserRepositoryImpl implements UserRepository {
                 .password(user.getPassword())
                 .username(user.getUsername())
                 .nickname(user.getNickname())
+                .assessmentGradeYear(user.getAssessmentGradeYear())
                 .job(user.getJob())
                 .direction(user.getDirection())
                 .gender(user.getGender())

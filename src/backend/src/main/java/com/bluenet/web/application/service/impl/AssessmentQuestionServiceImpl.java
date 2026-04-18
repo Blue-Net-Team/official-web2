@@ -135,7 +135,9 @@ public class AssessmentQuestionServiceImpl implements AssessmentQuestionService 
                 if (!currentUser.getDirection().equals(timeVO.getDirection())) {
                     throw new SecurityException("无权查看该考核的题目");
                 }
-                Integer userEnrollmentYear = GradeCalculator.extractEnrollmentYear(currentUser.getStudentId());
+                Integer userEnrollmentYear = GradeCalculator.resolveAssessmentYear(
+                        currentUser.getStudentId(),
+                        currentUser.getAssessmentGradeYear());
                 if (userEnrollmentYear != null && !userEnrollmentYear.equals(timeVO.getGrade())) {
                     throw new SecurityException("无权查看该考核的题目");
                 }
@@ -189,7 +191,9 @@ public class AssessmentQuestionServiceImpl implements AssessmentQuestionService 
                 if (!currentUser.getDirection().equals(timeVO.getDirection())) {
                     throw new SecurityException("无权查看该题目");
                 }
-                Integer userEnrollmentYear = GradeCalculator.extractEnrollmentYear(currentUser.getStudentId());
+                Integer userEnrollmentYear = GradeCalculator.resolveAssessmentYear(
+                        currentUser.getStudentId(),
+                        currentUser.getAssessmentGradeYear());
                 if (userEnrollmentYear != null && !userEnrollmentYear.equals(timeVO.getGrade())) {
                     throw new SecurityException("无权查看该题目");
                 }

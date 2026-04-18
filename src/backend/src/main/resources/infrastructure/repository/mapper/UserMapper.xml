@@ -11,6 +11,7 @@
         <result column="nickname" property="nickname"/>
         <result column="college_id" property="collegeId"/>
         <result column="major" property="major"/>
+        <result column="assessment_grade_year" property="assessmentGradeYear"/>
         <result column="direction" property="direction"/>
         <result column="gender" property="gender"/>
         <result column="job" property="job"/>

@@ -6,6 +6,7 @@ import type {
   EnrollmentDetailDTO,
   EnrollmentStatisticsDTO,
   EnrollmentApprovalResultDTO,
+  ApproveEnrollmentRequestDTO,
   RejectEnrollmentRequestDTO,
   EnrollmentListQueryDTO,
 } from '../schema/type'
@@ -40,9 +41,13 @@ export const adminEnrollService = {
    * 通过报名
    * PUT /admin/enrollments/{id}/approve
    */
-  async approve(id: number): Promise<ResponseMessage<EnrollmentApprovalResultDTO>> {
+  async approve(
+    id: number,
+    data: ApproveEnrollmentRequestDTO = {}
+  ): Promise<ResponseMessage<EnrollmentApprovalResultDTO>> {
     const response = await apiClient.put<ResponseMessage<EnrollmentApprovalResultDTO>>(
-      `/admin/enrollments/${id}/approve`
+      `/admin/enrollments/${id}/approve`,
+      data
     )
     return response.data
   },

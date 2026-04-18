@@ -8,6 +8,7 @@ import com.bluenet.web.domain.model.entity.User;
 import com.bluenet.web.domain.model.enumerate.Direction;
 import com.bluenet.web.domain.model.enumerate.EnrollStatus;
 import com.bluenet.web.domain.model.enumerate.FileType;
+import com.bluenet.web.domain.model.enumerate.Gender;
 import com.bluenet.web.domain.model.enumerate.RoleType;
 import com.bluenet.web.domain.model.vo.EnrollBriefVO;
 import com.bluenet.web.domain.model.vo.EnrollStatisticsVO;
@@ -78,7 +79,7 @@ public class EnrollDomainServiceImpl implements EnrollDomainService {
                 .collegeId(enrollment.getCollegeId())
                 .collegeName(enrollment.getCollegeName())
                 .major(enrollment.getMajor())
-                .grade(enrollment.getGrade())
+                .gender(enrollment.getGender())
                 .direction(enrollment.getDirection())
                 .avatarFileId(enrollment.getAvatarFileId())
                 .status(EnrollStatus.PENDING)
@@ -98,6 +99,10 @@ public class EnrollDomainServiceImpl implements EnrollDomainService {
         EnrollVO existing = enrollRepository.findById(enrollment.getId())
                 .orElseThrow(() -> new DataNotFound("报名记录不存在"));
 
+        if (existing.getStatus() != EnrollStatus.PENDING) {
+            throw new DataConflict("报名已审核，无法更新报名信息");
+        }
+
         String newPassword = generateRandomPassword(ENROLL_PASSWORD_LENGTH);
 
         EnrollVO updatedEnrollment = EnrollVO.builder()
@@ -107,7 +112,7 @@ public class EnrollDomainServiceImpl implements EnrollDomainService {
                 .collegeId(enrollment.getCollegeId())
                 .collegeName(enrollment.getCollegeName())
                 .major(enrollment.getMajor())
-                .grade(enrollment.getGrade())
+                .gender(enrollment.getGender())
                 .direction(enrollment.getDirection())
                 .avatarFileId(enrollment.getAvatarFileId())
                 .status(existing.getStatus())
@@ -136,6 +141,12 @@ public class EnrollDomainServiceImpl implements EnrollDomainService {
     @Override
     @Transactional
     public void approveEnrollment(Long id) {
+        approveEnrollment(id, null);
+    }
+
+    @Override
+    @Transactional
+    public void approveEnrollment(Long id, Integer assessmentGradeYear) {
         EnrollVO enrollment = enrollRepository.findById(id)
                 .orElseThrow(() -> new DataNotFound("报名记录不存在"));
 
@@ -147,7 +158,7 @@ public class EnrollDomainServiceImpl implements EnrollDomainService {
         Long createdUserId;
 
         if (existingUser.isEmpty()) {
-            createdUserId = createUserFromEnrollment(enrollment);
+            createdUserId = createUserFromEnrollment(enrollment, assessmentGradeYear);
         } else {
             log.info("学号 {} 对应的用户已存在，跳过创建", enrollment.getStudentId());
             createdUserId = existingUser.get().getId();
@@ -160,7 +171,7 @@ public class EnrollDomainServiceImpl implements EnrollDomainService {
                 .collegeId(enrollment.getCollegeId())
                 .collegeName(enrollment.getCollegeName())
                 .major(enrollment.getMajor())
-                .grade(enrollment.getGrade())
+                .gender(enrollment.getGender())
                 .direction(enrollment.getDirection())
                 .avatarFileId(enrollment.getAvatarFileId())
                 .status(EnrollStatus.APPROVED)
@@ -190,7 +201,7 @@ public class EnrollDomainServiceImpl implements EnrollDomainService {
                 .collegeId(enrollment.getCollegeId())
                 .collegeName(enrollment.getCollegeName())
                 .major(enrollment.getMajor())
-                .grade(enrollment.getGrade())
+                .gender(enrollment.getGender())
                 .direction(enrollment.getDirection())
                 .avatarFileId(enrollment.getAvatarFileId())
                 .status(EnrollStatus.REJECTED)
@@ -216,7 +227,7 @@ public class EnrollDomainServiceImpl implements EnrollDomainService {
         }
     }
 
-    private Long createUserFromEnrollment(EnrollVO enrollment) {
+    private Long createUserFromEnrollment(EnrollVO enrollment, Integer assessmentGradeYear) {
         RoleVO candidateRole = roleRepository.findByName(RoleType.CANDIDATE.getName())
                 .orElseThrow(() -> new GlobalException("CANDIDATE 角色不存在，请先初始化角色数据"));
 
@@ -232,6 +243,8 @@ public class EnrollDomainServiceImpl implements EnrollDomainService {
                 .username(enrollment.getUsername())
                 .collegeId(enrollment.getCollegeId())
                 .major(enrollment.getMajor())
+                .assessmentGradeYear(assessmentGradeYear)
+                .gender(enrollment.getGender() != null ? enrollment.getGender() : Gender.UNKNOWN)
                 .direction(enrollment.getDirection())
                 .avatarId(enrollment.getAvatarFileId())
                 .roleId(candidateRole.getId())

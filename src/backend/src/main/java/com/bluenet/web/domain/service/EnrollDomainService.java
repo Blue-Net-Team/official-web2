@@ -19,6 +19,7 @@ public interface EnrollDomainService {
     Page<EnrollBriefVO> getEnrollmentList(String keyword, EnrollStatus status, Direction direction, Pageable pageable);
     EnrollStatisticsVO getStatistics();
     void approveEnrollment(Long id);
+    void approveEnrollment(Long id, Integer assessmentGradeYear);
     void rejectEnrollment(Long id, String reason);
     void validateAvatar(Long avatarId);
 }

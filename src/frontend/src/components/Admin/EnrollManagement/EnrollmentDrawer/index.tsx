@@ -1,11 +1,12 @@
 'use client'
 
-import { useState } from 'react'
-import { Avatar, Button, Descriptions, Divider, Drawer, Spin, Tag } from 'antd'
+import { useEffect, useState } from 'react'
+import { Avatar, Button, Descriptions, Divider, Drawer, InputNumber, Spin, Tag } from 'antd'
 import { UserOutlined, CheckOutlined, CloseOutlined } from '@ant-design/icons'
 import type { EnrollmentDetailDTO } from '@/apis/schema/type'
-import { DIRECTION_LABELS } from '@/apis/schema/enumerate'
+import { DIRECTION_LABELS, GENDER_LABELS } from '@/apis/schema/enumerate'
 import type { Direction } from '@/apis/schema/enumerate'
+import type { Gender } from '@/apis/schema/enumerate'
 import { API_BASE_URL } from '@/apis/config'
 
 interface EnrollmentDrawerProps {
@@ -13,7 +14,7 @@ interface EnrollmentDrawerProps {
   detail: EnrollmentDetailDTO | null
   loading: boolean
   onClose: () => void
-  onApprove: (id: number) => Promise<void>
+  onApprove: (id: number, assessmentGradeYear?: number) => Promise<void>
   onReject: (id: number) => void
 }
 
@@ -22,8 +23,6 @@ const STATUS_CONFIG: Record<string, { color: string; label: string }> = {
   APPROVED: { color: 'success', label: '已通过' },
   REJECTED: { color: 'error', label: '已拒绝' },
 }
-
-const GRADE_LABELS = ['大一', '大二', '大三', '大四', '大五', '大六']
 
 export const EnrollmentDrawer: React.FC<EnrollmentDrawerProps> = ({
   open,
@@ -36,11 +35,24 @@ export const EnrollmentDrawer: React.FC<EnrollmentDrawerProps> = ({
   const [avatarError, setAvatarError] = useState(false)
   const [approving, setApproving] = useState(false)
 
+  const defaultAssessmentGradeYear =
+    detail?.studentId && /^\d{4}/.test(detail.studentId)
+      ? Number.parseInt(detail.studentId.slice(0, 4), 10)
+      : undefined
+  const [assessmentGradeYear, setAssessmentGradeYear] = useState<number | undefined>(
+    defaultAssessmentGradeYear
+  )
+  const effectiveAssessmentGradeYear = assessmentGradeYear ?? defaultAssessmentGradeYear
+
+  useEffect(() => {
+    setAssessmentGradeYear(defaultAssessmentGradeYear)
+  }, [defaultAssessmentGradeYear])
+
   const handleApprove = async () => {
     if (!detail) return
     setApproving(true)
     try {
-      await onApprove(detail.id)
+      await onApprove(detail.id, effectiveAssessmentGradeYear)
     } finally {
       setApproving(false)
     }
@@ -57,6 +69,9 @@ export const EnrollmentDrawer: React.FC<EnrollmentDrawerProps> = ({
   const directionLabel = detail
     ? (DIRECTION_LABELS[detail.direction as Direction] ?? detail.direction)
     : ''
+  const genderLabel = detail?.gender
+    ? (GENDER_LABELS[detail.gender as Gender] ?? detail.gender)
+    : '未知'
   const avatarSrc = detail?.avatarFileId
     ? `${API_BASE_URL}/file/download/${detail.avatarFileId}`
     : undefined
@@ -105,8 +120,17 @@ export const EnrollmentDrawer: React.FC<EnrollmentDrawerProps> = ({
               <Descriptions.Item label="邮箱">{detail.email}</Descriptions.Item>
               <Descriptions.Item label="学院">{detail.collegeName}</Descriptions.Item>
               <Descriptions.Item label="专业">{detail.major}</Descriptions.Item>
-              <Descriptions.Item label="年级">
-                {GRADE_LABELS[detail.grade - 1] ?? `${detail.grade}`}
+              <Descriptions.Item label="性别">{genderLabel}</Descriptions.Item>
+              <Descriptions.Item label="考核届别">
+                <InputNumber
+                  min={2000}
+                  max={2100}
+                  precision={0}
+                  value={effectiveAssessmentGradeYear}
+                  disabled={detail.status !== 'PENDING'}
+                  onChange={(value) => setAssessmentGradeYear(value ?? undefined)}
+                  style={{ width: 120 }}
+                />
               </Descriptions.Item>
               <Descriptions.Item label="方向">
                 <span className="text-[#fa8c16]">{directionLabel}</span>

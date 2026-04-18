@@ -11,6 +11,7 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 import org.springframework.web.bind.MissingServletRequestParameterException;
 
 import com.bluenet.web.api.dto.ResponseMessage;
+import com.bluenet.web.domain.exception.DataConflict;
 import com.bluenet.web.domain.exception.GlobalException;
 
 import lombok.extern.slf4j.Slf4j;
@@ -102,8 +103,12 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(GlobalException.class)
-    public ResponseEntity<ResponseMessage<Void>> handleGlobalException(GlobalException ex) {
+    public ResponseEntity<ResponseMessage<?>> handleGlobalException(GlobalException ex) {
         logException(ex);
+        if (ex instanceof DataConflict dataConflict && dataConflict.getData() != null) {
+            return ResponseEntity.status(ex.getCode())
+                    .body(ResponseMessage.error(ex.getCode().value(), ex.getMessage(), dataConflict.getData()));
+        }
         return ResponseEntity.status(ex.getCode()).body(ResponseMessage.error(ex));
     }
 

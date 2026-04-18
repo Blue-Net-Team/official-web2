@@ -541,7 +541,6 @@ class AdminCollegeControllerIntegrationTest extends BaseIntegrationTest {
                 .studentId("test002")
                 .collegeId(collegeId)
                 .major("计算机科学与技术")
-                .grade(2)
                 .direction(Direction.COMPUTER_VISION)
                 .status(EnrollStatus.PENDING)
                 .build();

@@ -1,6 +1,7 @@
 package com.bluenet.web.api.dto.enrollment;
 
 import com.bluenet.web.domain.model.enumerate.Direction;
+import com.bluenet.web.domain.model.enumerate.Gender;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
@@ -39,11 +40,9 @@ public class CreateEnrollmentRequestDTO {
     @Schema(description = "专业", required = true, example = "计算机科学与技术")
     private String major;
 
-    @NotNull(message = "年级不能为空")
-    @Min(value = 1, message = "年级最小为1")
-    @Max(value = 6, message = "年级最大为6")
-    @Schema(description = "年级，1-6", required = true, example = "2")
-    private Integer grade;
+    @NotNull(message = "性别不能为空")
+    @Schema(description = "性别", required = true, example = "male")
+    private Gender gender;
 
     @NotNull(message = "方向不能为空")
     @Schema(description = "报名方向", required = true, example = "computer_vision")

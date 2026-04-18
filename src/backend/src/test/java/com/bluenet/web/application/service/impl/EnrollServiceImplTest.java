@@ -20,6 +20,7 @@ import com.bluenet.web.api.dto.enrollment.*;
 import com.bluenet.web.domain.exception.DataNotFound;
 import com.bluenet.web.domain.model.enumerate.Direction;
 import com.bluenet.web.domain.model.enumerate.EnrollStatus;
+import com.bluenet.web.domain.model.enumerate.Gender;
 import com.bluenet.web.domain.model.vo.EnrollBriefVO;
 import com.bluenet.web.domain.model.vo.EnrollStatisticsVO;
 import com.bluenet.web.domain.model.vo.EnrollVO;
@@ -46,7 +47,7 @@ class EnrollServiceImplTest {
     private static final Long TEST_COLLEGE_ID = 1L;
     private static final String TEST_COLLEGE_NAME = "计算机学院";
     private static final String TEST_MAJOR = "计算机科学与技术";
-    private static final Integer TEST_GRADE = 2;
+    private static final Gender TEST_GENDER = Gender.MALE;
     private static final Direction TEST_DIRECTION = Direction.COMPUTER_VISION;
     private static final Long TEST_AVATAR_ID = 100L;
     private static final String TEST_REFERRAL_CODE = "ABC12345";
@@ -57,7 +58,7 @@ class EnrollServiceImplTest {
                 .studentId(TEST_STUDENT_ID)
                 .collegeId(TEST_COLLEGE_ID)
                 .major(TEST_MAJOR)
-                .grade(TEST_GRADE)
+                .gender(TEST_GENDER)
                 .direction(TEST_DIRECTION)
                 .avatarId(TEST_AVATAR_ID)
                 .internalReferralCode(TEST_REFERRAL_CODE)
@@ -72,7 +73,7 @@ class EnrollServiceImplTest {
                 .collegeId(TEST_COLLEGE_ID)
                 .collegeName(TEST_COLLEGE_NAME)
                 .major(TEST_MAJOR)
-                .grade(TEST_GRADE)
+                .gender(TEST_GENDER)
                 .direction(TEST_DIRECTION)
                 .avatarFileId(TEST_AVATAR_ID)
                 .status(EnrollStatus.PENDING)
@@ -87,7 +88,7 @@ class EnrollServiceImplTest {
                 .studentId(TEST_STUDENT_ID)
                 .collegeName(TEST_COLLEGE_NAME)
                 .major(TEST_MAJOR)
-                .grade(TEST_GRADE)
+                .gender(TEST_GENDER)
                 .direction(TEST_DIRECTION)
                 .status(EnrollStatus.PENDING)
                 .avatarFileId(TEST_AVATAR_ID)
@@ -126,7 +127,7 @@ class EnrollServiceImplTest {
                     .studentId(TEST_STUDENT_ID)
                     .collegeId(TEST_COLLEGE_ID)
                     .major(TEST_MAJOR)
-                    .grade(TEST_GRADE)
+                    .gender(TEST_GENDER)
                     .direction(TEST_DIRECTION)
                     .avatarId(null)
                     .build();
@@ -336,7 +337,24 @@ class EnrollServiceImplTest {
             assertEquals(TEST_ID, result.getId());
             assertEquals(EnrollStatus.APPROVED, result.getStatus());
             assertEquals(999L, result.getCreatedUserId());
-            verify(enrollDomainService).approveEnrollment(TEST_ID);
+            verify(enrollDomainService).approveEnrollment(TEST_ID, null);
+        }
+
+        @Test
+        @DisplayName("approve with assessment grade year: should pass override to domain")
+        void approveEnrollment_withAssessmentGradeYear_shouldPassOverride() {
+            EnrollVO vo = createTestEnrollVO();
+            ApproveEnrollmentRequestDTO request = ApproveEnrollmentRequestDTO.builder()
+                    .assessmentGradeYear(2024)
+                    .build();
+
+            when(enrollDomainService.getEnrollmentById(TEST_ID)).thenReturn(Optional.of(vo));
+            when(userRepository.findByStudentId(TEST_STUDENT_ID)).thenReturn(Optional.empty());
+
+            EnrollmentApprovalResultDTO result = enrollService.approveEnrollment(TEST_ID, request);
+
+            assertNotNull(result);
+            verify(enrollDomainService).approveEnrollment(TEST_ID, 2024);
         }
 
         @Test

@@ -73,7 +73,6 @@ class EnrollDomainServiceImplTest {
     private static final Long TEST_COLLEGE_ID = 1L;
     private static final String TEST_COLLEGE_NAME = "计算机学院";
     private static final String TEST_MAJOR = "计算机科学与技术";
-    private static final Integer TEST_GRADE = 2;
     private static final Direction TEST_DIRECTION = Direction.COMPUTER_VISION;
     private static final Long TEST_AVATAR_ID = 100L;
     private static final Long TEST_ROLE_ID = 1L;
@@ -86,7 +85,6 @@ class EnrollDomainServiceImplTest {
                 .collegeId(TEST_COLLEGE_ID)
                 .collegeName(TEST_COLLEGE_NAME)
                 .major(TEST_MAJOR)
-                .grade(TEST_GRADE)
                 .direction(TEST_DIRECTION)
                 .avatarFileId(TEST_AVATAR_ID)
                 .status(EnrollStatus.PENDING)
@@ -100,7 +98,6 @@ class EnrollDomainServiceImplTest {
                 .studentId(TEST_STUDENT_ID)
                 .collegeName(TEST_COLLEGE_NAME)
                 .major(TEST_MAJOR)
-                .grade(TEST_GRADE)
                 .direction(TEST_DIRECTION)
                 .status(EnrollStatus.PENDING)
                 .avatarFileId(TEST_AVATAR_ID)
@@ -216,7 +213,6 @@ class EnrollDomainServiceImplTest {
                     .studentId(TEST_STUDENT_ID)
                     .collegeId(TEST_COLLEGE_ID)
                     .major(TEST_MAJOR)
-                    .grade(TEST_GRADE)
                     .direction(TEST_DIRECTION)
                     .build();
 
@@ -261,8 +257,8 @@ class EnrollDomainServiceImplTest {
         }
 
         @Test
-        @DisplayName("被拒绝的报名更新：状态应保持不变")
-        void updateEnrollment_rejectedEnroll_shouldKeepStatus() {
+        @DisplayName("被拒绝的报名更新：应抛出DataConflict")
+        void updateEnrollment_rejectedEnroll_shouldThrowDataConflict() {
             EnrollVO existing = createTestEnrollVO().toBuilder()
                     .status(EnrollStatus.REJECTED)
                     .build();
@@ -275,14 +271,13 @@ class EnrollDomainServiceImplTest {
 
             when(enrollRepository.findById(TEST_ID)).thenReturn(Optional.of(existing));
 
-            enrollDomainService.updateEnrollment(update);
-
-            verify(enrollRepository).update(argThat(saved -> saved.getStatus() == EnrollStatus.REJECTED));
+            assertThrows(DataConflict.class, () -> enrollDomainService.updateEnrollment(update));
+            verify(enrollRepository, never()).update(any());
         }
 
         @Test
-        @DisplayName("已通过的报名更新：状态应保持不变")
-        void updateEnrollment_approvedEnroll_shouldKeepStatus() {
+        @DisplayName("已通过的报名更新：应抛出DataConflict")
+        void updateEnrollment_approvedEnroll_shouldThrowDataConflict() {
             EnrollVO existing = createTestEnrollVO().toBuilder()
                     .status(EnrollStatus.APPROVED)
                     .build();
@@ -295,9 +290,8 @@ class EnrollDomainServiceImplTest {
 
             when(enrollRepository.findById(TEST_ID)).thenReturn(Optional.of(existing));
 
-            enrollDomainService.updateEnrollment(update);
-
-            verify(enrollRepository).update(argThat(saved -> saved.getStatus() == EnrollStatus.APPROVED));
+            assertThrows(DataConflict.class, () -> enrollDomainService.updateEnrollment(update));
+            verify(enrollRepository, never()).update(any());
         }
     }
 

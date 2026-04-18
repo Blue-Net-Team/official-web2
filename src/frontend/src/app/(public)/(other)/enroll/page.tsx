@@ -9,7 +9,7 @@ import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import styles from './styles.module.css'
 import { enrollService } from '@/apis/services/enroll.service'
-import { CreateEnrollmentRequestDTO, Direction } from '@/apis/schema/type'
+import { CreateEnrollmentRequestDTO, Direction, Gender } from '@/apis/schema/type'
 import { fileService } from '@/apis/services/file.service'
 import { collegeService } from '@/apis/services/college.service'
 import type { CollegeDTO } from '@/apis/schema/type'
@@ -44,9 +44,9 @@ const DIRECTIONS = [
   },
 ]
 
-const GRADE_OPTIONS = [
-  { value: 1, label: '大一' },
-  { value: 2, label: '大二' },
+const GENDER_OPTIONS = [
+  { value: 'MALE' as Gender, label: '男' },
+  { value: 'FEMALE' as Gender, label: '女' },
 ]
 
 const customTheme: ThemeConfig = {
@@ -400,7 +400,7 @@ const EnrollPageContent: React.FC = () => {
           email: values.email,
           collegeId: values.collegeId,
           major: values.major,
-          grade: values.grade,
+          gender: values.gender,
           direction: selectedDirection,
           introduction: values.introduction,
           internalReferralCode: values.internalReferralCode,
@@ -423,8 +423,24 @@ const EnrollPageContent: React.FC = () => {
         }
       } catch (error: unknown) {
         if (error && typeof error === 'object' && 'response' in error) {
-          const err = error as { response?: { data?: { code?: number } } }
+          const err = error as {
+            response?: {
+              data?: {
+                code?: number
+                msg?: string
+                data?: { status?: string }
+              }
+            }
+          }
           if (err.response?.data?.code === 409) {
+            if (err.response.data.data?.status !== 'PENDING') {
+              messageApi.error(
+                err.response.data.data?.status
+                  ? '该报名已审核，无法更新报名信息'
+                  : err.response.data.msg || '该报名已审核，无法更新报名信息'
+              )
+              return
+            }
             modal.confirm({
               title: '该学号已报名',
               content: '是否更新报名信息？',
@@ -526,6 +542,26 @@ const EnrollPageContent: React.FC = () => {
                       <Input placeholder="12-13位数字" maxLength={13} />
                     </Form.Item>
                   </div>
+                  <div className="flex flex-col gap-[6px]">
+                    <label className="text-[13px] font-medium text-white/70 flex items-center gap-1">
+                      性别 <span className="text-[#ff6b35]">*</span>
+                    </label>
+                    <Form.Item
+                      name="gender"
+                      rules={[{ required: true, message: '请选择性别' }]}
+                      className="mb-0"
+                    >
+                      <Select
+                        placeholder="请选择性别"
+                        options={GENDER_OPTIONS.map((opt) => ({
+                          key: opt.value,
+                          value: opt.value,
+                          label: opt.label,
+                        }))}
+                        style={{ width: '100%' }}
+                      />
+                    </Form.Item>
+                  </div>
                 </div>
               </div>
 
@@ -568,7 +604,7 @@ const EnrollPageContent: React.FC = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 max-sm:grid-cols-1 gap-4 animate-[slideIn_0.6s_cubic-bezier(0.4,0,0.2,1)_0.3s_both]">
+              <div className="animate-[slideIn_0.6s_cubic-bezier(0.4,0,0.2,1)_0.3s_both]">
                 <div className="flex flex-col gap-[6px]">
                   <label className="text-[13px] font-medium text-white/70 flex items-center gap-1">
                     专业 <span className="text-[#ff6b35]">*</span>
@@ -579,26 +615,6 @@ const EnrollPageContent: React.FC = () => {
                     className="mb-0"
                   >
                     <Input placeholder="请输入专业名称" />
-                  </Form.Item>
-                </div>
-                <div className="flex flex-col gap-[6px]">
-                  <label className="text-[13px] font-medium text-white/70 flex items-center gap-1">
-                    年级 <span className="text-[#ff6b35]">*</span>
-                  </label>
-                  <Form.Item
-                    name="grade"
-                    rules={[{ required: true, message: '请选择年级' }]}
-                    className="mb-0"
-                  >
-                    <Select
-                      placeholder="请选择年级"
-                      options={GRADE_OPTIONS.map((opt) => ({
-                        key: opt.value,
-                        value: opt.value,
-                        label: opt.label,
-                      }))}
-                      style={{ width: '100%' }}
-                    />
                   </Form.Item>
                 </div>
               </div>

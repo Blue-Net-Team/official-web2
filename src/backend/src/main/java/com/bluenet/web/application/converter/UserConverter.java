@@ -16,7 +16,7 @@ public class UserConverter {
      * @return 用户信息DTO
      */
     public UserInfo convertToUserInfo(UserVO userVO) {
-        String gradeLabel = GradeCalculator.getGradeLabel(userVO.getStudentId());
+        String gradeLabel = GradeCalculator.getGradeLabel(userVO.getStudentId(), userVO.getAssessmentGradeYear());
 
         return UserInfo.builder()
                 .id(userVO.getId())

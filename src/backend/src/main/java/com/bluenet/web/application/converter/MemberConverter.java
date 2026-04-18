@@ -32,7 +32,7 @@ public class MemberConverter {
     }
 
     public MemberDetailDTO toDetailDTO(MemberVO vo) {
-        String gradeLabel = GradeCalculator.getGradeLabel(vo.getStudentId());
+        String gradeLabel = GradeCalculator.getGradeLabel(vo.getStudentId(), vo.getAssessmentGradeYear());
 
         return MemberDetailDTO.builder()
                 .id(vo.getId())

@@ -2,6 +2,7 @@ package com.bluenet.web.api.dto.enrollment;
 
 import com.bluenet.web.domain.model.enumerate.Direction;
 import com.bluenet.web.domain.model.enumerate.EnrollStatus;
+import com.bluenet.web.domain.model.enumerate.Gender;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -35,8 +36,8 @@ public class EnrollmentDetailDTO {
     @Schema(description = "专业", example = "计算机科学与技术")
     private String major;
 
-    @Schema(description = "年级", example = "2")
-    private Integer grade;
+    @Schema(description = "性别", example = "male")
+    private Gender gender;
 
     @Schema(description = "报名方向", example = "computer_vision")
     private Direction direction;

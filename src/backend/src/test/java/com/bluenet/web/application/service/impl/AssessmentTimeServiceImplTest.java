@@ -326,6 +326,34 @@ class AssessmentTimeServiceImplTest {
         }
 
         @Test
+        @DisplayName("CANDIDATE with assessment year override: should use override")
+        void list_candidateWithAssessmentYearOverride_shouldUseOverride() {
+            try (MockedStatic<UserCTX> mockedUserCTX = mockStatic(UserCTX.class)) {
+
+                com.bluenet.web.domain.model.vo.UserVO userVO = com.bluenet.web.domain.model.vo.UserVO.builder()
+                        .id(3L)
+                        .roleName("CANDIDATE")
+                        .direction(Direction.COMPUTER_VISION)
+                        .studentId("2023123456")
+                        .assessmentGradeYear(2024)
+                        .build();
+                mockedUserCTX.when(UserCTX::getCurrentUser).thenReturn(userVO);
+
+                List<AssessmentTimeVO> voList = List.of(createTestVO());
+                Page<AssessmentTimeVO> voPage = new PageImpl<>(voList);
+                when(assessmentTimeRepository.findByFilters(eq(Direction.COMPUTER_VISION), eq(2024), any()))
+                        .thenReturn(voPage);
+                when(assessmentTimeConverter.convertToDTO(any())).thenReturn(createTestDTO());
+
+                PageDTO<AssessmentTimeDTO> result = assessmentTimeService.listAssessmentTimes(0, 5);
+
+                assertNotNull(result);
+                verify(assessmentTimeRepository)
+                        .findByFilters(eq(Direction.COMPUTER_VISION), eq(2024), any());
+            }
+        }
+
+        @Test
         @DisplayName("未登录用户：应返回全部数据")
         void list_noUser_shouldReturnAll() {
             try (MockedStatic<UserCTX> mockedUserCTX = mockStatic(UserCTX.class)) {
@@ -399,6 +427,43 @@ class AssessmentTimeServiceImplTest {
                 assertEquals(1, result.getContent().size());
                 assertEquals(8, result.getContent().get(0).getTotalQuestions());
                 assertEquals(5, result.getContent().get(0).getCompletedQuestions());
+                verify(assessmentTimeRepository).findByUserParticipation(
+                        eq(1L),
+                        eq(Direction.COMPUTER_VISION),
+                        eq(2024),
+                        any());
+            }
+        }
+
+        @Test
+        @DisplayName("CANDIDATE with assessment year override: my assessments should use override")
+        void listForUser_candidateWithAssessmentYearOverride_shouldUseOverride() {
+            try (MockedStatic<UserCTX> mockedUserCTX = mockStatic(UserCTX.class)) {
+                UserVO userVO = UserVO.builder()
+                        .id(1L)
+                        .roleName("CANDIDATE")
+                        .direction(Direction.COMPUTER_VISION)
+                        .studentId("2023123456")
+                        .assessmentGradeYear(2024)
+                        .build();
+                mockedUserCTX.when(UserCTX::getCurrentUser).thenReturn(userVO);
+
+                Page<AssessmentTimeVO> voPage = new PageImpl<>(List.of(createTestVO()));
+                when(
+                        assessmentTimeRepository.findByUserParticipation(
+                                eq(1L),
+                                eq(Direction.COMPUTER_VISION),
+                                eq(2024),
+                                any()))
+                                        .thenReturn(voPage);
+
+                when(assessmentTimeConverter.convertToDTO(any())).thenReturn(createTestDTO());
+                when(assessmentQuestionRepository.countByAssessmentTimeId(TEST_ID)).thenReturn(8);
+                when(assessmentAnswerRepository.countByUserIdAndAssessmentTimeId(1L, TEST_ID)).thenReturn(5);
+
+                PageDTO<AssessmentTimeDTO> result = assessmentTimeService.listAssessmentTimesForUser(0, 5);
+
+                assertNotNull(result);
                 verify(assessmentTimeRepository).findByUserParticipation(
                         eq(1L),
                         eq(Direction.COMPUTER_VISION),

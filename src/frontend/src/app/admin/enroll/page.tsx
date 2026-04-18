@@ -65,16 +65,22 @@ export default function EnrollManagementPage() {
         setList(data.content)
         setTotalElements(data.totalElements)
       }
+    } catch {
+      messageApi.error('获取报名列表失败，请稍后重试')
     } finally {
       setLoading(false)
     }
-  }, [page, filters])
+  }, [page, filters, messageApi])
 
   // Fetch statistics
   const fetchStatistics = useCallback(async () => {
-    const res = await adminEnrollService.getStatistics()
-    if (res.data) setStatistics(res.data)
-  }, [])
+    try {
+      const res = await adminEnrollService.getStatistics()
+      if (res.data) setStatistics(res.data)
+    } catch {
+      messageApi.error('获取报名统计失败，请稍后重试')
+    }
+  }, [messageApi])
 
   // Initial load & refetch on filter/page change
   useEffect(() => {
@@ -95,18 +101,25 @@ export default function EnrollManagementPage() {
     try {
       const res = await adminEnrollService.getDetail(enrollment.id)
       if (res.data) setDrawerDetail(res.data)
+    } catch {
+      messageApi.error('获取报名详情失败，请稍后重试')
+      setDrawerOpen(false)
     } finally {
       setDrawerLoading(false)
     }
   }
 
   // Approve
-  const handleApprove = async (id: number) => {
-    const res = await adminEnrollService.approve(id)
-    if (res.data) {
-      messageApi.success('已通过')
-      setDrawerOpen(false)
-      await Promise.all([fetchList(), fetchStatistics()])
+  const handleApprove = async (id: number, assessmentGradeYear?: number) => {
+    try {
+      const res = await adminEnrollService.approve(id, { assessmentGradeYear })
+      if (res.data) {
+        messageApi.success('已通过')
+        setDrawerOpen(false)
+        await Promise.all([fetchList(), fetchStatistics()])
+      }
+    } catch {
+      messageApi.error('审核通过失败，请稍后重试')
     }
   }
 
@@ -119,15 +132,19 @@ export default function EnrollManagementPage() {
 
   const handleRejectConfirm = async () => {
     if (rejectingId == null) return
-    const res = await adminEnrollService.reject(rejectingId, {
-      reason: rejectReason || undefined,
-    })
-    if (res.data) {
-      messageApi.success('已拒绝')
-      setRejectModalOpen(false)
-      setDrawerOpen(false)
-      setRejectingId(null)
-      await Promise.all([fetchList(), fetchStatistics()])
+    try {
+      const res = await adminEnrollService.reject(rejectingId, {
+        reason: rejectReason || undefined,
+      })
+      if (res.data) {
+        messageApi.success('已拒绝')
+        setRejectModalOpen(false)
+        setDrawerOpen(false)
+        setRejectingId(null)
+        await Promise.all([fetchList(), fetchStatistics()])
+      }
+    } catch {
+      messageApi.error('拒绝报名失败，请稍后重试')
     }
   }
 

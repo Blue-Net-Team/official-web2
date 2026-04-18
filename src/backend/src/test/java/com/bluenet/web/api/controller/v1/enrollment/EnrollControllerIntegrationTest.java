@@ -20,6 +20,7 @@ import com.bluenet.web.domain.model.entity.College;
 import com.bluenet.web.domain.model.entity.Enroll;
 import com.bluenet.web.domain.model.enumerate.Direction;
 import com.bluenet.web.domain.model.enumerate.EnrollStatus;
+import com.bluenet.web.domain.model.enumerate.Gender;
 import com.bluenet.web.infrastructure.repository.mapper.CollegeMapper;
 import com.bluenet.web.infrastructure.repository.mapper.EnrollMapper;
 import com.bluenet.web.testcontainers.TestcontainersConfiguration;
@@ -46,7 +47,6 @@ class EnrollControllerIntegrationTest extends BaseIntegrationTest {
     private static final String TEST_STUDENT_ID = "202311548105";
     private static final String TEST_USERNAME = "张三";
     private static final String TEST_MAJOR = "计算机科学与技术";
-    private static final Integer TEST_GRADE = 2;
     private static final String TEST_EMAIL = "test@example.com";
     private static final String TEST_INTRODUCTION = "我是测试用户，来自计算机科学与技术专业，对计算机视觉方向非常感兴趣。我热爱编程，熟悉Python、Java等多种编程语言，曾参与多个项目开发，希望能够加入蓝网团队学习更多知识，提升自己的技术能力，为团队做出贡献。";
 
@@ -68,7 +68,7 @@ class EnrollControllerIntegrationTest extends BaseIntegrationTest {
                 .email(TEST_EMAIL)
                 .collegeId(testCollegeId)
                 .major(TEST_MAJOR)
-                .grade(TEST_GRADE)
+                .gender(Gender.MALE)
                 .direction(Direction.COMPUTER_VISION)
                 .introduction(TEST_INTRODUCTION)
                 .build();
@@ -133,21 +133,6 @@ class EnrollControllerIntegrationTest extends BaseIntegrationTest {
 
             assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         }
-
-        @Test
-        @DisplayName("年级超出范围：应返回400")
-        void createEnrollment_gradeOutOfRange_shouldReturn400() {
-            CreateEnrollmentRequestDTO request = createTestRequest();
-            request.setGrade(10);
-
-            ResponseEntity<ResponseMessage> response = restTemplate.postForEntity(
-                    "/api/v1/enrollments",
-                    request,
-                    ResponseMessage.class);
-
-            assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        }
-
         @Test
         @DisplayName("学院不存在：应正常创建（学院名称为空）")
         void createEnrollment_nonExistingCollege_shouldCreateWithNullCollegeName() {
@@ -225,8 +210,8 @@ class EnrollControllerIntegrationTest extends BaseIntegrationTest {
         }
 
         @Test
-        @DisplayName("被拒绝的报名更新后：状态应保持REJECTED")
-        void createEnrollment_updateRejectedEnrollment_shouldKeepRejected() {
+        @DisplayName("被拒绝的报名强制更新：应返回409且不覆盖原报名")
+        void createEnrollment_updateRejectedEnrollment_shouldReturn409AndNotOverwrite() {
             CreateEnrollmentRequestDTO request1 = createTestRequest();
             ResponseEntity<ResponseMessage<EnrollmentBriefDTO>> createResponse = restTemplate.exchange(
                     "/api/v1/enrollments",
@@ -244,15 +229,20 @@ class EnrollControllerIntegrationTest extends BaseIntegrationTest {
             request2.setUsername("李四");
             request2.setForceUpdate(true);
 
-            ResponseEntity<ResponseMessage<EnrollmentBriefDTO>> response = restTemplate.exchange(
+            ResponseEntity<ResponseMessage> response = restTemplate.exchange(
                     "/api/v1/enrollments",
                     HttpMethod.POST,
                     new HttpEntity<>(request2),
-                    new ParameterizedTypeReference<ResponseMessage<EnrollmentBriefDTO>>() {
+                    new ParameterizedTypeReference<ResponseMessage>() {
                     });
 
-            assertEquals(HttpStatus.OK, response.getStatusCode());
-            assertEquals(EnrollStatus.REJECTED, response.getBody().getData().getStatus());
+            assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
+            assertNotNull(response.getBody());
+            assertEquals("报名已审核，无法更新报名信息", response.getBody().getMsg());
+
+            Enroll unchanged = enrollMapper.selectById(enrollId);
+            assertEquals(EnrollStatus.REJECTED, unchanged.getStatus());
+            assertEquals(TEST_USERNAME, unchanged.getUsername());
         }
     }
 
@@ -305,39 +295,6 @@ class EnrollControllerIntegrationTest extends BaseIntegrationTest {
 
             assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         }
-
-        @Test
-        @DisplayName("年级边界值1：应正常创建")
-        void createEnrollment_minGrade_shouldCreate() {
-            CreateEnrollmentRequestDTO request = createTestRequest();
-            request.setGrade(1);
-
-            ResponseEntity<ResponseMessage<EnrollmentBriefDTO>> response = restTemplate.exchange(
-                    "/api/v1/enrollments",
-                    HttpMethod.POST,
-                    new HttpEntity<>(request),
-                    new ParameterizedTypeReference<ResponseMessage<EnrollmentBriefDTO>>() {
-                    });
-
-            assertEquals(HttpStatus.CREATED, response.getStatusCode());
-        }
-
-        @Test
-        @DisplayName("年级边界值6：应正常创建")
-        void createEnrollment_maxGrade_shouldCreate() {
-            CreateEnrollmentRequestDTO request = createTestRequest();
-            request.setGrade(6);
-
-            ResponseEntity<ResponseMessage<EnrollmentBriefDTO>> response = restTemplate.exchange(
-                    "/api/v1/enrollments",
-                    HttpMethod.POST,
-                    new HttpEntity<>(request),
-                    new ParameterizedTypeReference<ResponseMessage<EnrollmentBriefDTO>>() {
-                    });
-
-            assertEquals(HttpStatus.CREATED, response.getStatusCode());
-        }
-
         @Test
         @DisplayName("内推码格式正确：应正常创建")
         void createEnrollment_validReferralCode_shouldCreate() {

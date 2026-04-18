@@ -2,6 +2,8 @@ package com.bluenet.web.application.service.impl;
 
 import com.bluenet.web.api.dto.enrollment.*;
 import com.bluenet.web.application.service.EnrollService;
+import com.bluenet.web.domain.exception.BadRequest;
+import com.bluenet.web.domain.exception.DataConflict;
 import com.bluenet.web.domain.exception.DataNotFound;
 import com.bluenet.web.domain.model.enumerate.EnrollStatus;
 import com.bluenet.web.domain.model.vo.EnrollBriefVO;
@@ -29,6 +31,17 @@ public class EnrollServiceImpl implements EnrollService {
     @Override
     @Transactional
     public EnrollmentResultDTO createEnrollment(CreateEnrollmentRequestDTO request) {
+        Optional<EnrollVO> existing = enrollDomainService.getEnrollmentByStudentId(request.getStudentId());
+        if (existing.isPresent()) {
+            if (Boolean.TRUE.equals(request.getForceUpdate())) {
+                EnrollmentBriefDTO updated = updateEnrollment(request.getStudentId(), request);
+                return convertToResultDTO(updated, false);
+            }
+            throw new DataConflict(
+                    "学号已存在，是否更新报名信息？",
+                    convertToConflictDTO(existing.get()));
+        }
+
         if (request.getAvatarId() != null) {
             enrollDomainService.validateAvatar(request.getAvatarId());
         }
@@ -39,7 +52,7 @@ public class EnrollServiceImpl implements EnrollService {
                 .email(request.getEmail())
                 .collegeId(request.getCollegeId())
                 .major(request.getMajor())
-                .grade(request.getGrade())
+                .gender(request.getGender())
                 .direction(request.getDirection())
                 .avatarFileId(request.getAvatarId())
                 .introduction(request.getIntroduction())
@@ -52,8 +65,12 @@ public class EnrollServiceImpl implements EnrollService {
                 .id(id)
                 .username(request.getUsername())
                 .studentId(request.getStudentId())
+                .email(request.getEmail())
+                .major(request.getMajor())
+                .gender(request.getGender())
                 .direction(request.getDirection())
                 .status(EnrollStatus.PENDING)
+                .avatarFileId(request.getAvatarId())
                 .created(true)
                 .build();
     }
@@ -75,7 +92,7 @@ public class EnrollServiceImpl implements EnrollService {
                 .email(request.getEmail())
                 .collegeId(request.getCollegeId())
                 .major(request.getMajor())
-                .grade(request.getGrade())
+                .gender(request.getGender())
                 .direction(request.getDirection())
                 .avatarFileId(request.getAvatarId())
                 .introduction(request.getIntroduction())
@@ -113,10 +130,18 @@ public class EnrollServiceImpl implements EnrollService {
     @Override
     @Transactional
     public EnrollmentApprovalResultDTO approveEnrollment(Long id) {
+        return approveEnrollment(id, null);
+    }
+
+    @Override
+    @Transactional
+    public EnrollmentApprovalResultDTO approveEnrollment(Long id, ApproveEnrollmentRequestDTO request) {
         EnrollVO enrollment = enrollDomainService.getEnrollmentById(id)
                 .orElseThrow(() -> new DataNotFound("报名记录不存在"));
 
-        enrollDomainService.approveEnrollment(id);
+        Integer assessmentGradeYear = request != null ? request.getAssessmentGradeYear() : null;
+        validateAssessmentGradeYear(assessmentGradeYear);
+        enrollDomainService.approveEnrollment(id, assessmentGradeYear);
 
         Long createdUserId = null;
         var user = userRepository.findByStudentId(enrollment.getStudentId());
@@ -129,6 +154,15 @@ public class EnrollServiceImpl implements EnrollService {
                 .status(EnrollStatus.APPROVED)
                 .createdUserId(createdUserId)
                 .build();
+    }
+
+    private void validateAssessmentGradeYear(Integer assessmentGradeYear) {
+        if (assessmentGradeYear == null) {
+            return;
+        }
+        if (assessmentGradeYear < 2000 || assessmentGradeYear > 2100) {
+            throw new BadRequest("assessmentGradeYear must be between 2000 and 2100");
+        }
     }
 
     @Override
@@ -165,7 +199,7 @@ public class EnrollServiceImpl implements EnrollService {
                 .email(vo.getEmail())
                 .collegeName(vo.getCollegeName())
                 .major(vo.getMajor())
-                .grade(vo.getGrade())
+                .gender(vo.getGender())
                 .direction(vo.getDirection())
                 .status(vo.getStatus())
                 .avatarFileId(vo.getAvatarFileId())
@@ -180,7 +214,7 @@ public class EnrollServiceImpl implements EnrollService {
                 .email(vo.getEmail())
                 .collegeName(vo.getCollegeName())
                 .major(vo.getMajor())
-                .grade(vo.getGrade())
+                .gender(vo.getGender())
                 .direction(vo.getDirection())
                 .status(vo.getStatus())
                 .avatarFileId(vo.getAvatarFileId())
@@ -196,13 +230,39 @@ public class EnrollServiceImpl implements EnrollService {
                 .collegeId(vo.getCollegeId())
                 .collegeName(vo.getCollegeName())
                 .major(vo.getMajor())
-                .grade(vo.getGrade())
+                .gender(vo.getGender())
                 .direction(vo.getDirection())
                 .status(vo.getStatus())
                 .avatarFileId(vo.getAvatarFileId())
                 .introduction(vo.getIntroduction())
                 .internalReferralCode(vo.getInternalReferralCode())
                 .referralUserName(vo.getReferralUserName())
+                .build();
+    }
+
+    private EnrollmentResultDTO convertToResultDTO(EnrollmentBriefDTO dto, boolean created) {
+        return EnrollmentResultDTO.builder()
+                .id(dto.getId())
+                .username(dto.getUsername())
+                .studentId(dto.getStudentId())
+                .email(dto.getEmail())
+                .collegeName(dto.getCollegeName())
+                .major(dto.getMajor())
+                .gender(dto.getGender())
+                .direction(dto.getDirection())
+                .status(dto.getStatus())
+                .avatarFileId(dto.getAvatarFileId())
+                .created(created)
+                .build();
+    }
+
+    private EnrollmentConflictDTO convertToConflictDTO(EnrollVO vo) {
+        return EnrollmentConflictDTO.builder()
+                .id(vo.getId())
+                .username(vo.getUsername())
+                .studentId(vo.getStudentId())
+                .status(vo.getStatus())
+                .direction(vo.getDirection())
                 .build();
     }
 }

@@ -54,6 +54,35 @@ class GradeCalculatorTest {
         }
     }
 
+    @Nested
+    @DisplayName("resolveAssessmentYear method tests")
+    class ResolveAssessmentYearTests {
+
+        @Test
+        @DisplayName("override exists: should return override")
+        void resolveAssessmentYear_overrideExists_shouldReturnOverride() {
+            assertEquals(2024, GradeCalculator.resolveAssessmentYear("2023123456", 2024));
+        }
+
+        @Test
+        @DisplayName("override missing: should fallback to student id prefix")
+        void resolveAssessmentYear_overrideMissing_shouldFallbackToStudentId() {
+            assertEquals(2023, GradeCalculator.resolveAssessmentYear("2023123456", null));
+        }
+
+        @Test
+        @DisplayName("invalid student id without override: should return null")
+        void resolveAssessmentYear_invalidStudentIdWithoutOverride_shouldReturnNull() {
+            assertNull(GradeCalculator.resolveAssessmentYear("abcd12345678", null));
+        }
+
+        @Test
+        @DisplayName("grade label should use override year")
+        void getGradeLabel_withOverride_shouldUseOverrideYear() {
+            assertEquals("大二", GradeCalculator.getGradeLabel("2023123456", 2024));
+        }
+    }
+
     // ==================== calculateGrade(enrollmentYear, date) 测试
     // ====================
 

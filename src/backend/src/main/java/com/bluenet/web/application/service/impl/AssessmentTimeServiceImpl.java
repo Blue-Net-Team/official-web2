@@ -114,7 +114,9 @@ public class AssessmentTimeServiceImpl implements AssessmentTimeService {
 
                 if (roleType == RoleType.CANDIDATE) {
                     // CANDIDATE：按入学年份过滤
-                    grade = GradeCalculator.extractEnrollmentYear(currentUser.getStudentId());
+                    grade = GradeCalculator.resolveAssessmentYear(
+                            currentUser.getStudentId(),
+                            currentUser.getAssessmentGradeYear());
                 }
             }
         }
@@ -139,7 +141,9 @@ public class AssessmentTimeServiceImpl implements AssessmentTimeService {
             return PageDTO.from(emptyPage.map(assessmentTimeConverter::convertToDTO));
         }
 
-        Integer enrollmentYear = GradeCalculator.extractEnrollmentYear(currentUser.getStudentId());
+        Integer enrollmentYear = GradeCalculator.resolveAssessmentYear(
+                currentUser.getStudentId(),
+                currentUser.getAssessmentGradeYear());
         Direction direction = currentUser.getDirection();
 
         Page<AssessmentTimeVO> voPage = assessmentTimeRepository.findByUserParticipation(

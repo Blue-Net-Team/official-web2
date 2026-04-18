@@ -4,8 +4,9 @@ import { useState } from 'react'
 import { Avatar, Button, Card, Tag } from 'antd'
 import { UserOutlined, CheckOutlined, CloseOutlined } from '@ant-design/icons'
 import type { EnrollmentBriefDTO } from '@/apis/schema/type'
-import { DIRECTION_LABELS } from '@/apis/schema/enumerate'
+import { DIRECTION_LABELS, GENDER_LABELS } from '@/apis/schema/enumerate'
 import type { Direction } from '@/apis/schema/enumerate'
+import type { Gender } from '@/apis/schema/enumerate'
 import { API_BASE_URL } from '@/apis/config'
 
 export type { EnrollmentBriefDTO }
@@ -39,6 +40,9 @@ export const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
     label: enrollment.status,
   }
   const directionLabel = DIRECTION_LABELS[enrollment.direction as Direction] ?? enrollment.direction
+  const genderLabel = enrollment.gender
+    ? (GENDER_LABELS[enrollment.gender as Gender] ?? enrollment.gender)
+    : '未知'
   const avatarSrc = enrollment.avatarFileId
     ? `${API_BASE_URL}/file/download/${enrollment.avatarFileId}`
     : undefined
@@ -79,7 +83,7 @@ export const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
       </div>
 
       <div className="text-[13px] text-white/65 mb-3">
-        {enrollment.collegeName} · {directionLabel}
+        {enrollment.collegeName} · {genderLabel} · {directionLabel}
       </div>
 
       <div className="flex flex-wrap gap-2">

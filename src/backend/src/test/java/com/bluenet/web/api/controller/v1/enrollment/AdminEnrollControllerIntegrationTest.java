@@ -101,7 +101,6 @@ class AdminEnrollControllerIntegrationTest extends BaseIntegrationTest {
                 .studentId(TEST_STUDENT_ID.substring(0, 8) + uniqueSuffix)
                 .collegeId(testCollegeId)
                 .major("计算机科学与技术")
-                .grade(2)
                 .direction(Direction.COMPUTER_VISION)
                 .status(status)
                 .build();

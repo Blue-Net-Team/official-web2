@@ -70,11 +70,26 @@ public class GradeCalculator {
      * @return 年级标签（如"大一"、"大二"、"已毕业"），无法计算时返回null
      */
     public static String getGradeLabel(String studentId) {
-        Integer gradeNum = calculateGrade(studentId);
+        return getGradeLabel(studentId, null);
+    }
+
+    public static String getGradeLabel(String studentId, Integer assessmentGradeYear) {
+        Integer enrollmentYear = resolveAssessmentYear(studentId, assessmentGradeYear);
+        if (enrollmentYear == null) {
+            return null;
+        }
+        Integer gradeNum = calculateGrade(enrollmentYear, LocalDate.now());
         if (gradeNum == null) {
             return null;
         }
         return gradeNum > 4 ? GRADE_GRADUATED : GRADE_LABELS.getOrDefault(gradeNum, gradeNum + "年级");
+    }
+
+    public static Integer resolveAssessmentYear(String studentId, Integer assessmentGradeYear) {
+        if (assessmentGradeYear != null) {
+            return assessmentGradeYear;
+        }
+        return extractEnrollmentYear(studentId);
     }
 
     /**

@@ -15,6 +15,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
@@ -91,9 +92,10 @@ public class AdminEnrollController {
     @RequiresPermission(name = "通过报名", value = "enrollment:approve", access = AccessLevel.PROTECTED)
     @PutMapping("/{id}/approve")
     public ResponseMessage<EnrollmentApprovalResultDTO> approveEnrollment(
-            @Parameter(description = "报名ID", required = true) @PathVariable Long id) {
+            @Parameter(description = "报名ID", required = true) @PathVariable Long id,
+            @Valid @RequestBody(required = false) ApproveEnrollmentRequestDTO request) {
         try {
-            EnrollmentApprovalResultDTO result = enrollService.approveEnrollment(id);
+            EnrollmentApprovalResultDTO result = enrollService.approveEnrollment(id, request);
             return ResponseMessage.success("审核通过，账号已发放", result);
         } catch (DataNotFound e) {
             return ResponseMessage.error(HttpStatus.NOT_FOUND.value(), e.getMessage());

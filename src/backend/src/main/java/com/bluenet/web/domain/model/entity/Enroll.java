@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.bluenet.web.domain.model.enumerate.Direction;
 import com.bluenet.web.domain.model.enumerate.EnrollStatus;
+import com.bluenet.web.domain.model.enumerate.Gender;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -24,7 +25,7 @@ public class Enroll {
     private String internalReferralCode;
     private Long collegeId;
     private String major;
-    private Integer grade;
+    private Gender gender;
     private Direction direction;
     private Long avatarId;
     private EnrollStatus status;

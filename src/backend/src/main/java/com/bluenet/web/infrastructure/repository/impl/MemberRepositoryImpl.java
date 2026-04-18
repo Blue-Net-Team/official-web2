@@ -16,6 +16,7 @@ import com.bluenet.web.infrastructure.repository.mapper.QrcodeMapper;
 import com.bluenet.web.infrastructure.repository.mapper.RoleMapper;
 import com.bluenet.web.infrastructure.repository.mapper.UserMapper;
 import com.bluenet.web.domain.model.enumerate.RoleType;
+import com.bluenet.web.domain.util.GradeCalculator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
@@ -148,7 +149,9 @@ public class MemberRepositoryImpl implements MemberRepository {
             }
         }
 
-        Integer enrollmentYear = extractEnrollmentYear(user.getStudentId());
+        Integer enrollmentYear = GradeCalculator.resolveAssessmentYear(
+                user.getStudentId(),
+                user.getAssessmentGradeYear());
         String roleName = user.getRoleId() != null ? roleIdToNameMap.get(user.getRoleId()) : null;
 
         RoleType roleType = roleName != null ? RoleType.fromName(roleName) : null;
@@ -169,19 +172,8 @@ public class MemberRepositoryImpl implements MemberRepository {
                 .githubUsername(user.getGithubUsername())
                 .wechatQrcode(wechatQrCodeUrl)
                 .enrollmentYear(enrollmentYear)
+                .assessmentGradeYear(user.getAssessmentGradeYear())
                 .roleName(roleName)
                 .build();
-    }
-
-    private Integer extractEnrollmentYear(String studentId) {
-        if (studentId == null || studentId.length() < 4) {
-            return null;
-        }
-        try {
-            return Integer.parseInt(studentId.substring(0, 4));
-        } catch (NumberFormatException e) {
-            log.warn("Failed to extract enrollment year from studentId: {}", studentId);
-            return null;
-        }
     }
 }

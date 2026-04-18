@@ -175,7 +175,6 @@ class EntityCrudTest extends BaseIntegrationTest {
         enroll.setPassword("password123");
         enroll.setCollegeId(college.getId());
         enroll.setMajor("软件工程");
-        enroll.setGrade(2024);
         enroll.setDirection(Direction.STRUCTURAL_DESIGN);
         enroll.setStatus(EnrollStatus.PENDING);
 

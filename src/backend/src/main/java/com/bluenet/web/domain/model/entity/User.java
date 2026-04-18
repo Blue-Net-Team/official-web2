@@ -26,6 +26,7 @@ public class User {
     private String nickname;
     private Long collegeId;
     private String major;
+    private Integer assessmentGradeYear;
     private Direction direction;
     private Gender gender;
     private String job;

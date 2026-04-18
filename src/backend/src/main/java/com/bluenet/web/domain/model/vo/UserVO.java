@@ -63,6 +63,8 @@ public class UserVO {
      */
     private String major;
 
+    private Integer assessmentGradeYear;
+
     /**
      * 方向
      */
