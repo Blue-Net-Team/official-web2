@@ -18,6 +18,7 @@ public class PermissionConverter {
                 .name(vo.getName())
                 .url(vo.getUrl())
                 .method(vo.getMethod())
+                .accessLevel(vo.getAccessLevel())
                 .assignedRoles(assignedRoles != null ? assignedRoles : List.of())
                 .build();
     }
@@ -60,6 +61,7 @@ public class PermissionConverter {
                         node.setValue(permission.getValue());
                         node.setPermissionId(permission.getId());
                         node.setPermissionCount(1);
+                        node.setAccessLevel(permission.getAccessLevel());
                     }
 
                     nodeMap.put(nodeKey, node);

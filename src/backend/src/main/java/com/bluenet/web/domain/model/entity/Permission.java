@@ -14,4 +14,5 @@ public class Permission {
     private String value;
     private String url;
     private String method;
+    private String accessLevel;
 }

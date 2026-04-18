@@ -645,6 +645,7 @@ export interface PermissionDTO {
   name: string
   url: string | null
   method: string | null
+  accessLevel: string
   assignedRoles: string[]
 }
 
@@ -661,6 +662,7 @@ export interface PermissionTreeDTO {
   value: string | null
   permissionId: number | null
   leaf: boolean
+  accessLevel: string | null
   children: PermissionTreeDTO[]
   permissionCount: number
 }

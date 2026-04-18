@@ -147,7 +147,8 @@ public class PermissionScanner implements InitializingBean {
             // 为每个HTTP方法创建权限
             for (RequestMethod method : methods) {
                 permissions.add(
-                        new PermissionInfo(permissionInfo.getValue(), permissionInfo.getName(), url, method.name()));
+                        new PermissionInfo(permissionInfo.getValue(), permissionInfo.getName(), url, method.name(),
+                                permissionInfo.getAccess().name()));
             }
         }
 
@@ -169,7 +170,8 @@ public class PermissionScanner implements InitializingBean {
      */
     private boolean isSame(PermissionInfo info, Permission existing) {
         return Objects.equals(info.getName(), existing.getName()) && Objects.equals(info.getUrl(), existing.getUrl())
-                && Objects.equals(info.getMethod(), existing.getMethod());
+                && Objects.equals(info.getMethod(), existing.getMethod())
+                && Objects.equals(info.getAccessLevel(), existing.getAccessLevel());
     }
 
     /**
@@ -184,6 +186,7 @@ public class PermissionScanner implements InitializingBean {
             permission.setName(info.getName());
             permission.setUrl(info.getUrl());
             permission.setMethod(info.getMethod());
+            permission.setAccessLevel(info.getAccessLevel());
             permissionMapper.insert(permission);
         }
 
@@ -197,6 +200,7 @@ public class PermissionScanner implements InitializingBean {
                 existing.setName(info.getName());
                 existing.setUrl(info.getUrl());
                 existing.setMethod(info.getMethod());
+                existing.setAccessLevel(info.getAccessLevel());
                 permissionMapper.updateById(existing);
             }
         }
@@ -220,12 +224,14 @@ public class PermissionScanner implements InitializingBean {
         private final String name;
         private final String url;
         private final String method;
+        private final String accessLevel;
 
-        public PermissionInfo(String value, String name, String url, String method) {
+        public PermissionInfo(String value, String name, String url, String method, String accessLevel) {
             this.value = value;
             this.name = name;
             this.url = url;
             this.method = method;
+            this.accessLevel = accessLevel;
         }
 
         public String getValue() {
@@ -242,6 +248,10 @@ public class PermissionScanner implements InitializingBean {
 
         public String getMethod() {
             return method;
+        }
+
+        public String getAccessLevel() {
+            return accessLevel;
         }
     }
 }

@@ -1,21 +1,71 @@
 'use client'
 
-import { useState, useCallback } from 'react'
-import { Card, Radio, Button, Space, App, Alert, Typography, Divider } from 'antd'
-import { CheckOutlined, DeleteOutlined, InfoCircleOutlined } from '@ant-design/icons'
+import { useState, useCallback, useRef, useMemo } from 'react'
+import {
+  Card,
+  Radio,
+  Button,
+  Space,
+  App,
+  Alert,
+  Typography,
+  Divider,
+  Descriptions,
+  Tag,
+} from 'antd'
+import { SaveOutlined, InfoCircleOutlined } from '@ant-design/icons'
 import PermissionTree from '@/components/Admin/PermissionTree'
 import { adminPermissionService } from '@/apis/services/admin-permission.service'
 import { getRoleLevel } from '@/utils/RoleUtils'
 import authStore from '@/stores/authStore'
+import type { PermissionDTO, PermissionTreeDTO } from '@/apis/schema/type'
 
 const { Title, Text } = Typography
 
+const ACCESS_LEVEL_CONFIG: Record<string, { color: string; label: string }> = {
+  PUBLIC: { color: 'green', label: '公开访问' },
+  AUTHENTICATED: { color: 'blue', label: '登录即可' },
+  PROTECTED: { color: 'default', label: '需要权限' },
+}
+
 const ROLES = [
-  { value: 'SUPER_ADMIN', label: '超级管理员', description: '绕过权限检查，无需分配权限' },
+  { value: 'SUPER_ADMIN', label: '超级管理员' },
   { value: 'DIRECTION_ADMIN', label: '方向管理员' },
   { value: 'MEMBER', label: '正式成员' },
   { value: 'CANDIDATE', label: '候选人' },
 ]
+
+function mapValuesToIds(nodes: PermissionTreeDTO[], valueSet: Set<string>): number[] {
+  const ids: number[] = []
+  const walk = (list: PermissionTreeDTO[]) => {
+    for (const node of list) {
+      if (node.leaf && node.value && valueSet.has(node.value) && node.permissionId != null) {
+        ids.push(node.permissionId)
+      }
+      if (node.children) walk(node.children)
+    }
+  }
+  walk(nodes)
+  return ids
+}
+
+function getAlwaysEnabledIds(nodes: PermissionTreeDTO[]): Set<number> {
+  const ids = new Set<number>()
+  const walk = (list: PermissionTreeDTO[]) => {
+    for (const node of list) {
+      if (
+        node.leaf &&
+        (node.accessLevel === 'PUBLIC' || node.accessLevel === 'AUTHENTICATED') &&
+        node.permissionId != null
+      ) {
+        ids.add(node.permissionId)
+      }
+      if (node.children) walk(node.children)
+    }
+  }
+  walk(nodes)
+  return ids
+}
 
 export default function RolePermissionPage() {
   const { message } = App.useApp()
@@ -25,17 +75,44 @@ export default function RolePermissionPage() {
   const [selectedRole, setSelectedRole] = useState<string>('MEMBER')
   const [assignedPermissions, setAssignedPermissions] = useState<string[]>([])
   const [selectedPermissionIds, setSelectedPermissionIds] = useState<number[]>([])
+  const [initialPermissionIds, setInitialPermissionIds] = useState<number[]>([])
   const [loading, setLoading] = useState(false)
+  const [previewPermission, setPreviewPermission] = useState<PermissionDTO | null>(null)
+
+  const treeDataRef = useRef<PermissionTreeDTO[]>([])
+
+  const hasChanges = useMemo(() => {
+    const current = new Set(selectedPermissionIds)
+    const initial = new Set(initialPermissionIds)
+    if (current.size !== initial.size) return true
+    for (const id of current) {
+      if (!initial.has(id)) return true
+    }
+    return false
+  }, [selectedPermissionIds, initialPermissionIds])
 
   const handleRoleChange = useCallback(
     async (roleName: string) => {
       setSelectedRole(roleName)
+      setPreviewPermission(null)
       setSelectedPermissionIds([])
+      setInitialPermissionIds([])
       setLoading(true)
       try {
-        const res = await adminPermissionService.getRolePermissions(roleName)
-        if (res.code === 200 && res.data) {
-          setAssignedPermissions(res.data)
+        const [permRes, treeRes] = await Promise.all([
+          adminPermissionService.getRolePermissions(roleName),
+          adminPermissionService.getPermissionTree(),
+        ])
+
+        if (treeRes.code === 200 && treeRes.data) {
+          treeDataRef.current = treeRes.data
+        }
+
+        if (permRes.code === 200 && permRes.data) {
+          setAssignedPermissions(permRes.data)
+          const ids = mapValuesToIds(treeDataRef.current, new Set(permRes.data))
+          setInitialPermissionIds(ids)
+          setSelectedPermissionIds(ids)
         }
       } catch {
         message.error('加载角色权限失败')
@@ -50,49 +127,65 @@ export default function RolePermissionPage() {
     setSelectedPermissionIds(ids)
   }, [])
 
-  const handleAssign = async () => {
-    if (selectedPermissionIds.length === 0) {
-      message.warning('请先选择要分配的权限')
-      return
-    }
-    setLoading(true)
+  const handlePermissionSelect = useCallback(async (permissionId: number) => {
     try {
-      const res = await adminPermissionService.assignPermissionsToRole(selectedRole, {
-        permissionIds: selectedPermissionIds,
-      })
+      const res = await adminPermissionService.getPermissionDetail(permissionId)
       if (res.code === 200 && res.data) {
-        message.success(`成功分配 ${res.data.successCount} 个权限`)
-        setAssignedPermissions(res.data.currentPermissions)
-        setSelectedPermissionIds([])
-      } else {
-        message.error(res.msg || '分配失败')
+        setPreviewPermission(res.data)
       }
     } catch {
-      message.error('分配权限失败')
-    } finally {
-      setLoading(false)
+      // silently ignore
     }
-  }
+  }, [])
 
-  const handleRemove = async () => {
-    if (selectedPermissionIds.length === 0) {
-      message.warning('请先选择要移除的权限')
+  const handleSave = async () => {
+    const alwaysEnabled = getAlwaysEnabledIds(treeDataRef.current)
+
+    const toAdd = selectedPermissionIds.filter(
+      (id) => !initialPermissionIds.includes(id) && !alwaysEnabled.has(id)
+    )
+    const toRemove = initialPermissionIds.filter(
+      (id) => !selectedPermissionIds.includes(id) && !alwaysEnabled.has(id)
+    )
+
+    if (toAdd.length === 0 && toRemove.length === 0) {
+      message.info('没有需要变更的权限')
       return
     }
+
     setLoading(true)
     try {
-      const res = await adminPermissionService.removePermissionsFromRole(selectedRole, {
-        permissionIds: selectedPermissionIds,
-      })
-      if (res.code === 200 && res.data) {
-        message.success(`成功移除 ${res.data.successCount} 个权限`)
-        setAssignedPermissions(res.data.currentPermissions)
-        setSelectedPermissionIds([])
-      } else {
-        message.error(res.msg || '移除失败')
+      if (toAdd.length > 0) {
+        const res = await adminPermissionService.assignPermissionsToRole(selectedRole, {
+          permissionIds: toAdd,
+        })
+        if (res.code !== 200) {
+          message.error(res.msg || '分配权限失败')
+          return
+        }
+      }
+      if (toRemove.length > 0) {
+        const res = await adminPermissionService.removePermissionsFromRole(selectedRole, {
+          permissionIds: toRemove,
+        })
+        if (res.code !== 200) {
+          message.error(res.msg || '移除权限失败')
+          return
+        }
+      }
+
+      message.success('权限已更新')
+
+      // Reload fresh state
+      const permRes = await adminPermissionService.getRolePermissions(selectedRole)
+      if (permRes.code === 200 && permRes.data) {
+        setAssignedPermissions(permRes.data)
+        const ids = mapValuesToIds(treeDataRef.current, new Set(permRes.data))
+        setInitialPermissionIds(ids)
+        setSelectedPermissionIds(ids)
       }
     } catch {
-      message.error('移除权限失败')
+      message.error('操作失败')
     } finally {
       setLoading(false)
     }
@@ -108,10 +201,48 @@ export default function RolePermissionPage() {
 
       <div style={{ display: 'flex', gap: 24 }}>
         <Card
-          title="选择角色"
-          style={{ width: 280, flexShrink: 0 }}
+          title={`权限列表 - ${ROLES.find((r) => r.value === selectedRole)?.label || selectedRole}`}
+          style={{ flex: 1 }}
           styles={{ body: { padding: 16 } }}
         >
+          <PermissionTree
+            assignedPermissions={assignedPermissions}
+            onSelectionChange={handleSelectionChange}
+            onSelect={handlePermissionSelect}
+            mode="checkable"
+          />
+        </Card>
+
+        <Card
+          title="角色权限分配"
+          style={{ width: 360, flexShrink: 0 }}
+          styles={{ body: { padding: 16 } }}
+          extra={
+            <Button
+              type="primary"
+              icon={<SaveOutlined />}
+              onClick={handleSave}
+              loading={loading}
+              disabled={isSuperAdmin || !hasChanges}
+            >
+              保存
+            </Button>
+          }
+        >
+          {isSuperAdmin && (
+            <Alert
+              message="SUPER_ADMIN 角色绕过权限检查"
+              description="该角色自动拥有所有权限，无需手动分配或移除。"
+              type="info"
+              icon={<InfoCircleOutlined />}
+              showIcon
+              style={{ marginBottom: 16 }}
+            />
+          )}
+
+          <Text strong style={{ display: 'block', marginBottom: 12 }}>
+            选择角色
+          </Text>
           <Radio.Group
             value={selectedRole}
             onChange={(e) => handleRoleChange(e.target.value)}
@@ -140,50 +271,30 @@ export default function RolePermissionPage() {
           <div style={{ fontSize: 12, color: '#999' }}>
             <Text type="secondary">已分配权限数：{assignedPermissions.length}</Text>
           </div>
-        </Card>
 
-        <Card
-          title={`权限列表 - ${ROLES.find((r) => r.value === selectedRole)?.label || selectedRole}`}
-          style={{ flex: 1 }}
-          styles={{ body: { padding: 16 } }}
-          extra={
-            <Space>
-              <Button
-                type="primary"
-                icon={<CheckOutlined />}
-                onClick={handleAssign}
-                loading={loading}
-                disabled={isSuperAdmin || selectedPermissionIds.length === 0}
-              >
-                分配选中权限
-              </Button>
-              <Button
-                danger
-                icon={<DeleteOutlined />}
-                onClick={handleRemove}
-                loading={loading}
-                disabled={isSuperAdmin || selectedPermissionIds.length === 0}
-              >
-                移除选中权限
-              </Button>
-            </Space>
-          }
-        >
-          {isSuperAdmin && (
-            <Alert
-              message="SUPER_ADMIN 角色绕过权限检查"
-              description="该角色自动拥有所有权限，无需手动分配或移除。"
-              type="info"
-              icon={<InfoCircleOutlined />}
-              showIcon
-              style={{ marginBottom: 16 }}
-            />
+          {previewPermission && (
+            <>
+              <Divider />
+              <Descriptions column={1} size="small" bordered>
+                <Descriptions.Item label="权限标识">{previewPermission.value}</Descriptions.Item>
+                <Descriptions.Item label="权限名称">{previewPermission.name}</Descriptions.Item>
+                <Descriptions.Item label="访问级别">
+                  <Tag
+                    color={ACCESS_LEVEL_CONFIG[previewPermission.accessLevel]?.color || 'default'}
+                  >
+                    {ACCESS_LEVEL_CONFIG[previewPermission.accessLevel]?.label ||
+                      previewPermission.accessLevel}
+                  </Tag>
+                </Descriptions.Item>
+                <Descriptions.Item label="接口路径">
+                  {previewPermission.url || '-'}
+                </Descriptions.Item>
+                <Descriptions.Item label="HTTP方法">
+                  {previewPermission.method || '-'}
+                </Descriptions.Item>
+              </Descriptions>
+            </>
           )}
-
-          <PermissionTree
-            assignedPermissions={assignedPermissions}
-            onSelectionChange={handleSelectionChange}
-          />
         </Card>
       </div>
     </div>

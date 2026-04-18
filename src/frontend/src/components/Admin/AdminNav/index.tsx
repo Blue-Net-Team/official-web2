@@ -67,6 +67,28 @@ export const menuConfig: MenuItemConfig[] = [
     minLevel: 3,
   },
   {
+    key: 'permission',
+    label: '权限管理',
+    icon: <SafetyOutlined />,
+    minLevel: 3,
+    children: [
+      {
+        key: 'permissionRole',
+        label: '角色权限',
+        path: '/admin/permissions/role',
+        icon: <TeamOutlined />,
+        minLevel: 3,
+      },
+      {
+        key: 'permissionPermission',
+        label: '权限角色',
+        path: '/admin/permissions/permission',
+        icon: <KeyOutlined />,
+        minLevel: 3,
+      },
+    ],
+  },
+  {
     key: 'assessment',
     label: '考核',
     icon: <CheckCircleOutlined />,
@@ -92,28 +114,6 @@ export const menuConfig: MenuItemConfig[] = [
         path: '/admin/assessment/judge',
         icon: <CheckCircleOutlined />,
         minLevel: 1,
-      },
-    ],
-  },
-  {
-    key: 'permission',
-    label: '权限管理',
-    icon: <SafetyOutlined />,
-    minLevel: 3,
-    children: [
-      {
-        key: 'permissionRole',
-        label: '角色权限',
-        path: '/admin/permissions/role',
-        icon: <TeamOutlined />,
-        minLevel: 3,
-      },
-      {
-        key: 'permissionPermission',
-        label: '权限角色',
-        path: '/admin/permissions/permission',
-        icon: <KeyOutlined />,
-        minLevel: 3,
       },
     ],
   },

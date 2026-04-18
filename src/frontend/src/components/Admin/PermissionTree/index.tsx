@@ -1,15 +1,19 @@
 'use client'
 
 import { useState, useEffect, useMemo, useCallback } from 'react'
-import { Tree, Input, Spin, Empty, Badge } from 'antd'
+import { Tree, Input, Spin, Empty, Badge, Tag } from 'antd'
 import { SearchOutlined } from '@ant-design/icons'
 import type { TreeProps } from 'antd'
 import type { PermissionTreeDTO } from '@/apis/schema/type'
 import { adminPermissionService } from '@/apis/services/admin-permission.service'
 
+type PermissionTreeMode = 'checkable' | 'selectable'
+
 interface PermissionTreeProps {
   assignedPermissions: string[]
-  onSelectionChange: (permissionIds: number[]) => void
+  onSelectionChange?: (permissionIds: number[]) => void
+  onSelect?: (permissionId: number) => void
+  mode?: PermissionTreeMode
 }
 
 interface AntdTreeNode {
@@ -17,13 +21,26 @@ interface AntdTreeNode {
   title: React.ReactNode
   isLeaf?: boolean
   permissionId?: number | null
+  accessLevel?: string | null
+  disabled?: boolean
   children?: AntdTreeNode[]
+}
+
+const ACCESS_LEVEL_CONFIG: Record<string, { color: string; label: string }> = {
+  PUBLIC: { color: 'green', label: '公开' },
+  AUTHENTICATED: { color: 'blue', label: '登录' },
+  PROTECTED: { color: 'default', label: '受保护' },
+}
+
+function isAlwaysEnabled(accessLevel: string | null | undefined): boolean {
+  return accessLevel === 'PUBLIC' || accessLevel === 'AUTHENTICATED'
 }
 
 function treeToAntdNodes(
   nodes: PermissionTreeDTO[],
   searchKeyword: string,
-  assignedSet: Set<string>
+  assignedSet: Set<string>,
+  mode: PermissionTreeMode
 ): AntdTreeNode[] {
   return nodes
     .map((node): AntdTreeNode | null => {
@@ -33,7 +50,7 @@ function treeToAntdNodes(
         (node.value != null && node.value.toLowerCase().includes(searchKeyword.toLowerCase()))
 
       const childNodes = node.children
-        ? treeToAntdNodes(node.children, searchKeyword, assignedSet)
+        ? treeToAntdNodes(node.children, searchKeyword, assignedSet, mode)
         : []
 
       if (!matchesSearch && childNodes.length === 0) {
@@ -41,12 +58,24 @@ function treeToAntdNodes(
       }
 
       const isAssigned = node.value != null && assignedSet.has(node.value)
+      const alwaysEnabled = isAlwaysEnabled(node.accessLevel)
+
+      const accessTag =
+        node.leaf && node.accessLevel ? (
+          <Tag
+            color={ACCESS_LEVEL_CONFIG[node.accessLevel]?.color || 'default'}
+            style={{ marginLeft: 4, fontSize: 11, lineHeight: '18px', padding: '0 4px' }}
+          >
+            {ACCESS_LEVEL_CONFIG[node.accessLevel]?.label || node.accessLevel}
+          </Tag>
+        ) : null
 
       return {
         key: node.key,
         title: (
           <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
             {node.title}
+            {accessTag}
             {isAssigned && <Badge status="success" style={{ marginLeft: 4 }} />}
             {!node.leaf && node.permissionCount > 0 && (
               <span style={{ color: '#999', fontSize: 12 }}>({node.permissionCount})</span>
@@ -55,6 +84,8 @@ function treeToAntdNodes(
         ),
         isLeaf: node.leaf,
         permissionId: node.permissionId,
+        accessLevel: node.accessLevel,
+        disabled: mode === 'checkable' && alwaysEnabled,
         children: childNodes.length > 0 ? childNodes : undefined,
       }
     })
@@ -92,11 +123,31 @@ function collectAllLeafIds(nodes: PermissionTreeDTO[]): number[] {
   return ids
 }
 
-const PermissionTree = ({ assignedPermissions, onSelectionChange }: PermissionTreeProps) => {
+/** Collect keys of always-enabled (PUBLIC/AUTHENTICATED) leaf permissions */
+function collectAlwaysEnabledKeys(nodes: PermissionTreeDTO[]): string[] {
+  const keys: string[] = []
+  for (const node of nodes) {
+    if (node.leaf && isAlwaysEnabled(node.accessLevel)) {
+      keys.push(node.key)
+    }
+    if (node.children) {
+      keys.push(...collectAlwaysEnabledKeys(node.children))
+    }
+  }
+  return keys
+}
+
+const PermissionTree = ({
+  assignedPermissions,
+  onSelectionChange,
+  onSelect,
+  mode = 'checkable',
+}: PermissionTreeProps) => {
   const [treeData, setTreeData] = useState<PermissionTreeDTO[]>([])
   const [loading, setLoading] = useState(false)
   const [searchKeyword, setSearchKeyword] = useState('')
   const [checkedKeys, setCheckedKeys] = useState<string[]>([])
+  const [selectedKey, setSelectedKey] = useState<string | null>(null)
 
   useEffect(() => {
     const fetchTree = async () => {
@@ -115,8 +166,15 @@ const PermissionTree = ({ assignedPermissions, onSelectionChange }: PermissionTr
 
   const assignedSet = useMemo(() => new Set(assignedPermissions), [assignedPermissions])
 
+  // Keys that are always enabled (PUBLIC/AUTHENTICATED)
+  const alwaysEnabledKeys = useMemo(() => new Set(collectAlwaysEnabledKeys(treeData)), [treeData])
+
   useEffect(() => {
     const assignedKeys: string[] = []
+    // Include always-enabled keys
+    for (const key of alwaysEnabledKeys) {
+      assignedKeys.push(key)
+    }
     const walk = (nodes: PermissionTreeDTO[]) => {
       for (const node of nodes) {
         if (node.leaf && node.value != null && assignedSet.has(node.value)) {
@@ -127,31 +185,50 @@ const PermissionTree = ({ assignedPermissions, onSelectionChange }: PermissionTr
     }
     walk(treeData)
     setCheckedKeys(assignedKeys)
-  }, [assignedSet, treeData])
+  }, [assignedSet, treeData, alwaysEnabledKeys])
 
   const antdTreeData = useMemo(
-    () => treeToAntdNodes(treeData, searchKeyword, assignedSet),
-    [treeData, searchKeyword, assignedSet]
+    () => treeToAntdNodes(treeData, searchKeyword, assignedSet, mode),
+    [treeData, searchKeyword, assignedSet, mode]
   )
 
   const handleCheck: TreeProps['onCheck'] = useCallback(
-    (checked) => {
+    (checked: React.Key[] | { checked: React.Key[]; halfChecked: React.Key[] }) => {
       const keys = (Array.isArray(checked) ? checked : []) as string[]
-      setCheckedKeys(keys)
+      // Always keep always-enabled keys checked
+      const finalKeys = Array.from(new Set([...keys, ...alwaysEnabledKeys]))
+      setCheckedKeys(finalKeys)
 
-      const selectedIds: number[] = []
-      const walk = (nodes: PermissionTreeDTO[]) => {
-        for (const node of nodes) {
-          if (node.leaf && keys.includes(node.key) && node.permissionId != null) {
-            selectedIds.push(node.permissionId)
+      if (onSelectionChange) {
+        const selectedIds: number[] = []
+        const walk = (nodes: PermissionTreeDTO[]) => {
+          for (const node of nodes) {
+            if (node.leaf && finalKeys.includes(node.key) && node.permissionId != null) {
+              selectedIds.push(node.permissionId)
+            }
+            if (node.children) walk(node.children)
           }
-          if (node.children) walk(node.children)
+        }
+        walk(treeData)
+        onSelectionChange(selectedIds)
+      }
+    },
+    [treeData, onSelectionChange, alwaysEnabledKeys]
+  )
+
+  const handleSelect: TreeProps['onSelect'] = useCallback(
+    (selectedKeys: React.Key[]) => {
+      const key = selectedKeys[0] as string | undefined
+      setSelectedKey(key || null)
+
+      if (key && onSelect) {
+        const node = findNodeByKey(treeData, key)
+        if (node?.leaf && node.permissionId != null) {
+          onSelect(node.permissionId)
         }
       }
-      walk(treeData)
-      onSelectionChange(selectedIds)
     },
-    [treeData, onSelectionChange]
+    [treeData, onSelect]
   )
 
   if (loading) {
@@ -174,9 +251,11 @@ const PermissionTree = ({ assignedPermissions, onSelectionChange }: PermissionTr
       />
       {antdTreeData && antdTreeData.length > 0 ? (
         <Tree
-          checkable
-          checkedKeys={checkedKeys}
-          onCheck={handleCheck}
+          checkable={mode === 'checkable'}
+          checkedKeys={mode === 'checkable' ? checkedKeys : undefined}
+          onCheck={mode === 'checkable' ? handleCheck : undefined}
+          selectedKeys={selectedKey ? [selectedKey] : []}
+          onSelect={onSelect ? handleSelect : undefined}
           treeData={antdTreeData}
           defaultExpandAll={!!searchKeyword}
           showLine={{ showLeafIcon: false }}
@@ -186,6 +265,17 @@ const PermissionTree = ({ assignedPermissions, onSelectionChange }: PermissionTr
       )}
     </div>
   )
+}
+
+function findNodeByKey(nodes: PermissionTreeDTO[], key: string): PermissionTreeDTO | null {
+  for (const node of nodes) {
+    if (node.key === key) return node
+    if (node.children) {
+      const found = findNodeByKey(node.children, key)
+      if (found) return found
+    }
+  }
+  return null
 }
 
 export default PermissionTree

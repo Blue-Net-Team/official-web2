@@ -1,7 +1,18 @@
 'use client'
 
 import { useState, useCallback, useMemo } from 'react'
-import { Card, Checkbox, Button, Space, App, Typography, Descriptions, Spin, Empty } from 'antd'
+import {
+  Card,
+  Checkbox,
+  Button,
+  Space,
+  App,
+  Typography,
+  Descriptions,
+  Spin,
+  Empty,
+  Tag,
+} from 'antd'
 import { SaveOutlined } from '@ant-design/icons'
 import PermissionTree from '@/components/Admin/PermissionTree'
 import { adminPermissionService } from '@/apis/services/admin-permission.service'
@@ -9,8 +20,13 @@ import type { PermissionDTO } from '@/apis/schema/type'
 
 const { Title, Text } = Typography
 
+const ACCESS_LEVEL_CONFIG: Record<string, { color: string; label: string }> = {
+  PUBLIC: { color: 'green', label: '公开访问' },
+  AUTHENTICATED: { color: 'blue', label: '登录即可' },
+  PROTECTED: { color: 'default', label: '需要权限' },
+}
+
 const AVAILABLE_ROLES = [
-  { value: 'SUPER_ADMIN', label: '超级管理员' },
   { value: 'DIRECTION_ADMIN', label: '方向管理员' },
   { value: 'MEMBER', label: '正式成员' },
   { value: 'CANDIDATE', label: '候选人' },
@@ -25,23 +41,14 @@ export default function PermissionRolePage() {
   const [checkedRoles, setCheckedRoles] = useState<string[]>([])
   const [loading, setLoading] = useState(false)
 
-  const handleSelectionChange = useCallback(
-    async (ids: number[]) => {
-      if (ids.length === 0) {
-        setSelectedPermissionId(null)
-        setPermissionDetail(null)
-        setAssignedRoles([])
-        setCheckedRoles([])
-        return
-      }
-
-      const permId = ids[ids.length - 1]
-      setSelectedPermissionId(permId)
+  const handleSelect = useCallback(
+    async (permissionId: number) => {
+      setSelectedPermissionId(permissionId)
       setLoading(true)
       try {
         const [detailRes, rolesRes] = await Promise.all([
-          adminPermissionService.getPermissionDetail(permId),
-          adminPermissionService.getPermissionRoles(permId),
+          adminPermissionService.getPermissionDetail(permissionId),
+          adminPermissionService.getPermissionRoles(permissionId),
         ])
 
         if (detailRes.code === 200 && detailRes.data) {
@@ -60,9 +67,19 @@ export default function PermissionRolePage() {
     [message]
   )
 
-  const handleRoleCheck = useCallback((roleName: string, checked: boolean) => {
-    setCheckedRoles((prev) => (checked ? [...prev, roleName] : prev.filter((r) => r !== roleName)))
-  }, [])
+  const isAlwaysEnabled = permissionDetail
+    ? permissionDetail.accessLevel === 'PUBLIC' || permissionDetail.accessLevel === 'AUTHENTICATED'
+    : false
+
+  const handleRoleCheck = useCallback(
+    (roleName: string, checked: boolean) => {
+      if (isAlwaysEnabled) return
+      setCheckedRoles((prev) =>
+        checked ? [...prev, roleName] : prev.filter((r) => r !== roleName)
+      )
+    },
+    [isAlwaysEnabled]
+  )
 
   const roleChanges = useMemo(() => {
     const toAdd = checkedRoles.filter((r) => !assignedRoles.includes(r))
@@ -124,7 +141,7 @@ export default function PermissionRolePage() {
 
       <div style={{ display: 'flex', gap: 24 }}>
         <Card title="选择权限" style={{ flex: 1 }} styles={{ body: { padding: 16 } }}>
-          <PermissionTree assignedPermissions={[]} onSelectionChange={handleSelectionChange} />
+          <PermissionTree assignedPermissions={[]} onSelect={handleSelect} mode="selectable" />
         </Card>
 
         <Card
@@ -137,7 +154,7 @@ export default function PermissionRolePage() {
               icon={<SaveOutlined />}
               onClick={handleSave}
               loading={loading}
-              disabled={!selectedPermissionId}
+              disabled={!selectedPermissionId || isAlwaysEnabled}
             >
               保存
             </Button>
@@ -145,31 +162,47 @@ export default function PermissionRolePage() {
         >
           {loading && <Spin style={{ display: 'block', margin: '20px auto' }} />}
 
-          {!loading && !selectedPermissionId && <Empty description="请在左侧选择一个权限" />}
+          {!loading && !selectedPermissionId && <Empty description="请在左侧点击选择一个权限" />}
 
           {!loading && selectedPermissionId && permissionDetail && (
             <>
               <Descriptions column={1} size="small" bordered style={{ marginBottom: 16 }}>
                 <Descriptions.Item label="权限标识">{permissionDetail.value}</Descriptions.Item>
                 <Descriptions.Item label="权限名称">{permissionDetail.name}</Descriptions.Item>
-                {permissionDetail.url && (
-                  <Descriptions.Item label="接口路径">{permissionDetail.url}</Descriptions.Item>
-                )}
-                {permissionDetail.method && (
-                  <Descriptions.Item label="HTTP方法">{permissionDetail.method}</Descriptions.Item>
-                )}
+                <Descriptions.Item label="访问级别">
+                  <Tag
+                    color={ACCESS_LEVEL_CONFIG[permissionDetail.accessLevel]?.color || 'default'}
+                  >
+                    {ACCESS_LEVEL_CONFIG[permissionDetail.accessLevel]?.label ||
+                      permissionDetail.accessLevel}
+                  </Tag>
+                </Descriptions.Item>
+                <Descriptions.Item label="接口路径">
+                  {permissionDetail.url || '-'}
+                </Descriptions.Item>
+                <Descriptions.Item label="HTTP方法">
+                  {permissionDetail.method || '-'}
+                </Descriptions.Item>
               </Descriptions>
 
               <Text strong style={{ display: 'block', marginBottom: 12 }}>
                 拥有此权限的角色：
               </Text>
 
+              {isAlwaysEnabled && (
+                <Text type="secondary" style={{ display: 'block', marginBottom: 8, fontSize: 12 }}>
+                  该权限为{permissionDetail.accessLevel === 'PUBLIC' ? '公开' : '登录'}
+                  访问，所有角色自动拥有，无需分配。
+                </Text>
+              )}
+
               <Space direction="vertical" style={{ width: '100%' }}>
                 {AVAILABLE_ROLES.map((role) => (
                   <Checkbox
                     key={role.value}
-                    checked={checkedRoles.includes(role.value)}
+                    checked={isAlwaysEnabled || checkedRoles.includes(role.value)}
                     onChange={(e) => handleRoleCheck(role.value, e.target.checked)}
+                    disabled={isAlwaysEnabled}
                   >
                     <div>
                       <Text strong>{role.label}</Text>

@@ -40,4 +40,9 @@ public class PermissionVO {
      * HTTP方法（可选）
      */
     private String method;
+
+    /**
+     * 访问级别: PUBLIC, AUTHENTICATED, PROTECTED
+     */
+    private String accessLevel;
 }

@@ -29,6 +29,9 @@ public class PermissionDTO {
     @Schema(description = "HTTP方法", example = "POST")
     private String method;
 
+    @Schema(description = "访问级别: PUBLIC/AUTHENTICATED/PROTECTED", example = "PROTECTED")
+    private String accessLevel;
+
     @Schema(description = "已分配该权限的角色名列表")
     @Builder.Default
     private List<String> assignedRoles = List.of();

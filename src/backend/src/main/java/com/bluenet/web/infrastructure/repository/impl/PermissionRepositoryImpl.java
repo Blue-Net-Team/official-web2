@@ -121,6 +121,7 @@ public class PermissionRepositoryImpl implements PermissionRepository {
                 .value(permission.getValue())
                 .url(permission.getUrl())
                 .method(permission.getMethod())
+                .accessLevel(permission.getAccessLevel())
                 .build();
     }
 }

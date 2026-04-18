@@ -33,6 +33,9 @@ public class PermissionTreeDTO {
     @Builder.Default
     private List<PermissionTreeDTO> children = List.of();
 
+    @Schema(description = "访问级别: PUBLIC/AUTHENTICATED/PROTECTED（仅叶子节点有值）")
+    private String accessLevel;
+
     @Schema(description = "该节点下叶子节点（权限）数量", example = "5")
     private Integer permissionCount;
 }
