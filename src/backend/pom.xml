@@ -189,6 +189,11 @@
             <artifactId>minio</artifactId>
             <version>8.5.4</version>
         </dependency>
+        <dependency>
+            <groupId>com.aliyun.oss</groupId>
+            <artifactId>aliyun-sdk-oss</artifactId>
+            <version>3.18.3</version>
+        </dependency>
         <!-- springdoc-openapi for Spring Boot 3.x -->
         <dependency>
             <groupId>org.springdoc</groupId>

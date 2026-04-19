@@ -10,7 +10,6 @@ import com.bluenet.web.domain.repository.QrcodeRepository;
 import com.bluenet.web.domain.service.QrcodeDomainService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,7 +21,6 @@ import java.util.List;
 @Service
 @Slf4j
 @RequiredArgsConstructor
-@ConditionalOnProperty(name = "minio.enabled", havingValue = "true")
 public class QrcodeDomainServiceImpl implements QrcodeDomainService {
 
     private final QrcodeRepository qrcodeRepository;

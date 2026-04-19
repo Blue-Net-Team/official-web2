@@ -1,36 +1,27 @@
 package com.bluenet.web.infrastructure.config;
 
-import com.bluenet.web.domain.model.enumerate.FileType;
-import com.bluenet.web.infrastructure.config.properties.MinioProperties;
-import io.minio.BucketExistsArgs;
-import io.minio.MakeBucketArgs;
+import com.bluenet.web.infrastructure.config.properties.StorageProperties;
 import io.minio.MinioClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-/**
- * MinIO配置类 用于初始化MinIO客户端和自动创建bucket
- */
 @Slf4j
 @Configuration
 @RequiredArgsConstructor
+@ConditionalOnProperty(name = "storage.enabled", havingValue = "true", matchIfMissing = true)
 public class MinioConfig {
 
-    private final MinioProperties minioProperties;
+    private final StorageProperties storageProperties;
 
-    /**
-     * 创建MinioClient Bean
-     *
-     * @return MinioClient实例
-     */
     @Bean
-    @ConditionalOnProperty(name = "minio.enabled", havingValue = "true")
+    @ConditionalOnProperty(name = "storage.provider", havingValue = "minio", matchIfMissing = true)
     public MinioClient minioClient() {
-        String endpoint = minioProperties.getUseSSL()
+        storageProperties.validateMinio();
+        StorageProperties.Minio minioProperties = storageProperties.getMinio();
+        String endpoint = Boolean.TRUE.equals(minioProperties.getUseSSL())
                 ? "https://" + minioProperties.getEndpoint()
                 : "http://" + minioProperties.getEndpoint();
 
@@ -39,36 +30,7 @@ public class MinioConfig {
                 .credentials(minioProperties.getAccessKey(), minioProperties.getSecretKey())
                 .build();
 
-        log.info("MinIO client initialized: {}", minioProperties.getUrl());
+        log.info("MinIO client initialized: {}:{}", minioProperties.getEndpoint(), minioProperties.getPort());
         return client;
-    }
-
-    /**
-     * 应用启动时自动创建bucket
-     *
-     * @param minioClient
-     *            MinioClient
-     * @return CommandLineRunner
-     */
-    @Bean
-    @ConditionalOnProperty(name = "minio.enabled", havingValue = "true")
-    public CommandLineRunner createBuckets(MinioClient minioClient) {
-        return args -> {
-            for (FileType fileType : FileType.values()) {
-                String bucketName = fileType.getValue();
-                try {
-                    boolean exists = minioClient.bucketExists(BucketExistsArgs.builder().bucket(bucketName).build());
-                    if (!exists) {
-                        minioClient.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
-                        log.info("Created MinIO bucket: {}", bucketName);
-                    } else {
-                        log.debug("MinIO bucket already exists: {}", bucketName);
-                    }
-                } catch (Exception e) {
-                    log.error("Failed to create MinIO bucket: {}", bucketName, e);
-                    throw new RuntimeException("Failed to initialize MinIO bucket: " + bucketName, e);
-                }
-            }
-        };
     }
 }

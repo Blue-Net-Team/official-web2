@@ -15,11 +15,18 @@ cors:
   # 示例：https://bluenet.com,https://www.bluenet.com
   allowed-origins: ${CORS_ALLOWED_ORIGINS:}
 
-# MinIO配置（生产环境）
-minio:
+# Object storage configuration
+storage:
   enabled: true
-  endpoint: ${MINIO_ENDPOINT:}
-  port: ${MINIO_PORT:9000}
-  accessKey: ${MINIO_AK:}
-  secretKey: ${MINIO_SK:}
-  useSSL: true
+  provider: ${STORAGE_PROVIDER:aliyun-oss}
+  bucket: ${STORAGE_BUCKET:}
+  minio:
+    endpoint: ${MINIO_ENDPOINT:}
+    port: ${MINIO_PORT:9000}
+    accessKey: ${MINIO_AK:}
+    secretKey: ${MINIO_SK:}
+    useSSL: ${MINIO_USE_SSL:true}
+  aliyun-oss:
+    endpoint: ${ALIYUN_OSS_ENDPOINT:}
+    accessKeyId: ${ALIYUN_OSS_AK:}
+    accessKeySecret: ${ALIYUN_OSS_SK:}

@@ -39,12 +39,14 @@ public class TestcontainersConfiguration {
                 .withUserName("testuser")
                 .withPassword("testpassword");
 
-        registry.add("minio.enabled", () -> "true");
-        registry.add("minio.endpoint", container::getHost);
-        registry.add("minio.port", () -> container.getMappedPort(9000));
-        registry.add("minio.accessKey", container::getUserName);
-        registry.add("minio.secretKey", container::getPassword);
-        registry.add("minio.useSSL", () -> "false");
+        registry.add("storage.enabled", () -> "true");
+        registry.add("storage.provider", () -> "minio");
+        registry.add("storage.bucket", () -> "bluenet-test");
+        registry.add("storage.minio.endpoint", container::getHost);
+        registry.add("storage.minio.port", () -> container.getMappedPort(9000));
+        registry.add("storage.minio.accessKey", container::getUserName);
+        registry.add("storage.minio.secretKey", container::getPassword);
+        registry.add("storage.minio.useSSL", () -> "false");
 
         return container;
     }

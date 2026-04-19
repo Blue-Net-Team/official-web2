@@ -8,7 +8,6 @@ import com.bluenet.web.domain.repository.QrcodeRepository;
 import com.bluenet.web.infrastructure.repository.mapper.QrcodeMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -20,7 +19,6 @@ import java.util.Optional;
 @Repository
 @Slf4j
 @RequiredArgsConstructor
-@ConditionalOnProperty(name = "minio.enabled", havingValue = "true")
 public class QrcodeRepositoryImpl implements QrcodeRepository {
 
     private final QrcodeMapper qrcodeMapper;

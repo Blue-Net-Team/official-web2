@@ -16,7 +16,7 @@ import java.util.concurrent.atomic.AtomicLong;
 @Slf4j
 @Repository
 @Primary
-@ConditionalOnProperty(name = "minio.enabled", havingValue = "false")
+@ConditionalOnProperty(name = "storage.enabled", havingValue = "false")
 public class MockQrcodeRepository implements QrcodeRepository {
 
     private final AtomicLong idGenerator = new AtomicLong(1);

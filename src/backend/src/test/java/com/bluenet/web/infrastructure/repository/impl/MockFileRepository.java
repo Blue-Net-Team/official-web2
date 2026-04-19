@@ -19,7 +19,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 @Slf4j
 @Repository
-@ConditionalOnProperty(name = "minio.enabled", havingValue = "false", matchIfMissing = false)
+@ConditionalOnProperty(name = "storage.enabled", havingValue = "false", matchIfMissing = false)
 public class MockFileRepository implements FileRepository {
 
     private final AtomicLong idGenerator = new AtomicLong(1);

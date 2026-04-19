@@ -25,13 +25,21 @@ spring:
           timeout: 10000
           writetimeout: 10000
 
-# MinIO配置
-minio:
+# Object storage configuration
+storage:
   enabled: true
-  endpoint: ${MINIO_ENDPOINT:localhost}
-  port: ${MINIO_PORT:9000}
-  accessKey: ${MINIO_AK:admin}
-  secretKey: ${MINIO_SK:admin1234}
+  provider: ${STORAGE_PROVIDER:minio}
+  bucket: ${STORAGE_BUCKET:bluenet}
+  minio:
+    endpoint: ${MINIO_ENDPOINT:localhost}
+    port: ${MINIO_PORT:9000}
+    accessKey: ${MINIO_AK:admin}
+    secretKey: ${MINIO_SK:admin1234}
+    useSSL: ${MINIO_USE_SSL:false}
+  aliyun-oss:
+    endpoint: ${ALIYUN_OSS_ENDPOINT:}
+    accessKeyId: ${ALIYUN_OSS_AK:}
+    accessKeySecret: ${ALIYUN_OSS_SK:}
 
 # Cookie 配置（开发环境）
 cookie:
