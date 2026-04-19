@@ -18,6 +18,9 @@ public class AssessmentSessionServiceImpl implements AssessmentSessionService {
     @Override
     public AssessmentSessionDTO getOrCreateSession(Long userId, Long assessmentTimeId) {
         AssessmentSessionVO session = assessmentSessionDomainService.getOrCreateSession(userId, assessmentTimeId);
+        if (session == null) {
+            return null;
+        }
         return AssessmentSessionDTO.builder()
                 .id(session.getId())
                 .userId(session.getUserId())

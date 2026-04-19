@@ -111,6 +111,17 @@ class AssessmentAnswerServiceImplTest {
         return AssessmentTimeVO.builder()
                 .id(TEST_ASSESSMENT_TIME_ID)
                 .direction(Direction.COMPUTER_VISION)
+                .timeLimit(true)
+                .timeLimitMinutes(90)
+                .build();
+    }
+
+    private AssessmentTimeVO createNonTimedTimeVO() {
+        return AssessmentTimeVO.builder()
+                .id(TEST_ASSESSMENT_TIME_ID)
+                .direction(Direction.COMPUTER_VISION)
+                .timeLimit(false)
+                .timeLimitMinutes(null)
                 .build();
     }
 
@@ -246,6 +257,67 @@ class AssessmentAnswerServiceImplTest {
                                         && answerVO.getQuestionId().equals(TEST_QUESTION_ID)
                                         && answerVO.getFileId().equals(TEST_FILE_ID)
                                         && "test answer content".equals(answerVO.getContent())));
+            }
+        }
+
+        @Test
+        @DisplayName("不限时考核存在过期旧会话：创建答案不应被deadline拦截")
+        void createAnswer_nonTimedWithExpiredOldSession_shouldIgnoreDeadline() {
+            try (MockedStatic<UserCTX> mockedUserCTX = mockStatic(UserCTX.class)) {
+                UserVO user = createTestUser();
+                mockedUserCTX.when(UserCTX::getCurrentUser).thenReturn(user);
+
+                CreateAnswerRequestDTO request = createTestRequest();
+                AssessmentQuestionVO questionVO = createTestQuestionVO();
+                AssessmentAnswerVO createdVO = createTestAnswerVO();
+
+                when(assessmentQuestionDomainService.getQuestionById(TEST_QUESTION_ID)).thenReturn(questionVO);
+                when(assessmentTimeDomainService.getById(TEST_ASSESSMENT_TIME_ID))
+                        .thenReturn(Optional.of(createNonTimedTimeVO()));
+                when(fileDomainService.getFileById(TEST_FILE_ID))
+                        .thenReturn(FileVO.builder().id(TEST_FILE_ID).type(FileType.WORK).build());
+                when(assessmentAnswerDomainService.createAnswer(any(AssessmentAnswerVO.class))).thenReturn(createdVO);
+
+                AssessmentAnswerDTO result = assessmentAnswerService.createAnswer(request);
+
+                assertNotNull(result);
+                verify(assessmentSessionRepository, never())
+                        .findByUserIdAndAssessmentTimeId(TEST_USER_ID, TEST_ASSESSMENT_TIME_ID);
+                verify(assessmentAnswerDomainService).createAnswer(any(AssessmentAnswerVO.class));
+            }
+        }
+    }
+
+    @Nested
+    @DisplayName("updateAnswer 方法测试")
+    class UpdateAnswerTests {
+
+        @Test
+        @DisplayName("不限时考核存在过期旧会话：修改答案不应被deadline拦截")
+        void updateAnswer_nonTimedWithExpiredOldSession_shouldIgnoreDeadline() {
+            try (MockedStatic<UserCTX> mockedUserCTX = mockStatic(UserCTX.class)) {
+                UserVO user = createTestUser();
+                mockedUserCTX.when(UserCTX::getCurrentUser).thenReturn(user);
+
+                CreateAnswerRequestDTO request = createTestRequest();
+                AssessmentQuestionVO questionVO = createTestQuestionVO();
+                AssessmentAnswerVO existingVO = createTestAnswerVO();
+                AssessmentAnswerVO updatedVO = createTestAnswerVO();
+
+                when(assessmentQuestionDomainService.getQuestionById(TEST_QUESTION_ID)).thenReturn(questionVO);
+                when(assessmentTimeDomainService.getById(TEST_ASSESSMENT_TIME_ID))
+                        .thenReturn(Optional.of(createNonTimedTimeVO()));
+                when(fileDomainService.getFileById(TEST_FILE_ID))
+                        .thenReturn(FileVO.builder().id(TEST_FILE_ID).type(FileType.WORK).build());
+                when(assessmentAnswerRepository.findByUserIdAndQuestionId(TEST_USER_ID, TEST_QUESTION_ID))
+                        .thenReturn(Optional.of(existingVO), Optional.of(updatedVO));
+
+                AssessmentAnswerDTO result = assessmentAnswerService.updateAnswer(request);
+
+                assertNotNull(result);
+                verify(assessmentSessionRepository, never())
+                        .findByUserIdAndAssessmentTimeId(TEST_USER_ID, TEST_ASSESSMENT_TIME_ID);
+                verify(assessmentAnswerDomainService).updateAnswer(existingVO, TEST_FILE_ID, "test answer content");
             }
         }
     }

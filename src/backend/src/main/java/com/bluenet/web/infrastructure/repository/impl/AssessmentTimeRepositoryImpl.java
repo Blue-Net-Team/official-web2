@@ -1,6 +1,7 @@
 package com.bluenet.web.infrastructure.repository.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bluenet.web.domain.model.entity.AssessmentQuestion;
@@ -74,6 +75,12 @@ public class AssessmentTimeRepositoryImpl implements AssessmentTimeRepository {
             entity.setTimeLimitMinutes(assessmentTime.getTimeLimitMinutes());
         }
         assessmentTimeMapper.updateById(entity);
+        if (Boolean.FALSE.equals(assessmentTime.getTimeLimit())) {
+            UpdateWrapper<AssessmentTime> wrapper = new UpdateWrapper<>();
+            wrapper.eq("id", assessmentTime.getId())
+                    .set("time_limit_minutes", null);
+            assessmentTimeMapper.update(null, wrapper);
+        }
     }
 
     @Override

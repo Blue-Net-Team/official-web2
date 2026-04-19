@@ -130,11 +130,15 @@ export default function QuestionDetailPage() {
       const response = await assessmentTimeService.getAssessmentTimes(0, 50)
       if (response.code === 200 && response.data) {
         const found = response.data.content.find((t: AssessmentTimeDTO) => t.id === timeId)
-        if (found) setTimeInfo(found)
+        if (found) {
+          setTimeInfo(found)
+          return found
+        }
       }
     } catch (error) {
       console.error('Failed to fetch assessment time info:', error)
     }
+    return null
   }, [timeId])
 
   // 加载考核会话
@@ -146,6 +150,9 @@ export default function QuestionDetailPage() {
         if (new Date(response.data.deadline).getTime() <= Date.now()) {
           setIsExpired(true)
         }
+      } else {
+        setSession(null)
+        setIsExpired(false)
       }
     } catch {
       // 没有会话（非限时考核或未开始），忽略
@@ -194,8 +201,12 @@ export default function QuestionDetailPage() {
         fetchQuestion(),
         fetchAnswer(),
         fetchQuestionsList(),
-        fetchTimeInfo(),
-        fetchSession(),
+        fetchTimeInfo().then((found) => {
+          if (found?.timeLimit) return fetchSession()
+          setSession(null)
+          setIsExpired(false)
+          return undefined
+        }),
       ]).finally(() => setLoading(false))
     }
   }, [isAuthenticated, fetchQuestion, fetchAnswer, fetchQuestionsList, fetchTimeInfo, fetchSession])
@@ -331,7 +342,7 @@ export default function QuestionDetailPage() {
   const fileContent = question.content as FileUploadContent | null
   const isFileUpload = question.questionType === 'FILE_UPLOAD'
   const isAnswered = !!answer
-  const isTimed = session !== null
+  const isTimed = Boolean(timeInfo?.timeLimit && session?.deadline)
   const deadline = session?.deadline ?? null
   const statusInfo = timeInfo ? getStatusInfo(timeInfo.startTime, timeInfo.endTime) : null
 

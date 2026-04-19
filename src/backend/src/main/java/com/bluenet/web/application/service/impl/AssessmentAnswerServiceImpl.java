@@ -54,20 +54,22 @@ public class AssessmentAnswerServiceImpl implements AssessmentAnswerService {
         AssessmentQuestionVO question = assessmentQuestionDomainService.getQuestionById(request.getQuestionId());
 
         // 校验方向匹配
-        validateDirectionMatch(currentUser, question);
+        AssessmentTimeVO timeVO = validateDirectionMatch(currentUser, question);
 
         // 校验 fileId 有效性和类型
         validateFileId(request.getFileId());
 
         // 校验限时考核是否已过期
-        assessmentSessionRepository
-                .findByUserIdAndAssessmentTimeId(currentUser.getId(), question.getAssessmentTimeId())
-                .ifPresent(session -> {
-                    if (session.getDeadline() != null
-                            && LocalDateTime.now().isAfter(session.getDeadline())) {
-                        throw new BadRequest("考核时间已到，无法提交答案");
-                    }
-                });
+        if (Boolean.TRUE.equals(timeVO.getTimeLimit())) {
+            assessmentSessionRepository
+                    .findByUserIdAndAssessmentTimeId(currentUser.getId(), question.getAssessmentTimeId())
+                    .ifPresent(session -> {
+                        if (session.getDeadline() != null
+                                && LocalDateTime.now().isAfter(session.getDeadline())) {
+                            throw new BadRequest("考核时间已到，无法提交答案");
+                        }
+                    });
+        }
 
         // 构建答案VO
         AssessmentAnswerVO answerVO = AssessmentAnswerVO.builder()
@@ -94,19 +96,21 @@ public class AssessmentAnswerServiceImpl implements AssessmentAnswerService {
         AssessmentQuestionVO question = assessmentQuestionDomainService.getQuestionById(request.getQuestionId());
 
         // 校验方向匹配
-        validateDirectionMatch(currentUser, question);
+        AssessmentTimeVO timeVO = validateDirectionMatch(currentUser, question);
 
         // 校验 fileId 有效性和类型
         validateFileId(request.getFileId());
 
-        assessmentSessionRepository
-                .findByUserIdAndAssessmentTimeId(currentUser.getId(), question.getAssessmentTimeId())
-                .ifPresent(session -> {
-                    if (session.getDeadline() != null
-                            && LocalDateTime.now().isAfter(session.getDeadline())) {
-                        throw new BadRequest("考核时间已到，无法修改答案");
-                    }
-                });
+        if (Boolean.TRUE.equals(timeVO.getTimeLimit())) {
+            assessmentSessionRepository
+                    .findByUserIdAndAssessmentTimeId(currentUser.getId(), question.getAssessmentTimeId())
+                    .ifPresent(session -> {
+                        if (session.getDeadline() != null
+                                && LocalDateTime.now().isAfter(session.getDeadline())) {
+                            throw new BadRequest("考核时间已到，无法修改答案");
+                        }
+                    });
+        }
 
         Optional<AssessmentAnswerVO> existingOpt = assessmentAnswerRepository
                 .findByUserIdAndQuestionId(currentUser.getId(), request.getQuestionId());
@@ -137,12 +141,13 @@ public class AssessmentAnswerServiceImpl implements AssessmentAnswerService {
         return answerOpt.map(this::convertToDTO).orElse(null);
     }
 
-    private void validateDirectionMatch(UserVO user, AssessmentQuestionVO question) {
+    private AssessmentTimeVO validateDirectionMatch(UserVO user, AssessmentQuestionVO question) {
         AssessmentTimeVO timeVO = assessmentTimeDomainService.getById(question.getAssessmentTimeId())
                 .orElseThrow(() -> new BadRequest("考核时间不存在"));
         if (user.getDirection() != null && !user.getDirection().equals(timeVO.getDirection())) {
             throw new Forbidden("方向不匹配");
         }
+        return timeVO;
     }
 
     private void validateFileId(Long fileId) {

@@ -24,6 +24,21 @@ public class AssessmentSessionDomainServiceImpl implements AssessmentSessionDoma
     @Override
     @Transactional
     public AssessmentSessionVO getOrCreateSession(Long userId, Long assessmentTimeId) {
+        // 获取考核时间信息
+        AssessmentTimeVO timeVO = assessmentTimeDomainService.getById(assessmentTimeId)
+                .orElseThrow(() -> new IllegalArgumentException("考核时间不存在"));
+
+        if (!Boolean.TRUE.equals(timeVO.getTimeLimit())) {
+            log.debug(
+                    "assessment time is not timed, skip session for userId: {}, assessmentTimeId: {}",
+                    userId,
+                    assessmentTimeId);
+            return null;
+        }
+        if (timeVO.getTimeLimitMinutes() == null || timeVO.getTimeLimitMinutes() <= 0) {
+            throw new IllegalArgumentException("限时考核必须设置有效的限时分钟数");
+        }
+
         // 尝试查找已有会话
         Optional<AssessmentSessionVO> existing = assessmentSessionRepository
                 .findByUserIdAndAssessmentTimeId(userId, assessmentTimeId);
@@ -31,10 +46,6 @@ public class AssessmentSessionDomainServiceImpl implements AssessmentSessionDoma
             log.debug("session already exists for userId: {}, assessmentTimeId: {}", userId, assessmentTimeId);
             return existing.get();
         }
-
-        // 获取考核时间信息
-        AssessmentTimeVO timeVO = assessmentTimeDomainService.getById(assessmentTimeId)
-                .orElseThrow(() -> new IllegalArgumentException("考核时间不存在"));
 
         LocalDateTime startTime = LocalDateTime.now();
         LocalDateTime limitDeadline = startTime.plusMinutes(timeVO.getTimeLimitMinutes());

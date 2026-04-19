@@ -58,7 +58,7 @@ public class AssessmentTimeServiceImpl implements AssessmentTimeService {
                 .startTime(request.getStartTime())
                 .endTime(request.getEndTime())
                 .timeLimit(request.getTimeLimit())
-                .timeLimitMinutes(request.getTimeLimitMinutes())
+                .timeLimitMinutes(Boolean.TRUE.equals(request.getTimeLimit()) ? request.getTimeLimitMinutes() : null)
                 .build();
 
         Long id = assessmentTimeDomainService.create(vo);
@@ -86,7 +86,7 @@ public class AssessmentTimeServiceImpl implements AssessmentTimeService {
                 .startTime(request.getStartTime())
                 .endTime(request.getEndTime())
                 .timeLimit(request.getTimeLimit())
-                .timeLimitMinutes(request.getTimeLimitMinutes())
+                .timeLimitMinutes(Boolean.FALSE.equals(request.getTimeLimit()) ? null : request.getTimeLimitMinutes())
                 .build();
 
         assessmentTimeDomainService.update(vo);

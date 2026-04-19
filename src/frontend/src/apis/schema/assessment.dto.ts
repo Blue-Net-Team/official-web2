@@ -103,46 +103,99 @@ export interface AssessmentQuestionDTO {
   answered: boolean | null
 }
 
-/** 文件上传题内容 */
-export interface FileUploadContent {
-  /** 题目描述/要求 */
+/** 题目内容基类（对应后端 QuestionContent 多态结构，type 使用后端 @JsonSubTypes 的小写 name） */
+export interface BaseQuestionContent {
+  /** 题型标识（后端 Jackson @JsonSubTypes name，小写） */
+  type: 'file_upload' | 'single_choice' | 'multiple_choice' | 'algorithm'
+  /** 题干 */
   content: string
-  /** 允许的文件类型（扩展名列表） */
+}
+
+/** 文件上传题内容 */
+export interface FileUploadContent extends BaseQuestionContent {
+  type: 'file_upload'
+  /** 允许的文件类型（扩展名列表，前端预留字段，后端未返回） */
   allowedExtensions?: string[]
-  /** 最大文件大小（字节） */
+  /** 最大文件大小（字节，前端预留字段，后端未返回） */
   maxFileSize?: number
 }
 
 /** 单选题内容 */
-export interface SingleChoiceContent {
-  /** 题目描述 */
-  description: string
+export interface SingleChoiceContent extends BaseQuestionContent {
+  type: 'single_choice'
   /** 选项列表 */
   options: string[]
-  /** 正确答案索引（仅管理端返回） */
-  correctAnswer?: number
+  /** 正确答案（选项文本，仅管理端返回） */
+  correctAnswer?: string
 }
 
 /** 多选题内容 */
-export interface MultipleChoiceContent {
-  /** 题目描述 */
-  description: string
+export interface MultipleChoiceContent extends BaseQuestionContent {
+  type: 'multiple_choice'
   /** 选项列表 */
   options: string[]
-  /** 正确答案索引列表（仅管理端返回） */
-  correctAnswers?: number[]
+  /** 正确答案列表（选项文本数组，仅管理端返回） */
+  correctAnswers?: string[]
+}
+
+/** 算法题测试用例 */
+export interface AlgorithmTestCase {
+  /** 输入 */
+  input: string
+  /** 期望输出 */
+  expectedOutput: string
 }
 
 /** 算法题内容 */
-export interface AlgorithmContent {
-  /** 题目描述 */
-  content: string
-  /** 支持的编程语言 */
-  supportedLanguages?: string[]
-  /** 代码模板 */
-  template?: string
+export interface AlgorithmContent extends BaseQuestionContent {
+  type: 'algorithm'
   /** 测试用例（仅管理端返回） */
-  testCases?: unknown[]
+  testCases?: AlgorithmTestCase[]
+  /** 时间限制（毫秒） */
+  timeLimit?: number
+  /** 内存限制（KB） */
+  memoryLimit?: number
+}
+
+/** 考题内容联合类型 */
+export type QuestionContent =
+  | FileUploadContent
+  | SingleChoiceContent
+  | MultipleChoiceContent
+  | AlgorithmContent
+
+/** 创建考题请求 - 对应后端 CreateQuestionRequestDTO */
+export interface CreateQuestionRequestDTO {
+  /** 考核时间ID */
+  assessmentTimeId: number
+  /** 题号 */
+  questionNo: number
+  /** 题型 */
+  questionType: QuestionType
+  /** 题目标题 */
+  title: string
+  /** 题目内容（多态 JSON） */
+  content?: QuestionContent | null
+  /** 附件ID */
+  attachmentId?: number | null
+  /** 分值 */
+  score: number
+}
+
+/** 更新考题请求 - 对应后端 UpdateQuestionRequestDTO */
+export interface UpdateQuestionRequestDTO {
+  /** 题号 */
+  questionNo?: number
+  /** 题型 */
+  questionType?: QuestionType
+  /** 题目标题 */
+  title?: string
+  /** 题目内容（多态 JSON） */
+  content?: QuestionContent | null
+  /** 附件ID */
+  attachmentId?: number | null
+  /** 分值 */
+  score?: number
 }
 
 /** 答案信息 - 对应后端 AssessmentAnswerDTO */

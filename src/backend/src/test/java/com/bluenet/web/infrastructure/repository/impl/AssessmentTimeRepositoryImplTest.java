@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bluenet.web.domain.model.entity.AssessmentTime;
 import com.bluenet.web.domain.model.enumerate.Direction;
@@ -19,6 +20,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -54,6 +56,31 @@ class AssessmentTimeRepositoryImplTest {
         entity.setEndTime(END_TIME);
         entity.setTimeLimit(false);
         return entity;
+    }
+
+    @Nested
+    @DisplayName("update 方法测试")
+    class UpdateTests {
+
+        @Test
+        @DisplayName("关闭限时时应清空timeLimitMinutes")
+        void update_disableTimeLimit_shouldClearTimeLimitMinutes() {
+            AssessmentTimeVO updateVO = AssessmentTimeVO.builder()
+                    .id(1L)
+                    .timeLimit(false)
+                    .timeLimitMinutes(null)
+                    .build();
+
+            assessmentTimeRepository.update(updateVO);
+
+            verify(assessmentTimeMapper).updateById(
+                    argThat(
+                            (AssessmentTime entity) -> entity.getId().equals(1L)
+                                    && Boolean.FALSE.equals(entity.getTimeLimit())));
+            ArgumentCaptor<UpdateWrapper<AssessmentTime>> wrapperCaptor = ArgumentCaptor.forClass(UpdateWrapper.class);
+            verify(assessmentTimeMapper).update(isNull(), wrapperCaptor.capture());
+            assertTrue(wrapperCaptor.getValue().getSqlSet().contains("time_limit_minutes"));
+        }
     }
 
     // ==================== findByUserParticipation 测试 ====================
