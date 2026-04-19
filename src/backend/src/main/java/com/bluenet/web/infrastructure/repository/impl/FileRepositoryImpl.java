@@ -27,6 +27,13 @@ import org.springframework.transaction.annotation.Transactional;
 import java.io.InputStream;
 import java.util.Optional;
 
+/**
+ * 文件仓储实现类。
+ * <p>
+ * 负责文件元数据和考核业务关联查询，文件对象本身的读写删除委托给当前启用的
+ * {@link ObjectStorage} 适配器。
+ * </p>
+ */
 @Slf4j
 @Repository
 @RequiredArgsConstructor
@@ -81,6 +88,14 @@ public class FileRepositoryImpl implements FileRepository {
         return convertToTimeVO(assessmentTime);
     }
 
+    /**
+     * 保存文件元数据并写入对象存储。
+     *
+     * @param inputStream
+     *            文件输入流
+     * @param file
+     *            文件实体，包含文件名和文件类型等信息
+     */
     @Override
     @Transactional
     public FileVO saveFile(InputStream inputStream, File file) {
@@ -97,6 +112,15 @@ public class FileRepositoryImpl implements FileRepository {
                 .build();
     }
 
+    /**
+     * 从对象存储加载文件。
+     *
+     * @param filename
+     *            文件名
+     * @param fileType
+     *            文件类型
+     * @return 文件资源
+     */
     @Override
     public Resource loadFile(String filename, FileType fileType) {
         validateParameters(filename, fileType);
@@ -106,6 +130,7 @@ public class FileRepositoryImpl implements FileRepository {
     @Override
     @Transactional
     public void deleteFile(String filename, FileType fileType) {
+        // 查找对应的文件元数据，避免只删除对象后留下孤立数据库记录。
         Optional<File> fileOp = fileMapper.selectByNameAndType(filename, fileType);
         if (fileOp.isEmpty()) {
             log.warn("File not found in database for deletion: {} ({})", filename, fileType);
@@ -116,12 +141,14 @@ public class FileRepositoryImpl implements FileRepository {
             log.warn("Failed to delete file record from database: {} ({})", filename, fileType);
             throw new RuntimeException("Failed to delete file record: " + filename);
         }
+        // 删除数据库记录后再删除对象存储中的文件。
         objectStorage.delete(fileType, filename);
     }
 
     @Override
     @Transactional
     public void deleteFileById(Long id) {
+        // 查找对应的文件元数据，拿到对象存储删除所需的文件类型和文件名。
         File file = fileMapper.selectById(id);
         if (file == null) {
             log.warn("File not found in database for deletion: id={}", id);
@@ -132,9 +159,13 @@ public class FileRepositoryImpl implements FileRepository {
             log.warn("Failed to delete file record from database: id={}", id);
             throw new RuntimeException("Failed to delete file record, id: " + id);
         }
+        // 删除数据库记录后再删除对象存储中的文件。
         objectStorage.delete(file.getType(), file.getName());
     }
 
+    /**
+     * 验证保存文件方法的参数。
+     */
     private void validateParameters(String filename, InputStream inputStream, FileType fileType) {
         validateParameters(filename, fileType);
         if (inputStream == null) {
@@ -142,6 +173,9 @@ public class FileRepositoryImpl implements FileRepository {
         }
     }
 
+    /**
+     * 验证加载和删除文件方法的参数。
+     */
     private void validateParameters(String filename, FileType fileType) {
         if (filename == null || filename.trim().isEmpty()) {
             throw new IllegalArgumentException("Filename cannot be null or empty");

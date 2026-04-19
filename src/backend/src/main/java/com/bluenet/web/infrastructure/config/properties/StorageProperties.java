@@ -6,6 +6,13 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
+/**
+ * 对象存储配置属性。
+ * <p>
+ * {@code storage.provider} 决定启用 MinIO 或阿里云 OSS，{@code storage.bucket}
+ * 是统一 bucket 名称，文件类型只作为 bucket 内的对象 key 前缀。
+ * </p>
+ */
 @Data
 @Component
 @ConfigurationProperties(prefix = "storage")
@@ -20,6 +27,9 @@ public class StorageProperties {
     private Minio minio = new Minio();
     private AliyunOss aliyunOss = new AliyunOss();
 
+    /**
+     * 校验跨 provider 共享配置。
+     */
     @PostConstruct
     public void validate() {
         if (!Boolean.TRUE.equals(enabled)) {
@@ -45,6 +55,9 @@ public class StorageProperties {
         return provider == null ? "" : provider.trim().toLowerCase();
     }
 
+    /**
+     * 校验 MinIO 客户端创建所需配置。
+     */
     public void validateMinio() {
         if (!StringUtils.hasText(minio.endpoint)) {
             throw new IllegalStateException("storage.minio.endpoint must not be empty");
@@ -60,6 +73,9 @@ public class StorageProperties {
         }
     }
 
+    /**
+     * 校验阿里云 OSS 客户端创建所需配置。
+     */
     public void validateAliyunOss() {
         if (!StringUtils.hasText(aliyunOss.endpoint)) {
             throw new IllegalStateException("storage.aliyun-oss.endpoint must not be empty");
@@ -72,6 +88,9 @@ public class StorageProperties {
         }
     }
 
+    /**
+     * MinIO 连接配置。
+     */
     @Data
     public static class Minio {
         private String endpoint = "localhost";
@@ -81,6 +100,9 @@ public class StorageProperties {
         private Boolean useSSL = false;
     }
 
+    /**
+     * 阿里云 OSS 连接配置。
+     */
     @Data
     public static class AliyunOss {
         private String endpoint = "";

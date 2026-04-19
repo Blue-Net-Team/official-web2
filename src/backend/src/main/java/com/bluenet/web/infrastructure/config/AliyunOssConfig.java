@@ -9,6 +9,9 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+/**
+ * 阿里云 OSS 配置类，用于按 {@code storage.provider=aliyun-oss} 初始化 OSS 客户端。
+ */
 @Slf4j
 @Configuration
 @RequiredArgsConstructor
@@ -17,6 +20,11 @@ public class AliyunOssConfig {
 
     private final StorageProperties storageProperties;
 
+    /**
+     * 创建阿里云 OSS 客户端 Bean。
+     *
+     * @return OSS 客户端实例
+     */
     @Bean(destroyMethod = "shutdown")
     @ConditionalOnProperty(name = "storage.provider", havingValue = "aliyun-oss")
     public OSS aliyunOssClient() {

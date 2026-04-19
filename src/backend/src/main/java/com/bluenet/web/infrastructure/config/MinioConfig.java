@@ -8,6 +8,9 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+/**
+ * MinIO配置类，用于按 {@code storage.provider=minio} 初始化 MinIO 客户端。
+ */
 @Slf4j
 @Configuration
 @RequiredArgsConstructor
@@ -16,6 +19,11 @@ public class MinioConfig {
 
     private final StorageProperties storageProperties;
 
+    /**
+     * 创建 MinioClient Bean。
+     *
+     * @return MinioClient 实例
+     */
     @Bean
     @ConditionalOnProperty(name = "storage.provider", havingValue = "minio", matchIfMissing = true)
     public MinioClient minioClient() {

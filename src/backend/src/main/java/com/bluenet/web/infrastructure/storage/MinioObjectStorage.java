@@ -20,6 +20,12 @@ import org.springframework.stereotype.Component;
 
 import java.io.InputStream;
 
+/**
+ * MinIO 对象存储适配器。
+ * <p>
+ * 负责将统一的 {@link ObjectStorage} 操作转换为 MinIO SDK 调用。
+ * </p>
+ */
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -35,6 +41,9 @@ public class MinioObjectStorage implements ObjectStorage {
         return "minio";
     }
 
+    /**
+     * 确保配置的单 bucket 已存在。
+     */
     @Override
     public void ensureBucket() {
         String bucket = objectLocationResolver.resolve(FileType.AVATAR, "__bucket_check__").bucket();
@@ -52,6 +61,9 @@ public class MinioObjectStorage implements ObjectStorage {
         }
     }
 
+    /**
+     * 保存文件到 MinIO。
+     */
     @Override
     public void put(FileType fileType, String filename, InputStream inputStream) {
         if (inputStream == null) {
@@ -72,6 +84,9 @@ public class MinioObjectStorage implements ObjectStorage {
         }
     }
 
+    /**
+     * 从 MinIO 加载文件。
+     */
     @Override
     public Resource get(FileType fileType, String filename) {
         ObjectLocation location = objectLocationResolver.resolve(fileType, filename);
@@ -96,6 +111,9 @@ public class MinioObjectStorage implements ObjectStorage {
         }
     }
 
+    /**
+     * 删除 MinIO 中的文件对象。
+     */
     @Override
     public void delete(FileType fileType, String filename) {
         ObjectLocation location = objectLocationResolver.resolve(fileType, filename);
@@ -112,6 +130,9 @@ public class MinioObjectStorage implements ObjectStorage {
         }
     }
 
+    /**
+     * 检查 MinIO bucket 是否可访问。
+     */
     @Override
     public void checkHealth() {
         try {

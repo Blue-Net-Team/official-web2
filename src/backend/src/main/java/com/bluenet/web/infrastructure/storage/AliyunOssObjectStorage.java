@@ -17,6 +17,12 @@ import org.springframework.stereotype.Component;
 
 import java.io.InputStream;
 
+/**
+ * 阿里云 OSS 对象存储适配器。
+ * <p>
+ * 负责将统一的 {@link ObjectStorage} 操作转换为阿里云 OSS SDK 调用。
+ * </p>
+ */
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -32,6 +38,9 @@ public class AliyunOssObjectStorage implements ObjectStorage {
         return "aliyun-oss";
     }
 
+    /**
+     * 确保配置的单 bucket 已存在。
+     */
     @Override
     public void ensureBucket() {
         String bucket = objectLocationResolver.resolve(FileType.AVATAR, "__bucket_check__").bucket();
@@ -48,6 +57,9 @@ public class AliyunOssObjectStorage implements ObjectStorage {
         }
     }
 
+    /**
+     * 保存文件到阿里云 OSS。
+     */
     @Override
     public void put(FileType fileType, String filename, InputStream inputStream) {
         if (inputStream == null) {
@@ -63,6 +75,9 @@ public class AliyunOssObjectStorage implements ObjectStorage {
         }
     }
 
+    /**
+     * 从阿里云 OSS 加载文件。
+     */
     @Override
     public Resource get(FileType fileType, String filename) {
         ObjectLocation location = objectLocationResolver.resolve(fileType, filename);
@@ -84,6 +99,9 @@ public class AliyunOssObjectStorage implements ObjectStorage {
         }
     }
 
+    /**
+     * 删除阿里云 OSS 中的文件对象。
+     */
     @Override
     public void delete(FileType fileType, String filename) {
         ObjectLocation location = objectLocationResolver.resolve(fileType, filename);
@@ -96,6 +114,9 @@ public class AliyunOssObjectStorage implements ObjectStorage {
         }
     }
 
+    /**
+     * 检查阿里云 OSS bucket 是否可访问。
+     */
     @Override
     public void checkHealth() {
         try {

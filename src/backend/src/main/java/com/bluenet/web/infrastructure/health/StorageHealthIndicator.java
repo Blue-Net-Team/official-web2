@@ -8,6 +8,12 @@ import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.stereotype.Component;
 
+/**
+ * 对象存储健康检查指示器。
+ * <p>
+ * 委托当前启用的对象存储适配器检查连接状态，并在 Actuator 健康信息中输出 provider。
+ * </p>
+ */
 @Slf4j
 @Component
 @RequiredArgsConstructor
