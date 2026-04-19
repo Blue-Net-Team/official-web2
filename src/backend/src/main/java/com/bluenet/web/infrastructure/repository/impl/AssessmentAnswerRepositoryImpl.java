@@ -1,6 +1,7 @@
 package com.bluenet.web.infrastructure.repository.impl;
 
 import com.bluenet.web.domain.exception.GlobalException;
+import com.bluenet.web.domain.model.enumerate.ProgrammingLanguage;
 import com.bluenet.web.domain.model.entity.AssessmentAnswer;
 import com.bluenet.web.domain.model.vo.AssessmentAnswerVO;
 import com.bluenet.web.domain.repository.AssessmentAnswerRepository;
@@ -69,6 +70,19 @@ public class AssessmentAnswerRepositoryImpl implements AssessmentAnswerRepositor
         if (influence == 0) {
             log.warn("更新答题内容失败，保存到数据库时没有影响任何行，answerId {}", answerId);
             throw new GlobalException("更新答题内容失败");
+        }
+        return influence;
+    }
+
+    @Override
+    public int updateLanguage(Long answerId, ProgrammingLanguage language) {
+        AssessmentAnswer answer = new AssessmentAnswer();
+        answer.setId(answerId);
+        answer.setLanguage(language);
+        int influence = assessmentAnswerMapper.updateById(answer);
+        if (influence == 0) {
+            log.warn("更新答题语言失败，保存到数据库时没有影响任何行，answerId {}", answerId);
+            throw new GlobalException("更新答题语言失败");
         }
         return influence;
     }

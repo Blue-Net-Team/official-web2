@@ -1,5 +1,6 @@
 package com.bluenet.web.api.dto.assessment_answer;
 
+import com.bluenet.web.domain.model.enumerate.ProgrammingLanguage;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -23,4 +24,7 @@ public class CreateAnswerRequestDTO {
 
     @Schema(description = "答案内容（选择题/算法题）")
     private String content;
+
+    @Schema(description = "编程语言（算法题提交时使用）")
+    private ProgrammingLanguage language;
 }

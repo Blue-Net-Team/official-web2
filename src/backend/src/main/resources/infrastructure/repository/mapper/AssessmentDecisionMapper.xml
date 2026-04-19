@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bluenet.web.infrastructure.repository.mapper.AssessmentDecisionMapper">
+    <resultMap id="BaseResultMap" type="com.bluenet.web.domain.model.entity.AssessmentDecision">
+        <id column="id" property="id"/>
+        <result column="user_id" property="userId"/>
+        <result column="assessment_time_id" property="assessmentTimeId"/>
+        <result column="passed" property="passed"/>
+        <result column="decided_by" property="decidedBy"/>
+        <result column="decision_comment" property="decisionComment"/>
+        <result column="decided_at" property="decidedAt"/>
+        <result column="updated_at" property="updatedAt"/>
+    </resultMap>
+</mapper>

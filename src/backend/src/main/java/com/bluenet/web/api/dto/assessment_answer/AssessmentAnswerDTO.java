@@ -1,5 +1,7 @@
 package com.bluenet.web.api.dto.assessment_answer;
 
+import com.bluenet.web.api.dto.assessment_judgement.AssessmentJudgementDTO;
+import com.bluenet.web.domain.model.enumerate.ProgrammingLanguage;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -27,6 +29,12 @@ public class AssessmentAnswerDTO {
     @Schema(description = "答案内容")
     private String content;
 
+    @Schema(description = "编程语言（算法题答案）")
+    private ProgrammingLanguage language;
+
     @Schema(description = "提交时间")
     private LocalDateTime submitTime;
+
+    @Schema(description = "最新评判结果（客观题提交后同步返回）")
+    private AssessmentJudgementDTO judgement;
 }

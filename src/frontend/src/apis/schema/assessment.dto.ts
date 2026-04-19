@@ -11,6 +11,26 @@ export type AssessmentStatus = 'NOT_STARTED' | 'IN_PROGRESS' | 'ENDED'
 /** 题型枚举 */
 export type QuestionType = 'SINGLE_CHOICE' | 'MULTIPLE_CHOICE' | 'FILE_UPLOAD' | 'ALGORITHM'
 
+/** 编程语言值，和后端 ProgrammingLanguage 的 JsonValue 保持一致 */
+export type ProgrammingLanguage = 'python' | 'c' | 'cpp' | 'java' | 'javascript'
+
+/** 判题任务状态 */
+export type JudgeJobStatus =
+  | 'PENDING'
+  | 'RUNNING'
+  | 'RETRYING'
+  | 'SUCCEEDED'
+  | 'FAILED_REVIEW_REQUIRED'
+
+/** 判题用例状态 */
+export type JudgeCaseStatus = 'AC' | 'WA' | 'TLE' | 'RE' | 'CE' | 'MLE'
+
+/** 算法运行用例类型 */
+export type AlgorithmTestcaseType = 'DEFAULT_RUN' | 'CUSTOM_RUN' | 'FORMAL'
+
+/** 客观题结果码 */
+export type ObjectiveResultCode = 'AC' | 'WA' | 'TLE' | 'RE' | 'CE' | 'MLE'
+
 /** 创建考核时间请求 - 对应后端 CreateAssessmentTimeRequestDTO */
 export interface CreateAssessmentTimeRequestDTO {
   /** 方向 */
@@ -138,19 +158,45 @@ export interface MultipleChoiceContent extends BaseQuestionContent {
   correctAnswers?: string[]
 }
 
+/** 算法题题面样例 */
+export interface AlgorithmExample {
+  /** 输入 */
+  input: string
+  /** 期望输出 */
+  expectedOutput: string
+  /** 样例说明 */
+  explanation?: string
+}
+
 /** 算法题测试用例 */
 export interface AlgorithmTestCase {
   /** 输入 */
   input: string
   /** 期望输出 */
   expectedOutput: string
+  /** 是否隐藏 */
+  hidden?: boolean
+  /** 权重 */
+  weight?: number
 }
 
 /** 算法题内容 */
 export interface AlgorithmContent extends BaseQuestionContent {
   type: 'algorithm'
-  /** 测试用例（仅管理端返回） */
+  /** 输入说明 */
+  inputDescription?: string
+  /** 输出说明 */
+  outputDescription?: string
+  /** 数据范围 */
+  constraints?: string
+  /** 题面样例 */
+  examples?: AlgorithmExample[]
+  /** 默认运行测试用例 */
+  runTestCases?: AlgorithmTestCase[]
+  /** 正式判题测试用例（仅管理端返回） */
   testCases?: AlgorithmTestCase[]
+  /** 各语言初始代码模板，key 同时决定允许提交语言 */
+  starterCode?: Record<string, string>
   /** 时间限制（毫秒） */
   timeLimit?: number
   /** 内存限制（KB） */
@@ -208,8 +254,12 @@ export interface AssessmentAnswerDTO {
   fileId: number | null
   /** 答案内容 */
   content: string | null
+  /** 算法题编程语言 */
+  language: ProgrammingLanguage | null
   /** 提交时间 */
   submitTime: string | null
+  /** 自动或人工评判结果 */
+  judgement: AssessmentJudgementDTO | null
 }
 
 /** 创建答案请求 - 对应后端 CreateAnswerRequestDTO */
@@ -220,6 +270,150 @@ export interface CreateAnswerRequestDTO {
   fileId?: number | null
   /** 答案内容 */
   content?: string | null
+  /** 算法题编程语言 */
+  language?: ProgrammingLanguage | null
+}
+
+/** 评判结果 - 对应后端 AssessmentJudgementDTO */
+export interface AssessmentJudgementDTO {
+  /** 评判ID */
+  id: number
+  /** 答案ID */
+  answerId: number
+  /** 题目ID */
+  questionId: number
+  /** 考核时间ID */
+  assessmentTimeId: number
+  /** 用户ID */
+  userId: number
+  /** 得分 */
+  score: number
+  /** 满分 */
+  maxScore: number
+  /** 结果码 */
+  resultCode: ObjectiveResultCode | null
+  /** 评判状态 */
+  status: string
+  /** 评判来源 */
+  source: string
+  /** 评论 */
+  comment: string | null
+  /** 评判时间 */
+  judgedAt: string | null
+}
+
+/** 算法运行请求 */
+export interface AlgorithmRunRequestDTO {
+  /** 题目ID */
+  questionId: number
+  /** 编程语言 */
+  language: ProgrammingLanguage
+  /** 源代码 */
+  sourceCode: string
+  /** 运行类型 */
+  testcaseType?: AlgorithmTestcaseType
+  /** 自定义输入 */
+  customInput?: string | null
+}
+
+/** 算法提交响应 */
+export interface AlgorithmSubmitResponseDTO {
+  /** 答案ID */
+  answerId: number | null
+  /** 判题任务ID */
+  judgeJobId: number
+  /** 判题用例类型 */
+  testcaseType: AlgorithmTestcaseType
+}
+
+/** 算法单个用例结果 */
+export interface JudgeCaseResultDTO {
+  /** 用例序号 */
+  caseNo: number
+  /** 用例类型 */
+  testcaseType: AlgorithmTestcaseType
+  /** 结果状态 */
+  status: JudgeCaseStatus
+  /** 输入 */
+  input: string | null
+  /** 期望输出 */
+  expectedOutput: string | null
+  /** 实际输出 */
+  actualOutput: string | null
+  /** 标准输出 */
+  stdout: string | null
+  /** 标准错误 */
+  stderr: string | null
+  /** 耗时毫秒 */
+  timeUsedMs: number | null
+  /** 内存KB */
+  memoryUsedKb: number | null
+  /** 结果说明 */
+  message: string | null
+}
+
+/** 算法判题轮询响应 */
+export interface JudgeJobPollingResponseDTO {
+  /** 判题任务ID */
+  judgeJobId: number
+  /** 判题用例类型 */
+  testcaseType: AlgorithmTestcaseType
+  /** 任务状态 */
+  status: JudgeJobStatus
+  /** 状态说明 */
+  statusMessage: string | null
+  /** 用例结果 */
+  caseResults: JudgeCaseResultDTO[]
+  /** 正式提交评判结果 */
+  judgement: AssessmentJudgementDTO | null
+}
+
+/** 文件上传题人工评分请求 */
+export interface ManualReviewRequestDTO {
+  /** 答案ID */
+  answerId: number
+  /** 得分 */
+  score: number
+  /** 评语 */
+  comment?: string | null
+}
+
+/** 考核最终通过决策请求 */
+export interface AssessmentDecisionRequestDTO {
+  /** 考生用户ID */
+  userId: number
+  /** 考核时间ID */
+  assessmentTimeId: number
+  /** 是否通过 */
+  passed: boolean
+  /** 决策备注 */
+  decisionComment?: string | null
+}
+
+/** 考核最终通过决策结果 */
+export interface AssessmentDecisionDTO extends AssessmentDecisionRequestDTO {
+  /** 决策ID */
+  id: number
+  /** 决策人ID */
+  decidedBy: number
+  /** 决策时间 */
+  decidedAt: string | null
+}
+
+/** 题目统计结果 */
+export interface QuestionStatisticsDTO {
+  /** 题目ID */
+  questionId: number
+  /** 题型 */
+  questionType: QuestionType
+  /** 提交人数 */
+  submittedCount: number
+  /** 通过人数 */
+  acceptedCount: number
+  /** 通过率 */
+  passRate: number
+  /** 结果码分布 */
+  resultDistribution: Partial<Record<ObjectiveResultCode, number>>
 }
 
 /** 考核会话 - 对应后端 AssessmentSessionVO */

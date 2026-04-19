@@ -20,9 +20,11 @@ import com.bluenet.web.domain.service.FileDomainService;
 import com.bluenet.web.domain.exception.BadRequest;
 import com.bluenet.web.domain.exception.DataNotFound;
 import com.bluenet.web.domain.model.enumerate.FileType;
+import com.bluenet.web.domain.model.enumerate.QuestionType;
 import com.bluenet.web.domain.util.GradeCalculator;
 import com.bluenet.web.domain.model.enumerate.RoleType;
 import com.bluenet.web.infrastructure.security.util.UserCTX;
+import com.bluenet.web.domain.model.vo.evaluation.AlgorithmContent;
 import com.bluenet.web.domain.model.vo.evaluation.QuestionContent;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +33,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Map;
+import java.util.List;
 
 /**
  * 考题应用服务实现
@@ -58,6 +63,7 @@ public class AssessmentQuestionServiceImpl implements AssessmentQuestionService 
         QuestionContent questionContent = request.getContent() != null
                 ? objectMapper.convertValue(request.getContent(), QuestionContent.class)
                 : null;
+        validateQuestionContent(request.getQuestionType(), questionContent);
 
         AssessmentQuestionVO vo = AssessmentQuestionVO.builder()
                 .assessmentTimeId(request.getAssessmentTimeId())
@@ -81,13 +87,16 @@ public class AssessmentQuestionServiceImpl implements AssessmentQuestionService 
         QuestionContent updatedContent = request.getContent() != null
                 ? objectMapper.convertValue(request.getContent(), QuestionContent.class)
                 : existing.getContent();
+        QuestionType questionType = request.getQuestionType() != null
+                ? request.getQuestionType()
+                : existing.getQuestionType();
+        validateQuestionContent(questionType, updatedContent);
 
         AssessmentQuestionVO vo = AssessmentQuestionVO.builder()
                 .id(id)
                 .assessmentTimeId(existing.getAssessmentTimeId())
                 .questionNo(request.getQuestionNo() != null ? request.getQuestionNo() : existing.getQuestionNo())
-                .questionType(
-                        request.getQuestionType() != null ? request.getQuestionType() : existing.getQuestionType())
+                .questionType(questionType)
                 .title(request.getTitle() != null ? request.getTitle() : existing.getTitle())
                 .content(updatedContent)
                 .attachmentId(
@@ -200,8 +209,8 @@ public class AssessmentQuestionServiceImpl implements AssessmentQuestionService 
             }
         }
 
-        // 返回完整详情（包含content）
-        return assessmentQuestionConverter.convertToDTO(vo);
+        // 用户端算法题不能提前暴露正式判题用例，避免提交前泄露隐藏测试点。
+        return assessmentQuestionConverter.convertToDTO(sanitizeQuestionForUser(vo));
     }
 
     @Override
@@ -219,5 +228,78 @@ public class AssessmentQuestionServiceImpl implements AssessmentQuestionService 
 
         assessmentQuestionDomainService.updateAttachment(question, fileVO);
         log.info("题目附件更新成功 - questionId={}, fileId={}", questionId, fileId);
+    }
+
+    private void validateQuestionContent(QuestionType questionType, QuestionContent content) {
+        if (questionType != QuestionType.ALGORITHM) {
+            return;
+        }
+        if (!(content instanceof AlgorithmContent algorithmContent)) {
+            throw new IllegalArgumentException("算法题内容不能为空");
+        }
+        validateStarterCode(algorithmContent.getStarterCode());
+        validateTestCases(algorithmContent.getTestCases(), true, "正式测试用例");
+        validateTestCases(algorithmContent.getRunTestCases(), false, "默认运行测试用例");
+    }
+
+    private void validateStarterCode(Map<String, String> starterCode) {
+        if (starterCode == null || starterCode.isEmpty()) {
+            throw new IllegalArgumentException("算法题至少需要配置一个语言模板");
+        }
+        boolean hasUsableTemplate = starterCode.entrySet()
+                .stream()
+                .anyMatch(entry -> hasText(entry.getKey()) && hasText(entry.getValue()));
+        if (!hasUsableTemplate) {
+            throw new IllegalArgumentException("算法题至少需要配置一个有效语言模板");
+        }
+    }
+
+    private void validateTestCases(List<AlgorithmContent.TestCase> testCases, boolean required, String label) {
+        if (testCases == null || testCases.isEmpty()) {
+            if (required) {
+                throw new IllegalArgumentException("算法题至少需要配置一个" + label);
+            }
+            return;
+        }
+        for (int i = 0; i < testCases.size(); i++) {
+            AlgorithmContent.TestCase testCase = testCases.get(i);
+            if (testCase == null || !hasText(testCase.getInput()) || !hasText(testCase.getExpectedOutput())) {
+                throw new IllegalArgumentException(label + "第" + (i + 1) + "个用例必须包含输入和期望输出");
+            }
+        }
+    }
+
+    private AssessmentQuestionVO sanitizeQuestionForUser(AssessmentQuestionVO question) {
+        if (question.getQuestionType() != QuestionType.ALGORITHM
+                || !(question.getContent()instanceof AlgorithmContent algorithmContent)) {
+            return question;
+        }
+        AlgorithmContent sanitizedContent = new AlgorithmContent();
+        sanitizedContent.setContent(algorithmContent.getContent());
+        sanitizedContent.setInputDescription(algorithmContent.getInputDescription());
+        sanitizedContent.setOutputDescription(algorithmContent.getOutputDescription());
+        sanitizedContent.setConstraints(algorithmContent.getConstraints());
+        sanitizedContent.setExamples(algorithmContent.getExamples());
+        sanitizedContent.setRunTestCases(algorithmContent.getRunTestCases());
+        sanitizedContent.setStarterCode(algorithmContent.getStarterCode());
+        sanitizedContent.setTimeLimit(algorithmContent.getTimeLimit());
+        sanitizedContent.setMemoryLimit(algorithmContent.getMemoryLimit());
+        // 正式 testCases 仅供判题使用，用户端题目详情不直接返回。
+        sanitizedContent.setTestCases(null);
+
+        return AssessmentQuestionVO.builder()
+                .id(question.getId())
+                .assessmentTimeId(question.getAssessmentTimeId())
+                .questionNo(question.getQuestionNo())
+                .questionType(question.getQuestionType())
+                .title(question.getTitle())
+                .content(sanitizedContent)
+                .attachmentId(question.getAttachmentId())
+                .score(question.getScore())
+                .build();
+    }
+
+    private boolean hasText(String value) {
+        return value != null && !value.isBlank();
     }
 }

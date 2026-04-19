@@ -12,6 +12,7 @@ public interface AssessmentAnswerRepository {
     int updateFileId(Long answerId, Long fileId);
     int updateSubmitTime(Long answerId, LocalDateTime submitTime);
     int updateContent(Long answerId, String content);
+    int updateLanguage(Long answerId, com.bluenet.web.domain.model.enumerate.ProgrammingLanguage language);
     int countByUserIdAndAssessmentTimeId(Long userId, Long assessmentTimeId);
     boolean existsByUserIdAndQuestionId(Long userId, Long questionId);
 

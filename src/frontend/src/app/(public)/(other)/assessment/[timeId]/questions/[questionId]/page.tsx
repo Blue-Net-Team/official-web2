@@ -23,11 +23,13 @@ import {
   DownloadOutlined,
   CheckSquareOutlined,
 } from '@ant-design/icons'
-import { Button, Tag, message, Spin, Upload, type UploadProps } from 'antd'
+import { Button, Select, Tag, message, Spin, Upload, type UploadProps } from 'antd'
 import { assessmentQuestionService } from '@/apis/services/assessment-question.service'
 import { assessmentTimeService } from '@/apis/services/assessment-time.service'
 import { assessmentAnswerService } from '@/apis/services/assessment-answer.service'
 import { assessmentSessionService } from '@/apis/services/assessment-session.service'
+import { algorithmJudgeService } from '@/apis/services/algorithm-judge.service'
+import { assessmentStatisticsService } from '@/apis/services/assessment-statistics.service'
 import { fileService } from '@/apis/services/file.service'
 import authStore from '@/stores/authStore'
 import type {
@@ -36,9 +38,15 @@ import type {
   FileUploadContent,
   SingleChoiceContent,
   MultipleChoiceContent,
+  AlgorithmContent,
   AssessmentTimeDTO,
   AssessmentSessionDTO,
   AssessmentStatus,
+  AlgorithmTestcaseType,
+  JudgeCaseResultDTO,
+  JudgeJobPollingResponseDTO,
+  ProgrammingLanguage,
+  QuestionStatisticsDTO,
 } from '@/apis/schema/assessment.dto'
 import { DIRECTION_LABELS as DirectionLabels } from '@/apis/schema/enumerate'
 import { QuestionTypeLabels } from '@/types/assessment'
@@ -71,6 +79,32 @@ function formatFileSize(bytes: number): string {
 }
 
 const OPTION_LABELS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')
+
+const LANGUAGE_LABELS: Record<ProgrammingLanguage, string> = {
+  python: 'Python',
+  c: 'C',
+  cpp: 'C++',
+  java: 'Java',
+  javascript: 'JavaScript',
+}
+
+const RESULT_LABELS: Record<string, string> = {
+  AC: '通过',
+  WA: '答案错误',
+  TLE: '超时',
+  RE: '运行错误',
+  CE: '编译错误',
+  MLE: '内存超限',
+}
+
+const RESULT_COLOR_CLASSES: Record<string, string> = {
+  AC: 'text-[#07c160] bg-[#07c160]/[0.08] border-[#07c160]/[0.18]',
+  WA: 'text-[#ff4d4f] bg-[#ff4d4f]/[0.08] border-[#ff4d4f]/[0.18]',
+  TLE: 'text-[#fa8c16] bg-[#fa8c16]/[0.08] border-[#fa8c16]/[0.18]',
+  RE: 'text-[#ff4d4f] bg-[#ff4d4f]/[0.08] border-[#ff4d4f]/[0.18]',
+  CE: 'text-[#fa8c16] bg-[#fa8c16]/[0.08] border-[#fa8c16]/[0.18]',
+  MLE: 'text-[#fa8c16] bg-[#fa8c16]/[0.08] border-[#fa8c16]/[0.18]',
+}
 
 type UploadPhase =
   | 'idle'
@@ -117,6 +151,15 @@ export default function QuestionDetailPage() {
   const [isExpired, setIsExpired] = useState(false)
   const [selectedOption, setSelectedOption] = useState<string | null>(null)
   const [selectedOptions, setSelectedOptions] = useState<string[]>([])
+  const [algorithmLanguage, setAlgorithmLanguage] = useState<ProgrammingLanguage | null>(null)
+  const [algorithmCode, setAlgorithmCode] = useState('')
+  const [algorithmRunMode, setAlgorithmRunMode] =
+    useState<Exclude<AlgorithmTestcaseType, 'FORMAL'>>('DEFAULT_RUN')
+  const [customInput, setCustomInput] = useState('')
+  const [judgeResult, setJudgeResult] = useState<JudgeJobPollingResponseDTO | null>(null)
+  const [questionStatistics, setQuestionStatistics] = useState<QuestionStatisticsDTO | null>(null)
+  const [pollingJobId, setPollingJobId] = useState<number | null>(null)
+  const [pollingFormalJob, setPollingFormalJob] = useState(false)
   const autoSubmitRef = useRef(false)
   const { isAuthenticated, checkAuthStatus } = authStore()
   const [messageApi, contextHolder] = message.useMessage()
@@ -203,11 +246,26 @@ export default function QuestionDetailPage() {
     }
   }, [questionId])
 
+  // 后端未开启候选人通过率展示时会返回错误，这里静默隐藏可选统计卡片。
+  const fetchQuestionStatistics = useCallback(async () => {
+    try {
+      const response = await assessmentStatisticsService.getCandidateQuestionStatistics(questionId)
+      if (response.code === 200 && response.data) {
+        setQuestionStatistics(response.data)
+      } else {
+        setQuestionStatistics(null)
+      }
+    } catch {
+      setQuestionStatistics(null)
+    }
+  }, [questionId])
+
   useEffect(() => {
     if (isAuthenticated) {
       Promise.all([
         fetchQuestion(),
         fetchAnswer(),
+        fetchQuestionStatistics(),
         fetchQuestionsList(),
         fetchTimeInfo().then((found) => {
           if (found?.timeLimit) return fetchSession()
@@ -217,19 +275,27 @@ export default function QuestionDetailPage() {
         }),
       ]).finally(() => setLoading(false))
     }
-  }, [isAuthenticated, fetchQuestion, fetchAnswer, fetchQuestionsList, fetchTimeInfo, fetchSession])
+  }, [
+    isAuthenticated,
+    fetchQuestion,
+    fetchAnswer,
+    fetchQuestionStatistics,
+    fetchQuestionsList,
+    fetchTimeInfo,
+    fetchSession,
+  ])
 
   // 同步已有答案到选项状态
   useEffect(() => {
     if (!answer?.content) {
       setSelectedOption(null)
       setSelectedOptions([])
-      return
+      if (question?.questionType !== 'ALGORITHM') return
     }
-    if (question?.questionType === 'SINGLE_CHOICE') {
+    if (question?.questionType === 'SINGLE_CHOICE' && answer?.content) {
       setSelectedOption(answer.content)
       setSelectedOptions([])
-    } else if (question?.questionType === 'MULTIPLE_CHOICE') {
+    } else if (question?.questionType === 'MULTIPLE_CHOICE' && answer?.content) {
       try {
         const parsed = JSON.parse(answer.content)
         if (Array.isArray(parsed)) setSelectedOptions(parsed)
@@ -237,8 +303,49 @@ export default function QuestionDetailPage() {
         setSelectedOptions([])
       }
       setSelectedOption(null)
+    } else if (question?.questionType === 'ALGORITHM') {
+      const content = question.content as AlgorithmContent | null
+      const languages = Object.keys(content?.starterCode ?? {}) as ProgrammingLanguage[]
+      const selectedLanguage =
+        answer?.language && languages.includes(answer.language) ? answer.language : languages[0]
+      setAlgorithmLanguage(selectedLanguage ?? null)
+      setAlgorithmCode(
+        answer?.content || (selectedLanguage ? content?.starterCode?.[selectedLanguage] : '') || ''
+      )
     }
-  }, [answer?.content, question?.questionType])
+  }, [answer?.content, answer?.language, question?.content, question?.questionType])
+
+  // 判题接口按任务 ID 轮询，完成或需要人工排查时停止。
+  useEffect(() => {
+    if (!pollingJobId) return
+
+    let stopped = false
+    const poll = async () => {
+      try {
+        const response = await algorithmJudgeService.getJob(pollingJobId)
+        if (response.code !== 200 || !response.data || stopped) return
+        setJudgeResult(response.data)
+        if (
+          response.data.status === 'SUCCEEDED' ||
+          response.data.status === 'FAILED_REVIEW_REQUIRED'
+        ) {
+          setPollingJobId(null)
+          if (pollingFormalJob) {
+            fetchAnswer()
+          }
+        }
+      } catch (error) {
+        console.error('Judge polling error:', error)
+      }
+    }
+
+    poll()
+    const timer = window.setInterval(poll, 1500)
+    return () => {
+      stopped = true
+      window.clearInterval(timer)
+    }
+  }, [pollingJobId, pollingFormalJob, fetchAnswer])
 
   // 提交答案
   const handleSubmit = async () => {
@@ -326,6 +433,88 @@ export default function QuestionDetailPage() {
     } catch (error) {
       messageApi.error('提交失败，请重试')
       console.error('Choice submit error:', error)
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  const handleAlgorithmRun = async () => {
+    if (!algorithmLanguage) {
+      messageApi.warning('请选择提交语言')
+      return
+    }
+    if (!algorithmCode.trim()) {
+      messageApi.warning('请输入代码')
+      return
+    }
+
+    setSubmitting(true)
+    try {
+      const response = await algorithmJudgeService.run({
+        questionId,
+        language: algorithmLanguage,
+        sourceCode: algorithmCode,
+        testcaseType: algorithmRunMode,
+        customInput: algorithmRunMode === 'CUSTOM_RUN' ? customInput : null,
+      })
+      if (response.code === 200 && response.data) {
+        setJudgeResult({
+          judgeJobId: response.data.judgeJobId,
+          testcaseType: response.data.testcaseType,
+          status: 'PENDING',
+          statusMessage: '等待判题',
+          caseResults: [],
+          judgement: null,
+        })
+        setPollingFormalJob(false)
+        setPollingJobId(response.data.judgeJobId)
+        messageApi.success('运行任务已提交')
+      } else {
+        messageApi.error(response.msg || '运行失败')
+      }
+    } catch (error) {
+      messageApi.error('运行失败，请重试')
+      console.error('Algorithm run error:', error)
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  const handleAlgorithmSubmit = async () => {
+    if (!algorithmLanguage) {
+      messageApi.warning('请选择提交语言')
+      return
+    }
+    if (!algorithmCode.trim()) {
+      messageApi.warning('请输入代码')
+      return
+    }
+
+    setSubmitting(true)
+    try {
+      const response = await algorithmJudgeService.submit({
+        questionId,
+        language: algorithmLanguage,
+        content: algorithmCode,
+      })
+      if (response.code === 200 && response.data) {
+        setJudgeResult({
+          judgeJobId: response.data.judgeJobId,
+          testcaseType: response.data.testcaseType,
+          status: 'PENDING',
+          statusMessage: '等待判题',
+          caseResults: [],
+          judgement: null,
+        })
+        setPollingFormalJob(true)
+        setPollingJobId(response.data.judgeJobId)
+        messageApi.success('提交成功，正在判题')
+      } else {
+        messageApi.error(response.msg || '提交失败')
+      }
+    } catch (error) {
+      messageApi.error('提交失败，请重试')
+      console.error('Algorithm submit error:', error)
     } finally {
       setSubmitting(false)
     }
@@ -447,15 +636,28 @@ export default function QuestionDetailPage() {
   const isFileUpload = question.questionType === 'FILE_UPLOAD'
   const isSingleChoice = question.questionType === 'SINGLE_CHOICE'
   const isMultipleChoice = question.questionType === 'MULTIPLE_CHOICE'
+  const isAlgorithm = question.questionType === 'ALGORITHM'
   const isChoiceQuestion = isSingleChoice || isMultipleChoice
   const choiceContent = isChoiceQuestion
     ? (question.content as SingleChoiceContent | MultipleChoiceContent | null)
     : null
+  const algorithmContent = isAlgorithm ? (question.content as AlgorithmContent | null) : null
+  const algorithmLanguages = Object.keys(
+    algorithmContent?.starterCode ?? {}
+  ) as ProgrammingLanguage[]
+  const algorithmLanguageOptions = algorithmLanguages.map((language) => ({
+    value: language,
+    label: LANGUAGE_LABELS[language] ?? language,
+  }))
   const options = choiceContent?.options ?? []
   const isAnswered = !!answer
   const isTimed = Boolean(timeInfo?.timeLimit && session?.deadline)
   const deadline = session?.deadline ?? null
   const statusInfo = timeInfo ? getStatusInfo(timeInfo.startTime, timeInfo.endTime) : null
+  const passRateText =
+    questionStatistics?.passRate !== undefined
+      ? `${(Number(questionStatistics.passRate) * 100).toFixed(2)}%`
+      : null
 
   const allowedExtsText = fileContent?.allowedExtensions
     ? `支持 ${fileContent.allowedExtensions.join(', ')} 格式`
@@ -466,6 +668,11 @@ export default function QuestionDetailPage() {
   const uploadHintText = [allowedExtsText, maxSizeText].filter(Boolean).join('，')
 
   const uploadPhase = getUploadPhase(isExpired, isAnswered, isResubmitting, !!uploadedFile)
+  const visibleJudgeCaseResults = judgeResult
+    ? judgeResult.caseResults.filter(
+        (caseResult) => judgeResult.testcaseType !== 'FORMAL' || caseResult.status !== 'AC'
+      )
+    : []
 
   const draggerProps: UploadProps = {
     name: 'file',
@@ -633,6 +840,58 @@ export default function QuestionDetailPage() {
         )
     }
   }
+
+  const renderResultBadge = (resultCode?: string | null) => {
+    if (!resultCode) return null
+    return (
+      <span
+        className={`inline-flex items-center px-2.5 py-1 rounded-md border text-xs font-semibold ${
+          RESULT_COLOR_CLASSES[resultCode] ?? 'text-white/65 bg-white/[0.08] border-white/[0.12]'
+        }`}
+      >
+        {resultCode} · {RESULT_LABELS[resultCode] ?? resultCode}
+      </span>
+    )
+  }
+
+  const renderTextCell = (label: string, value?: string | null, emptyText = '空') => (
+    <div className="min-w-0">
+      <div className="px-3 py-2 text-[11px] font-semibold text-white/45 bg-white/[0.04] border border-white/[0.08] rounded-t-md">
+        {label}
+      </div>
+      <pre className="m-0 min-h-16 whitespace-pre-wrap break-words rounded-b-md bg-black/30 border-x border-b border-white/[0.08] p-3 text-xs text-white/65">
+        {value || emptyText}
+      </pre>
+    </div>
+  )
+
+  const renderJudgeCase = (caseResult: JudgeCaseResultDTO) => (
+    <div
+      key={`${caseResult.caseNo}-${caseResult.testcaseType}`}
+      className="rounded-lg bg-white/[0.04] border border-white/[0.08] p-4 flex flex-col gap-3"
+    >
+      <div className="flex items-center justify-between gap-3">
+        <span className="text-sm font-semibold text-white">用例 {caseResult.caseNo}</span>
+        {renderResultBadge(caseResult.status)}
+      </div>
+      <p className="text-[11px] text-white/30 m-0">
+        换行会按原样保留显示；判题会忽略首尾空白，但中间换行和内容顺序需要一致。
+      </p>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        {renderTextCell('输入 stdin', caseResult.input, '无输入')}
+        {caseResult.expectedOutput !== null
+          ? renderTextCell('期望输出 target', caseResult.expectedOutput, '空输出')
+          : renderTextCell(
+              '标准输出 stdout',
+              caseResult.stdout || caseResult.actualOutput,
+              '无输出'
+            )}
+        {caseResult.expectedOutput !== null &&
+          renderTextCell('实际输出 stdout', caseResult.actualOutput || caseResult.stdout, '无输出')}
+      </div>
+      {caseResult.stderr && renderTextCell('标准错误 stderr', caseResult.stderr, '无错误输出')}
+    </div>
+  )
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] relative flex flex-col">
@@ -837,12 +1096,163 @@ export default function QuestionDetailPage() {
                   })}
                 </div>
               </section>
+            ) : isAlgorithm ? (
+              <section className="bg-white/[0.06] border border-white/[0.08] rounded-xl p-7 h-fit flex flex-col gap-6">
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-2.5">
+                    <ExperimentOutlined className="text-xl text-[#6677ff]" />
+                    <h2 className="text-base font-semibold text-white m-0">算法题</h2>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-white/45">
+                    {algorithmContent?.timeLimit && <span>{algorithmContent.timeLimit} ms</span>}
+                    {algorithmContent?.memoryLimit && (
+                      <span>{algorithmContent.memoryLimit} KB</span>
+                    )}
+                  </div>
+                </div>
+                <hr className="w-full h-px bg-white/[0.04] border-none m-0" />
+                <MarkdownRenderer content={algorithmContent?.content} emptyText="暂无题目描述" />
+                {(algorithmContent?.inputDescription ||
+                  algorithmContent?.outputDescription ||
+                  algorithmContent?.constraints) && (
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    {algorithmContent.inputDescription && (
+                      <div className="rounded-lg bg-white/[0.04] p-4">
+                        <p className="text-xs text-white/35 mb-2">输入说明</p>
+                        <p className="text-sm text-white/65 whitespace-pre-wrap m-0">
+                          {algorithmContent.inputDescription}
+                        </p>
+                      </div>
+                    )}
+                    {algorithmContent.outputDescription && (
+                      <div className="rounded-lg bg-white/[0.04] p-4">
+                        <p className="text-xs text-white/35 mb-2">输出说明</p>
+                        <p className="text-sm text-white/65 whitespace-pre-wrap m-0">
+                          {algorithmContent.outputDescription}
+                        </p>
+                      </div>
+                    )}
+                    {algorithmContent.constraints && (
+                      <div className="rounded-lg bg-white/[0.04] p-4">
+                        <p className="text-xs text-white/35 mb-2">数据范围</p>
+                        <p className="text-sm text-white/65 whitespace-pre-wrap m-0">
+                          {algorithmContent.constraints}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
+                {algorithmContent?.examples?.map((example, index) => (
+                  <div
+                    key={index}
+                    className="rounded-lg bg-white/[0.04] border border-white/[0.08] p-4"
+                  >
+                    <p className="text-sm font-semibold text-white mb-3">样例 {index + 1}</p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {renderTextCell('样例输入 stdin', example.input, '无输入')}
+                      {renderTextCell('样例输出 stdout', example.expectedOutput, '空输出')}
+                    </div>
+                    <p className="text-[11px] text-white/30 mt-3 mb-0">
+                      换行会按原样保留显示；判题会忽略首尾空白，但中间换行和内容顺序需要一致。
+                    </p>
+                    {example.explanation && (
+                      <p className="text-xs text-white/45 mt-3 mb-0 whitespace-pre-wrap">
+                        {example.explanation}
+                      </p>
+                    )}
+                  </div>
+                ))}
+
+                <div className="rounded-xl bg-white/[0.04] border border-white/[0.08] p-5 flex flex-col gap-4">
+                  <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm text-white/65">语言</span>
+                      <Select
+                        className="min-w-36"
+                        value={algorithmLanguage ?? undefined}
+                        options={algorithmLanguageOptions}
+                        disabled={isExpired || algorithmLanguageOptions.length === 0}
+                        onChange={(value: ProgrammingLanguage) => {
+                          setAlgorithmLanguage(value)
+                          setAlgorithmCode(algorithmContent?.starterCode?.[value] ?? '')
+                        }}
+                      />
+                    </div>
+                    {answer?.judgement && renderResultBadge(answer.judgement.resultCode)}
+                  </div>
+                  <textarea
+                    value={algorithmCode}
+                    disabled={isExpired}
+                    onChange={(event) => setAlgorithmCode(event.target.value)}
+                    className="w-full min-h-80 resize-y rounded-lg bg-black/30 border border-white/[0.08] p-4 text-sm text-white/80 font-mono outline-none focus:border-[#6677ff]/60 disabled:opacity-60"
+                    spellCheck={false}
+                    placeholder="在这里编写标准输入输出代码"
+                  />
+                  <div className="flex flex-col gap-3">
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        className={`px-3 py-2 rounded-lg text-xs border ${
+                          algorithmRunMode === 'DEFAULT_RUN'
+                            ? 'bg-[#6677ff]/[0.16] border-[#6677ff]/[0.35] text-[#9aa6ff]'
+                            : 'bg-white/[0.04] border-white/[0.08] text-white/45'
+                        }`}
+                        onClick={() => setAlgorithmRunMode('DEFAULT_RUN')}
+                        disabled={isExpired}
+                      >
+                        默认用例
+                      </button>
+                      <button
+                        className={`px-3 py-2 rounded-lg text-xs border ${
+                          algorithmRunMode === 'CUSTOM_RUN'
+                            ? 'bg-[#6677ff]/[0.16] border-[#6677ff]/[0.35] text-[#9aa6ff]'
+                            : 'bg-white/[0.04] border-white/[0.08] text-white/45'
+                        }`}
+                        onClick={() => setAlgorithmRunMode('CUSTOM_RUN')}
+                        disabled={isExpired}
+                      >
+                        自定义输入
+                      </button>
+                    </div>
+                    {algorithmRunMode === 'CUSTOM_RUN' && (
+                      <textarea
+                        value={customInput}
+                        disabled={isExpired}
+                        onChange={(event) => setCustomInput(event.target.value)}
+                        className="w-full min-h-28 resize-y rounded-lg bg-black/30 border border-white/[0.08] p-3 text-xs text-white/70 font-mono outline-none focus:border-[#6677ff]/60 disabled:opacity-60"
+                        spellCheck={false}
+                        placeholder="输入自定义 stdin"
+                      />
+                    )}
+                  </div>
+                </div>
+
+                {judgeResult && (
+                  <div className="rounded-xl bg-white/[0.04] border border-white/[0.08] p-5 flex flex-col gap-4">
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="text-sm font-semibold text-white">
+                        判题状态：{judgeResult.statusMessage || judgeResult.status}
+                      </span>
+                      <span className="text-xs text-white/35">
+                        {judgeResult.testcaseType === 'FORMAL' ? '正式提交' : '运行调试'}
+                      </span>
+                      {judgeResult.judgement
+                        ? renderResultBadge(judgeResult.judgement.resultCode)
+                        : null}
+                    </div>
+                    {visibleJudgeCaseResults.length > 0 && (
+                      <div className="flex flex-col gap-3">
+                        {visibleJudgeCaseResults.map(renderJudgeCase)}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </section>
             ) : (
               <div className="flex flex-col items-center justify-center gap-3 min-h-[200px] bg-white/[0.06] border border-white/[0.08] rounded-xl px-5 py-10">
                 <ExperimentOutlined className="text-[40px] text-white/15" />
-                <p className="text-base font-medium text-white/40 m-0">正在开发</p>
+                <p className="text-base font-medium text-white/40 m-0">暂不支持该题型</p>
                 <p className="text-[13px] text-white/25 m-0">
-                  {QuestionTypeLabels[question.questionType]}功能即将上线
+                  {QuestionTypeLabels[question.questionType]}
                 </p>
               </div>
             )}
@@ -907,6 +1317,21 @@ export default function QuestionDetailPage() {
                   {question.score} 分
                 </span>
               </div>
+              {questionStatistics && passRateText && (
+                <>
+                  <hr className="w-full h-px bg-white/[0.04] border-none m-0" />
+                  <div className="flex justify-between items-center">
+                    <span className="text-[13px] text-white/45">题目通过率</span>
+                    <span className="text-[13px] font-semibold text-[#07c160]">{passRateText}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-[13px] text-white/45">通过 / 提交</span>
+                    <span className="text-[13px] text-white/65">
+                      {questionStatistics.acceptedCount} / {questionStatistics.submittedCount}
+                    </span>
+                  </div>
+                </>
+              )}
             </div>
 
             {isFileUpload && uploadedFile && !isAnswered && !isExpired && (
@@ -973,6 +1398,17 @@ export default function QuestionDetailPage() {
                         })()}
                   </div>
                 )}
+                {isAlgorithm && answer?.language && (
+                  <div className="text-[13px] text-white/65">
+                    提交语言：{LANGUAGE_LABELS[answer.language] ?? answer.language}
+                  </div>
+                )}
+                {answer?.judgement && (
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-[13px] text-white/45">评判结果</span>
+                    {renderResultBadge(answer.judgement.resultCode)}
+                  </div>
+                )}
               </div>
             )}
 
@@ -991,6 +1427,34 @@ export default function QuestionDetailPage() {
                   <SendOutlined className="text-base" />
                   {submitting ? '提交中...' : '提交答案'}
                 </button>
+              )}
+              {isAlgorithm && !isExpired && (
+                <>
+                  <button
+                    className="w-full h-11 rounded-lg bg-white/[0.08] border border-white/[0.08] text-white/65 text-[15px] font-semibold cursor-pointer flex items-center justify-center gap-2 transition-opacity duration-200 hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={
+                      submitting || !!pollingJobId || !algorithmCode.trim() || !algorithmLanguage
+                    }
+                    onClick={handleAlgorithmRun}
+                  >
+                    <ExperimentOutlined className="text-base" />
+                    {pollingJobId && !pollingFormalJob ? '运行中...' : '运行代码'}
+                  </button>
+                  <button
+                    className="w-full h-11 rounded-lg border-none text-white text-[15px] font-semibold cursor-pointer flex items-center justify-center gap-2 transition-opacity duration-200 hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed bg-gradient-to-b from-[#6677ff] to-[#4455dd]"
+                    disabled={
+                      submitting || !!pollingJobId || !algorithmCode.trim() || !algorithmLanguage
+                    }
+                    onClick={handleAlgorithmSubmit}
+                  >
+                    <SendOutlined className="text-base" />
+                    {pollingJobId && pollingFormalJob
+                      ? '判题中...'
+                      : isAnswered
+                        ? '重新提交'
+                        : '提交答案'}
+                  </button>
+                </>
               )}
               {(isFileUpload || isChoiceQuestion) && isAnswered && isResubmitting && !isExpired && (
                 <>

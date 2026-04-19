@@ -17,6 +17,7 @@ import {
 } from 'antd'
 import { MinusCircleOutlined, PlusOutlined, PaperClipOutlined } from '@ant-design/icons'
 import type {
+  AlgorithmTestCase,
   AssessmentQuestionDTO,
   CreateQuestionRequestDTO,
   QuestionType,
@@ -69,9 +70,15 @@ interface FormValues {
   correctAnswers: number[]
   // Algorithm content
   algorithmContent: string
+  inputDescription: string
+  outputDescription: string
+  constraints: string
+  examples: { input: string; expectedOutput: string; explanation?: string }[]
+  runTestCases: AlgorithmTestCase[]
   timeLimit: number | null
   memoryLimit: number | null
-  testCases: { input: string; expectedOutput: string }[]
+  testCases: AlgorithmTestCase[]
+  starterCodeTemplates: { language: string; code: string }[]
 }
 
 /** QuestionType enum → 后端 Jackson @JsonSubTypes 小写 name */
@@ -80,6 +87,35 @@ const CONTENT_TYPE_MAP: Record<QuestionType, string> = {
   SINGLE_CHOICE: 'single_choice',
   MULTIPLE_CHOICE: 'multiple_choice',
   ALGORITHM: 'algorithm',
+}
+
+const PROGRAMMING_LANGUAGE_OPTIONS = [
+  { value: 'python', label: 'Python' },
+  { value: 'c', label: 'C' },
+  { value: 'cpp', label: 'C++' },
+  { value: 'java', label: 'Java' },
+  { value: 'javascript', label: 'JavaScript' },
+]
+
+/** 表单用数组编辑语言模板，提交给后端时需要合并为 starterCode map。 */
+function buildStarterCodeMap(templates: FormValues['starterCodeTemplates']) {
+  return (templates || []).reduce<Record<string, string>>((acc, item) => {
+    const language = item.language?.trim()
+    if (language && item.code?.trim()) {
+      acc[language] = item.code
+    }
+    return acc
+  }, {})
+}
+
+/** 后端 starterCode map 转成 Form.List 可编辑的语言模板数组。 */
+function parseStarterCodeTemplates(starterCode: unknown) {
+  if (!starterCode || typeof starterCode !== 'object') return []
+
+  return Object.entries(starterCode as Record<string, string>).map(([language, code]) => ({
+    language,
+    code,
+  }))
 }
 
 /** correctAnswer 在表单中存的是选项索引(number)，提交时转为选项文本 */
@@ -108,7 +144,13 @@ function buildContentFromForm(values: FormValues): QuestionContent | null {
       return {
         type,
         content: values.algorithmContent || '',
+        inputDescription: values.inputDescription || '',
+        outputDescription: values.outputDescription || '',
+        constraints: values.constraints || '',
+        examples: values.examples || [],
+        runTestCases: values.runTestCases || [],
         testCases: values.testCases || [],
+        starterCode: buildStarterCodeMap(values.starterCodeTemplates),
         timeLimit: values.timeLimit ?? undefined,
         memoryLimit: values.memoryLimit ?? undefined,
       } as QuestionContent
@@ -150,7 +192,13 @@ function parseContentToForm(content: unknown, questionType: QuestionType): Parti
     case 'ALGORITHM':
       return {
         algorithmContent: (c.content as string) || '',
-        testCases: (c.testCases as { input: string; expectedOutput: string }[]) || [],
+        inputDescription: (c.inputDescription as string) || '',
+        outputDescription: (c.outputDescription as string) || '',
+        constraints: (c.constraints as string) || '',
+        examples: (c.examples as FormValues['examples']) || [],
+        runTestCases: (c.runTestCases as AlgorithmTestCase[]) || [],
+        testCases: (c.testCases as AlgorithmTestCase[]) || [],
+        starterCodeTemplates: parseStarterCodeTemplates(c.starterCode),
         timeLimit: (c.timeLimit as number) ?? null,
         memoryLimit: (c.memoryLimit as number) ?? null,
       }
@@ -211,9 +259,15 @@ export default function QuestionDrawer({
         correctAnswer: -1,
         correctAnswers: [],
         algorithmContent: '',
+        inputDescription: '',
+        outputDescription: '',
+        constraints: '',
+        examples: [],
+        runTestCases: [],
         timeLimit: null,
         memoryLimit: null,
         testCases: [],
+        starterCodeTemplates: [],
       })
     }
   }, [questionTypeValue, form, open, isViewMode])
@@ -291,6 +345,96 @@ export default function QuestionDrawer({
         <QuestionStemMarkdownEditor rows={rows} placeholder={placeholder} />
       </Form.Item>
     )
+
+  const renderAlgorithmTestCases = (
+    name: 'examples' | 'runTestCases' | 'testCases',
+    label: string,
+    buttonText: string,
+    includeExplanation = false,
+    includeFormalFields = false
+  ) => (
+    <Form.List name={name}>
+      {(fields, { add, remove }) => (
+        <>
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-white/50 text-sm">{label}</span>
+            {!isViewMode && (
+              <Button
+                type="dashed"
+                size="small"
+                onClick={() =>
+                  add(
+                    includeFormalFields
+                      ? { input: '', expectedOutput: '', hidden: true, weight: 1 }
+                      : { input: '', expectedOutput: '' }
+                  )
+                }
+                icon={<PlusOutlined />}
+              >
+                {buttonText}
+              </Button>
+            )}
+          </div>
+          {fields.map((field) => (
+            <div key={field.key} className="mb-3">
+              <div className="flex gap-2">
+                <Form.Item
+                  name={[field.name, 'input']}
+                  label="输入"
+                  rules={[{ required: true, message: '请输入输入' }]}
+                  className="flex-1 mb-0"
+                >
+                  <Input.TextArea rows={2} placeholder="输入" disabled={isViewMode} />
+                </Form.Item>
+                <Form.Item
+                  name={[field.name, 'expectedOutput']}
+                  label="期望输出"
+                  rules={[{ required: true, message: '请输入期望输出' }]}
+                  className="flex-1 mb-0"
+                >
+                  <Input.TextArea rows={2} placeholder="期望输出" disabled={isViewMode} />
+                </Form.Item>
+                {!isViewMode && (
+                  <Button
+                    type="text"
+                    danger
+                    icon={<MinusCircleOutlined />}
+                    onClick={() => remove(field.name)}
+                    className="mt-7"
+                  />
+                )}
+              </div>
+              {includeExplanation && (
+                <Form.Item name={[field.name, 'explanation']} label="样例说明" className="mt-2">
+                  <Input.TextArea rows={2} placeholder="可选，支持普通文本" disabled={isViewMode} />
+                </Form.Item>
+              )}
+              {includeFormalFields && (
+                <div className="flex gap-4 mt-2">
+                  <Form.Item
+                    name={[field.name, 'hidden']}
+                    label="隐藏用例"
+                    valuePropName="checked"
+                    className="mb-0"
+                  >
+                    <Checkbox disabled={isViewMode}>隐藏</Checkbox>
+                  </Form.Item>
+                  <Form.Item name={[field.name, 'weight']} label="权重" className="flex-1 mb-0">
+                    <InputNumber
+                      min={1}
+                      placeholder="默认 1"
+                      style={{ width: '100%' }}
+                      disabled={isViewMode}
+                    />
+                  </Form.Item>
+                </div>
+              )}
+            </div>
+          ))}
+        </>
+      )}
+    </Form.List>
+  )
 
   const renderContentFields = () => {
     const type = questionTypeValue
@@ -430,6 +574,15 @@ export default function QuestionDrawer({
         return (
           <>
             {renderStemField('algorithmContent', 10, '输入题目描述，支持 Markdown')}
+            <Form.Item name="inputDescription" label="输入说明">
+              <Input.TextArea rows={3} placeholder="描述标准输入格式" disabled={isViewMode} />
+            </Form.Item>
+            <Form.Item name="outputDescription" label="输出说明">
+              <Input.TextArea rows={3} placeholder="描述标准输出格式" disabled={isViewMode} />
+            </Form.Item>
+            <Form.Item name="constraints" label="数据范围">
+              <Input.TextArea rows={3} placeholder="描述数据范围和约束" disabled={isViewMode} />
+            </Form.Item>
             <div className="flex gap-4">
               <Form.Item name="timeLimit" label="时间限制(ms)" className="flex-1">
                 <InputNumber
@@ -448,40 +601,47 @@ export default function QuestionDrawer({
                 />
               </Form.Item>
             </div>
-            <Form.List name="testCases">
+            {renderAlgorithmTestCases('examples', '题面样例', '添加样例', true)}
+            {renderAlgorithmTestCases('runTestCases', '默认运行用例', '添加默认运行用例')}
+            {renderAlgorithmTestCases('testCases', '正式判题用例', '添加正式判题用例', false, true)}
+            <Form.List name="starterCodeTemplates">
               {(fields, { add, remove }) => (
                 <>
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-white/50 text-sm">测试用例</span>
+                    <span className="text-white/50 text-sm">语言模板</span>
                     {!isViewMode && (
                       <Button
                         type="dashed"
                         size="small"
-                        onClick={() => add({ input: '', expectedOutput: '' })}
+                        onClick={() => add({ language: 'python', code: '' })}
                         icon={<PlusOutlined />}
                       >
-                        添加测试用例
+                        添加语言模板
                       </Button>
                     )}
                   </div>
                   {fields.map((field) => (
                     <div key={field.key} className="mb-3">
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 items-start">
                         <Form.Item
-                          name={[field.name, 'input']}
-                          label="输入"
-                          rules={[{ required: true, message: '请输入' }]}
-                          className="flex-1 mb-0"
+                          name={[field.name, 'language']}
+                          label="语言"
+                          rules={[{ required: true, message: '请选择语言' }]}
+                          className="w-44 mb-0"
                         >
-                          <Input.TextArea rows={2} placeholder="输入" disabled={isViewMode} />
+                          <Select options={PROGRAMMING_LANGUAGE_OPTIONS} disabled={isViewMode} />
                         </Form.Item>
                         <Form.Item
-                          name={[field.name, 'expectedOutput']}
-                          label="期望输出"
-                          rules={[{ required: true, message: '请输入' }]}
+                          name={[field.name, 'code']}
+                          label="模板代码"
+                          rules={[{ required: true, message: '请输入模板代码' }]}
                           className="flex-1 mb-0"
                         >
-                          <Input.TextArea rows={2} placeholder="期望输出" disabled={isViewMode} />
+                          <Input.TextArea
+                            rows={8}
+                            placeholder="输入该语言的初始代码"
+                            disabled={isViewMode}
+                          />
                         </Form.Item>
                         {!isViewMode && (
                           <Button
@@ -541,7 +701,10 @@ export default function QuestionDrawer({
         initialValues={{
           questionType: 'FILE_UPLOAD',
           options: [''],
+          examples: [],
+          runTestCases: [],
           testCases: [],
+          starterCodeTemplates: [],
           correctAnswer: -1,
           correctAnswers: [],
         }}

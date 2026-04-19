@@ -2,7 +2,13 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { App, Button, Grid, Modal, Pagination, Select, Spin, Table, Tag } from 'antd'
-import { PlusOutlined, EditOutlined, DeleteOutlined, PaperClipOutlined } from '@ant-design/icons'
+import {
+  PlusOutlined,
+  EditOutlined,
+  DeleteOutlined,
+  PaperClipOutlined,
+  BarChartOutlined,
+} from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
 import type {
   AssessmentQuestionDTO,
@@ -15,6 +21,7 @@ import { adminAssessmentQuestionService } from '@/apis/services/admin-assessment
 import authStore from '@/stores/authStore'
 import { getRoleLevel } from '@/utils/RoleUtils'
 import QuestionDrawer, { QUESTION_TYPE_LABELS, type DrawerMode } from './QuestionDrawer'
+import JudgementDrawer from './JudgementDrawer'
 
 const PAGE_SIZE = 20
 const { useBreakpoint } = Grid
@@ -33,6 +40,7 @@ export default function AssessmentQuestionManagementPage() {
 
   const userInfo = authStore((state) => state.userInfo)
   const isSuperAdmin = getRoleLevel(userInfo?.roleName || '') >= 3
+  const roleLevel = getRoleLevel(userInfo?.roleName || '')
   const userDirection = userInfo?.direction
 
   // Filter state
@@ -54,6 +62,8 @@ export default function AssessmentQuestionManagementPage() {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [drawerMode, setDrawerMode] = useState<DrawerMode>('view')
   const [selectedQuestion, setSelectedQuestion] = useState<AssessmentQuestionDTO | null>(null)
+  const [judgementDrawerOpen, setJudgementDrawerOpen] = useState(false)
+  const [judgementQuestion, setJudgementQuestion] = useState<AssessmentQuestionDTO | null>(null)
 
   // Delete modal state
   const [deleteModalOpen, setDeleteModalOpen] = useState(false)
@@ -164,6 +174,11 @@ export default function AssessmentQuestionManagementPage() {
     setDeleteModalOpen(true)
   }
 
+  const handleJudgementClick = (item: AssessmentQuestionDTO) => {
+    setJudgementQuestion(item)
+    setJudgementDrawerOpen(true)
+  }
+
   const handleDeleteConfirm = async () => {
     if (!deletingItem) return
     try {
@@ -229,6 +244,16 @@ export default function AssessmentQuestionManagementPage() {
         render: (_: unknown, record: AssessmentQuestionDTO) =>
           canOperate ? (
             <div className="flex gap-1">
+              <Button
+                title="查看评判与统计"
+                type="text"
+                size="small"
+                icon={<BarChartOutlined />}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  handleJudgementClick(record)
+                }}
+              />
               <Button
                 type="text"
                 size="small"
@@ -339,6 +364,14 @@ export default function AssessmentQuestionManagementPage() {
         onSuccess={handleDrawerSuccess}
         onDelete={handleDeleteClick}
         onEdit={() => setDrawerMode('edit')}
+      />
+
+      <JudgementDrawer
+        open={judgementDrawerOpen}
+        question={judgementQuestion}
+        canManualReview={roleLevel >= 1}
+        canDecide={roleLevel >= 2}
+        onClose={() => setJudgementDrawerOpen(false)}
       />
 
       {/* Delete confirmation modal */}

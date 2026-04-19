@@ -17,7 +17,16 @@ import com.bluenet.web.domain.service.FileDomainService;
 import com.bluenet.web.domain.exception.DataConflict;
 import com.bluenet.web.domain.exception.Forbidden;
 import com.bluenet.web.domain.model.enumerate.FileType;
+import com.bluenet.web.domain.model.enumerate.JudgementSource;
+import com.bluenet.web.domain.model.enumerate.JudgementStatus;
+import com.bluenet.web.domain.model.enumerate.ObjectiveResultCode;
+import com.bluenet.web.domain.model.enumerate.QuestionType;
 import com.bluenet.web.infrastructure.security.util.UserCTX;
+import com.bluenet.web.domain.model.vo.AssessmentJudgementVO;
+import com.bluenet.web.domain.model.vo.evaluation.MultipleChoiceContent;
+import com.bluenet.web.domain.model.vo.evaluation.SingleChoiceContent;
+import com.bluenet.web.domain.service.AssessmentJudgementDomainService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -25,9 +34,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -57,10 +69,16 @@ class AssessmentAnswerServiceImplTest {
     private FileDomainService fileDomainService;
 
     @Mock
+    private AssessmentJudgementDomainService assessmentJudgementDomainService;
+
+    @Mock
     private AssessmentAnswerRepository assessmentAnswerRepository;
 
     @Mock
     private AssessmentSessionRepository assessmentSessionRepository;
+
+    @Spy
+    private ObjectMapper objectMapper = new ObjectMapper();
 
     @InjectMocks
     private AssessmentAnswerServiceImpl assessmentAnswerService;
@@ -104,6 +122,49 @@ class AssessmentAnswerServiceImplTest {
         return AssessmentQuestionVO.builder()
                 .id(TEST_QUESTION_ID)
                 .assessmentTimeId(TEST_ASSESSMENT_TIME_ID)
+                .build();
+    }
+
+    private AssessmentQuestionVO createSingleChoiceQuestionVO(String correctAnswer) {
+        SingleChoiceContent content = new SingleChoiceContent();
+        content.setContent("单选题");
+        content.setOptions(Arrays.asList("A", "B", "C"));
+        content.setCorrectAnswer(correctAnswer);
+        return AssessmentQuestionVO.builder()
+                .id(TEST_QUESTION_ID)
+                .assessmentTimeId(TEST_ASSESSMENT_TIME_ID)
+                .questionType(QuestionType.SINGLE_CHOICE)
+                .content(content)
+                .score(BigDecimal.TEN)
+                .build();
+    }
+
+    private AssessmentQuestionVO createMultipleChoiceQuestionVO(String... correctAnswers) {
+        MultipleChoiceContent content = new MultipleChoiceContent();
+        content.setContent("多选题");
+        content.setOptions(Arrays.asList("A", "B", "C"));
+        content.setCorrectAnswers(Arrays.asList(correctAnswers));
+        return AssessmentQuestionVO.builder()
+                .id(TEST_QUESTION_ID)
+                .assessmentTimeId(TEST_ASSESSMENT_TIME_ID)
+                .questionType(QuestionType.MULTIPLE_CHOICE)
+                .content(content)
+                .score(BigDecimal.TEN)
+                .build();
+    }
+
+    private AssessmentJudgementVO createJudgementVO(ObjectiveResultCode resultCode) {
+        return AssessmentJudgementVO.builder()
+                .id(900L)
+                .answerId(TEST_ANSWER_ID)
+                .questionId(TEST_QUESTION_ID)
+                .assessmentTimeId(TEST_ASSESSMENT_TIME_ID)
+                .userId(TEST_USER_ID)
+                .score(resultCode == ObjectiveResultCode.AC ? BigDecimal.TEN : BigDecimal.ZERO)
+                .maxScore(BigDecimal.TEN)
+                .status(JudgementStatus.JUDGED)
+                .resultCode(resultCode)
+                .source(JudgementSource.AUTO)
                 .build();
     }
 
@@ -286,6 +347,88 @@ class AssessmentAnswerServiceImplTest {
                 verify(assessmentAnswerDomainService).createAnswer(any(AssessmentAnswerVO.class));
             }
         }
+
+        @Test
+        @DisplayName("单选题回答正确：应同步写入AC评判并返回结果")
+        void createAnswer_singleChoiceCorrect_shouldCreateAcceptedJudgement() {
+            try (MockedStatic<UserCTX> mockedUserCTX = mockStatic(UserCTX.class)) {
+                UserVO user = createTestUser();
+                mockedUserCTX.when(UserCTX::getCurrentUser).thenReturn(user);
+
+                CreateAnswerRequestDTO request = CreateAnswerRequestDTO.builder()
+                        .questionId(TEST_QUESTION_ID)
+                        .content("B")
+                        .build();
+                AssessmentQuestionVO questionVO = createSingleChoiceQuestionVO("B");
+                AssessmentAnswerVO createdVO = AssessmentAnswerVO.builder()
+                        .id(TEST_ANSWER_ID)
+                        .userId(TEST_USER_ID)
+                        .questionId(TEST_QUESTION_ID)
+                        .content("B")
+                        .submitTime(TEST_SUBMIT_TIME)
+                        .build();
+
+                when(assessmentQuestionDomainService.getQuestionById(TEST_QUESTION_ID)).thenReturn(questionVO);
+                when(assessmentTimeDomainService.getById(TEST_ASSESSMENT_TIME_ID))
+                        .thenReturn(Optional.of(createTestTimeVO()));
+                when(assessmentSessionRepository.findByUserIdAndAssessmentTimeId(TEST_USER_ID, TEST_ASSESSMENT_TIME_ID))
+                        .thenReturn(Optional.empty());
+                when(assessmentAnswerDomainService.createAnswer(any(AssessmentAnswerVO.class))).thenReturn(createdVO);
+                when(assessmentJudgementDomainService.createJudgement(any(AssessmentJudgementVO.class)))
+                        .thenReturn(createJudgementVO(ObjectiveResultCode.AC));
+
+                AssessmentAnswerDTO result = assessmentAnswerService.createAnswer(request);
+
+                assertNotNull(result.getJudgement());
+                assertEquals(ObjectiveResultCode.AC, result.getJudgement().getResultCode());
+                verify(assessmentJudgementDomainService).createJudgement(
+                        argThat(
+                                judgement -> judgement.getResultCode() == ObjectiveResultCode.AC
+                                        && BigDecimal.TEN.compareTo(judgement.getScore()) == 0
+                                        && JudgementStatus.JUDGED == judgement.getStatus()
+                                        && JudgementSource.AUTO == judgement.getSource()));
+            }
+        }
+
+        @Test
+        @DisplayName("单选题回答错误：应同步写入WA评判")
+        void createAnswer_singleChoiceWrong_shouldCreateWrongAnswerJudgement() {
+            try (MockedStatic<UserCTX> mockedUserCTX = mockStatic(UserCTX.class)) {
+                UserVO user = createTestUser();
+                mockedUserCTX.when(UserCTX::getCurrentUser).thenReturn(user);
+
+                CreateAnswerRequestDTO request = CreateAnswerRequestDTO.builder()
+                        .questionId(TEST_QUESTION_ID)
+                        .content("A")
+                        .build();
+                AssessmentQuestionVO questionVO = createSingleChoiceQuestionVO("B");
+                AssessmentAnswerVO createdVO = AssessmentAnswerVO.builder()
+                        .id(TEST_ANSWER_ID)
+                        .userId(TEST_USER_ID)
+                        .questionId(TEST_QUESTION_ID)
+                        .content("A")
+                        .submitTime(TEST_SUBMIT_TIME)
+                        .build();
+
+                when(assessmentQuestionDomainService.getQuestionById(TEST_QUESTION_ID)).thenReturn(questionVO);
+                when(assessmentTimeDomainService.getById(TEST_ASSESSMENT_TIME_ID))
+                        .thenReturn(Optional.of(createTestTimeVO()));
+                when(assessmentSessionRepository.findByUserIdAndAssessmentTimeId(TEST_USER_ID, TEST_ASSESSMENT_TIME_ID))
+                        .thenReturn(Optional.empty());
+                when(assessmentAnswerDomainService.createAnswer(any(AssessmentAnswerVO.class))).thenReturn(createdVO);
+                when(assessmentJudgementDomainService.createJudgement(any(AssessmentJudgementVO.class)))
+                        .thenReturn(createJudgementVO(ObjectiveResultCode.WA));
+
+                AssessmentAnswerDTO result = assessmentAnswerService.createAnswer(request);
+
+                assertNotNull(result.getJudgement());
+                assertEquals(ObjectiveResultCode.WA, result.getJudgement().getResultCode());
+                verify(assessmentJudgementDomainService).createJudgement(
+                        argThat(
+                                judgement -> judgement.getResultCode() == ObjectiveResultCode.WA
+                                        && BigDecimal.ZERO.compareTo(judgement.getScore()) == 0));
+            }
+        }
     }
 
     @Nested
@@ -318,6 +461,83 @@ class AssessmentAnswerServiceImplTest {
                 verify(assessmentSessionRepository, never())
                         .findByUserIdAndAssessmentTimeId(TEST_USER_ID, TEST_ASSESSMENT_TIME_ID);
                 verify(assessmentAnswerDomainService).updateAnswer(existingVO, TEST_FILE_ID, "test answer content");
+            }
+        }
+
+        @Test
+        @DisplayName("多选题回答顺序不同但集合一致：应同步写入AC评判")
+        void updateAnswer_multipleChoiceSameSet_shouldCreateAcceptedJudgement() {
+            try (MockedStatic<UserCTX> mockedUserCTX = mockStatic(UserCTX.class)) {
+                UserVO user = createTestUser();
+                mockedUserCTX.when(UserCTX::getCurrentUser).thenReturn(user);
+
+                CreateAnswerRequestDTO request = CreateAnswerRequestDTO.builder()
+                        .questionId(TEST_QUESTION_ID)
+                        .content("[\"B\",\"A\"]")
+                        .build();
+                AssessmentQuestionVO questionVO = createMultipleChoiceQuestionVO("A", "B");
+                AssessmentAnswerVO existingVO = createTestAnswerVO();
+                AssessmentAnswerVO updatedVO = AssessmentAnswerVO.builder()
+                        .id(TEST_ANSWER_ID)
+                        .userId(TEST_USER_ID)
+                        .questionId(TEST_QUESTION_ID)
+                        .content("[\"B\",\"A\"]")
+                        .submitTime(TEST_SUBMIT_TIME)
+                        .build();
+
+                when(assessmentQuestionDomainService.getQuestionById(TEST_QUESTION_ID)).thenReturn(questionVO);
+                when(assessmentTimeDomainService.getById(TEST_ASSESSMENT_TIME_ID))
+                        .thenReturn(Optional.of(createTestTimeVO()));
+                when(assessmentSessionRepository.findByUserIdAndAssessmentTimeId(TEST_USER_ID, TEST_ASSESSMENT_TIME_ID))
+                        .thenReturn(Optional.empty());
+                when(assessmentAnswerRepository.findByUserIdAndQuestionId(TEST_USER_ID, TEST_QUESTION_ID))
+                        .thenReturn(Optional.of(existingVO), Optional.of(updatedVO));
+                when(assessmentJudgementDomainService.createJudgement(any(AssessmentJudgementVO.class)))
+                        .thenReturn(createJudgementVO(ObjectiveResultCode.AC));
+
+                AssessmentAnswerDTO result = assessmentAnswerService.updateAnswer(request);
+
+                assertNotNull(result.getJudgement());
+                assertEquals(ObjectiveResultCode.AC, result.getJudgement().getResultCode());
+                verify(assessmentJudgementDomainService)
+                        .createJudgement(argThat(judgement -> judgement.getResultCode() == ObjectiveResultCode.AC));
+            }
+        }
+
+        @Test
+        @DisplayName("多选题答案格式错误：应拒绝并抛出BadRequest")
+        void updateAnswer_multipleChoiceInvalidJson_shouldThrowBadRequest() {
+            try (MockedStatic<UserCTX> mockedUserCTX = mockStatic(UserCTX.class)) {
+                UserVO user = createTestUser();
+                mockedUserCTX.when(UserCTX::getCurrentUser).thenReturn(user);
+
+                CreateAnswerRequestDTO request = CreateAnswerRequestDTO.builder()
+                        .questionId(TEST_QUESTION_ID)
+                        .content("A,B")
+                        .build();
+                AssessmentQuestionVO questionVO = createMultipleChoiceQuestionVO("A", "B");
+                AssessmentAnswerVO existingVO = createTestAnswerVO();
+                AssessmentAnswerVO updatedVO = AssessmentAnswerVO.builder()
+                        .id(TEST_ANSWER_ID)
+                        .userId(TEST_USER_ID)
+                        .questionId(TEST_QUESTION_ID)
+                        .content("A,B")
+                        .submitTime(TEST_SUBMIT_TIME)
+                        .build();
+
+                when(assessmentQuestionDomainService.getQuestionById(TEST_QUESTION_ID)).thenReturn(questionVO);
+                when(assessmentTimeDomainService.getById(TEST_ASSESSMENT_TIME_ID))
+                        .thenReturn(Optional.of(createTestTimeVO()));
+                when(assessmentSessionRepository.findByUserIdAndAssessmentTimeId(TEST_USER_ID, TEST_ASSESSMENT_TIME_ID))
+                        .thenReturn(Optional.empty());
+                when(assessmentAnswerRepository.findByUserIdAndQuestionId(TEST_USER_ID, TEST_QUESTION_ID))
+                        .thenReturn(Optional.of(existingVO), Optional.of(updatedVO));
+
+                com.bluenet.web.domain.exception.BadRequest ex = assertThrows(
+                        com.bluenet.web.domain.exception.BadRequest.class,
+                        () -> assessmentAnswerService.updateAnswer(request));
+                assertEquals("多选题答案格式错误", ex.getMessage());
+                verify(assessmentJudgementDomainService, never()).createJudgement(any());
             }
         }
     }
@@ -475,6 +695,27 @@ class AssessmentAnswerServiceImplTest {
                 assertEquals(TEST_SUBMIT_TIME, result.getSubmitTime());
 
                 verify(assessmentAnswerRepository).findByUserIdAndQuestionId(TEST_USER_ID, TEST_QUESTION_ID);
+            }
+        }
+
+        @Test
+        @DisplayName("答案存在且已有评判：应返回最新评判结果")
+        void getMyAnswer_withJudgement_shouldReturnLatestJudgement() {
+            try (MockedStatic<UserCTX> mockedUserCTX = mockStatic(UserCTX.class)) {
+                UserVO user = createTestUser();
+                mockedUserCTX.when(UserCTX::getCurrentUser).thenReturn(user);
+
+                AssessmentAnswerVO answerVO = createTestAnswerVO();
+                when(assessmentAnswerRepository.findByUserIdAndQuestionId(TEST_USER_ID, TEST_QUESTION_ID))
+                        .thenReturn(Optional.of(answerVO));
+                when(assessmentJudgementDomainService.getLatestByAnswerId(TEST_ANSWER_ID))
+                        .thenReturn(createJudgementVO(ObjectiveResultCode.AC));
+
+                AssessmentAnswerDTO result = assessmentAnswerService.getMyAnswer(TEST_QUESTION_ID);
+
+                assertNotNull(result);
+                assertNotNull(result.getJudgement());
+                assertEquals(ObjectiveResultCode.AC, result.getJudgement().getResultCode());
             }
         }
 

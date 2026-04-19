@@ -1,0 +1,71 @@
+## ADDED Requirements
+
+### Requirement: Unified question judgement records
+The system SHALL record a question-level judgement for each assessed answer, including question id, answer id, candidate id, score, max score, judgement status, normalized result code, judgement source, reviewer identity when applicable, comment, and timestamps.
+
+#### Scenario: Automatic judgement is recorded
+- **WHEN** a single choice, multiple choice, or algorithm answer is evaluated by the system
+- **THEN** the system SHALL store a judgement with source `AUTO`, reviewer type `SYSTEM`, and a normalized result code
+
+#### Scenario: Manual judgement is recorded
+- **WHEN** an authorized member scores a file upload answer
+- **THEN** the system SHALL store a judgement with source `MANUAL`, reviewer id, score, comment, and judgement time
+
+### Requirement: Objective judgement result codes
+The system SHALL use normalized result codes for automatically judged objective answers so that pass rates and result distributions can be aggregated consistently.
+
+#### Scenario: Choice answer result code
+- **WHEN** a single choice or multiple choice answer is automatically judged
+- **THEN** the system SHALL record result code `AC` for a correct answer or `WA` for an incorrect answer
+
+#### Scenario: Algorithm answer result code
+- **WHEN** an algorithm answer is automatically judged
+- **THEN** the system SHALL record one primary result code from `AC`, `WA`, `TLE`, `RE`, `CE`, or `MLE`
+
+#### Scenario: Choice answer is judged synchronously
+- **WHEN** a single choice or multiple choice answer is submitted
+- **THEN** the system SHALL synchronously record result code `AC` or `WA` without creating a pending judgement result
+
+#### Scenario: Judge infrastructure failure is not a result code
+- **WHEN** a sandbox, queue, or Judge Worker infrastructure failure prevents an algorithm job from completing a valid judgement
+- **THEN** the system SHALL NOT record an objective judgement result code for the candidate and SHALL keep the judge job retryable or flagged for operational review
+
+### Requirement: Manual review for file upload answers
+The system SHALL allow users with team member or higher permission to score and comment on file upload answers.
+
+#### Scenario: Member scores file upload answer
+- **WHEN** a team member submits a valid score and comment for a file upload answer
+- **THEN** the system SHALL save the manual judgement and expose it in the answer review view
+
+#### Scenario: Candidate cannot score file upload answer
+- **WHEN** a candidate attempts to score any file upload answer
+- **THEN** the system SHALL reject the operation with a forbidden response
+
+### Requirement: Objective judgements are read-only to humans
+The system SHALL prevent users from manually changing the score of automatically judged single choice, multiple choice, and algorithm answers.
+
+#### Scenario: Member attempts to modify automatic judgement score
+- **WHEN** a team member submits a manual score update for a single choice, multiple choice, or algorithm answer
+- **THEN** the system SHALL reject the operation and preserve the automatic judgement
+
+### Requirement: Judgement result visibility
+The system SHALL allow candidates to view their own judgement results and allow team members or higher roles to view candidate judgement results within their authorized scope.
+
+#### Scenario: Candidate views own result
+- **WHEN** a candidate requests the judgement result for their submitted answer
+- **THEN** the system SHALL return that candidate's judgement result
+
+#### Scenario: Member views candidate result
+- **WHEN** a team member requests judgement results within their authorized assessment scope
+- **THEN** the system SHALL return the matching candidate judgement results
+
+### Requirement: Assessment pass decision
+The system SHALL allow direction administrators or higher roles to set the final pass decision for a candidate assessment based on the question judgement results.
+
+#### Scenario: Direction administrator marks candidate as passed
+- **WHEN** a direction administrator sets a candidate assessment decision to passed
+- **THEN** the system SHALL save the decision, decision maker, decision time, and optional decision comment
+
+#### Scenario: Member cannot set final decision
+- **WHEN** a team member attempts to set the final pass decision
+- **THEN** the system SHALL reject the operation with a forbidden response
