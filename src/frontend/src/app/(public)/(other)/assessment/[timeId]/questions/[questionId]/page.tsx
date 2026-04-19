@@ -21,6 +21,7 @@ import {
   ExperimentOutlined,
   RedoOutlined,
   DownloadOutlined,
+  CheckSquareOutlined,
 } from '@ant-design/icons'
 import { Button, Tag, message, Spin, Upload, type UploadProps } from 'antd'
 import { assessmentQuestionService } from '@/apis/services/assessment-question.service'
@@ -33,6 +34,8 @@ import type {
   AssessmentQuestionDTO,
   AssessmentAnswerDTO,
   FileUploadContent,
+  SingleChoiceContent,
+  MultipleChoiceContent,
   AssessmentTimeDTO,
   AssessmentSessionDTO,
   AssessmentStatus,
@@ -66,6 +69,8 @@ function formatFileSize(bytes: number): string {
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
+
+const OPTION_LABELS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')
 
 type UploadPhase =
   | 'idle'
@@ -110,6 +115,8 @@ export default function QuestionDetailPage() {
     size?: number
   } | null>(null)
   const [isExpired, setIsExpired] = useState(false)
+  const [selectedOption, setSelectedOption] = useState<string | null>(null)
+  const [selectedOptions, setSelectedOptions] = useState<string[]>([])
   const autoSubmitRef = useRef(false)
   const { isAuthenticated, checkAuthStatus } = authStore()
   const [messageApi, contextHolder] = message.useMessage()
@@ -212,6 +219,27 @@ export default function QuestionDetailPage() {
     }
   }, [isAuthenticated, fetchQuestion, fetchAnswer, fetchQuestionsList, fetchTimeInfo, fetchSession])
 
+  // 同步已有答案到选项状态
+  useEffect(() => {
+    if (!answer?.content) {
+      setSelectedOption(null)
+      setSelectedOptions([])
+      return
+    }
+    if (question?.questionType === 'SINGLE_CHOICE') {
+      setSelectedOption(answer.content)
+      setSelectedOptions([])
+    } else if (question?.questionType === 'MULTIPLE_CHOICE') {
+      try {
+        const parsed = JSON.parse(answer.content)
+        if (Array.isArray(parsed)) setSelectedOptions(parsed)
+      } catch {
+        setSelectedOptions([])
+      }
+      setSelectedOption(null)
+    }
+  }, [answer?.content, question?.questionType])
+
   // 提交答案
   const handleSubmit = async () => {
     if (!uploadedFile) {
@@ -267,33 +295,108 @@ export default function QuestionDetailPage() {
     }
   }
 
+  // 提交选择题答案
+  const handleSubmitChoice = async () => {
+    if (question?.questionType === 'SINGLE_CHOICE' && !selectedOption) {
+      messageApi.warning('请选择一个选项')
+      return
+    }
+    if (question?.questionType === 'MULTIPLE_CHOICE' && selectedOptions.length === 0) {
+      messageApi.warning('请至少选择一个选项')
+      return
+    }
+
+    const content =
+      question?.questionType === 'SINGLE_CHOICE' ? selectedOption! : JSON.stringify(selectedOptions)
+    const hasExistingAnswer = !!answer
+
+    setSubmitting(true)
+    try {
+      const response = hasExistingAnswer
+        ? await assessmentAnswerService.updateAnswer({ questionId, content })
+        : await assessmentAnswerService.createAnswer({ questionId, content })
+
+      if (response.code === 200 && response.data) {
+        setAnswer(response.data)
+        setIsResubmitting(false)
+        messageApi.success(hasExistingAnswer ? '重新提交成功' : '提交成功')
+      } else {
+        messageApi.error(response.msg || '提交失败')
+      }
+    } catch (error) {
+      messageApi.error('提交失败，请重试')
+      console.error('Choice submit error:', error)
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
   // 超时自动提交
   const handleTimeUp = useCallback(() => {
     setIsExpired(true)
     if (answer) return
-    if (!uploadedFile) return
     if (autoSubmitRef.current) return
     autoSubmitRef.current = true
 
-    setSubmitting(true)
-    assessmentAnswerService
-      .createAnswer({ questionId, fileId: uploadedFile.id })
-      .then((response) => {
-        if (response.code === 200 && response.data) {
-          setAnswer(response.data)
-          messageApi.warning('考核时间已到，已自动提交')
-        } else {
+    // 自动提交文件上传
+    if (uploadedFile) {
+      setSubmitting(true)
+      assessmentAnswerService
+        .createAnswer({ questionId, fileId: uploadedFile.id })
+        .then((response) => {
+          if (response.code === 200 && response.data) {
+            setAnswer(response.data)
+            messageApi.warning('考核时间已到，已自动提交')
+          } else {
+            messageApi.error('自动提交失败')
+          }
+        })
+        .catch((error) => {
           messageApi.error('自动提交失败')
-        }
-      })
-      .catch((error) => {
-        messageApi.error('自动提交失败')
-        console.error('Auto-submit error:', error)
-      })
-      .finally(() => {
-        setSubmitting(false)
-      })
-  }, [answer, uploadedFile, questionId, messageApi])
+          console.error('Auto-submit error:', error)
+        })
+        .finally(() => {
+          setSubmitting(false)
+        })
+      return
+    }
+
+    // 自动提交选择题
+    const choiceContent =
+      question?.questionType === 'SINGLE_CHOICE'
+        ? selectedOption
+        : question?.questionType === 'MULTIPLE_CHOICE' && selectedOptions.length > 0
+          ? JSON.stringify(selectedOptions)
+          : null
+    if (choiceContent) {
+      setSubmitting(true)
+      assessmentAnswerService
+        .createAnswer({ questionId, content: choiceContent })
+        .then((response) => {
+          if (response.code === 200 && response.data) {
+            setAnswer(response.data)
+            messageApi.warning('考核时间已到，已自动提交')
+          } else {
+            messageApi.error('自动提交失败')
+          }
+        })
+        .catch((error) => {
+          messageApi.error('自动提交失败')
+          console.error('Auto-submit error:', error)
+        })
+        .finally(() => {
+          setSubmitting(false)
+        })
+    }
+  }, [
+    answer,
+    uploadedFile,
+    questionId,
+    messageApi,
+    question?.questionType,
+    selectedOption,
+    selectedOptions,
+  ])
 
   // 删除已上传文件
   const handleRemoveFile = () => {
@@ -342,6 +445,13 @@ export default function QuestionDetailPage() {
 
   const fileContent = question.content as FileUploadContent | null
   const isFileUpload = question.questionType === 'FILE_UPLOAD'
+  const isSingleChoice = question.questionType === 'SINGLE_CHOICE'
+  const isMultipleChoice = question.questionType === 'MULTIPLE_CHOICE'
+  const isChoiceQuestion = isSingleChoice || isMultipleChoice
+  const choiceContent = isChoiceQuestion
+    ? (question.content as SingleChoiceContent | MultipleChoiceContent | null)
+    : null
+  const options = choiceContent?.options ?? []
   const isAnswered = !!answer
   const isTimed = Boolean(timeInfo?.timeLimit && session?.deadline)
   const deadline = session?.deadline ?? null
@@ -650,6 +760,83 @@ export default function QuestionDetailPage() {
                   <UploadArea />
                 </div>
               </section>
+            ) : isChoiceQuestion ? (
+              <section className="bg-white/[0.06] border border-white/[0.08] rounded-xl p-7 h-fit">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2.5">
+                    <CheckSquareOutlined className="text-xl text-[#6677ff]" />
+                    <h2 className="text-base font-semibold text-white m-0">
+                      {isSingleChoice ? '选择答案（单选）' : '选择答案（多选）'}
+                    </h2>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    {isAnswered && !isResubmitting && (
+                      <span className="inline-flex items-center gap-1 text-xs text-[#07c160]">
+                        <CheckCircleOutlined /> 已提交
+                      </span>
+                    )}
+                    {isAnswered && !isResubmitting && !isExpired && (
+                      <button
+                        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#fa8c16]/[0.1] border border-[#fa8c16]/[0.19] text-[#fa8c16] text-xs font-medium cursor-pointer transition-all duration-200 hover:bg-[#fa8c16]/[0.19]"
+                        onClick={() => setIsResubmitting(true)}
+                      >
+                        <RedoOutlined className="text-sm" />
+                        重新提交
+                      </button>
+                    )}
+                  </div>
+                </div>
+                <hr className="w-full h-px bg-white/[0.04] border-none m-0" />
+                <div className="flex flex-col gap-3 mt-4">
+                  {options.map((option, index) => {
+                    const label = OPTION_LABELS[index] || `${index + 1}`
+                    const isSelected = isSingleChoice
+                      ? selectedOption === option
+                      : selectedOptions.includes(option)
+                    const isLocked = isAnswered && !isResubmitting
+
+                    return (
+                      <div
+                        key={index}
+                        onClick={() => {
+                          if (isLocked || isExpired) return
+                          if (isSingleChoice) {
+                            setSelectedOption(option)
+                          } else {
+                            setSelectedOptions((prev) =>
+                              prev.includes(option)
+                                ? prev.filter((o) => o !== option)
+                                : [...prev, option]
+                            )
+                          }
+                        }}
+                        className={`flex items-center gap-4 p-4 rounded-xl transition-all duration-200 border ${
+                          isSelected
+                            ? 'bg-[#6677ff]/[0.08] border-[#6677ff]/[0.3]'
+                            : 'bg-white/[0.04] border-white/[0.08]'
+                        } ${
+                          !isLocked && !isExpired ? 'cursor-pointer hover:bg-white/[0.06]' : ''
+                        } ${isLocked ? 'opacity-90' : ''}`}
+                      >
+                        <span
+                          className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold flex-shrink-0 ${
+                            isSelected ? 'bg-[#6677ff] text-white' : 'bg-white/[0.08] text-white/45'
+                          }`}
+                        >
+                          {label}
+                        </span>
+                        <span
+                          className={`text-sm ${
+                            isSelected ? 'text-white font-medium' : 'text-white/65'
+                          }`}
+                        >
+                          {option}
+                        </span>
+                      </div>
+                    )
+                  })}
+                </div>
+              </section>
             ) : (
               <div className="flex flex-col items-center justify-center gap-3 min-h-[200px] bg-white/[0.06] border border-white/[0.08] rounded-xl px-5 py-10">
                 <ExperimentOutlined className="text-[40px] text-white/15" />
@@ -772,26 +959,50 @@ export default function QuestionDetailPage() {
                     下载已提交的答案
                   </button>
                 )}
+                {isChoiceQuestion && answer?.content && (
+                  <div className="text-[13px] text-white/65">
+                    你的答案：
+                    {isSingleChoice
+                      ? answer.content
+                      : (() => {
+                          try {
+                            return JSON.parse(answer.content).join('、')
+                          } catch {
+                            return answer.content
+                          }
+                        })()}
+                  </div>
+                )}
               </div>
             )}
 
             <div className="flex flex-col gap-3">
-              {isFileUpload && !isAnswered && !isExpired && (
+              {(isFileUpload || isChoiceQuestion) && !isAnswered && !isExpired && (
                 <button
                   className="w-full h-11 rounded-lg border-none text-white text-[15px] font-semibold cursor-pointer flex items-center justify-center gap-2 transition-opacity duration-200 hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed bg-gradient-to-b from-[#6677ff] to-[#4455dd]"
-                  disabled={!uploadedFile || submitting}
-                  onClick={handleSubmit}
+                  disabled={
+                    isFileUpload
+                      ? !uploadedFile || submitting
+                      : (isSingleChoice ? !selectedOption : selectedOptions.length === 0) ||
+                        submitting
+                  }
+                  onClick={isFileUpload ? handleSubmit : handleSubmitChoice}
                 >
                   <SendOutlined className="text-base" />
                   {submitting ? '提交中...' : '提交答案'}
                 </button>
               )}
-              {isFileUpload && isAnswered && isResubmitting && !isExpired && (
+              {(isFileUpload || isChoiceQuestion) && isAnswered && isResubmitting && !isExpired && (
                 <>
                   <button
                     className="w-full h-11 rounded-lg border-none text-white text-[15px] font-semibold cursor-pointer flex items-center justify-center gap-2 transition-opacity duration-200 hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed bg-gradient-to-b from-[#6677ff] to-[#4455dd]"
-                    disabled={!uploadedFile || submitting}
-                    onClick={handleResubmit}
+                    disabled={
+                      isFileUpload
+                        ? !uploadedFile || submitting
+                        : (isSingleChoice ? !selectedOption : selectedOptions.length === 0) ||
+                          submitting
+                    }
+                    onClick={isFileUpload ? handleResubmit : handleSubmitChoice}
                   >
                     <SendOutlined className="text-base" />
                     {submitting ? '提交中...' : '确认重新提交'}
@@ -801,6 +1012,19 @@ export default function QuestionDetailPage() {
                     onClick={() => {
                       setIsResubmitting(false)
                       setUploadedFile(null)
+                      // 恢复选择题状态
+                      if (answer?.content) {
+                        if (question?.questionType === 'SINGLE_CHOICE') {
+                          setSelectedOption(answer.content)
+                        } else if (question?.questionType === 'MULTIPLE_CHOICE') {
+                          try {
+                            const parsed = JSON.parse(answer.content)
+                            if (Array.isArray(parsed)) setSelectedOptions(parsed)
+                          } catch {
+                            /* ignore */
+                          }
+                        }
+                      }
                     }}
                   >
                     取消
