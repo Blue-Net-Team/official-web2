@@ -43,14 +43,17 @@ public class DockerSandboxExecutor implements SandboxExecutor {
                 .build();
     }
 
+    private static final long PROCESS_DESTROY_TIMEOUT_MS = 5000;
+
     private SandboxCaseResult executeOne(SandboxExecutionRequest request, SandboxTestcase testcase) {
         Path workspace = null;
+        Process process = null;
         try {
             workspace = Files.createTempDirectory("bluenet-judge-");
             writeSource(workspace, request.getLanguage(), request.getSourceCode());
 
             long started = System.nanoTime();
-            Process process = new ProcessBuilder(buildDockerCommand(request, workspace))
+            process = new ProcessBuilder(buildDockerCommand(request, workspace))
                     .redirectErrorStream(false)
                     .start();
             try (OutputStream stdin = process.getOutputStream()) {
@@ -59,7 +62,7 @@ public class DockerSandboxExecutor implements SandboxExecutor {
 
             boolean finished = process.waitFor(resolveTimeout(request).toMillis(), TimeUnit.MILLISECONDS);
             if (!finished) {
-                process.destroyForcibly();
+                killProcess(process);
                 return buildResult(testcase, JudgeCaseStatus.TLE, "", "", elapsedMs(started), "运行超时");
             }
 
@@ -71,7 +74,7 @@ public class DockerSandboxExecutor implements SandboxExecutor {
                 return buildResult(testcase, status, stdout, stderr, elapsedMs, stderr);
             }
 
-            // 自定义运行没有期望输出，进程正常退出即视为运行成功，避免前端误显示“答案错误”。
+            // 自定义运行没有期望输出，进程正常退出即视为运行成功，避免前端误显示"答案错误"。
             JudgeCaseStatus status = testcase.getExpectedOutput() == null
                     ? JudgeCaseStatus.AC
                     : normalize(stdout).equals(normalize(testcase.getExpectedOutput()))
@@ -86,7 +89,20 @@ public class DockerSandboxExecutor implements SandboxExecutor {
         } catch (RuntimeException e) {
             return buildResult(testcase, JudgeCaseStatus.RE, "", e.getMessage(), null, e.getMessage());
         } finally {
+            killProcess(process);
             deleteWorkspace(workspace);
+        }
+    }
+
+    private void killProcess(Process process) {
+        if (process == null || !process.isAlive()) {
+            return;
+        }
+        process.destroyForcibly();
+        try {
+            process.waitFor(PROCESS_DESTROY_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         }
     }
 
