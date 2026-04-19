@@ -9,8 +9,8 @@ import org.springframework.util.StringUtils;
 /**
  * 对象存储配置属性。
  * <p>
- * {@code storage.provider} 决定启用 MinIO 或阿里云 OSS，{@code storage.bucket}
- * 是统一 bucket 名称，文件类型只作为 bucket 内的对象 key 前缀。
+ * {@code storage.provider} 决定启用 MinIO 或阿里云 OSS，{@code storage.bucket} 是统一
+ * bucket 名称，文件类型只作为 bucket 内的对象 key 前缀。
  * </p>
  */
 @Data

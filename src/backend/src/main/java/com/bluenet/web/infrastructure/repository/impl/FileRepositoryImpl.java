@@ -30,8 +30,7 @@ import java.util.Optional;
 /**
  * 文件仓储实现类。
  * <p>
- * 负责文件元数据和考核业务关联查询，文件对象本身的读写删除委托给当前启用的
- * {@link ObjectStorage} 适配器。
+ * 负责文件元数据和考核业务关联查询，文件对象本身的读写删除委托给当前启用的 {@link ObjectStorage} 适配器。
  * </p>
  */
 @Slf4j
