@@ -39,6 +39,7 @@ import type {
 } from '@/apis/schema/assessment.dto'
 import { DIRECTION_LABELS as DirectionLabels } from '@/apis/schema/enumerate'
 import { QuestionTypeLabels } from '@/types/assessment'
+import { MarkdownRenderer } from '@/components/Assessment'
 import CountdownTimer from './CountdownTimer'
 import styles from './styles.module.css'
 
@@ -523,10 +524,6 @@ export default function QuestionDetailPage() {
     }
   }
 
-  const descriptionLines = fileContent?.content?.split('\n').filter(Boolean) || []
-  const mainDesc = descriptionLines[0] || '暂无题目描述'
-  const requirements = descriptionLines.slice(1)
-
   return (
     <div className="min-h-screen bg-[#0a0a0a] relative flex flex-col">
       <div className={`${styles.bg} top-0 left-0 w-full h-full z-0 pointer-events-none fixed`} />
@@ -598,19 +595,7 @@ export default function QuestionDetailPage() {
               </div>
               <hr className="w-full h-px bg-white/[0.04] border-none m-0 my-4" />
               <div className="flex flex-col gap-4">
-                <p className="text-sm leading-relaxed text-white/65 whitespace-pre-wrap m-0">
-                  {mainDesc}
-                </p>
-                {requirements.length > 0 && (
-                  <div className="flex flex-col gap-2.5">
-                    {requirements.map((req, i) => (
-                      <div key={i} className="flex gap-2 text-[13px] text-white/45">
-                        <span className="flex-shrink-0 text-white/45">{i + 1}.</span>
-                        <span className="text-white/65 leading-relaxed">{req}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                <MarkdownRenderer content={fileContent?.content} emptyText="暂无题目描述" />
                 {fileContent?.allowedExtensions && (
                   <div className="flex gap-2 text-[13px] text-white/45">
                     <span className="flex-shrink-0 text-white/45">允许的文件类型：</span>

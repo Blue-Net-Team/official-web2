@@ -7,6 +7,7 @@ import {
   Checkbox,
   Drawer,
   Form,
+  Grid,
   Input,
   InputNumber,
   Radio,
@@ -24,6 +25,7 @@ import type {
 } from '@/apis/schema/assessment.dto'
 import { adminAssessmentQuestionService } from '@/apis/services/admin-assessment-question.service'
 import { fileService } from '@/apis/services/file.service'
+import { MarkdownRenderer, QuestionStemMarkdownEditor } from '@/components/Assessment'
 
 export type DrawerMode = 'view' | 'edit' | 'create'
 
@@ -171,6 +173,7 @@ export default function QuestionDrawer({
 }: QuestionDrawerProps) {
   const { message: messageApi } = App.useApp()
   const [form] = Form.useForm<FormValues>()
+  const screens = Grid.useBreakpoint()
 
   const isViewMode = mode === 'view'
   const isCreateMode = mode === 'create'
@@ -272,24 +275,35 @@ export default function QuestionDrawer({
     return '考题详情'
   }, [mode, isCreateMode])
 
+  const drawerWidth = !screens.md ? '100vw' : isViewMode ? 500 : 'min(1120px, calc(100vw - 48px))'
+
+  const renderStemField = (
+    name: 'fileContent' | 'choiceContent' | 'algorithmContent',
+    rows: number,
+    placeholder: string
+  ) =>
+    isViewMode ? (
+      <Form.Item label="题干" shouldUpdate>
+        {({ getFieldValue }) => <MarkdownRenderer content={getFieldValue(name) as string} />}
+      </Form.Item>
+    ) : (
+      <Form.Item name={name} label="题干">
+        <QuestionStemMarkdownEditor rows={rows} placeholder={placeholder} />
+      </Form.Item>
+    )
+
   const renderContentFields = () => {
     const type = questionTypeValue
     if (!type) return null
 
     switch (type) {
       case 'FILE_UPLOAD':
-        return (
-          <Form.Item name="fileContent" label="题干">
-            <Input.TextArea rows={4} placeholder="输入题目描述/要求" disabled={isViewMode} />
-          </Form.Item>
-        )
+        return renderStemField('fileContent', 10, '输入题目描述/要求，支持 Markdown')
 
       case 'SINGLE_CHOICE':
         return (
           <>
-            <Form.Item name="choiceContent" label="题干">
-              <Input.TextArea rows={3} placeholder="输入题目描述" disabled={isViewMode} />
-            </Form.Item>
+            {renderStemField('choiceContent', 8, '输入题目描述，支持 Markdown')}
             <Form.List name="options">
               {(fields, { add, remove }) => (
                 <>
@@ -352,9 +366,7 @@ export default function QuestionDrawer({
       case 'MULTIPLE_CHOICE':
         return (
           <>
-            <Form.Item name="choiceContent" label="题干">
-              <Input.TextArea rows={3} placeholder="输入题目描述" disabled={isViewMode} />
-            </Form.Item>
+            {renderStemField('choiceContent', 8, '输入题目描述，支持 Markdown')}
             <Form.List name="options">
               {(fields, { add, remove }) => (
                 <>
@@ -417,9 +429,7 @@ export default function QuestionDrawer({
       case 'ALGORITHM':
         return (
           <>
-            <Form.Item name="algorithmContent" label="题干">
-              <Input.TextArea rows={4} placeholder="输入题目描述" disabled={isViewMode} />
-            </Form.Item>
+            {renderStemField('algorithmContent', 10, '输入题目描述，支持 Markdown')}
             <div className="flex gap-4">
               <Form.Item name="timeLimit" label="时间限制(ms)" className="flex-1">
                 <InputNumber
@@ -501,7 +511,7 @@ export default function QuestionDrawer({
       title={drawerTitle}
       open={open}
       onClose={onClose}
-      width={isViewMode ? 500 : 560}
+      width={drawerWidth}
       footer={
         isViewMode ? (
           <div className="flex justify-end gap-2">
