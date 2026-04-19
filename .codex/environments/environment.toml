@@ -4,8 +4,13 @@ name = "develop"
 
 [setup]
 script = '''
-cd "$CODEX_WORKTREE_PATH/src/frontend"
+Set-Location -LiteralPath "$env:CODEX_WORKTREE_PATH/src/frontend"
 pnpm install
-cp "$CODEX_SOURCE_TREE_PATH/src/backend/.env" "$CODEX_WORKTREE_PATH/src/backend/.env"
-sh "$CODEX_WORKTREE_PATH/scripts/hooks/install.sh"
+if ($LASTEXITCODE -ne 0) {
+  exit $LASTEXITCODE
+}
+$backendEnv = Join-Path $env:CODEX_WORKTREE_PATH "src/backend/.env"
+if (-not (Test-Path -LiteralPath $backendEnv)) {
+  Copy-Item -LiteralPath "$env:CODEX_SOURCE_TREE_PATH/src/backend/.env" -Destination $backendEnv -ErrorAction Stop
+}
 '''
