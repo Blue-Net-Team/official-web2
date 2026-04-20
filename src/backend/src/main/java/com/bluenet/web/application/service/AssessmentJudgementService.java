@@ -75,4 +75,17 @@ public interface AssessmentJudgementService {
      * 查询指定考核时间下的录用决策工作台数据。
      */
     AssessmentDecisionWorkspaceDTO getDecisionWorkspace(Long assessmentTimeId, String keyword, String decisionStatus);
+
+    /**
+     * 发布指定考核轮次的决策结果邮件通知。
+     * <p>
+     * 向该轮全部已决策考生（passed 不为 null）异步发送 HTML 邮件， 邮件内容包含考生姓名、考核方向、轮次和通过/淘汰结果。
+     * 单封邮件发送失败仅记录日志，不影响其余邮件发送。
+     * </p>
+     *
+     * @param assessmentTimeId
+     *            考核时间ID
+     * @return 成功发送的邮件数量
+     */
+    int publishDecisions(Long assessmentTimeId);
 }

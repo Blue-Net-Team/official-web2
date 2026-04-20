@@ -106,7 +106,7 @@ public class AdminAssessmentJudgementController {
      * @return 题目评分汇总 DTO 列表
      */
     @Operation(summary = "查询题目评分汇总", description = "按考核时间查询题目维度提交数、已评分数、待评分数和平均分")
-    @RequiresPermission(name = "查询题目评分汇总", value = "assessment-judgement:query", access = AccessLevel.PROTECTED)
+    @RequiresPermission(name = "查询题目评分汇总", value = "assessment-scoreboard:question", access = AccessLevel.PROTECTED)
     @GetMapping("/scoreboard/questions")
     public ResponseMessage<List<AssessmentQuestionScoreboardDTO>> listQuestionScoreboard(
             @Parameter(description = "考核时间ID", required = true) @RequestParam Long assessmentTimeId,
@@ -129,7 +129,7 @@ public class AdminAssessmentJudgementController {
      * @return 提交评分 DTO 列表
      */
     @Operation(summary = "查询题目提交评分列表", description = "按题目查询所有考生提交及最新评判")
-    @RequiresPermission(name = "查询题目提交评分", value = "assessment-judgement:query", access = AccessLevel.PROTECTED)
+    @RequiresPermission(name = "查询题目提交评分", value = "assessment-scoreboard:submission", access = AccessLevel.PROTECTED)
     @GetMapping("/scoreboard/questions/{questionId}/submissions")
     public ResponseMessage<List<AssessmentQuestionSubmissionDTO>> listQuestionSubmissions(
             @Parameter(description = "题目ID", required = true) @PathVariable Long questionId,
@@ -150,7 +150,7 @@ public class AdminAssessmentJudgementController {
      * @return 考生评分汇总 DTO 列表
      */
     @Operation(summary = "查询考生评分矩阵", description = "按考核时间查询考生维度总分、各题提交和评分状态")
-    @RequiresPermission(name = "查询考生评分矩阵", value = "assessment-judgement:query", access = AccessLevel.PROTECTED)
+    @RequiresPermission(name = "查询考生评分矩阵", value = "assessment-scoreboard:candidate", access = AccessLevel.PROTECTED)
     @GetMapping("/scoreboard/candidates")
     public ResponseMessage<List<AssessmentCandidateScoreboardDTO>> listCandidateScoreboard(
             @Parameter(description = "考核时间ID", required = true) @RequestParam Long assessmentTimeId,
@@ -172,7 +172,7 @@ public class AdminAssessmentJudgementController {
      * @return 决策工作台 DTO
      */
     @Operation(summary = "查询录用决策工作台", description = "按考核时间查询候选人表现、已有决策和决策统计")
-    @RequiresPermission(name = "查询录用决策工作台", value = "assessment-decision:set", access = AccessLevel.PROTECTED)
+    @RequiresPermission(name = "查询录用决策工作台", value = "assessment-decision:query", access = AccessLevel.PROTECTED)
     @GetMapping("/decisions")
     public ResponseMessage<AssessmentDecisionWorkspaceDTO> getDecisionWorkspace(
             @Parameter(description = "考核时间ID", required = true) @RequestParam Long assessmentTimeId,
@@ -181,5 +181,20 @@ public class AdminAssessmentJudgementController {
         return ResponseMessage.success(
                 assessmentJudgementService
                         .getDecisionWorkspace(assessmentTimeId, keyword, decisionStatus));
+    }
+
+    /**
+     * 发布本轮考核决策结果，向已决策考生发送邮件通知。
+     *
+     * @param assessmentTimeId
+     *            考核时间ID
+     * @return 成功发送的邮件数量
+     */
+    @Operation(summary = "发布本轮考核结果", description = "向指定考核轮次的已决策考生发送邮件通知，包含姓名、方向、轮次和结果")
+    @RequiresPermission(name = "发布考核决策结果", value = "assessment-decision:publish", access = AccessLevel.PROTECTED)
+    @PostMapping("/decisions/publish")
+    public ResponseMessage<Integer> publishDecisions(
+            @Parameter(description = "考核时间ID", required = true) @RequestParam Long assessmentTimeId) {
+        return ResponseMessage.success(assessmentJudgementService.publishDecisions(assessmentTimeId));
     }
 }

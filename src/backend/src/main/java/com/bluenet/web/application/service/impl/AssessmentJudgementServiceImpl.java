@@ -38,9 +38,12 @@ import com.bluenet.web.domain.service.AssessmentDecisionDomainService;
 import com.bluenet.web.domain.service.AssessmentJudgementDomainService;
 import com.bluenet.web.domain.service.AssessmentQuestionDomainService;
 import com.bluenet.web.domain.service.AssessmentTimeDomainService;
+import com.bluenet.web.domain.service.UserDomainService;
+import com.bluenet.web.infrastructure.email.EmailSender;
 import com.bluenet.web.infrastructure.security.util.RoleHierarchy;
 import com.bluenet.web.infrastructure.security.util.UserCTX;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -60,6 +63,7 @@ import java.util.stream.Collectors;
  * 考核评判应用服务实现。
  */
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class AssessmentJudgementServiceImpl implements AssessmentJudgementService {
     private final AssessmentJudgementDomainService assessmentJudgementDomainService;
@@ -69,6 +73,8 @@ public class AssessmentJudgementServiceImpl implements AssessmentJudgementServic
     private final AssessmentTimeDomainService assessmentTimeDomainService;
     private final AssessmentJudgementRepository assessmentJudgementRepository;
     private final AssessmentDecisionRepository assessmentDecisionRepository;
+    private final UserDomainService userDomainService;
+    private final EmailSender emailSender;
 
     /**
      * 获取指定答案的最新评判结果。
@@ -269,6 +275,80 @@ public class AssessmentJudgementServiceImpl implements AssessmentJudgementServic
                 .statistics(statistics)
                 .candidates(candidates)
                 .build();
+    }
+
+    /**
+     * 发布指定考核轮次的决策结果邮件通知。
+     *
+     * @param assessmentTimeId
+     *            考核时间ID
+     * @return 成功发送的邮件数量
+     */
+    @Override
+    public int publishDecisions(Long assessmentTimeId) {
+        requireDecisionScope(assessmentTimeId);
+        AssessmentTimeVO assessmentTime = assessmentTimeDomainService.getById(assessmentTimeId)
+                .orElseThrow(() -> new DataNotFound("考核时间不存在，ID: " + assessmentTimeId));
+        List<AssessmentDecisionVO> decisions = assessmentDecisionRepository
+                .findByAssessmentTimeId(assessmentTimeId)
+                .stream()
+                .filter(d -> d.getPassed() != null)
+                .toList();
+        int sentCount = 0;
+        for (AssessmentDecisionVO decision : decisions) {
+            UserVO user = userDomainService.getUser(decision.getUserId()).orElse(null);
+            if (user == null || user.getEmail() == null || user.getEmail().isBlank()) {
+                log.warn("跳过无邮箱用户：userId={}", decision.getUserId());
+                continue;
+            }
+            String subject = "[蓝网] 考核结果通知";
+            String directionLabel = assessmentTime.getDirection() != null
+                    ? assessmentTime.getDirection().getDescription()
+                    : "";
+            int epoch = assessmentTime.getEpoch() != null ? assessmentTime.getEpoch() : 0;
+            String resultText = Boolean.TRUE.equals(decision.getPassed()) ? "通过" : "未通过";
+            String nickname = user.getNickname() != null ? user.getNickname() : user.getUsername();
+            String htmlContent = buildPublishEmailHtml(nickname, directionLabel, epoch, resultText);
+            try {
+                emailSender.sendHtmlAsync(user.getEmail(), subject, htmlContent);
+                sentCount++;
+            } catch (Exception e) {
+                log.error("发送决策邮件失败：userId={}, email={}", decision.getUserId(), user.getEmail(), e);
+            }
+        }
+        return sentCount;
+    }
+
+    /**
+     * 构建决策通知 HTML 邮件内容。
+     *
+     * @param nickname
+     *            考生昵称
+     * @param directionLabel
+     *            考核方向名称
+     * @param epoch
+     *            轮次
+     * @param resultText
+     *            结果文本
+     * @return HTML 邮件内容
+     */
+    private String buildPublishEmailHtml(String nickname, String directionLabel, int epoch, String resultText) {
+        return """
+                <div style="font-family: 'Microsoft YaHei', sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                  <h2 style="color: #1890ff;">考核结果通知</h2>
+                  <p>%s 你好，</p>
+                  <p>你参加的 <strong>%s方向第%d轮</strong> 考核结果已公布：</p>
+                  <p style="font-size: 18px; font-weight: bold; color: %s;">%s</p>
+                  <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
+                  <p style="color: #999; font-size: 12px;">此邮件由系统自动发送，请勿回复。</p>
+                </div>
+                """
+                .formatted(
+                        nickname,
+                        directionLabel,
+                        epoch,
+                        "通过".equals(resultText) ? "#52c41a" : "#ff4d4f",
+                        resultText);
     }
 
     // ========== 权限与校验 ==========

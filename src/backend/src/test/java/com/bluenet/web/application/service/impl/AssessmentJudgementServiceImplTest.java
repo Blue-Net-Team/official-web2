@@ -32,6 +32,8 @@ import com.bluenet.web.domain.service.AssessmentDecisionDomainService;
 import com.bluenet.web.domain.service.AssessmentJudgementDomainService;
 import com.bluenet.web.domain.service.AssessmentQuestionDomainService;
 import com.bluenet.web.domain.service.AssessmentTimeDomainService;
+import com.bluenet.web.domain.service.UserDomainService;
+import com.bluenet.web.infrastructure.email.EmailSender;
 import com.bluenet.web.infrastructure.security.util.UserCTX;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -82,6 +84,12 @@ class AssessmentJudgementServiceImplTest {
 
     @Mock
     private AssessmentDecisionRepository assessmentDecisionRepository;
+
+    @Mock
+    private UserDomainService userDomainService;
+
+    @Mock
+    private EmailSender emailSender;
 
     @InjectMocks
     private AssessmentJudgementServiceImpl assessmentJudgementService;
@@ -414,6 +422,146 @@ class AssessmentJudgementServiceImplTest {
         }
     }
 
+    // ========== 发布决策邮件测试 ==========
+
+    /**
+     * 验证发布决策会向已决策考生发送邮件并返回发送数量。
+     */
+    @Test
+    @DisplayName("发布决策：应向已决策考生发送邮件")
+    void publishDecisions_withDecidedCandidates_shouldSendEmails() {
+        try (MockedStatic<UserCTX> mockedUserCTX = mockStatic(UserCTX.class)) {
+            mockedUserCTX.when(UserCTX::getCurrentUser).thenReturn(createUser(RoleType.DIRECTION_ADMIN));
+            when(assessmentTimeDomainService.getById(ASSESSMENT_TIME_ID)).thenReturn(Optional.of(createTimeVO()));
+            when(assessmentDecisionRepository.findByAssessmentTimeId(ASSESSMENT_TIME_ID))
+                    .thenReturn(
+                            List.of(
+                                    createDecisionVOForUser(CANDIDATE_ID, true),
+                                    createDecisionVOForUser(41L, false)));
+            when(userDomainService.getUser(CANDIDATE_ID))
+                    .thenReturn(Optional.of(createUserWithEmail(CANDIDATE_ID, "a@test.com")));
+            when(userDomainService.getUser(41L))
+                    .thenReturn(Optional.of(createUserWithEmail(41L, "b@test.com")));
+
+            int result = assessmentJudgementService.publishDecisions(ASSESSMENT_TIME_ID);
+
+            assertEquals(2, result);
+            verify(emailSender, times(2)).sendHtmlAsync(
+                    anyString(),
+                    anyString(),
+                    anyString());
+        }
+    }
+
+    /**
+     * 验证无已决策考生时返回 0 且不发送邮件。
+     */
+    @Test
+    @DisplayName("发布决策：无已决策考生时应返回0")
+    void publishDecisions_noDecisions_shouldReturnZero() {
+        try (MockedStatic<UserCTX> mockedUserCTX = mockStatic(UserCTX.class)) {
+            mockedUserCTX.when(UserCTX::getCurrentUser).thenReturn(createUser(RoleType.DIRECTION_ADMIN));
+            when(assessmentTimeDomainService.getById(ASSESSMENT_TIME_ID)).thenReturn(Optional.of(createTimeVO()));
+            when(assessmentDecisionRepository.findByAssessmentTimeId(ASSESSMENT_TIME_ID))
+                    .thenReturn(List.of());
+
+            int result = assessmentJudgementService.publishDecisions(ASSESSMENT_TIME_ID);
+
+            assertEquals(0, result);
+            verifyNoInteractions(emailSender);
+        }
+    }
+
+    /**
+     * 验证考核时间不存在时抛出异常。
+     */
+    @Test
+    @DisplayName("发布决策：考核时间不存在应抛出DataNotFound")
+    void publishDecisions_timeNotFound_shouldThrowDataNotFound() {
+        try (MockedStatic<UserCTX> mockedUserCTX = mockStatic(UserCTX.class)) {
+            mockedUserCTX.when(UserCTX::getCurrentUser).thenReturn(createUser(RoleType.DIRECTION_ADMIN));
+            when(assessmentTimeDomainService.getById(999L)).thenReturn(Optional.empty());
+
+            assertThrows(
+                    com.bluenet.web.domain.exception.DataNotFound.class,
+                    () -> assessmentJudgementService.publishDecisions(999L));
+            verifyNoInteractions(emailSender);
+        }
+    }
+
+    /**
+     * 验证普通成员不能发布决策。
+     */
+    @Test
+    @DisplayName("发布决策：普通成员应被拒绝")
+    void publishDecisions_member_shouldThrowForbidden() {
+        try (MockedStatic<UserCTX> mockedUserCTX = mockStatic(UserCTX.class)) {
+            mockedUserCTX.when(UserCTX::getCurrentUser).thenReturn(createUser(RoleType.MEMBER));
+
+            assertThrows(
+                    Forbidden.class,
+                    () -> assessmentJudgementService.publishDecisions(ASSESSMENT_TIME_ID));
+            verifyNoInteractions(emailSender);
+        }
+    }
+
+    /**
+     * 验证用户无邮箱时跳过发送。
+     */
+    @Test
+    @DisplayName("发布决策：无邮箱用户应跳过")
+    void publishDecisions_userWithoutEmail_shouldSkip() {
+        try (MockedStatic<UserCTX> mockedUserCTX = mockStatic(UserCTX.class)) {
+            mockedUserCTX.when(UserCTX::getCurrentUser).thenReturn(createUser(RoleType.DIRECTION_ADMIN));
+            when(assessmentTimeDomainService.getById(ASSESSMENT_TIME_ID)).thenReturn(Optional.of(createTimeVO()));
+            when(assessmentDecisionRepository.findByAssessmentTimeId(ASSESSMENT_TIME_ID))
+                    .thenReturn(
+                            List.of(
+                                    createDecisionVOForUser(CANDIDATE_ID, true),
+                                    createDecisionVOForUser(41L, false)));
+            when(userDomainService.getUser(CANDIDATE_ID))
+                    .thenReturn(Optional.of(createUserWithEmail(CANDIDATE_ID, null)));
+            when(userDomainService.getUser(41L))
+                    .thenReturn(Optional.of(createUserWithEmail(41L, "b@test.com")));
+
+            int result = assessmentJudgementService.publishDecisions(ASSESSMENT_TIME_ID);
+
+            assertEquals(1, result);
+            verify(emailSender, times(1)).sendHtmlAsync(
+                    eq("b@test.com"),
+                    anyString(),
+                    anyString());
+        }
+    }
+
+    /**
+     * 验证邮件发送失败时记录日志并继续发送其余邮件。
+     */
+    @Test
+    @DisplayName("发布决策：单封邮件失败应继续发送其余")
+    void publishDecisions_emailFailure_shouldContinueSending() {
+        try (MockedStatic<UserCTX> mockedUserCTX = mockStatic(UserCTX.class)) {
+            mockedUserCTX.when(UserCTX::getCurrentUser).thenReturn(createUser(RoleType.DIRECTION_ADMIN));
+            when(assessmentTimeDomainService.getById(ASSESSMENT_TIME_ID)).thenReturn(Optional.of(createTimeVO()));
+            when(assessmentDecisionRepository.findByAssessmentTimeId(ASSESSMENT_TIME_ID))
+                    .thenReturn(
+                            List.of(
+                                    createDecisionVOForUser(CANDIDATE_ID, true),
+                                    createDecisionVOForUser(41L, false)));
+            when(userDomainService.getUser(CANDIDATE_ID))
+                    .thenReturn(Optional.of(createUserWithEmail(CANDIDATE_ID, "a@test.com")));
+            when(userDomainService.getUser(41L))
+                    .thenReturn(Optional.of(createUserWithEmail(41L, "b@test.com")));
+            doThrow(new RuntimeException("SMTP error")).when(emailSender)
+                    .sendHtmlAsync(eq("a@test.com"), anyString(), anyString());
+
+            int result = assessmentJudgementService.publishDecisions(ASSESSMENT_TIME_ID);
+
+            assertEquals(1, result);
+            verify(emailSender).sendHtmlAsync(eq("b@test.com"), anyString(), anyString());
+        }
+    }
+
     // ========== 测试数据构造 ==========
 
     private UserVO createUser(RoleType roleType) {
@@ -421,6 +569,14 @@ class AssessmentJudgementServiceImplTest {
                 .id(REVIEWER_ID)
                 .roleName(roleType.getName())
                 .direction(com.bluenet.web.domain.model.enumerate.Direction.COMPUTER_VISION)
+                .build();
+    }
+
+    private UserVO createUserWithEmail(Long userId, String email) {
+        return UserVO.builder()
+                .id(userId)
+                .email(email)
+                .nickname("用户" + userId)
                 .build();
     }
 

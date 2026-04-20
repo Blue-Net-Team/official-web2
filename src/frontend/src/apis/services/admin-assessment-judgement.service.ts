@@ -97,4 +97,14 @@ export const adminAssessmentJudgementService = {
     )
     return response.data
   },
+
+  /** 发布本轮考核决策结果邮件通知。 */
+  async publishDecisions(assessmentTimeId: number): Promise<ResponseMessage<number>> {
+    const response = await apiClient.post<ResponseMessage<number>>(
+      '/admin/assessment-judgements/decisions/publish',
+      null,
+      { params: { assessmentTimeId } }
+    )
+    return response.data
+  },
 }

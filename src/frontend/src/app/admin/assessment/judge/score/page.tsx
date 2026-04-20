@@ -14,7 +14,6 @@ import {
   Grid,
   Input,
   InputNumber,
-  Modal,
   Select,
   Spin,
   Statistic,
@@ -345,13 +344,15 @@ export default function AssessmentJudgementManagementPage() {
     }
   }
 
-  /** 提示发布结果邮件能力尚未接入。 */
-  const showPublishNotice = () => {
-    Modal.info({
-      title: '发布本轮结果',
-      content: '邮件通知接口尚未接入。本次操作不会发送邮件，也不会修改任何考生决策。',
-      okText: '知道了',
-    })
+  /** 向已决策考生发送结果通知邮件。 */
+  const handlePublish = async () => {
+    if (!assessmentTimeId) return
+    try {
+      const res = await adminAssessmentJudgementService.publishDecisions(assessmentTimeId)
+      messageApi.success(`已发送 ${res.data} 封通知邮件`)
+    } catch {
+      messageApi.error('发布失败，请稍后重试')
+    }
   }
 
   /** 题目视图左侧题目汇总表列定义。 */
@@ -836,7 +837,7 @@ export default function AssessmentJudgementManagementPage() {
           />
           <Button
             type="primary"
-            onClick={showPublishNotice}
+            onClick={handlePublish}
             disabled={!assessmentTimeId || !isDecisionMaker}
           >
             发布本轮结果
@@ -930,7 +931,7 @@ export default function AssessmentJudgementManagementPage() {
                 </Button>
               </div>
               <div className="text-xs text-white/35">
-                点击通过或淘汰后会立即保存该考生决策；发布本轮结果入口当前不会发送邮件。
+                点击通过或淘汰后会立即保存该考生决策；发布本轮结果将向已决策考生发送邮件通知。
               </div>
             </div>
           ) : (
