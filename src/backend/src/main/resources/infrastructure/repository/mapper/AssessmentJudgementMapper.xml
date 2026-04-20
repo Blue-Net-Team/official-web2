@@ -19,4 +19,261 @@
         <result column="created_at" property="createdAt"/>
         <result column="updated_at" property="updatedAt"/>
     </resultMap>
+
+    <select id="selectLatestByAnswerId" resultMap="BaseResultMap">
+        SELECT * FROM tb_assessment_judgement
+        WHERE answer_id = #{answerId}
+        ORDER BY updated_at DESC, id DESC
+        LIMIT 1
+    </select>
+
+    <select id="selectLatestByQuestionIdAndUserId" resultMap="BaseResultMap">
+        SELECT * FROM tb_assessment_judgement
+        WHERE question_id = #{questionId} AND user_id = #{userId}
+        ORDER BY updated_at DESC, id DESC
+        LIMIT 1
+    </select>
+
+    <select id="selectAllByQuestionId" resultMap="BaseResultMap">
+        SELECT * FROM tb_assessment_judgement
+        WHERE question_id = #{questionId}
+        ORDER BY user_id ASC, updated_at DESC, id DESC
+    </select>
+
+    <select id="selectLatestObjectiveByQuestionId" resultMap="BaseResultMap">
+        SELECT DISTINCT ON (user_id) *
+        FROM tb_assessment_judgement
+        WHERE question_id = #{questionId}
+          AND source = 'AUTO'
+          AND status = 'JUDGED'
+          AND result_code IS NOT NULL
+        ORDER BY user_id, updated_at DESC, id DESC
+    </select>
+
+    <select id="selectQuestionScoreboard" resultType="com.bluenet.web.domain.model.vo.AssessmentQuestionScoreboardVO">
+        WITH ranked_judgement AS (
+            SELECT
+                j.*,
+                ROW_NUMBER() OVER (
+                    PARTITION BY j.question_id, j.user_id
+                    ORDER BY
+                        CASE WHEN q.question_type = 'algorithm' THEN j.score END DESC NULLS LAST,
+                        CASE WHEN q.question_type = 'algorithm' AND j.result_code = 'AC' THEN 1 ELSE 0 END DESC,
+                        j.updated_at DESC,
+                        j.id DESC
+                ) AS display_rank
+            FROM tb_assessment_judgement j
+            JOIN tb_assessment_question q ON q.id = j.question_id
+            WHERE j.status = 'JUDGED'
+              AND j.assessment_time_id = #{assessmentTimeId}
+        ),
+        display_judgement AS (
+            SELECT * FROM ranked_judgement WHERE display_rank = 1
+        )
+        SELECT
+            q.id AS question_id,
+            q.assessment_time_id,
+            q.question_no,
+            q.question_type,
+            q.title,
+            q.score AS max_score,
+            COUNT(a.id) AS submitted_count,
+            COUNT(dj.id) AS judged_count,
+            COUNT(a.id) - COUNT(dj.id) AS pending_count,
+            COALESCE(AVG(dj.score), 0) AS average_score
+        FROM tb_assessment_question q
+        LEFT JOIN tb_assessment_answer a ON a.question_id = q.id
+        LEFT JOIN display_judgement dj ON dj.question_id = q.id AND dj.user_id = a.user_id
+        WHERE q.assessment_time_id = #{assessmentTimeId}
+        <if test="questionType != null">
+            AND q.question_type = #{questionType}
+        </if>
+        <if test="keyword != null and keyword != ''">
+            AND q.title ILIKE ('%' || CAST(#{keyword} AS TEXT) || '%')
+        </if>
+        GROUP BY q.id, q.assessment_time_id, q.question_no, q.question_type, q.title, q.score
+        ORDER BY q.question_no ASC, q.id ASC
+    </select>
+
+    <select id="selectQuestionSubmissions" resultType="com.bluenet.web.domain.model.vo.AssessmentQuestionSubmissionVO">
+        WITH ranked_judgement AS (
+            SELECT
+                j.*,
+                ROW_NUMBER() OVER (
+                    PARTITION BY j.question_id, j.user_id
+                    ORDER BY
+                        CASE WHEN q.question_type = 'algorithm' THEN j.score END DESC NULLS LAST,
+                        CASE WHEN q.question_type = 'algorithm' AND j.result_code = 'AC' THEN 1 ELSE 0 END DESC,
+                        j.updated_at DESC,
+                        j.id DESC
+                ) AS display_rank
+            FROM tb_assessment_judgement j
+            JOIN tb_assessment_question q ON q.id = j.question_id
+            WHERE j.question_id = #{questionId}
+              AND j.status = 'JUDGED'
+        ),
+        display_judgement AS (
+            SELECT * FROM ranked_judgement WHERE display_rank = 1
+        )
+        SELECT
+            a.id AS answer_id,
+            q.id AS question_id,
+            q.assessment_time_id,
+            q.question_no,
+            q.title AS question_title,
+            q.question_type,
+            q.score AS max_score,
+            u.id AS candidate_user_id,
+            u.student_id,
+            u.username,
+            u.nickname,
+            a.file_id,
+            a.content,
+            a.language,
+            a.submit_time,
+            dj.id AS judgement_id,
+            dj.score AS judgement_score,
+            dj.max_score AS judgement_max_score,
+            dj.status AS judgement_status,
+            dj.result_code,
+            dj.source,
+            dj.reviewer_id,
+            dj.reviewer_type,
+            dj.comment AS judgement_comment,
+            dj.judged_at
+        FROM tb_assessment_answer a
+        JOIN tb_assessment_question q ON q.id = a.question_id
+        JOIN tb_user u ON u.id = a.user_id
+        LEFT JOIN display_judgement dj ON dj.question_id = q.id AND dj.user_id = u.id
+        WHERE a.question_id = #{questionId}
+        <if test="keyword != null and keyword != ''">
+            AND (u.username ILIKE ('%' || CAST(#{keyword} AS TEXT) || '%')
+                OR u.nickname ILIKE ('%' || CAST(#{keyword} AS TEXT) || '%')
+                OR u.student_id ILIKE ('%' || CAST(#{keyword} AS TEXT) || '%'))
+        </if>
+        <if test="status != null and status == 'JUDGED'">
+            AND dj.id IS NOT NULL
+        </if>
+        <if test="status != null and status == 'PENDING'">
+            AND dj.id IS NULL
+        </if>
+        ORDER BY u.student_id ASC, a.submit_time DESC, a.id DESC
+    </select>
+
+    <select id="selectQuestionSubmissionHistories" resultType="com.bluenet.web.domain.model.vo.AssessmentQuestionSubmissionVO">
+        WITH ranked_history AS (
+            SELECT
+                j.*,
+                ROW_NUMBER() OVER (
+                    PARTITION BY j.question_id, j.user_id
+                    ORDER BY
+                        CASE WHEN q.question_type = 'algorithm' THEN j.score END DESC NULLS LAST,
+                        CASE WHEN q.question_type = 'algorithm' AND j.result_code = 'AC' THEN 1 ELSE 0 END DESC,
+                        j.updated_at DESC,
+                        j.id DESC
+                ) AS display_rank
+            FROM tb_assessment_judgement j
+            JOIN tb_assessment_question q ON q.id = j.question_id
+            WHERE j.question_id = #{questionId}
+              AND j.status = 'JUDGED'
+            <if test="userIds != null and userIds.size() > 0">
+              AND j.user_id IN
+              <foreach collection="userIds" item="userId" open="(" separator="," close=")">
+                #{userId}
+              </foreach>
+            </if>
+        )
+        SELECT
+            j.answer_id,
+            j.question_id,
+            j.assessment_time_id,
+            j.user_id AS candidate_user_id,
+            j.id AS judgement_id,
+            j.score AS judgement_score,
+            j.max_score AS judgement_max_score,
+            j.status AS judgement_status,
+            j.result_code,
+            j.source,
+            j.reviewer_id,
+            j.reviewer_type,
+            j.comment AS judgement_comment,
+            j.judged_at,
+            CASE WHEN j.display_rank = 1 THEN true ELSE false END AS selected_best
+        FROM ranked_history j
+        ORDER BY j.user_id ASC, j.judged_at DESC NULLS LAST, j.id DESC
+    </select>
+
+    <select id="selectCandidateScoreRows" resultType="com.bluenet.web.domain.model.vo.AssessmentCandidateScoreRowVO">
+        WITH selected_time AS (
+            SELECT * FROM tb_assessment_time WHERE id = #{assessmentTimeId}
+        ),
+        candidate_users AS (
+            SELECT u.*
+            FROM tb_user u
+            JOIN tb_role r ON r.id = u.role_id
+            CROSS JOIN selected_time t
+            WHERE r.name = 'CANDIDATE'
+              AND u.direction = t.direction
+              AND COALESCE(
+                  u.assessment_grade_year,
+                  CASE WHEN u.student_id ~ '^\d{4}' THEN SUBSTRING(u.student_id FROM 1 FOR 4)::INTEGER END
+              ) = t.grade
+            <if test="keyword != null and keyword != ''">
+              AND (u.username ILIKE ('%' || CAST(#{keyword} AS TEXT) || '%')
+                  OR u.nickname ILIKE ('%' || CAST(#{keyword} AS TEXT) || '%')
+                  OR u.student_id ILIKE ('%' || CAST(#{keyword} AS TEXT) || '%'))
+            </if>
+        ),
+        questions AS (
+            SELECT *
+            FROM tb_assessment_question
+            WHERE assessment_time_id = #{assessmentTimeId}
+        ),
+        ranked_judgement AS (
+            SELECT
+                j.*,
+                ROW_NUMBER() OVER (
+                    PARTITION BY j.question_id, j.user_id
+                    ORDER BY
+                        CASE WHEN q.question_type = 'algorithm' THEN j.score END DESC NULLS LAST,
+                        CASE WHEN q.question_type = 'algorithm' AND j.result_code = 'AC' THEN 1 ELSE 0 END DESC,
+                        j.updated_at DESC,
+                        j.id DESC
+                ) AS display_rank
+            FROM tb_assessment_judgement j
+            JOIN questions q ON q.id = j.question_id
+            WHERE j.assessment_time_id = #{assessmentTimeId}
+              AND j.status = 'JUDGED'
+        ),
+        display_judgement AS (
+            SELECT * FROM ranked_judgement WHERE display_rank = 1
+        )
+        SELECT
+            u.id AS candidate_user_id,
+            u.student_id,
+            u.username,
+            u.nickname,
+            q.id AS question_id,
+            q.question_no,
+            q.title AS question_title,
+            q.question_type,
+            q.score AS max_score,
+            a.id AS answer_id,
+            a.submit_time,
+            dj.id AS judgement_id,
+            dj.score AS judgement_score,
+            dj.max_score AS judgement_max_score,
+            dj.status AS judgement_status,
+            dj.result_code,
+            dj.source,
+            dj.reviewer_id,
+            dj.reviewer_type,
+            dj.comment AS judgement_comment,
+            dj.judged_at
+        FROM candidate_users u
+        CROSS JOIN questions q
+        LEFT JOIN tb_assessment_answer a ON a.user_id = u.id AND a.question_id = q.id
+        LEFT JOIN display_judgement dj ON dj.user_id = u.id AND dj.question_id = q.id
+        ORDER BY u.student_id ASC, q.question_no ASC, q.id ASC
+    </select>
 </mapper>

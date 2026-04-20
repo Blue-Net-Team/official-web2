@@ -302,6 +302,14 @@ export interface AssessmentJudgementDTO {
   judgedAt: string | null
 }
 
+/** 题目提交历史评判记录 */
+export interface AssessmentQuestionSubmissionHistoryDTO {
+  /** 本次历史评判 */
+  judgement: AssessmentJudgementDTO | null
+  /** 是否为当前展示用的最佳/最新记录 */
+  selectedBest: boolean
+}
+
 /** 算法运行请求 */
 export interface AlgorithmRunRequestDTO {
   /** 题目ID */
@@ -398,6 +406,150 @@ export interface AssessmentDecisionDTO extends AssessmentDecisionRequestDTO {
   decidedBy: number
   /** 决策时间 */
   decidedAt: string | null
+}
+
+/** 题目评分汇总 */
+export interface AssessmentQuestionScoreboardDTO {
+  /** 题目ID */
+  questionId: number
+  /** 考核时间ID */
+  assessmentTimeId: number
+  /** 题号 */
+  questionNo: number
+  /** 题型 */
+  questionType: QuestionType
+  /** 题目标题 */
+  title: string
+  /** 满分 */
+  maxScore: number
+  /** 提交数 */
+  submittedCount: number
+  /** 已评分数 */
+  judgedCount: number
+  /** 待评分数 */
+  pendingCount: number
+  /** 平均分 */
+  averageScore: number
+}
+
+/** 题目提交评分行 */
+export interface AssessmentQuestionSubmissionDTO {
+  /** 答案ID */
+  answerId: number
+  /** 题目ID */
+  questionId: number
+  /** 考核时间ID */
+  assessmentTimeId: number
+  /** 题号 */
+  questionNo: number
+  /** 题目标题 */
+  questionTitle: string
+  /** 题型 */
+  questionType: QuestionType
+  /** 题目满分 */
+  maxScore: number
+  /** 考生用户ID */
+  candidateUserId: number
+  /** 考生学号 */
+  studentId: string
+  /** 考生姓名 */
+  username: string
+  /** 考生昵称 */
+  nickname: string | null
+  /** 上传文件ID */
+  fileId: number | null
+  /** 答案内容 */
+  content: string | null
+  /** 算法题提交语言 */
+  language: ProgrammingLanguage | null
+  /** 提交时间 */
+  submitTime: string | null
+  /** 最新评判 */
+  latestJudgement: AssessmentJudgementDTO | null
+  /** 历史评判记录，算法题用于展开查看所有提交评判 */
+  histories: AssessmentQuestionSubmissionHistoryDTO[]
+}
+
+/** 考生单题评分状态 */
+export interface AssessmentCandidateQuestionScoreDTO {
+  /** 题目ID */
+  questionId: number
+  /** 题号 */
+  questionNo: number
+  /** 题目标题 */
+  questionTitle: string
+  /** 题型 */
+  questionType: QuestionType
+  /** 题目满分 */
+  maxScore: number
+  /** 答案ID */
+  answerId: number | null
+  /** 是否已提交 */
+  submitted: boolean
+  /** 提交时间 */
+  submitTime: string | null
+  /** 最新得分 */
+  score: number | null
+  /** 是否已评分 */
+  judged: boolean
+  /** 最新评判 */
+  latestJudgement: AssessmentJudgementDTO | null
+}
+
+/** 考生评分汇总 */
+export interface AssessmentCandidateScoreboardDTO {
+  /** 考生用户ID */
+  candidateUserId: number
+  /** 考生学号 */
+  studentId: string
+  /** 考生姓名 */
+  username: string
+  /** 考生昵称 */
+  nickname: string | null
+  /** 总得分 */
+  totalScore: number
+  /** 总满分 */
+  maxScore: number
+  /** 已评分题数 */
+  judgedQuestionCount: number
+  /** 待评分题数 */
+  pendingJudgementCount: number
+  /** 各题评分状态 */
+  questionScores: AssessmentCandidateQuestionScoreDTO[]
+}
+
+/** 录用决策统计 */
+export interface AssessmentDecisionStatisticsDTO {
+  /** 候选人数 */
+  candidates: number
+  /** 待决策人数 */
+  pending: number
+  /** 通过人数 */
+  passed: number
+  /** 淘汰人数 */
+  eliminated: number
+}
+
+/** 录用决策候选人 */
+export interface AssessmentDecisionCandidateDTO extends AssessmentCandidateScoreboardDTO {
+  /** 决策ID */
+  decisionId: number | null
+  /** 是否通过，null表示待决策 */
+  passed: boolean | null
+  /** 决策备注 */
+  decisionComment: string | null
+  /** 决策人ID */
+  decidedBy: number | null
+  /** 决策时间 */
+  decidedAt: string | null
+}
+
+/** 录用决策工作台 */
+export interface AssessmentDecisionWorkspaceDTO {
+  /** 统计数据 */
+  statistics: AssessmentDecisionStatisticsDTO
+  /** 候选人列表 */
+  candidates: AssessmentDecisionCandidateDTO[]
 }
 
 /** 题目统计结果 */

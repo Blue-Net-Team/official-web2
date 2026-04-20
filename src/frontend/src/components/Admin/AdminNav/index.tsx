@@ -21,12 +21,19 @@ import {
 import type { MenuProps } from 'antd'
 
 export interface MenuItemConfig {
+  /** 菜单唯一键。 */
   key: string
+  /** 菜单展示名称。 */
   label: string
+  /** 菜单跳转路径。 */
   path?: string
+  /** 菜单图标。 */
   icon?: React.ReactNode
+  /** 可访问该菜单的最低角色等级。 */
   minLevel: number
+  /** 是否禁用该菜单。 */
   disabled?: boolean
+  /** 子菜单配置。 */
   children?: MenuItemConfig[]
 }
 
@@ -109,11 +116,18 @@ export const menuConfig: MenuItemConfig[] = [
         minLevel: 2,
       },
       {
-        key: 'assessmentJudge',
-        label: '考核评判',
-        path: '/admin/assessment/judge',
+        key: 'assessmentJudgeScore',
+        label: '题目评分',
+        path: '/admin/assessment/judge/score',
         icon: <CheckCircleOutlined />,
         minLevel: 1,
+      },
+      {
+        key: 'assessmentJudgeDecision',
+        label: '录用决策',
+        path: '/admin/assessment/judge/decision',
+        icon: <TeamOutlined />,
+        minLevel: 2,
       },
     ],
   },
@@ -127,6 +141,7 @@ export const menuConfig: MenuItemConfig[] = [
   },
 ]
 
+/** 按当前角色等级过滤后台导航菜单。 */
 export function filterMenuItems(items: MenuItemConfig[], roleLevel: number): MenuProps['items'] {
   return items
     .filter((item) => roleLevel >= item.minLevel)
@@ -156,19 +171,29 @@ export function filterMenuItems(items: MenuItemConfig[], roleLevel: number): Men
 }
 
 interface AdminNavContextType {
+  /** 当前是否为移动端布局。 */
   isMobile: boolean
+  /** 移动端抽屉是否显示。 */
   drawerVisible: boolean
+  /** 打开移动端导航抽屉。 */
   openDrawer: () => void
+  /** 关闭移动端导航抽屉。 */
   closeDrawer: () => void
+  /** 桌面端侧边栏是否折叠。 */
   collapsed: boolean
+  /** 设置桌面端侧边栏折叠状态。 */
   onCollapse: (collapsed: boolean) => void
+  /** 按权限过滤后的 AntD 菜单项。 */
   menuItems: MenuProps['items']
+  /** 当前路由命中的菜单键。 */
   selectedKeys: string[]
+  /** 菜单点击处理函数。 */
   onMenuClick: MenuProps['onClick']
 }
 
 const AdminNavContext = createContext<AdminNavContextType | null>(null)
 
+/** 读取后台导航上下文。 */
 export const useAdminNav = () => {
   const context = useContext(AdminNavContext)
   if (!context) {
@@ -177,6 +202,7 @@ export const useAdminNav = () => {
   return context
 }
 
+/** 提供后台导航状态、权限菜单和路由跳转能力。 */
 const AdminNav = ({ children }: { children: React.ReactNode }) => {
   const [isMobile, setIsMobile] = useState(false)
   const [drawerVisible, setDrawerVisible] = useState(false)
@@ -188,6 +214,7 @@ const AdminNav = ({ children }: { children: React.ReactNode }) => {
   const roleLevel = useMemo(() => getRoleLevel(userInfo?.roleName || ''), [userInfo?.roleName])
 
   useEffect(() => {
+    /** 根据窗口宽度同步移动端状态。 */
     const checkMobile = () => {
       const mobile = window.matchMedia('(max-width: 767px)').matches
       setIsMobile(mobile)
@@ -213,7 +240,9 @@ const AdminNav = ({ children }: { children: React.ReactNode }) => {
     return [childMatch ? childMatch.key : matched.key]
   }, [pathname])
 
+  /** 根据菜单键查找路径并执行跳转。 */
   const handleMenuClick: MenuProps['onClick'] = ({ key }) => {
+    /** 在嵌套菜单配置中递归查找目标路径。 */
     const findPath = (items: MenuItemConfig[]): string | undefined => {
       for (const item of items) {
         if (item.key === key) return item.path

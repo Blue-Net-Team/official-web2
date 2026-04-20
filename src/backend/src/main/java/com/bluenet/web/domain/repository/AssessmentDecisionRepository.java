@@ -3,6 +3,7 @@ package com.bluenet.web.domain.repository;
 import com.bluenet.web.domain.model.entity.AssessmentDecision;
 import com.bluenet.web.domain.model.vo.AssessmentDecisionVO;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -45,4 +46,13 @@ public interface AssessmentDecisionRepository {
      * @return 决策记录
      */
     Optional<AssessmentDecisionVO> findByUserIdAndAssessmentTimeId(Long userId, Long assessmentTimeId);
+
+    /**
+     * 查询指定考核时间下的全部录用决策。
+     *
+     * @param assessmentTimeId
+     *            考核时间ID
+     * @return 决策列表
+     */
+    List<AssessmentDecisionVO> findByAssessmentTimeId(Long assessmentTimeId);
 }

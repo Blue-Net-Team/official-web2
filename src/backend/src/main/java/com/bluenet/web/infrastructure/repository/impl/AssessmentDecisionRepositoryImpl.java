@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -78,5 +79,20 @@ public class AssessmentDecisionRepositoryImpl implements AssessmentDecisionRepos
                 .decidedAt(decision.getDecidedAt())
                 .updatedAt(decision.getUpdatedAt())
                 .build();
+    }
+
+    /**
+     * 查询指定考核时间下的全部录用决策，将实体转换为 VO。
+     *
+     * @param assessmentTimeId
+     *            考核时间ID
+     * @return 决策 VO 列表
+     */
+    @Override
+    public List<AssessmentDecisionVO> findByAssessmentTimeId(Long assessmentTimeId) {
+        return assessmentDecisionMapper.selectByAssessmentTimeId(assessmentTimeId)
+                .stream()
+                .map(this::convertToVO)
+                .toList();
     }
 }

@@ -1,0 +1,1129 @@
+'use client'
+
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import {
+  Alert,
+  App,
+  Button,
+  Card,
+  Collapse,
+  Descriptions,
+  Drawer,
+  Empty,
+  Form,
+  Grid,
+  Input,
+  InputNumber,
+  Modal,
+  Select,
+  Spin,
+  Statistic,
+  Steps,
+  Table,
+  Tabs,
+  Tag,
+  Timeline,
+} from 'antd'
+import type { TableColumnsType } from 'antd'
+import { DownloadOutlined } from '@ant-design/icons'
+import dayjs from 'dayjs'
+import type {
+  AssessmentCandidateQuestionScoreDTO,
+  AssessmentCandidateScoreboardDTO,
+  AssessmentDecisionCandidateDTO,
+  AssessmentDecisionWorkspaceDTO,
+  AssessmentQuestionScoreboardDTO,
+  AssessmentQuestionSubmissionDTO,
+  AssessmentTimeDTO,
+  QuestionType,
+} from '@/apis/schema/assessment.dto'
+import { Direction, DIRECTION_LABELS } from '@/apis/schema/enumerate'
+import { adminAssessmentJudgementService } from '@/apis/services/admin-assessment-judgement.service'
+import { adminAssessmentTimeService } from '@/apis/services/admin-assessment-time.service'
+import { fileService } from '@/apis/services/file.service'
+import authStore from '@/stores/authStore'
+import { getRoleLevel } from '@/utils/RoleUtils'
+import {
+  QUESTION_TYPE_LABELS,
+  QUESTION_TYPE_COLORS,
+  formatScore,
+  formatTime,
+  getResultColor,
+  getDecisionTag,
+} from '../shared'
+
+export default function AssessmentJudgementManagementPage() {
+  const { message: messageApi } = App.useApp()
+  const screens = Grid.useBreakpoint()
+  const [form] = Form.useForm<{ score: number; comment?: string }>()
+
+  const userInfo = authStore((state) => state.userInfo)
+  const isSuperAdmin = getRoleLevel(userInfo?.roleName || '') >= 3
+  const isDecisionMaker = getRoleLevel(userInfo?.roleName || '') >= 2
+  const userDirection = userInfo?.direction
+
+  const [activeTab, setActiveTab] = useState('score')
+  const [scoreView, setScoreView] = useState('questions')
+  const [direction, setDirection] = useState<Direction | undefined>(
+    isSuperAdmin ? undefined : (userDirection ?? undefined)
+  )
+  const [assessmentTimeId, setAssessmentTimeId] = useState<number | undefined>()
+  const [assessmentTimes, setAssessmentTimes] = useState<AssessmentTimeDTO[]>([])
+
+  const [questionType, setQuestionType] = useState<QuestionType | undefined>()
+  const [scoreKeyword, setScoreKeyword] = useState('')
+  const [submissionStatus, setSubmissionStatus] = useState<'JUDGED' | 'PENDING' | undefined>()
+  const [questions, setQuestions] = useState<AssessmentQuestionScoreboardDTO[]>([])
+  const [selectedQuestionId, setSelectedQuestionId] = useState<number | undefined>()
+  const [submissions, setSubmissions] = useState<AssessmentQuestionSubmissionDTO[]>([])
+  const [candidateScores, setCandidateScores] = useState<AssessmentCandidateScoreboardDTO[]>([])
+
+  const [decisionKeyword, setDecisionKeyword] = useState('')
+  const [decisionStatus, setDecisionStatus] = useState<
+    'PENDING' | 'PASSED' | 'ELIMINATED' | undefined
+  >()
+  const [decisionWorkspace, setDecisionWorkspace] = useState<AssessmentDecisionWorkspaceDTO | null>(
+    null
+  )
+  const [selectedDecisionCandidate, setSelectedDecisionCandidate] =
+    useState<AssessmentDecisionCandidateDTO | null>(null)
+  const [decisionComment, setDecisionComment] = useState('')
+
+  const [loadingTimes, setLoadingTimes] = useState(false)
+  const [loadingQuestions, setLoadingQuestions] = useState(false)
+  const [loadingSubmissions, setLoadingSubmissions] = useState(false)
+  const [loadingCandidates, setLoadingCandidates] = useState(false)
+  const [loadingDecisions, setLoadingDecisions] = useState(false)
+  const [reviewing, setReviewing] = useState<AssessmentQuestionSubmissionDTO | null>(null)
+  const [viewingCandidateScore, setViewingCandidateScore] =
+    useState<AssessmentCandidateScoreboardDTO | null>(null)
+  const [candidateQuestionDetails, setCandidateQuestionDetails] = useState<
+    Record<number, AssessmentQuestionSubmissionDTO | null>
+  >({})
+  const [loadingCandidateQuestionIds, setLoadingCandidateQuestionIds] = useState<number[]>([])
+  const [savingReview, setSavingReview] = useState(false)
+  const [savingDecisionUserId, setSavingDecisionUserId] = useState<number | null>(null)
+
+  const directionOptions = useMemo(() => {
+    const entries = Object.entries(DIRECTION_LABELS) as [Direction, string][]
+    if (!isSuperAdmin && userDirection) {
+      return entries.filter(([value]) => value === userDirection)
+    }
+    return entries
+  }, [isSuperAdmin, userDirection])
+
+  const timeOptions = useMemo(
+    () =>
+      assessmentTimes.map((item) => ({
+        value: item.id,
+        label: `${DIRECTION_LABELS[item.direction]} · 第 ${item.epoch} 轮 · ${item.grade}级`,
+      })),
+    [assessmentTimes]
+  )
+
+  const selectedQuestion = useMemo(
+    () => questions.find((item) => item.questionId === selectedQuestionId) ?? null,
+    [questions, selectedQuestionId]
+  )
+
+  /** 加载指定方向下可评判的考核时间。 */
+  const fetchAssessmentTimes = useCallback(
+    async (nextDirection: Direction) => {
+      setLoadingTimes(true)
+      try {
+        const response = await adminAssessmentTimeService.getList(0, 100)
+        setAssessmentTimes(
+          response.data?.content.filter((item) => item.direction === nextDirection) ?? []
+        )
+      } catch {
+        messageApi.error('加载考核时间失败')
+      } finally {
+        setLoadingTimes(false)
+      }
+    },
+    [messageApi]
+  )
+
+  /** 加载题目维度的评分汇总。 */
+  const fetchQuestionScoreboard = useCallback(async () => {
+    if (!assessmentTimeId) {
+      setQuestions([])
+      setSelectedQuestionId(undefined)
+      return
+    }
+    setLoadingQuestions(true)
+    try {
+      const response = await adminAssessmentJudgementService.getQuestionScoreboard({
+        assessmentTimeId,
+        questionType,
+        keyword: scoreKeyword || undefined,
+      })
+      const list = response.data ?? []
+      setQuestions(list)
+      setSelectedQuestionId((current) => current ?? list[0]?.questionId)
+    } catch {
+      messageApi.error('加载题目评分汇总失败')
+    } finally {
+      setLoadingQuestions(false)
+    }
+  }, [assessmentTimeId, questionType, scoreKeyword, messageApi])
+
+  /** 加载当前选中题目的考生提交列表。 */
+  const fetchQuestionSubmissions = useCallback(async () => {
+    if (!selectedQuestionId) {
+      setSubmissions([])
+      return
+    }
+    setLoadingSubmissions(true)
+    try {
+      const response = await adminAssessmentJudgementService.getQuestionSubmissions(
+        selectedQuestionId,
+        {
+          keyword: scoreKeyword || undefined,
+          status: submissionStatus,
+        }
+      )
+      setSubmissions(response.data ?? [])
+    } catch {
+      messageApi.error('加载题目提交失败')
+    } finally {
+      setLoadingSubmissions(false)
+    }
+  }, [selectedQuestionId, scoreKeyword, submissionStatus, messageApi])
+
+  /** 加载人员视图的考生评分矩阵。 */
+  const fetchCandidateScoreboard = useCallback(async () => {
+    if (!assessmentTimeId) {
+      setCandidateScores([])
+      return
+    }
+    setLoadingCandidates(true)
+    try {
+      const response = await adminAssessmentJudgementService.getCandidateScoreboard({
+        assessmentTimeId,
+        keyword: scoreKeyword || undefined,
+      })
+      setCandidateScores(response.data ?? [])
+    } catch {
+      messageApi.error('加载人员评分视图失败')
+    } finally {
+      setLoadingCandidates(false)
+    }
+  }, [assessmentTimeId, scoreKeyword, messageApi])
+
+  /** 加载录用决策工作台数据。 */
+  const fetchDecisionWorkspace = useCallback(async () => {
+    if (!assessmentTimeId) {
+      setDecisionWorkspace(null)
+      setSelectedDecisionCandidate(null)
+      return
+    }
+    setLoadingDecisions(true)
+    try {
+      const response = await adminAssessmentJudgementService.getDecisionWorkspace({
+        assessmentTimeId,
+        keyword: decisionKeyword || undefined,
+        decisionStatus,
+      })
+      const workspace = response.data
+      setDecisionWorkspace(workspace)
+      setSelectedDecisionCandidate((current) => {
+        if (!workspace?.candidates.length) return null
+        return (
+          workspace.candidates.find((item) => item.candidateUserId === current?.candidateUserId) ??
+          workspace.candidates[0]
+        )
+      })
+    } catch {
+      messageApi.error('加载录用决策数据失败')
+    } finally {
+      setLoadingDecisions(false)
+    }
+  }, [assessmentTimeId, decisionKeyword, decisionStatus, messageApi])
+
+  useEffect(() => {
+    if (!direction) {
+      setAssessmentTimes([])
+      setAssessmentTimeId(undefined)
+      return
+    }
+    fetchAssessmentTimes(direction)
+    setAssessmentTimeId(undefined)
+  }, [direction, fetchAssessmentTimes])
+
+  useEffect(() => {
+    if (activeTab === 'score') {
+      fetchQuestionScoreboard()
+    }
+  }, [activeTab, fetchQuestionScoreboard])
+
+  useEffect(() => {
+    if (activeTab === 'score' && scoreView === 'questions') {
+      fetchQuestionSubmissions()
+    }
+  }, [activeTab, scoreView, fetchQuestionSubmissions])
+
+  useEffect(() => {
+    setCandidateQuestionDetails({})
+    setLoadingCandidateQuestionIds([])
+  }, [viewingCandidateScore?.candidateUserId])
+
+  useEffect(() => {
+    if (activeTab === 'score' && scoreView === 'candidates') {
+      fetchCandidateScoreboard()
+    }
+  }, [activeTab, scoreView, fetchCandidateScoreboard])
+
+  useEffect(() => {
+    if (activeTab === 'decision') {
+      fetchDecisionWorkspace()
+    }
+  }, [activeTab, fetchDecisionWorkspace])
+
+  useEffect(() => {
+    if (!reviewing) return
+    form.setFieldsValue({
+      score: Number(reviewing.latestJudgement?.score ?? 0),
+      comment: reviewing.latestJudgement?.comment ?? undefined,
+    })
+  }, [reviewing, form])
+
+  useEffect(() => {
+    setDecisionComment(selectedDecisionCandidate?.decisionComment ?? '')
+  }, [selectedDecisionCandidate])
+
+  /** 人工评分保存后刷新所有受分数影响的数据。 */
+  const refreshAfterScore = async () => {
+    await Promise.all([
+      fetchQuestionScoreboard(),
+      fetchQuestionSubmissions(),
+      fetchCandidateScoreboard(),
+    ])
+    if (activeTab === 'decision') {
+      await fetchDecisionWorkspace()
+    }
+  }
+
+  /** 提交文件上传题人工评分。 */
+  const handleSubmitReview = async () => {
+    if (!reviewing || reviewing.questionType !== 'FILE_UPLOAD') return
+    const values = await form.validateFields()
+    setSavingReview(true)
+    try {
+      await adminAssessmentJudgementService.manualReview({
+        answerId: reviewing.answerId,
+        score: values.score,
+        comment: values.comment,
+      })
+      messageApi.success('评分已提交')
+      setReviewing(null)
+      await refreshAfterScore()
+    } catch {
+      messageApi.error('提交评分失败')
+    } finally {
+      setSavingReview(false)
+    }
+  }
+
+  /** 保存候选人的通过或淘汰决策。 */
+  const handleDecision = async (candidate: AssessmentDecisionCandidateDTO, passed: boolean) => {
+    if (!assessmentTimeId) return
+    setSavingDecisionUserId(candidate.candidateUserId)
+    try {
+      await adminAssessmentJudgementService.decide({
+        userId: candidate.candidateUserId,
+        assessmentTimeId,
+        passed,
+        decisionComment: decisionComment || undefined,
+      })
+      messageApi.success(passed ? '已标记通过' : '已标记淘汰')
+      await fetchDecisionWorkspace()
+    } catch {
+      messageApi.error('保存决策失败')
+    } finally {
+      setSavingDecisionUserId(null)
+    }
+  }
+
+  /** 提示发布结果邮件能力尚未接入。 */
+  const showPublishNotice = () => {
+    Modal.info({
+      title: '发布本轮结果',
+      content: '邮件通知接口尚未接入。本次操作不会发送邮件，也不会修改任何考生决策。',
+      okText: '知道了',
+    })
+  }
+
+  /** 题目视图左侧题目汇总表列定义。 */
+  const questionColumns: TableColumnsType<AssessmentQuestionScoreboardDTO> = [
+    {
+      title: '题目',
+      dataIndex: 'title',
+      render: (title: string, record) => (
+        <div>
+          <div className="text-white/85">
+            #{record.questionNo} {title}
+          </div>
+          <Tag color={QUESTION_TYPE_COLORS[record.questionType]} bordered={false}>
+            {QUESTION_TYPE_LABELS[record.questionType]}
+          </Tag>
+        </div>
+      ),
+    },
+    { title: '满分', dataIndex: 'maxScore', width: 70, render: formatScore },
+    { title: '提交', dataIndex: 'submittedCount', width: 70 },
+    { title: '待评', dataIndex: 'pendingCount', width: 70 },
+    { title: '均分', dataIndex: 'averageScore', width: 70, render: formatScore },
+  ]
+
+  /** 题目视图右侧提交列表列定义。 */
+  const submissionColumns: TableColumnsType<AssessmentQuestionSubmissionDTO> = [
+    {
+      title: '考生',
+      render: (_, record) => (
+        <div>
+          <div className="text-white/85">{record.username}</div>
+          <div className="text-xs text-white/35">{record.studentId}</div>
+        </div>
+      ),
+    },
+    {
+      title: '评判时间',
+      width: 150,
+      render: (_, record) => formatTime(record.latestJudgement?.judgedAt),
+    },
+    {
+      title: '得分',
+      width: 90,
+      render: (_, record) =>
+        record.latestJudgement ? (
+          <span>
+            {formatScore(record.latestJudgement.score)} / {formatScore(record.maxScore)}
+          </span>
+        ) : (
+          <Tag>待评分</Tag>
+        ),
+    },
+    {
+      title: '结果',
+      width: 80,
+      render: (_, record) => {
+        const resultCode = record.latestJudgement?.resultCode
+        if (!resultCode) return <span className="text-white/35">-</span>
+        // 客观题主行直接展示判题结果，避免必须展开历史才能看到 AC/WA/TLE 等状态。
+        return <Tag color={getResultColor(resultCode)}>{resultCode}</Tag>
+      },
+    },
+    {
+      title: '状态',
+      width: 90,
+      render: (_, record) =>
+        record.latestJudgement ? <Tag color="green">已评分</Tag> : <Tag color="orange">待评分</Tag>,
+    },
+  ]
+
+  /** 渲染单个考生在当前题目下的完整提交评判历史。 */
+  const renderSubmissionHistory = (record: AssessmentQuestionSubmissionDTO) => {
+    const histories = record.histories ?? []
+    const sortedHistories = [...histories].sort((left, right) => {
+      const leftTime = left.judgement?.judgedAt ? dayjs(left.judgement.judgedAt).valueOf() : 0
+      const rightTime = right.judgement?.judgedAt ? dayjs(right.judgement.judgedAt).valueOf() : 0
+      return rightTime - leftTime
+    })
+    return (
+      <div className="px-2 py-2">
+        {/* 用 AntD Collapse 和 Timeline 表达历史记录，避免表格套表格造成层级过重。 */}
+        <Collapse
+          size="small"
+          defaultActiveKey={['history']}
+          items={[
+            {
+              key: 'history',
+              label: (
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-white/85">提交评判历史</span>
+                  <Tag color="blue" bordered={false}>
+                    {sortedHistories.length} 条记录
+                  </Tag>
+                </div>
+              ),
+              children: (
+                <div className="max-h-[360px] overflow-y-auto overscroll-contain pr-2">
+                  <Timeline
+                    className="mt-3"
+                    items={sortedHistories.map((history, index) => {
+                      const judgement = history.judgement
+                      const resultCode = judgement?.resultCode ?? '暂无结果'
+                      const resultColor = getResultColor(judgement?.resultCode)
+                      return {
+                        color: resultColor,
+                        children: (
+                          <div className="rounded-xl border border-white/10 bg-black/20 px-3 py-2">
+                            <div className="flex flex-wrap items-center justify-between gap-2">
+                              <div className="flex flex-wrap items-center gap-2">
+                                <Tag color={resultColor} bordered={false}>
+                                  {resultCode}
+                                </Tag>
+                                {history.selectedBest && <Tag color="green">当前展示</Tag>}
+                                <span className="text-white/80">
+                                  {formatScore(judgement?.score)} /{' '}
+                                  {formatScore(judgement?.maxScore)}
+                                </span>
+                              </div>
+                              <span className="text-xs text-white/40">
+                                {formatTime(judgement?.judgedAt)}
+                              </span>
+                            </div>
+                            <div className="mt-1 text-xs text-white/40">
+                              第 {index + 1} 条 · {judgement?.source ?? '-'}
+                            </div>
+                          </div>
+                        ),
+                      }
+                    })}
+                  />
+                </div>
+              ),
+            },
+          ]}
+        />
+      </div>
+    )
+  }
+
+  /** 按需加载人员视图抽屉中某道题的提交详情。 */
+  const fetchCandidateQuestionDetail = useCallback(
+    async (question: AssessmentCandidateQuestionScoreDTO) => {
+      if (!viewingCandidateScore || candidateQuestionDetails[question.questionId] !== undefined) {
+        return
+      }
+      setLoadingCandidateQuestionIds((current) => [...current, question.questionId])
+      try {
+        const response = await adminAssessmentJudgementService.getQuestionSubmissions(
+          question.questionId
+        )
+        const detail =
+          response.data?.find(
+            (item) => item.candidateUserId === viewingCandidateScore.candidateUserId
+          ) ?? null
+        setCandidateQuestionDetails((current) => ({
+          ...current,
+          [question.questionId]: detail,
+        }))
+      } catch {
+        messageApi.error('加载题目提交记录失败')
+      } finally {
+        setLoadingCandidateQuestionIds((current) =>
+          current.filter((id) => id !== question.questionId)
+        )
+      }
+    },
+    [candidateQuestionDetails, messageApi, viewingCandidateScore]
+  )
+
+  /** 渲染人员视图抽屉内的单题提交详情。 */
+  const renderCandidateQuestionDetail = (question: AssessmentCandidateQuestionScoreDTO) => {
+    const detail = candidateQuestionDetails[question.questionId]
+    const loading = loadingCandidateQuestionIds.includes(question.questionId)
+    if (loading) {
+      return (
+        <div className="py-6">
+          <Spin />
+        </div>
+      )
+    }
+    if (!question.submitted) {
+      return <Empty description="该题未提交" />
+    }
+    if (!detail) {
+      return <Empty description="暂无提交记录" />
+    }
+    return (
+      <div className="flex flex-col gap-3 px-2 py-2">
+        <Descriptions column={screens.md ? 2 : 1} size="small">
+          <Descriptions.Item label="答案提交时间">
+            {formatTime(detail.submitTime)}
+          </Descriptions.Item>
+          <Descriptions.Item label="展示评判时间">
+            {formatTime(detail.latestJudgement?.judgedAt)}
+          </Descriptions.Item>
+          <Descriptions.Item label="得分">
+            {detail.latestJudgement
+              ? `${formatScore(detail.latestJudgement.score)} / ${formatScore(detail.maxScore)}`
+              : '待评分'}
+          </Descriptions.Item>
+          <Descriptions.Item label="结果">
+            {detail.latestJudgement?.resultCode ? (
+              <Tag color={getResultColor(detail.latestJudgement.resultCode)}>
+                {detail.latestJudgement.resultCode}
+              </Tag>
+            ) : (
+              '-'
+            )}
+          </Descriptions.Item>
+        </Descriptions>
+        {detail.content && (
+          <Card size="small" title="答案内容">
+            <pre className="m-0 max-h-40 overflow-auto whitespace-pre-wrap text-white/70">
+              {detail.content}
+            </pre>
+          </Card>
+        )}
+        {(detail.histories?.length ?? 0) > 0 && renderSubmissionHistory(detail)}
+      </div>
+    )
+  }
+
+  /** 人员视图考生评分矩阵列定义。 */
+  const candidateColumns: TableColumnsType<AssessmentCandidateScoreboardDTO> = [
+    {
+      title: '考生',
+      render: (_, record) => (
+        <div>
+          <div className="text-white/85">{record.username}</div>
+          <div className="text-xs text-white/35">{record.studentId}</div>
+        </div>
+      ),
+    },
+    {
+      title: '总分',
+      width: 120,
+      render: (_, record) => `${formatScore(record.totalScore)} / ${formatScore(record.maxScore)}`,
+    },
+    { title: '已评分', dataIndex: 'judgedQuestionCount', width: 90 },
+    { title: '待评分', dataIndex: 'pendingJudgementCount', width: 90 },
+    {
+      title: '题目表现',
+      render: (_, record) => (
+        <div className="flex flex-wrap gap-1.5">
+          {record.questionScores.map((item) => (
+            <Tag
+              key={item.questionId}
+              color={item.judged ? 'green' : item.submitted ? 'orange' : 'default'}
+            >
+              #{item.questionNo}{' '}
+              {item.judged ? formatScore(item.score) : item.submitted ? '待评' : '未交'}
+            </Tag>
+          ))}
+        </div>
+      ),
+    },
+  ]
+
+  /** 录用决策候选人表列定义。 */
+  const decisionColumns: TableColumnsType<AssessmentDecisionCandidateDTO> = [
+    {
+      title: '候选人',
+      render: (_, record) => (
+        <div>
+          <div className="text-white/85">{record.username}</div>
+          <div className="text-xs text-white/35">{record.studentId}</div>
+        </div>
+      ),
+    },
+    {
+      title: '总分',
+      width: 120,
+      render: (_, record) => `${formatScore(record.totalScore)} / ${formatScore(record.maxScore)}`,
+    },
+    { title: '待评分', dataIndex: 'pendingJudgementCount', width: 90 },
+    { title: '状态', width: 90, render: (_, record) => getDecisionTag(record) },
+  ]
+
+  /** 渲染考核方向和考核时间的公共筛选器。 */
+  const renderFilters = (
+    <div className="flex flex-wrap items-center gap-3">
+      <Select
+        placeholder="考核方向"
+        style={{ width: 160 }}
+        value={direction}
+        onChange={setDirection}
+        options={directionOptions.map(([value, label]) => ({ value, label }))}
+      />
+      <Select
+        placeholder="考核时间"
+        loading={loadingTimes}
+        disabled={!direction}
+        style={{ width: 240 }}
+        value={assessmentTimeId}
+        onChange={setAssessmentTimeId}
+        options={timeOptions}
+      />
+    </div>
+  )
+
+  /** 在未选完整考核范围时提示用户先选择方向和时间。 */
+  const renderScopeGuide = () => {
+    if (direction && assessmentTimeId) {
+      return null
+    }
+    const currentStep = direction ? 1 : 0
+    return (
+      <Card className="border-orange-500/30 bg-orange-500/[0.03]">
+        <div className="flex flex-col gap-4">
+          <Alert
+            type="info"
+            showIcon
+            message="选择考核范围后查看评分数据"
+            description="请先选择考核方向，再选择该方向下的考核时间。系统会加载该轮考核题目、提交记录和评分结果。"
+          />
+          <Steps
+            size="small"
+            current={currentStep}
+            items={[
+              {
+                title: '选择考核方向',
+                status: direction ? 'finish' : 'process',
+              },
+              {
+                title: '选择考核时间',
+                status: assessmentTimeId ? 'finish' : direction ? 'process' : 'wait',
+              },
+            ]}
+          />
+        </div>
+      </Card>
+    )
+  }
+
+  /** 渲染题目视图，左侧题目汇总，右侧提交列表。 */
+  const renderQuestionView = (
+    <div className="grid grid-cols-1 xl:grid-cols-[420px_minmax(0,1fr)] gap-4">
+      <Card styles={{ body: { padding: 0 } }}>
+        <Spin spinning={loadingQuestions}>
+          <Table
+            rowKey="questionId"
+            size="small"
+            pagination={false}
+            columns={questionColumns}
+            dataSource={questions}
+            onRow={(record) => ({
+              onClick: () => setSelectedQuestionId(record.questionId),
+              className: `cursor-pointer ${record.questionId === selectedQuestionId ? 'bg-white/[0.04]' : ''}`,
+            })}
+            locale={{ emptyText: assessmentTimeId ? '暂无题目' : '完成上方考核范围选择后加载题目' }}
+          />
+        </Spin>
+      </Card>
+      <Card
+        title={
+          selectedQuestion
+            ? `#${selectedQuestion.questionNo} ${selectedQuestion.title}`
+            : '题目提交'
+        }
+        styles={{ body: { padding: 0 } }}
+      >
+        <Spin spinning={loadingSubmissions}>
+          <div className="overscroll-contain">
+            <Table
+              rowKey="answerId"
+              size="small"
+              pagination={false}
+              columns={submissionColumns}
+              dataSource={submissions}
+              scroll={{ y: 'calc(100vh - 360px)' }}
+              onRow={(record) => ({
+                onClick: () => setReviewing(record),
+                className: 'cursor-pointer',
+              })}
+              expandable={{
+                expandedRowRender: renderSubmissionHistory,
+                rowExpandable: (record) => (record.histories?.length ?? 0) > 1,
+              }}
+              locale={{ emptyText: selectedQuestionId ? '暂无提交' : '请选择左侧题目查看提交' }}
+            />
+          </div>
+        </Spin>
+      </Card>
+    </div>
+  )
+
+  /** 渲染人员视图的考生评分矩阵。 */
+  const renderCandidateView = (
+    <Card styles={{ body: { padding: 0 } }}>
+      <Spin spinning={loadingCandidates}>
+        <Table
+          rowKey="candidateUserId"
+          size="small"
+          pagination={{ pageSize: 10 }}
+          columns={candidateColumns}
+          dataSource={candidateScores}
+          onRow={(record) => ({
+            onClick: () => setViewingCandidateScore(record),
+            className: 'cursor-pointer',
+          })}
+          locale={{
+            emptyText: assessmentTimeId ? '暂无考生评分数据' : '完成上方考核范围选择后加载人员评分',
+          }}
+        />
+      </Spin>
+    </Card>
+  )
+
+  /** 渲染题目评分页面主体。 */
+  const renderScoreTab = (
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          {renderFilters}
+          <Select
+            allowClear
+            placeholder="题型"
+            style={{ width: 140 }}
+            value={questionType}
+            onChange={setQuestionType}
+            options={Object.entries(QUESTION_TYPE_LABELS).map(([value, label]) => ({
+              value,
+              label,
+            }))}
+          />
+          <Select
+            allowClear
+            placeholder="评分状态"
+            style={{ width: 140 }}
+            value={submissionStatus}
+            onChange={setSubmissionStatus}
+            options={[
+              { value: 'PENDING', label: '待评分' },
+              { value: 'JUDGED', label: '已评分' },
+            ]}
+          />
+        </div>
+        <Input.Search
+          allowClear
+          placeholder="搜索题目 / 考生"
+          style={{ width: screens.md ? 260 : '100%' }}
+          onSearch={setScoreKeyword}
+        />
+      </div>
+      {renderScopeGuide()}
+      <Tabs
+        activeKey={scoreView}
+        onChange={setScoreView}
+        items={[
+          { key: 'questions', label: '题目视图', children: renderQuestionView },
+          { key: 'candidates', label: '人员视图', children: renderCandidateView },
+        ]}
+      />
+    </div>
+  )
+
+  /** 渲染录用决策主体，保留给旧入口复用。 */
+  const renderDecisionTab = (
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          {renderFilters}
+          <Select
+            allowClear
+            placeholder="决策状态"
+            style={{ width: 150 }}
+            value={decisionStatus}
+            onChange={setDecisionStatus}
+            options={[
+              { value: 'PENDING', label: '待决策' },
+              { value: 'PASSED', label: '通过' },
+              { value: 'ELIMINATED', label: '淘汰' },
+            ]}
+          />
+        </div>
+        <div className="flex flex-wrap gap-3">
+          <Input.Search
+            allowClear
+            placeholder="搜索考生 / 学号"
+            style={{ width: screens.md ? 240 : '100%' }}
+            onSearch={setDecisionKeyword}
+          />
+          <Button
+            type="primary"
+            onClick={showPublishNotice}
+            disabled={!assessmentTimeId || !isDecisionMaker}
+          >
+            发布本轮结果
+          </Button>
+        </div>
+      </div>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <Card>
+          <Statistic title="候选人" value={decisionWorkspace?.statistics.candidates ?? 0} />
+        </Card>
+        <Card>
+          <Statistic title="待决策" value={decisionWorkspace?.statistics.pending ?? 0} />
+        </Card>
+        <Card>
+          <Statistic title="通过" value={decisionWorkspace?.statistics.passed ?? 0} />
+        </Card>
+        <Card>
+          <Statistic title="淘汰" value={decisionWorkspace?.statistics.eliminated ?? 0} />
+        </Card>
+      </div>
+      <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_360px] gap-4">
+        <Card styles={{ body: { padding: 0 } }}>
+          <Spin spinning={loadingDecisions}>
+            <Table
+              rowKey="candidateUserId"
+              size="small"
+              pagination={{ pageSize: 10 }}
+              columns={decisionColumns}
+              dataSource={decisionWorkspace?.candidates ?? []}
+              onRow={(record) => ({
+                onClick: () => setSelectedDecisionCandidate(record),
+                className: 'cursor-pointer',
+              })}
+              locale={{ emptyText: assessmentTimeId ? '暂无候选人' : '请先选择考核时间' }}
+            />
+          </Spin>
+        </Card>
+        <Card title="候选人决策">
+          {selectedDecisionCandidate ? (
+            <div className="flex flex-col gap-4">
+              <Descriptions column={1} size="small">
+                <Descriptions.Item label="姓名">
+                  {selectedDecisionCandidate.username}
+                </Descriptions.Item>
+                <Descriptions.Item label="学号">
+                  {selectedDecisionCandidate.studentId}
+                </Descriptions.Item>
+                <Descriptions.Item label="总分">
+                  {formatScore(selectedDecisionCandidate.totalScore)} /{' '}
+                  {formatScore(selectedDecisionCandidate.maxScore)}
+                </Descriptions.Item>
+                <Descriptions.Item label="状态">
+                  {getDecisionTag(selectedDecisionCandidate)}
+                </Descriptions.Item>
+              </Descriptions>
+              <div className="flex flex-wrap gap-1.5">
+                {selectedDecisionCandidate.questionScores.map((item) => (
+                  <Tag
+                    key={item.questionId}
+                    color={item.judged ? 'green' : item.submitted ? 'orange' : 'default'}
+                  >
+                    #{item.questionNo}{' '}
+                    {item.judged ? formatScore(item.score) : item.submitted ? '待评' : '未交'}
+                  </Tag>
+                ))}
+              </div>
+              <Input.TextArea
+                rows={3}
+                maxLength={200}
+                showCount
+                placeholder="决策备注（可选）"
+                value={decisionComment}
+                onChange={(event) => setDecisionComment(event.target.value)}
+              />
+              <div className="grid grid-cols-2 gap-2">
+                <Button
+                  type="primary"
+                  loading={savingDecisionUserId === selectedDecisionCandidate.candidateUserId}
+                  onClick={() => handleDecision(selectedDecisionCandidate, true)}
+                  disabled={!isDecisionMaker}
+                >
+                  通过
+                </Button>
+                <Button
+                  danger
+                  loading={savingDecisionUserId === selectedDecisionCandidate.candidateUserId}
+                  onClick={() => handleDecision(selectedDecisionCandidate, false)}
+                  disabled={!isDecisionMaker}
+                >
+                  淘汰
+                </Button>
+              </div>
+              <div className="text-xs text-white/35">
+                点击通过或淘汰后会立即保存该考生决策；发布本轮结果入口当前不会发送邮件。
+              </div>
+            </div>
+          ) : (
+            <Empty description="请选择候选人" />
+          )}
+        </Card>
+      </div>
+    </div>
+  )
+
+  /** 人员评分明细抽屉中的题目列定义。 */
+  const candidateQuestionColumns: TableColumnsType<AssessmentCandidateQuestionScoreDTO> = [
+    {
+      title: '题目',
+      render: (_, record) => (
+        <div>
+          <div className="text-white/85">
+            #{record.questionNo} {record.questionTitle}
+          </div>
+          <Tag color={QUESTION_TYPE_COLORS[record.questionType]} bordered={false}>
+            {QUESTION_TYPE_LABELS[record.questionType]}
+          </Tag>
+        </div>
+      ),
+    },
+    {
+      title: '得分',
+      width: 110,
+      render: (_, record) =>
+        record.judged
+          ? `${formatScore(record.score)} / ${formatScore(record.maxScore)}`
+          : record.submitted
+            ? '待评分'
+            : '未提交',
+    },
+    {
+      title: '结果',
+      width: 80,
+      render: (_, record) => {
+        const resultCode = record.latestJudgement?.resultCode
+        if (!resultCode) return <span className="text-white/35">-</span>
+        return <Tag color={getResultColor(resultCode)}>{resultCode}</Tag>
+      },
+    },
+    {
+      title: '答案提交时间',
+      width: 150,
+      render: (_, record) => formatTime(record.submitTime),
+    },
+  ]
+
+  const isFileUploadReview = reviewing?.questionType === 'FILE_UPLOAD'
+
+  return (
+    <div className="min-h-full bg-black text-white">
+      {renderScoreTab}
+
+      <Drawer
+        title={reviewing ? `${reviewing.username}的作品评分` : '作品评分'}
+        open={!!reviewing}
+        onClose={() => setReviewing(null)}
+        width={screens.md ? 520 : '100%'}
+        extra={
+          reviewing?.fileId ? (
+            <Button
+              icon={<DownloadOutlined />}
+              onClick={() => fileService.downloadFile(reviewing.fileId!)}
+            >
+              下载作品
+            </Button>
+          ) : null
+        }
+      >
+        {reviewing && (
+          <div className="flex flex-col gap-4">
+            <Descriptions column={1} size="small">
+              <Descriptions.Item label="考生">
+                {reviewing.username}（{reviewing.studentId}）
+              </Descriptions.Item>
+              <Descriptions.Item label="题目">
+                #{reviewing.questionNo} {reviewing.questionTitle}
+              </Descriptions.Item>
+              <Descriptions.Item label="题型">
+                <Tag color={QUESTION_TYPE_COLORS[reviewing.questionType]} bordered={false}>
+                  {QUESTION_TYPE_LABELS[reviewing.questionType]}
+                </Tag>
+              </Descriptions.Item>
+              <Descriptions.Item label="答案提交时间">
+                {formatTime(reviewing.submitTime)}
+              </Descriptions.Item>
+              <Descriptions.Item label="展示评判时间">
+                {formatTime(reviewing.latestJudgement?.judgedAt)}
+              </Descriptions.Item>
+              <Descriptions.Item label="当前得分">
+                {reviewing.latestJudgement
+                  ? `${formatScore(reviewing.latestJudgement.score)} / ${formatScore(reviewing.maxScore)}`
+                  : '待评分'}
+              </Descriptions.Item>
+            </Descriptions>
+
+            {reviewing.content && (
+              <Card size="small" title="答案内容">
+                <pre className="m-0 max-h-48 overflow-auto whitespace-pre-wrap text-white/70">
+                  {reviewing.content}
+                </pre>
+              </Card>
+            )}
+
+            {isFileUploadReview ? (
+              <Form form={form} layout="vertical">
+                {/* 文件上传题是唯一允许人工改分的题型，客观题保持后端自动评判只读。 */}
+                <Form.Item
+                  name="score"
+                  label={`评分（满分 ${formatScore(reviewing.maxScore)}）`}
+                  rules={[{ required: true, message: '请输入评分' }]}
+                >
+                  <InputNumber
+                    min={0}
+                    max={Number(reviewing.maxScore)}
+                    precision={1}
+                    className="w-full"
+                  />
+                </Form.Item>
+                <Form.Item name="comment" label="评论">
+                  <Input.TextArea
+                    rows={5}
+                    maxLength={500}
+                    showCount
+                    placeholder="输入给作品的评论"
+                  />
+                </Form.Item>
+                <Button type="primary" block loading={savingReview} onClick={handleSubmitReview}>
+                  提交评分
+                </Button>
+              </Form>
+            ) : (
+              <Card size="small">
+                <div className="flex flex-wrap items-center gap-2 text-white/65">
+                  <span>客观题由系统自动评判，不能人工修改分数。</span>
+                  <span>结果：</span>
+                  {reviewing.latestJudgement?.resultCode ? (
+                    <Tag color={getResultColor(reviewing.latestJudgement.resultCode)}>
+                      {reviewing.latestJudgement.resultCode}
+                    </Tag>
+                  ) : (
+                    <span>暂无评判结果</span>
+                  )}
+                </div>
+              </Card>
+            )}
+          </div>
+        )}
+      </Drawer>
+
+      <Drawer
+        title={viewingCandidateScore ? `${viewingCandidateScore.username}的评分明细` : '评分明细'}
+        open={!!viewingCandidateScore}
+        onClose={() => setViewingCandidateScore(null)}
+        width={screens.md ? 640 : '100%'}
+      >
+        {viewingCandidateScore && (
+          <div className="flex flex-col gap-4">
+            <Descriptions column={1} size="small">
+              <Descriptions.Item label="考生">
+                {viewingCandidateScore.username}（{viewingCandidateScore.studentId}）
+              </Descriptions.Item>
+              <Descriptions.Item label="总分">
+                {formatScore(viewingCandidateScore.totalScore)} /{' '}
+                {formatScore(viewingCandidateScore.maxScore)}
+              </Descriptions.Item>
+              <Descriptions.Item label="待评分题目">
+                {viewingCandidateScore.pendingJudgementCount}
+              </Descriptions.Item>
+            </Descriptions>
+            <Table
+              rowKey="questionId"
+              size="small"
+              pagination={false}
+              columns={candidateQuestionColumns}
+              dataSource={viewingCandidateScore.questionScores}
+              expandable={{
+                expandedRowRender: renderCandidateQuestionDetail,
+                rowExpandable: (record) => record.submitted,
+                onExpand: (expanded, record) => {
+                  if (expanded) {
+                    fetchCandidateQuestionDetail(record)
+                  }
+                },
+              }}
+            />
+          </div>
+        )}
+      </Drawer>
+    </div>
+  )
+}

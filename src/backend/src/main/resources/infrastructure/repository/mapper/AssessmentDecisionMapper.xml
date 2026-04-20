@@ -11,4 +11,15 @@
         <result column="decided_at" property="decidedAt"/>
         <result column="updated_at" property="updatedAt"/>
     </resultMap>
+
+    <select id="selectByUserIdAndAssessmentTimeId" resultMap="BaseResultMap">
+        SELECT * FROM tb_assessment_decision
+        WHERE user_id = #{userId} AND assessment_time_id = #{assessmentTimeId}
+        LIMIT 1
+    </select>
+
+    <select id="selectByAssessmentTimeId" resultMap="BaseResultMap">
+        SELECT * FROM tb_assessment_decision
+        WHERE assessment_time_id = #{assessmentTimeId}
+    </select>
 </mapper>

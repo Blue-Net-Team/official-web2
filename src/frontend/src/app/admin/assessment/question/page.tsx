@@ -2,13 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { App, Button, Grid, Modal, Pagination, Select, Spin, Table, Tag } from 'antd'
-import {
-  PlusOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  PaperClipOutlined,
-  BarChartOutlined,
-} from '@ant-design/icons'
+import { PlusOutlined, EditOutlined, DeleteOutlined, PaperClipOutlined } from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
 import type {
   AssessmentQuestionDTO,
@@ -21,7 +15,6 @@ import { adminAssessmentQuestionService } from '@/apis/services/admin-assessment
 import authStore from '@/stores/authStore'
 import { getRoleLevel } from '@/utils/RoleUtils'
 import QuestionDrawer, { QUESTION_TYPE_LABELS, type DrawerMode } from './QuestionDrawer'
-import JudgementDrawer from './JudgementDrawer'
 
 const PAGE_SIZE = 20
 const { useBreakpoint } = Grid
@@ -62,8 +55,6 @@ export default function AssessmentQuestionManagementPage() {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [drawerMode, setDrawerMode] = useState<DrawerMode>('view')
   const [selectedQuestion, setSelectedQuestion] = useState<AssessmentQuestionDTO | null>(null)
-  const [judgementDrawerOpen, setJudgementDrawerOpen] = useState(false)
-  const [judgementQuestion, setJudgementQuestion] = useState<AssessmentQuestionDTO | null>(null)
 
   // Delete modal state
   const [deleteModalOpen, setDeleteModalOpen] = useState(false)
@@ -83,7 +74,7 @@ export default function AssessmentQuestionManagementPage() {
     return entries
   }, [isSuperAdmin, userDirection])
 
-  // Fetch assessment times when direction filter changes
+  // 方向变更后加载该方向下的考核时间。
   const fetchAssessmentTimes = useCallback(async (direction: Direction) => {
     try {
       const res = await adminAssessmentTimeService.getList(0, 100)
@@ -104,7 +95,7 @@ export default function AssessmentQuestionManagementPage() {
     setFilterTimeId(undefined)
   }, [filterDirection, fetchAssessmentTimes])
 
-  // Assessment time select options
+  // 考核时间下拉选项。
   const timeOptions = useMemo(() => {
     return assessmentTimes.map((t) => ({
       value: t.id,
@@ -112,12 +103,12 @@ export default function AssessmentQuestionManagementPage() {
     }))
   }, [assessmentTimes])
 
-  // Find the selected AssessmentTimeDTO for context display
+  // 当前选中的考核时间上下文。
   const selectedTime = useMemo(() => {
     return assessmentTimes.find((t) => t.id === filterTimeId) ?? null
   }, [assessmentTimes, filterTimeId])
 
-  // Fetch questions when assessment time is selected
+  // 按当前考核时间分页加载考题。
   const fetchQuestions = useCallback(async () => {
     if (!filterTimeId) {
       setQuestions([])
@@ -140,45 +131,46 @@ export default function AssessmentQuestionManagementPage() {
     fetchQuestions()
   }, [fetchQuestions])
 
-  // Handlers
+  // 切换方向筛选并重置分页。
   const handleDirectionChange = (value: Direction | undefined) => {
     setFilterDirection(value)
     setPage(1)
   }
 
+  // 切换考核时间筛选并重置分页。
   const handleTimeChange = (value: number | undefined) => {
     setFilterTimeId(value)
     setPage(1)
   }
 
+  // 打开新增考题抽屉。
   const handleCreate = () => {
     setSelectedQuestion(null)
     setDrawerMode('create')
     setDrawerOpen(true)
   }
 
+  // 点击表格行时以只读模式查看考题。
   const handleRowClick = (record: AssessmentQuestionDTO) => {
     setSelectedQuestion(record)
     setDrawerMode('view')
     setDrawerOpen(true)
   }
 
+  // 打开编辑考题抽屉。
   const handleEdit = (record: AssessmentQuestionDTO) => {
     setSelectedQuestion(record)
     setDrawerMode('edit')
     setDrawerOpen(true)
   }
 
+  // 打开删除确认弹窗。
   const handleDeleteClick = (item: AssessmentQuestionDTO) => {
     setDeletingItem(item)
     setDeleteModalOpen(true)
   }
 
-  const handleJudgementClick = (item: AssessmentQuestionDTO) => {
-    setJudgementQuestion(item)
-    setJudgementDrawerOpen(true)
-  }
-
+  // 确认删除考题后刷新列表。
   const handleDeleteConfirm = async () => {
     if (!deletingItem) return
     try {
@@ -193,12 +185,13 @@ export default function AssessmentQuestionManagementPage() {
     }
   }
 
+  // 抽屉保存成功后关闭抽屉并刷新列表。
   const handleDrawerSuccess = () => {
     setDrawerOpen(false)
     fetchQuestions()
   }
 
-  // Table columns
+  // 考题表格列定义。
   const columns: ColumnsType<AssessmentQuestionDTO> = useMemo(() => {
     const cols: ColumnsType<AssessmentQuestionDTO> = [
       {
@@ -245,16 +238,6 @@ export default function AssessmentQuestionManagementPage() {
           canOperate ? (
             <div className="flex gap-1">
               <Button
-                title="查看评判与统计"
-                type="text"
-                size="small"
-                icon={<BarChartOutlined />}
-                onClick={(e) => {
-                  e.stopPropagation()
-                  handleJudgementClick(record)
-                }}
-              />
-              <Button
                 type="text"
                 size="small"
                 icon={<EditOutlined />}
@@ -285,7 +268,7 @@ export default function AssessmentQuestionManagementPage() {
     return cols
   }, [isMobile, canOperate])
 
-  // Empty text depends on filter state
+  // 空状态文案随方向和考核时间筛选状态变化。
   const emptyText = !filterDirection
     ? '请先选择方向'
     : !filterTimeId
@@ -364,14 +347,6 @@ export default function AssessmentQuestionManagementPage() {
         onSuccess={handleDrawerSuccess}
         onDelete={handleDeleteClick}
         onEdit={() => setDrawerMode('edit')}
-      />
-
-      <JudgementDrawer
-        open={judgementDrawerOpen}
-        question={judgementQuestion}
-        canManualReview={roleLevel >= 1}
-        canDecide={roleLevel >= 2}
-        onClose={() => setJudgementDrawerOpen(false)}
       />
 
       {/* Delete confirmation modal */}

@@ -27,8 +27,10 @@ import type {
 import { adminAssessmentQuestionService } from '@/apis/services/admin-assessment-question.service'
 import { fileService } from '@/apis/services/file.service'
 import { MarkdownRenderer, QuestionStemMarkdownEditor } from '@/components/Assessment'
+import { QUESTION_TYPE_LABELS } from '@/app/admin/assessment/judge/shared'
 
 export type DrawerMode = 'view' | 'edit' | 'create'
+export { QUESTION_TYPE_LABELS }
 
 interface QuestionDrawerProps {
   open: boolean
@@ -47,13 +49,6 @@ const QUESTION_TYPE_OPTIONS: { value: QuestionType; label: string }[] = [
   { value: 'MULTIPLE_CHOICE', label: '多选题' },
   { value: 'ALGORITHM', label: '算法题' },
 ]
-
-const QUESTION_TYPE_LABELS: Record<QuestionType, string> = {
-  FILE_UPLOAD: '文件上传',
-  SINGLE_CHOICE: '单选题',
-  MULTIPLE_CHOICE: '多选题',
-  ALGORITHM: '算法题',
-}
 
 interface FormValues {
   questionNo: number
@@ -206,8 +201,6 @@ function parseContentToForm(content: unknown, questionType: QuestionType): Parti
       return {}
   }
 }
-
-export { QUESTION_TYPE_LABELS }
 
 export default function QuestionDrawer({
   open,
