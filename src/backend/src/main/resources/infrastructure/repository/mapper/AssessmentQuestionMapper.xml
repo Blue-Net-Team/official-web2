@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.bluenet.web.infrastructure.repository.mapper.AssessmentQuestionMapper">
-    <resultMap id="BaseResultMap" type="com.bluenet.web.domain.model.entity.AssessmentQuestion">
+    <resultMap id="BaseResultMap" type="com.bluenet.web.infrastructure.repository.dataobject.AssessmentQuestionDO">
         <id column="id" property="id"/>
         <result column="assessment_time_id" property="assessmentTimeId"/>
         <result column="question_no" property="questionNo"/>
@@ -11,4 +11,32 @@
         <result column="attachment_id" property="attachmentId"/>
         <result column="score" property="score"/>
     </resultMap>
+
+    <select id="countByAssessmentTimeId" resultType="long">
+        SELECT COUNT(*)
+        FROM tb_assessment_question
+        WHERE assessment_time_id = #{assessmentTimeId}
+    </select>
+
+    <select id="selectPageByAssessmentTimeId" resultMap="BaseResultMap">
+        SELECT *
+        FROM tb_assessment_question
+        WHERE assessment_time_id = #{assessmentTimeId}
+        ORDER BY question_no ASC
+    </select>
+
+    <select id="selectByAssessmentTimeIdAndQuestionNo" resultMap="BaseResultMap">
+        SELECT *
+        FROM tb_assessment_question
+        WHERE assessment_time_id = #{assessmentTimeId}
+          AND question_no = #{questionNo}
+        LIMIT 1
+    </select>
+
+    <select id="selectFirstByAttachmentId" resultMap="BaseResultMap">
+        SELECT *
+        FROM tb_assessment_question
+        WHERE attachment_id = #{attachmentId}
+        LIMIT 1
+    </select>
 </mapper>

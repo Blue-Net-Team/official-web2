@@ -1,5 +1,9 @@
 package com.bluenet.web.api.controller.v1;
 
+import com.bluenet.web.infrastructure.repository.dataobject.*;
+
+import com.bluenet.web.testsupport.RepositoryTestObjects;
+
 import com.bluenet.web.BaseIntegrationTest;
 import com.bluenet.web.api.dto.ResponseMessage;
 import com.bluenet.web.domain.model.entity.User;
@@ -48,9 +52,12 @@ class AuthControllerGithubIntegrationTest extends BaseIntegrationTest {
 
     @BeforeEach
     void createTestUser() {
-        User existing = userMapper.selectOne(
-                new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<User>()
-                        .eq(User::getStudentId, TEST_STUDENT_ID));
+        // Mapper 返回 DO，测试夹具转换为领域对象后再断言/清理。
+        User existing = RepositoryTestObjects.toDomain(
+                userMapper.selectOne(
+                        new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<UserDO>()
+                                .eq(UserDO::getStudentId, TEST_STUDENT_ID)),
+                User.class);
         if (existing != null) {
             userMapper.deleteById(existing.getId());
         }
@@ -63,7 +70,7 @@ class AuthControllerGithubIntegrationTest extends BaseIntegrationTest {
         user.setRoleId(1L);
         user.setDisable(false);
         user.setDirection(Direction.COMPUTER_VISION);
-        userMapper.insert(user);
+        RepositoryTestObjects.insert(userMapper, user, UserDO.class);
     }
 
     private List<String> loginAndGetCookies() {

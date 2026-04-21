@@ -1,5 +1,9 @@
 package com.bluenet.web.api.controller.v1.equipment;
 
+import com.bluenet.web.infrastructure.repository.dataobject.*;
+
+import com.bluenet.web.testsupport.RepositoryTestObjects;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.List;
@@ -64,7 +68,7 @@ class EquipmentControllerIntegrationTest extends BaseIntegrationTest {
                 .url(TEST_FILE_URL)
                 .type(TEST_FILE_TYPE)
                 .build();
-        fileMapper.insert(file);
+        RepositoryTestObjects.insert(fileMapper, file, FileDO.class);
 
         // 创建测试设备1
         Equipment equipment1 = new Equipment();
@@ -73,7 +77,7 @@ class EquipmentControllerIntegrationTest extends BaseIntegrationTest {
         equipment1.setDescription(TEST_DESCRIPTION);
         equipment1.setImageFileId(TEST_FILE_ID);
         equipment1.setSortOrder(10);
-        equipmentMapper.insert(equipment1);
+        RepositoryTestObjects.insert(equipmentMapper, equipment1, EquipmentDO.class);
 
         // 创建测试设备2
         Equipment equipment2 = new Equipment();
@@ -82,7 +86,7 @@ class EquipmentControllerIntegrationTest extends BaseIntegrationTest {
         equipment2.setDescription(TEST_DESCRIPTION);
         equipment2.setImageFileId(TEST_FILE_ID);
         equipment2.setSortOrder(20);
-        equipmentMapper.insert(equipment2);
+        RepositoryTestObjects.insert(equipmentMapper, equipment2, EquipmentDO.class);
 
         // 创建测试设备3
         Equipment equipment3 = new Equipment();
@@ -91,7 +95,7 @@ class EquipmentControllerIntegrationTest extends BaseIntegrationTest {
         equipment3.setDescription(TEST_DESCRIPTION);
         equipment3.setImageFileId(TEST_FILE_ID);
         equipment3.setSortOrder(30);
-        equipmentMapper.insert(equipment3);
+        RepositoryTestObjects.insert(equipmentMapper, equipment3, EquipmentDO.class);
     }
 
     @Test

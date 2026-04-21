@@ -3,7 +3,7 @@
 <mapper namespace="com.bluenet.web.infrastructure.repository.mapper.LearningPathMapper">
 
     <!-- 根据方向查询学习步骤列表 -->
-    <select id="selectByDirection" resultType="com.bluenet.web.domain.model.vo.LearningStepVO">
+    <select id="selectByDirection" resultType="com.bluenet.web.infrastructure.repository.dataobject.DirectionLearningStepDO">
         SELECT
             id,
             direction,
@@ -16,7 +16,7 @@
     </select>
 
     <!-- 根据ID查询学习步骤 -->
-    <select id="selectById" resultType="com.bluenet.web.domain.model.vo.LearningStepVO">
+    <select id="selectLearningStepById" resultType="com.bluenet.web.infrastructure.repository.dataobject.DirectionLearningStepDO">
         SELECT
             id,
             direction,

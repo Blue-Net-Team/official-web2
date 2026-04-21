@@ -37,6 +37,9 @@ public class ProjectContent {
     /**
      * 演示链接
      */
+    /**
+     * 项目演示或在线预览地址。
+     */
     @JsonProperty("demoUrl")
     private String demoUrl;
 }

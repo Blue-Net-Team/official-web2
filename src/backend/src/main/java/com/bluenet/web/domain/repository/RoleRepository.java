@@ -13,11 +13,11 @@ import java.util.Optional;
 public interface RoleRepository {
 
     /**
-     * 根据角色名称查找角色
+     * 按名称查询角色 记录。
      *
      * @param name
-     *            角色名称（如 CANDIDATE, MEMBER 等）
-     * @return 角色 VO，未找到返回 empty
+     *            业务对象名称。
+     * @return 查询到的角色 结果；不存在时为空。
      */
     Optional<RoleVO> findByName(String name);
 }

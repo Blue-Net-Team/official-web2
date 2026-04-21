@@ -1,5 +1,9 @@
 package com.bluenet.web.api.controller.v1.competition;
 
+import com.bluenet.web.infrastructure.repository.dataobject.*;
+
+import com.bluenet.web.testsupport.RepositoryTestObjects;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.List;
@@ -66,7 +70,7 @@ class CompetitionControllerIntegrationTest extends BaseIntegrationTest {
                 .url(TEST_FILE_URL)
                 .type(TEST_FILE_TYPE)
                 .build();
-        fileMapper.insert(file);
+        RepositoryTestObjects.insert(fileMapper, file, FileDO.class);
 
         Competition competition1 = new Competition();
         competition1.setName(TEST_NAME);
@@ -75,7 +79,7 @@ class CompetitionControllerIntegrationTest extends BaseIntegrationTest {
         competition1.setCoverFileId(TEST_FILE_ID);
         competition1.setSummary(TEST_SUMMARY);
         competition1.setSortOrder(0);
-        competitionMapper.insert(competition1);
+        RepositoryTestObjects.insert(competitionMapper, competition1, CompetitionDO.class);
 
         Competition competition2 = new Competition();
         competition2.setName("ACM程序设计大赛");
@@ -83,7 +87,7 @@ class CompetitionControllerIntegrationTest extends BaseIntegrationTest {
         competition2.setLogoFileId(TEST_FILE_ID);
         competition2.setSummary("ACM国际大学生程序设计竞赛");
         competition2.setSortOrder(1);
-        competitionMapper.insert(competition2);
+        RepositoryTestObjects.insert(competitionMapper, competition2, CompetitionDO.class);
     }
 
     @Test

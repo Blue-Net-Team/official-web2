@@ -1,5 +1,9 @@
 package com.bluenet.web.infrastructure.repository.mapper;
 
+import com.bluenet.web.infrastructure.repository.dataobject.*;
+
+import com.bluenet.web.testsupport.RepositoryTestObjects;
+
 import com.bluenet.web.BaseIntegrationTest;
 import com.bluenet.web.domain.model.entity.College;
 import com.bluenet.web.domain.model.entity.User;
@@ -25,7 +29,7 @@ class EnumMappingTest extends BaseIntegrationTest {
         // 创建学院
         College college = new College();
         college.setName("测试学院");
-        collegeMapper.insert(college);
+        RepositoryTestObjects.insert(collegeMapper, college, CollegeDO.class);
 
         // 创建用户并设置枚举值
         User user = new User();
@@ -37,10 +41,10 @@ class EnumMappingTest extends BaseIntegrationTest {
         user.setDisable(false);
 
         // 保存到数据库
-        userMapper.insert(user);
+        RepositoryTestObjects.insert(userMapper, user, UserDO.class);
 
         // 从数据库读取
-        User retrieved = userMapper.selectById(user.getId());
+        User retrieved = RepositoryTestObjects.toDomain(userMapper.selectById(user.getId()), User.class);
 
         // 验证枚举正确映射
         assertEquals(Direction.COMPUTER_VISION, retrieved.getDirection());

@@ -1,7 +1,9 @@
 package com.bluenet.web.infrastructure.repository.impl;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.bluenet.web.infrastructure.repository.support.RepositoryObjectConverter;
+
+import com.bluenet.web.infrastructure.repository.dataobject.*;
+
 import com.bluenet.web.domain.model.entity.VerifyCode;
 import com.bluenet.web.domain.model.vo.VerifyCodeVO;
 import com.bluenet.web.domain.repository.VerificationCodeRepository;
@@ -20,15 +22,20 @@ public class VerificationCodeRepositoryImpl implements VerificationCodeRepositor
 
     private final VerifyCodeMapper verifyCodeMapper;
 
+    /**
+     * 按邮箱和验证码查询验证码记录。
+     *
+     * @param email
+     *            邮箱地址，用于定位用户或验证码。
+     * @param code
+     *            验证码或推荐码。
+     * @return 查询到的验证码 结果；不存在时为空。
+     */
     @Override
     public Optional<VerifyCodeVO> findByEmailAndCode(String email, String code) {
-        LambdaQueryWrapper<VerifyCode> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(VerifyCode::getTarget, email)
-                .eq(VerifyCode::getCode, code)
-                .orderByDesc(VerifyCode::getId)
-                .last("LIMIT 1");
-
-        VerifyCode verifyCode = verifyCodeMapper.selectOne(wrapper);
+        VerifyCode verifyCode = RepositoryObjectConverter.toDomain(
+                verifyCodeMapper.selectLatestByTargetAndCode(email, code),
+                VerifyCode.class);
 
         if (verifyCode == null) {
             return Optional.empty();
@@ -37,16 +44,22 @@ public class VerificationCodeRepositoryImpl implements VerificationCodeRepositor
         return Optional.of(convert(verifyCode));
     }
 
+    /**
+     * 按邮箱、验证码和场景查询验证码记录。
+     *
+     * @param email
+     *            邮箱地址，用于定位用户或验证码。
+     * @param code
+     *            验证码或推荐码。
+     * @param scene
+     *            验证码使用场景。
+     * @return 查询到的验证码 结果；不存在时为空。
+     */
     @Override
     public Optional<VerifyCodeVO> findByEmailAndCodeAndScene(String email, String code, String scene) {
-        LambdaQueryWrapper<VerifyCode> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(VerifyCode::getTarget, email)
-                .eq(VerifyCode::getCode, code)
-                .eq(VerifyCode::getScene, scene)
-                .orderByDesc(VerifyCode::getId)
-                .last("LIMIT 1");
-
-        VerifyCode verifyCode = verifyCodeMapper.selectOne(wrapper);
+        VerifyCode verifyCode = RepositoryObjectConverter.toDomain(
+                verifyCodeMapper.selectLatestByTargetAndCodeAndScene(email, code, scene),
+                VerifyCode.class);
 
         if (verifyCode == null) {
             return Optional.empty();
@@ -55,6 +68,12 @@ public class VerificationCodeRepositoryImpl implements VerificationCodeRepositor
         return Optional.of(convert(verifyCode));
     }
 
+    /**
+     * 保存新的验证码 记录。
+     *
+     * @param verifyCodeVO
+     *            验证码视图对象。
+     */
     @Override
     public void save(VerifyCodeVO verifyCodeVO) {
         VerifyCode verifyCode = new VerifyCode();
@@ -62,7 +81,7 @@ public class VerificationCodeRepositoryImpl implements VerificationCodeRepositor
         verifyCode.setCode(verifyCodeVO.getCode());
         verifyCode.setExpireAt(verifyCodeVO.getExpireAt());
         verifyCode.setScene(verifyCodeVO.getScene());
-        verifyCodeMapper.insert(verifyCode);
+        RepositoryObjectConverter.insert(verifyCodeMapper, verifyCode, VerifyCodeDO.class);
         log.debug(
                 "验证码已存储 - target={}, scene={}, expireAt={}",
                 verifyCodeVO.getTarget(),
@@ -70,27 +89,43 @@ public class VerificationCodeRepositoryImpl implements VerificationCodeRepositor
                 verifyCodeVO.getExpireAt());
     }
 
+    /**
+     * 将匹配的验证码记录标记为已使用。
+     *
+     * @param email
+     *            邮箱地址，用于定位用户或验证码。
+     * @param code
+     *            验证码或推荐码。
+     */
     @Override
     public void markAsUsed(String email, String code) {
-        LambdaUpdateWrapper<VerifyCode> wrapper = new LambdaUpdateWrapper<>();
-        wrapper.eq(VerifyCode::getTarget, email)
-                .eq(VerifyCode::getCode, code)
-                .set(VerifyCode::getUsedAt, LocalDateTime.now());
-        verifyCodeMapper.update(null, wrapper);
+        verifyCodeMapper.markAsUsed(email, code, LocalDateTime.now());
         log.debug("验证码已标记为已使用 - target={}", email);
     }
 
+    /**
+     * 将匹配的验证码记录标记为已使用。
+     *
+     * @param email
+     *            邮箱地址，用于定位用户或验证码。
+     * @param code
+     *            验证码或推荐码。
+     * @param scene
+     *            验证码使用场景。
+     */
     @Override
     public void markAsUsed(String email, String code, String scene) {
-        LambdaUpdateWrapper<VerifyCode> wrapper = new LambdaUpdateWrapper<>();
-        wrapper.eq(VerifyCode::getTarget, email)
-                .eq(VerifyCode::getCode, code)
-                .eq(VerifyCode::getScene, scene)
-                .set(VerifyCode::getUsedAt, LocalDateTime.now());
-        verifyCodeMapper.update(null, wrapper);
+        verifyCodeMapper.markAsUsedWithScene(email, code, scene, LocalDateTime.now());
         log.debug("验证码已标记为已使用 - target={}, scene={}", email, scene);
     }
 
+    /**
+     * 转换验证码 相关对象，隔离持久层和领域层模型。
+     *
+     * @param verifyCode
+     *            验证码领域对象。
+     * @return 转换后的目标模型对象。
+     */
     private VerifyCodeVO convert(VerifyCode verifyCode) {
         return VerifyCodeVO.builder()
                 .target(verifyCode.getTarget())

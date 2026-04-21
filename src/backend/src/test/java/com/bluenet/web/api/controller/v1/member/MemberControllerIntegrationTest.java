@@ -1,5 +1,9 @@
 package com.bluenet.web.api.controller.v1.member;
 
+import com.bluenet.web.infrastructure.repository.dataobject.*;
+
+import com.bluenet.web.testsupport.RepositoryTestObjects;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.ArrayList;
@@ -70,30 +74,36 @@ class MemberControllerIntegrationTest extends BaseIntegrationTest {
     }
 
     private void createRoles() {
-        Role memberRole = roleMapper.selectOne(
-                new LambdaQueryWrapper<Role>().eq(Role::getName, "MEMBER"));
+        Role memberRole = RepositoryTestObjects.toDomain(
+                roleMapper.selectOne(
+                        new LambdaQueryWrapper<RoleDO>().eq(RoleDO::getName, "MEMBER")),
+                Role.class);
         if (memberRole == null) {
             memberRole = new Role();
             memberRole.setName("MEMBER");
-            roleMapper.insert(memberRole);
+            RepositoryTestObjects.insert(roleMapper, memberRole, RoleDO.class);
         }
         memberRoleId = memberRole.getId();
 
-        Role directionAdminRole = roleMapper.selectOne(
-                new LambdaQueryWrapper<Role>().eq(Role::getName, "DIRECTION_ADMIN"));
+        Role directionAdminRole = RepositoryTestObjects.toDomain(
+                roleMapper.selectOne(
+                        new LambdaQueryWrapper<RoleDO>().eq(RoleDO::getName, "DIRECTION_ADMIN")),
+                Role.class);
         if (directionAdminRole == null) {
             directionAdminRole = new Role();
             directionAdminRole.setName("DIRECTION_ADMIN");
-            roleMapper.insert(directionAdminRole);
+            RepositoryTestObjects.insert(roleMapper, directionAdminRole, RoleDO.class);
         }
         directionAdminRoleId = directionAdminRole.getId();
 
-        Role superAdminRole = roleMapper.selectOne(
-                new LambdaQueryWrapper<Role>().eq(Role::getName, "SUPER_ADMIN"));
+        Role superAdminRole = RepositoryTestObjects.toDomain(
+                roleMapper.selectOne(
+                        new LambdaQueryWrapper<RoleDO>().eq(RoleDO::getName, "SUPER_ADMIN")),
+                Role.class);
         if (superAdminRole == null) {
             superAdminRole = new Role();
             superAdminRole.setName("SUPER_ADMIN");
-            roleMapper.insert(superAdminRole);
+            RepositoryTestObjects.insert(roleMapper, superAdminRole, RoleDO.class);
         }
         superAdminRoleId = superAdminRole.getId();
     }
@@ -101,7 +111,7 @@ class MemberControllerIntegrationTest extends BaseIntegrationTest {
     private void createCollege() {
         College college = new College();
         college.setName("计算机学院");
-        collegeMapper.insert(college);
+        RepositoryTestObjects.insert(collegeMapper, college, CollegeDO.class);
         collegeId = college.getId();
     }
 
@@ -119,7 +129,7 @@ class MemberControllerIntegrationTest extends BaseIntegrationTest {
         members.add(disabledUser);
 
         for (User member : members) {
-            userMapper.insert(member);
+            RepositoryTestObjects.insert(userMapper, member, UserDO.class);
         }
     }
 
@@ -277,8 +287,9 @@ class MemberControllerIntegrationTest extends BaseIntegrationTest {
         @Test
         @DisplayName("正常情况：应返回成员详情")
         void getMemberById_existingMember_shouldReturnDetail() {
-            User testUser = userMapper.selectOne(
-                    new LambdaQueryWrapper<User>().eq(User::getUsername, "张三"));
+            User testUser = RepositoryTestObjects.toDomain(
+                    userMapper.selectOne(new LambdaQueryWrapper<UserDO>().eq(UserDO::getUsername, "张三")),
+                    User.class);
             assertNotNull(testUser);
 
             ResponseEntity<ResponseMessage<MemberDetailDTO>> response = restTemplate.exchange(
@@ -317,8 +328,9 @@ class MemberControllerIntegrationTest extends BaseIntegrationTest {
         @Test
         @DisplayName("公开接口：无需认证即可访问")
         void getMemberById_publicEndpoint_shouldNotRequireAuth() {
-            User testUser = userMapper.selectOne(
-                    new LambdaQueryWrapper<User>().eq(User::getUsername, "张三"));
+            User testUser = RepositoryTestObjects.toDomain(
+                    userMapper.selectOne(new LambdaQueryWrapper<UserDO>().eq(UserDO::getUsername, "张三")),
+                    User.class);
 
             ResponseEntity<ResponseMessage<MemberDetailDTO>> response = restTemplate.exchange(
                     "/api/v1/members/" + testUser.getId(),
@@ -402,8 +414,9 @@ class MemberControllerIntegrationTest extends BaseIntegrationTest {
         @Test
         @DisplayName("公开接口：无需认证即可访问")
         void getMemberExperiences_publicEndpoint_shouldNotRequireAuth() {
-            User testUser = userMapper.selectOne(
-                    new LambdaQueryWrapper<User>().eq(User::getUsername, "张三"));
+            User testUser = RepositoryTestObjects.toDomain(
+                    userMapper.selectOne(new LambdaQueryWrapper<UserDO>().eq(UserDO::getUsername, "张三")),
+                    User.class);
             assertNotNull(testUser);
 
             ResponseEntity<ResponseMessage<List<ExperienceDTO>>> response = restTemplate.exchange(
@@ -433,8 +446,9 @@ class MemberControllerIntegrationTest extends BaseIntegrationTest {
         @Test
         @DisplayName("成员无经历：应返回空列表")
         void getMemberExperiences_memberNoExperiences_shouldReturnEmptyList() {
-            User testUser = userMapper.selectOne(
-                    new LambdaQueryWrapper<User>().eq(User::getUsername, "张三"));
+            User testUser = RepositoryTestObjects.toDomain(
+                    userMapper.selectOne(new LambdaQueryWrapper<UserDO>().eq(UserDO::getUsername, "张三")),
+                    User.class);
             assertNotNull(testUser);
 
             ResponseEntity<ResponseMessage<List<ExperienceDTO>>> response = restTemplate.exchange(
@@ -453,8 +467,9 @@ class MemberControllerIntegrationTest extends BaseIntegrationTest {
         @Test
         @DisplayName("按类型筛选：应只返回指定类型的经历")
         void getMemberExperiences_withTypeFilter_shouldReturnFilteredExperiences() {
-            User testUser = userMapper.selectOne(
-                    new LambdaQueryWrapper<User>().eq(User::getUsername, "张三"));
+            User testUser = RepositoryTestObjects.toDomain(
+                    userMapper.selectOne(new LambdaQueryWrapper<UserDO>().eq(UserDO::getUsername, "张三")),
+                    User.class);
             assertNotNull(testUser);
 
             ResponseEntity<ResponseMessage<List<ExperienceDTO>>> response = restTemplate.exchange(
@@ -475,12 +490,13 @@ class MemberControllerIntegrationTest extends BaseIntegrationTest {
         @DisplayName("非团队成员：应返回空列表")
         void getMemberExperiences_nonTeamMember_shouldReturnEmptyList() {
             // 创建CANDIDATE角色用户（非团队成员）
-            Role candidateRole = roleMapper.selectOne(
-                    new LambdaQueryWrapper<Role>().eq(Role::getName, "CANDIDATE"));
+            Role candidateRole = RepositoryTestObjects.toDomain(
+                    roleMapper.selectOne(new LambdaQueryWrapper<RoleDO>().eq(RoleDO::getName, "CANDIDATE")),
+                    Role.class);
             if (candidateRole == null) {
                 candidateRole = new Role();
                 candidateRole.setName("CANDIDATE");
-                roleMapper.insert(candidateRole);
+                RepositoryTestObjects.insert(roleMapper, candidateRole, RoleDO.class);
             }
 
             User candidateUser = User.builder()
@@ -494,7 +510,7 @@ class MemberControllerIntegrationTest extends BaseIntegrationTest {
                     .gender(Gender.MALE)
                     .disable(false)
                     .build();
-            userMapper.insert(candidateUser);
+            RepositoryTestObjects.insert(userMapper, candidateUser, UserDO.class);
 
             ResponseEntity<ResponseMessage<List<ExperienceDTO>>> response = restTemplate.exchange(
                     "/api/v1/members/" + candidateUser.getId() + "/experiences",
@@ -513,8 +529,9 @@ class MemberControllerIntegrationTest extends BaseIntegrationTest {
         @Test
         @DisplayName("无效类型参数：应返回400或忽略")
         void getMemberExperiences_invalidType_shouldHandleGracefully() {
-            User testUser = userMapper.selectOne(
-                    new LambdaQueryWrapper<User>().eq(User::getUsername, "张三"));
+            User testUser = RepositoryTestObjects.toDomain(
+                    userMapper.selectOne(new LambdaQueryWrapper<UserDO>().eq(UserDO::getUsername, "张三")),
+                    User.class);
             assertNotNull(testUser);
 
             ResponseEntity<ResponseMessage<List<ExperienceDTO>>> response = restTemplate.exchange(

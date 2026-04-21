@@ -1,5 +1,9 @@
 package com.bluenet.web.api.controller.v1.admin;
 
+import com.bluenet.web.infrastructure.repository.dataobject.*;
+
+import com.bluenet.web.testsupport.RepositoryTestObjects;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.List;
@@ -79,7 +83,7 @@ class PermissionAdminControllerIntegrationTest extends BaseIntegrationTest {
     @BeforeEach
     void setUpTestData() {
         // 查找SUPER_ADMIN角色
-        Role superAdminRole = roleMapper.selectByName("SUPER_ADMIN");
+        Role superAdminRole = RepositoryTestObjects.toDomain(roleMapper.selectByName("SUPER_ADMIN"), Role.class);
         if (superAdminRole == null) {
             throw new IllegalStateException("SUPER_ADMIN 角色不存在，请检查数据库迁移脚本");
         }
@@ -94,7 +98,7 @@ class PermissionAdminControllerIntegrationTest extends BaseIntegrationTest {
                 .roleId(superAdminRoleId)
                 .disable(false)
                 .build();
-        userMapper.insert(adminUser);
+        RepositoryTestObjects.insert(userMapper, adminUser, UserDO.class);
 
         // 登录获取认证信息
         loginAndGetCookies();
@@ -187,11 +191,12 @@ class PermissionAdminControllerIntegrationTest extends BaseIntegrationTest {
         Permission permission = createPermission("assessment:create", "创建考核", "/api/v1/admin/assessments", "POST");
 
         // 分配权限给角色
-        Role role = roleMapper.selectByName(RoleType.DIRECTION_ADMIN.name());
+        Role role = RepositoryTestObjects
+                .toDomain(roleMapper.selectByName(RoleType.DIRECTION_ADMIN.name()), Role.class);
         RolePermission rp = new RolePermission();
         rp.setRoleId(role.getId());
         rp.setPermissionId(permission.getId());
-        rolePermissionMapper.insert(rp);
+        RepositoryTestObjects.insert(rolePermissionMapper, rp, RolePermissionDO.class);
 
         HttpHeaders headers = createAuthHeadersWithCsrf();
         HttpEntity<Void> request = new HttpEntity<>(headers);
@@ -271,7 +276,7 @@ class PermissionAdminControllerIntegrationTest extends BaseIntegrationTest {
         @BeforeEach
         void setUpMemberUser() {
             // 创建普通 MEMBER 用户
-            Role memberRole = roleMapper.selectByName("MEMBER");
+            Role memberRole = RepositoryTestObjects.toDomain(roleMapper.selectByName("MEMBER"), Role.class);
             User memberUser = User.builder()
                     .studentId("member001")
                     .username("普通成员")
@@ -280,7 +285,7 @@ class PermissionAdminControllerIntegrationTest extends BaseIntegrationTest {
                     .roleId(memberRole.getId())
                     .disable(false)
                     .build();
-            userMapper.insert(memberUser);
+            RepositoryTestObjects.insert(userMapper, memberUser, UserDO.class);
 
             // 用 MEMBER 登录
             StudentIdLoginRequestDTO loginRequest = new StudentIdLoginRequestDTO();
@@ -357,7 +362,7 @@ class PermissionAdminControllerIntegrationTest extends BaseIntegrationTest {
         permission.setName(name);
         permission.setUrl(url);
         permission.setMethod(method);
-        permissionMapper.insert(permission);
+        RepositoryTestObjects.insert(permissionMapper, permission, PermissionDO.class);
         return permission;
     }
 }

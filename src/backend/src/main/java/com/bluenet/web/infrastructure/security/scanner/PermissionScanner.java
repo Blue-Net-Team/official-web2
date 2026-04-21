@@ -1,8 +1,11 @@
 package com.bluenet.web.infrastructure.security.scanner;
 
 import com.bluenet.web.domain.model.entity.Permission;
+import com.bluenet.web.infrastructure.repository.dataobject.PermissionDO;
+import com.bluenet.web.infrastructure.repository.dataobject.RolePermissionDO;
 import com.bluenet.web.infrastructure.repository.mapper.PermissionMapper;
 import com.bluenet.web.infrastructure.repository.mapper.RolePermissionMapper;
+import com.bluenet.web.infrastructure.repository.support.RepositoryObjectConverter;
 import com.bluenet.web.infrastructure.security.util.PermissionResolver;
 import com.bluenet.web.infrastructure.security.util.PermissionValidator;
 import org.slf4j.Logger;
@@ -65,7 +68,11 @@ public class PermissionScanner implements InitializingBean {
         logger.info("Found {} controller methods with @RequiresPermission", scannedPermissions.size());
 
         // 2. 批量加载数据库现有权限
-        List<Permission> existingPermissions = permissionMapper.selectList(null);
+        List<Permission> existingPermissions = permissionMapper.selectList(null)
+                .stream()
+                // 扫描器内部沿用领域对象做差异比较，Mapper 只暴露 PermissionDO。
+                .map(permission -> RepositoryObjectConverter.copy(permission, Permission.class))
+                .toList();
         Map<String, Permission> existingMap = existingPermissions.stream()
                 .collect(Collectors.toMap(Permission::getValue, p -> p, (p1, p2) -> p1));
 
@@ -181,7 +188,7 @@ public class PermissionScanner implements InitializingBean {
             List<Permission> toDelete) {
         // 插入新权限
         for (PermissionInfo info : toInsert) {
-            Permission permission = new Permission();
+            PermissionDO permission = new PermissionDO();
             permission.setValue(info.getValue());
             permission.setName(info.getName());
             permission.setUrl(info.getUrl());
@@ -192,10 +199,10 @@ public class PermissionScanner implements InitializingBean {
 
         // 更新现有权限
         for (PermissionInfo info : toUpdate) {
-            Permission existing = permissionMapper
+            PermissionDO existing = permissionMapper
                     .selectOne(
-                            new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<Permission>()
-                                    .eq(Permission::getValue, info.getValue()));
+                            new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<PermissionDO>()
+                                    .eq(PermissionDO::getValue, info.getValue()));
             if (existing != null) {
                 existing.setName(info.getName());
                 existing.setUrl(info.getUrl());
@@ -209,8 +216,8 @@ public class PermissionScanner implements InitializingBean {
         for (Permission ghost : toDelete) {
             // 先删除关联
             rolePermissionMapper.delete(
-                    new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<com.bluenet.web.domain.model.entity.RolePermission>()
-                            .eq(com.bluenet.web.domain.model.entity.RolePermission::getPermissionId, ghost.getId()));
+                    new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<RolePermissionDO>()
+                            .eq(RolePermissionDO::getPermissionId, ghost.getId()));
             // 再删除权限
             permissionMapper.deleteById(ghost.getId());
         }

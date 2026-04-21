@@ -1,5 +1,9 @@
 package com.bluenet.web.api.controller.v1.achievement;
 
+import com.bluenet.web.infrastructure.repository.dataobject.*;
+
+import com.bluenet.web.testsupport.RepositoryTestObjects;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.time.LocalDate;
@@ -55,7 +59,7 @@ class AchievementControllerIntegrationTest extends BaseIntegrationTest {
                 .url("http://example.com/test.jpg")
                 .type(FileType.NORMAL_IMG)
                 .build();
-        fileMapper.insert(file);
+        RepositoryTestObjects.insert(fileMapper, file, FileDO.class);
         testFileId = file.getId();
     }
 
@@ -68,7 +72,7 @@ class AchievementControllerIntegrationTest extends BaseIntegrationTest {
         achievement.setAwardLevel(awardLevel);
         achievement.setAwardName(awardLevel != null ? "测试奖项" : null);
         achievement.setFileId(testFileId);
-        achievementMapper.insert(achievement);
+        RepositoryTestObjects.insert(achievementMapper, achievement, AchievementDO.class);
         return achievement;
     }
 

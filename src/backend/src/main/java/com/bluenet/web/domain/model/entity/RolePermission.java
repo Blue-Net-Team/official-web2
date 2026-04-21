@@ -1,15 +1,19 @@
 package com.bluenet.web.domain.model.entity;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
 @Data
-@TableName("tb_role_permission")
 public class RolePermission {
-    @TableId(type = IdType.AUTO)
+    /**
+     * 当前对象在系统中的唯一标识。
+     */
     private Long id;
+    /**
+     * 用户绑定的角色标识。
+     */
     private Long roleId;
+    /**
+     * 角色权限关联中的权限标识。
+     */
     private Long permissionId;
 }

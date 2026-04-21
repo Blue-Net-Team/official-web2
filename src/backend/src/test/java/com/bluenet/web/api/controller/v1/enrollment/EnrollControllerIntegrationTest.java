@@ -1,5 +1,9 @@
 package com.bluenet.web.api.controller.v1.enrollment;
 
+import com.bluenet.web.infrastructure.repository.dataobject.*;
+
+import com.bluenet.web.testsupport.RepositoryTestObjects;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -57,7 +61,7 @@ class EnrollControllerIntegrationTest extends BaseIntegrationTest {
         College college = College.builder()
                 .name("计算机学院")
                 .build();
-        collegeMapper.insert(college);
+        RepositoryTestObjects.insert(collegeMapper, college, CollegeDO.class);
         testCollegeId = college.getId();
     }
 
@@ -221,9 +225,9 @@ class EnrollControllerIntegrationTest extends BaseIntegrationTest {
                     });
             Long enrollId = createResponse.getBody().getData().getId();
 
-            Enroll enroll = enrollMapper.selectById(enrollId);
+            Enroll enroll = RepositoryTestObjects.toDomain(enrollMapper.selectById(enrollId), Enroll.class);
             enroll.setStatus(EnrollStatus.REJECTED);
-            enrollMapper.updateById(enroll);
+            RepositoryTestObjects.updateById(enrollMapper, enroll, EnrollDO.class);
 
             CreateEnrollmentRequestDTO request2 = createTestRequest();
             request2.setUsername("李四");
@@ -240,7 +244,7 @@ class EnrollControllerIntegrationTest extends BaseIntegrationTest {
             assertNotNull(response.getBody());
             assertEquals("报名已审核，无法更新报名信息", response.getBody().getMsg());
 
-            Enroll unchanged = enrollMapper.selectById(enrollId);
+            Enroll unchanged = RepositoryTestObjects.toDomain(enrollMapper.selectById(enrollId), Enroll.class);
             assertEquals(EnrollStatus.REJECTED, unchanged.getStatus());
             assertEquals(TEST_USERNAME, unchanged.getUsername());
         }

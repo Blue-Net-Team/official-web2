@@ -1,21 +1,22 @@
 package com.bluenet.web.domain.model.entity;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-@TableName("tb_role")
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
 public class Role {
-    @TableId(type = IdType.AUTO)
+    /**
+     * 当前对象在系统中的唯一标识。
+     */
     private Long id;
+    /**
+     * 业务对象名称。
+     */
     private String name;
 
     public static Role buildSuperAdmin(Long id) {

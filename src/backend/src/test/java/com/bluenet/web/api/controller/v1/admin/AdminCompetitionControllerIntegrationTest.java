@@ -1,5 +1,9 @@
 package com.bluenet.web.api.controller.v1.admin;
 
+import com.bluenet.web.infrastructure.repository.dataobject.*;
+
+import com.bluenet.web.testsupport.RepositoryTestObjects;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.List;
@@ -82,10 +86,10 @@ class AdminCompetitionControllerIntegrationTest extends BaseIntegrationTest {
     @BeforeEach
     void setUpTestData() {
         File file = File.builder().name(TEST_FILE_NAME).url(TEST_FILE_URL).type(TEST_FILE_TYPE).build();
-        fileMapper.insert(file);
+        RepositoryTestObjects.insert(fileMapper, file, FileDO.class);
         testFileId = file.getId();
 
-        Role adminRole = roleMapper.selectByName("SUPER_ADMIN");
+        Role adminRole = RepositoryTestObjects.toDomain(roleMapper.selectByName("SUPER_ADMIN"), Role.class);
         if (adminRole == null) {
             throw new IllegalStateException("SUPER_ADMIN 角色不存在，请检查数据库迁移脚本");
         }
@@ -106,7 +110,7 @@ class AdminCompetitionControllerIntegrationTest extends BaseIntegrationTest {
         adminUser.setRoleId(adminRoleId);
         adminUser.setDisable(false);
         adminUser.setDirection(Direction.COMPUTER_VISION);
-        userMapper.insert(adminUser);
+        RepositoryTestObjects.insert(userMapper, adminUser, UserDO.class);
 
         loginAndGetCookies();
     }
@@ -115,12 +119,12 @@ class AdminCompetitionControllerIntegrationTest extends BaseIntegrationTest {
         Permission permission = new Permission();
         permission.setName(name);
         permission.setValue(value);
-        permissionMapper.insert(permission);
+        RepositoryTestObjects.insert(permissionMapper, permission, PermissionDO.class);
 
         RolePermission rolePermission = new RolePermission();
         rolePermission.setRoleId(adminRoleId);
         rolePermission.setPermissionId(permission.getId());
-        rolePermissionMapper.insert(rolePermission);
+        RepositoryTestObjects.insert(rolePermissionMapper, rolePermission, RolePermissionDO.class);
     }
 
     private void loginAndGetCookies() {
@@ -228,7 +232,7 @@ class AdminCompetitionControllerIntegrationTest extends BaseIntegrationTest {
         competition.setShortName("OLD");
         competition.setSummary("原简介");
         competition.setSortOrder(0);
-        competitionMapper.insert(competition);
+        RepositoryTestObjects.insert(competitionMapper, competition, CompetitionDO.class);
 
         CompetitionRequestDTO request = CompetitionRequestDTO.builder()
                 .name("更新后的竞赛名")
@@ -279,7 +283,7 @@ class AdminCompetitionControllerIntegrationTest extends BaseIntegrationTest {
         Competition competition = new Competition();
         competition.setName("要删除的竞赛");
         competition.setSortOrder(0);
-        competitionMapper.insert(competition);
+        RepositoryTestObjects.insert(competitionMapper, competition, CompetitionDO.class);
         Long competitionId = competition.getId();
 
         HttpHeaders headers = createAuthHeadersWithCsrf();
@@ -295,7 +299,8 @@ class AdminCompetitionControllerIntegrationTest extends BaseIntegrationTest {
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(200, response.getBody().getCode());
 
-        Competition deleted = competitionMapper.selectById(competitionId);
+        Competition deleted = RepositoryTestObjects
+                .toDomain(competitionMapper.selectById(competitionId), Competition.class);
         assertNull(deleted);
     }
 
@@ -322,7 +327,7 @@ class AdminCompetitionControllerIntegrationTest extends BaseIntegrationTest {
         Competition competition = new Competition();
         competition.setName("要删除的竞赛");
         competition.setSortOrder(0);
-        competitionMapper.insert(competition);
+        RepositoryTestObjects.insert(competitionMapper, competition, CompetitionDO.class);
         Long competitionId = competition.getId();
 
         HttpHeaders headers = createAuthHeadersWithCsrf();
@@ -337,7 +342,8 @@ class AdminCompetitionControllerIntegrationTest extends BaseIntegrationTest {
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
 
-        Competition deletedCompetition = competitionMapper.selectById(competitionId);
+        Competition deletedCompetition = RepositoryTestObjects
+                .toDomain(competitionMapper.selectById(competitionId), Competition.class);
         assertNull(deletedCompetition);
     }
 }

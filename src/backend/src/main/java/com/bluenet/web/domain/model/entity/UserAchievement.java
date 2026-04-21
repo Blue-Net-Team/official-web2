@@ -1,15 +1,19 @@
 package com.bluenet.web.domain.model.entity;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
 @Data
-@TableName("tb_user_achievement")
 public class UserAchievement {
-    @TableId(type = IdType.AUTO)
+    /**
+     * 当前对象在系统中的唯一标识。
+     */
     private Long id;
+    /**
+     * 关联用户标识。
+     */
     private Long userId;
+    /**
+     * 用户成果关联的成果记录标识。
+     */
     private Long achievementId;
 }

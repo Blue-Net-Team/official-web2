@@ -15,41 +15,40 @@ import java.util.Optional;
  */
 public interface PermissionRepository {
     /**
-     * 根据ID查找权限
+     * 按主键查询权限 记录。
      *
      * @param id
-     *            权限ID
-     * @return 权限值对象，未找到返回 empty
+     *            业务记录主键。
+     * @return 查询到的权限 结果；不存在时为空。
      */
     Optional<PermissionVO> findById(Long id);
 
     /**
-     * 查找所有权限（用于构建权限树）
+     * 查询全部权限 记录。
      *
-     * @return 所有权限列表
+     * @return 满足条件的权限 结果集合。
      */
     List<PermissionVO> findAll();
 
     /**
-     * 分页查询权限列表，支持关键词搜索和格式筛选
+     * 查询全部权限 记录。
      *
      * @param keyword
-     *            搜索关键词（权限标识符或名称）
+     *            搜索关键字。
      * @param format
-     *            格式筛选（resource:action, resource:subresource:action,
-     *            resource-action:action）
+     *            权限返回格式或展示格式。
      * @param pageable
-     *            分页参数
-     * @return 分页权限列表
+     *            Spring 分页请求对象。
+     * @return 分页后的权限 结果。
      */
     Page<PermissionVO> findAll(String keyword, String format, Pageable pageable);
 
     /**
-     * 批量查找权限
+     * 按主键集合批量查询权限 记录。
      *
      * @param ids
-     *            权限ID列表
-     * @return 权限列表（不保证顺序，不包含未找到的权限）
+     *            业务记录主键集合。
+     * @return 满足条件的权限 结果集合。
      */
     List<PermissionVO> findAllByIds(List<Long> ids);
 }

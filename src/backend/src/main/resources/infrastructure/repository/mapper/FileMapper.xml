@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.bluenet.web.infrastructure.repository.mapper.FileMapper">
-    <resultMap id="BaseResultMap" type="com.bluenet.web.domain.model.entity.File">
+    <resultMap id="BaseResultMap" type="com.bluenet.web.infrastructure.repository.dataobject.FileDO">
         <id column="id" property="id"/>
         <result column="name" property="name"/>
-        <result column="type" property="type" typeHandler="org.apache.ibatis.type.EnumOrdinalTypeHandler"/>
+        <result column="type" property="type" typeHandler="com.baomidou.mybatisplus.core.handlers.MybatisEnumTypeHandler"/>
         <result column="url" property="url"/>
     </resultMap>
 
@@ -12,6 +12,6 @@
         SELECT *
         FROM tb_file
         WHERE name = #{filename}
-          AND type = #{fileType}
+          AND type = #{fileType.value}
     </select>
 </mapper>

@@ -14,58 +14,60 @@ import com.bluenet.web.domain.model.vo.FileVO;
 
 public interface FileRepository {
     /**
-     * 根据ID查询文件
+     * 按主键查询文件 记录。
      *
      * @param id
-     *            文件ID
-     * @return 文件VO
+     *            业务记录主键。
+     * @return 查询到的文件 结果；不存在时为空。
      */
     Optional<FileVO> findById(Long id);
 
     /**
-     * 根据答题的文件ID查询答题
+     * 查询符合条件的文件 记录。
      *
      * @param fileId
-     *            文件ID
-     * @return 答题VO
+     *            文件主键。
+     * @return 查询到的文件 结果；不存在时为空。
      */
     Optional<AssessmentAnswerVO> findAnswerByFileId(Long fileId);
 
     /**
-     * 根据题目的附件ID查询题目
+     * 查询符合条件的文件 记录。
      *
      * @param attachmentId
-     *            附件ID
-     * @return 题目VO
+     *            附件文件主键。
+     * @return 查询到的文件 结果；不存在时为空。
      */
     Optional<AssessmentQuestionVO> findQuestionByAttachmentId(Long attachmentId);
 
     /**
-     * 根据ID查询考试时间
+     * 查询符合条件的文件 记录。
      *
      * @param id
-     *            考试时间ID
-     * @return 考试时间VO
+     *            业务记录主键。
+     * @return 查询或处理得到的文件 结果。
      */
     AssessmentTimeVO findTimeById(Long id);
 
     /**
-     * 保存文件
+     * 处理文件 仓储职责中的业务数据访问逻辑。
      *
      * @param inputStream
-     *            文件输入流
+     *            待保存文件的输入流。
      * @param file
-     *            文件实体，包含文件名和文件类型等信息
+     *            文件领域对象或文件视图对象。
+     * @return 查询或处理得到的文件 结果。
      */
     FileVO saveFile(InputStream inputStream, File file);
 
     /**
-     * 保存文件（重载方法，支持直接使用 Resource）
+     * 处理文件 仓储职责中的业务数据访问逻辑。
      *
      * @param resource
-     *            文件资源
+     *            文件下载资源句柄。
      * @param file
-     *            文件实体
+     *            文件领域对象或文件视图对象。
+     * @return 查询或处理得到的文件 结果。
      */
     default FileVO saveFile(Resource resource, File file) {
         try (InputStream inputStream = resource.getInputStream()) {
@@ -76,52 +78,52 @@ public interface FileRepository {
     }
 
     /**
-     * 加载文件
+     * 从对象存储加载指定文件资源。
      *
      * @param filename
-     *            文件名
+     *            对象存储中的文件名。
      * @param fileType
-     *            文件类型
-     * @return 文件资源
+     *            文件业务类型。
+     * @return 查询或处理得到的文件 结果。
      */
     Resource loadFile(String filename, FileType fileType);
 
     /**
-     * 加载文件（重载方法，支持直接使用 File 实体）
+     * 从对象存储加载指定文件资源。
      *
      * @param file
-     *            文件实体
-     * @return 文件资源
+     *            文件领域对象或文件视图对象。
+     * @return 查询或处理得到的文件 结果。
      */
     default Resource loadFile(File file) {
         return loadFile(file.getName(), file.getType());
     }
 
     /**
-     * 删除文件
+     * 按文件名和类型删除文件元数据和对象存储内容。
      *
      * @param filename
-     *            文件名
+     *            对象存储中的文件名。
      * @param fileType
-     *            文件类型
+     *            文件业务类型。
      */
     void deleteFile(String filename, FileType fileType);
 
     /**
-     * 删除文件（重载方法，支持直接使用 File 实体）
+     * 按文件名和类型删除文件元数据和对象存储内容。
      *
      * @param file
-     *            文件实体
+     *            文件领域对象或文件视图对象。
      */
     default void deleteFile(File file) {
         deleteFile(file.getName(), file.getType());
     }
 
     /**
-     * 根据文件ID删除文件（包括数据库记录和存储对象）
+     * 按文件主键删除文件元数据和对象存储内容。
      *
      * @param id
-     *            文件ID
+     *            业务记录主键。
      */
     void deleteFileById(Long id);
 }

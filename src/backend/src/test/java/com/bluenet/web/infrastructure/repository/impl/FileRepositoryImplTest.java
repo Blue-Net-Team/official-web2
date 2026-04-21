@@ -1,6 +1,7 @@
 package com.bluenet.web.infrastructure.repository.impl;
 
 import com.bluenet.web.domain.model.entity.File;
+import com.bluenet.web.infrastructure.repository.dataobject.FileDO;
 import com.bluenet.web.domain.model.enumerate.FileType;
 import com.bluenet.web.infrastructure.repository.mapper.AssessmentAnswerMapper;
 import com.bluenet.web.infrastructure.repository.mapper.AssessmentQuestionMapper;
@@ -58,7 +59,7 @@ class FileRepositoryImplTest {
 
         repository.saveFile(inputStream, file);
 
-        verify(fileMapper).insert(file);
+        verify(fileMapper).insert(org.mockito.ArgumentMatchers.any(FileDO.class));
         verify(objectStorage).put(FileType.NORMAL_IMG, "test.jpg", inputStream);
     }
 

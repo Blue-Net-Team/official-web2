@@ -17,114 +17,114 @@ import java.util.Optional;
 public interface AssessmentJudgementRepository {
 
     /**
-     * 保存新的题目评判记录。
+     * 保存新的考核评审结果 记录。
      *
      * @param judgement
-     *            评判记录实体
+     *            考核评审结果对象。
      */
     void save(AssessmentJudgement judgement);
 
     /**
-     * 按主键查询评判记录。
+     * 按主键查询考核评审结果 记录。
      *
      * @param id
-     *            评判记录ID
-     * @return 评判记录
+     *            业务记录主键。
+     * @return 查询到的考核评审结果 结果；不存在时为空。
      */
     Optional<AssessmentJudgementVO> findById(Long id);
 
     /**
-     * 更新已有评判记录。
+     * 更新已有考核评审结果 记录。
      *
      * @param judgement
-     *            评判记录VO
+     *            考核评审结果对象。
      */
     void update(AssessmentJudgementVO judgement);
 
     /**
-     * 查询一个答案最新的评判记录。
+     * 查询指定作答的最新评审结果。
      *
      * @param answerId
-     *            答案ID
-     * @return 最新评判记录
+     *            考核作答主键。
+     * @return 查询到的考核评审结果 结果；不存在时为空。
      */
     Optional<AssessmentJudgementVO> findLatestByAnswerId(Long answerId);
 
     /**
-     * 查询一个考生在一道题上的最新评判记录。
+     * 查询用户在指定题目上的最新评审结果。
      *
      * @param questionId
-     *            题目ID
+     *            考核题目主键。
      * @param userId
-     *            考生用户ID
-     * @return 最新评判记录
+     *            用户主键，用于限定用户范围。
+     * @return 查询到的考核评审结果 结果；不存在时为空。
      */
     Optional<AssessmentJudgementVO> findLatestByQuestionIdAndUserId(Long questionId, Long userId);
 
     /**
-     * 查询一道题的所有评判记录。
+     * 查询指定题目的全部评审记录。
      *
      * @param questionId
-     *            题目ID
-     * @return 评判记录列表
+     *            考核题目主键。
+     * @return 满足条件的考核评审结果 结果集合。
      */
     List<AssessmentJudgementVO> findAllByQuestionId(Long questionId);
 
     /**
-     * 查询一道客观题每个考生最新的正式自动评判记录。
+     * 查询指定题目最新的客观题评审结果。
      *
      * @param questionId
-     *            题目ID
-     * @return 每名考生最新自动评判记录
+     *            考核题目主键。
+     * @return 满足条件的考核评审结果 结果集合。
      */
     List<AssessmentJudgementVO> findLatestObjectiveByQuestionId(Long questionId);
 
     /**
-     * 查询题目维度评分汇总，算法题按最佳提交计入统计。
+     * 查询符合条件的考核评审结果 记录。
      *
      * @param assessmentTimeId
-     *            考核时间ID
+     *            考核场次主键。
      * @param questionType
-     *            题型筛选
+     *            题目类型过滤条件。
      * @param keyword
-     *            题目关键词
-     * @return 题目评分汇总列表
+     *            搜索关键字。
+     * @return 满足条件的考核评审结果 结果集合。
      */
     List<AssessmentQuestionScoreboardVO> findQuestionScoreboard(Long assessmentTimeId, QuestionType questionType,
             String keyword);
 
     /**
-     * 查询题目下考生提交列表，附带每名考生当前应展示的评判记录。
+     * 查询符合条件的考核评审结果 记录。
      *
      * @param questionId
-     *            题目ID
+     *            考核题目主键。
      * @param keyword
-     *            考生关键词
+     *            搜索关键字。
      * @param status
-     *            评判状态筛选
-     * @return 提交列表
+     *            业务状态过滤条件。
+     * @return 满足条件的考核评审结果 结果集合。
      */
     List<AssessmentQuestionSubmissionVO> findQuestionSubmissions(Long questionId, String keyword, String status);
 
     /**
-     * 查询题目下指定考生的完整提交评判历史。
+     * 查询符合条件的考核评审结果 记录。
      *
      * @param questionId
-     *            题目ID
+     *            考核题目主键。
      * @param userIds
-     *            考生用户ID列表
-     * @return 评判历史列表
+     *            候选用户主键集合。
+     * @return 满足条件的考核评审结果 结果集合。
      */
     List<AssessmentQuestionSubmissionHistoryVO> findQuestionSubmissionHistories(Long questionId, List<Long> userIds);
 
     /**
-     * 查询考生维度评分矩阵的扁平行数据。
+     * 查询符合条件的考核评审结果 记录。
      *
      * @param assessmentTimeId
-     *            考核时间ID
+     *            考核场次主键。
      * @param keyword
-     *            考生关键词
-     * @return 考生评分矩阵行列表
+     *            搜索关键字。
+     * @return 满足条件的考核评审结果 结果集合。
      */
     List<AssessmentCandidateScoreRowVO> findCandidateScoreRows(Long assessmentTimeId, String keyword);
 }

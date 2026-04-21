@@ -1,5 +1,9 @@
 package com.bluenet.web.infrastructure.repository.impl;
 
+import com.bluenet.web.infrastructure.repository.dataobject.*;
+
+import com.bluenet.web.testsupport.RepositoryTestObjects;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -16,16 +20,15 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.bluenet.web.domain.model.entity.College;
 import com.bluenet.web.domain.model.entity.Enroll;
-import com.bluenet.web.domain.model.entity.User;
 import com.bluenet.web.domain.model.enumerate.Direction;
 import com.bluenet.web.domain.model.enumerate.EnrollStatus;
 import com.bluenet.web.domain.model.vo.EnrollBriefVO;
 import com.bluenet.web.domain.model.vo.EnrollStatisticsVO;
 import com.bluenet.web.domain.model.vo.EnrollVO;
+import com.bluenet.web.infrastructure.repository.dataobject.UserDO;
 import com.bluenet.web.infrastructure.repository.mapper.CollegeMapper;
 import com.bluenet.web.infrastructure.repository.mapper.EnrollMapper;
 import com.bluenet.web.infrastructure.repository.mapper.UserMapper;
@@ -87,8 +90,10 @@ class EnrollRepositoryImplTest {
             Enroll enroll = createTestEnroll();
             College college = createTestCollege();
 
-            when(enrollMapper.selectById(TEST_ID)).thenReturn(enroll);
-            when(collegeMapper.selectById(TEST_COLLEGE_ID)).thenReturn(college);
+            when(enrollMapper.selectById(TEST_ID))
+                    .thenReturn(RepositoryTestObjects.toDataObject(enroll, EnrollDO.class));
+            when(collegeMapper.selectById(TEST_COLLEGE_ID))
+                    .thenReturn(RepositoryTestObjects.toDataObject(college, CollegeDO.class));
 
             Optional<EnrollVO> result = enrollRepository.findById(TEST_ID);
 
@@ -105,7 +110,7 @@ class EnrollRepositoryImplTest {
         @Test
         @DisplayName("报名不存在：应返回空Optional")
         void findById_nonExistingEnroll_shouldReturnEmpty() {
-            when(enrollMapper.selectById(TEST_ID)).thenReturn(null);
+            when(enrollMapper.selectById(TEST_ID)).thenReturn(RepositoryTestObjects.toDataObject(null, EnrollDO.class));
 
             Optional<EnrollVO> result = enrollRepository.findById(TEST_ID);
 
@@ -119,8 +124,10 @@ class EnrollRepositoryImplTest {
         void findById_collegeNotExists_shouldReturnNullCollegeName() {
             Enroll enroll = createTestEnroll();
 
-            when(enrollMapper.selectById(TEST_ID)).thenReturn(enroll);
-            when(collegeMapper.selectById(TEST_COLLEGE_ID)).thenReturn(null);
+            when(enrollMapper.selectById(TEST_ID))
+                    .thenReturn(RepositoryTestObjects.toDataObject(enroll, EnrollDO.class));
+            when(collegeMapper.selectById(TEST_COLLEGE_ID))
+                    .thenReturn(RepositoryTestObjects.toDataObject(null, CollegeDO.class));
 
             Optional<EnrollVO> result = enrollRepository.findById(TEST_ID);
 
@@ -139,20 +146,23 @@ class EnrollRepositoryImplTest {
             Enroll enroll = createTestEnroll();
             College college = createTestCollege();
 
-            when(enrollMapper.selectOne(any(LambdaQueryWrapper.class))).thenReturn(enroll);
-            when(collegeMapper.selectById(TEST_COLLEGE_ID)).thenReturn(college);
+            when(enrollMapper.selectByStudentId(TEST_STUDENT_ID))
+                    .thenReturn(RepositoryTestObjects.toDataObject(enroll, EnrollDO.class));
+            when(collegeMapper.selectById(TEST_COLLEGE_ID))
+                    .thenReturn(RepositoryTestObjects.toDataObject(college, CollegeDO.class));
 
             Optional<EnrollVO> result = enrollRepository.findByStudentId(TEST_STUDENT_ID);
 
             assertTrue(result.isPresent());
             assertEquals(TEST_STUDENT_ID, result.get().getStudentId());
-            verify(enrollMapper).selectOne(any(LambdaQueryWrapper.class));
+            verify(enrollMapper).selectByStudentId(TEST_STUDENT_ID);
         }
 
         @Test
         @DisplayName("学号不存在：应返回空Optional")
         void findByStudentId_nonExistingStudentId_shouldReturnEmpty() {
-            when(enrollMapper.selectOne(any(LambdaQueryWrapper.class))).thenReturn(null);
+            when(enrollMapper.selectByStudentId(TEST_STUDENT_ID))
+                    .thenReturn(RepositoryTestObjects.toDataObject(null, EnrollDO.class));
 
             Optional<EnrollVO> result = enrollRepository.findByStudentId(TEST_STUDENT_ID);
 
@@ -167,7 +177,7 @@ class EnrollRepositoryImplTest {
         @Test
         @DisplayName("学号存在：应返回true")
         void existsByStudentId_existingStudentId_shouldReturnTrue() {
-            when(enrollMapper.selectCount(any(LambdaQueryWrapper.class))).thenReturn(1L);
+            when(enrollMapper.countByStudentId(TEST_STUDENT_ID)).thenReturn(1L);
 
             boolean result = enrollRepository.existsByStudentId(TEST_STUDENT_ID);
 
@@ -177,7 +187,7 @@ class EnrollRepositoryImplTest {
         @Test
         @DisplayName("学号不存在：应返回false")
         void existsByStudentId_nonExistingStudentId_shouldReturnFalse() {
-            when(enrollMapper.selectCount(any(LambdaQueryWrapper.class))).thenReturn(0L);
+            when(enrollMapper.countByStudentId(TEST_STUDENT_ID)).thenReturn(0L);
 
             boolean result = enrollRepository.existsByStudentId(TEST_STUDENT_ID);
 
@@ -202,8 +212,8 @@ class EnrollRepositoryImplTest {
                     .status(EnrollStatus.PENDING)
                     .build();
 
-            when(enrollMapper.insert(any(Enroll.class))).thenAnswer(invocation -> {
-                Enroll enroll = invocation.getArgument(0);
+            when(enrollMapper.insert(any(EnrollDO.class))).thenAnswer(invocation -> {
+                EnrollDO enroll = invocation.getArgument(0);
                 enroll.setId(TEST_ID);
                 return 1;
             });
@@ -211,7 +221,7 @@ class EnrollRepositoryImplTest {
             Long result = enrollRepository.save(vo);
 
             assertEquals(TEST_ID, result);
-            verify(enrollMapper).insert(any(Enroll.class));
+            verify(enrollMapper).insert(any(EnrollDO.class));
         }
     }
 
@@ -229,11 +239,11 @@ class EnrollRepositoryImplTest {
                     .status(EnrollStatus.APPROVED)
                     .build();
 
-            when(enrollMapper.updateById(any(Enroll.class))).thenReturn(1);
+            when(enrollMapper.updateById(any(EnrollDO.class))).thenReturn(1);
 
             enrollRepository.update(vo);
 
-            verify(enrollMapper).updateById(any(Enroll.class));
+            verify(enrollMapper).updateById(any(EnrollDO.class));
         }
     }
 
@@ -245,38 +255,40 @@ class EnrollRepositoryImplTest {
         @DisplayName("无筛选条件：应返回所有报名")
         void search_noFilters_shouldReturnAllEnrolls() {
             Pageable pageable = PageRequest.of(0, 10);
-            List<Enroll> enrollList = new ArrayList<>();
-            enrollList.add(createTestEnroll());
+            List<EnrollDO> enrollList = new ArrayList<>();
+            enrollList.add(RepositoryTestObjects.toDataObject(createTestEnroll(), EnrollDO.class));
 
-            IPage<Enroll> mockPage = new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>(1, 10);
+            IPage<EnrollDO> mockPage = new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>(1, 10);
             mockPage.setRecords(enrollList);
             mockPage.setTotal(1);
 
-            when(enrollMapper.selectPage(any(IPage.class), any(LambdaQueryWrapper.class))).thenReturn(mockPage);
-            when(collegeMapper.selectById(TEST_COLLEGE_ID)).thenReturn(createTestCollege());
+            when(enrollMapper.selectPageByConditions(any(IPage.class), any(), any(), any())).thenReturn(mockPage);
+            when(collegeMapper.selectById(TEST_COLLEGE_ID))
+                    .thenReturn(RepositoryTestObjects.toDataObject(createTestCollege(), CollegeDO.class));
 
             Page<EnrollBriefVO> result = enrollRepository.search(null, null, null, pageable);
 
             assertNotNull(result);
             assertEquals(1, result.getTotalElements());
-            verify(enrollMapper).selectPage(any(IPage.class), any(LambdaQueryWrapper.class));
+            verify(enrollMapper).selectPageByConditions(any(IPage.class), any(), any(), any());
         }
 
         @Test
         @DisplayName("按状态筛选：应返回对应状态的报名")
         void search_withStatusFilter_shouldReturnFilteredEnrolls() {
             Pageable pageable = PageRequest.of(0, 10);
-            List<Enroll> enrollList = new ArrayList<>();
+            List<EnrollDO> enrollList = new ArrayList<>();
             Enroll enroll = createTestEnroll();
             enroll.setStatus(EnrollStatus.PENDING);
-            enrollList.add(enroll);
+            enrollList.add(RepositoryTestObjects.toDataObject(enroll, EnrollDO.class));
 
-            IPage<Enroll> mockPage = new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>(1, 10);
+            IPage<EnrollDO> mockPage = new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>(1, 10);
             mockPage.setRecords(enrollList);
             mockPage.setTotal(1);
 
-            when(enrollMapper.selectPage(any(IPage.class), any(LambdaQueryWrapper.class))).thenReturn(mockPage);
-            when(collegeMapper.selectById(TEST_COLLEGE_ID)).thenReturn(createTestCollege());
+            when(enrollMapper.selectPageByConditions(any(IPage.class), any(), any(), any())).thenReturn(mockPage);
+            when(collegeMapper.selectById(TEST_COLLEGE_ID))
+                    .thenReturn(RepositoryTestObjects.toDataObject(createTestCollege(), CollegeDO.class));
 
             Page<EnrollBriefVO> result = enrollRepository.search(null, EnrollStatus.PENDING, null, pageable);
 
@@ -289,15 +301,16 @@ class EnrollRepositoryImplTest {
         @DisplayName("按方向筛选：应返回对应方向的报名")
         void search_withDirectionFilter_shouldReturnFilteredEnrolls() {
             Pageable pageable = PageRequest.of(0, 10);
-            List<Enroll> enrollList = new ArrayList<>();
-            enrollList.add(createTestEnroll());
+            List<EnrollDO> enrollList = new ArrayList<>();
+            enrollList.add(RepositoryTestObjects.toDataObject(createTestEnroll(), EnrollDO.class));
 
-            IPage<Enroll> mockPage = new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>(1, 10);
+            IPage<EnrollDO> mockPage = new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>(1, 10);
             mockPage.setRecords(enrollList);
             mockPage.setTotal(1);
 
-            when(enrollMapper.selectPage(any(IPage.class), any(LambdaQueryWrapper.class))).thenReturn(mockPage);
-            when(collegeMapper.selectById(TEST_COLLEGE_ID)).thenReturn(createTestCollege());
+            when(enrollMapper.selectPageByConditions(any(IPage.class), any(), any(), any())).thenReturn(mockPage);
+            when(collegeMapper.selectById(TEST_COLLEGE_ID))
+                    .thenReturn(RepositoryTestObjects.toDataObject(createTestCollege(), CollegeDO.class));
 
             Page<EnrollBriefVO> result = enrollRepository.search(null, null, TEST_DIRECTION, pageable);
 
@@ -309,15 +322,16 @@ class EnrollRepositoryImplTest {
         @DisplayName("关键词搜索：应返回匹配的报名")
         void search_withKeyword_shouldReturnMatchingEnrolls() {
             Pageable pageable = PageRequest.of(0, 10);
-            List<Enroll> enrollList = new ArrayList<>();
-            enrollList.add(createTestEnroll());
+            List<EnrollDO> enrollList = new ArrayList<>();
+            enrollList.add(RepositoryTestObjects.toDataObject(createTestEnroll(), EnrollDO.class));
 
-            IPage<Enroll> mockPage = new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>(1, 10);
+            IPage<EnrollDO> mockPage = new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>(1, 10);
             mockPage.setRecords(enrollList);
             mockPage.setTotal(1);
 
-            when(enrollMapper.selectPage(any(IPage.class), any(LambdaQueryWrapper.class))).thenReturn(mockPage);
-            when(collegeMapper.selectById(TEST_COLLEGE_ID)).thenReturn(createTestCollege());
+            when(enrollMapper.selectPageByConditions(any(IPage.class), any(), any(), any())).thenReturn(mockPage);
+            when(collegeMapper.selectById(TEST_COLLEGE_ID))
+                    .thenReturn(RepositoryTestObjects.toDataObject(createTestCollege(), CollegeDO.class));
 
             Page<EnrollBriefVO> result = enrollRepository.search("张三", null, null, pageable);
 
@@ -329,15 +343,16 @@ class EnrollRepositoryImplTest {
         @DisplayName("组合筛选：应返回同时满足多个条件的报名")
         void search_withMultipleFilters_shouldReturnFilteredEnrolls() {
             Pageable pageable = PageRequest.of(0, 10);
-            List<Enroll> enrollList = new ArrayList<>();
-            enrollList.add(createTestEnroll());
+            List<EnrollDO> enrollList = new ArrayList<>();
+            enrollList.add(RepositoryTestObjects.toDataObject(createTestEnroll(), EnrollDO.class));
 
-            IPage<Enroll> mockPage = new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>(1, 10);
+            IPage<EnrollDO> mockPage = new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>(1, 10);
             mockPage.setRecords(enrollList);
             mockPage.setTotal(1);
 
-            when(enrollMapper.selectPage(any(IPage.class), any(LambdaQueryWrapper.class))).thenReturn(mockPage);
-            when(collegeMapper.selectById(TEST_COLLEGE_ID)).thenReturn(createTestCollege());
+            when(enrollMapper.selectPageByConditions(any(IPage.class), any(), any(), any())).thenReturn(mockPage);
+            when(collegeMapper.selectById(TEST_COLLEGE_ID))
+                    .thenReturn(RepositoryTestObjects.toDataObject(createTestCollege(), CollegeDO.class));
 
             Page<EnrollBriefVO> result = enrollRepository.search("张三", EnrollStatus.PENDING, TEST_DIRECTION, pageable);
 
@@ -350,11 +365,11 @@ class EnrollRepositoryImplTest {
         void search_noResults_shouldReturnEmptyPage() {
             Pageable pageable = PageRequest.of(0, 10);
 
-            IPage<Enroll> mockPage = new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>(1, 10);
+            IPage<EnrollDO> mockPage = new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>(1, 10);
             mockPage.setRecords(new ArrayList<>());
             mockPage.setTotal(0);
 
-            when(enrollMapper.selectPage(any(IPage.class), any(LambdaQueryWrapper.class))).thenReturn(mockPage);
+            when(enrollMapper.selectPageByConditions(any(IPage.class), any(), any(), any())).thenReturn(mockPage);
 
             Page<EnrollBriefVO> result = enrollRepository.search("不存在", null, null, pageable);
 
@@ -370,14 +385,9 @@ class EnrollRepositoryImplTest {
         @Test
         @DisplayName("正常情况：应返回统计数据")
         void getStatistics_normalCase_shouldReturnStatistics() {
-            when(enrollMapper.selectCount(any(LambdaQueryWrapper.class)))
-                    .thenReturn(2L)
-                    .thenReturn(1L)
-                    .thenReturn(1L)
-                    .thenReturn(0L)
-                    .thenReturn(1L)
-                    .thenReturn(1L)
-                    .thenReturn(0L);
+            when(enrollMapper.countAll()).thenReturn(2L);
+            when(enrollMapper.countByStatus(any(EnrollStatus.class))).thenReturn(1L);
+            when(enrollMapper.countByDirection(any(Direction.class))).thenReturn(1L);
 
             EnrollStatisticsVO result = enrollRepository.getStatistics();
 
@@ -385,13 +395,15 @@ class EnrollRepositoryImplTest {
             assertEquals(2L, result.getTotal());
             assertNotNull(result.getByStatus());
             assertNotNull(result.getByDirection());
-            verify(enrollMapper, times(7)).selectCount(any(LambdaQueryWrapper.class));
+            verify(enrollMapper).countAll();
+            verify(enrollMapper, times(EnrollStatus.values().length)).countByStatus(any(EnrollStatus.class));
+            verify(enrollMapper, times(Direction.values().length)).countByDirection(any(Direction.class));
         }
 
         @Test
         @DisplayName("无数据：应返回零统计")
         void getStatistics_noData_shouldReturnZeroStatistics() {
-            when(enrollMapper.selectCount(any(LambdaQueryWrapper.class))).thenReturn(0L);
+            when(enrollMapper.countAll()).thenReturn(0L);
 
             EnrollStatisticsVO result = enrollRepository.getStatistics();
 
@@ -409,14 +421,16 @@ class EnrollRepositoryImplTest {
         void findById_withReferralCodeAndUserExists_shouldReturnReferralUserInfo() {
             Enroll enroll = createTestEnroll();
             College college = createTestCollege();
-            User referralUser = User.builder()
-                    .id(999L)
-                    .username("推荐人")
-                    .internalReferralCode(TEST_REFERRAL_CODE)
-                    .build();
+            UserDO referralUser = new UserDO();
+            // Mapper mock 返回持久层 DO，RepositoryImpl 再按领域模型读取推荐人信息。
+            referralUser.setId(999L);
+            referralUser.setUsername("推荐人");
+            referralUser.setInternalReferralCode(TEST_REFERRAL_CODE);
 
-            when(enrollMapper.selectById(TEST_ID)).thenReturn(enroll);
-            when(collegeMapper.selectById(TEST_COLLEGE_ID)).thenReturn(college);
+            when(enrollMapper.selectById(TEST_ID))
+                    .thenReturn(RepositoryTestObjects.toDataObject(enroll, EnrollDO.class));
+            when(collegeMapper.selectById(TEST_COLLEGE_ID))
+                    .thenReturn(RepositoryTestObjects.toDataObject(college, CollegeDO.class));
             when(userMapper.selectByInternalReferralCode(TEST_REFERRAL_CODE)).thenReturn(referralUser);
 
             Optional<EnrollVO> result = enrollRepository.findById(TEST_ID);
@@ -433,8 +447,10 @@ class EnrollRepositoryImplTest {
             Enroll enroll = createTestEnroll();
             College college = createTestCollege();
 
-            when(enrollMapper.selectById(TEST_ID)).thenReturn(enroll);
-            when(collegeMapper.selectById(TEST_COLLEGE_ID)).thenReturn(college);
+            when(enrollMapper.selectById(TEST_ID))
+                    .thenReturn(RepositoryTestObjects.toDataObject(enroll, EnrollDO.class));
+            when(collegeMapper.selectById(TEST_COLLEGE_ID))
+                    .thenReturn(RepositoryTestObjects.toDataObject(college, CollegeDO.class));
             when(userMapper.selectByInternalReferralCode(TEST_REFERRAL_CODE)).thenReturn(null);
 
             Optional<EnrollVO> result = enrollRepository.findById(TEST_ID);
@@ -452,8 +468,10 @@ class EnrollRepositoryImplTest {
             enroll.setInternalReferralCode(null);
             College college = createTestCollege();
 
-            when(enrollMapper.selectById(TEST_ID)).thenReturn(enroll);
-            when(collegeMapper.selectById(TEST_COLLEGE_ID)).thenReturn(college);
+            when(enrollMapper.selectById(TEST_ID))
+                    .thenReturn(RepositoryTestObjects.toDataObject(enroll, EnrollDO.class));
+            when(collegeMapper.selectById(TEST_COLLEGE_ID))
+                    .thenReturn(RepositoryTestObjects.toDataObject(college, CollegeDO.class));
 
             Optional<EnrollVO> result = enrollRepository.findById(TEST_ID);
 

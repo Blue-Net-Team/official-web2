@@ -1,5 +1,9 @@
 package com.bluenet.web.infrastructure.repository.impl;
 
+import com.bluenet.web.infrastructure.repository.dataobject.*;
+
+import com.bluenet.web.testsupport.RepositoryTestObjects;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
@@ -8,7 +12,6 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bluenet.web.domain.model.entity.AssessmentQuestion;
 import com.bluenet.web.domain.model.enumerate.QuestionType;
@@ -61,10 +64,13 @@ class AssessmentQuestionRepositoryImplTest {
             q2.setId(2L);
             q2.setQuestionNo(2);
 
-            Page<AssessmentQuestion> mockPage = new Page<>(1, 10, 2);
-            mockPage.setRecords(List.of(q1, q2));
+            Page<AssessmentQuestionDO> mockPage = new Page<>(1, 10, 2);
+            mockPage.setRecords(
+                    List.of(
+                            RepositoryTestObjects.toDataObject(q1, AssessmentQuestionDO.class),
+                            RepositoryTestObjects.toDataObject(q2, AssessmentQuestionDO.class)));
 
-            when(assessmentQuestionMapper.selectPage(any(Page.class), any(LambdaQueryWrapper.class)))
+            when(assessmentQuestionMapper.selectPageByAssessmentTimeId(any(Page.class), eq(TEST_TIME_ID)))
                     .thenReturn(mockPage);
 
             org.springframework.data.domain.Page<AssessmentQuestionVO> result = assessmentQuestionRepository
@@ -78,10 +84,10 @@ class AssessmentQuestionRepositoryImplTest {
         @Test
         @DisplayName("无数据时：应返回空分页结果")
         void findAllByTimeId_noData_shouldReturnEmptyPage() {
-            Page<AssessmentQuestion> mockPage = new Page<>(1, 10, 0);
+            Page<AssessmentQuestionDO> mockPage = new Page<>(1, 10, 0);
             mockPage.setRecords(List.of());
 
-            when(assessmentQuestionMapper.selectPage(any(Page.class), any(LambdaQueryWrapper.class)))
+            when(assessmentQuestionMapper.selectPageByAssessmentTimeId(any(Page.class), eq(TEST_TIME_ID)))
                     .thenReturn(mockPage);
 
             org.springframework.data.domain.Page<AssessmentQuestionVO> result = assessmentQuestionRepository
@@ -105,11 +111,11 @@ class AssessmentQuestionRepositoryImplTest {
                     .score(BigDecimal.valueOf(20))
                     .build();
 
-            when(assessmentQuestionMapper.updateById(any(AssessmentQuestion.class))).thenReturn(1);
+            when(assessmentQuestionMapper.updateById(any(AssessmentQuestionDO.class))).thenReturn(1);
 
             assessmentQuestionRepository.update(vo);
 
-            verify(assessmentQuestionMapper).updateById(any(AssessmentQuestion.class));
+            verify(assessmentQuestionMapper).updateById(any(AssessmentQuestionDO.class));
         }
 
         @Test
@@ -120,11 +126,11 @@ class AssessmentQuestionRepositoryImplTest {
                     .title("不存在的题目")
                     .build();
 
-            when(assessmentQuestionMapper.updateById(any(AssessmentQuestion.class))).thenReturn(0);
+            when(assessmentQuestionMapper.updateById(any(AssessmentQuestionDO.class))).thenReturn(0);
 
             assessmentQuestionRepository.update(vo);
 
-            verify(assessmentQuestionMapper).updateById(any(AssessmentQuestion.class));
+            verify(assessmentQuestionMapper).updateById(any(AssessmentQuestionDO.class));
         }
     }
 
@@ -160,7 +166,8 @@ class AssessmentQuestionRepositoryImplTest {
         @Test
         @DisplayName("存在时：应返回true")
         void existsById_existingQuestion_shouldReturnTrue() {
-            when(assessmentQuestionMapper.selectById(TEST_ID)).thenReturn(createTestEntity());
+            when(assessmentQuestionMapper.selectById(TEST_ID))
+                    .thenReturn(RepositoryTestObjects.toDataObject(createTestEntity(), AssessmentQuestionDO.class));
 
             assertTrue(assessmentQuestionRepository.existsById(TEST_ID));
         }
@@ -168,7 +175,8 @@ class AssessmentQuestionRepositoryImplTest {
         @Test
         @DisplayName("不存在时：应返回false")
         void existsById_nonExistingQuestion_shouldReturnFalse() {
-            when(assessmentQuestionMapper.selectById(999L)).thenReturn(null);
+            when(assessmentQuestionMapper.selectById(999L))
+                    .thenReturn(RepositoryTestObjects.toDataObject(null, AssessmentQuestionDO.class));
 
             assertFalse(assessmentQuestionRepository.existsById(999L));
         }
@@ -181,8 +189,8 @@ class AssessmentQuestionRepositoryImplTest {
         @Test
         @DisplayName("题号已存在：应返回Optional包含结果")
         void findByTimeIdAndQuestionNo_existing_shouldReturnPresent() {
-            when(assessmentQuestionMapper.selectOne(any(LambdaQueryWrapper.class)))
-                    .thenReturn(createTestEntity());
+            when(assessmentQuestionMapper.selectByAssessmentTimeIdAndQuestionNo(TEST_TIME_ID, 1))
+                    .thenReturn(RepositoryTestObjects.toDataObject(createTestEntity(), AssessmentQuestionDO.class));
 
             Optional<AssessmentQuestionVO> result = assessmentQuestionRepository
                     .findByTimeIdAndQuestionNo(TEST_TIME_ID, 1);
@@ -194,8 +202,7 @@ class AssessmentQuestionRepositoryImplTest {
         @Test
         @DisplayName("题号不存在：应返回空Optional")
         void findByTimeIdAndQuestionNo_notExisting_shouldReturnEmpty() {
-            when(assessmentQuestionMapper.selectOne(any(LambdaQueryWrapper.class)))
-                    .thenReturn(null);
+            when(assessmentQuestionMapper.selectByAssessmentTimeIdAndQuestionNo(TEST_TIME_ID, 99)).thenReturn(null);
 
             Optional<AssessmentQuestionVO> result = assessmentQuestionRepository
                     .findByTimeIdAndQuestionNo(TEST_TIME_ID, 99);

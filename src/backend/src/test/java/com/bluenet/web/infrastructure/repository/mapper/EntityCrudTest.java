@@ -1,5 +1,9 @@
 package com.bluenet.web.infrastructure.repository.mapper;
 
+import com.bluenet.web.infrastructure.repository.dataobject.*;
+
+import com.bluenet.web.testsupport.RepositoryTestObjects;
+
 import com.bluenet.web.BaseIntegrationTest;
 import com.bluenet.web.domain.model.entity.*;
 import com.bluenet.web.domain.model.enumerate.*;
@@ -43,9 +47,9 @@ class EntityCrudTest extends BaseIntegrationTest {
         // 创建学院和角色
         College college = new College();
         college.setName("计算机学院");
-        collegeMapper.insert(college);
+        RepositoryTestObjects.insert(collegeMapper, college, CollegeDO.class);
 
-        Role role = roleMapper.selectByName("MEMBER");
+        Role role = RepositoryTestObjects.toDomain(roleMapper.selectByName("MEMBER"), Role.class);
 
         // 创建用户
         User user = new User();
@@ -59,12 +63,12 @@ class EntityCrudTest extends BaseIntegrationTest {
         user.setDisable(false);
 
         // 插入
-        int insertCount = userMapper.insert(user);
+        int insertCount = RepositoryTestObjects.insert(userMapper, user, UserDO.class);
         assertEquals(1, insertCount);
         assertNotNull(user.getId());
 
         // 查询
-        User retrieved = userMapper.selectById(user.getId());
+        User retrieved = RepositoryTestObjects.toDomain(userMapper.selectById(user.getId()), User.class);
         assertNotNull(retrieved);
         assertEquals("202401010001", retrieved.getStudentId());
         assertEquals("test@example.com", retrieved.getEmail());
@@ -84,7 +88,7 @@ class EntityCrudTest extends BaseIntegrationTest {
         evalTime.setEndTime(LocalDateTime.now().plusDays(7));
         evalTime.setTimeLimit(true);
         evalTime.setTimeLimitMinutes(120);
-        assessmentTimeMapper.insert(evalTime);
+        RepositoryTestObjects.insert(assessmentTimeMapper, evalTime, AssessmentTimeDO.class);
 
         // 创建题目 - 单选题
         AssessmentQuestion question = new AssessmentQuestion();
@@ -101,11 +105,12 @@ class EntityCrudTest extends BaseIntegrationTest {
         question.setContent(content);
 
         // 插入
-        int insertCount = assessmentQuestionMapper.insert(question);
+        int insertCount = RepositoryTestObjects.insert(assessmentQuestionMapper, question, AssessmentQuestionDO.class);
         assertEquals(1, insertCount);
 
         // 查询
-        AssessmentQuestion retrieved = assessmentQuestionMapper.selectById(question.getId());
+        AssessmentQuestion retrieved = RepositoryTestObjects
+                .toDomain(assessmentQuestionMapper.selectById(question.getId()), AssessmentQuestion.class);
         assertNotNull(retrieved);
         assertEquals(QuestionType.SINGLE_CHOICE, retrieved.getQuestionType());
 
@@ -128,7 +133,7 @@ class EntityCrudTest extends BaseIntegrationTest {
         evalTime.setEpoch(1);
         evalTime.setStartTime(LocalDateTime.now());
         evalTime.setEndTime(LocalDateTime.now().plusDays(7));
-        assessmentTimeMapper.insert(evalTime);
+        RepositoryTestObjects.insert(assessmentTimeMapper, evalTime, AssessmentTimeDO.class);
 
         AssessmentQuestion question = new AssessmentQuestion();
         question.setAssessmentTimeId(evalTime.getId());
@@ -150,9 +155,10 @@ class EntityCrudTest extends BaseIntegrationTest {
         question.setContent(content);
 
         // 插入并验证
-        assessmentQuestionMapper.insert(question);
+        RepositoryTestObjects.insert(assessmentQuestionMapper, question, AssessmentQuestionDO.class);
 
-        AssessmentQuestion retrieved = assessmentQuestionMapper.selectById(question.getId());
+        AssessmentQuestion retrieved = RepositoryTestObjects
+                .toDomain(assessmentQuestionMapper.selectById(question.getId()), AssessmentQuestion.class);
         assertTrue(retrieved.getContent() instanceof AlgorithmContent);
 
         AlgorithmContent algorithmContent = (AlgorithmContent) retrieved.getContent();
@@ -166,7 +172,7 @@ class EntityCrudTest extends BaseIntegrationTest {
         // 创建学院
         College college = new College();
         college.setName("测试学院");
-        collegeMapper.insert(college);
+        RepositoryTestObjects.insert(collegeMapper, college, CollegeDO.class);
 
         // 创建报名记录
         Enroll enroll = new Enroll();
@@ -179,11 +185,11 @@ class EntityCrudTest extends BaseIntegrationTest {
         enroll.setStatus(EnrollStatus.PENDING);
 
         // 插入
-        int insertCount = enrollMapper.insert(enroll);
+        int insertCount = RepositoryTestObjects.insert(enrollMapper, enroll, EnrollDO.class);
         assertEquals(1, insertCount);
 
         // 查询
-        Enroll retrieved = enrollMapper.selectById(enroll.getId());
+        Enroll retrieved = RepositoryTestObjects.toDomain(enrollMapper.selectById(enroll.getId()), Enroll.class);
         assertNotNull(retrieved);
         assertEquals("202401020001", retrieved.getStudentId());
         assertEquals(Direction.STRUCTURAL_DESIGN, retrieved.getDirection());

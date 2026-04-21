@@ -1,5 +1,9 @@
 package com.bluenet.web.api.controller;
 
+import com.bluenet.web.infrastructure.repository.dataobject.*;
+
+import com.bluenet.web.testsupport.RepositoryTestObjects;
+
 import com.bluenet.web.BaseIntegrationTest;
 import com.bluenet.web.api.dto.ResponseMessage;
 import com.bluenet.web.api.dto.auth.EmailLoginRequestDTO;
@@ -79,15 +83,18 @@ class AuthControllerIntegrationTest extends BaseIntegrationTest {
         user.setDirection(Direction.COMPUTER_VISION);
 
         // 如果用户已存在则删除
-        User existingUser = userMapper
-                .selectOne(
-                        new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<User>()
-                                .eq(User::getStudentId, TEST_STUDENT_ID));
+        // Mapper 返回 DO，测试夹具转换为领域对象后再断言/清理。
+        User existingUser = RepositoryTestObjects.toDomain(
+                userMapper
+                        .selectOne(
+                                new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<UserDO>()
+                                        .eq(UserDO::getStudentId, TEST_STUDENT_ID)),
+                User.class);
         if (existingUser != null) {
             userMapper.deleteById(existingUser.getId());
         }
 
-        userMapper.insert(user);
+        RepositoryTestObjects.insert(userMapper, user, UserDO.class);
     }
 
     // ==================== 学号登录测试 ====================
@@ -386,6 +393,6 @@ class AuthControllerIntegrationTest extends BaseIntegrationTest {
         verifyCode.setCode(code);
         verifyCode.setExpireAt(expireAt);
         verifyCode.setUsedAt(usedAt);
-        verifyCodeMapper.insert(verifyCode);
+        RepositoryTestObjects.insert(verifyCodeMapper, verifyCode, VerifyCodeDO.class);
     }
 }

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bluenet.web.infrastructure.repository.mapper.AlgorithmJudgeCaseResultMapper">
+    <resultMap id="BaseResultMap" type="com.bluenet.web.infrastructure.repository.dataobject.AlgorithmJudgeCaseResultDO">
+        <id column="id" property="id"/>
+        <result column="judge_job_id" property="judgeJobId"/>
+        <result column="case_no" property="caseNo"/>
+        <result column="testcase_type" property="testcaseType"/>
+        <result column="status" property="status"/>
+        <result column="input" property="input"/>
+        <result column="expected_output" property="expectedOutput"/>
+        <result column="actual_output" property="actualOutput"/>
+        <result column="stdout" property="stdout"/>
+        <result column="stderr" property="stderr"/>
+        <result column="time_used_ms" property="timeUsedMs"/>
+        <result column="memory_used_kb" property="memoryUsedKb"/>
+        <result column="message" property="message"/>
+        <result column="visible_to_candidate" property="visibleToCandidate"/>
+        <result column="created_at" property="createdAt"/>
+    </resultMap>
+
+    <select id="selectByJudgeJobId" resultMap="BaseResultMap">
+        SELECT *
+        FROM tb_algorithm_judge_case_result
+        WHERE judge_job_id = #{judgeJobId}
+        ORDER BY case_no ASC, id ASC
+    </select>
+</mapper>

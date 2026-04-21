@@ -7,20 +7,18 @@ import static org.mockito.Mockito.*;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bluenet.web.domain.model.entity.AssessmentTime;
 import com.bluenet.web.domain.model.enumerate.Direction;
 import com.bluenet.web.domain.model.vo.AssessmentTimeVO;
-import com.bluenet.web.infrastructure.repository.mapper.AssessmentAnswerMapper;
+import com.bluenet.web.infrastructure.repository.dataobject.AssessmentTimeDO;
 import com.bluenet.web.infrastructure.repository.mapper.AssessmentQuestionMapper;
 import com.bluenet.web.infrastructure.repository.mapper.AssessmentTimeMapper;
+import com.bluenet.web.testsupport.RepositoryTestObjects;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -35,9 +33,6 @@ class AssessmentTimeRepositoryImplTest {
 
     @Mock
     private AssessmentQuestionMapper assessmentQuestionMapper;
-
-    @Mock
-    private AssessmentAnswerMapper assessmentAnswerMapper;
 
     @InjectMocks
     private AssessmentTimeRepositoryImpl assessmentTimeRepository;
@@ -75,11 +70,9 @@ class AssessmentTimeRepositoryImplTest {
 
             verify(assessmentTimeMapper).updateById(
                     argThat(
-                            (AssessmentTime entity) -> entity.getId().equals(1L)
+                            (AssessmentTimeDO entity) -> entity.getId().equals(1L)
                                     && Boolean.FALSE.equals(entity.getTimeLimit())));
-            ArgumentCaptor<UpdateWrapper<AssessmentTime>> wrapperCaptor = ArgumentCaptor.forClass(UpdateWrapper.class);
-            verify(assessmentTimeMapper).update(isNull(), wrapperCaptor.capture());
-            assertTrue(wrapperCaptor.getValue().getSqlSet().contains("time_limit_minutes"));
+            verify(assessmentTimeMapper).clearTimeLimitMinutesById(1L);
         }
     }
 
@@ -94,11 +87,19 @@ class AssessmentTimeRepositoryImplTest {
         void findByUserParticipation_withDirectionAndYear_shouldReturnMatchingResults() {
             AssessmentTime at1 = createTestEntity(1L, Direction.COMPUTER_VISION, 1, 2024);
             AssessmentTime at2 = createTestEntity(2L, Direction.COMPUTER_VISION, 2, 2024);
-            Page<AssessmentTime> mockPage = new Page<>(1, 10, 2);
-            mockPage.setRecords(List.of(at2, at1));
+            Page<AssessmentTimeDO> mockPage = new Page<>(1, 10, 2);
+            mockPage.setRecords(
+                    List.of(
+                            RepositoryTestObjects.toDataObject(at2, AssessmentTimeDO.class),
+                            RepositoryTestObjects.toDataObject(at1, AssessmentTimeDO.class)));
 
-            when(assessmentTimeMapper.selectPage(any(Page.class), any(LambdaQueryWrapper.class)))
-                    .thenReturn(mockPage);
+            when(
+                    assessmentTimeMapper.selectPageByUserParticipation(
+                            any(Page.class),
+                            eq(TEST_USER_ID),
+                            eq(Direction.COMPUTER_VISION),
+                            eq(2024)))
+                                    .thenReturn(mockPage);
 
             org.springframework.data.domain.Page<AssessmentTimeVO> result = assessmentTimeRepository
                     .findByUserParticipation(
@@ -108,18 +109,27 @@ class AssessmentTimeRepositoryImplTest {
                             Pageable.ofSize(10));
 
             assertEquals(2, result.getContent().size());
-            verify(assessmentTimeMapper).selectPage(any(Page.class), any(LambdaQueryWrapper.class));
+            verify(assessmentTimeMapper).selectPageByUserParticipation(
+                    any(Page.class),
+                    eq(TEST_USER_ID),
+                    eq(Direction.COMPUTER_VISION),
+                    eq(2024));
         }
 
         @Test
         @DisplayName("enrollmentYear为null：应仅按EXISTS查询")
         void findByUserParticipation_nullYear_shouldQueryByExistsOnly() {
             AssessmentTime at1 = createTestEntity(1L, Direction.STRUCTURAL_DESIGN, 1, 2024);
-            Page<AssessmentTime> mockPage = new Page<>(1, 10, 1);
-            mockPage.setRecords(List.of(at1));
+            Page<AssessmentTimeDO> mockPage = new Page<>(1, 10, 1);
+            mockPage.setRecords(List.of(RepositoryTestObjects.toDataObject(at1, AssessmentTimeDO.class)));
 
-            when(assessmentTimeMapper.selectPage(any(Page.class), any(LambdaQueryWrapper.class)))
-                    .thenReturn(mockPage);
+            when(
+                    assessmentTimeMapper.selectPageByUserParticipation(
+                            any(Page.class),
+                            eq(TEST_USER_ID),
+                            eq(Direction.COMPUTER_VISION),
+                            isNull()))
+                                    .thenReturn(mockPage);
 
             org.springframework.data.domain.Page<AssessmentTimeVO> result = assessmentTimeRepository
                     .findByUserParticipation(
@@ -134,11 +144,16 @@ class AssessmentTimeRepositoryImplTest {
         @Test
         @DisplayName("direction和enrollmentYear都为null：应仅按EXISTS查询")
         void findByUserParticipation_bothNull_shouldQueryByExistsOnly() {
-            Page<AssessmentTime> mockPage = new Page<>(1, 10, 0);
+            Page<AssessmentTimeDO> mockPage = new Page<>(1, 10, 0);
             mockPage.setRecords(List.of());
 
-            when(assessmentTimeMapper.selectPage(any(Page.class), any(LambdaQueryWrapper.class)))
-                    .thenReturn(mockPage);
+            when(
+                    assessmentTimeMapper.selectPageByUserParticipation(
+                            any(Page.class),
+                            eq(TEST_USER_ID),
+                            isNull(),
+                            isNull()))
+                                    .thenReturn(mockPage);
 
             org.springframework.data.domain.Page<AssessmentTimeVO> result = assessmentTimeRepository
                     .findByUserParticipation(TEST_USER_ID, null, null, Pageable.ofSize(10));
@@ -149,11 +164,16 @@ class AssessmentTimeRepositoryImplTest {
         @Test
         @DisplayName("无匹配数据：应返回空分页")
         void findByUserParticipation_noMatch_shouldReturnEmptyPage() {
-            Page<AssessmentTime> mockPage = new Page<>(1, 10, 0);
+            Page<AssessmentTimeDO> mockPage = new Page<>(1, 10, 0);
             mockPage.setRecords(List.of());
 
-            when(assessmentTimeMapper.selectPage(any(Page.class), any(LambdaQueryWrapper.class)))
-                    .thenReturn(mockPage);
+            when(
+                    assessmentTimeMapper.selectPageByUserParticipation(
+                            any(Page.class),
+                            eq(TEST_USER_ID),
+                            eq(Direction.EMBEDDED),
+                            eq(2025)))
+                                    .thenReturn(mockPage);
 
             org.springframework.data.domain.Page<AssessmentTimeVO> result = assessmentTimeRepository
                     .findByUserParticipation(
@@ -171,11 +191,19 @@ class AssessmentTimeRepositoryImplTest {
         void findByUserParticipation_shouldOrderByDesc() {
             AssessmentTime at1 = createTestEntity(1L, Direction.COMPUTER_VISION, 1, 2024);
             AssessmentTime at2 = createTestEntity(2L, Direction.COMPUTER_VISION, 1, 2024);
-            Page<AssessmentTime> mockPage = new Page<>(1, 10, 2);
-            mockPage.setRecords(List.of(at2, at1));
+            Page<AssessmentTimeDO> mockPage = new Page<>(1, 10, 2);
+            mockPage.setRecords(
+                    List.of(
+                            RepositoryTestObjects.toDataObject(at2, AssessmentTimeDO.class),
+                            RepositoryTestObjects.toDataObject(at1, AssessmentTimeDO.class)));
 
-            when(assessmentTimeMapper.selectPage(any(Page.class), any(LambdaQueryWrapper.class)))
-                    .thenReturn(mockPage);
+            when(
+                    assessmentTimeMapper.selectPageByUserParticipation(
+                            any(Page.class),
+                            eq(TEST_USER_ID),
+                            eq(Direction.COMPUTER_VISION),
+                            eq(2024)))
+                                    .thenReturn(mockPage);
 
             org.springframework.data.domain.Page<AssessmentTimeVO> result = assessmentTimeRepository
                     .findByUserParticipation(
@@ -191,11 +219,16 @@ class AssessmentTimeRepositoryImplTest {
         @Test
         @DisplayName("分页参数正确传递")
         void findByUserParticipation_shouldRespectPagination() {
-            Page<AssessmentTime> mockPage = new Page<>(1, 5, 20);
+            Page<AssessmentTimeDO> mockPage = new Page<>(1, 5, 20);
             mockPage.setRecords(List.of());
 
-            when(assessmentTimeMapper.selectPage(any(Page.class), any(LambdaQueryWrapper.class)))
-                    .thenReturn(mockPage);
+            when(
+                    assessmentTimeMapper.selectPageByUserParticipation(
+                            any(Page.class),
+                            eq(TEST_USER_ID),
+                            eq(Direction.COMPUTER_VISION),
+                            eq(2024)))
+                                    .thenReturn(mockPage);
 
             assessmentTimeRepository.findByUserParticipation(
                     TEST_USER_ID,
@@ -203,7 +236,11 @@ class AssessmentTimeRepositoryImplTest {
                     2024,
                     Pageable.ofSize(5));
 
-            verify(assessmentTimeMapper).selectPage(any(Page.class), any(LambdaQueryWrapper.class));
+            verify(assessmentTimeMapper).selectPageByUserParticipation(
+                    any(Page.class),
+                    eq(TEST_USER_ID),
+                    eq(Direction.COMPUTER_VISION),
+                    eq(2024));
         }
     }
 }

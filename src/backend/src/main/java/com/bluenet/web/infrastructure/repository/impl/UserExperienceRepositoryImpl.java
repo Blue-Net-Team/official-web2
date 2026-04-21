@@ -1,6 +1,9 @@
 package com.bluenet.web.infrastructure.repository.impl;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.bluenet.web.infrastructure.repository.support.RepositoryObjectConverter;
+
+import com.bluenet.web.infrastructure.repository.dataobject.*;
+
 import com.bluenet.web.domain.model.entity.UserExperience;
 import com.bluenet.web.domain.model.enumerate.ExperienceType;
 import com.bluenet.web.domain.model.vo.ExperienceVO;
@@ -25,9 +28,17 @@ public class UserExperienceRepositoryImpl implements UserExperienceRepository {
     private final UserExperienceMapper userExperienceMapper;
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
+    /**
+     * 按主键查询用户经历 记录。
+     *
+     * @param id
+     *            业务记录主键。
+     * @return 查询到的用户经历 结果；不存在时为空。
+     */
     @Override
     public Optional<ExperienceVO> findById(Long id) {
-        UserExperience experience = userExperienceMapper.selectById(id);
+        UserExperience experience = RepositoryObjectConverter
+                .toDomain(userExperienceMapper.selectById(id), UserExperience.class);
         if (experience == null) {
             log.warn("Experience not found: {}", id);
             return Optional.empty();
@@ -35,31 +46,61 @@ public class UserExperienceRepositoryImpl implements UserExperienceRepository {
         return Optional.of(convertToVO(experience));
     }
 
+    /**
+     * 查询指定用户关联的用户经历 记录。
+     *
+     * @param userId
+     *            用户主键，用于限定用户范围。
+     * @return 满足条件的用户经历 结果集合。
+     */
     @Override
     public List<ExperienceVO> findByUserId(Long userId) {
-        List<UserExperience> experiences = userExperienceMapper.selectList(
-                new LambdaQueryWrapper<UserExperience>()
-                        .eq(UserExperience::getUserId, userId)
-                        .orderByDesc(UserExperience::getStartTime));
+        List<UserExperience> experiences = RepositoryObjectConverter.toDomainList(
+                userExperienceMapper.selectByUserId(userId),
+                UserExperience.class);
 
         return experiences.stream()
                 .map(this::convertToVO)
                 .toList();
     }
 
+    /**
+     * 查询用户指定类型的经历列表。
+     *
+     * @param userId
+     *            用户主键，用于限定用户范围。
+     * @param type
+     *            业务类型或枚举类型。
+     * @return 满足条件的用户经历 结果集合。
+     */
     @Override
     public List<ExperienceVO> findByUserIdAndType(Long userId, ExperienceType type) {
-        List<UserExperience> experiences = userExperienceMapper.selectList(
-                new LambdaQueryWrapper<UserExperience>()
-                        .eq(UserExperience::getUserId, userId)
-                        .eq(UserExperience::getType, type)
-                        .orderByDesc(UserExperience::getStartTime));
+        List<UserExperience> experiences = RepositoryObjectConverter.toDomainList(
+                userExperienceMapper.selectByUserIdAndType(userId, type),
+                UserExperience.class);
 
         return experiences.stream()
                 .map(this::convertToVO)
                 .toList();
     }
 
+    /**
+     * 保存新的用户经历 记录。
+     *
+     * @param userId
+     *            用户主键，用于限定用户范围。
+     * @param type
+     *            业务类型或枚举类型。
+     * @param title
+     *            经历或展示项标题。
+     * @param startTime
+     *            经历开始时间。
+     * @param endTime
+     *            经历结束时间。
+     * @param content
+     *            作答内容、经历内容或题目内容。
+     * @return 查询或处理得到的用户经历 结果。
+     */
     @Override
     public ExperienceVO save(Long userId, ExperienceType type, String title,
             String startTime, String endTime, String content) {
@@ -71,15 +112,31 @@ public class UserExperienceRepositoryImpl implements UserExperienceRepository {
         experience.setStartTime(parseDateTime(startTime));
         experience.setEndTime(endTime != null ? parseDateTime(endTime) : null);
 
-        userExperienceMapper.insert(experience);
+        RepositoryObjectConverter.insert(userExperienceMapper, experience, UserExperienceDO.class);
         log.info("Created experience: id={}, userId={}, type={}", experience.getId(), userId, type);
 
         return convertToVO(experience);
     }
 
+    /**
+     * 更新已有用户经历 记录。
+     *
+     * @param id
+     *            业务记录主键。
+     * @param title
+     *            经历或展示项标题。
+     * @param startTime
+     *            经历开始时间。
+     * @param endTime
+     *            经历结束时间。
+     * @param content
+     *            作答内容、经历内容或题目内容。
+     * @return 数据库受影响行数。
+     */
     @Override
     public ExperienceVO update(Long id, String title, String startTime, String endTime, String content) {
-        UserExperience experience = userExperienceMapper.selectById(id);
+        UserExperience experience = RepositoryObjectConverter
+                .toDomain(userExperienceMapper.selectById(id), UserExperience.class);
         if (experience == null) {
             throw new IllegalArgumentException("Experience not found: " + id);
         }
@@ -89,12 +146,19 @@ public class UserExperienceRepositoryImpl implements UserExperienceRepository {
         experience.setStartTime(parseDateTime(startTime));
         experience.setEndTime(endTime != null ? parseDateTime(endTime) : null);
 
-        userExperienceMapper.updateById(experience);
+        RepositoryObjectConverter.updateById(userExperienceMapper, experience, UserExperienceDO.class);
         log.info("Updated experience: id={}", id);
 
         return convertToVO(experience);
     }
 
+    /**
+     * 删除指定用户经历 记录。
+     *
+     * @param id
+     *            业务记录主键。
+     * @return 数据库受影响行数。
+     */
     @Override
     public boolean deleteById(Long id) {
         int rows = userExperienceMapper.deleteById(id);
@@ -106,23 +170,42 @@ public class UserExperienceRepositoryImpl implements UserExperienceRepository {
         return false;
     }
 
+    /**
+     * 统计用户指定类型的经历数量。
+     *
+     * @param userId
+     *            用户主键，用于限定用户范围。
+     * @param type
+     *            业务类型或枚举类型。
+     * @return 满足条件的记录数量。
+     */
     @Override
     public int countByUserIdAndType(Long userId, ExperienceType type) {
-        return Math.toIntExact(
-                userExperienceMapper.selectCount(
-                        new LambdaQueryWrapper<UserExperience>()
-                                .eq(UserExperience::getUserId, userId)
-                                .eq(UserExperience::getType, type)));
+        return Math.toIntExact(userExperienceMapper.countByUserIdAndType(userId, type));
     }
 
+    /**
+     * 校验用户是否拥有指定经历记录。
+     *
+     * @param experienceId
+     *            用户经历记录主键。
+     * @param userId
+     *            用户主键，用于限定用户范围。
+     * @return 满足条件时返回 true，否则返回 false。
+     */
     @Override
     public boolean checkOwner(Long experienceId, Long userId) {
-        UserExperience experience = userExperienceMapper.selectById(experienceId);
+        UserExperience experience = RepositoryObjectConverter
+                .toDomain(userExperienceMapper.selectById(experienceId), UserExperience.class);
         return experience != null && experience.getUserId().equals(userId);
     }
 
     /**
-     * 转换为值对象
+     * 在用户经历 的持久层对象、领域对象和视图对象之间转换。
+     *
+     * @param experience
+     *            用户经历领域对象。
+     * @return 转换后的目标模型对象。
      */
     private ExperienceVO convertToVO(UserExperience experience) {
         return ExperienceVO.builder()
@@ -136,7 +219,11 @@ public class UserExperienceRepositoryImpl implements UserExperienceRepository {
     }
 
     /**
-     * 解析日期时间字符串 支持格式：yyyy.MM、yyyy-MM、yyyy.MM.dd、yyyy-MM-dd
+     * 处理用户经历 仓储职责中的业务数据访问逻辑。
+     *
+     * @param dateStr
+     *            待解析的日期字符串。
+     * @return 查询或处理得到的用户经历 结果。
      */
     private LocalDateTime parseDateTime(String dateStr) {
         if (dateStr == null || dateStr.isBlank()) {
@@ -187,7 +274,11 @@ public class UserExperienceRepositoryImpl implements UserExperienceRepository {
     }
 
     /**
-     * 格式化日期时间 返回 yyyy.MM 格式
+     * 处理用户经历 仓储职责中的业务数据访问逻辑。
+     *
+     * @param dateTime
+     *            待格式化的日期时间。
+     * @return 查询或处理得到的用户经历 结果。
      */
     private String formatDateTime(LocalDateTime dateTime) {
         if (dateTime == null) {

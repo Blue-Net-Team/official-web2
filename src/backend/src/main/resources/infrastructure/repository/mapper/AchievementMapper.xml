@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.bluenet.web.infrastructure.repository.mapper.AchievementMapper">
-    <resultMap id="BaseResultMap" type="com.bluenet.web.domain.model.entity.Achievement">
+    <resultMap id="BaseResultMap" type="com.bluenet.web.infrastructure.repository.dataobject.AchievementDO">
         <id column="id" property="id"/>
         <result column="title" property="title"/>
         <result column="type" property="type"/>
@@ -9,31 +9,17 @@
         <result column="achieve_at" property="achieveAt"/>
         <result column="award_level" property="awardLevel"/>
         <result column="award_name" property="awardName"/>
-    </resultMap>
-
-    <resultMap id="AchievementVOResultMap" type="com.bluenet.web.domain.model.vo.AchievementVO">
-        <id column="id" property="id"/>
-        <result column="title" property="title"/>
-        <result column="relate_to" property="relateTo"/>
-        <result column="type" property="type"/>
-        <result column="achieve_at" property="achieveAt"/>
-        <result column="award_level" property="awardLevel"/>
-        <result column="award_name" property="awardName"/>
-        <result column="competition_name" property="competitionName"/>
-        <result column="competition_short_name" property="competitionShortName"/>
-        <result column="competition_logo_file_id" property="competitionLogoFileId"/>
         <result column="file_id" property="fileId"/>
-        <result column="file_url" property="fileUrl"/>
     </resultMap>
 
-    <resultMap id="AchievementStatsVOResultMap" type="com.bluenet.web.domain.model.vo.AchievementStatsVO">
+    <resultMap id="AchievementStatsProjectionResultMap" type="com.bluenet.web.infrastructure.repository.projection.AchievementStatsProjection">
         <result column="total_achievements" property="totalAchievements"/>
         <result column="national_count" property="nationalCount"/>
         <result column="provincial_count" property="provincialCount"/>
         <result column="school_count" property="schoolCount"/>
     </resultMap>
 
-    <select id="selectAchievementsWithFilter" resultMap="AchievementVOResultMap">
+    <select id="selectAchievementsWithFilter" resultMap="BaseResultMap">
         SELECT
             a.id,
             a.title,
@@ -42,14 +28,8 @@
             a.achieve_at,
             a.award_level,
             a.award_name,
-            c.name AS competition_name,
-            c.short_name AS competition_short_name,
-            c.logo_file_id AS competition_logo_file_id,
-            a.file_id,
-            f.url AS file_url
+            a.file_id
         FROM tb_achievement a
-        LEFT JOIN tb_competition c ON a.relate_to = c.name
-        LEFT JOIN tb_file f ON a.file_id = f.id
         <where>
             <if test="type != null">
                 AND a.type = #{type}
@@ -64,7 +44,7 @@
         ORDER BY a.achieve_at DESC, a.id DESC
     </select>
 
-    <select id="selectAchievementStats" resultMap="AchievementStatsVOResultMap">
+    <select id="selectAchievementStats" resultMap="AchievementStatsProjectionResultMap">
         SELECT
             COUNT(*) AS total_achievements,
             COALESCE(SUM(CASE WHEN award_level = 'national' THEN 1 ELSE 0 END), 0) AS national_count,

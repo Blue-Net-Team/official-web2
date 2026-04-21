@@ -1,8 +1,5 @@
 package com.bluenet.web.domain.model.entity;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
 /**
@@ -12,9 +9,10 @@ import lombok.Data;
  * </p>
  */
 @Data
-@TableName("tb_venue")
 public class Venue {
-    @TableId(type = IdType.AUTO)
+    /**
+     * 当前对象在系统中的唯一标识。
+     */
     private Long id;
 
     /**

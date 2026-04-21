@@ -50,6 +50,9 @@ public class CompetitionContent {
     /**
      * 证书链接
      */
+    /**
+     * 证书或证明材料的访问地址。
+     */
     @JsonProperty("certificateUrl")
     private String certificateUrl;
 }

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.bluenet.web.infrastructure.repository.mapper.CompetitionMapper">
-    <resultMap id="BaseResultMap" type="com.bluenet.web.domain.model.entity.Competition">
+    <resultMap id="BaseResultMap" type="com.bluenet.web.infrastructure.repository.dataobject.CompetitionDO">
         <id column="id" property="id"/>
         <result column="name" property="name"/>
         <result column="short_name" property="shortName"/>
@@ -14,26 +14,11 @@
         <result column="sort_order" property="sortOrder"/>
     </resultMap>
 
-    <resultMap id="CompetitionVOResultMap" type="com.bluenet.web.domain.model.vo.CompetitionVO">
-        <id column="id" property="id"/>
-        <result column="name" property="name"/>
-        <result column="short_name" property="shortName"/>
-        <result column="logo_url" property="logoUrl"/>
-        <result column="logo_file_id" property="logoFileId"/>
-        <result column="cover_file_id" property="coverFileId"/>
-        <result column="summary" property="summary"/>
-        <result column="level" property="level"/>
-        <result column="month" property="month"/>
-        <result column="organizer" property="organizer"/>
-        <result column="sort_order" property="sortOrder"/>
-    </resultMap>
-
-    <select id="selectCompetitionsWithLimit" resultMap="CompetitionVOResultMap">
+    <select id="selectCompetitionsWithLimit" resultMap="BaseResultMap">
         SELECT
             c.id,
             c.name,
             c.short_name,
-            f.url AS logo_url,
             c.logo_file_id,
             c.cover_file_id,
             c.summary,
@@ -42,17 +27,15 @@
             c.organizer,
             c.sort_order
         FROM tb_competition c
-        LEFT JOIN tb_file f ON c.logo_file_id = f.id
         ORDER BY c.sort_order ASC, c.id ASC
         LIMIT #{limit}
     </select>
 
-    <select id="selectCompetitionsPage" resultMap="CompetitionVOResultMap">
+    <select id="selectCompetitionsPage" resultMap="BaseResultMap">
         SELECT
             c.id,
             c.name,
             c.short_name,
-            f.url AS logo_url,
             c.logo_file_id,
             c.cover_file_id,
             c.summary,
@@ -61,7 +44,6 @@
             c.organizer,
             c.sort_order
         FROM tb_competition c
-        LEFT JOIN tb_file f ON c.logo_file_id = f.id
         ORDER BY c.sort_order ASC, c.id ASC
     </select>
 
@@ -85,5 +67,14 @@
         WHERE sort_order &gt; #{sortOrder}
         ORDER BY sort_order ASC
         LIMIT 1
+    </select>
+
+    <select id="selectByNames" resultMap="BaseResultMap">
+        SELECT *
+        FROM tb_competition
+        WHERE name IN
+        <foreach collection="names" item="name" open="(" separator="," close=")">
+            #{name}
+        </foreach>
     </select>
 </mapper>

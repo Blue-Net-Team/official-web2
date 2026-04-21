@@ -14,89 +14,89 @@ import java.util.List;
  */
 public interface CompetitionRepository {
     /**
-     * 查询竞赛列表（按排序号升序）
+     * 按展示排序查询指定数量的竞赛视图。
      *
      * @param limit
-     *            限制返回数量，如果为0则返回全部
+     *            最大返回数量。
      * @return 竞赛简要信息列表
      */
     List<CompetitionVO> findCompetitionsWithLimit(int limit);
 
     /**
-     * 分页查询竞赛列表
+     * 按展示排序分页查询竞赛视图。
      *
      * @param pageable
-     *            分页参数
-     * @return 竞赛分页数据
+     *            Spring 分页请求对象。
+     * @return 分页后的竞赛 结果。
      */
     Page<CompetitionVO> findCompetitionsPage(Pageable pageable);
 
     /**
-     * 保存竞赛
+     * 保存新的竞赛 记录。
      *
      * @param competition
-     *            竞赛实体
-     * @return 保存后的竞赛ID
+     *            竞赛领域对象。
+     * @return 新记录的主键。
      */
     Long save(com.bluenet.web.domain.model.entity.Competition competition);
 
     /**
-     * 更新竞赛
+     * 更新已有竞赛 记录。
      *
      * @param competition
-     *            竞赛实体
+     *            竞赛领域对象。
      */
     void update(com.bluenet.web.domain.model.entity.Competition competition);
 
     /**
-     * 根据ID删除竞赛
+     * 删除指定竞赛 记录。
      *
      * @param id
-     *            竞赛ID
+     *            业务记录主键。
      */
     void deleteById(Long id);
 
     /**
-     * 检查竞赛是否存在
+     * 判断是否存在满足条件的竞赛 记录。
      *
      * @param id
-     *            竞赛ID
-     * @return 如果存在返回true，否则返回false
+     *            业务记录主键。
+     * @return 满足条件时返回 true，否则返回 false。
      */
     boolean existsById(Long id);
 
     /**
-     * 查询当前最大的排序号
+     * 查询符合条件的竞赛 记录。
      *
-     * @return 最大排序号，若无记录返回null
+     * @return 转换后的目标模型对象。
      */
     Integer findMaxSortOrder();
 
     /**
-     * 批量更新竞赛排序号
+     * 批量更新竞赛 展示排序值。
      *
      * @param sortItems
-     *            竞赛ID与新排序号的列表
+     *            需要更新排序的条目集合。
      */
     void batchUpdateSortOrder(List<SortItem> sortItems);
 
     /**
-     * 根据ID查询竞赛
+     * 按主键查询竞赛 记录。
      *
      * @param id
-     *            竞赛ID
-     * @return 竞赛实体，不存在返回null
+     *            业务记录主键。
+     * @return 查询或处理得到的竞赛 结果。
      */
     com.bluenet.web.domain.model.entity.Competition findById(Long id);
 
     /**
-     * 查找排序号相邻的竞赛
+     * 查询当前竞赛相邻位置的竞赛记录，用于排序调整。
      *
      * @param sortOrder
-     *            当前排序号
+     *            展示排序值。
      * @param direction
-     *            方向：UP 查找比当前小的最大值，DOWN 查找比当前大的最小值
-     * @return 相邻的竞赛实体，不存在返回null
+     *            技术方向过滤条件。
+     * @return 查询或处理得到的竞赛 结果。
      */
     com.bluenet.web.domain.model.entity.Competition findAdjacent(Integer sortOrder, String direction);
 

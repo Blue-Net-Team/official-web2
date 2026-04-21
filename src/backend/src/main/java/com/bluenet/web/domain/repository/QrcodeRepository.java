@@ -13,45 +13,45 @@ import java.util.Optional;
 public interface QrcodeRepository {
 
     /**
-     * 保存二维码
+     * 保存新的二维码 记录。
      *
      * @param qrcode
-     *            二维码VO
+     *            二维码领域对象或视图对象。
      */
     void save(QrcodeVO qrcode);
 
     /**
-     * 根据ID查询二维码
+     * 按主键查询二维码 记录。
      *
      * @param id
-     *            二维码ID
-     * @return 二维码实体
+     *            业务记录主键。
+     * @return 查询到的二维码 结果；不存在时为空。
      */
     Optional<Qrcode> findById(Long id);
 
     /**
-     * 根据文件ID查询二维码
+     * 按文件主键查询关联记录。
      *
      * @param fileId
-     *            文件ID
-     * @return 二维码实体
+     *            文件主键。
+     * @return 查询到的二维码 结果；不存在时为空。
      */
     Optional<Qrcode> findByFileId(Long fileId);
 
     /**
-     * 根据类型查询二维码列表（按ID升序）
+     * 按业务类型查询二维码 记录。
      *
      * @param type
-     *            二维码类型
-     * @return 二维码列表
+     *            业务类型或枚举类型。
+     * @return 满足条件的二维码 结果集合。
      */
     List<Qrcode> findByType(QrcodeType type);
 
     /**
-     * 根据ID删除二维码
+     * 删除指定二维码 记录。
      *
      * @param id
-     *            二维码ID
+     *            业务记录主键。
      */
     void deleteById(Long id);
 }

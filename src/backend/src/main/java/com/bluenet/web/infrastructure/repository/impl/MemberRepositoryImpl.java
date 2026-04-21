@@ -1,5 +1,9 @@
 package com.bluenet.web.infrastructure.repository.impl;
 
+import com.bluenet.web.infrastructure.repository.support.RepositoryObjectConverter;
+
+import com.bluenet.web.infrastructure.repository.dataobject.*;
+
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bluenet.web.domain.model.entity.College;
@@ -49,17 +53,26 @@ public class MemberRepositoryImpl implements MemberRepository {
         this.systemUsername = systemUsername;
     }
 
+    /**
+     * 查询全部成员 记录。
+     *
+     * @param direction
+     *            技术方向过滤条件。
+     * @param pageable
+     *            Spring 分页请求对象。
+     * @return 分页后的成员 结果。
+     */
     @Override
     public org.springframework.data.domain.Page<MemberVO> findAll(Direction direction,
             org.springframework.data.domain.Pageable pageable) {
-        Page<User> mybatisPage = new Page<>(pageable.getPageNumber() + 1, pageable.getPageSize());
+        Page<UserDO> mybatisPage = new Page<>(pageable.getPageNumber() + 1, pageable.getPageSize());
 
         List<String> roleNames = List.of(
                 RoleType.MEMBER.getName(),
                 RoleType.DIRECTION_ADMIN.getName(),
                 RoleType.SUPER_ADMIN.getName());
 
-        IPage<User> result = userMapper.selectByRoleNamesAndDirection(
+        IPage<UserDO> result = userMapper.selectByRoleNamesAndDirection(
                 mybatisPage,
                 roleNames,
                 direction,
@@ -67,9 +80,10 @@ public class MemberRepositoryImpl implements MemberRepository {
                 systemUsername);
 
         // 批量查询角色
-        Map<Long, String> roleIdToNameMap = buildRoleIdToNameMap(result.getRecords());
+        List<User> users = RepositoryObjectConverter.toDomainList(result.getRecords(), User.class);
+        Map<Long, String> roleIdToNameMap = buildRoleIdToNameMap(users);
 
-        List<MemberVO> members = result.getRecords()
+        List<MemberVO> members = users
                 .stream()
                 .map(user -> convertToVO(user, roleIdToNameMap))
                 .collect(Collectors.toList());
@@ -80,9 +94,16 @@ public class MemberRepositoryImpl implements MemberRepository {
                 result.getTotal());
     }
 
+    /**
+     * 按主键查询成员 记录。
+     *
+     * @param id
+     *            业务记录主键。
+     * @return 查询到的成员 结果；不存在时为空。
+     */
     @Override
     public Optional<MemberVO> findById(Long id) {
-        User user = userMapper.selectById(id);
+        User user = RepositoryObjectConverter.toDomain(userMapper.selectById(id), User.class);
         if (user == null || user.getDisable() || user.getRoleId() == null
                 || systemUsername.equals(user.getUsername())) {
             return Optional.empty();
@@ -93,15 +114,20 @@ public class MemberRepositoryImpl implements MemberRepository {
         return Optional.of(convertToVO(user, roleIdToNameMap));
     }
 
+    /**
+     * 查询各技术方向负责人成员列表。
+     *
+     * @return 满足条件的成员 结果集合。
+     */
     @Override
     public List<MemberVO> findDirectionLeaders() {
-        Page<User> mybatisPage = new Page<>(1, Integer.MAX_VALUE);
+        Page<UserDO> mybatisPage = new Page<>(1, Integer.MAX_VALUE);
 
         List<String> roleNames = List.of(
                 RoleType.DIRECTION_ADMIN.getName(),
                 RoleType.SUPER_ADMIN.getName());
 
-        IPage<User> result = userMapper.selectByRoleNamesAndDirection(
+        IPage<UserDO> result = userMapper.selectByRoleNamesAndDirection(
                 mybatisPage,
                 roleNames,
                 null,
@@ -109,14 +135,22 @@ public class MemberRepositoryImpl implements MemberRepository {
                 systemUsername);
 
         // 批量查询角色
-        Map<Long, String> roleIdToNameMap = buildRoleIdToNameMap(result.getRecords());
+        List<User> users = RepositoryObjectConverter.toDomainList(result.getRecords(), User.class);
+        Map<Long, String> roleIdToNameMap = buildRoleIdToNameMap(users);
 
-        return result.getRecords()
+        return users
                 .stream()
                 .map(user -> convertToVO(user, roleIdToNameMap))
                 .collect(Collectors.toList());
     }
 
+    /**
+     * 处理成员 仓储职责中的业务数据访问逻辑。
+     *
+     * @param users
+     *            用户数据行集合。
+     * @return 转换后的目标模型对象。
+     */
     private Map<Long, String> buildRoleIdToNameMap(List<User> users) {
         List<Long> roleIds = users.stream()
                 .map(User::getRoleId)
@@ -128,23 +162,35 @@ public class MemberRepositoryImpl implements MemberRepository {
             return Collections.emptyMap();
         }
 
-        List<Role> roles = roleMapper.selectBatchIds(roleIds);
+        List<Role> roles = RepositoryObjectConverter.toDomainList(roleMapper.selectBatchIds(roleIds), Role.class);
         return roles.stream()
                 .collect(Collectors.toMap(Role::getId, Role::getName));
     }
 
+    /**
+     * 在成员 的持久层对象、领域对象和视图对象之间转换。
+     *
+     * @param user
+     *            用户领域对象。
+     * @param roleIdToNameMap
+     *            角色主键到角色名称的映射。
+     * @return 转换后的目标模型对象。
+     */
     private MemberVO convertToVO(User user, Map<Long, String> roleIdToNameMap) {
         String collegeName = null;
         if (user.getCollegeId() != null) {
-            College college = collegeMapper.selectById(user.getCollegeId());
+            College college = RepositoryObjectConverter
+                    .toDomain(collegeMapper.selectById(user.getCollegeId()), College.class);
             collegeName = college != null ? college.getName() : null;
         }
 
         String wechatQrCodeUrl = null;
         if (user.getQrcodeId() != null) {
-            Qrcode qrcode = qrcodeMapper.selectById(user.getQrcodeId());
+            Qrcode qrcode = RepositoryObjectConverter
+                    .toDomain(qrcodeMapper.selectById(user.getQrcodeId()), Qrcode.class);
             if (qrcode != null && qrcode.getFileId() != null) {
-                File wechatQrCode = fileMapper.selectById(qrcode.getFileId());
+                File wechatQrCode = RepositoryObjectConverter
+                        .toDomain(fileMapper.selectById(qrcode.getFileId()), File.class);
                 wechatQrCodeUrl = wechatQrCode != null ? wechatQrCode.getUrl() : null;
             }
         }

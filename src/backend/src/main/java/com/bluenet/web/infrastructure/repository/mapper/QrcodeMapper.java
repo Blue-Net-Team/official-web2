@@ -1,10 +1,30 @@
 package com.bluenet.web.infrastructure.repository.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.bluenet.web.domain.model.entity.Qrcode;
+import com.bluenet.web.infrastructure.repository.dataobject.QrcodeDO;
+import com.bluenet.web.domain.model.enumerate.QrcodeType;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
+
+import java.util.List;
 
 @Mapper
-public interface QrcodeMapper extends BaseMapper<Qrcode> {
-    Qrcode selectByFileId(Long fileId);
+public interface QrcodeMapper extends BaseMapper<QrcodeDO> {
+    /**
+     * 按条件查询二维码 数据行。
+     *
+     * @param fileId
+     *            文件主键。
+     * @return 匹配条件的二维码 数据行；不存在时为 null。
+     */
+    QrcodeDO selectByFileId(@Param("fileId") Long fileId);
+
+    /**
+     * 按条件查询二维码 数据行。
+     *
+     * @param type
+     *            业务类型或枚举类型。
+     * @return 满足条件的二维码 结果集合。
+     */
+    List<QrcodeDO> selectByType(@Param("type") QrcodeType type);
 }

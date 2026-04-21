@@ -11,20 +11,68 @@ import lombok.Getter;
 @AllArgsConstructor
 @Builder(toBuilder = true)
 public class EnrollVO {
+    /**
+     * 当前对象在系统中的唯一标识。
+     */
     private Long id;
+    /**
+     * 用户真实姓名或登录用户名。
+     */
     private String username;
+    /**
+     * 学生学号。
+     */
     private String studentId;
+    /**
+     * 用户、报名或统计记录所属学院标识。
+     */
     private Long collegeId;
+    /**
+     * 学院名称。
+     */
     private String collegeName;
+    /**
+     * 用户所在专业。
+     */
     private String major;
+    /**
+     * 用户性别。
+     */
     private Gender gender;
+    /**
+     * 用户或考核所属技术方向。
+     */
     private Direction direction;
+    /**
+     * 用户头像对应的文件记录标识。
+     */
     private Long avatarFileId;
+    /**
+     * 当前业务流程、任务或记录的状态。
+     */
     private EnrollStatus status;
+    /**
+     * 用户或报名使用的内部推荐码。
+     */
     private String internalReferralCode;
+    /**
+     * 推荐人的用户标识。
+     */
     private Long referralUserId;
+    /**
+     * 推荐人的展示名称。
+     */
     private String referralUserName;
+    /**
+     * 用户邮箱地址。
+     */
     private String email;
+    /**
+     * 报名自我介绍或申请说明。
+     */
     private String introduction;
+    /**
+     * 用户密码哈希值或报名初始密码。
+     */
     private String password;
 }

@@ -1,5 +1,9 @@
 package com.bluenet.web.api.controller;
 
+import com.bluenet.web.infrastructure.repository.dataobject.*;
+
+import com.bluenet.web.testsupport.RepositoryTestObjects;
+
 import com.bluenet.web.BaseIntegrationTest;
 import com.bluenet.web.api.dto.ResponseMessage;
 import com.bluenet.web.api.dto.auth.StudentIdLoginRequestDTO;
@@ -52,9 +56,12 @@ class AdminLoginIntegrationTest extends BaseIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        User existingUser = userMapper.selectOne(
-                new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<User>()
-                        .eq(User::getStudentId, ADMIN_STUDENT_ID));
+        // Mapper 返回 DO，测试夹具转换为领域对象后再断言/清理。
+        User existingUser = RepositoryTestObjects.toDomain(
+                userMapper.selectOne(
+                        new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<UserDO>()
+                                .eq(UserDO::getStudentId, ADMIN_STUDENT_ID)),
+                User.class);
         if (existingUser != null) {
             userMapper.deleteById(existingUser.getId());
         }
@@ -76,7 +83,7 @@ class AdminLoginIntegrationTest extends BaseIntegrationTest {
             adminUser.setPassword(encodedPassword);
             adminUser.setRoleId(1L);
             adminUser.setDisable(false);
-            userMapper.insert(adminUser);
+            RepositoryTestObjects.insert(userMapper, adminUser, UserDO.class);
 
             StudentIdLoginRequestDTO request = new StudentIdLoginRequestDTO();
             request.setStudentId(ADMIN_STUDENT_ID);
@@ -115,7 +122,7 @@ class AdminLoginIntegrationTest extends BaseIntegrationTest {
             adminUser.setPassword(encodedPassword);
             adminUser.setRoleId(1L);
             adminUser.setDisable(false);
-            userMapper.insert(adminUser);
+            RepositoryTestObjects.insert(userMapper, adminUser, UserDO.class);
 
             StudentIdLoginRequestDTO request = new StudentIdLoginRequestDTO();
             request.setStudentId(ADMIN_STUDENT_ID);
@@ -141,7 +148,7 @@ class AdminLoginIntegrationTest extends BaseIntegrationTest {
             adminUser.setPassword(encodedPassword);
             adminUser.setRoleId(1L);
             adminUser.setDisable(false);
-            userMapper.insert(adminUser);
+            RepositoryTestObjects.insert(userMapper, adminUser, UserDO.class);
 
             String wrongSha256Hash = sha256Hash("wrongPassword");
             StudentIdLoginRequestDTO request = new StudentIdLoginRequestDTO();

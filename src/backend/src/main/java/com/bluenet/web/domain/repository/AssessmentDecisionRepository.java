@@ -12,47 +12,47 @@ import java.util.Optional;
 public interface AssessmentDecisionRepository {
 
     /**
-     * 保存新的最终通过决策。
+     * 保存新的考核最终决策 记录。
      *
      * @param decision
-     *            决策实体
+     *            考核最终决策对象。
      */
     void save(AssessmentDecision decision);
 
     /**
-     * 按主键查询最终通过决策。
+     * 按主键查询考核最终决策 记录。
      *
      * @param id
-     *            决策ID
-     * @return 决策记录
+     *            业务记录主键。
+     * @return 查询到的考核最终决策 结果；不存在时为空。
      */
     Optional<AssessmentDecisionVO> findById(Long id);
 
     /**
-     * 更新已有最终通过决策。
+     * 更新已有考核最终决策 记录。
      *
      * @param decision
-     *            决策VO
+     *            考核最终决策对象。
      */
     void update(AssessmentDecisionVO decision);
 
     /**
-     * 查询某考生在某次考核中的最终通过决策。
+     * 按用户和考核场次查询对应记录。
      *
      * @param userId
-     *            考生用户ID
+     *            用户主键，用于限定用户范围。
      * @param assessmentTimeId
-     *            考核时间ID
-     * @return 决策记录
+     *            考核场次主键。
+     * @return 查询到的考核最终决策 结果；不存在时为空。
      */
     Optional<AssessmentDecisionVO> findByUserIdAndAssessmentTimeId(Long userId, Long assessmentTimeId);
 
     /**
-     * 查询指定考核时间下的全部录用决策。
+     * 查询指定考核场次下的记录列表。
      *
      * @param assessmentTimeId
-     *            考核时间ID
-     * @return 决策列表
+     *            考核场次主键。
+     * @return 满足条件的考核最终决策 结果集合。
      */
     List<AssessmentDecisionVO> findByAssessmentTimeId(Long assessmentTimeId);
 }

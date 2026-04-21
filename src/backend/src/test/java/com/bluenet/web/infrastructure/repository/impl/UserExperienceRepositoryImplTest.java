@@ -1,6 +1,9 @@
 package com.bluenet.web.infrastructure.repository.impl;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.bluenet.web.infrastructure.repository.dataobject.*;
+
+import com.bluenet.web.testsupport.RepositoryTestObjects;
+
 import com.bluenet.web.domain.model.entity.UserExperience;
 import com.bluenet.web.domain.model.enumerate.ExperienceType;
 import com.bluenet.web.domain.model.vo.ExperienceVO;
@@ -55,7 +58,8 @@ class UserExperienceRepositoryImplTest {
         void findById_existingExperience_shouldReturnVO() {
             UserExperience experience = createTestExperience(EXPERIENCE_ID, USER_ID, ExperienceType.PROJECT, "项目1");
 
-            when(userExperienceMapper.selectById(EXPERIENCE_ID)).thenReturn(experience);
+            when(userExperienceMapper.selectById(EXPERIENCE_ID))
+                    .thenReturn(RepositoryTestObjects.toDataObject(experience, UserExperienceDO.class));
 
             Optional<ExperienceVO> result = userExperienceRepository.findById(EXPERIENCE_ID);
 
@@ -85,23 +89,27 @@ class UserExperienceRepositoryImplTest {
         @Test
         @DisplayName("用户有经历：应返回经历列表")
         void findByUserId_userHasExperiences_shouldReturnList() {
-            List<UserExperience> experiences = Arrays.asList(
-                    createTestExperience(100L, USER_ID, ExperienceType.PROJECT, "项目1"),
-                    createTestExperience(101L, USER_ID, ExperienceType.COMPETITION, "竞赛1"));
+            List<UserExperienceDO> experiences = Arrays.asList(
+                    RepositoryTestObjects.toDataObject(
+                            createTestExperience(100L, USER_ID, ExperienceType.PROJECT, "项目1"),
+                            UserExperienceDO.class),
+                    RepositoryTestObjects.toDataObject(
+                            createTestExperience(101L, USER_ID, ExperienceType.COMPETITION, "竞赛1"),
+                            UserExperienceDO.class));
 
-            when(userExperienceMapper.selectList(any(LambdaQueryWrapper.class))).thenReturn(experiences);
+            when(userExperienceMapper.selectByUserId(USER_ID)).thenReturn(experiences);
 
             List<ExperienceVO> result = userExperienceRepository.findByUserId(USER_ID);
 
             assertNotNull(result);
             assertEquals(2, result.size());
-            verify(userExperienceMapper).selectList(any(LambdaQueryWrapper.class));
+            verify(userExperienceMapper).selectByUserId(USER_ID);
         }
 
         @Test
         @DisplayName("用户无经历：应返回空列表")
         void findByUserId_userHasNoExperiences_shouldReturnEmptyList() {
-            when(userExperienceMapper.selectList(any(LambdaQueryWrapper.class))).thenReturn(Collections.emptyList());
+            when(userExperienceMapper.selectByUserId(USER_ID)).thenReturn(Collections.emptyList());
 
             List<ExperienceVO> result = userExperienceRepository.findByUserId(USER_ID);
 
@@ -117,11 +125,15 @@ class UserExperienceRepositoryImplTest {
         @Test
         @DisplayName("按类型筛选：应返回指定类型的经历")
         void findByUserIdAndType_shouldFilterByType() {
-            List<UserExperience> experiences = Arrays.asList(
-                    createTestExperience(100L, USER_ID, ExperienceType.PROJECT, "项目1"),
-                    createTestExperience(101L, USER_ID, ExperienceType.PROJECT, "项目2"));
+            List<UserExperienceDO> experiences = Arrays.asList(
+                    RepositoryTestObjects.toDataObject(
+                            createTestExperience(100L, USER_ID, ExperienceType.PROJECT, "项目1"),
+                            UserExperienceDO.class),
+                    RepositoryTestObjects.toDataObject(
+                            createTestExperience(101L, USER_ID, ExperienceType.PROJECT, "项目2"),
+                            UserExperienceDO.class));
 
-            when(userExperienceMapper.selectList(any(LambdaQueryWrapper.class))).thenReturn(experiences);
+            when(userExperienceMapper.selectByUserIdAndType(USER_ID, ExperienceType.PROJECT)).thenReturn(experiences);
 
             List<ExperienceVO> result = userExperienceRepository.findByUserIdAndType(USER_ID, ExperienceType.PROJECT);
 
@@ -133,7 +145,8 @@ class UserExperienceRepositoryImplTest {
         @Test
         @DisplayName("无匹配类型：应返回空列表")
         void findByUserIdAndType_noMatch_shouldReturnEmptyList() {
-            when(userExperienceMapper.selectList(any(LambdaQueryWrapper.class))).thenReturn(Collections.emptyList());
+            when(userExperienceMapper.selectByUserIdAndType(USER_ID, ExperienceType.INTERNSHIP))
+                    .thenReturn(Collections.emptyList());
 
             List<ExperienceVO> result = userExperienceRepository
                     .findByUserIdAndType(USER_ID, ExperienceType.INTERNSHIP);
@@ -150,8 +163,8 @@ class UserExperienceRepositoryImplTest {
         @Test
         @DisplayName("保存经历：应成功保存并返回VO")
         void save_validData_shouldSaveAndReturnVO() {
-            when(userExperienceMapper.insert(any(UserExperience.class))).thenAnswer(invocation -> {
-                UserExperience experience = invocation.getArgument(0);
+            when(userExperienceMapper.insert(any(UserExperienceDO.class))).thenAnswer(invocation -> {
+                UserExperienceDO experience = invocation.getArgument(0);
                 experience.setId(EXPERIENCE_ID);
                 return 1;
             });
@@ -167,7 +180,7 @@ class UserExperienceRepositoryImplTest {
             assertNotNull(result);
             assertEquals(EXPERIENCE_ID, result.getId());
             assertEquals("新项目", result.getTitle());
-            verify(userExperienceMapper).insert(any(UserExperience.class));
+            verify(userExperienceMapper).insert(any(UserExperienceDO.class));
         }
     }
 
@@ -184,8 +197,9 @@ class UserExperienceRepositoryImplTest {
                     ExperienceType.PROJECT,
                     "原项目");
 
-            when(userExperienceMapper.selectById(EXPERIENCE_ID)).thenReturn(existingExperience);
-            when(userExperienceMapper.updateById(any(UserExperience.class))).thenReturn(1);
+            when(userExperienceMapper.selectById(EXPERIENCE_ID))
+                    .thenReturn(RepositoryTestObjects.toDataObject(existingExperience, UserExperienceDO.class));
+            when(userExperienceMapper.updateById(any(UserExperienceDO.class))).thenReturn(1);
 
             ExperienceVO result = userExperienceRepository.update(
                     EXPERIENCE_ID,
@@ -196,13 +210,14 @@ class UserExperienceRepositoryImplTest {
 
             assertNotNull(result);
             assertEquals("更新后的项目", result.getTitle());
-            verify(userExperienceMapper).updateById(any(UserExperience.class));
+            verify(userExperienceMapper).updateById(any(UserExperienceDO.class));
         }
 
         @Test
         @DisplayName("经历不存在：应抛出IllegalArgumentException")
         void update_nonExistingExperience_shouldThrowException() {
-            when(userExperienceMapper.selectById(EXPERIENCE_ID)).thenReturn(null);
+            when(userExperienceMapper.selectById(EXPERIENCE_ID))
+                    .thenReturn(RepositoryTestObjects.toDataObject(null, UserExperienceDO.class));
 
             assertThrows(
                     IllegalArgumentException.class,
@@ -243,7 +258,7 @@ class UserExperienceRepositoryImplTest {
         @Test
         @DisplayName("统计数量：应返回正确数量")
         void countByUserIdAndType_shouldReturnCorrectCount() {
-            when(userExperienceMapper.selectCount(any(LambdaQueryWrapper.class))).thenReturn(5L);
+            when(userExperienceMapper.countByUserIdAndType(USER_ID, ExperienceType.PROJECT)).thenReturn(5L);
 
             int result = userExperienceRepository.countByUserIdAndType(USER_ID, ExperienceType.PROJECT);
 
@@ -253,7 +268,7 @@ class UserExperienceRepositoryImplTest {
         @Test
         @DisplayName("无数据：应返回0")
         void countByUserIdAndType_noData_shouldReturnZero() {
-            when(userExperienceMapper.selectCount(any(LambdaQueryWrapper.class))).thenReturn(0L);
+            when(userExperienceMapper.countByUserIdAndType(USER_ID, ExperienceType.PROJECT)).thenReturn(0L);
 
             int result = userExperienceRepository.countByUserIdAndType(USER_ID, ExperienceType.PROJECT);
 
@@ -270,7 +285,8 @@ class UserExperienceRepositoryImplTest {
         void checkOwner_isOwner_shouldReturnTrue() {
             UserExperience experience = createTestExperience(EXPERIENCE_ID, USER_ID, ExperienceType.PROJECT, "项目1");
 
-            when(userExperienceMapper.selectById(EXPERIENCE_ID)).thenReturn(experience);
+            when(userExperienceMapper.selectById(EXPERIENCE_ID))
+                    .thenReturn(RepositoryTestObjects.toDataObject(experience, UserExperienceDO.class));
 
             boolean result = userExperienceRepository.checkOwner(EXPERIENCE_ID, USER_ID);
 
@@ -282,7 +298,8 @@ class UserExperienceRepositoryImplTest {
         void checkOwner_notOwner_shouldReturnFalse() {
             UserExperience experience = createTestExperience(EXPERIENCE_ID, USER_ID, ExperienceType.PROJECT, "项目1");
 
-            when(userExperienceMapper.selectById(EXPERIENCE_ID)).thenReturn(experience);
+            when(userExperienceMapper.selectById(EXPERIENCE_ID))
+                    .thenReturn(RepositoryTestObjects.toDataObject(experience, UserExperienceDO.class));
 
             boolean result = userExperienceRepository.checkOwner(EXPERIENCE_ID, OTHER_USER_ID);
 
@@ -292,7 +309,8 @@ class UserExperienceRepositoryImplTest {
         @Test
         @DisplayName("经历不存在：应返回false")
         void checkOwner_experienceNotExists_shouldReturnFalse() {
-            when(userExperienceMapper.selectById(EXPERIENCE_ID)).thenReturn(null);
+            when(userExperienceMapper.selectById(EXPERIENCE_ID))
+                    .thenReturn(RepositoryTestObjects.toDataObject(null, UserExperienceDO.class));
 
             boolean result = userExperienceRepository.checkOwner(EXPERIENCE_ID, USER_ID);
 

@@ -2,6 +2,7 @@ package com.bluenet.web.domain.service.impl;
 
 import com.bluenet.web.domain.exception.BadRequest;
 import com.bluenet.web.domain.exception.DataNotFound;
+import com.bluenet.web.domain.model.entity.User;
 import com.bluenet.web.domain.model.enumerate.Direction;
 import com.bluenet.web.domain.model.enumerate.Gender;
 import com.bluenet.web.domain.model.vo.FileVO;
@@ -81,10 +82,14 @@ public class UserDomainServiceImpl implements UserDomainService {
     @Override
     @Transactional
     public void changePassword(Long userId, String rawNewPassword) {
-        userRepository.findById(userId)
+        UserVO userVO = userRepository.findById(userId)
                 .orElseThrow(() -> new DataNotFound("用户不存在"));
-        String encodedPassword = passwordEncoder.encode(rawNewPassword);
-        userRepository.updatePassword(userId, encodedPassword);
+        User user = User.builder()
+                .id(userVO.getId())
+                .password(userVO.getPassword())
+                .build();
+        user.changePassword(passwordEncoder.encode(rawNewPassword));
+        userRepository.updatePassword(user.getId(), user.getPassword());
     }
 
     private void verifyCode(String email, String code, String scene) {

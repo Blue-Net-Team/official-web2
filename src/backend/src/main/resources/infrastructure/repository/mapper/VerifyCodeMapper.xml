@@ -1,11 +1,46 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.bluenet.web.infrastructure.repository.mapper.VerifyCodeMapper">
-    <resultMap id="BaseResultMap" type="com.bluenet.web.domain.model.entity.VerifyCode">
+    <resultMap id="BaseResultMap" type="com.bluenet.web.infrastructure.repository.dataobject.VerifyCodeDO">
         <id column="id" property="id"/>
         <result column="target" property="target"/>
         <result column="code" property="code"/>
+        <result column="scene" property="scene"/>
         <result column="expire_at" property="expireAt"/>
         <result column="used_at" property="usedAt"/>
     </resultMap>
+
+    <select id="selectLatestByTargetAndCode" resultMap="BaseResultMap">
+        SELECT *
+        FROM tb_verify_code
+        WHERE target = #{target}
+          AND code = #{code}
+        ORDER BY id DESC
+        LIMIT 1
+    </select>
+
+    <select id="selectLatestByTargetAndCodeAndScene" resultMap="BaseResultMap">
+        SELECT *
+        FROM tb_verify_code
+        WHERE target = #{target}
+          AND code = #{code}
+          AND scene = #{scene}
+        ORDER BY id DESC
+        LIMIT 1
+    </select>
+
+    <update id="markAsUsed">
+        UPDATE tb_verify_code
+        SET used_at = #{usedAt}
+        WHERE target = #{target}
+          AND code = #{code}
+    </update>
+
+    <update id="markAsUsedWithScene">
+        UPDATE tb_verify_code
+        SET used_at = #{usedAt}
+        WHERE target = #{target}
+          AND code = #{code}
+          AND scene = #{scene}
+    </update>
 </mapper>

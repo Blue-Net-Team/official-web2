@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.bluenet.web.infrastructure.repository.mapper.AssessmentAnswerMapper">
-    <resultMap id="BaseResultMap" type="com.bluenet.web.domain.model.entity.AssessmentAnswer">
+    <resultMap id="BaseResultMap" type="com.bluenet.web.infrastructure.repository.dataobject.AssessmentAnswerDO">
         <id column="id" property="id"/>
         <result column="user_id" property="userId"/>
         <result column="question_id" property="questionId"/>
@@ -10,4 +10,34 @@
         <result column="file_id" property="fileId"/>
         <result column="submit_time" property="submitTime"/>
     </resultMap>
+
+    <select id="countByUserIdAndAssessmentTimeId" resultType="int">
+        SELECT COUNT(*)
+        FROM tb_assessment_answer a
+        JOIN tb_assessment_question q ON a.question_id = q.id
+        WHERE q.assessment_time_id = #{assessmentTimeId}
+          AND a.user_id = #{userId}
+    </select>
+
+    <select id="countByUserIdAndQuestionId" resultType="int">
+        SELECT COUNT(*)
+        FROM tb_assessment_answer
+        WHERE user_id = #{userId}
+          AND question_id = #{questionId}
+    </select>
+
+    <select id="selectByUserIdAndQuestionId" resultMap="BaseResultMap">
+        SELECT *
+        FROM tb_assessment_answer
+        WHERE user_id = #{userId}
+          AND question_id = #{questionId}
+        LIMIT 1
+    </select>
+
+    <select id="selectFirstByFileId" resultMap="BaseResultMap">
+        SELECT *
+        FROM tb_assessment_answer
+        WHERE file_id = #{fileId}
+        LIMIT 1
+    </select>
 </mapper>

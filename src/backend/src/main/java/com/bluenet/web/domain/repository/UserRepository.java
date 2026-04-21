@@ -11,63 +11,156 @@ import com.bluenet.web.domain.model.vo.UserVO;
 import java.util.Optional;
 
 public interface UserRepository {
+    /**
+     * 保存新的用户 记录。
+     *
+     * @param user
+     *            用户领域对象。
+     */
     void save(User user);
+    /**
+     * 按主键查询用户 记录。
+     *
+     * @param id
+     *            业务记录主键。
+     * @return 查询到的用户 结果；不存在时为空。
+     */
     Optional<UserVO> findById(Long id);
+    /**
+     * 按邮箱查询用户视图。
+     *
+     * @param email
+     *            邮箱地址，用于定位用户或验证码。
+     * @return 查询到的用户 结果；不存在时为空。
+     */
     Optional<UserVO> findByEmail(String email);
+    /**
+     * 按学号查询用户或报名申请。
+     *
+     * @param studentId
+     *            学生学号，用于定位用户或报名申请。
+     * @return 查询到的用户 结果；不存在时为空。
+     */
     Optional<UserVO> findByStudentId(String studentId);
+    /**
+     * 更新用户头像文件关联。
+     *
+     * @param user
+     *            用户领域对象。
+     * @param file
+     *            文件领域对象或文件视图对象。
+     * @return 数据库受影响行数。
+     */
     int updateAvatar(UserVO user, FileVO file);
+    /**
+     * 更新用户头像文件关联。
+     *
+     * @param userId
+     *            用户主键，用于限定用户范围。
+     * @param id
+     *            业务记录主键。
+     * @return 数据库受影响行数。
+     */
     int updateAvatar(Long userId, Long id);
+    /**
+     * 更新用户微信二维码文件关联。
+     *
+     * @param user
+     *            用户领域对象。
+     * @param qrcode
+     *            二维码领域对象或视图对象。
+     * @return 数据库受影响行数。
+     */
     int updateQrcode(UserVO user, QrcodeVO qrcode);
 
     /**
-     * 更新用户基本信息
+     * 更新用户个人资料字段。
      *
      * @param userId
-     *            用户ID
+     *            用户主键，用于限定用户范围。
      * @param username
-     *            用户名（可为null）
+     *            用户姓名或登录名。
      * @param nickname
-     *            昵称（可为null）
+     *            用户昵称。
      * @param college
-     *            学院（可为null）
+     *            学院名称。
      * @param major
-     *            专业（可为null）
+     *            专业名称。
      * @param direction
-     *            方向（可为null）
+     *            技术方向过滤条件。
      * @param gender
-     *            性别（可为null）
+     *            性别。
      * @param bio
-     *            个人简介（可为null）
-     * @return 影响的行数
+     *            个人简介。
+     * @return 数据库受影响行数。
      */
     int updateProfile(Long userId, String username, String nickname, String college,
             String major, Direction direction, Gender gender, String bio);
 
     /**
-     * 获取用户Tab计数
+     * 统计用户主页各标签页展示数量。
      *
      * @param userId
-     *            用户ID
-     * @return Tab计数
+     *            用户主键，用于限定用户范围。
+     * @return 查询或处理得到的用户 结果。
      */
     TabCountsVO getTabCounts(Long userId);
 
+    /**
+     * 按 GitHub 用户标识查询已绑定用户。
+     *
+     * @param githubId
+     *            GitHub 用户唯一标识。
+     * @return 查询到的用户 结果；不存在时为空。
+     */
     Optional<UserVO> findByGithubId(String githubId);
 
+    /**
+     * 保存用户与 GitHub 账号的绑定信息。
+     *
+     * @param userId
+     *            用户主键，用于限定用户范围。
+     * @param githubId
+     *            GitHub 用户唯一标识。
+     * @param githubUsername
+     *            GitHub 登录名。
+     */
     void updateGithubBinding(Long userId, String githubId, String githubUsername);
 
+    /**
+     * 清除用户与 GitHub 账号的绑定信息。
+     *
+     * @param userId
+     *            用户主键，用于限定用户范围。
+     */
     void clearGithubBinding(Long userId);
 
+    /**
+     * 更新用户邮箱地址。
+     *
+     * @param userId
+     *            用户主键，用于限定用户范围。
+     * @param newEmail
+     *            新的邮箱地址。
+     */
     void updateEmail(Long userId, String newEmail);
 
+    /**
+     * 更新用户加密后的登录密码。
+     *
+     * @param userId
+     *            用户主键，用于限定用户范围。
+     * @param encodedPassword
+     *            加密后的密码。
+     */
     void updatePassword(Long userId, String encodedPassword);
 
     /**
-     * 检查内推码是否已存在（用于唯一性校验）
+     * 判断内部推荐码是否已被用户占用。
      *
      * @param code
-     *            内推码
-     * @return true 如果该内推码已被使用
+     *            验证码或推荐码。
+     * @return 满足条件时返回 true，否则返回 false。
      */
     boolean existsByInternalReferralCode(String code);
 }

@@ -11,5 +11,8 @@ import lombok.Data;
         @JsonSubTypes.Type(value = MultipleChoiceContent.class, name = "multiple_choice"),
         @JsonSubTypes.Type(value = AlgorithmContent.class, name = "algorithm") })
 public abstract class QuestionContent {
+    /**
+     * 正文内容、题目内容或结构化配置内容。
+     */
     private String content;
 }

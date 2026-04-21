@@ -1,9 +1,10 @@
 package com.bluenet.web.infrastructure.repository.impl;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.bluenet.web.infrastructure.repository.support.RepositoryObjectConverter;
+
+import com.bluenet.web.infrastructure.repository.dataobject.*;
+
 import com.bluenet.web.domain.model.entity.College;
-import com.bluenet.web.domain.model.entity.Enroll;
-import com.bluenet.web.domain.model.entity.User;
 import com.bluenet.web.domain.model.vo.CollegeVO;
 import com.bluenet.web.domain.repository.CollegeRepository;
 import com.bluenet.web.infrastructure.repository.mapper.CollegeMapper;
@@ -29,84 +30,145 @@ public class CollegeRepositoryImpl implements CollegeRepository {
     private final UserMapper userMapper;
     private final EnrollMapper enrollMapper;
 
+    /**
+     * 查询全部学院 记录。
+     *
+     * @return 满足条件的学院 结果集合。
+     */
     @Override
     public List<CollegeVO> findAll() {
-        List<College> colleges = collegeMapper.selectList(null);
+        List<College> colleges = RepositoryObjectConverter.toDomainList(collegeMapper.selectList(null), College.class);
         return colleges.stream()
                 .map(this::convertToVO)
                 .collect(Collectors.toList());
     }
 
+    /**
+     * 按主键查询学院 记录。
+     *
+     * @param id
+     *            业务记录主键。
+     * @return 查询到的学院 结果；不存在时为空。
+     */
     @Override
     public Optional<CollegeVO> findById(Long id) {
-        College college = collegeMapper.selectById(id);
+        College college = RepositoryObjectConverter.toDomain(collegeMapper.selectById(id), College.class);
         if (college == null) {
             return Optional.empty();
         }
         return Optional.of(convertToVO(college));
     }
 
+    /**
+     * 保存新的学院 记录。
+     *
+     * @param name
+     *            业务对象名称。
+     * @return 新记录的主键。
+     */
     @Override
     public Long save(String name) {
         College college = new College();
         college.setName(name);
-        collegeMapper.insert(college);
+        RepositoryObjectConverter.insert(collegeMapper, college, CollegeDO.class);
         return college.getId();
     }
 
+    /**
+     * 更新已有学院 记录。
+     *
+     * @param id
+     *            业务记录主键。
+     * @param name
+     *            业务对象名称。
+     */
     @Override
     public void update(Long id, String name) {
         College college = new College();
         college.setId(id);
         college.setName(name);
-        collegeMapper.updateById(college);
+        RepositoryObjectConverter.updateById(collegeMapper, college, CollegeDO.class);
     }
 
+    /**
+     * 删除指定学院 记录。
+     *
+     * @param id
+     *            业务记录主键。
+     */
     @Override
     public void deleteById(Long id) {
         collegeMapper.deleteById(id);
     }
 
+    /**
+     * 判断是否存在满足条件的学院 记录。
+     *
+     * @param id
+     *            业务记录主键。
+     * @return 满足条件时返回 true，否则返回 false。
+     */
     @Override
     public boolean existsById(Long id) {
         return collegeMapper.selectById(id) != null;
     }
 
+    /**
+     * 判断是否存在满足条件的学院 记录。
+     *
+     * @param name
+     *            业务对象名称。
+     * @return 满足条件时返回 true，否则返回 false。
+     */
     @Override
     public boolean existsByName(String name) {
-        LambdaQueryWrapper<College> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(College::getName, name);
-        return collegeMapper.selectCount(wrapper) > 0;
-    }
-
-    @Override
-    public boolean existsByNameAndIdNot(String name, Long excludeId) {
-        LambdaQueryWrapper<College> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(College::getName, name)
-                .ne(College::getId, excludeId);
-        return collegeMapper.selectCount(wrapper) > 0;
-    }
-
-    @Override
-    public boolean hasAssociatedUsers(Long id) {
-        LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(User::getCollegeId, id);
-        return userMapper.selectCount(wrapper) > 0;
-    }
-
-    @Override
-    public boolean hasAssociatedEnrolls(Long id) {
-        LambdaQueryWrapper<Enroll> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(Enroll::getCollegeId, id);
-        return enrollMapper.selectCount(wrapper) > 0;
+        return collegeMapper.countByName(name) > 0;
     }
 
     /**
-     * 将实体转换为VO
+     * 判断除当前记录外是否存在相同业务唯一键的学院 记录。
+     *
+     * @param name
+     *            业务对象名称。
+     * @param excludeId
+     *            需要排除的当前记录主键。
+     * @return 满足条件时返回 true，否则返回 false。
+     */
+    @Override
+    public boolean existsByNameAndIdNot(String name, Long excludeId) {
+        return collegeMapper.countByNameAndIdNot(name, excludeId) > 0;
+    }
+
+    /**
+     * 判断学院下是否仍有关联用户。
+     *
+     * @param id
+     *            业务记录主键。
+     * @return 满足条件时返回 true，否则返回 false。
+     */
+    @Override
+    public boolean hasAssociatedUsers(Long id) {
+        return userMapper.countByCollegeId(id) > 0;
+    }
+
+    /**
+     * 判断学院下是否仍有关联报名申请。
+     *
+     * @param id
+     *            业务记录主键。
+     * @return 满足条件时返回 true，否则返回 false。
+     */
+    @Override
+    public boolean hasAssociatedEnrolls(Long id) {
+        return enrollMapper.countByCollegeId(id) > 0;
+    }
+
+    /**
+     * 在学院 的持久层对象、领域对象和视图对象之间转换。
      *
      * @param college
-     *            学院实体
-     * @return 学院VO
+     *            学院名称。
+     * @return 转换后的目标模型对象。
      */
     private CollegeVO convertToVO(College college) {
         return CollegeVO.builder()

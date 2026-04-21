@@ -1,5 +1,9 @@
 package com.bluenet.web.infrastructure.repository.impl;
 
+import com.bluenet.web.infrastructure.repository.support.RepositoryObjectConverter;
+
+import com.bluenet.web.infrastructure.repository.dataobject.*;
+
 import com.bluenet.web.domain.model.entity.AlgorithmJudgeCaseResult;
 import com.bluenet.web.domain.model.vo.AlgorithmJudgeCaseResultVO;
 import com.bluenet.web.domain.repository.AlgorithmJudgeCaseResultRepository;
@@ -14,13 +18,27 @@ import java.util.List;
 public class AlgorithmJudgeCaseResultRepositoryImpl implements AlgorithmJudgeCaseResultRepository {
     private final AlgorithmJudgeCaseResultMapper algorithmJudgeCaseResultMapper;
 
+    /**
+     * 处理算法评测用例结果 仓储职责中的业务数据访问逻辑。
+     *
+     * @param results
+     *            算法评测用例结果集合。
+     */
     @Override
     public void saveAll(List<AlgorithmJudgeCaseResultVO> results) {
         for (AlgorithmJudgeCaseResultVO result : results) {
-            algorithmJudgeCaseResultMapper.insert(convertToEntity(result));
+            RepositoryObjectConverter
+                    .insert(algorithmJudgeCaseResultMapper, convertToEntity(result), AlgorithmJudgeCaseResultDO.class);
         }
     }
 
+    /**
+     * 查询符合条件的算法评测用例结果 记录。
+     *
+     * @param judgeJobId
+     *            算法评测任务主键。
+     * @return 满足条件的算法评测用例结果 结果集合。
+     */
     @Override
     public List<AlgorithmJudgeCaseResultVO> findByJudgeJobId(Long judgeJobId) {
         return algorithmJudgeCaseResultMapper.selectByJudgeJobId(judgeJobId)
@@ -29,7 +47,14 @@ public class AlgorithmJudgeCaseResultRepositoryImpl implements AlgorithmJudgeCas
                 .toList();
     }
 
-    private AlgorithmJudgeCaseResultVO convertToVO(AlgorithmJudgeCaseResult result) {
+    /**
+     * 在算法评测用例结果 的持久层对象、领域对象和视图对象之间转换。
+     *
+     * @param result
+     *            算法评测用例结果。
+     * @return 转换后的目标模型对象。
+     */
+    private AlgorithmJudgeCaseResultVO convertToVO(AlgorithmJudgeCaseResultDO result) {
         return AlgorithmJudgeCaseResultVO.builder()
                 .id(result.getId())
                 .judgeJobId(result.getJudgeJobId())
@@ -49,6 +74,13 @@ public class AlgorithmJudgeCaseResultRepositoryImpl implements AlgorithmJudgeCas
                 .build();
     }
 
+    /**
+     * 在算法评测用例结果 的持久层对象、领域对象和视图对象之间转换。
+     *
+     * @param result
+     *            算法评测用例结果。
+     * @return 转换后的目标模型对象。
+     */
     private AlgorithmJudgeCaseResult convertToEntity(AlgorithmJudgeCaseResultVO result) {
         AlgorithmJudgeCaseResult entity = new AlgorithmJudgeCaseResult();
         entity.setId(result.getId());

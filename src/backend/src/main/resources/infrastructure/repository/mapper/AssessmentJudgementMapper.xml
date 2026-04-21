@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.bluenet.web.infrastructure.repository.mapper.AssessmentJudgementMapper">
-    <resultMap id="BaseResultMap" type="com.bluenet.web.domain.model.entity.AssessmentJudgement">
+    <resultMap id="BaseResultMap" type="com.bluenet.web.infrastructure.repository.dataobject.AssessmentJudgementDO">
         <id column="id" property="id"/>
         <result column="answer_id" property="answerId"/>
         <result column="question_id" property="questionId"/>
@@ -50,7 +50,7 @@
         ORDER BY user_id, updated_at DESC, id DESC
     </select>
 
-    <select id="selectQuestionScoreboard" resultType="com.bluenet.web.domain.model.vo.AssessmentQuestionScoreboardVO">
+    <select id="selectQuestionScoreboard" resultType="com.bluenet.web.infrastructure.repository.projection.AssessmentQuestionScoreboardProjection">
         WITH ranked_judgement AS (
             SELECT
                 j.*,
@@ -95,7 +95,7 @@
         ORDER BY q.question_no ASC, q.id ASC
     </select>
 
-    <select id="selectQuestionSubmissions" resultType="com.bluenet.web.domain.model.vo.AssessmentQuestionSubmissionVO">
+    <select id="selectQuestionSubmissions" resultType="com.bluenet.web.infrastructure.repository.projection.AssessmentQuestionSubmissionRowProjection">
         WITH ranked_judgement AS (
             SELECT
                 j.*,
@@ -160,7 +160,7 @@
         ORDER BY u.student_id ASC, a.submit_time DESC, a.id DESC
     </select>
 
-    <select id="selectQuestionSubmissionHistories" resultType="com.bluenet.web.domain.model.vo.AssessmentQuestionSubmissionVO">
+    <select id="selectQuestionSubmissionHistories" resultType="com.bluenet.web.infrastructure.repository.projection.AssessmentQuestionSubmissionRowProjection">
         WITH ranked_history AS (
             SELECT
                 j.*,
@@ -203,7 +203,7 @@
         ORDER BY j.user_id ASC, j.judged_at DESC NULLS LAST, j.id DESC
     </select>
 
-    <select id="selectCandidateScoreRows" resultType="com.bluenet.web.domain.model.vo.AssessmentCandidateScoreRowVO">
+    <select id="selectCandidateScoreRows" resultType="com.bluenet.web.infrastructure.repository.projection.AssessmentCandidateScoreRowProjection">
         WITH selected_time AS (
             SELECT * FROM tb_assessment_time WHERE id = #{assessmentTimeId}
         ),

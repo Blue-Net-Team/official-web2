@@ -1,15 +1,15 @@
 package com.bluenet.web.infrastructure.repository.impl;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
+import com.bluenet.web.infrastructure.repository.support.RepositoryObjectConverter;
+
+import com.bluenet.web.infrastructure.repository.dataobject.*;
+
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.bluenet.web.domain.model.entity.AssessmentQuestion;
 import com.bluenet.web.domain.model.entity.AssessmentTime;
 import com.bluenet.web.domain.model.enumerate.Direction;
 import com.bluenet.web.domain.model.vo.AssessmentTimeVO;
 import com.bluenet.web.domain.repository.AssessmentTimeRepository;
-import com.bluenet.web.infrastructure.repository.mapper.AssessmentAnswerMapper;
 import com.bluenet.web.infrastructure.repository.mapper.AssessmentQuestionMapper;
 import com.bluenet.web.infrastructure.repository.mapper.AssessmentTimeMapper;
 import lombok.RequiredArgsConstructor;
@@ -31,24 +31,44 @@ import java.util.stream.Collectors;
 public class AssessmentTimeRepositoryImpl implements AssessmentTimeRepository {
     private final AssessmentTimeMapper assessmentTimeMapper;
     private final AssessmentQuestionMapper assessmentQuestionMapper;
-    private final AssessmentAnswerMapper assessmentAnswerMapper;
 
+    /**
+     * 按主键查询考核场次 记录。
+     *
+     * @param id
+     *            业务记录主键。
+     * @return 查询到的考核场次 结果；不存在时为空。
+     */
     @Override
     public Optional<AssessmentTimeVO> findById(Long id) {
-        AssessmentTime entity = assessmentTimeMapper.selectById(id);
+        AssessmentTime entity = RepositoryObjectConverter
+                .toDomain(assessmentTimeMapper.selectById(id), AssessmentTime.class);
         if (entity == null) {
             return Optional.empty();
         }
         return Optional.of(convertToVO(entity));
     }
 
+    /**
+     * 保存新的考核场次 记录。
+     *
+     * @param assessmentTime
+     *            考核场次对象。
+     * @return 新记录的主键。
+     */
     @Override
     public Long save(AssessmentTimeVO assessmentTime) {
         AssessmentTime entity = convertToEntity(assessmentTime);
-        assessmentTimeMapper.insert(entity);
+        RepositoryObjectConverter.insert(assessmentTimeMapper, entity, AssessmentTimeDO.class);
         return entity.getId();
     }
 
+    /**
+     * 更新已有考核场次 记录。
+     *
+     * @param assessmentTime
+     *            考核场次对象。
+     */
     @Override
     public void update(AssessmentTimeVO assessmentTime) {
         AssessmentTime entity = new AssessmentTime();
@@ -74,112 +94,144 @@ public class AssessmentTimeRepositoryImpl implements AssessmentTimeRepository {
         if (assessmentTime.getTimeLimitMinutes() != null) {
             entity.setTimeLimitMinutes(assessmentTime.getTimeLimitMinutes());
         }
-        assessmentTimeMapper.updateById(entity);
+        RepositoryObjectConverter.updateById(assessmentTimeMapper, entity, AssessmentTimeDO.class);
         if (Boolean.FALSE.equals(assessmentTime.getTimeLimit())) {
-            UpdateWrapper<AssessmentTime> wrapper = new UpdateWrapper<>();
-            wrapper.eq("id", assessmentTime.getId())
-                    .set("time_limit_minutes", null);
-            assessmentTimeMapper.update(null, wrapper);
+            assessmentTimeMapper.clearTimeLimitMinutesById(assessmentTime.getId());
         }
     }
 
+    /**
+     * 删除指定考核场次 记录。
+     *
+     * @param id
+     *            业务记录主键。
+     */
     @Override
     public void deleteById(Long id) {
         assessmentTimeMapper.deleteById(id);
     }
 
+    /**
+     * 判断是否存在满足条件的考核场次 记录。
+     *
+     * @param id
+     *            业务记录主键。
+     * @return 满足条件时返回 true，否则返回 false。
+     */
     @Override
     public boolean existsById(Long id) {
         return assessmentTimeMapper.selectById(id) != null;
     }
 
+    /**
+     * 判断是否存在满足条件的考核场次 记录。
+     *
+     * @param direction
+     *            技术方向过滤条件。
+     * @param epoch
+     *            考核批次或轮次。
+     * @param grade
+     *            考核年级。
+     * @return 满足条件时返回 true，否则返回 false。
+     */
     @Override
     public boolean existsByDirectionAndEpochAndGrade(Direction direction, Integer epoch, Integer grade) {
-        LambdaQueryWrapper<AssessmentTime> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(AssessmentTime::getDirection, direction)
-                .eq(AssessmentTime::getEpoch, epoch)
-                .eq(AssessmentTime::getGrade, grade);
-        return assessmentTimeMapper.selectCount(wrapper) > 0;
+        return assessmentTimeMapper.countByDirectionEpochGrade(direction, epoch, grade) > 0;
     }
 
+    /**
+     * 判断除当前记录外是否存在相同业务唯一键的考核场次 记录。
+     *
+     * @param direction
+     *            技术方向过滤条件。
+     * @param epoch
+     *            考核批次或轮次。
+     * @param grade
+     *            考核年级。
+     * @param excludeId
+     *            需要排除的当前记录主键。
+     * @return 满足条件时返回 true，否则返回 false。
+     */
     @Override
     public boolean existsByDirectionAndEpochAndGradeAndIdNot(Direction direction, Integer epoch, Integer grade,
             Long excludeId) {
-        LambdaQueryWrapper<AssessmentTime> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(AssessmentTime::getDirection, direction)
-                .eq(AssessmentTime::getEpoch, epoch)
-                .eq(AssessmentTime::getGrade, grade)
-                .ne(AssessmentTime::getId, excludeId);
-        return assessmentTimeMapper.selectCount(wrapper) > 0;
+        return assessmentTimeMapper.countByDirectionEpochGradeAndIdNot(direction, epoch, grade, excludeId) > 0;
     }
 
+    /**
+     * 判断考核场次下是否仍有关联题目。
+     *
+     * @param assessmentTimeId
+     *            考核场次主键。
+     * @return 满足条件时返回 true，否则返回 false。
+     */
     @Override
     public boolean hasAssociatedQuestions(Long assessmentTimeId) {
-        LambdaQueryWrapper<AssessmentQuestion> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(AssessmentQuestion::getAssessmentTimeId, assessmentTimeId);
-        return assessmentQuestionMapper.selectCount(wrapper) > 0;
+        return assessmentQuestionMapper.countByAssessmentTimeId(assessmentTimeId) > 0;
     }
 
+    /**
+     * 按组合筛选条件分页查询考核场次 视图。
+     *
+     * @param direction
+     *            技术方向过滤条件。
+     * @param grade
+     *            考核年级。
+     * @param pageable
+     *            Spring 分页请求对象。
+     * @return 分页后的考核场次 结果。
+     */
     @Override
     public org.springframework.data.domain.Page<AssessmentTimeVO> findByFilters(
             Direction direction, Integer grade, org.springframework.data.domain.Pageable pageable) {
-        Page<AssessmentTime> page = new Page<>(pageable.getPageNumber() + 1, pageable.getPageSize());
-        LambdaQueryWrapper<AssessmentTime> wrapper = new LambdaQueryWrapper<>();
-        if (direction != null) {
-            wrapper.eq(AssessmentTime::getDirection, direction);
-        }
-        if (grade != null) {
-            wrapper.eq(AssessmentTime::getGrade, grade);
-        }
-        wrapper.orderByDesc(AssessmentTime::getId);
-        IPage<AssessmentTime> result = assessmentTimeMapper.selectPage(page, wrapper);
+        Page<AssessmentTimeDO> page = new Page<>(pageable.getPageNumber() + 1, pageable.getPageSize());
+        IPage<AssessmentTimeDO> result = assessmentTimeMapper.selectPageByFilters(page, direction, grade);
 
         List<AssessmentTimeVO> content = result.getRecords()
                 .stream()
-                .map(this::convertToVO)
+                .map(time -> convertToVO(RepositoryObjectConverter.toDomain(time, AssessmentTime.class)))
                 .collect(Collectors.toList());
         return new PageImpl<>(content, pageable, result.getTotal());
     }
 
+    /**
+     * 查询用户已经参与过的考核场次。
+     *
+     * @param userId
+     *            用户主键，用于限定用户范围。
+     * @param direction
+     *            技术方向过滤条件。
+     * @param enrollmentYear
+     *            入学年份过滤条件。
+     * @param pageable
+     *            Spring 分页请求对象。
+     * @return 分页后的考核场次 结果。
+     */
     @Override
     public org.springframework.data.domain.Page<AssessmentTimeVO> findByUserParticipation(
             Long userId, Direction direction, Integer enrollmentYear,
             org.springframework.data.domain.Pageable pageable) {
-        Page<AssessmentTime> page = new Page<>(pageable.getPageNumber() + 1, pageable.getPageSize());
-        LambdaQueryWrapper<AssessmentTime> wrapper = new LambdaQueryWrapper<>();
-
-        // Condition: (direction = ? AND grade = ?) OR EXISTS (answer subquery)
-        wrapper.and(w -> {
-            if (direction != null && enrollmentYear != null) {
-                w.eq(AssessmentTime::getDirection, direction)
-                        .eq(AssessmentTime::getGrade, enrollmentYear);
-            } else if (direction != null) {
-                w.eq(AssessmentTime::getDirection, direction);
-            } else if (enrollmentYear != null) {
-                w.eq(AssessmentTime::getGrade, enrollmentYear);
-            } else {
-                // No direction/grade filter possible, use impossible condition so only EXISTS
-                // applies
-                w.eq(AssessmentTime::getId, -1);
-            }
-        })
-                .or(
-                        w -> w.inSql(
-                                AssessmentTime::getId,
-                                "SELECT q.assessment_time_id FROM tb_assessment_question q "
-                                        + "JOIN tb_assessment_answer a ON a.question_id = q.id "
-                                        + "WHERE a.user_id = " + String.valueOf(userId)));
-
-        wrapper.orderByDesc(AssessmentTime::getId);
-        IPage<AssessmentTime> result = assessmentTimeMapper.selectPage(page, wrapper);
+        Page<AssessmentTimeDO> page = new Page<>(pageable.getPageNumber() + 1, pageable.getPageSize());
+        IPage<AssessmentTimeDO> result = assessmentTimeMapper.selectPageByUserParticipation(
+                page,
+                userId,
+                direction,
+                enrollmentYear);
 
         List<AssessmentTimeVO> content = result.getRecords()
                 .stream()
-                .map(this::convertToVO)
+                .map(time -> convertToVO(RepositoryObjectConverter.toDomain(time, AssessmentTime.class)))
                 .collect(Collectors.toList());
         return new PageImpl<>(content, pageable, result.getTotal());
     }
 
+    /**
+     * 在考核场次 的持久层对象、领域对象和视图对象之间转换。
+     *
+     * @param entity
+     *            领域实体。
+     * @return 转换后的目标模型对象。
+     */
     private AssessmentTimeVO convertToVO(AssessmentTime entity) {
         return AssessmentTimeVO.builder()
                 .id(entity.getId())
@@ -193,6 +245,13 @@ public class AssessmentTimeRepositoryImpl implements AssessmentTimeRepository {
                 .build();
     }
 
+    /**
+     * 在考核场次 的持久层对象、领域对象和视图对象之间转换。
+     *
+     * @param vo
+     *            领域视图对象。
+     * @return 转换后的目标模型对象。
+     */
     private AssessmentTime convertToEntity(AssessmentTimeVO vo) {
         AssessmentTime entity = new AssessmentTime();
         entity.setDirection(vo.getDirection());

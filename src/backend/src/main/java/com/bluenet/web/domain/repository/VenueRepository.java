@@ -13,62 +13,62 @@ import java.util.Optional;
  */
 public interface VenueRepository {
     /**
-     * 查询所有场地（按排序号降序）
+     * 按展示排序倒序查询全部场地 视图。
      *
-     * @return 场地列表
+     * @return 满足条件的场地 结果集合。
      */
     List<VenueVO> findAllOrderBySortOrderDesc();
 
     /**
-     * 根据ID查询场地
+     * 处理场地 仓储职责中的业务数据访问逻辑。
      *
      * @param id
-     *            场地ID
-     * @return 场地信息，如果不存在则返回Optional.empty()
+     *            业务记录主键。
+     * @return 查询或处理得到的场地 结果。
      */
     Optional<VenueVO> findById(Long id);
 
     /**
-     * 保存场地
+     * 保存新的场地 记录。
      *
      * @param venue
-     *            场地实体
-     * @return 保存后的场地ID
+     *            场地领域对象。
+     * @return 新记录的主键。
      */
     Long save(com.bluenet.web.domain.model.entity.Venue venue);
 
     /**
-     * 更新场地
+     * 更新已有场地 记录。
      *
      * @param venue
-     *            场地实体
+     *            场地领域对象。
      */
     void update(com.bluenet.web.domain.model.entity.Venue venue);
 
     /**
-     * 删除场地
+     * 删除指定场地 记录。
      *
      * @param id
-     *            场地ID
+     *            业务记录主键。
      */
     void deleteById(Long id);
 
     /**
-     * 检查场地是否存在
+     * 判断是否存在满足条件的场地 记录。
      *
      * @param id
-     *            场地ID
-     * @return 如果存在返回true，否则返回false
+     *            业务记录主键。
+     * @return 满足条件时返回 true，否则返回 false。
      */
     boolean existsById(Long id);
 
     /**
-     * 更新场地图片
+     * 更新场地 展示图片文件关联。
      *
      * @param id
-     *            场地ID
+     *            业务记录主键。
      * @param imageFileId
-     *            图片文件ID
+     *            展示图片文件主键。
      */
     void updateImage(Long id, Long imageFileId);
 }

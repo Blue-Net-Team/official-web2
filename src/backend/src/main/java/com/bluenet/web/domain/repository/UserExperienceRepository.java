@@ -11,99 +11,99 @@ import java.util.Optional;
  */
 public interface UserExperienceRepository {
     /**
-     * 根据ID查询经历
+     * 按主键查询用户经历 记录。
      *
      * @param id
-     *            经历ID
-     * @return 经历值对象
+     *            业务记录主键。
+     * @return 查询到的用户经历 结果；不存在时为空。
      */
     Optional<ExperienceVO> findById(Long id);
 
     /**
-     * 查询用户所有经历
+     * 查询指定用户关联的用户经历 记录。
      *
      * @param userId
-     *            用户ID
-     * @return 经历列表
+     *            用户主键，用于限定用户范围。
+     * @return 满足条件的用户经历 结果集合。
      */
     List<ExperienceVO> findByUserId(Long userId);
 
     /**
-     * 查询用户指定类型的经历
+     * 查询用户指定类型的经历列表。
      *
      * @param userId
-     *            用户ID
+     *            用户主键，用于限定用户范围。
      * @param type
-     *            经历类型
-     * @return 经历列表
+     *            业务类型或枚举类型。
+     * @return 满足条件的用户经历 结果集合。
      */
     List<ExperienceVO> findByUserIdAndType(Long userId, ExperienceType type);
 
     /**
-     * 保存经历
+     * 保存新的用户经历 记录。
      *
      * @param userId
-     *            用户ID
+     *            用户主键，用于限定用户范围。
      * @param type
-     *            经历类型
+     *            业务类型或枚举类型。
      * @param title
-     *            标题
+     *            经历或展示项标题。
      * @param startTime
-     *            开始时间
+     *            经历开始时间。
      * @param endTime
-     *            结束时间
+     *            经历结束时间。
      * @param content
-     *            JSON内容
-     * @return 保存后的经历
+     *            作答内容、经历内容或题目内容。
+     * @return 查询或处理得到的用户经历 结果。
      */
     ExperienceVO save(Long userId, ExperienceType type, String title,
             String startTime, String endTime, String content);
 
     /**
-     * 更新经历
+     * 更新已有用户经历 记录。
      *
      * @param id
-     *            经历ID
+     *            业务记录主键。
      * @param title
-     *            标题
+     *            经历或展示项标题。
      * @param startTime
-     *            开始时间
+     *            经历开始时间。
      * @param endTime
-     *            结束时间
+     *            经历结束时间。
      * @param content
-     *            JSON内容
-     * @return 更新后的经历
+     *            作答内容、经历内容或题目内容。
+     * @return 数据库受影响行数。
      */
     ExperienceVO update(Long id, String title, String startTime, String endTime, String content);
 
     /**
-     * 删除经历
+     * 删除指定用户经历 记录。
      *
      * @param id
-     *            经历ID
-     * @return 是否删除成功
+     *            业务记录主键。
+     * @return 数据库受影响行数。
      */
     boolean deleteById(Long id);
 
     /**
-     * 统计用户指定类型经历数量
+     * 统计用户指定类型的经历数量。
      *
      * @param userId
-     *            用户ID
+     *            用户主键，用于限定用户范围。
      * @param type
-     *            经历类型
-     * @return 数量
+     *            业务类型或枚举类型。
+     * @return 满足条件的记录数量。
      */
     int countByUserIdAndType(Long userId, ExperienceType type);
 
     /**
-     * 检查经历是否属于指定用户
+     * 校验用户是否拥有指定经历记录。
      *
      * @param experienceId
-     *            经历ID
+     *            用户经历记录主键。
      * @param userId
-     *            用户ID
-     * @return 是否属于该用户
+     *            用户主键，用于限定用户范围。
+     * @return 满足条件时返回 true，否则返回 false。
      */
     boolean checkOwner(Long experienceId, Long userId);
 }

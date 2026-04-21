@@ -1,5 +1,9 @@
 package com.bluenet.web.api.controller.v1.user;
 
+import com.bluenet.web.infrastructure.repository.dataobject.*;
+
+import com.bluenet.web.testsupport.RepositoryTestObjects;
+
 import com.bluenet.web.BaseIntegrationTest;
 import com.bluenet.web.api.dto.ResponseMessage;
 import com.bluenet.web.api.dto.auth.StudentIdLoginRequestDTO;
@@ -79,7 +83,7 @@ class UserProfileControllerIntegrationTest extends BaseIntegrationTest {
         user.setBio("原个人简介");
         user.setGender(Gender.MALE);
 
-        userMapper.insert(user);
+        RepositoryTestObjects.insert(userMapper, user, UserDO.class);
         testUserId = user.getId();
     }
 
@@ -237,7 +241,7 @@ class UserProfileControllerIntegrationTest extends BaseIntegrationTest {
         assertNotNull(response.getBody());
         assertEquals(200, response.getBody().getCode());
 
-        User updatedUser = userMapper.selectById(testUserId);
+        User updatedUser = RepositoryTestObjects.toDomain(userMapper.selectById(testUserId), User.class);
         assertEquals("新用户名", updatedUser.getUsername());
         assertEquals("新昵称", updatedUser.getNickname());
         assertEquals("新的个人简介", updatedUser.getBio());
@@ -264,7 +268,7 @@ class UserProfileControllerIntegrationTest extends BaseIntegrationTest {
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
 
-        User updatedUser = userMapper.selectById(testUserId);
+        User updatedUser = RepositoryTestObjects.toDomain(userMapper.selectById(testUserId), User.class);
         assertEquals("仅更新昵称", updatedUser.getNickname());
     }
 
@@ -298,7 +302,7 @@ class UserProfileControllerIntegrationTest extends BaseIntegrationTest {
         memberUser.setDirection(Direction.COMPUTER_VISION);
         memberUser.setBio("原个人简介");
         memberUser.setGender(Gender.MALE);
-        userMapper.insert(memberUser);
+        RepositoryTestObjects.insert(userMapper, memberUser, UserDO.class);
 
         // 登录获取 Cookie
         StudentIdLoginRequestDTO loginRequest = new StudentIdLoginRequestDTO();
@@ -335,7 +339,7 @@ class UserProfileControllerIntegrationTest extends BaseIntegrationTest {
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
 
-        User updatedUser = userMapper.selectById(memberUser.getId());
+        User updatedUser = RepositoryTestObjects.toDomain(userMapper.selectById(memberUser.getId()), User.class);
         assertEquals("完整更新用户名", updatedUser.getUsername());
         assertEquals("完整更新昵称", updatedUser.getNickname());
         assertEquals("完整更新简介", updatedUser.getBio());

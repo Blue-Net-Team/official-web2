@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.bluenet.web.infrastructure.repository.mapper.UserMapper">
-    <resultMap id="BaseResultMap" type="com.bluenet.web.domain.model.entity.User">
+    <resultMap id="BaseResultMap" type="com.bluenet.web.infrastructure.repository.dataobject.UserDO">
         <id column="id" property="id"/>
         <result column="student_id" property="studentId"/>
         <result column="email" property="email"/>
@@ -136,4 +136,10 @@
         SET password = #{password}
         WHERE id = #{userId}
     </update>
+
+    <select id="countByCollegeId" resultType="long">
+        SELECT COUNT(*)
+        FROM tb_user
+        WHERE college_id = #{collegeId}
+    </select>
 </mapper>

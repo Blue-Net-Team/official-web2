@@ -1,5 +1,9 @@
 package com.bluenet.web.api.controller.v1.admin;
 
+import com.bluenet.web.infrastructure.repository.dataobject.*;
+
+import com.bluenet.web.testsupport.RepositoryTestObjects;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.List;
@@ -98,7 +102,7 @@ class AdminCollegeControllerIntegrationTest extends BaseIntegrationTest {
     @BeforeEach
     void setUpTestData() {
         // 查询已存在的管理员角色（由 Flyway 迁移脚本初始化）
-        Role adminRole = roleMapper.selectByName("SUPER_ADMIN");
+        Role adminRole = RepositoryTestObjects.toDomain(roleMapper.selectByName("SUPER_ADMIN"), Role.class);
         if (adminRole == null) {
             throw new IllegalStateException("SUPER_ADMIN 角色不存在，请检查数据库迁移脚本");
         }
@@ -122,7 +126,7 @@ class AdminCollegeControllerIntegrationTest extends BaseIntegrationTest {
         adminUser.setRoleId(adminRoleId);
         adminUser.setDisable(false);
         adminUser.setDirection(Direction.COMPUTER_VISION);
-        userMapper.insert(adminUser);
+        RepositoryTestObjects.insert(userMapper, adminUser, UserDO.class);
 
         // 登录获取 Cookie 和 CSRF Token
         loginAndGetCookies();
@@ -132,13 +136,13 @@ class AdminCollegeControllerIntegrationTest extends BaseIntegrationTest {
         Permission permission = new Permission();
         permission.setName(name);
         permission.setValue(value);
-        permissionMapper.insert(permission);
+        RepositoryTestObjects.insert(permissionMapper, permission, PermissionDO.class);
 
         // 关联到管理员角色
         RolePermission rolePermission = new RolePermission();
         rolePermission.setRoleId(adminRoleId);
         rolePermission.setPermissionId(permission.getId());
-        rolePermissionMapper.insert(rolePermission);
+        RepositoryTestObjects.insert(rolePermissionMapper, rolePermission, RolePermissionDO.class);
     }
 
     private void loginAndGetCookies() {
@@ -220,7 +224,7 @@ class AdminCollegeControllerIntegrationTest extends BaseIntegrationTest {
     @DisplayName("集成测试：创建学院时名称重复应返回400")
     void createCollege_duplicateName_shouldReturn400() {
         // 准备：先创建一个学院
-        collegeMapper.insert(createTestCollege(TEST_NAME_1));
+        RepositoryTestObjects.insert(collegeMapper, createTestCollege(TEST_NAME_1), CollegeDO.class);
 
         CreateCollegeRequestDTO request = CreateCollegeRequestDTO.builder()
                 .name(TEST_NAME_1)
@@ -305,7 +309,7 @@ class AdminCollegeControllerIntegrationTest extends BaseIntegrationTest {
     void updateCollege_shouldUpdateSuccessfully() {
         // 准备：先创建一个学院
         College college = createTestCollege(TEST_NAME_1);
-        collegeMapper.insert(college);
+        RepositoryTestObjects.insert(collegeMapper, college, CollegeDO.class);
         Long collegeId = college.getId();
 
         UpdateCollegeRequestDTO request = UpdateCollegeRequestDTO.builder()
@@ -368,10 +372,10 @@ class AdminCollegeControllerIntegrationTest extends BaseIntegrationTest {
     void updateCollege_duplicateName_shouldReturn400() {
         // 准备：创建两个学院
         College college1 = createTestCollege(TEST_NAME_1);
-        collegeMapper.insert(college1);
+        RepositoryTestObjects.insert(collegeMapper, college1, CollegeDO.class);
 
         College college2 = createTestCollege(TEST_NAME_2);
-        collegeMapper.insert(college2);
+        RepositoryTestObjects.insert(collegeMapper, college2, CollegeDO.class);
 
         // 尝试将college2的名称改为college1的名称
         UpdateCollegeRequestDTO request = UpdateCollegeRequestDTO.builder()
@@ -403,7 +407,7 @@ class AdminCollegeControllerIntegrationTest extends BaseIntegrationTest {
     void updateCollege_sameName_shouldSucceed() {
         // 准备：创建一个学院
         College college = createTestCollege(TEST_NAME_1);
-        collegeMapper.insert(college);
+        RepositoryTestObjects.insert(collegeMapper, college, CollegeDO.class);
         Long collegeId = college.getId();
 
         // 更新为相同名称
@@ -437,7 +441,7 @@ class AdminCollegeControllerIntegrationTest extends BaseIntegrationTest {
     void deleteCollege_shouldDeleteSuccessfully() {
         // 准备：创建一个学院
         College college = createTestCollege(TEST_NAME_1);
-        collegeMapper.insert(college);
+        RepositoryTestObjects.insert(collegeMapper, college, CollegeDO.class);
         Long collegeId = college.getId();
 
         HttpHeaders headers = createAuthHeadersWithCsrf();
@@ -456,7 +460,7 @@ class AdminCollegeControllerIntegrationTest extends BaseIntegrationTest {
         assertEquals(200, response.getBody().getCode());
 
         // 验证数据库中已删除
-        College deleted = collegeMapper.selectById(collegeId);
+        College deleted = RepositoryTestObjects.toDomain(collegeMapper.selectById(collegeId), College.class);
         assertNull(deleted);
     }
 
@@ -490,7 +494,7 @@ class AdminCollegeControllerIntegrationTest extends BaseIntegrationTest {
     void deleteCollege_withAssociatedUsers_shouldReturn400() {
         // 准备：创建学院
         College college = createTestCollege(TEST_NAME_1);
-        collegeMapper.insert(college);
+        RepositoryTestObjects.insert(collegeMapper, college, CollegeDO.class);
         Long collegeId = college.getId();
 
         // 创建关联用户
@@ -501,7 +505,7 @@ class AdminCollegeControllerIntegrationTest extends BaseIntegrationTest {
         user.setPassword(passwordEncoder.encode("password"));
         user.setCollegeId(collegeId);
         user.setDirection(Direction.COMPUTER_VISION);
-        userMapper.insert(user);
+        RepositoryTestObjects.insert(userMapper, user, UserDO.class);
 
         HttpHeaders headers = createAuthHeadersWithCsrf();
         HttpEntity<Void> entity = new HttpEntity<>(headers);
@@ -520,7 +524,7 @@ class AdminCollegeControllerIntegrationTest extends BaseIntegrationTest {
         assertTrue(response.getBody().getMsg().contains("关联用户"));
 
         // 验证学院未被删除
-        College notDeleted = collegeMapper.selectById(collegeId);
+        College notDeleted = RepositoryTestObjects.toDomain(collegeMapper.selectById(collegeId), College.class);
         assertNotNull(notDeleted);
     }
 
@@ -532,7 +536,7 @@ class AdminCollegeControllerIntegrationTest extends BaseIntegrationTest {
     void deleteCollege_withAssociatedEnrolls_shouldReturn400() {
         // 准备：创建学院
         College college = createTestCollege(TEST_NAME_1);
-        collegeMapper.insert(college);
+        RepositoryTestObjects.insert(collegeMapper, college, CollegeDO.class);
         Long collegeId = college.getId();
 
         // 创建关联报名记录
@@ -544,7 +548,7 @@ class AdminCollegeControllerIntegrationTest extends BaseIntegrationTest {
                 .direction(Direction.COMPUTER_VISION)
                 .status(EnrollStatus.PENDING)
                 .build();
-        enrollMapper.insert(enroll);
+        RepositoryTestObjects.insert(enrollMapper, enroll, EnrollDO.class);
 
         HttpHeaders headers = createAuthHeadersWithCsrf();
         HttpEntity<Void> entity = new HttpEntity<>(headers);
@@ -563,7 +567,7 @@ class AdminCollegeControllerIntegrationTest extends BaseIntegrationTest {
         assertTrue(response.getBody().getMsg().contains("关联报名记录"));
 
         // 验证学院未被删除
-        College notDeleted = collegeMapper.selectById(collegeId);
+        College notDeleted = RepositoryTestObjects.toDomain(collegeMapper.selectById(collegeId), College.class);
         assertNotNull(notDeleted);
     }
 
@@ -575,7 +579,7 @@ class AdminCollegeControllerIntegrationTest extends BaseIntegrationTest {
     void deleteCollege_withoutAuth_shouldReturn401() {
         // 准备：创建一个学院
         College college = createTestCollege(TEST_NAME_1);
-        collegeMapper.insert(college);
+        RepositoryTestObjects.insert(collegeMapper, college, CollegeDO.class);
 
         // 执行：不携带认证信息
         HttpEntity<Void> entity = new HttpEntity<>(null);

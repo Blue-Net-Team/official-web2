@@ -1,14 +1,12 @@
 package com.bluenet.web.infrastructure.repository.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.bluenet.web.domain.model.entity.DirectionLearningStep;
+import com.bluenet.web.infrastructure.repository.dataobject.DirectionLearningStepDO;
 import com.bluenet.web.domain.model.enumerate.Direction;
-import com.bluenet.web.domain.model.vo.LearningStepVO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
-import java.util.Optional;
 
 /**
  * 学习路径Mapper接口
@@ -17,35 +15,35 @@ import java.util.Optional;
  * </p>
  */
 @Mapper
-public interface LearningPathMapper extends BaseMapper<DirectionLearningStep> {
+public interface LearningPathMapper extends BaseMapper<DirectionLearningStepDO> {
     /**
-     * 根据方向查询学习步骤列表
+     * 按条件查询学习路径 数据行。
      *
      * @param direction
-     *            方向
-     * @return 学习步骤列表
+     *            技术方向过滤条件。
+     * @return 满足条件的学习路径 结果集合。
      */
-    List<LearningStepVO> selectByDirection(@Param("direction") Direction direction);
+    List<DirectionLearningStepDO> selectByDirection(@Param("direction") Direction direction);
 
     /**
-     * 根据ID查询学习步骤
+     * 查询学习路径 数据行。
      *
      * @param id
-     *            步骤ID
-     * @return 学习步骤
+     *            业务记录主键。
+     * @return 匹配条件的学习路径 数据行；不存在时为 null。
      */
-    Optional<LearningStepVO> selectById(@Param("id") Long id);
+    DirectionLearningStepDO selectLearningStepById(@Param("id") Long id);
 
     /**
-     * 检查同一方向内步骤序号是否已存在
+     * 判断是否存在满足条件的学习路径 记录。
      *
      * @param direction
-     *            方向
+     *            技术方向过滤条件。
      * @param stepNumber
-     *            步骤序号
+     *            学习路径步骤序号。
      * @param excludeId
-     *            排除的步骤ID
-     * @return 如果存在返回true，否则返回false
+     *            需要排除的当前记录主键。
+     * @return 满足条件时返回 true，否则返回 false。
      */
     boolean existsByDirectionAndStepNumber(
             @Param("direction") Direction direction,

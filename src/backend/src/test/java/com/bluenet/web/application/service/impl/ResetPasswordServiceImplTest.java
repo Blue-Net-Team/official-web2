@@ -331,9 +331,11 @@ class ResetPasswordServiceImplTest {
         @Test
         @DisplayName("正常重置密码：应成功更新密码并清理状态")
         void resetPassword_normal_shouldSucceed() {
+            UserVO user = createTestUserVO();
             when(stateService.exists(TEST_TOKEN)).thenReturn(true);
             when(stateService.getStep(TEST_TOKEN)).thenReturn(4);
             when(stateService.getField(TEST_TOKEN, "userId")).thenReturn(TEST_USER_ID.toString());
+            when(userRepository.findById(TEST_USER_ID)).thenReturn(Optional.of(user));
             when(passwordEncoder.encode("newPassword123")).thenReturn("$2a$10$encoded");
 
             assertDoesNotThrow(() -> resetPasswordService.resetPassword(TEST_TOKEN, "newPassword123"));
@@ -380,6 +382,23 @@ class ResetPasswordServiceImplTest {
                     () -> resetPasswordService.resetPassword(TEST_TOKEN, "newPassword123"));
 
             assertEquals("重置流程状态异常，请重新开始", exception.getMessage());
+        }
+
+        @Test
+        @DisplayName("用户不存在：应抛出 BadRequest")
+        void resetPassword_userNotFound_shouldThrowBadRequest() {
+            when(stateService.exists(TEST_TOKEN)).thenReturn(true);
+            when(stateService.getStep(TEST_TOKEN)).thenReturn(4);
+            when(stateService.getField(TEST_TOKEN, "userId")).thenReturn(TEST_USER_ID.toString());
+            when(userRepository.findById(TEST_USER_ID)).thenReturn(Optional.empty());
+
+            BadRequest exception = assertThrows(
+                    BadRequest.class,
+                    () -> resetPasswordService.resetPassword(TEST_TOKEN, "newPassword123"));
+
+            assertEquals("用户不存在", exception.getMessage());
+            verify(userRepository, never()).updatePassword(anyLong(), anyString());
+            verify(authTokenService, never()).revokeAllUserTokens(anyLong());
         }
     }
 }

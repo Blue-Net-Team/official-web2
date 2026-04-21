@@ -1,5 +1,9 @@
 package com.bluenet.web.api.controller.v1.user;
 
+import com.bluenet.web.infrastructure.repository.dataobject.*;
+
+import com.bluenet.web.testsupport.RepositoryTestObjects;
+
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.bluenet.web.BaseIntegrationTest;
 import com.bluenet.web.api.dto.ResponseMessage;
@@ -96,7 +100,7 @@ class UserExperienceControllerIntegrationTest extends BaseIntegrationTest {
         user.setDisable(false);
         user.setDirection(Direction.COMPUTER_VISION);
 
-        userMapper.insert(user);
+        RepositoryTestObjects.insert(userMapper, user, UserDO.class);
         testUserId = user.getId();
     }
 
@@ -108,45 +112,51 @@ class UserExperienceControllerIntegrationTest extends BaseIntegrationTest {
     }
 
     private void assignPermissionToMemberRole(String value) {
-        Permission permission = permissionMapper.selectOne(
-                new LambdaQueryWrapper<Permission>().eq(Permission::getValue, value));
+        Permission permission = RepositoryTestObjects.toDomain(
+                permissionMapper.selectOne(
+                        new LambdaQueryWrapper<PermissionDO>().eq(PermissionDO::getValue, value)),
+                Permission.class);
         if (permission == null) {
             permission = new Permission();
             permission.setName(value);
             permission.setValue(value);
-            permissionMapper.insert(permission);
+            RepositoryTestObjects.insert(permissionMapper, permission, PermissionDO.class);
         }
 
         Long existingCount = rolePermissionMapper.selectCount(
-                new LambdaQueryWrapper<RolePermission>()
-                        .eq(RolePermission::getRoleId, memberRoleId)
-                        .eq(RolePermission::getPermissionId, permission.getId()));
+                new LambdaQueryWrapper<RolePermissionDO>()
+                        .eq(RolePermissionDO::getRoleId, memberRoleId)
+                        .eq(RolePermissionDO::getPermissionId, permission.getId()));
         if (existingCount == 0) {
             RolePermission rolePermission = new RolePermission();
             rolePermission.setRoleId(memberRoleId);
             rolePermission.setPermissionId(permission.getId());
-            rolePermissionMapper.insert(rolePermission);
+            RepositoryTestObjects.insert(rolePermissionMapper, rolePermission, RolePermissionDO.class);
         }
     }
 
     private void createRoles() {
         // 创建MEMBER角色
-        Role memberRole = roleMapper.selectOne(
-                new LambdaQueryWrapper<Role>().eq(Role::getName, "MEMBER"));
+        Role memberRole = RepositoryTestObjects.toDomain(
+                roleMapper.selectOne(
+                        new LambdaQueryWrapper<RoleDO>().eq(RoleDO::getName, "MEMBER")),
+                Role.class);
         if (memberRole == null) {
             memberRole = new Role();
             memberRole.setName("MEMBER");
-            roleMapper.insert(memberRole);
+            RepositoryTestObjects.insert(roleMapper, memberRole, RoleDO.class);
         }
         memberRoleId = memberRole.getId();
 
         // 创建CANDIDATE角色
-        Role candidateRole = roleMapper.selectOne(
-                new LambdaQueryWrapper<Role>().eq(Role::getName, "CANDIDATE"));
+        Role candidateRole = RepositoryTestObjects.toDomain(
+                roleMapper.selectOne(
+                        new LambdaQueryWrapper<RoleDO>().eq(RoleDO::getName, "CANDIDATE")),
+                Role.class);
         if (candidateRole == null) {
             candidateRole = new Role();
             candidateRole.setName("CANDIDATE");
-            roleMapper.insert(candidateRole);
+            RepositoryTestObjects.insert(roleMapper, candidateRole, RoleDO.class);
         }
         candidateRoleId = candidateRole.getId();
     }
@@ -163,7 +173,7 @@ class UserExperienceControllerIntegrationTest extends BaseIntegrationTest {
         user.setRoleId(roleId);
         user.setDisable(false);
         user.setDirection(Direction.COMPUTER_VISION);
-        userMapper.insert(user);
+        RepositoryTestObjects.insert(userMapper, user, UserDO.class);
         return user.getId();
     }
 

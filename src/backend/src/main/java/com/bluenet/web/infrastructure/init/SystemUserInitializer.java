@@ -4,12 +4,12 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
-import com.bluenet.web.domain.model.entity.Role;
 import com.bluenet.web.domain.model.entity.User;
 import com.bluenet.web.domain.model.enumerate.RoleType;
+import com.bluenet.web.domain.model.vo.RoleVO;
+import com.bluenet.web.domain.repository.RoleRepository;
 import com.bluenet.web.domain.repository.UserRepository;
 import com.bluenet.web.infrastructure.config.properties.SystemUserProperties;
-import com.bluenet.web.infrastructure.repository.mapper.RoleMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
@@ -24,7 +24,7 @@ public class SystemUserInitializer implements CommandLineRunner {
     private final SystemUserProperties systemUserProperties;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final RoleMapper roleMapper;
+    private final RoleRepository roleRepository;
 
     @Override
     public void run(String... args) {
@@ -36,7 +36,8 @@ public class SystemUserInitializer implements CommandLineRunner {
         }
 
         try {
-            Role role = roleMapper.selectByName(RoleType.SUPER_ADMIN.getName());
+            RoleVO role = roleRepository.findByName(RoleType.SUPER_ADMIN.getName())
+                    .orElse(null);
             if (role == null) {
                 log.error("Failed to create system user: SUPER_ADMIN role not found");
                 return;

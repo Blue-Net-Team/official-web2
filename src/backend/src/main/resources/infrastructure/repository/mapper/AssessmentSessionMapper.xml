@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bluenet.web.infrastructure.repository.mapper.AssessmentSessionMapper">
+    <resultMap id="BaseResultMap" type="com.bluenet.web.infrastructure.repository.dataobject.AssessmentSessionDO">
+        <id column="id" property="id"/>
+        <result column="user_id" property="userId"/>
+        <result column="assessment_time_id" property="assessmentTimeId"/>
+        <result column="start_time" property="startTime"/>
+        <result column="deadline" property="deadline"/>
+    </resultMap>
+
+    <select id="selectByUserIdAndAssessmentTimeId" resultMap="BaseResultMap">
+        SELECT *
+        FROM tb_assessment_session
+        WHERE user_id = #{userId}
+          AND assessment_time_id = #{assessmentTimeId}
+        LIMIT 1
+    </select>
+</mapper>

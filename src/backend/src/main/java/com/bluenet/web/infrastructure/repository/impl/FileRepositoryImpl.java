@@ -1,5 +1,9 @@
 package com.bluenet.web.infrastructure.repository.impl;
 
+import com.bluenet.web.infrastructure.repository.support.RepositoryObjectConverter;
+
+import com.bluenet.web.infrastructure.repository.dataobject.*;
+
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.bluenet.web.domain.exception.DataNotFound;
 import com.bluenet.web.domain.model.entity.AssessmentAnswer;
@@ -45,42 +49,75 @@ public class FileRepositoryImpl implements FileRepository {
     private final AssessmentQuestionMapper assessmentQuestionMapper;
     private final AssessmentTimeMapper assessmentTimeMapper;
 
+    /**
+     * 按主键查询文件 记录。
+     *
+     * @param id
+     *            业务记录主键。
+     * @return 查询到的文件 结果；不存在时为空。
+     */
     @Override
     public Optional<FileVO> findById(Long id) {
-        File file = fileMapper.selectById(id);
+        File file = RepositoryObjectConverter.toDomain(fileMapper.selectById(id), File.class);
         if (file == null) {
             return Optional.empty();
         }
         return Optional.of(convertToVO(file));
     }
 
+    /**
+     * 查询符合条件的文件 记录。
+     *
+     * @param fileId
+     *            文件主键。
+     * @return 查询到的文件 结果；不存在时为空。
+     */
     @Override
     public Optional<AssessmentAnswerVO> findAnswerByFileId(Long fileId) {
-        AssessmentAnswer answer = assessmentAnswerMapper.selectOne(
-                new LambdaQueryWrapper<AssessmentAnswer>()
-                        .eq(AssessmentAnswer::getFileId, fileId)
-                        .last("LIMIT 1"));
+        AssessmentAnswer answer = RepositoryObjectConverter.toDomain(
+                assessmentAnswerMapper.selectOne(
+                        new LambdaQueryWrapper<AssessmentAnswerDO>()
+                                .eq(AssessmentAnswerDO::getFileId, fileId)
+                                .last("LIMIT 1")),
+                AssessmentAnswer.class);
         if (answer == null) {
             return Optional.empty();
         }
         return Optional.of(convertToAnswerVO(answer));
     }
 
+    /**
+     * 查询符合条件的文件 记录。
+     *
+     * @param attachmentId
+     *            附件文件主键。
+     * @return 查询到的文件 结果；不存在时为空。
+     */
     @Override
     public Optional<AssessmentQuestionVO> findQuestionByAttachmentId(Long attachmentId) {
-        AssessmentQuestion question = assessmentQuestionMapper.selectOne(
-                new LambdaQueryWrapper<AssessmentQuestion>()
-                        .eq(AssessmentQuestion::getAttachmentId, attachmentId)
-                        .last("LIMIT 1"));
+        AssessmentQuestion question = RepositoryObjectConverter.toDomain(
+                assessmentQuestionMapper.selectOne(
+                        new LambdaQueryWrapper<AssessmentQuestionDO>()
+                                .eq(AssessmentQuestionDO::getAttachmentId, attachmentId)
+                                .last("LIMIT 1")),
+                AssessmentQuestion.class);
         if (question == null) {
             return Optional.empty();
         }
         return Optional.of(convertToQuestionVO(question));
     }
 
+    /**
+     * 查询符合条件的文件 记录。
+     *
+     * @param id
+     *            业务记录主键。
+     * @return 查询或处理得到的文件 结果。
+     */
     @Override
     public AssessmentTimeVO findTimeById(Long id) {
-        AssessmentTime assessmentTime = assessmentTimeMapper.selectById(id);
+        AssessmentTime assessmentTime = RepositoryObjectConverter
+                .toDomain(assessmentTimeMapper.selectById(id), AssessmentTime.class);
         if (assessmentTime == null) {
             throw new DataNotFound("Assessment time not found, ID: " + id);
         }
@@ -88,19 +125,20 @@ public class FileRepositoryImpl implements FileRepository {
     }
 
     /**
-     * 保存文件元数据并写入对象存储。
+     * 处理文件 仓储职责中的业务数据访问逻辑。
      *
      * @param inputStream
-     *            文件输入流
+     *            待保存文件的输入流。
      * @param file
-     *            文件实体，包含文件名和文件类型等信息
+     *            文件领域对象或文件视图对象。
+     * @return 查询或处理得到的文件 结果。
      */
     @Override
     @Transactional
     public FileVO saveFile(InputStream inputStream, File file) {
         validateParameters(file.getName(), inputStream, file.getType());
 
-        fileMapper.insert(file);
+        RepositoryObjectConverter.insert(fileMapper, file, FileDO.class);
         objectStorage.put(file.getType(), file.getName(), inputStream);
         log.debug("File metadata and object saved successfully: id={}, type={}", file.getId(), file.getType());
 
@@ -112,13 +150,13 @@ public class FileRepositoryImpl implements FileRepository {
     }
 
     /**
-     * 从对象存储加载文件。
+     * 从对象存储加载指定文件资源。
      *
      * @param filename
-     *            文件名
+     *            对象存储中的文件名。
      * @param fileType
-     *            文件类型
-     * @return 文件资源
+     *            文件业务类型。
+     * @return 查询或处理得到的文件 结果。
      */
     @Override
     public Resource loadFile(String filename, FileType fileType) {
@@ -126,11 +164,20 @@ public class FileRepositoryImpl implements FileRepository {
         return objectStorage.get(fileType, filename);
     }
 
+    /**
+     * 按文件名和类型删除文件元数据和对象存储内容。
+     *
+     * @param filename
+     *            对象存储中的文件名。
+     * @param fileType
+     *            文件业务类型。
+     */
     @Override
     @Transactional
     public void deleteFile(String filename, FileType fileType) {
         // 查找对应的文件元数据，避免只删除对象后留下孤立数据库记录。
-        Optional<File> fileOp = fileMapper.selectByNameAndType(filename, fileType);
+        Optional<File> fileOp = Optional.ofNullable(
+                RepositoryObjectConverter.toDomain(fileMapper.selectByNameAndType(filename, fileType), File.class));
         if (fileOp.isEmpty()) {
             log.warn("File not found in database for deletion: {} ({})", filename, fileType);
             throw new DataNotFound("File not found for deletion: " + filename);
@@ -144,11 +191,17 @@ public class FileRepositoryImpl implements FileRepository {
         objectStorage.delete(fileType, filename);
     }
 
+    /**
+     * 按文件主键删除文件元数据和对象存储内容。
+     *
+     * @param id
+     *            业务记录主键。
+     */
     @Override
     @Transactional
     public void deleteFileById(Long id) {
         // 查找对应的文件元数据，拿到对象存储删除所需的文件类型和文件名。
-        File file = fileMapper.selectById(id);
+        File file = RepositoryObjectConverter.toDomain(fileMapper.selectById(id), File.class);
         if (file == null) {
             log.warn("File not found in database for deletion: id={}", id);
             throw new DataNotFound("File not found for deletion, id: " + id);
@@ -163,7 +216,14 @@ public class FileRepositoryImpl implements FileRepository {
     }
 
     /**
-     * 验证保存文件方法的参数。
+     * 校验文件仓储操作所需参数。
+     *
+     * @param filename
+     *            对象存储中的文件名。
+     * @param inputStream
+     *            待保存文件的输入流。
+     * @param fileType
+     *            文件业务类型。
      */
     private void validateParameters(String filename, InputStream inputStream, FileType fileType) {
         validateParameters(filename, fileType);
@@ -173,7 +233,12 @@ public class FileRepositoryImpl implements FileRepository {
     }
 
     /**
-     * 验证加载和删除文件方法的参数。
+     * 校验文件仓储操作所需参数。
+     *
+     * @param filename
+     *            对象存储中的文件名。
+     * @param fileType
+     *            文件业务类型。
      */
     private void validateParameters(String filename, FileType fileType) {
         if (filename == null || filename.trim().isEmpty()) {
@@ -184,6 +249,13 @@ public class FileRepositoryImpl implements FileRepository {
         }
     }
 
+    /**
+     * 在文件 的持久层对象、领域对象和视图对象之间转换。
+     *
+     * @param file
+     *            文件领域对象或文件视图对象。
+     * @return 转换后的目标模型对象。
+     */
     private FileVO convertToVO(File file) {
         return FileVO.builder()
                 .id(file.getId())
@@ -193,6 +265,13 @@ public class FileRepositoryImpl implements FileRepository {
                 .build();
     }
 
+    /**
+     * 处理文件 仓储职责中的业务数据访问逻辑。
+     *
+     * @param answer
+     *            考核作答对象。
+     * @return 转换后的目标模型对象。
+     */
     private AssessmentAnswerVO convertToAnswerVO(AssessmentAnswer answer) {
         return AssessmentAnswerVO.builder()
                 .id(answer.getId())
@@ -205,6 +284,13 @@ public class FileRepositoryImpl implements FileRepository {
                 .build();
     }
 
+    /**
+     * 处理文件 仓储职责中的业务数据访问逻辑。
+     *
+     * @param question
+     *            考核题目对象。
+     * @return 转换后的目标模型对象。
+     */
     private AssessmentQuestionVO convertToQuestionVO(AssessmentQuestion question) {
         return AssessmentQuestionVO.builder()
                 .id(question.getId())
@@ -218,6 +304,13 @@ public class FileRepositoryImpl implements FileRepository {
                 .build();
     }
 
+    /**
+     * 处理文件 仓储职责中的业务数据访问逻辑。
+     *
+     * @param assessmentTime
+     *            考核场次对象。
+     * @return 转换后的目标模型对象。
+     */
     private AssessmentTimeVO convertToTimeVO(AssessmentTime assessmentTime) {
         return AssessmentTimeVO.builder()
                 .id(assessmentTime.getId())

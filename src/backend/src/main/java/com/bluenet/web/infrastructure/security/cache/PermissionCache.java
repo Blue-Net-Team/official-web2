@@ -11,9 +11,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.springframework.stereotype.Component;
 
 import com.bluenet.web.domain.model.entity.Permission;
-import com.bluenet.web.domain.model.entity.RolePermission;
+import com.bluenet.web.infrastructure.repository.dataobject.RolePermissionDO;
 import com.bluenet.web.infrastructure.repository.mapper.PermissionMapper;
 import com.bluenet.web.infrastructure.repository.mapper.RolePermissionMapper;
+import com.bluenet.web.infrastructure.repository.support.RepositoryObjectConverter;
 
 import jakarta.annotation.PostConstruct;
 
@@ -54,12 +55,16 @@ public class PermissionCache {
      */
     public void refresh() {
         // 加载所有权限
-        List<Permission> permissions = permissionMapper.selectList(null);
+        List<Permission> permissions = permissionMapper.selectList(null)
+                .stream()
+                // 缓存对外仍暴露领域 Permission，Mapper 边界只返回 PermissionDO。
+                .map(permission -> RepositoryObjectConverter.copy(permission, Permission.class))
+                .toList();
         permissionMap.clear();
         permissions.forEach(p -> permissionMap.put(p.getValue(), p));
 
         // 加载所有角色权限关系
-        List<RolePermission> rolePermissions = rolePermissionMapper.selectList(null);
+        List<RolePermissionDO> rolePermissions = rolePermissionMapper.selectList(null);
         rolePermissionMap.clear();
         rolePermissions.forEach(rp -> {
             rolePermissionMap.computeIfAbsent(rp.getRoleId(), k -> ConcurrentHashMap.newKeySet())

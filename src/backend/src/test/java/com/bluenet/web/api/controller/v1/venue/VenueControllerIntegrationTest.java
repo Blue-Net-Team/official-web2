@@ -1,5 +1,9 @@
 package com.bluenet.web.api.controller.v1.venue;
 
+import com.bluenet.web.infrastructure.repository.dataobject.*;
+
+import com.bluenet.web.testsupport.RepositoryTestObjects;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.List;
@@ -64,7 +68,7 @@ class VenueControllerIntegrationTest extends BaseIntegrationTest {
                 .url(TEST_FILE_URL)
                 .type(TEST_FILE_TYPE)
                 .build();
-        fileMapper.insert(file);
+        RepositoryTestObjects.insert(fileMapper, file, FileDO.class);
 
         // 创建测试场地1
         Venue venue1 = new Venue();
@@ -73,7 +77,7 @@ class VenueControllerIntegrationTest extends BaseIntegrationTest {
         venue1.setDescription(TEST_DESCRIPTION);
         venue1.setImageFileId(TEST_FILE_ID);
         venue1.setSortOrder(10);
-        venueMapper.insert(venue1);
+        RepositoryTestObjects.insert(venueMapper, venue1, VenueDO.class);
 
         // 创建测试场地2
         Venue venue2 = new Venue();
@@ -82,7 +86,7 @@ class VenueControllerIntegrationTest extends BaseIntegrationTest {
         venue2.setDescription(TEST_DESCRIPTION);
         venue2.setImageFileId(TEST_FILE_ID);
         venue2.setSortOrder(20);
-        venueMapper.insert(venue2);
+        RepositoryTestObjects.insert(venueMapper, venue2, VenueDO.class);
     }
 
     @Test

@@ -62,7 +62,9 @@ public class UserVO {
      * 专业
      */
     private String major;
-
+    /**
+     * 用于考核资格计算的年级年份，优先覆盖从学号推导出的入学年份。
+     */
     private Integer assessmentGradeYear;
 
     /**

@@ -15,111 +15,111 @@ import java.util.Optional;
  */
 public interface AssessmentTimeRepository {
     /**
-     * 根据ID查询考核时间
+     * 处理考核场次 仓储职责中的业务数据访问逻辑。
      *
      * @param id
-     *            考核时间ID
-     * @return 考核时间信息，如果不存在则返回Optional.empty()
+     *            业务记录主键。
+     * @return 查询或处理得到的考核场次 结果。
      */
     Optional<AssessmentTimeVO> findById(Long id);
 
     /**
-     * 保存考核时间
+     * 保存新的考核场次 记录。
      *
      * @param vo
-     *            考核时间VO
-     * @return 保存后的考核时间ID
+     *            领域视图对象。
+     * @return 新记录的主键。
      */
     Long save(AssessmentTimeVO vo);
 
     /**
-     * 更新考核时间
+     * 更新已有考核场次 记录。
      *
      * @param vo
-     *            考核时间VO
+     *            领域视图对象。
      */
     void update(AssessmentTimeVO vo);
 
     /**
-     * 根据ID删除考核时间
+     * 删除指定考核场次 记录。
      *
      * @param id
-     *            考核时间ID
+     *            业务记录主键。
      */
     void deleteById(Long id);
 
     /**
-     * 检查考核时间是否存在
+     * 判断是否存在满足条件的考核场次 记录。
      *
      * @param id
-     *            考核时间ID
-     * @return 如果存在返回true，否则返回false
+     *            业务记录主键。
+     * @return 满足条件时返回 true，否则返回 false。
      */
     boolean existsById(Long id);
 
     /**
-     * 检查方向+届次+入学年份组合是否已存在
+     * 判断是否存在满足条件的考核场次 记录。
      *
      * @param direction
-     *            方向
+     *            技术方向过滤条件。
      * @param epoch
-     *            届次
+     *            考核批次或轮次。
      * @param grade
-     *            入学年份（如 2024、2025）
-     * @return 如果存在返回true，否则返回false
+     *            考核年级。
+     * @return 满足条件时返回 true，否则返回 false。
      */
     boolean existsByDirectionAndEpochAndGrade(Direction direction, Integer epoch, Integer grade);
 
     /**
-     * 检查方向+届次+入学年份组合是否已存在（排除指定ID）
+     * 判断除当前记录外是否存在相同业务唯一键的考核场次 记录。
      *
      * @param direction
-     *            方向
+     *            技术方向过滤条件。
      * @param epoch
-     *            届次
+     *            考核批次或轮次。
      * @param grade
-     *            入学年份（如 2024、2025）
+     *            考核年级。
      * @param excludeId
-     *            排除的考核时间ID
-     * @return 如果存在返回true，否则返回false
+     *            需要排除的当前记录主键。
+     * @return 满足条件时返回 true，否则返回 false。
      */
     boolean existsByDirectionAndEpochAndGradeAndIdNot(Direction direction, Integer epoch, Integer grade,
             Long excludeId);
 
     /**
-     * 检查是否有关联的考核题目
+     * 判断考核场次下是否仍有关联题目。
      *
      * @param assessmentTimeId
-     *            考核时间ID
-     * @return 如果有关联题目返回true，否则返回false
+     *            考核场次主键。
+     * @return 满足条件时返回 true，否则返回 false。
      */
     boolean hasAssociatedQuestions(Long assessmentTimeId);
 
     /**
-     * 分页查询考核时间（支持方向和年级过滤）
+     * 按组合筛选条件分页查询考核场次 视图。
      *
      * @param direction
-     *            方向（null表示不过滤）
+     *            技术方向过滤条件。
      * @param grade
-     *            入学年份（如 2024、2025，null表示不过滤）
+     *            考核年级。
      * @param pageable
-     *            分页参数
-     * @return 考核时间分页结果
+     *            Spring 分页请求对象。
+     * @return 分页后的考核场次 结果。
      */
     Page<AssessmentTimeVO> findByFilters(Direction direction, Integer grade, Pageable pageable);
 
     /**
-     * 按用户参与视角查询考核时间（分配给用户的 + 用户参与过的）
+     * 查询用户已经参与过的考核场次。
      *
      * @param userId
-     *            当前用户ID
+     *            用户主键，用于限定用户范围。
      * @param direction
-     *            当前用户方向（null时仅按answer过滤）
+     *            技术方向过滤条件。
      * @param enrollmentYear
-     *            当前用户入学年份（null时仅按answer过滤）
+     *            入学年份过滤条件。
      * @param pageable
-     *            分页参数
-     * @return 考核时间分页结果
+     *            Spring 分页请求对象。
+     * @return 分页后的考核场次 结果。
      */
     Page<AssessmentTimeVO> findByUserParticipation(Long userId, Direction direction, Integer enrollmentYear,
             Pageable pageable);

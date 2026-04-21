@@ -1,26 +1,30 @@
 package com.bluenet.web.infrastructure.repository.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.bluenet.web.domain.model.entity.Venue;
-import com.bluenet.web.domain.model.vo.VenueVO;
+import com.bluenet.web.infrastructure.repository.dataobject.VenueDO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
-import java.util.Optional;
 
 /**
- * 场地Mapper接口
+ * Mapper for tb_venue only; RepositoryImpl assembles related file data.
  */
 @Mapper
-public interface VenueMapper extends BaseMapper<Venue> {
+public interface VenueMapper extends BaseMapper<VenueDO> {
     /**
-     * 查询所有场地（按排序号降序，包含图片URL）
+     * 查询场地 数据行。
+     *
+     * @return 满足条件的场地 结果集合。
      */
-    List<VenueVO> selectAllOrderBySortOrderDesc();
+    List<VenueDO> selectAllOrderBySortOrderDesc();
 
     /**
-     * 根据ID查询场地（包含图片URL）
+     * 查询场地 数据行。
+     *
+     * @param id
+     *            业务记录主键。
+     * @return 匹配条件的场地 数据行；不存在时为 null。
      */
-    Optional<VenueVO> selectByIdWithImageUrl(@Param("id") Long id);
+    VenueDO selectVenueById(@Param("id") Long id);
 }

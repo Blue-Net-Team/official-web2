@@ -1,26 +1,30 @@
 package com.bluenet.web.infrastructure.repository.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.bluenet.web.domain.model.entity.Equipment;
-import com.bluenet.web.domain.model.vo.EquipmentVO;
+import com.bluenet.web.infrastructure.repository.dataobject.EquipmentDO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
-import java.util.Optional;
 
 /**
- * 设备Mapper接口
+ * Mapper for tb_equipment only; RepositoryImpl assembles related file data.
  */
 @Mapper
-public interface EquipmentMapper extends BaseMapper<Equipment> {
+public interface EquipmentMapper extends BaseMapper<EquipmentDO> {
     /**
-     * 查询所有设备（按排序号降序，包含图片URL）
+     * 查询设备 数据行。
+     *
+     * @return 满足条件的设备 结果集合。
      */
-    List<EquipmentVO> selectAllOrderBySortOrderDesc();
+    List<EquipmentDO> selectAllOrderBySortOrderDesc();
 
     /**
-     * 根据ID查询设备（包含图片URL）
+     * 查询设备 数据行。
+     *
+     * @param id
+     *            业务记录主键。
+     * @return 匹配条件的设备 数据行；不存在时为 null。
      */
-    Optional<EquipmentVO> selectByIdWithImageUrl(@Param("id") Long id);
+    EquipmentDO selectEquipmentById(@Param("id") Long id);
 }

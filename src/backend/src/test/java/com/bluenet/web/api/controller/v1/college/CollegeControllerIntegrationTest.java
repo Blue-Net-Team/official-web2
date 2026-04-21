@@ -1,5 +1,9 @@
 package com.bluenet.web.api.controller.v1.college;
 
+import com.bluenet.web.infrastructure.repository.dataobject.*;
+
+import com.bluenet.web.testsupport.RepositoryTestObjects;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.List;
@@ -57,9 +61,9 @@ class CollegeControllerIntegrationTest extends BaseIntegrationTest {
     @BeforeEach
     void setUpTestData() {
         // 创建测试学院数据
-        collegeMapper.insert(createTestCollege(TEST_NAME_1));
-        collegeMapper.insert(createTestCollege(TEST_NAME_2));
-        collegeMapper.insert(createTestCollege(TEST_NAME_3));
+        RepositoryTestObjects.insert(collegeMapper, createTestCollege(TEST_NAME_1), CollegeDO.class);
+        RepositoryTestObjects.insert(collegeMapper, createTestCollege(TEST_NAME_2), CollegeDO.class);
+        RepositoryTestObjects.insert(collegeMapper, createTestCollege(TEST_NAME_3), CollegeDO.class);
     }
 
     // ==================== GET /api/v1/colleges ====================

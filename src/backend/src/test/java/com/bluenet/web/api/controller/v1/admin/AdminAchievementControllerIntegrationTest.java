@@ -1,5 +1,9 @@
 package com.bluenet.web.api.controller.v1.admin;
 
+import com.bluenet.web.infrastructure.repository.dataobject.*;
+
+import com.bluenet.web.testsupport.RepositoryTestObjects;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.time.LocalDate;
@@ -82,10 +86,10 @@ class AdminAchievementControllerIntegrationTest extends BaseIntegrationTest {
     @BeforeEach
     void setUpTestData() {
         File file = File.builder().name(TEST_FILE_NAME).url(TEST_FILE_URL).type(TEST_FILE_TYPE).build();
-        fileMapper.insert(file);
+        RepositoryTestObjects.insert(fileMapper, file, FileDO.class);
         testFileId = file.getId();
 
-        Role adminRole = roleMapper.selectByName("SUPER_ADMIN");
+        Role adminRole = RepositoryTestObjects.toDomain(roleMapper.selectByName("SUPER_ADMIN"), Role.class);
         if (adminRole == null) {
             throw new IllegalStateException("SUPER_ADMIN 角色不存在，请检查数据库迁移脚本");
         }
@@ -106,7 +110,7 @@ class AdminAchievementControllerIntegrationTest extends BaseIntegrationTest {
         adminUser.setRoleId(adminRoleId);
         adminUser.setDisable(false);
         adminUser.setDirection(Direction.COMPUTER_VISION);
-        userMapper.insert(adminUser);
+        RepositoryTestObjects.insert(userMapper, adminUser, UserDO.class);
 
         loginAndGetCookies();
     }
@@ -115,12 +119,12 @@ class AdminAchievementControllerIntegrationTest extends BaseIntegrationTest {
         Permission permission = new Permission();
         permission.setName(name);
         permission.setValue(value);
-        permissionMapper.insert(permission);
+        RepositoryTestObjects.insert(permissionMapper, permission, PermissionDO.class);
 
         RolePermission rolePermission = new RolePermission();
         rolePermission.setRoleId(adminRoleId);
         rolePermission.setPermissionId(permission.getId());
-        rolePermissionMapper.insert(rolePermission);
+        RepositoryTestObjects.insert(rolePermissionMapper, rolePermission, RolePermissionDO.class);
     }
 
     private void loginAndGetCookies() {
@@ -189,7 +193,8 @@ class AdminAchievementControllerIntegrationTest extends BaseIntegrationTest {
         assertEquals(AwardLevel.NATIONAL, created.getAwardLevel());
         assertEquals(testFileId, created.getFileId());
 
-        Achievement achievementEntity = achievementMapper.selectById(created.getId());
+        Achievement achievementEntity = RepositoryTestObjects
+                .toDomain(achievementMapper.selectById(created.getId()), Achievement.class);
         assertNotNull(achievementEntity);
         assertEquals("蓝桥杯全国一等奖", achievementEntity.getTitle());
     }
@@ -310,7 +315,7 @@ class AdminAchievementControllerIntegrationTest extends BaseIntegrationTest {
         achievement.setAwardLevel(AwardLevel.NATIONAL);
         achievement.setAwardName("一等奖");
         achievement.setFileId(testFileId);
-        achievementMapper.insert(achievement);
+        RepositoryTestObjects.insert(achievementMapper, achievement, AchievementDO.class);
         Long achievementId = achievement.getId();
 
         UpdateAchievementRequestDTO request = UpdateAchievementRequestDTO.builder()
@@ -345,7 +350,8 @@ class AdminAchievementControllerIntegrationTest extends BaseIntegrationTest {
         assertEquals(AwardLevel.PROVINCIAL, updated.getAwardLevel());
         assertEquals("二等奖", updated.getAwardName());
 
-        Achievement updatedEntity = achievementMapper.selectById(achievementId);
+        Achievement updatedEntity = RepositoryTestObjects
+                .toDomain(achievementMapper.selectById(achievementId), Achievement.class);
         assertNotNull(updatedEntity);
         assertEquals("更新后的标题", updatedEntity.getTitle());
         assertEquals(AwardLevel.PROVINCIAL, updatedEntity.getAwardLevel());
@@ -387,7 +393,7 @@ class AdminAchievementControllerIntegrationTest extends BaseIntegrationTest {
         achievement.setRelateTo("待删除期刊");
         achievement.setAchieveAt(LocalDate.of(2024, 1, 1));
         achievement.setFileId(testFileId);
-        achievementMapper.insert(achievement);
+        RepositoryTestObjects.insert(achievementMapper, achievement, AchievementDO.class);
         Long achievementId = achievement.getId();
 
         HttpHeaders headers = createAuthHeadersWithCsrf();
@@ -403,7 +409,8 @@ class AdminAchievementControllerIntegrationTest extends BaseIntegrationTest {
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(200, response.getBody().getCode());
 
-        Achievement deleted = achievementMapper.selectById(achievementId);
+        Achievement deleted = RepositoryTestObjects
+                .toDomain(achievementMapper.selectById(achievementId), Achievement.class);
         assertNull(deleted);
     }
 

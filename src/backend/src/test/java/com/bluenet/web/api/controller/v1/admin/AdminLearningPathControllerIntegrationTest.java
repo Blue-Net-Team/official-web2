@@ -1,5 +1,9 @@
 package com.bluenet.web.api.controller.v1.admin;
 
+import com.bluenet.web.infrastructure.repository.dataobject.*;
+
+import com.bluenet.web.testsupport.RepositoryTestObjects;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.List;
@@ -87,7 +91,7 @@ class AdminLearningPathControllerIntegrationTest extends BaseIntegrationTest {
     @BeforeEach
     void setUpTestData() {
         // 查询已存在的管理员角色（由 Flyway 迁移脚本初始化）
-        Role adminRole = roleMapper.selectByName("SUPER_ADMIN");
+        Role adminRole = RepositoryTestObjects.toDomain(roleMapper.selectByName("SUPER_ADMIN"), Role.class);
         if (adminRole == null) {
             throw new IllegalStateException("SUPER_ADMIN 角色不存在，请检查数据库迁移脚本");
         }
@@ -111,7 +115,7 @@ class AdminLearningPathControllerIntegrationTest extends BaseIntegrationTest {
         adminUser.setRoleId(adminRoleId);
         adminUser.setDisable(false);
         adminUser.setDirection(Direction.COMPUTER_VISION);
-        userMapper.insert(adminUser);
+        RepositoryTestObjects.insert(userMapper, adminUser, UserDO.class);
 
         // 登录获取 Cookie 和 CSRF Token
         loginAndGetCookies();
@@ -121,13 +125,13 @@ class AdminLearningPathControllerIntegrationTest extends BaseIntegrationTest {
         Permission permission = new Permission();
         permission.setName(name);
         permission.setValue(value);
-        permissionMapper.insert(permission);
+        RepositoryTestObjects.insert(permissionMapper, permission, PermissionDO.class);
 
         // 关联到管理员角色
         RolePermission rolePermission = new RolePermission();
         rolePermission.setRoleId(adminRoleId);
         rolePermission.setPermissionId(permission.getId());
-        rolePermissionMapper.insert(rolePermission);
+        RepositoryTestObjects.insert(rolePermissionMapper, rolePermission, RolePermissionDO.class);
     }
 
     private void loginAndGetCookies() {

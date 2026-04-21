@@ -14,67 +14,67 @@ import java.util.Optional;
  */
 public interface LearningPathRepository {
     /**
-     * 根据方向查询学习步骤列表
+     * 按技术方向查询学习路径 记录。
      *
      * @param direction
-     *            方向
-     * @return 学习步骤列表，按步骤序号升序排列
+     *            技术方向过滤条件。
+     * @return 满足条件的学习路径 结果集合。
      */
     List<LearningStepVO> findByDirection(Direction direction);
 
     /**
-     * 根据ID查询学习步骤
+     * 处理学习路径 仓储职责中的业务数据访问逻辑。
      *
      * @param id
-     *            步骤ID
+     *            业务记录主键。
      * @return 学习步骤，如果不存在则返回Optional.empty()
      */
     Optional<LearningStepVO> findById(Long id);
 
     /**
-     * 保存学习步骤
+     * 保存新的学习路径 记录。
      *
      * @param step
-     *            学习步骤实体
-     * @return 保存后的步骤ID
+     *            学习路径步骤领域对象。
+     * @return 新记录的主键。
      */
     Long save(com.bluenet.web.domain.model.entity.DirectionLearningStep step);
 
     /**
-     * 更新学习步骤
+     * 更新已有学习路径 记录。
      *
      * @param step
-     *            学习步骤实体
+     *            学习路径步骤领域对象。
      */
     void update(com.bluenet.web.domain.model.entity.DirectionLearningStep step);
 
     /**
-     * 根据ID删除学习步骤
+     * 删除指定学习路径 记录。
      *
      * @param id
-     *            步骤ID
+     *            业务记录主键。
      */
     void deleteById(Long id);
 
     /**
-     * 检查学习步骤是否存在
+     * 判断是否存在满足条件的学习路径 记录。
      *
      * @param id
-     *            步骤ID
-     * @return 如果存在返回true，否则返回false
+     *            业务记录主键。
+     * @return 满足条件时返回 true，否则返回 false。
      */
     boolean existsById(Long id);
 
     /**
-     * 检查同一方向内步骤序号是否已存在
+     * 判断是否存在满足条件的学习路径 记录。
      *
      * @param direction
-     *            方向
+     *            技术方向过滤条件。
      * @param stepNumber
-     *            步骤序号
+     *            学习路径步骤序号。
      * @param excludeId
-     *            排除的步骤ID（用于更新时排除自身）
-     * @return 如果存在返回true，否则返回false
+     *            需要排除的当前记录主键。
+     * @return 满足条件时返回 true，否则返回 false。
      */
     boolean existsByDirectionAndStepNumber(Direction direction, Integer stepNumber, Long excludeId);
 }

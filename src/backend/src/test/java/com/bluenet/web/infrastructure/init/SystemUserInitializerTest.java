@@ -1,11 +1,12 @@
 package com.bluenet.web.infrastructure.init;
 
-import com.bluenet.web.domain.model.entity.Role;
 import com.bluenet.web.domain.model.entity.User;
+import com.bluenet.web.domain.model.enumerate.RoleType;
+import com.bluenet.web.domain.model.vo.RoleVO;
 import com.bluenet.web.domain.model.vo.UserVO;
+import com.bluenet.web.domain.repository.RoleRepository;
 import com.bluenet.web.domain.repository.UserRepository;
 import com.bluenet.web.infrastructure.config.properties.SystemUserProperties;
-import com.bluenet.web.infrastructure.repository.mapper.RoleMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -36,7 +37,7 @@ class SystemUserInitializerTest {
     private PasswordEncoder passwordEncoder;
 
     @Mock
-    private RoleMapper roleMapper;
+    private RoleRepository roleRepository;
 
     @InjectMocks
     private SystemUserInitializer systemUserInitializer;
@@ -62,7 +63,7 @@ class SystemUserInitializerTest {
             when(systemUserProperties.getPassword()).thenReturn(DEFAULT_PASSWORD);
             when(userRepository.findByStudentId(DEFAULT_STUDENT_ID)).thenReturn(Optional.empty());
             when(passwordEncoder.encode(expectedSha256Hash)).thenReturn(ENCODED_PASSWORD);
-            when(roleMapper.selectByName("SUPER_ADMIN")).thenReturn(Role.buildSuperAdmin());
+            when(roleRepository.findByName(RoleType.SUPER_ADMIN.getName())).thenReturn(Optional.of(superAdminRole()));
 
             systemUserInitializer.run();
 
@@ -88,7 +89,7 @@ class SystemUserInitializerTest {
             when(systemUserProperties.getPassword()).thenReturn(DEFAULT_PASSWORD);
             when(userRepository.findByStudentId(DEFAULT_STUDENT_ID)).thenReturn(Optional.empty());
             when(passwordEncoder.encode(expectedSha256Hash)).thenReturn(ENCODED_PASSWORD);
-            when(roleMapper.selectByName("SUPER_ADMIN")).thenReturn(Role.buildSuperAdmin());
+            when(roleRepository.findByName(RoleType.SUPER_ADMIN.getName())).thenReturn(Optional.of(superAdminRole()));
             doThrow(new RuntimeException("Database error")).when(userRepository).save(any(User.class));
 
             systemUserInitializer.run();
@@ -110,7 +111,7 @@ class SystemUserInitializerTest {
             when(systemUserProperties.getPassword()).thenReturn(customPassword);
             when(userRepository.findByStudentId(customStudentId)).thenReturn(Optional.empty());
             when(passwordEncoder.encode(expectedSha256Hash)).thenReturn(customEncodedPassword);
-            when(roleMapper.selectByName("SUPER_ADMIN")).thenReturn(Role.buildSuperAdmin());
+            when(roleRepository.findByName(RoleType.SUPER_ADMIN.getName())).thenReturn(Optional.of(superAdminRole()));
 
             systemUserInitializer.run();
 
@@ -200,5 +201,13 @@ class SystemUserInitializerTest {
 
     private String sha256Hash(String input) {
         return sha256HashViaInitializer(input);
+    }
+    private RoleVO superAdminRole() {
+        // Initializer depends on the repository boundary, so the fixture returns a
+        // domain VO instead of a DO.
+        return RoleVO.builder()
+                .id(1L)
+                .name(RoleType.SUPER_ADMIN.getName())
+                .build();
     }
 }

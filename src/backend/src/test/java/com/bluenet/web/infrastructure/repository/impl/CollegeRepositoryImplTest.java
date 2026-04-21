@@ -1,5 +1,9 @@
 package com.bluenet.web.infrastructure.repository.impl;
 
+import com.bluenet.web.infrastructure.repository.dataobject.*;
+
+import com.bluenet.web.testsupport.RepositoryTestObjects;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -15,7 +19,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.bluenet.web.domain.model.entity.College;
 import com.bluenet.web.domain.model.vo.CollegeVO;
 import com.bluenet.web.infrastructure.repository.mapper.CollegeMapper;
@@ -72,7 +75,7 @@ class CollegeRepositoryImplTest {
         @DisplayName("正常情况：应返回所有学院VO列表")
         void findAll_withColleges_shouldReturnVOList() {
             // 准备
-            List<College> collegeList = new ArrayList<>();
+            List collegeList = new ArrayList<>();
             collegeList.add(createTestCollege(1L, "计算机学院"));
             collegeList.add(createTestCollege(2L, "软件学院"));
 
@@ -118,7 +121,8 @@ class CollegeRepositoryImplTest {
         void findById_existingCollege_shouldReturnVO() {
             // 准备
             College college = createTestCollege();
-            when(collegeMapper.selectById(TEST_ID)).thenReturn(college);
+            when(collegeMapper.selectById(TEST_ID))
+                    .thenReturn(RepositoryTestObjects.toDataObject(college, CollegeDO.class));
 
             // 执行
             Optional<CollegeVO> result = collegeRepository.findById(TEST_ID);
@@ -134,7 +138,8 @@ class CollegeRepositoryImplTest {
         @DisplayName("学院不存在：应返回空Optional")
         void findById_nonExistingCollege_shouldReturnEmpty() {
             // 准备
-            when(collegeMapper.selectById(TEST_ID)).thenReturn(null);
+            when(collegeMapper.selectById(TEST_ID))
+                    .thenReturn(RepositoryTestObjects.toDataObject(null, CollegeDO.class));
 
             // 执行
             Optional<CollegeVO> result = collegeRepository.findById(TEST_ID);
@@ -148,7 +153,7 @@ class CollegeRepositoryImplTest {
         @DisplayName("ID为null：应调用mapper并返回空")
         void findById_nullId_shouldHandleGracefully() {
             // 准备
-            when(collegeMapper.selectById(null)).thenReturn(null);
+            when(collegeMapper.selectById(null)).thenReturn(RepositoryTestObjects.toDataObject(null, CollegeDO.class));
 
             // 执行
             Optional<CollegeVO> result = collegeRepository.findById(null);
@@ -168,8 +173,8 @@ class CollegeRepositoryImplTest {
         @DisplayName("正常保存：应返回生成的ID")
         void save_validName_shouldReturnId() {
             // 准备
-            when(collegeMapper.insert(any(College.class))).thenAnswer(invocation -> {
-                College college = invocation.getArgument(0, College.class);
+            when(collegeMapper.insert(any(CollegeDO.class))).thenAnswer(invocation -> {
+                CollegeDO college = invocation.getArgument(0, CollegeDO.class);
                 college.setId(TEST_ID);
                 return 1;
             });
@@ -179,15 +184,15 @@ class CollegeRepositoryImplTest {
 
             // 验证
             assertEquals(TEST_ID, result);
-            verify(collegeMapper).insert(any(College.class));
+            verify(collegeMapper).insert(any(CollegeDO.class));
         }
 
         @Test
         @DisplayName("保存时名称应正确设置")
         void save_shouldSetNameCorrectly() {
             // 准备
-            when(collegeMapper.insert(any(College.class))).thenAnswer(invocation -> {
-                College college = invocation.getArgument(0);
+            when(collegeMapper.insert(any(CollegeDO.class))).thenAnswer(invocation -> {
+                CollegeDO college = invocation.getArgument(0);
                 college.setId(TEST_ID);
                 assertEquals(TEST_NAME, college.getName());
                 return 1;
@@ -197,7 +202,7 @@ class CollegeRepositoryImplTest {
             collegeRepository.save(TEST_NAME);
 
             // 验证
-            verify(collegeMapper).insert(any(College.class));
+            verify(collegeMapper).insert(any(CollegeDO.class));
         }
     }
 
@@ -211,14 +216,14 @@ class CollegeRepositoryImplTest {
         @DisplayName("正常更新：应调用mapper更新")
         void update_validData_shouldCallMapperUpdate() {
             // 准备
-            when(collegeMapper.updateById(any(College.class))).thenAnswer(invocation -> 1);
+            when(collegeMapper.updateById(any(CollegeDO.class))).thenReturn(1);
 
             // 执行
             collegeRepository.update(TEST_ID, TEST_NAME_2);
 
             // 验证
             verify(collegeMapper)
-                    .updateById(argThat((College c) -> TEST_ID.equals(c.getId()) && TEST_NAME_2.equals(c.getName())));
+                    .updateById(argThat((CollegeDO c) -> TEST_ID.equals(c.getId()) && TEST_NAME_2.equals(c.getName())));
         }
     }
 
@@ -252,7 +257,8 @@ class CollegeRepositoryImplTest {
         @DisplayName("学院存在：应返回true")
         void existsById_existingCollege_shouldReturnTrue() {
             // 准备
-            when(collegeMapper.selectById(TEST_ID)).thenReturn(createTestCollege());
+            when(collegeMapper.selectById(TEST_ID))
+                    .thenReturn(RepositoryTestObjects.toDataObject(createTestCollege(), CollegeDO.class));
 
             // 执行
             boolean result = collegeRepository.existsById(TEST_ID);
@@ -266,7 +272,8 @@ class CollegeRepositoryImplTest {
         @DisplayName("学院不存在：应返回false")
         void existsById_nonExistingCollege_shouldReturnFalse() {
             // 准备
-            when(collegeMapper.selectById(TEST_ID)).thenReturn(null);
+            when(collegeMapper.selectById(TEST_ID))
+                    .thenReturn(RepositoryTestObjects.toDataObject(null, CollegeDO.class));
 
             // 执行
             boolean result = collegeRepository.existsById(TEST_ID);
@@ -287,28 +294,28 @@ class CollegeRepositoryImplTest {
         @DisplayName("名称已存在：应返回true")
         void existsByName_existingName_shouldReturnTrue() {
             // 准备
-            when(collegeMapper.selectCount(any(LambdaQueryWrapper.class))).thenReturn(1L);
+            when(collegeMapper.countByName(TEST_NAME)).thenReturn(1L);
 
             // 执行
             boolean result = collegeRepository.existsByName(TEST_NAME);
 
             // 验证
             assertTrue(result);
-            verify(collegeMapper).selectCount(any(LambdaQueryWrapper.class));
+            verify(collegeMapper).countByName(TEST_NAME);
         }
 
         @Test
         @DisplayName("名称不存在：应返回false")
         void existsByName_nonExistingName_shouldReturnFalse() {
             // 准备
-            when(collegeMapper.selectCount(any(LambdaQueryWrapper.class))).thenReturn(0L);
+            when(collegeMapper.countByName(TEST_NAME)).thenReturn(0L);
 
             // 执行
             boolean result = collegeRepository.existsByName(TEST_NAME);
 
             // 验证
             assertFalse(result);
-            verify(collegeMapper).selectCount(any(LambdaQueryWrapper.class));
+            verify(collegeMapper).countByName(TEST_NAME);
         }
     }
 
@@ -322,28 +329,28 @@ class CollegeRepositoryImplTest {
         @DisplayName("排除自身后名称已存在：应返回true")
         void existsByNameAndIdNot_existingNameWithDifferentId_shouldReturnTrue() {
             // 准备
-            when(collegeMapper.selectCount(any(LambdaQueryWrapper.class))).thenReturn(1L);
+            when(collegeMapper.countByNameAndIdNot(TEST_NAME, TEST_ID)).thenReturn(1L);
 
             // 执行
             boolean result = collegeRepository.existsByNameAndIdNot(TEST_NAME, TEST_ID);
 
             // 验证
             assertTrue(result);
-            verify(collegeMapper).selectCount(any(LambdaQueryWrapper.class));
+            verify(collegeMapper).countByNameAndIdNot(TEST_NAME, TEST_ID);
         }
 
         @Test
         @DisplayName("排除自身后名称不存在：应返回false")
         void existsByNameAndIdNot_nonExistingName_shouldReturnFalse() {
             // 准备
-            when(collegeMapper.selectCount(any(LambdaQueryWrapper.class))).thenReturn(0L);
+            when(collegeMapper.countByNameAndIdNot(TEST_NAME, TEST_ID)).thenReturn(0L);
 
             // 执行
             boolean result = collegeRepository.existsByNameAndIdNot(TEST_NAME, TEST_ID);
 
             // 验证
             assertFalse(result);
-            verify(collegeMapper).selectCount(any(LambdaQueryWrapper.class));
+            verify(collegeMapper).countByNameAndIdNot(TEST_NAME, TEST_ID);
         }
     }
 
@@ -357,28 +364,28 @@ class CollegeRepositoryImplTest {
         @DisplayName("有关联用户：应返回true")
         void hasAssociatedUsers_withUsers_shouldReturnTrue() {
             // 准备
-            when(userMapper.selectCount(any(LambdaQueryWrapper.class))).thenReturn(5L);
+            when(userMapper.countByCollegeId(TEST_ID)).thenReturn(5L);
 
             // 执行
             boolean result = collegeRepository.hasAssociatedUsers(TEST_ID);
 
             // 验证
             assertTrue(result);
-            verify(userMapper).selectCount(any(LambdaQueryWrapper.class));
+            verify(userMapper).countByCollegeId(TEST_ID);
         }
 
         @Test
         @DisplayName("无关联用户：应返回false")
         void hasAssociatedUsers_noUsers_shouldReturnFalse() {
             // 准备
-            when(userMapper.selectCount(any(LambdaQueryWrapper.class))).thenReturn(0L);
+            when(userMapper.countByCollegeId(TEST_ID)).thenReturn(0L);
 
             // 执行
             boolean result = collegeRepository.hasAssociatedUsers(TEST_ID);
 
             // 验证
             assertFalse(result);
-            verify(userMapper).selectCount(any(LambdaQueryWrapper.class));
+            verify(userMapper).countByCollegeId(TEST_ID);
         }
     }
 
@@ -392,28 +399,28 @@ class CollegeRepositoryImplTest {
         @DisplayName("有关联报名记录：应返回true")
         void hasAssociatedEnrolls_withEnrolls_shouldReturnTrue() {
             // 准备
-            when(enrollMapper.selectCount(any(LambdaQueryWrapper.class))).thenReturn(10L);
+            when(enrollMapper.countByCollegeId(TEST_ID)).thenReturn(10L);
 
             // 执行
             boolean result = collegeRepository.hasAssociatedEnrolls(TEST_ID);
 
             // 验证
             assertTrue(result);
-            verify(enrollMapper).selectCount(any(LambdaQueryWrapper.class));
+            verify(enrollMapper).countByCollegeId(TEST_ID);
         }
 
         @Test
         @DisplayName("无关联报名记录：应返回false")
         void hasAssociatedEnrolls_noEnrolls_shouldReturnFalse() {
             // 准备
-            when(enrollMapper.selectCount(any(LambdaQueryWrapper.class))).thenReturn(0L);
+            when(enrollMapper.countByCollegeId(TEST_ID)).thenReturn(0L);
 
             // 执行
             boolean result = collegeRepository.hasAssociatedEnrolls(TEST_ID);
 
             // 验证
             assertFalse(result);
-            verify(enrollMapper).selectCount(any(LambdaQueryWrapper.class));
+            verify(enrollMapper).countByCollegeId(TEST_ID);
         }
     }
 }

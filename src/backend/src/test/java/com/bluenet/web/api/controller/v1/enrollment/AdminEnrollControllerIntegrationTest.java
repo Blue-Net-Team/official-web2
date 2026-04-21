@@ -1,5 +1,9 @@
 package com.bluenet.web.api.controller.v1.enrollment;
 
+import com.bluenet.web.infrastructure.repository.dataobject.*;
+
+import com.bluenet.web.testsupport.RepositoryTestObjects;
+
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -76,11 +80,11 @@ class AdminEnrollControllerIntegrationTest extends BaseIntegrationTest {
         College college = College.builder()
                 .name("计算机学院")
                 .build();
-        collegeMapper.insert(college);
+        RepositoryTestObjects.insert(collegeMapper, college, CollegeDO.class);
         testCollegeId = college.getId();
 
         // 获取 MEMBER 角色（由 Flyway 迁移初始化）
-        Role memberRole = roleMapper.selectByName("MEMBER");
+        Role memberRole = RepositoryTestObjects.toDomain(roleMapper.selectByName("MEMBER"), Role.class);
         if (memberRole != null) {
             memberRoleId = memberRole.getId();
         }
@@ -104,7 +108,7 @@ class AdminEnrollControllerIntegrationTest extends BaseIntegrationTest {
                 .direction(Direction.COMPUTER_VISION)
                 .status(status)
                 .build();
-        enrollMapper.insert(enroll);
+        RepositoryTestObjects.insert(enrollMapper, enroll, EnrollDO.class);
         return enroll;
     }
 
@@ -266,7 +270,8 @@ class AdminEnrollControllerIntegrationTest extends BaseIntegrationTest {
                     .andExpect(jsonPath("$.data.status").value("APPROVED"));
 
             // 验证用户已创建
-            User createdUser = userMapper.selectByStudentId(enroll.getStudentId());
+            User createdUser = RepositoryTestObjects
+                    .toDomain(userMapper.selectByStudentId(enroll.getStudentId()), User.class);
             assert createdUser != null : "用户应该被创建";
             assert createdUser.getUsername().equals(enroll.getUsername()) : "用户名应该匹配";
         }
@@ -311,7 +316,7 @@ class AdminEnrollControllerIntegrationTest extends BaseIntegrationTest {
                     .roleId(memberRoleId)
                     .disable(false)
                     .build();
-            userMapper.insert(existingUser);
+            RepositoryTestObjects.insert(userMapper, existingUser, UserDO.class);
 
             mockMvc.perform(
                     put("/api/v1/admin/enrollments/" + enroll.getId() + "/approve")

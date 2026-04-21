@@ -9,7 +9,12 @@ import com.bluenet.web.domain.model.vo.AssessmentQuestionScoreboardVO;
 import com.bluenet.web.domain.model.vo.AssessmentQuestionSubmissionHistoryVO;
 import com.bluenet.web.domain.model.vo.AssessmentQuestionSubmissionVO;
 import com.bluenet.web.domain.repository.AssessmentJudgementRepository;
+import com.bluenet.web.infrastructure.repository.dataobject.AssessmentJudgementDO;
 import com.bluenet.web.infrastructure.repository.mapper.AssessmentJudgementMapper;
+import com.bluenet.web.infrastructure.repository.projection.AssessmentCandidateScoreRowProjection;
+import com.bluenet.web.infrastructure.repository.projection.AssessmentQuestionScoreboardProjection;
+import com.bluenet.web.infrastructure.repository.projection.AssessmentQuestionSubmissionRowProjection;
+import com.bluenet.web.infrastructure.repository.support.RepositoryObjectConverter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
@@ -23,15 +28,29 @@ import java.util.Optional;
 public class AssessmentJudgementRepositoryImpl implements AssessmentJudgementRepository {
     private final AssessmentJudgementMapper assessmentJudgementMapper;
 
+    /**
+     * 保存新的考核评审结果 记录。
+     *
+     * @param judgement
+     *            考核评审结果对象。
+     */
     @Override
     public void save(AssessmentJudgement judgement) {
         log.info("save assessment judgement {}", judgement);
-        assessmentJudgementMapper.insert(judgement);
+        RepositoryObjectConverter.insert(assessmentJudgementMapper, judgement, AssessmentJudgementDO.class);
     }
 
+    /**
+     * 按主键查询考核评审结果 记录。
+     *
+     * @param id
+     *            业务记录主键。
+     * @return 查询到的考核评审结果 结果；不存在时为空。
+     */
     @Override
     public Optional<AssessmentJudgementVO> findById(Long id) {
-        AssessmentJudgement judgement = assessmentJudgementMapper.selectById(id);
+        AssessmentJudgement judgement = RepositoryObjectConverter
+                .toDomain(assessmentJudgementMapper.selectById(id), AssessmentJudgement.class);
         if (judgement == null) {
             log.warn("assessment judgement not found id {}", id);
             return Optional.empty();
@@ -39,71 +58,133 @@ public class AssessmentJudgementRepositoryImpl implements AssessmentJudgementRep
         return Optional.of(convertToVO(judgement));
     }
 
+    /**
+     * 更新已有考核评审结果 记录。
+     *
+     * @param judgement
+     *            考核评审结果对象。
+     */
     @Override
     public void update(AssessmentJudgementVO judgement) {
         AssessmentJudgement entity = convertToEntity(judgement);
-        int influence = assessmentJudgementMapper.updateById(entity);
+        int influence = RepositoryObjectConverter
+                .updateById(assessmentJudgementMapper, entity, AssessmentJudgementDO.class);
         if (influence == 0) {
             log.warn("更新考核评判记录失败，judgementId {}", judgement.getId());
             throw new GlobalException("更新考核评判记录失败");
         }
     }
 
+    /**
+     * 查询指定作答的最新评审结果。
+     *
+     * @param answerId
+     *            考核作答主键。
+     * @return 查询到的考核评审结果 结果；不存在时为空。
+     */
     @Override
     public Optional<AssessmentJudgementVO> findLatestByAnswerId(Long answerId) {
-        AssessmentJudgement judgement = assessmentJudgementMapper.selectLatestByAnswerId(answerId);
+        AssessmentJudgement judgement = RepositoryObjectConverter
+                .toDomain(assessmentJudgementMapper.selectLatestByAnswerId(answerId), AssessmentJudgement.class);
         if (judgement == null) {
             return Optional.empty();
         }
         return Optional.of(convertToVO(judgement));
     }
 
+    /**
+     * 查询用户在指定题目上的最新评审结果。
+     *
+     * @param questionId
+     *            考核题目主键。
+     * @param userId
+     *            用户主键，用于限定用户范围。
+     * @return 查询到的考核评审结果 结果；不存在时为空。
+     */
     @Override
     public Optional<AssessmentJudgementVO> findLatestByQuestionIdAndUserId(Long questionId, Long userId) {
-        AssessmentJudgement judgement = assessmentJudgementMapper.selectLatestByQuestionIdAndUserId(questionId, userId);
+        AssessmentJudgement judgement = RepositoryObjectConverter.toDomain(
+                assessmentJudgementMapper.selectLatestByQuestionIdAndUserId(questionId, userId),
+                AssessmentJudgement.class);
         if (judgement == null) {
             return Optional.empty();
         }
         return Optional.of(convertToVO(judgement));
     }
 
+    /**
+     * 查询指定题目的全部评审记录。
+     *
+     * @param questionId
+     *            考核题目主键。
+     * @return 满足条件的考核评审结果 结果集合。
+     */
     @Override
     public List<AssessmentJudgementVO> findAllByQuestionId(Long questionId) {
-        return assessmentJudgementMapper.selectAllByQuestionId(questionId)
+        // Mapper 层返回评判 DO，RepositoryImpl 在这里统一转换为领域对象。
+        return RepositoryObjectConverter.toDomainList(
+                assessmentJudgementMapper.selectAllByQuestionId(questionId),
+                AssessmentJudgement.class)
                 .stream()
                 .map(this::convertToVO)
                 .toList();
     }
 
+    /**
+     * 查询指定题目最新的客观题评审结果。
+     *
+     * @param questionId
+     *            考核题目主键。
+     * @return 满足条件的考核评审结果 结果集合。
+     */
     @Override
     public List<AssessmentJudgementVO> findLatestObjectiveByQuestionId(Long questionId) {
-        return assessmentJudgementMapper.selectLatestObjectiveByQuestionId(questionId)
+        // Mapper 层返回评判 DO，RepositoryImpl 在这里统一转换为领域对象。
+        return RepositoryObjectConverter.toDomainList(
+                assessmentJudgementMapper.selectLatestObjectiveByQuestionId(questionId),
+                AssessmentJudgement.class)
                 .stream()
                 .map(this::convertToVO)
                 .toList();
     }
 
+    /**
+     * 在考核评审结果 的持久层对象、领域对象和视图对象之间转换。
+     *
+     * @param judgement
+     *            考核评审结果对象。
+     * @return 转换后的目标模型对象。
+     */
     private AssessmentJudgement convertToEntity(AssessmentJudgementVO judgement) {
-        AssessmentJudgement entity = new AssessmentJudgement();
-        entity.setId(judgement.getId());
-        entity.setAnswerId(judgement.getAnswerId());
-        entity.setQuestionId(judgement.getQuestionId());
-        entity.setAssessmentTimeId(judgement.getAssessmentTimeId());
-        entity.setUserId(judgement.getUserId());
-        entity.setScore(judgement.getScore());
-        entity.setMaxScore(judgement.getMaxScore());
-        entity.setStatus(judgement.getStatus());
-        entity.setResultCode(judgement.getResultCode());
-        entity.setSource(judgement.getSource());
-        entity.setReviewerId(judgement.getReviewerId());
-        entity.setReviewerType(judgement.getReviewerType());
-        entity.setComment(judgement.getComment());
-        entity.setJudgedAt(judgement.getJudgedAt());
-        entity.setCreatedAt(judgement.getCreatedAt());
-        entity.setUpdatedAt(judgement.getUpdatedAt());
+        AssessmentJudgement entity = AssessmentJudgement.builder()
+                .id(judgement.getId())
+                .answerId(judgement.getAnswerId())
+                .questionId(judgement.getQuestionId())
+                .assessmentTimeId(judgement.getAssessmentTimeId())
+                .userId(judgement.getUserId())
+                .createdAt(judgement.getCreatedAt())
+                .build();
+        entity.applyJudgementResult(
+                judgement.getScore(),
+                judgement.getMaxScore(),
+                judgement.getStatus(),
+                judgement.getResultCode(),
+                judgement.getSource(),
+                judgement.getReviewerId(),
+                judgement.getReviewerType(),
+                judgement.getComment(),
+                judgement.getJudgedAt(),
+                judgement.getUpdatedAt());
         return entity;
     }
 
+    /**
+     * 在考核评审结果 的持久层对象、领域对象和视图对象之间转换。
+     *
+     * @param judgement
+     *            考核评审结果对象。
+     * @return 转换后的目标模型对象。
+     */
     private AssessmentJudgementVO convertToVO(AssessmentJudgement judgement) {
         return AssessmentJudgementVO.builder()
                 .id(judgement.getId())
@@ -126,47 +207,53 @@ public class AssessmentJudgementRepositoryImpl implements AssessmentJudgementRep
     }
 
     /**
-     * 查询题目评分汇总，Mapper 直接返回 VO。
+     * 查询符合条件的考核评审结果 记录。
      *
      * @param assessmentTimeId
-     *            考核时间ID
+     *            考核场次主键。
      * @param questionType
-     *            题型筛选
+     *            题目类型过滤条件。
      * @param keyword
-     *            题目关键词
-     * @return 题目评分汇总 VO 列表
+     *            搜索关键字。
+     * @return 满足条件的考核评审结果 结果集合。
      */
     @Override
     public List<AssessmentQuestionScoreboardVO> findQuestionScoreboard(Long assessmentTimeId,
             QuestionType questionType, String keyword) {
-        return assessmentJudgementMapper.selectQuestionScoreboard(assessmentTimeId, questionType, keyword);
+        return assessmentJudgementMapper.selectQuestionScoreboard(assessmentTimeId, questionType, keyword)
+                .stream()
+                .map(this::convertScoreboardToVO)
+                .toList();
     }
 
     /**
-     * 查询题目提交列表，Mapper 直接返回 VO。
+     * 查询符合条件的考核评审结果 记录。
      *
      * @param questionId
-     *            题目ID
+     *            考核题目主键。
      * @param keyword
-     *            考生关键词
+     *            搜索关键字。
      * @param status
-     *            评判状态筛选
-     * @return 提交 VO 列表
+     *            业务状态过滤条件。
+     * @return 满足条件的考核评审结果 结果集合。
      */
     @Override
     public List<AssessmentQuestionSubmissionVO> findQuestionSubmissions(Long questionId, String keyword,
             String status) {
-        return assessmentJudgementMapper.selectQuestionSubmissions(questionId, keyword, status);
+        return assessmentJudgementMapper.selectQuestionSubmissions(questionId, keyword, status)
+                .stream()
+                .map(this::convertSubmissionToVO)
+                .toList();
     }
 
     /**
-     * 查询评判历史，将扁平 VO 转换为嵌套的历史 VO（含评判记录和最佳标记）。
+     * 查询符合条件的考核评审结果 记录。
      *
      * @param questionId
-     *            题目ID
+     *            考核题目主键。
      * @param userIds
-     *            考生用户ID列表
-     * @return 评判历史 VO 列表
+     *            候选用户主键集合。
+     * @return 满足条件的考核评审结果 结果集合。
      */
     @Override
     public List<AssessmentQuestionSubmissionHistoryVO> findQuestionSubmissionHistories(Long questionId,
@@ -178,27 +265,31 @@ public class AssessmentJudgementRepositoryImpl implements AssessmentJudgementRep
     }
 
     /**
-     * 查询考生评分矩阵行，Mapper 直接返回 VO。
+     * 查询符合条件的考核评审结果 记录。
      *
      * @param assessmentTimeId
-     *            考核时间ID
+     *            考核场次主键。
      * @param keyword
-     *            考生关键词
-     * @return 考生评分矩阵行 VO 列表
+     *            搜索关键字。
+     * @return 满足条件的考核评审结果 结果集合。
      */
     @Override
     public List<AssessmentCandidateScoreRowVO> findCandidateScoreRows(Long assessmentTimeId, String keyword) {
-        return assessmentJudgementMapper.selectCandidateScoreRows(assessmentTimeId, keyword);
+        return assessmentJudgementMapper.selectCandidateScoreRows(assessmentTimeId, keyword)
+                .stream()
+                .map(this::convertCandidateScoreRowToVO)
+                .toList();
     }
 
     /**
-     * 扁平提交 VO → 嵌套历史 VO，仅在 judgementId 非空时构建评判 VO。
+     * 处理考核评审结果 仓储职责中的业务数据访问逻辑。
      *
      * @param row
-     *            Mapper 返回的扁平提交行
-     * @return 评判历史 VO
+     *            Mapper 返回的投影数据行。
+     * @return 转换后的目标模型对象。
      */
-    private AssessmentQuestionSubmissionHistoryVO convertSubmissionHistoryToVO(AssessmentQuestionSubmissionVO row) {
+    private AssessmentQuestionSubmissionHistoryVO convertSubmissionHistoryToVO(
+            AssessmentQuestionSubmissionRowProjection row) {
         AssessmentJudgementVO judgement = null;
         if (row.getJudgementId() != null) {
             judgement = AssessmentJudgementVO.builder()
@@ -221,6 +312,99 @@ public class AssessmentJudgementRepositoryImpl implements AssessmentJudgementRep
         return AssessmentQuestionSubmissionHistoryVO.builder()
                 .judgement(judgement)
                 .selectedBest(Boolean.TRUE.equals(row.getSelectedBest()))
+                .build();
+    }
+
+    /**
+     * 将题目评审看板投影转换为领域视图对象。
+     *
+     * @param row
+     *            Mapper 返回的投影数据行。
+     * @return 转换后的目标模型对象。
+     */
+    private AssessmentQuestionScoreboardVO convertScoreboardToVO(AssessmentQuestionScoreboardProjection row) {
+        return AssessmentQuestionScoreboardVO.builder()
+                .questionId(row.getQuestionId())
+                .assessmentTimeId(row.getAssessmentTimeId())
+                .questionNo(row.getQuestionNo())
+                .questionType(row.getQuestionType())
+                .title(row.getTitle())
+                .maxScore(row.getMaxScore())
+                .submittedCount(row.getSubmittedCount())
+                .judgedCount(row.getJudgedCount())
+                .pendingCount(row.getPendingCount())
+                .averageScore(row.getAverageScore())
+                .build();
+    }
+
+    /**
+     * 将题目提交明细投影转换为领域视图对象。
+     *
+     * @param row
+     *            Mapper 返回的投影数据行。
+     * @return 转换后的目标模型对象。
+     */
+    private AssessmentQuestionSubmissionVO convertSubmissionToVO(AssessmentQuestionSubmissionRowProjection row) {
+        return AssessmentQuestionSubmissionVO.builder()
+                .answerId(row.getAnswerId())
+                .questionId(row.getQuestionId())
+                .assessmentTimeId(row.getAssessmentTimeId())
+                .questionNo(row.getQuestionNo())
+                .questionTitle(row.getQuestionTitle())
+                .questionType(row.getQuestionType())
+                .maxScore(row.getMaxScore())
+                .candidateUserId(row.getCandidateUserId())
+                .studentId(row.getStudentId())
+                .username(row.getUsername())
+                .nickname(row.getNickname())
+                .fileId(row.getFileId())
+                .content(row.getContent())
+                .language(row.getLanguage())
+                .submitTime(row.getSubmitTime())
+                .judgementId(row.getJudgementId())
+                .judgementScore(row.getJudgementScore())
+                .judgementMaxScore(row.getJudgementMaxScore())
+                .judgementStatus(row.getJudgementStatus())
+                .resultCode(row.getResultCode())
+                .source(row.getSource())
+                .reviewerId(row.getReviewerId())
+                .reviewerType(row.getReviewerType())
+                .judgementComment(row.getJudgementComment())
+                .judgedAt(row.getJudgedAt())
+                .selectedBest(row.getSelectedBest())
+                .build();
+    }
+
+    /**
+     * 将候选人得分明细投影转换为领域视图对象。
+     *
+     * @param row
+     *            Mapper 返回的投影数据行。
+     * @return 转换后的目标模型对象。
+     */
+    private AssessmentCandidateScoreRowVO convertCandidateScoreRowToVO(AssessmentCandidateScoreRowProjection row) {
+        return AssessmentCandidateScoreRowVO.builder()
+                .candidateUserId(row.getCandidateUserId())
+                .studentId(row.getStudentId())
+                .username(row.getUsername())
+                .nickname(row.getNickname())
+                .questionId(row.getQuestionId())
+                .questionNo(row.getQuestionNo())
+                .questionTitle(row.getQuestionTitle())
+                .questionType(row.getQuestionType())
+                .maxScore(row.getMaxScore())
+                .answerId(row.getAnswerId())
+                .submitTime(row.getSubmitTime())
+                .judgementId(row.getJudgementId())
+                .judgementScore(row.getJudgementScore())
+                .judgementMaxScore(row.getJudgementMaxScore())
+                .judgementStatus(row.getJudgementStatus())
+                .resultCode(row.getResultCode())
+                .source(row.getSource())
+                .reviewerId(row.getReviewerId())
+                .reviewerType(row.getReviewerType())
+                .judgementComment(row.getJudgementComment())
+                .judgedAt(row.getJudgedAt())
                 .build();
     }
 }

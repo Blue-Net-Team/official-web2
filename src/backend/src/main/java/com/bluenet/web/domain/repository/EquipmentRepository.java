@@ -13,62 +13,62 @@ import java.util.Optional;
  */
 public interface EquipmentRepository {
     /**
-     * 查询所有设备（按排序号降序）
+     * 按展示排序倒序查询全部设备 视图。
      *
-     * @return 设备列表
+     * @return 满足条件的设备 结果集合。
      */
     List<EquipmentVO> findAllOrderBySortOrderDesc();
 
     /**
-     * 根据ID查询设备
+     * 处理设备 仓储职责中的业务数据访问逻辑。
      *
      * @param id
-     *            设备ID
+     *            业务记录主键。
      * @return 设备信息，如果不存在则返回Optional.empty()
      */
     Optional<EquipmentVO> findById(Long id);
 
     /**
-     * 保存设备
+     * 保存新的设备 记录。
      *
      * @param equipment
-     *            设备实体
-     * @return 保存后的设备ID
+     *            设备领域对象。
+     * @return 新记录的主键。
      */
     Long save(com.bluenet.web.domain.model.entity.Equipment equipment);
 
     /**
-     * 更新设备
+     * 更新已有设备 记录。
      *
      * @param equipment
-     *            设备实体
+     *            设备领域对象。
      */
     void update(com.bluenet.web.domain.model.entity.Equipment equipment);
 
     /**
-     * 删除设备
+     * 删除指定设备 记录。
      *
      * @param id
-     *            设备ID
+     *            业务记录主键。
      */
     void deleteById(Long id);
 
     /**
-     * 检查设备是否存在
+     * 判断是否存在满足条件的设备 记录。
      *
      * @param id
-     *            设备ID
-     * @return 如果存在返回true，否则返回false
+     *            业务记录主键。
+     * @return 满足条件时返回 true，否则返回 false。
      */
     boolean existsById(Long id);
 
     /**
-     * 更新设备图片
+     * 更新设备 展示图片文件关联。
      *
      * @param id
-     *            设备ID
+     *            业务记录主键。
      * @param imageFileId
-     *            图片文件ID
+     *            展示图片文件主键。
      */
     void updateImage(Long id, Long imageFileId);
 }

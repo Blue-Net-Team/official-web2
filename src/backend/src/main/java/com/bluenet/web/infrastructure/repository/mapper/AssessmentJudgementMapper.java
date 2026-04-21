@@ -1,66 +1,112 @@
 package com.bluenet.web.infrastructure.repository.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.bluenet.web.domain.model.entity.AssessmentJudgement;
 import com.bluenet.web.domain.model.enumerate.QuestionType;
-import com.bluenet.web.domain.model.vo.AssessmentCandidateScoreRowVO;
-import com.bluenet.web.domain.model.vo.AssessmentQuestionScoreboardVO;
-import com.bluenet.web.domain.model.vo.AssessmentQuestionSubmissionVO;
+import com.bluenet.web.infrastructure.repository.dataobject.AssessmentJudgementDO;
+import com.bluenet.web.infrastructure.repository.projection.AssessmentCandidateScoreRowProjection;
+import com.bluenet.web.infrastructure.repository.projection.AssessmentQuestionScoreboardProjection;
+import com.bluenet.web.infrastructure.repository.projection.AssessmentQuestionSubmissionRowProjection;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
 @Mapper
-public interface AssessmentJudgementMapper extends BaseMapper<AssessmentJudgement> {
+public interface AssessmentJudgementMapper extends BaseMapper<AssessmentJudgementDO> {
     /**
-     * 查询答案的最新评判记录。
+     * 查询考核评审结果 数据行。
+     *
+     * @param answerId
+     *            考核作答主键。
+     * @return 匹配条件的考核评审结果 数据行；不存在时为 null。
      */
-    AssessmentJudgement selectLatestByAnswerId(@Param("answerId") Long answerId);
+    AssessmentJudgementDO selectLatestByAnswerId(@Param("answerId") Long answerId);
 
     /**
-     * 查询考生在某道题上的最新评判记录。
+     * 查询考核评审结果 数据行。
+     *
+     * @param questionId
+     *            考核题目主键。
+     * @param userId
+     *            用户主键，用于限定用户范围。
+     * @return 匹配条件的考核评审结果 数据行；不存在时为 null。
      */
-    AssessmentJudgement selectLatestByQuestionIdAndUserId(@Param("questionId") Long questionId,
+    AssessmentJudgementDO selectLatestByQuestionIdAndUserId(@Param("questionId") Long questionId,
             @Param("userId") Long userId);
 
     /**
-     * 查询题目下所有评判记录。
+     * 查询考核评审结果 数据行。
+     *
+     * @param questionId
+     *            考核题目主键。
+     * @return 满足条件的考核评审结果 结果集合。
      */
-    List<AssessmentJudgement> selectAllByQuestionId(@Param("questionId") Long questionId);
+    List<AssessmentJudgementDO> selectAllByQuestionId(@Param("questionId") Long questionId);
 
     /**
-     * 查询客观题每个考生的最新自动评判记录。
+     * 查询考核评审结果 数据行。
+     *
+     * @param questionId
+     *            考核题目主键。
+     * @return 满足条件的考核评审结果 结果集合。
      */
-    List<AssessmentJudgement> selectLatestObjectiveByQuestionId(@Param("questionId") Long questionId);
+    List<AssessmentJudgementDO> selectLatestObjectiveByQuestionId(@Param("questionId") Long questionId);
 
     /**
-     * 查询题目维度评分汇总，算法题按最佳提交计入统计。
+     * 查询考核评审结果 数据行。
+     *
+     * @param assessmentTimeId
+     *            考核场次主键。
+     * @param questionType
+     *            题目类型过滤条件。
+     * @param keyword
+     *            搜索关键字。
+     * @return 满足条件的考核评审结果 结果集合。
      */
-    List<AssessmentQuestionScoreboardVO> selectQuestionScoreboard(
+    List<AssessmentQuestionScoreboardProjection> selectQuestionScoreboard(
             @Param("assessmentTimeId") Long assessmentTimeId,
             @Param("questionType") QuestionType questionType,
             @Param("keyword") String keyword);
 
     /**
-     * 查询题目下考生提交列表，附带每名考生当前应展示的评判记录。
+     * 查询考核评审结果 数据行。
+     *
+     * @param questionId
+     *            考核题目主键。
+     * @param keyword
+     *            搜索关键字。
+     * @param status
+     *            业务状态过滤条件。
+     * @return 满足条件的考核评审结果 结果集合。
      */
-    List<AssessmentQuestionSubmissionVO> selectQuestionSubmissions(
+    List<AssessmentQuestionSubmissionRowProjection> selectQuestionSubmissions(
             @Param("questionId") Long questionId,
             @Param("keyword") String keyword,
             @Param("status") String status);
 
     /**
-     * 查询题目下指定考生的完整提交评判历史。
+     * 查询考核评审结果 数据行。
+     *
+     * @param questionId
+     *            考核题目主键。
+     * @param userIds
+     *            候选用户主键集合。
+     * @return 满足条件的考核评审结果 结果集合。
      */
-    List<AssessmentQuestionSubmissionVO> selectQuestionSubmissionHistories(
+    List<AssessmentQuestionSubmissionRowProjection> selectQuestionSubmissionHistories(
             @Param("questionId") Long questionId,
             @Param("userIds") List<Long> userIds);
 
     /**
-     * 查询考生维度评分矩阵的扁平行数据。
+     * 查询考核评审结果 数据行。
+     *
+     * @param assessmentTimeId
+     *            考核场次主键。
+     * @param keyword
+     *            搜索关键字。
+     * @return 满足条件的考核评审结果 结果集合。
      */
-    List<AssessmentCandidateScoreRowVO> selectCandidateScoreRows(
+    List<AssessmentCandidateScoreRowProjection> selectCandidateScoreRows(
             @Param("assessmentTimeId") Long assessmentTimeId,
             @Param("keyword") String keyword);
 }

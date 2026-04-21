@@ -11,7 +11,16 @@ import java.util.Map;
 @AllArgsConstructor
 @Builder
 public class EnrollStatisticsVO {
+    /**
+     * 统计总数。
+     */
     private Long total;
+    /**
+     * 按业务状态聚合后的统计结果。
+     */
     private Map<String, Long> byStatus;
+    /**
+     * 按技术方向聚合后的统计结果。
+     */
     private Map<Direction, Long> byDirection;
 }

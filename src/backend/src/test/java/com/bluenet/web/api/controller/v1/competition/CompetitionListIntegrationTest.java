@@ -1,5 +1,9 @@
 package com.bluenet.web.api.controller.v1.competition;
 
+import com.bluenet.web.infrastructure.repository.dataobject.*;
+
+import com.bluenet.web.testsupport.RepositoryTestObjects;
+
 import com.bluenet.web.BaseIntegrationTest;
 import com.bluenet.web.api.dto.ResponseMessage;
 import com.bluenet.web.api.dto.competition.CompetitionResponseDTO;
@@ -65,7 +69,7 @@ class CompetitionListIntegrationTest extends BaseIntegrationTest {
                 .url("http://example.com/logo.png")
                 .type(FileType.NORMAL_IMG)
                 .build();
-        fileMapper.insert(logoFile);
+        RepositoryTestObjects.insert(fileMapper, logoFile, FileDO.class);
         logoFileId = logoFile.getId();
     }
 
@@ -87,7 +91,7 @@ class CompetitionListIntegrationTest extends BaseIntegrationTest {
         competition.setMonth(TEST_MONTH);
         competition.setOrganizer(TEST_ORGANIZER);
         competition.setSortOrder(100);
-        competitionMapper.insert(competition);
+        RepositoryTestObjects.insert(competitionMapper, competition, CompetitionDO.class);
 
         // 执行
         ResponseEntity<ResponseMessage<List<CompetitionResponseDTO>>> response = restTemplate.exchange(
@@ -128,7 +132,7 @@ class CompetitionListIntegrationTest extends BaseIntegrationTest {
                 .url("http://example.com/cover.jpg")
                 .type(FileType.NORMAL_IMG)
                 .build();
-        fileMapper.insert(coverFile);
+        RepositoryTestObjects.insert(fileMapper, coverFile, FileDO.class);
 
         // 准备：创建竞赛并设置封面
         Competition competition = new Competition();
@@ -139,7 +143,7 @@ class CompetitionListIntegrationTest extends BaseIntegrationTest {
         competition.setSummary("全国软件和信息技术专业人才大赛");
         competition.setLevel(TEST_LEVEL);
         competition.setSortOrder(100);
-        competitionMapper.insert(competition);
+        RepositoryTestObjects.insert(competitionMapper, competition, CompetitionDO.class);
 
         // 执行
         ResponseEntity<ResponseMessage<List<CompetitionResponseDTO>>> response = restTemplate.exchange(
@@ -171,7 +175,7 @@ class CompetitionListIntegrationTest extends BaseIntegrationTest {
         competition.setLogoFileId(logoFileId);
         competition.setSummary("这个竞赛没有封面");
         competition.setSortOrder(100);
-        competitionMapper.insert(competition);
+        RepositoryTestObjects.insert(competitionMapper, competition, CompetitionDO.class);
 
         // 执行
         ResponseEntity<ResponseMessage<List<CompetitionResponseDTO>>> response = restTemplate.exchange(
@@ -232,7 +236,7 @@ class CompetitionListIntegrationTest extends BaseIntegrationTest {
             competition.setLogoFileId(logoFileId);
             competition.setSummary("竞赛" + i + "简介");
             competition.setSortOrder(100 - i);
-            competitionMapper.insert(competition);
+            RepositoryTestObjects.insert(competitionMapper, competition, CompetitionDO.class);
         }
 
         // 执行：limit=0 应该被处理为 1
@@ -264,7 +268,7 @@ class CompetitionListIntegrationTest extends BaseIntegrationTest {
             competition.setLogoFileId(logoFileId);
             competition.setSummary("竞赛" + i + "简介");
             competition.setSortOrder(100 - i);
-            competitionMapper.insert(competition);
+            RepositoryTestObjects.insert(competitionMapper, competition, CompetitionDO.class);
         }
 
         // 执行：limit=100 应该被限制为 50
@@ -296,7 +300,7 @@ class CompetitionListIntegrationTest extends BaseIntegrationTest {
             competition.setLogoFileId(logoFileId);
             competition.setSummary("竞赛" + i + "简介");
             competition.setSortOrder(100 - i);
-            competitionMapper.insert(competition);
+            RepositoryTestObjects.insert(competitionMapper, competition, CompetitionDO.class);
         }
 
         // 执行：不传 limit 参数
@@ -326,14 +330,14 @@ class CompetitionListIntegrationTest extends BaseIntegrationTest {
                 .url("http://example.com/cover1.jpg")
                 .type(FileType.NORMAL_IMG)
                 .build();
-        fileMapper.insert(coverFile1);
+        RepositoryTestObjects.insert(fileMapper, coverFile1, FileDO.class);
 
         File coverFile2 = File.builder()
                 .name("cover2.jpg")
                 .url("http://example.com/cover2.jpg")
                 .type(FileType.NORMAL_IMG)
                 .build();
-        fileMapper.insert(coverFile2);
+        RepositoryTestObjects.insert(fileMapper, coverFile2, FileDO.class);
 
         // 准备：创建两个竞赛，各自有封面
         Competition competition1 = new Competition();
@@ -343,7 +347,7 @@ class CompetitionListIntegrationTest extends BaseIntegrationTest {
         competition1.setCoverFileId(coverFile1.getId());
         competition1.setSummary("竞赛1简介");
         competition1.setSortOrder(0);
-        competitionMapper.insert(competition1);
+        RepositoryTestObjects.insert(competitionMapper, competition1, CompetitionDO.class);
 
         Competition competition2 = new Competition();
         competition2.setName("竞赛2");
@@ -352,7 +356,7 @@ class CompetitionListIntegrationTest extends BaseIntegrationTest {
         competition2.setCoverFileId(coverFile2.getId());
         competition2.setSummary("竞赛2简介");
         competition2.setSortOrder(1);
-        competitionMapper.insert(competition2);
+        RepositoryTestObjects.insert(competitionMapper, competition2, CompetitionDO.class);
 
         // 执行
         ResponseEntity<ResponseMessage<List<CompetitionResponseDTO>>> response = restTemplate.exchange(

@@ -6,6 +6,7 @@ import java.util.Optional;
 
 import com.bluenet.web.application.service.ResetPasswordService;
 import com.bluenet.web.domain.exception.BadRequest;
+import com.bluenet.web.domain.model.entity.User;
 import com.bluenet.web.domain.model.vo.UserVO;
 import com.bluenet.web.domain.model.vo.VerifyCodeVO;
 import com.bluenet.web.domain.repository.UserRepository;
@@ -152,11 +153,15 @@ public class ResetPasswordServiceImpl implements ResetPasswordService {
         }
 
         // 编码新密码
-        String encodedPassword = passwordEncoder.encode(newPassword);
-
-        // 更新密码
         Long userId = Long.parseLong(userIdStr);
-        userRepository.updatePassword(userId, encodedPassword);
+        UserVO userVO = userRepository.findById(userId)
+                .orElseThrow(() -> new BadRequest("用户不存在"));
+        User user = User.builder()
+                .id(userVO.getId())
+                .password(userVO.getPassword())
+                .build();
+        user.changePassword(passwordEncoder.encode(newPassword));
+        userRepository.updatePassword(user.getId(), user.getPassword());
 
         // 吊销该用户所有已登录设备的 Token
         authTokenService.revokeAllUserTokens(userId);

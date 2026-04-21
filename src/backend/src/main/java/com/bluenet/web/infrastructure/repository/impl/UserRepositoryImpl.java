@@ -1,8 +1,11 @@
 package com.bluenet.web.infrastructure.repository.impl;
 
+import com.bluenet.web.infrastructure.repository.support.RepositoryObjectConverter;
+
+import com.bluenet.web.infrastructure.repository.dataobject.*;
+
 import java.util.*;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.bluenet.web.domain.exception.GlobalException;
 import com.bluenet.web.domain.model.entity.*;
 import com.bluenet.web.domain.model.enumerate.Direction;
@@ -33,15 +36,28 @@ public class UserRepositoryImpl implements UserRepository {
     private final RoleMapper roleMapper;
     private final UserExperienceMapper userExperienceMapper;
 
+    /**
+     * 保存新的用户 记录。
+     *
+     * @param user
+     *            用户领域对象。
+     */
     @Override
     public void save(User user) {
-        userMapper.insert(user);
+        RepositoryObjectConverter.insert(userMapper, user, UserDO.class);
         log.info("save user {}", user);
     }
 
+    /**
+     * 按主键查询用户 记录。
+     *
+     * @param id
+     *            业务记录主键。
+     * @return 查询到的用户 结果；不存在时为空。
+     */
     @Override
     public Optional<UserVO> findById(Long id) {
-        User user = userMapper.selectById(id);
+        User user = RepositoryObjectConverter.toDomain(userMapper.selectById(id), User.class);
         if (user == null) {
             log.warn("user not found id {}", id);
             return Optional.empty();
@@ -49,9 +65,16 @@ public class UserRepositoryImpl implements UserRepository {
         return Optional.of(convertToVO(user));
     }
 
+    /**
+     * 按邮箱查询用户视图。
+     *
+     * @param email
+     *            邮箱地址，用于定位用户或验证码。
+     * @return 查询到的用户 结果；不存在时为空。
+     */
     @Override
     public Optional<UserVO> findByEmail(String email) {
-        User user = userMapper.selectByEmail(email);
+        User user = RepositoryObjectConverter.toDomain(userMapper.selectByEmail(email), User.class);
         if (user == null) {
             log.warn("user not found email {}", email);
             return Optional.empty();
@@ -59,9 +82,16 @@ public class UserRepositoryImpl implements UserRepository {
         return Optional.of(convertToVO(user));
     }
 
+    /**
+     * 按学号查询用户或报名申请。
+     *
+     * @param studentId
+     *            学生学号，用于定位用户或报名申请。
+     * @return 查询到的用户 结果；不存在时为空。
+     */
     @Override
     public Optional<UserVO> findByStudentId(String studentId) {
-        User user = userMapper.selectByStudentId(studentId);
+        User user = RepositoryObjectConverter.toDomain(userMapper.selectByStudentId(studentId), User.class);
         if (user == null) {
             log.warn("user not found studentId {}", studentId);
             return Optional.empty();
@@ -69,6 +99,15 @@ public class UserRepositoryImpl implements UserRepository {
         return Optional.of(convertToVO(user));
     }
 
+    /**
+     * 更新用户头像文件关联。
+     *
+     * @param user
+     *            用户领域对象。
+     * @param file
+     *            文件领域对象或文件视图对象。
+     * @return 数据库受影响行数。
+     */
     @Override
     public int updateAvatar(UserVO user, FileVO file) {
         if (file.getId() == null) {
@@ -79,6 +118,15 @@ public class UserRepositoryImpl implements UserRepository {
         return updateAvatar(user.getId(), file.getId());
     }
 
+    /**
+     * 更新用户头像文件关联。
+     *
+     * @param userId
+     *            用户主键，用于限定用户范围。
+     * @param id
+     *            业务记录主键。
+     * @return 数据库受影响行数。
+     */
     @Override
     public int updateAvatar(Long userId, Long id) {
         int influence = userMapper.updateAvatarId(userId, id);
@@ -90,6 +138,15 @@ public class UserRepositoryImpl implements UserRepository {
         return influence;
     }
 
+    /**
+     * 更新用户微信二维码文件关联。
+     *
+     * @param user
+     *            用户领域对象。
+     * @param qrcode
+     *            二维码领域对象或视图对象。
+     * @return 数据库受影响行数。
+     */
     @Override
     public int updateQrcode(UserVO user, QrcodeVO qrcode) {
         if (qrcode.getId() == null) {
@@ -106,72 +163,143 @@ public class UserRepositoryImpl implements UserRepository {
         return influence;
     }
 
+    /**
+     * 更新用户个人资料字段。
+     *
+     * @param userId
+     *            用户主键，用于限定用户范围。
+     * @param username
+     *            用户姓名或登录名。
+     * @param nickname
+     *            用户昵称。
+     * @param college
+     *            学院名称。
+     * @param major
+     *            专业名称。
+     * @param direction
+     *            技术方向过滤条件。
+     * @param gender
+     *            性别。
+     * @param bio
+     *            个人简介。
+     * @return 数据库受影响行数。
+     */
     @Override
     public int updateProfile(Long userId, String username, String nickname, String college,
             String major, Direction direction, Gender gender, String bio) {
         return userMapper.updateProfile(userId, username, nickname, college, major, direction, gender, bio);
     }
 
+    /**
+     * 统计用户主页各标签页展示数量。
+     *
+     * @param userId
+     *            用户主键，用于限定用户范围。
+     * @return 查询或处理得到的用户 结果。
+     */
     @Override
     public TabCountsVO getTabCounts(Long userId) {
-        int projects = Math.toIntExact(
-                userExperienceMapper.selectCount(
-                        new LambdaQueryWrapper<UserExperience>()
-                                .eq(UserExperience::getUserId, userId)
-                                .eq(UserExperience::getType, ExperienceType.PROJECT)));
-        int competitions = Math.toIntExact(
-                userExperienceMapper.selectCount(
-                        new LambdaQueryWrapper<UserExperience>()
-                                .eq(UserExperience::getUserId, userId)
-                                .eq(UserExperience::getType, ExperienceType.COMPETITION)));
-        int internships = Math.toIntExact(
-                userExperienceMapper.selectCount(
-                        new LambdaQueryWrapper<UserExperience>()
-                                .eq(UserExperience::getUserId, userId)
-                                .eq(UserExperience::getType, ExperienceType.INTERNSHIP)));
+        int projects = Math.toIntExact(userExperienceMapper.countByUserIdAndType(userId, ExperienceType.PROJECT));
+        int competitions = Math
+                .toIntExact(userExperienceMapper.countByUserIdAndType(userId, ExperienceType.COMPETITION));
+        int internships = Math.toIntExact(userExperienceMapper.countByUserIdAndType(userId, ExperienceType.INTERNSHIP));
 
         return new TabCountsVO(projects, competitions, internships);
     }
 
+    /**
+     * 按 GitHub 用户标识查询已绑定用户。
+     *
+     * @param githubId
+     *            GitHub 用户唯一标识。
+     * @return 查询到的用户 结果；不存在时为空。
+     */
     @Override
     public Optional<UserVO> findByGithubId(String githubId) {
-        User user = userMapper.selectByGithubId(githubId);
+        User user = RepositoryObjectConverter.toDomain(userMapper.selectByGithubId(githubId), User.class);
         if (user == null) {
             return Optional.empty();
         }
         return Optional.of(convertToVO(user));
     }
 
+    /**
+     * 保存用户与 GitHub 账号的绑定信息。
+     *
+     * @param userId
+     *            用户主键，用于限定用户范围。
+     * @param githubId
+     *            GitHub 用户唯一标识。
+     * @param githubUsername
+     *            GitHub 登录名。
+     */
     @Override
     public void updateGithubBinding(Long userId, String githubId, String githubUsername) {
         userMapper.updateGithubBinding(userId, githubId, githubUsername);
     }
 
+    /**
+     * 清除用户与 GitHub 账号的绑定信息。
+     *
+     * @param userId
+     *            用户主键，用于限定用户范围。
+     */
     @Override
     public void clearGithubBinding(Long userId) {
         userMapper.clearGithubBinding(userId);
     }
 
+    /**
+     * 更新用户邮箱地址。
+     *
+     * @param userId
+     *            用户主键，用于限定用户范围。
+     * @param newEmail
+     *            新的邮箱地址。
+     */
     @Override
     public void updateEmail(Long userId, String newEmail) {
         userMapper.updateEmail(userId, newEmail);
     }
 
+    /**
+     * 更新用户加密后的登录密码。
+     *
+     * @param userId
+     *            用户主键，用于限定用户范围。
+     * @param encodedPassword
+     *            加密后的密码。
+     */
     @Override
     public void updatePassword(Long userId, String encodedPassword) {
         userMapper.updatePassword(userId, encodedPassword);
     }
 
+    /**
+     * 判断内部推荐码是否已被用户占用。
+     *
+     * @param code
+     *            验证码或推荐码。
+     * @return 满足条件时返回 true，否则返回 false。
+     */
     @Override
     public boolean existsByInternalReferralCode(String code) {
         return userMapper.selectByInternalReferralCode(code) != null;
     }
 
+    /**
+     * 在用户 的持久层对象、领域对象和视图对象之间转换。
+     *
+     * @param user
+     *            用户领域对象。
+     * @return 转换后的目标模型对象。
+     */
     private UserVO convertToVO(User user) {
         // 学院
         String collegeName = null;
         if (user.getCollegeId() != null) {
-            College college = collegeMapper.selectById(user.getCollegeId());
+            College college = RepositoryObjectConverter
+                    .toDomain(collegeMapper.selectById(user.getCollegeId()), College.class);
             collegeName = college != null ? college.getName() : null;
         } else {
             log.warn("user {} has no collegeId", user.getId());
@@ -180,9 +308,11 @@ public class UserRepositoryImpl implements UserRepository {
         // 微信二维码
         String wechatQrCodeUrl = null;
         if (user.getQrcodeId() != null) {
-            Qrcode qrcode = qrcodeMapper.selectById(user.getQrcodeId());
+            Qrcode qrcode = RepositoryObjectConverter
+                    .toDomain(qrcodeMapper.selectById(user.getQrcodeId()), Qrcode.class);
             if (qrcode != null && qrcode.getFileId() != null) {
-                File wechatQrCode = fileMapper.selectById(qrcode.getFileId());
+                File wechatQrCode = RepositoryObjectConverter
+                        .toDomain(fileMapper.selectById(qrcode.getFileId()), File.class);
                 wechatQrCodeUrl = wechatQrCode != null ? wechatQrCode.getUrl() : null;
             }
         } else {
@@ -200,7 +330,7 @@ public class UserRepositoryImpl implements UserRepository {
         // 角色
         String roleName;
         if (user.getRoleId() != null) {
-            Role roleOptional = roleMapper.selectById(user.getRoleId());
+            Role roleOptional = RepositoryObjectConverter.toDomain(roleMapper.selectById(user.getRoleId()), Role.class);
             roleName = roleOptional != null ? roleOptional.getName() : null;
         } else {
             log.warn("user {} has no roleId", user.getId());

@@ -558,3 +558,16 @@ cd bluenet_web2.2
 - Spotless Maven 插件自动格式化
 - 提交前运行 `mvn spotless:apply` 确保格式一致
 
+### 层间返回类型约定（新增）
+
+为统一本项目的分层职责与返回值，规定如下简洁约定：
+
+- Mapper（MyBatis）返回：持久层 DO/PO（nullable），不返回 Optional/VO/DTO。示例：UserDO selectById(Long id);
+- Repository 接口（domain/repository）返回：领域实体/聚合或 Optional<Aggregate>，分页返回 Page<Aggregate>。示例：Optional<User> findById(Long id);
+- RepositoryImpl（infrastructure）责任：由 Mapper 的 DO 转换为领域实体并返回 Optional/聚合。
+- 领域服务（domain/service）返回：领域实体/聚合或领域 VO（仅用于值对象，如统计），不返回 DTO。示例：Optional<User> getUser(Long id); TabCountsVO getTabCounts(Long userId);
+- Application 层返回：DTO（或 PageDTO），负责将领域对象转换为 DTO；Controller 返回 ResponseMessage<DTO>。
+- 例外：为性能须在 SQL 层做投影时，Mapper 可返回 VO/DTO，但必须在方法注释中说明并经审查（不得随意混用）。
+
+更多细节与示例见：docs\\layer-contracts.md
+

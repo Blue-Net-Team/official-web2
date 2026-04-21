@@ -1,5 +1,9 @@
 package com.bluenet.web.api.controller.v1.file;
 
+import com.bluenet.web.infrastructure.repository.dataobject.*;
+
+import com.bluenet.web.testsupport.RepositoryTestObjects;
+
 import com.bluenet.web.BaseIntegrationTest;
 import com.bluenet.web.domain.model.entity.AssessmentAnswer;
 import com.bluenet.web.domain.model.entity.AssessmentQuestion;
@@ -170,29 +174,29 @@ class FileUploadDownloadIntegrationTest extends BaseIntegrationTest {
         user.setStudentId("2024001100");
         user.setUsername("提交者");
         user.setDirection(Direction.COMPUTER_VISION);
-        userMapper.insert(user);
+        RepositoryTestObjects.insert(userMapper, user, UserDO.class);
 
         AssessmentTime time = new AssessmentTime();
         time.setId(100L);
         time.setDirection(Direction.COMPUTER_VISION);
-        assessmentTimeMapper.insert(time);
+        RepositoryTestObjects.insert(assessmentTimeMapper, time, AssessmentTimeDO.class);
 
         AssessmentQuestion question = new AssessmentQuestion();
         question.setId(100L);
         question.setAssessmentTimeId(100L);
         question.setQuestionNo(1);
-        assessmentQuestionMapper.insert(question);
+        RepositoryTestObjects.insert(assessmentQuestionMapper, question, AssessmentQuestionDO.class);
 
         AssessmentAnswer answer = new AssessmentAnswer();
         answer.setId(100L);
         answer.setUserId(100L);
         answer.setQuestionId(100L);
-        assessmentAnswerMapper.insert(answer);
+        RepositoryTestObjects.insert(assessmentAnswerMapper, answer, AssessmentAnswerDO.class);
 
         FileVO workFileVO = createFileInMinio("work.zip", FileType.WORK);
 
         answer.setFileId(workFileVO.getId());
-        assessmentAnswerMapper.updateById(answer);
+        RepositoryTestObjects.updateById(assessmentAnswerMapper, answer, AssessmentAnswerDO.class);
 
         mockMvc.perform(get("/api/v1/file/download/" + workFileVO.getId())).andExpect(status().isOk());
     }
@@ -206,29 +210,29 @@ class FileUploadDownloadIntegrationTest extends BaseIntegrationTest {
         submitter.setStudentId("2024001102");
         submitter.setUsername("提交者");
         submitter.setDirection(Direction.COMPUTER_VISION);
-        userMapper.insert(submitter);
+        RepositoryTestObjects.insert(userMapper, submitter, UserDO.class);
 
         AssessmentTime time = new AssessmentTime();
         time.setId(101L);
         time.setDirection(Direction.COMPUTER_VISION);
-        assessmentTimeMapper.insert(time);
+        RepositoryTestObjects.insert(assessmentTimeMapper, time, AssessmentTimeDO.class);
 
         AssessmentQuestion question = new AssessmentQuestion();
         question.setId(101L);
         question.setAssessmentTimeId(101L);
         question.setQuestionNo(1);
-        assessmentQuestionMapper.insert(question);
+        RepositoryTestObjects.insert(assessmentQuestionMapper, question, AssessmentQuestionDO.class);
 
         AssessmentAnswer answer = new AssessmentAnswer();
         answer.setId(101L);
         answer.setUserId(102L);
         answer.setQuestionId(101L);
-        assessmentAnswerMapper.insert(answer);
+        RepositoryTestObjects.insert(assessmentAnswerMapper, answer, AssessmentAnswerDO.class);
 
         FileVO workFileVO = createFileInMinio("work.zip", FileType.WORK);
 
         answer.setFileId(workFileVO.getId());
-        assessmentAnswerMapper.updateById(answer);
+        RepositoryTestObjects.updateById(assessmentAnswerMapper, answer, AssessmentAnswerDO.class);
 
         mockMvc.perform(get("/api/v1/file/download/" + workFileVO.getId())).andExpect(status().isForbidden());
     }
@@ -242,29 +246,29 @@ class FileUploadDownloadIntegrationTest extends BaseIntegrationTest {
         submitter.setStudentId("2024001104");
         submitter.setUsername("提交者");
         submitter.setDirection(Direction.COMPUTER_VISION);
-        userMapper.insert(submitter);
+        RepositoryTestObjects.insert(userMapper, submitter, UserDO.class);
 
         AssessmentTime time = new AssessmentTime();
         time.setId(102L);
         time.setDirection(Direction.COMPUTER_VISION);
-        assessmentTimeMapper.insert(time);
+        RepositoryTestObjects.insert(assessmentTimeMapper, time, AssessmentTimeDO.class);
 
         AssessmentQuestion question = new AssessmentQuestion();
         question.setId(102L);
         question.setAssessmentTimeId(102L);
         question.setQuestionNo(1);
-        assessmentQuestionMapper.insert(question);
+        RepositoryTestObjects.insert(assessmentQuestionMapper, question, AssessmentQuestionDO.class);
 
         AssessmentAnswer answer = new AssessmentAnswer();
         answer.setId(102L);
         answer.setUserId(104L);
         answer.setQuestionId(102L);
-        assessmentAnswerMapper.insert(answer);
+        RepositoryTestObjects.insert(assessmentAnswerMapper, answer, AssessmentAnswerDO.class);
 
         FileVO workFileVO = createFileInMinio("work.zip", FileType.WORK);
 
         answer.setFileId(workFileVO.getId());
-        assessmentAnswerMapper.updateById(answer);
+        RepositoryTestObjects.updateById(assessmentAnswerMapper, answer, AssessmentAnswerDO.class);
 
         mockMvc.perform(get("/api/v1/file/download/" + workFileVO.getId())).andExpect(status().isOk());
     }
@@ -278,23 +282,23 @@ class FileUploadDownloadIntegrationTest extends BaseIntegrationTest {
         user.setStudentId("2024001105");
         user.setUsername("考生A");
         user.setDirection(Direction.COMPUTER_VISION);
-        userMapper.insert(user);
+        RepositoryTestObjects.insert(userMapper, user, UserDO.class);
 
         AssessmentTime time = new AssessmentTime();
         time.setId(103L);
         time.setDirection(Direction.COMPUTER_VISION);
-        assessmentTimeMapper.insert(time);
+        RepositoryTestObjects.insert(assessmentTimeMapper, time, AssessmentTimeDO.class);
 
         AssessmentQuestion question = new AssessmentQuestion();
         question.setId(103L);
         question.setAssessmentTimeId(103L);
         question.setQuestionNo(1);
-        assessmentQuestionMapper.insert(question);
+        RepositoryTestObjects.insert(assessmentQuestionMapper, question, AssessmentQuestionDO.class);
 
         FileVO attachmentFileVO = createFileInMinio("attachment.pdf", FileType.ASSESSMENT_ATTACHMENT);
 
         question.setAttachmentId(attachmentFileVO.getId());
-        assessmentQuestionMapper.updateById(question);
+        RepositoryTestObjects.updateById(assessmentQuestionMapper, question, AssessmentQuestionDO.class);
 
         mockMvc.perform(get("/api/v1/file/download/" + attachmentFileVO.getId())).andExpect(status().isOk());
     }
@@ -308,23 +312,23 @@ class FileUploadDownloadIntegrationTest extends BaseIntegrationTest {
         user.setStudentId("2024001106");
         user.setUsername("考生B");
         user.setDirection(Direction.EMBEDDED);
-        userMapper.insert(user);
+        RepositoryTestObjects.insert(userMapper, user, UserDO.class);
 
         AssessmentTime time = new AssessmentTime();
         time.setId(104L);
         time.setDirection(Direction.COMPUTER_VISION);
-        assessmentTimeMapper.insert(time);
+        RepositoryTestObjects.insert(assessmentTimeMapper, time, AssessmentTimeDO.class);
 
         AssessmentQuestion question = new AssessmentQuestion();
         question.setId(104L);
         question.setAssessmentTimeId(104L);
         question.setQuestionNo(1);
-        assessmentQuestionMapper.insert(question);
+        RepositoryTestObjects.insert(assessmentQuestionMapper, question, AssessmentQuestionDO.class);
 
         FileVO attachmentFileVO = createFileInMinio("attachment.pdf", FileType.ASSESSMENT_ATTACHMENT);
 
         question.setAttachmentId(attachmentFileVO.getId());
-        assessmentQuestionMapper.updateById(question);
+        RepositoryTestObjects.updateById(assessmentQuestionMapper, question, AssessmentQuestionDO.class);
 
         mockMvc.perform(get("/api/v1/file/download/" + attachmentFileVO.getId())).andExpect(status().isForbidden());
     }
@@ -362,23 +366,23 @@ class FileUploadDownloadIntegrationTest extends BaseIntegrationTest {
         user.setStudentId("2024001107");
         user.setUsername("未报名考生");
         user.setDirection(null);
-        userMapper.insert(user);
+        RepositoryTestObjects.insert(userMapper, user, UserDO.class);
 
         AssessmentTime time = new AssessmentTime();
         time.setId(105L);
         time.setDirection(Direction.COMPUTER_VISION);
-        assessmentTimeMapper.insert(time);
+        RepositoryTestObjects.insert(assessmentTimeMapper, time, AssessmentTimeDO.class);
 
         AssessmentQuestion question = new AssessmentQuestion();
         question.setId(105L);
         question.setAssessmentTimeId(105L);
         question.setQuestionNo(1);
-        assessmentQuestionMapper.insert(question);
+        RepositoryTestObjects.insert(assessmentQuestionMapper, question, AssessmentQuestionDO.class);
 
         FileVO attachmentFileVO = createFileInMinio("attachment.pdf", FileType.ASSESSMENT_ATTACHMENT);
 
         question.setAttachmentId(attachmentFileVO.getId());
-        assessmentQuestionMapper.updateById(question);
+        RepositoryTestObjects.updateById(assessmentQuestionMapper, question, AssessmentQuestionDO.class);
 
         mockMvc.perform(get("/api/v1/file/download/" + attachmentFileVO.getId())).andExpect(status().isForbidden());
     }

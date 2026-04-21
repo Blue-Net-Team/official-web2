@@ -1,5 +1,9 @@
 package com.bluenet.web.api.controller.v1.admin;
 
+import com.bluenet.web.infrastructure.repository.dataobject.*;
+
+import com.bluenet.web.testsupport.RepositoryTestObjects;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.List;
@@ -72,7 +76,7 @@ class RolePermissionAdminControllerIntegrationTest extends BaseIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        Role superAdminRole = roleMapper.selectByName("SUPER_ADMIN");
+        Role superAdminRole = RepositoryTestObjects.toDomain(roleMapper.selectByName("SUPER_ADMIN"), Role.class);
         User adminUser = User.builder()
                 .studentId(TEST_STUDENT_ID)
                 .username("权限管理员")
@@ -81,7 +85,7 @@ class RolePermissionAdminControllerIntegrationTest extends BaseIntegrationTest {
                 .roleId(superAdminRole.getId())
                 .disable(false)
                 .build();
-        userMapper.insert(adminUser);
+        RepositoryTestObjects.insert(userMapper, adminUser, UserDO.class);
         loginAndGetCookies();
     }
 
@@ -92,7 +96,7 @@ class RolePermissionAdminControllerIntegrationTest extends BaseIntegrationTest {
         @Test
         @DisplayName("查询角色权限列表 - 成功")
         void getRolePermissions_Success() {
-            Role memberRole = roleMapper.selectByName("MEMBER");
+            Role memberRole = RepositoryTestObjects.toDomain(roleMapper.selectByName("MEMBER"), Role.class);
             Permission perm = createPermission("test:read", "测试读取");
             assignPermissionToRole(memberRole.getId(), perm.getId());
 
@@ -200,7 +204,7 @@ class RolePermissionAdminControllerIntegrationTest extends BaseIntegrationTest {
         @DisplayName("重复分配已有权限 - 自动跳过")
         void assignPermissions_Duplicate_Skipped() {
             Permission perm = createPermission("test:dup", "重复测试");
-            Role memberRole = roleMapper.selectByName("MEMBER");
+            Role memberRole = RepositoryTestObjects.toDomain(roleMapper.selectByName("MEMBER"), Role.class);
             assignPermissionToRole(memberRole.getId(), perm.getId());
 
             HttpHeaders headers = createAuthHeadersWithCsrf();
@@ -229,7 +233,7 @@ class RolePermissionAdminControllerIntegrationTest extends BaseIntegrationTest {
         @DisplayName("批量移除角色权限 - 成功")
         void removePermissions_Success() {
             Permission perm = createPermission("test:remove", "测试移除");
-            Role memberRole = roleMapper.selectByName("MEMBER");
+            Role memberRole = RepositoryTestObjects.toDomain(roleMapper.selectByName("MEMBER"), Role.class);
             assignPermissionToRole(memberRole.getId(), perm.getId());
 
             HttpHeaders headers = createAuthHeadersWithCsrf();
@@ -276,7 +280,7 @@ class RolePermissionAdminControllerIntegrationTest extends BaseIntegrationTest {
         @DisplayName("查询权限对应的角色列表 - 成功")
         void getPermissionRoles_Success() {
             Permission perm = createPermission("test:proles", "权限角色测试");
-            Role memberRole = roleMapper.selectByName("MEMBER");
+            Role memberRole = RepositoryTestObjects.toDomain(roleMapper.selectByName("MEMBER"), Role.class);
             assignPermissionToRole(memberRole.getId(), perm.getId());
 
             HttpHeaders headers = createAuthHeadersWithCsrf();
@@ -323,8 +327,8 @@ class RolePermissionAdminControllerIntegrationTest extends BaseIntegrationTest {
         @DisplayName("批量从权限移除角色 - 成功")
         void removeRolesFromPermission_Success() {
             Permission perm = createPermission("test:removeroles", "移除角色测试");
-            Role memberRole = roleMapper.selectByName("MEMBER");
-            Role candidateRole = roleMapper.selectByName("CANDIDATE");
+            Role memberRole = RepositoryTestObjects.toDomain(roleMapper.selectByName("MEMBER"), Role.class);
+            Role candidateRole = RepositoryTestObjects.toDomain(roleMapper.selectByName("CANDIDATE"), Role.class);
             assignPermissionToRole(memberRole.getId(), perm.getId());
             assignPermissionToRole(candidateRole.getId(), perm.getId());
 
@@ -379,7 +383,7 @@ class RolePermissionAdminControllerIntegrationTest extends BaseIntegrationTest {
         permission.setName(name);
         permission.setUrl("/api/v1/test");
         permission.setMethod("GET");
-        permissionMapper.insert(permission);
+        RepositoryTestObjects.insert(permissionMapper, permission, PermissionDO.class);
         return permission;
     }
 
@@ -387,6 +391,6 @@ class RolePermissionAdminControllerIntegrationTest extends BaseIntegrationTest {
         RolePermission rp = new RolePermission();
         rp.setRoleId(roleId);
         rp.setPermissionId(permissionId);
-        rolePermissionMapper.insert(rp);
+        RepositoryTestObjects.insert(rolePermissionMapper, rp, RolePermissionDO.class);
     }
 }

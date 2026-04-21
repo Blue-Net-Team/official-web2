@@ -5,10 +5,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.bluenet.web.api.dto.audit.EndpointLatencyDTO;
-import com.bluenet.web.api.dto.audit.EndpointRankingDTO;
 import com.bluenet.web.api.dto.audit.StatisticsPeriod;
-import com.bluenet.web.api.dto.audit.TrendPointDTO;
+import com.bluenet.web.domain.model.enumerate.AuditStatisticsPeriod;
+import com.bluenet.web.domain.model.vo.AuditEndpointLatencyVO;
+import com.bluenet.web.domain.model.vo.AuditEndpointRankingVO;
+import com.bluenet.web.domain.model.vo.AuditTrendPointVO;
 import com.bluenet.web.domain.repository.AuditRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -51,22 +52,23 @@ class DirectAuditStatisticsServiceTest {
         @Test
         @DisplayName("应返回趋势数据并委托给 repository")
         void shouldDelegateToRepository() {
-            TrendPointDTO point = new TrendPointDTO();
-            point.setTime(LocalDateTime.of(2026, 4, 11, 10, 0));
-            point.setCount(42L);
-            when(auditRepository.queryTrends(StatisticsPeriod.D7)).thenReturn(List.of(point));
+            AuditTrendPointVO point = AuditTrendPointVO.builder()
+                    .time(LocalDateTime.of(2026, 4, 11, 10, 0))
+                    .count(42L)
+                    .build();
+            when(auditRepository.queryTrends(AuditStatisticsPeriod.D7)).thenReturn(List.of(point));
 
             var result = service.getTrends(StatisticsPeriod.D7);
 
             assertEquals(1, result.size());
             assertEquals(42L, result.get(0).getCount());
-            verify(auditRepository).queryTrends(StatisticsPeriod.D7);
+            verify(auditRepository).queryTrends(AuditStatisticsPeriod.D7);
         }
 
         @Test
         @DisplayName("无数据时应返回空列表")
         void noData_shouldReturnEmptyList() {
-            when(auditRepository.queryTrends(StatisticsPeriod.H24)).thenReturn(Collections.emptyList());
+            when(auditRepository.queryTrends(AuditStatisticsPeriod.H24)).thenReturn(Collections.emptyList());
 
             var result = service.getTrends(StatisticsPeriod.H24);
 
@@ -77,11 +79,12 @@ class DirectAuditStatisticsServiceTest {
         @DisplayName("应正确传递不同的 period 参数")
         @ArgumentsSource(PeriodProvider.class)
         void shouldPassPeriodToRepository(StatisticsPeriod period) {
-            when(auditRepository.queryTrends(period)).thenReturn(Collections.emptyList());
+            when(auditRepository.queryTrends(AuditStatisticsPeriod.valueOf(period.name())))
+                    .thenReturn(Collections.emptyList());
 
             service.getTrends(period);
 
-            verify(auditRepository).queryTrends(period);
+            verify(auditRepository).queryTrends(AuditStatisticsPeriod.valueOf(period.name()));
         }
     }
 
@@ -94,12 +97,13 @@ class DirectAuditStatisticsServiceTest {
         @Test
         @DisplayName("应返回排名数据并委托给 repository")
         void shouldDelegateToRepository() {
-            EndpointRankingDTO dto = new EndpointRankingDTO();
-            dto.setPattern("/api/v1/file/download/{fileId}");
-            dto.setCount(100L);
-            dto.setAvgDurationMs(45.5);
-            dto.setErrorCount(2L);
-            when(auditRepository.queryEndpointRanking(StatisticsPeriod.D7, 20)).thenReturn(List.of(dto));
+            AuditEndpointRankingVO vo = AuditEndpointRankingVO.builder()
+                    .pattern("/api/v1/file/download/{fileId}")
+                    .count(100L)
+                    .avgDurationMs(45.5)
+                    .errorCount(2L)
+                    .build();
+            when(auditRepository.queryEndpointRanking(AuditStatisticsPeriod.D7, 20)).thenReturn(List.of(vo));
 
             var result = service.getEndpointRanking(StatisticsPeriod.D7, 20);
 
@@ -108,13 +112,14 @@ class DirectAuditStatisticsServiceTest {
             assertEquals(100L, result.get(0).getCount());
             assertEquals(45.5, result.get(0).getAvgDurationMs());
             assertEquals(2L, result.get(0).getErrorCount());
-            verify(auditRepository).queryEndpointRanking(StatisticsPeriod.D7, 20);
+            verify(auditRepository).queryEndpointRanking(AuditStatisticsPeriod.D7, 20);
         }
 
         @Test
         @DisplayName("无数据时应返回空列表")
         void noData_shouldReturnEmptyList() {
-            when(auditRepository.queryEndpointRanking(StatisticsPeriod.D30, 10)).thenReturn(Collections.emptyList());
+            when(auditRepository.queryEndpointRanking(AuditStatisticsPeriod.D30, 10))
+                    .thenReturn(Collections.emptyList());
 
             var result = service.getEndpointRanking(StatisticsPeriod.D30, 10);
 
@@ -131,12 +136,13 @@ class DirectAuditStatisticsServiceTest {
         @Test
         @DisplayName("应返回延迟排名数据并委托给 repository")
         void shouldDelegateToRepository() {
-            EndpointLatencyDTO dto = new EndpointLatencyDTO();
-            dto.setPattern("/api/v1/admin/competitions/{id}/images/{imageId}");
-            dto.setAvgDurationMs(320.8);
-            dto.setMaxDurationMs(1500L);
-            dto.setCount(50L);
-            when(auditRepository.queryEndpointLatencyRanking(StatisticsPeriod.D7, 20)).thenReturn(List.of(dto));
+            AuditEndpointLatencyVO vo = AuditEndpointLatencyVO.builder()
+                    .pattern("/api/v1/admin/competitions/{id}/images/{imageId}")
+                    .avgDurationMs(320.8)
+                    .maxDurationMs(1500L)
+                    .count(50L)
+                    .build();
+            when(auditRepository.queryEndpointLatencyRanking(AuditStatisticsPeriod.D7, 20)).thenReturn(List.of(vo));
 
             var result = service.getEndpointLatencyRanking(StatisticsPeriod.D7, 20);
 
@@ -144,13 +150,13 @@ class DirectAuditStatisticsServiceTest {
             assertEquals(320.8, result.get(0).getAvgDurationMs());
             assertEquals(1500L, result.get(0).getMaxDurationMs());
             assertEquals(50L, result.get(0).getCount());
-            verify(auditRepository).queryEndpointLatencyRanking(StatisticsPeriod.D7, 20);
+            verify(auditRepository).queryEndpointLatencyRanking(AuditStatisticsPeriod.D7, 20);
         }
 
         @Test
         @DisplayName("无数据时应返回空列表")
         void noData_shouldReturnEmptyList() {
-            when(auditRepository.queryEndpointLatencyRanking(StatisticsPeriod.H24, 5))
+            when(auditRepository.queryEndpointLatencyRanking(AuditStatisticsPeriod.H24, 5))
                     .thenReturn(Collections.emptyList());
 
             var result = service.getEndpointLatencyRanking(StatisticsPeriod.H24, 5);

@@ -1,5 +1,9 @@
 package com.bluenet.web.api.controller.v1.qrcode;
 
+import com.bluenet.web.infrastructure.repository.dataobject.*;
+
+import com.bluenet.web.testsupport.RepositoryTestObjects;
+
 import com.bluenet.web.BaseIntegrationTest;
 import com.bluenet.web.domain.model.entity.File;
 import com.bluenet.web.domain.model.entity.Qrcode;
@@ -75,10 +79,10 @@ class QrcodeControllerIntegrationTest extends BaseIntegrationTest {
 
         // 创建咨询群二维码
         Qrcode qrcode1 = Qrcode.forConsultation(file1.getId());
-        qrcodeMapper.insert(qrcode1);
+        RepositoryTestObjects.insert(qrcodeMapper, qrcode1, QrcodeDO.class);
 
         Qrcode qrcode2 = Qrcode.forConsultation(file2.getId());
-        qrcodeMapper.insert(qrcode2);
+        RepositoryTestObjects.insert(qrcodeMapper, qrcode2, QrcodeDO.class);
 
         mockMvc.perform(get("/api/v1/qrcodes/consultation"))
                 .andExpect(status().isOk())
@@ -100,13 +104,13 @@ class QrcodeControllerIntegrationTest extends BaseIntegrationTest {
 
         // 创建咨询群二维码
         Qrcode consultationQrcode = Qrcode.forConsultation(file1.getId());
-        qrcodeMapper.insert(consultationQrcode);
+        RepositoryTestObjects.insert(qrcodeMapper, consultationQrcode, QrcodeDO.class);
 
         // 创建用户二维码（不应被查询出来）
         Qrcode userQrcode = new Qrcode();
         userQrcode.setFileId(file2.getId());
         userQrcode.setType(QrcodeType.USER);
-        qrcodeMapper.insert(userQrcode);
+        RepositoryTestObjects.insert(qrcodeMapper, userQrcode, QrcodeDO.class);
 
         mockMvc.perform(get("/api/v1/qrcodes/consultation"))
                 .andExpect(status().isOk())
@@ -124,13 +128,13 @@ class QrcodeControllerIntegrationTest extends BaseIntegrationTest {
 
         // 按顺序插入（ID会按插入顺序递增）
         Qrcode first = Qrcode.forConsultation(file1.getId());
-        qrcodeMapper.insert(first);
+        RepositoryTestObjects.insert(qrcodeMapper, first, QrcodeDO.class);
 
         Qrcode second = Qrcode.forConsultation(file2.getId());
-        qrcodeMapper.insert(second);
+        RepositoryTestObjects.insert(qrcodeMapper, second, QrcodeDO.class);
 
         Qrcode third = Qrcode.forConsultation(file3.getId());
-        qrcodeMapper.insert(third);
+        RepositoryTestObjects.insert(qrcodeMapper, third, QrcodeDO.class);
 
         // 验证返回结果按ID升序排列
         mockMvc.perform(get("/api/v1/qrcodes/consultation"))
@@ -206,14 +210,14 @@ class QrcodeControllerIntegrationTest extends BaseIntegrationTest {
         // 创建测试文件和二维码
         File file = createTestFile("to-delete.png");
         Qrcode qrcode = Qrcode.forConsultation(file.getId());
-        qrcodeMapper.insert(qrcode);
+        RepositoryTestObjects.insert(qrcodeMapper, qrcode, QrcodeDO.class);
 
         mockMvc.perform(delete("/api/v1/admin/qrcodes/consultation/" + qrcode.getId()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200));
 
         // 验证已删除
-        Qrcode deleted = qrcodeMapper.selectById(qrcode.getId());
+        Qrcode deleted = RepositoryTestObjects.toDomain(qrcodeMapper.selectById(qrcode.getId()), Qrcode.class);
         assertNull(deleted);
     }
 
@@ -239,7 +243,7 @@ class QrcodeControllerIntegrationTest extends BaseIntegrationTest {
         // 创建测试文件和二维码
         File file = createTestFile("qrcode.png");
         Qrcode qrcode = Qrcode.forConsultation(file.getId());
-        qrcodeMapper.insert(qrcode);
+        RepositoryTestObjects.insert(qrcodeMapper, qrcode, QrcodeDO.class);
 
         mockMvc.perform(delete("/api/v1/admin/qrcodes/consultation/" + qrcode.getId()))
                 .andExpect(status().isForbidden());
@@ -254,7 +258,7 @@ class QrcodeControllerIntegrationTest extends BaseIntegrationTest {
         Qrcode userQrcode = new Qrcode();
         userQrcode.setFileId(file.getId());
         userQrcode.setType(QrcodeType.USER);
-        qrcodeMapper.insert(userQrcode);
+        RepositoryTestObjects.insert(qrcodeMapper, userQrcode, QrcodeDO.class);
 
         mockMvc.perform(delete("/api/v1/admin/qrcodes/consultation/" + userQrcode.getId()))
                 .andExpect(status().isBadRequest());
@@ -268,7 +272,7 @@ class QrcodeControllerIntegrationTest extends BaseIntegrationTest {
 
     private File createTestFileWithType(String filename, FileType type) {
         File file = new File(null, filename, type, "test-url/" + filename);
-        fileMapper.insert(file);
+        RepositoryTestObjects.insert(fileMapper, file, FileDO.class);
         return file;
     }
 }
