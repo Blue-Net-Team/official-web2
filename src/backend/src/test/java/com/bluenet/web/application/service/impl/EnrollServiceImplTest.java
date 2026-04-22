@@ -17,6 +17,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 
 import com.bluenet.web.api.dto.enrollment.*;
+import com.bluenet.web.application.port.MessageDispatcher;
 import com.bluenet.web.domain.exception.DataNotFound;
 import com.bluenet.web.domain.model.enumerate.Direction;
 import com.bluenet.web.domain.model.enumerate.EnrollStatus;
@@ -24,8 +25,7 @@ import com.bluenet.web.domain.model.enumerate.Gender;
 import com.bluenet.web.domain.model.vo.EnrollBriefVO;
 import com.bluenet.web.domain.model.vo.EnrollStatisticsVO;
 import com.bluenet.web.domain.model.vo.EnrollVO;
-import com.bluenet.web.domain.model.vo.UserVO;
-import com.bluenet.web.domain.repository.UserRepository;
+import com.bluenet.web.domain.model.vo.EnrollmentApprovalVO;
 import com.bluenet.web.domain.service.EnrollDomainService;
 
 @DisplayName("EnrollServiceImpl 单元测试")
@@ -36,7 +36,7 @@ class EnrollServiceImplTest {
     private EnrollDomainService enrollDomainService;
 
     @Mock
-    private UserRepository userRepository;
+    private MessageDispatcher messageDispatcher;
 
     @InjectMocks
     private EnrollServiceImpl enrollService;
@@ -326,10 +326,14 @@ class EnrollServiceImplTest {
         @DisplayName("正常审核通过：应返回审核结果")
         void approveEnrollment_normalCase_shouldReturnResult() {
             EnrollVO vo = createTestEnrollVO();
-            UserVO createdUser = UserVO.builder().id(999L).studentId(TEST_STUDENT_ID).build();
+            EnrollmentApprovalVO approval = EnrollmentApprovalVO.builder()
+                    .id(TEST_ID)
+                    .status(EnrollStatus.APPROVED)
+                    .userId(999L)
+                    .build();
 
             when(enrollDomainService.getEnrollmentById(TEST_ID)).thenReturn(Optional.of(vo));
-            when(userRepository.findByStudentId(TEST_STUDENT_ID)).thenReturn(Optional.of(createdUser));
+            when(enrollDomainService.approveEnrollment(TEST_ID, null)).thenReturn(approval);
 
             EnrollmentApprovalResultDTO result = enrollService.approveEnrollment(TEST_ID);
 
@@ -338,6 +342,7 @@ class EnrollServiceImplTest {
             assertEquals(EnrollStatus.APPROVED, result.getStatus());
             assertEquals(999L, result.getCreatedUserId());
             verify(enrollDomainService).approveEnrollment(TEST_ID, null);
+            verifyNoInteractions(messageDispatcher);
         }
 
         @Test
@@ -347,9 +352,13 @@ class EnrollServiceImplTest {
             ApproveEnrollmentRequestDTO request = ApproveEnrollmentRequestDTO.builder()
                     .assessmentGradeYear(2024)
                     .build();
+            EnrollmentApprovalVO approval = EnrollmentApprovalVO.builder()
+                    .id(TEST_ID)
+                    .status(EnrollStatus.APPROVED)
+                    .build();
 
             when(enrollDomainService.getEnrollmentById(TEST_ID)).thenReturn(Optional.of(vo));
-            when(userRepository.findByStudentId(TEST_STUDENT_ID)).thenReturn(Optional.empty());
+            when(enrollDomainService.approveEnrollment(TEST_ID, 2024)).thenReturn(approval);
 
             EnrollmentApprovalResultDTO result = enrollService.approveEnrollment(TEST_ID, request);
 
@@ -369,9 +378,13 @@ class EnrollServiceImplTest {
         @DisplayName("用户未创建：createdUserId应为null")
         void approveEnrollment_userNotCreated_shouldReturnNullUserId() {
             EnrollVO vo = createTestEnrollVO();
+            EnrollmentApprovalVO approval = EnrollmentApprovalVO.builder()
+                    .id(TEST_ID)
+                    .status(EnrollStatus.APPROVED)
+                    .build();
 
             when(enrollDomainService.getEnrollmentById(TEST_ID)).thenReturn(Optional.of(vo));
-            when(userRepository.findByStudentId(TEST_STUDENT_ID)).thenReturn(Optional.empty());
+            when(enrollDomainService.approveEnrollment(TEST_ID, null)).thenReturn(approval);
 
             EnrollmentApprovalResultDTO result = enrollService.approveEnrollment(TEST_ID);
 

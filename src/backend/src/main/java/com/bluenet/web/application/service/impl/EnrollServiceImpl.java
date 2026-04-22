@@ -1,6 +1,9 @@
 package com.bluenet.web.application.service.impl;
 
 import com.bluenet.web.api.dto.enrollment.*;
+import com.bluenet.web.application.message.MessageChannel;
+import com.bluenet.web.application.port.MessageDispatcher;
+import com.bluenet.web.application.message.MessageRequest;
 import com.bluenet.web.application.service.EnrollService;
 import com.bluenet.web.domain.exception.BadRequest;
 import com.bluenet.web.domain.exception.DataConflict;
@@ -9,7 +12,7 @@ import com.bluenet.web.domain.model.enumerate.EnrollStatus;
 import com.bluenet.web.domain.model.vo.EnrollBriefVO;
 import com.bluenet.web.domain.model.vo.EnrollStatisticsVO;
 import com.bluenet.web.domain.model.vo.EnrollVO;
-import com.bluenet.web.domain.repository.UserRepository;
+import com.bluenet.web.domain.model.vo.EnrollmentApprovalVO;
 import com.bluenet.web.domain.service.EnrollDomainService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,7 +29,9 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class EnrollServiceImpl implements EnrollService {
     private final EnrollDomainService enrollDomainService;
-    private final UserRepository userRepository;
+    private final MessageDispatcher messageDispatcher;
+
+    private static final String APPROVAL_EMAIL_SUBJECT = "蓝网报名审核通过通知";
 
     @Override
     @Transactional
@@ -136,23 +141,18 @@ public class EnrollServiceImpl implements EnrollService {
     @Override
     @Transactional
     public EnrollmentApprovalResultDTO approveEnrollment(Long id, ApproveEnrollmentRequestDTO request) {
-        EnrollVO enrollment = enrollDomainService.getEnrollmentById(id)
+        enrollDomainService.getEnrollmentById(id)
                 .orElseThrow(() -> new DataNotFound("报名记录不存在"));
 
         Integer assessmentGradeYear = request != null ? request.getAssessmentGradeYear() : null;
         validateAssessmentGradeYear(assessmentGradeYear);
-        enrollDomainService.approveEnrollment(id, assessmentGradeYear);
-
-        Long createdUserId = null;
-        var user = userRepository.findByStudentId(enrollment.getStudentId());
-        if (user.isPresent()) {
-            createdUserId = user.get().getId();
-        }
+        EnrollmentApprovalVO approval = enrollDomainService.approveEnrollment(id, assessmentGradeYear);
+        sendApprovalCredentialMessage(approval);
 
         return EnrollmentApprovalResultDTO.builder()
                 .id(id)
                 .status(EnrollStatus.APPROVED)
-                .createdUserId(createdUserId)
+                .createdUserId(approval.getUserId())
                 .build();
     }
 
@@ -264,5 +264,41 @@ public class EnrollServiceImpl implements EnrollService {
                 .status(vo.getStatus())
                 .direction(vo.getDirection())
                 .build();
+    }
+
+    private void sendApprovalCredentialMessage(EnrollmentApprovalVO approval) {
+        if (!approval.isNewUserCreated()) {
+            return;
+        }
+        try {
+            String htmlContent = buildApprovalCredentialEmailContent(approval);
+            messageDispatcher.dispatchAsync(
+                    MessageRequest
+                            .html(MessageChannel.EMAIL, approval.getEmail(), APPROVAL_EMAIL_SUBJECT, htmlContent));
+            log.info("审核通过初始凭据消息已触发异步分发 - enrollmentId={}, email={}", approval.getId(), approval.getEmail());
+        } catch (Exception ex) {
+            log.warn("审核通过初始凭据消息分发触发失败 - enrollmentId={}, email={}", approval.getId(), approval.getEmail(), ex);
+        }
+    }
+
+    private String buildApprovalCredentialEmailContent(EnrollmentApprovalVO approval) {
+        return """
+                <div style="font-family:Arial,sans-serif;max-width:640px;margin:0 auto;padding:20px;color:#333;">
+                    <h2 style="color:#1f7ae0;text-align:center;">蓝网报名审核已通过</h2>
+                    <p>您好，%s 同学：</p>
+                    <p>您的报名申请（学号：<strong>%s</strong>）已审核通过，系统已为您创建账号。</p>
+                    <div style="background:#f6f8fb;border:1px solid #e6ebf2;border-radius:8px;padding:16px;margin:16px 0;">
+                        <p style="margin:0 0 8px 0;">初始登录密码：</p>
+                        <p style="margin:0;font-size:22px;font-weight:bold;color:#d4380d;letter-spacing:1px;">%s</p>
+                    </div>
+                    <p style="margin:0 0 8px 0;">安全提示：</p>
+                    <ul style="margin-top:0;padding-left:20px;">
+                        <li>请在首次登录后尽快修改密码。</li>
+                        <li>请勿将密码透露给他人。</li>
+                    </ul>
+                    <p style="color:#999;font-size:12px;">此邮件由系统自动发送，请勿直接回复。</p>
+                </div>
+                """
+                .formatted(approval.getUsername(), approval.getStudentId(), approval.getInitialPassword());
     }
 }

@@ -12,7 +12,7 @@ import com.bluenet.web.domain.model.enumerate.FileType;
 /**
  * 枚举转换器测试
  * <p>
- * 用于测试自定义枚举转换器是否能够正确处理@EnumValue注解的枚举类型转换。
+ * 用于测试自定义枚举转换器是否能够正确处理领域枚举稳定业务值转换。
  * </p>
  */
 @DisplayName("枚举转换器测试")

@@ -20,7 +20,9 @@ import com.bluenet.web.domain.repository.VerificationCodeRepository;
 import com.bluenet.web.domain.service.FileDomainService;
 import com.bluenet.web.domain.service.UserDomainService;
 import com.bluenet.web.domain.service.VerificationCodeDomainService;
-import com.bluenet.web.infrastructure.email.EmailSender;
+import com.bluenet.web.application.message.MessageChannel;
+import com.bluenet.web.application.port.MessageDispatcher;
+import com.bluenet.web.application.message.MessageRequest;
 import com.bluenet.web.domain.model.enumerate.RoleType;
 import com.bluenet.web.infrastructure.security.auth.AuthTokenService;
 import com.bluenet.web.infrastructure.security.change.ChangePasswordStateService;
@@ -40,7 +42,7 @@ public class UserInfoServiceImpl implements UserInfoService {
     private final FileDomainService fileDomainService;
     private final VerificationCodeDomainService verificationCodeDomainService;
     private final VerificationCodeRepository verificationCodeRepository;
-    private final EmailSender emailSender;
+    private final MessageDispatcher messageDispatcher;
     private final PasswordEncoder passwordEncoder;
     private final ChangePasswordStateService changePasswordStateService;
     private final AuthTokenService authTokenService;
@@ -122,7 +124,7 @@ public class UserInfoServiceImpl implements UserInfoService {
 
         String subject = "change-email-original".equals(scene) ? "蓝网修改邮箱 - 验证原邮箱" : "蓝网修改邮箱 - 验证新邮箱";
         String htmlContent = buildChangeEmailVerificationCodeHtml(verifyCodeVO.getCode(), scene);
-        emailSender.sendHtmlAsync(email, subject, htmlContent);
+        messageDispatcher.dispatchAsync(MessageRequest.html(MessageChannel.EMAIL, email, subject, htmlContent));
 
         log.info("修改邮箱验证码已发送 - email={}, scene={}", email, scene);
     }

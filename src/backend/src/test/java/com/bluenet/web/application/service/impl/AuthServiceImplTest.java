@@ -13,7 +13,10 @@ import com.bluenet.web.domain.model.vo.VerifyCodeVO;
 import com.bluenet.web.domain.repository.VerificationCodeRepository;
 import com.bluenet.web.domain.service.AuthDomainService;
 import com.bluenet.web.domain.service.VerificationCodeDomainService;
-import com.bluenet.web.infrastructure.email.EmailSender;
+import com.bluenet.web.application.message.MessageChannel;
+import com.bluenet.web.application.message.MessageContentType;
+import com.bluenet.web.application.port.MessageDispatcher;
+import com.bluenet.web.application.message.MessageRequest;
 import com.bluenet.web.infrastructure.security.auth.AuthTokenService;
 import com.bluenet.web.infrastructure.security.cookie.CookieService;
 import com.bluenet.web.infrastructure.security.csrf.CsrfTokenService;
@@ -24,6 +27,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -64,7 +68,7 @@ class AuthServiceImplTest {
     private VerificationCodeRepository verificationCodeRepository;
 
     @Mock
-    private EmailSender emailSender;
+    private MessageDispatcher messageDispatcher;
 
     @Mock
     private HttpServletResponse response;
@@ -258,6 +262,11 @@ class AuthServiceImplTest {
         // 验证
         verify(verificationCodeDomainService).generateCode(TEST_EMAIL, "login");
         verify(verificationCodeRepository).save(verifyCodeVO);
-        verify(emailSender).sendHtmlAsync(eq(TEST_EMAIL), eq("蓝网登录验证码"), anyString());
+        ArgumentCaptor<MessageRequest> messageCaptor = ArgumentCaptor.forClass(MessageRequest.class);
+        verify(messageDispatcher).dispatchAsync(messageCaptor.capture());
+        assertEquals(MessageChannel.EMAIL, messageCaptor.getValue().channel());
+        assertEquals(MessageContentType.HTML, messageCaptor.getValue().contentType());
+        assertEquals(TEST_EMAIL, messageCaptor.getValue().recipient());
+        assertEquals("蓝网登录验证码", messageCaptor.getValue().subject());
     }
 }

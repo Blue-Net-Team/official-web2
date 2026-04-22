@@ -37,7 +37,6 @@ import com.bluenet.web.domain.repository.FileRepository;
 import com.bluenet.web.domain.repository.RoleRepository;
 import com.bluenet.web.domain.repository.UserRepository;
 import com.bluenet.web.domain.service.ReferralCodeGenerator;
-import com.bluenet.web.infrastructure.email.EmailSender;
 
 @DisplayName("EnrollDomainServiceImpl 单元测试")
 @ExtendWith(MockitoExtension.class)
@@ -60,9 +59,6 @@ class EnrollDomainServiceImplTest {
 
     @Mock
     private PasswordEncoder passwordEncoder;
-
-    @Mock
-    private EmailSender emailSender;
 
     @InjectMocks
     private EnrollDomainServiceImpl enrollDomainService;

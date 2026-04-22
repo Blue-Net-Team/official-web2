@@ -1,5 +1,8 @@
 package com.bluenet.web.infrastructure.email;
 
+import com.bluenet.web.application.port.MessageDispatcher;
+import com.bluenet.web.application.message.MessageChannel;
+import com.bluenet.web.application.message.MessageRequest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
@@ -49,7 +52,7 @@ class EmailSenderIntegrationTest extends BaseIntegrationTest {
     private static final String TEST_EMAIL_TO = System.getenv("TEST_EMAIL_TO");
 
     @Autowired
-    private EmailSender emailSender;
+    private MessageDispatcher messageDispatcher;
 
     @Test
     @DisplayName("发送 Hello World 纯文本邮件")
@@ -62,7 +65,7 @@ class EmailSenderIntegrationTest extends BaseIntegrationTest {
 
         // When & Then
         assertDoesNotThrow(() -> {
-            emailSender.send(to, subject, content);
+            messageDispatcher.dispatch(MessageRequest.text(MessageChannel.EMAIL, to, subject, content));
             log.info("Hello World 邮件发送成功，收件人: {}", to);
         }, "邮件发送应该成功，不抛出异常");
     }
@@ -86,7 +89,7 @@ class EmailSenderIntegrationTest extends BaseIntegrationTest {
 
         // When & Then
         assertDoesNotThrow(() -> {
-            emailSender.sendHtml(to, subject, htmlContent);
+            messageDispatcher.dispatch(MessageRequest.html(MessageChannel.EMAIL, to, subject, htmlContent));
             log.info("HTML 邮件发送成功，收件人: {}", to);
         }, "HTML 邮件发送应该成功，不抛出异常");
     }
@@ -119,7 +122,7 @@ class EmailSenderIntegrationTest extends BaseIntegrationTest {
 
         // When & Then
         assertDoesNotThrow(() -> {
-            emailSender.sendWithTemplate(to, subject, template, variables);
+            messageDispatcher.dispatch(MessageRequest.template(MessageChannel.EMAIL, to, subject, template, variables));
             log.info("模板邮件发送成功，收件人: {}", to);
         }, "模板邮件发送应该成功，不抛出异常");
     }
@@ -135,7 +138,7 @@ class EmailSenderIntegrationTest extends BaseIntegrationTest {
 
         // When & Then
         assertDoesNotThrow(() -> {
-            emailSender.sendAsync(to, subject, content);
+            messageDispatcher.dispatchAsync(MessageRequest.text(MessageChannel.EMAIL, to, subject, content));
             log.info("异步邮件已提交发送队列，收件人: {}", to);
         }, "异步邮件发送应该成功提交，不抛出异常");
 
@@ -154,9 +157,9 @@ class EmailSenderIntegrationTest extends BaseIntegrationTest {
         // When & Then
         IllegalArgumentException exception = assertThrows(
                 IllegalArgumentException.class,
-                () -> emailSender.send(to, subject, content));
+                () -> messageDispatcher.dispatch(MessageRequest.text(MessageChannel.EMAIL, to, subject, content)));
 
-        assertTrue(exception.getMessage().contains("Recipient email address cannot be null or empty"));
+        assertTrue(exception.getMessage().contains("Recipient cannot be null or empty"));
         log.info("正确抛出异常: {}", exception.getMessage());
     }
 
@@ -171,9 +174,9 @@ class EmailSenderIntegrationTest extends BaseIntegrationTest {
         // When & Then
         IllegalArgumentException exception = assertThrows(
                 IllegalArgumentException.class,
-                () -> emailSender.send(to, subject, content));
+                () -> messageDispatcher.dispatch(MessageRequest.text(MessageChannel.EMAIL, to, subject, content)));
 
-        assertTrue(exception.getMessage().contains("Recipient email address cannot be null or empty"));
+        assertTrue(exception.getMessage().contains("Recipient cannot be null or empty"));
         log.info("正确抛出异常: {}", exception.getMessage());
     }
 }

@@ -4,6 +4,7 @@ import com.bluenet.web.domain.model.entity.User;
 import com.bluenet.web.domain.model.enumerate.Direction;
 import com.bluenet.web.domain.model.enumerate.EnrollStatus;
 import com.bluenet.web.domain.model.vo.EnrollVO;
+import com.bluenet.web.domain.model.vo.EnrollmentApprovalVO;
 import com.bluenet.web.domain.model.vo.RoleVO;
 import com.bluenet.web.domain.model.vo.UserVO;
 import com.bluenet.web.domain.repository.EnrollRepository;
@@ -11,7 +12,6 @@ import com.bluenet.web.domain.repository.FileRepository;
 import com.bluenet.web.domain.repository.RoleRepository;
 import com.bluenet.web.domain.repository.UserRepository;
 import com.bluenet.web.domain.service.ReferralCodeGenerator;
-import com.bluenet.web.infrastructure.email.EmailSender;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -23,15 +23,12 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.util.Optional;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -51,8 +48,6 @@ class EnrollDomainServiceApprovalCredentialTest {
     private ReferralCodeGenerator referralCodeGenerator;
     @Mock
     private PasswordEncoder passwordEncoder;
-    @Mock
-    private EmailSender emailSender;
 
     @InjectMocks
     private EnrollDomainServiceImpl enrollDomainService;
@@ -71,7 +66,8 @@ class EnrollDomainServiceApprovalCredentialTest {
     }
 
     @Test
-    void approveEnrollment_newUser_shouldPersistEmailAndEncodedPassword_andSendPlainPasswordEmail() throws Exception {
+    void approveEnrollment_newUser_shouldPersistEmailAndEncodedPassword_andReturnPlainPasswordForApplicationMessage()
+            throws Exception {
         EnrollVO enroll = buildPendingEnroll();
         RoleVO role = RoleVO.builder().id(2L).name("CANDIDATE").build();
 
@@ -81,24 +77,20 @@ class EnrollDomainServiceApprovalCredentialTest {
         when(referralCodeGenerator.generate()).thenReturn("ABCD1234");
         when(passwordEncoder.encode(anyString())).thenReturn("bcrypt-value");
 
-        enrollDomainService.approveEnrollment(1L);
+        EnrollmentApprovalVO approval = enrollDomainService.approveEnrollment(1L);
 
         ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
         ArgumentCaptor<String> encoderInputCaptor = ArgumentCaptor.forClass(String.class);
-        ArgumentCaptor<String> htmlCaptor = ArgumentCaptor.forClass(String.class);
         verify(userRepository).save(userCaptor.capture());
         verify(passwordEncoder).encode(encoderInputCaptor.capture());
-        verify(emailSender).sendHtmlAsync(eq("candidate@example.com"), anyString(), htmlCaptor.capture());
 
         User savedUser = userCaptor.getValue();
         assertEquals("candidate@example.com", savedUser.getEmail());
         assertEquals("bcrypt-value", savedUser.getPassword());
 
-        String html = htmlCaptor.getValue();
-        Pattern pattern = Pattern.compile("初始登录密码：</p>\\s*<p[^>]*>([^<]+)</p>");
-        Matcher matcher = pattern.matcher(html);
-        assertTrue(matcher.find(), "邮件中应包含明文初始密码");
-        String plainPassword = matcher.group(1).trim();
+        String plainPassword = approval.getInitialPassword();
+        assertTrue(approval.isNewUserCreated(), "新建账号时应返回通知所需初始凭据");
+        assertEquals("candidate@example.com", approval.getEmail());
         assertEquals(8, plainPassword.length());
 
         String expectedSha256 = sha256Hex(plainPassword);
@@ -116,7 +108,6 @@ class EnrollDomainServiceApprovalCredentialTest {
 
         verify(userRepository, never()).save(any(User.class));
         verify(passwordEncoder, never()).encode(anyString());
-        verify(emailSender, never()).sendHtmlAsync(anyString(), anyString(), anyString());
     }
 
     @Test

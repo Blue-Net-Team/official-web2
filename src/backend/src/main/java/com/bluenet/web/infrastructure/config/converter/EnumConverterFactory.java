@@ -1,17 +1,14 @@
 package com.bluenet.web.infrastructure.config.converter;
 
-import com.baomidou.mybatisplus.annotation.EnumValue;
+import com.bluenet.web.domain.model.enumerate.ValueEnum;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.convert.converter.ConverterFactory;
-import org.springframework.util.ReflectionUtils;
-
-import java.lang.reflect.Field;
 
 /**
  * 枚举转换器工厂
  * <p>
- * 用于将字符串转换为枚举类型，支持MyBatis-Plus的@EnumValue注解。
- * 如果枚举字段有@EnumValue注解，则根据注解值进行转换；否则根据枚举名称进行转换。
+ * 用于将字符串转换为枚举类型，支持领域层 {@link ValueEnum} 稳定业务值。 如果枚举实现了
+ * {@link ValueEnum}，则根据业务值进行转换；否则根据枚举名称进行转换。
  * </p>
  */
 public class EnumConverterFactory implements ConverterFactory<String, Enum<?>> {
@@ -34,20 +31,15 @@ public class EnumConverterFactory implements ConverterFactory<String, Enum<?>> {
                 return null;
             }
 
-            // 尝试根据@EnumValue注解的值进行转换
+            // 优先根据领域枚举的稳定业务值进行转换，避免依赖持久化框架注解。
             T[] enumConstants = enumType.getEnumConstants();
             for (T constant : enumConstants) {
-                Field field = ReflectionUtils.findField(enumType, "value");
-                if (field != null && field.isAnnotationPresent(EnumValue.class)) {
-                    field.setAccessible(true);
-                    Object value = ReflectionUtils.getField(field, constant);
-                    if (source.equals(value.toString())) {
-                        return constant;
-                    }
+                if (constant instanceof ValueEnum valueEnum && source.equals(valueEnum.getValue())) {
+                    return constant;
                 }
             }
 
-            // 如果没有@EnumValue注解或未找到匹配值，则尝试根据枚举名称进行转换
+            // 如果未找到匹配业务值，则尝试根据枚举名称进行转换
             try {
                 // 使用反射调用Enum.valueOf方法，避免泛型类型约束问题
                 return (T) Enum.class.getMethod("valueOf", Class.class, String.class)

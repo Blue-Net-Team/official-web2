@@ -12,7 +12,7 @@ import com.bluenet.web.domain.model.vo.UserVO;
 import com.bluenet.web.domain.repository.FileRepository;
 import com.bluenet.web.domain.service.FileDomainService;
 import com.bluenet.web.domain.model.enumerate.RoleType;
-import com.bluenet.web.infrastructure.security.util.RoleHierarchy;
+import com.bluenet.web.domain.model.policy.RoleHierarchy;
 import com.bluenet.web.infrastructure.security.util.UserCTX;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

@@ -1,15 +1,13 @@
 package com.bluenet.web.domain.model.enumerate;
 
-import com.baomidou.mybatisplus.annotation.EnumValue;
 import lombok.Getter;
 
 @Getter
-public enum ExperienceType {
+public enum ExperienceType implements ValueEnum {
     COMPETITION("competition", "竞赛"),
     PROJECT("project", "项目"),
     INTERNSHIP("internship", "实习");
 
-    @EnumValue
     private final String value;
     private final String description;
 

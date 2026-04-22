@@ -62,10 +62,9 @@ bluenet:
 mybatis-plus:
   mapper-locations: classpath:infrastructure/repository/mapper/*.xml
   type-aliases-package: com.bluenet.web.domain.model.entity
-  type-handlers-package: com.bluenet.web.infrastructure.repository.handler
   configuration:
     map-underscore-to-camel-case: true
-    default-enum-type-handler: com.baomidou.mybatisplus.core.handlers.MybatisEnumTypeHandler
+    default-enum-type-handler: com.bluenet.web.infrastructure.repository.handler.ValueEnumTypeHandler
 
 # Object storage configuration
 storage:

@@ -13,6 +13,7 @@ import com.bluenet.web.domain.model.enumerate.RoleType;
 import com.bluenet.web.domain.model.vo.EnrollBriefVO;
 import com.bluenet.web.domain.model.vo.EnrollStatisticsVO;
 import com.bluenet.web.domain.model.vo.EnrollVO;
+import com.bluenet.web.domain.model.vo.EnrollmentApprovalVO;
 import com.bluenet.web.domain.model.vo.FileVO;
 import com.bluenet.web.domain.model.vo.RoleVO;
 import com.bluenet.web.domain.model.vo.UserVO;
@@ -22,7 +23,6 @@ import com.bluenet.web.domain.repository.RoleRepository;
 import com.bluenet.web.domain.repository.UserRepository;
 import com.bluenet.web.domain.service.EnrollDomainService;
 import com.bluenet.web.domain.service.ReferralCodeGenerator;
-import com.bluenet.web.infrastructure.email.EmailSender;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -47,11 +47,9 @@ public class EnrollDomainServiceImpl implements EnrollDomainService {
     private final RoleRepository roleRepository;
     private final ReferralCodeGenerator referralCodeGenerator;
     private final PasswordEncoder passwordEncoder;
-    private final EmailSender emailSender;
 
     private static final int ENROLL_PASSWORD_LENGTH = 10;
     private static final int APPROVAL_INITIAL_PASSWORD_LENGTH = 8;
-    private static final String APPROVAL_EMAIL_SUBJECT = "蓝网报名审核通过通知";
 
     @Override
     public Optional<EnrollVO> getEnrollmentById(Long id) {
@@ -140,13 +138,13 @@ public class EnrollDomainServiceImpl implements EnrollDomainService {
 
     @Override
     @Transactional
-    public void approveEnrollment(Long id) {
-        approveEnrollment(id, null);
+    public EnrollmentApprovalVO approveEnrollment(Long id) {
+        return approveEnrollment(id, null);
     }
 
     @Override
     @Transactional
-    public void approveEnrollment(Long id, Integer assessmentGradeYear) {
+    public EnrollmentApprovalVO approveEnrollment(Long id, Integer assessmentGradeYear) {
         EnrollVO enrollment = enrollRepository.findById(id)
                 .orElseThrow(() -> new DataNotFound("报名记录不存在"));
 
@@ -156,9 +154,14 @@ public class EnrollDomainServiceImpl implements EnrollDomainService {
 
         Optional<UserVO> existingUser = userRepository.findByStudentId(enrollment.getStudentId());
         Long createdUserId;
+        String initialPassword = null;
+        boolean newUserCreated = false;
 
         if (existingUser.isEmpty()) {
-            createdUserId = createUserFromEnrollment(enrollment, assessmentGradeYear);
+            CreatedUserCredential credential = createUserFromEnrollment(enrollment, assessmentGradeYear);
+            createdUserId = credential.userId();
+            initialPassword = credential.initialPassword();
+            newUserCreated = true;
         } else {
             log.info("学号 {} 对应的用户已存在，跳过创建", enrollment.getStudentId());
             createdUserId = existingUser.get().getId();
@@ -182,6 +185,16 @@ public class EnrollDomainServiceImpl implements EnrollDomainService {
         enrollRepository.update(approvedEnrollment);
 
         log.info("报名 {} 已通过审核，用户ID: {}", id, createdUserId);
+        return EnrollmentApprovalVO.builder()
+                .id(id)
+                .status(EnrollStatus.APPROVED)
+                .userId(createdUserId)
+                .newUserCreated(newUserCreated)
+                .username(enrollment.getUsername())
+                .studentId(enrollment.getStudentId())
+                .email(enrollment.getEmail())
+                .initialPassword(initialPassword)
+                .build();
     }
 
     @Override
@@ -227,7 +240,7 @@ public class EnrollDomainServiceImpl implements EnrollDomainService {
         }
     }
 
-    private Long createUserFromEnrollment(EnrollVO enrollment, Integer assessmentGradeYear) {
+    private CreatedUserCredential createUserFromEnrollment(EnrollVO enrollment, Integer assessmentGradeYear) {
         RoleVO candidateRole = roleRepository.findByName(RoleType.CANDIDATE.getName())
                 .orElseThrow(() -> new GlobalException("CANDIDATE 角色不存在，请先初始化角色数据"));
 
@@ -254,39 +267,7 @@ public class EnrollDomainServiceImpl implements EnrollDomainService {
 
         userRepository.save(user);
         log.info("创建新用户 {}, 学号: {}, 内推码: {}", user.getId(), user.getStudentId(), referralCode);
-        sendApprovalCredentialEmail(enrollment, initialPassword);
-        return user.getId();
-    }
-
-    private void sendApprovalCredentialEmail(EnrollVO enrollment, String initialPassword) {
-        try {
-            String htmlContent = buildApprovalCredentialEmailContent(enrollment, initialPassword);
-            emailSender.sendHtmlAsync(enrollment.getEmail(), APPROVAL_EMAIL_SUBJECT, htmlContent);
-            log.info("审核通过初始凭据邮件已触发异步发送 - enrollmentId={}, email={}", enrollment.getId(), enrollment.getEmail());
-        } catch (Exception ex) {
-            log.warn("审核通过初始凭据邮件发送触发失败 - enrollmentId={}, email={}", enrollment.getId(), enrollment.getEmail(), ex);
-        }
-    }
-
-    private String buildApprovalCredentialEmailContent(EnrollVO enrollment, String initialPassword) {
-        return """
-                <div style="font-family:Arial,sans-serif;max-width:640px;margin:0 auto;padding:20px;color:#333;">
-                    <h2 style="color:#1f7ae0;text-align:center;">蓝网报名审核已通过</h2>
-                    <p>您好，%s 同学：</p>
-                    <p>您的报名申请（学号：<strong>%s</strong>）已审核通过，系统已为您创建账号。</p>
-                    <div style="background:#f6f8fb;border:1px solid #e6ebf2;border-radius:8px;padding:16px;margin:16px 0;">
-                        <p style="margin:0 0 8px 0;">初始登录密码：</p>
-                        <p style="margin:0;font-size:22px;font-weight:bold;color:#d4380d;letter-spacing:1px;">%s</p>
-                    </div>
-                    <p style="margin:0 0 8px 0;">安全提示：</p>
-                    <ul style="margin-top:0;padding-left:20px;">
-                        <li>请在首次登录后尽快修改密码。</li>
-                        <li>请勿将密码透露给他人。</li>
-                    </ul>
-                    <p style="color:#999;font-size:12px;">此邮件由系统自动发送，请勿直接回复。</p>
-                </div>
-                """
-                .formatted(enrollment.getUsername(), enrollment.getStudentId(), initialPassword);
+        return new CreatedUserCredential(user.getId(), initialPassword);
     }
 
     private String generateRandomPassword(int length) {
@@ -315,5 +296,11 @@ public class EnrollDomainServiceImpl implements EnrollDomainService {
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException("SHA-256 algorithm not available", e);
         }
+    }
+
+    /**
+     * 新建账号的初始凭据结果，由应用层决定是否分发给用户。
+     */
+    private record CreatedUserCredential(Long userId, String initialPassword) {
     }
 }

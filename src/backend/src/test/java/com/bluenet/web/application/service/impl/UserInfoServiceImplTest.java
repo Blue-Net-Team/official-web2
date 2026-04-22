@@ -32,7 +32,7 @@ import static org.mockito.Mockito.*;
 
 import com.bluenet.web.domain.repository.VerificationCodeRepository;
 import com.bluenet.web.domain.service.VerificationCodeDomainService;
-import com.bluenet.web.infrastructure.email.EmailSender;
+import com.bluenet.web.application.port.MessageDispatcher;
 
 /**
  * UserInfoServiceImpl 单元测试
@@ -53,7 +53,7 @@ class UserInfoServiceImplTest {
     private VerificationCodeRepository verificationCodeRepository;
 
     @Mock
-    private EmailSender emailSender;
+    private MessageDispatcher messageDispatcher;
 
     @Mock
     private PasswordEncoder passwordEncoder;

@@ -39,8 +39,10 @@ import com.bluenet.web.domain.service.AssessmentJudgementDomainService;
 import com.bluenet.web.domain.service.AssessmentQuestionDomainService;
 import com.bluenet.web.domain.service.AssessmentTimeDomainService;
 import com.bluenet.web.domain.service.UserDomainService;
-import com.bluenet.web.infrastructure.email.EmailSender;
-import com.bluenet.web.infrastructure.security.util.RoleHierarchy;
+import com.bluenet.web.application.port.MessageDispatcher;
+import com.bluenet.web.application.message.MessageChannel;
+import com.bluenet.web.application.message.MessageRequest;
+import com.bluenet.web.domain.model.policy.RoleHierarchy;
 import com.bluenet.web.infrastructure.security.util.UserCTX;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -74,7 +76,7 @@ public class AssessmentJudgementServiceImpl implements AssessmentJudgementServic
     private final AssessmentJudgementRepository assessmentJudgementRepository;
     private final AssessmentDecisionRepository assessmentDecisionRepository;
     private final UserDomainService userDomainService;
-    private final EmailSender emailSender;
+    private final MessageDispatcher messageDispatcher;
 
     /**
      * 获取指定答案的最新评判结果。
@@ -310,7 +312,8 @@ public class AssessmentJudgementServiceImpl implements AssessmentJudgementServic
             String nickname = user.getNickname() != null ? user.getNickname() : user.getUsername();
             String htmlContent = buildPublishEmailHtml(nickname, directionLabel, epoch, resultText);
             try {
-                emailSender.sendHtmlAsync(user.getEmail(), subject, htmlContent);
+                messageDispatcher.dispatchAsync(
+                        MessageRequest.html(MessageChannel.EMAIL, user.getEmail(), subject, htmlContent));
                 sentCount++;
             } catch (Exception e) {
                 log.error("发送决策邮件失败：userId={}, email={}", decision.getUserId(), user.getEmail(), e);

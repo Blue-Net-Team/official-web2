@@ -19,7 +19,7 @@ import com.bluenet.web.domain.repository.AssessmentTimeRepository;
 import com.bluenet.web.domain.service.AssessmentTimeDomainService;
 import com.bluenet.web.domain.util.GradeCalculator;
 import com.bluenet.web.domain.model.enumerate.RoleType;
-import com.bluenet.web.infrastructure.security.util.RoleHierarchy;
+import com.bluenet.web.domain.model.policy.RoleHierarchy;
 import com.bluenet.web.infrastructure.security.util.UserCTX;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;

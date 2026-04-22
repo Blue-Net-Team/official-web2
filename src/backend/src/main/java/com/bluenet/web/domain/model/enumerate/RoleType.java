@@ -17,12 +17,11 @@ package com.bluenet.web.domain.model.enumerate;
  * <ul>
  * <li>禁止在代码中硬编码角色字符串（如 "ADMIN"、"MEMBER"）</li>
  * <li>使用 {@link RoleType} 枚举常量进行角色比较</li>
- * <li>使用 {@link com.bluenet.web.infrastructure.security.util.RoleHierarchy}
- * 工具类进行权限判断</li>
+ * <li>使用领域角色层级规则进行权限判断</li>
  * <li>数据库中的角色名称必须与 {@link #getName()} 返回值一致</li>
  * </ul>
  *
- * @see com.bluenet.web.infrastructure.security.util.RoleHierarchy
+ * @see com.bluenet.web.domain.model.policy.RoleHierarchy
  */
 public enum RoleType {
     /**

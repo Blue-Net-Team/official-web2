@@ -4,7 +4,7 @@
     <resultMap id="BaseResultMap" type="com.bluenet.web.infrastructure.repository.dataobject.QrcodeDO">
         <id column="id" property="id"/>
         <result column="file_id" property="fileId"/>
-        <result column="type" property="type" typeHandler="com.baomidou.mybatisplus.core.handlers.MybatisEnumTypeHandler"/>
+        <result column="type" property="type" typeHandler="com.bluenet.web.infrastructure.repository.handler.ValueEnumTypeHandler"/>
     </resultMap>
     <select id="selectByFileId" resultMap="BaseResultMap">
         SELECT * FROM tb_qrcode

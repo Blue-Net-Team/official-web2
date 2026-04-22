@@ -1,12 +1,11 @@
 package com.bluenet.web.domain.model.enumerate;
 
-import com.baomidou.mybatisplus.annotation.EnumValue;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 import lombok.Getter;
 
 @Getter
-public enum ProgrammingLanguage {
+public enum ProgrammingLanguage implements ValueEnum {
     PYTHON("python",
             "Python"),
     C("c", "C"),
@@ -14,7 +13,6 @@ public enum ProgrammingLanguage {
     JAVA("java", "Java"),
     JAVASCRIPT("javascript", "JavaScript");
 
-    @EnumValue
     private final String value;
     private final String description;
 

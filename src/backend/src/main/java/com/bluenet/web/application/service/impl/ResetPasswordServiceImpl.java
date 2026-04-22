@@ -12,7 +12,9 @@ import com.bluenet.web.domain.model.vo.VerifyCodeVO;
 import com.bluenet.web.domain.repository.UserRepository;
 import com.bluenet.web.domain.repository.VerificationCodeRepository;
 import com.bluenet.web.domain.service.VerificationCodeDomainService;
-import com.bluenet.web.infrastructure.email.EmailSender;
+import com.bluenet.web.application.message.MessageChannel;
+import com.bluenet.web.application.port.MessageDispatcher;
+import com.bluenet.web.application.message.MessageRequest;
 import com.bluenet.web.infrastructure.security.auth.AuthTokenService;
 import com.bluenet.web.infrastructure.security.reset.ResetPasswordStateService;
 
@@ -43,7 +45,7 @@ public class ResetPasswordServiceImpl implements ResetPasswordService {
     private final UserRepository userRepository;
     private final VerificationCodeDomainService verificationCodeDomainService;
     private final VerificationCodeRepository verificationCodeRepository;
-    private final EmailSender emailSender;
+    private final MessageDispatcher messageDispatcher;
     private final PasswordEncoder passwordEncoder;
     private final AuthTokenService authTokenService;
 
@@ -100,7 +102,7 @@ public class ResetPasswordServiceImpl implements ResetPasswordService {
         // 发送邮件
         String subject = "蓝网密码重置验证码";
         String htmlContent = buildResetCodeEmail(verifyCodeVO.getCode());
-        emailSender.sendHtmlAsync(email, subject, htmlContent);
+        messageDispatcher.dispatchAsync(MessageRequest.html(MessageChannel.EMAIL, email, subject, htmlContent));
 
         // 更新步骤
         Map<String, String> updates = new HashMap<>();

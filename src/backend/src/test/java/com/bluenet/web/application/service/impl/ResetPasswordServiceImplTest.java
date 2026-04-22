@@ -13,7 +13,10 @@ import com.bluenet.web.domain.model.vo.VerifyCodeVO;
 import com.bluenet.web.domain.repository.UserRepository;
 import com.bluenet.web.domain.repository.VerificationCodeRepository;
 import com.bluenet.web.domain.service.VerificationCodeDomainService;
-import com.bluenet.web.infrastructure.email.EmailSender;
+import com.bluenet.web.application.message.MessageChannel;
+import com.bluenet.web.application.message.MessageContentType;
+import com.bluenet.web.application.port.MessageDispatcher;
+import com.bluenet.web.application.message.MessageRequest;
 import com.bluenet.web.infrastructure.security.auth.AuthTokenService;
 import com.bluenet.web.infrastructure.security.reset.ResetPasswordStateService;
 
@@ -22,6 +25,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -43,7 +47,7 @@ class ResetPasswordServiceImplTest {
     private VerificationCodeRepository verificationCodeRepository;
 
     @Mock
-    private EmailSender emailSender;
+    private MessageDispatcher messageDispatcher;
 
     @Mock
     private PasswordEncoder passwordEncoder;
@@ -194,7 +198,11 @@ class ResetPasswordServiceImplTest {
             assertDoesNotThrow(() -> resetPasswordService.sendCode(TEST_TOKEN));
 
             verify(verificationCodeRepository).save(codeVO);
-            verify(emailSender).sendHtmlAsync(eq(TEST_EMAIL), any(), any());
+            ArgumentCaptor<MessageRequest> messageCaptor = ArgumentCaptor.forClass(MessageRequest.class);
+            verify(messageDispatcher).dispatchAsync(messageCaptor.capture());
+            assertEquals(MessageChannel.EMAIL, messageCaptor.getValue().channel());
+            assertEquals(MessageContentType.HTML, messageCaptor.getValue().contentType());
+            assertEquals(TEST_EMAIL, messageCaptor.getValue().recipient());
             verify(stateService).update(eq(TEST_TOKEN), any(Map.class));
         }
 

@@ -1,10 +1,12 @@
 package com.bluenet.web.infrastructure.repository.dataobject;
 
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.bluenet.web.domain.model.enumerate.QuestionType;
 import com.bluenet.web.domain.model.vo.evaluation.QuestionContent;
+import com.bluenet.web.infrastructure.repository.handler.QuestionContentTypeHandler;
 import java.math.BigDecimal;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -18,7 +20,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@TableName("tb_assessment_question")
+@TableName(value = "tb_assessment_question", autoResultMap = true)
 public class AssessmentQuestionDO {
     /**
      * 当前对象在系统中的唯一标识。
@@ -47,6 +49,7 @@ public class AssessmentQuestionDO {
     /**
      * 正文内容、题目内容或结构化配置内容。
      */
+    @TableField(typeHandler = QuestionContentTypeHandler.class)
     private QuestionContent content;
     /**
      * 题目或记录绑定的附件文件标识。

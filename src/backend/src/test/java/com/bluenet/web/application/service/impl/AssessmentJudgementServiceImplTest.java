@@ -33,7 +33,10 @@ import com.bluenet.web.domain.service.AssessmentJudgementDomainService;
 import com.bluenet.web.domain.service.AssessmentQuestionDomainService;
 import com.bluenet.web.domain.service.AssessmentTimeDomainService;
 import com.bluenet.web.domain.service.UserDomainService;
-import com.bluenet.web.infrastructure.email.EmailSender;
+import com.bluenet.web.application.message.MessageChannel;
+import com.bluenet.web.application.message.MessageContentType;
+import com.bluenet.web.application.port.MessageDispatcher;
+import com.bluenet.web.application.message.MessageRequest;
 import com.bluenet.web.infrastructure.security.util.UserCTX;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -89,7 +92,7 @@ class AssessmentJudgementServiceImplTest {
     private UserDomainService userDomainService;
 
     @Mock
-    private EmailSender emailSender;
+    private MessageDispatcher messageDispatcher;
 
     @InjectMocks
     private AssessmentJudgementServiceImpl assessmentJudgementService;
@@ -446,10 +449,14 @@ class AssessmentJudgementServiceImplTest {
             int result = assessmentJudgementService.publishDecisions(ASSESSMENT_TIME_ID);
 
             assertEquals(2, result);
-            verify(emailSender, times(2)).sendHtmlAsync(
-                    anyString(),
-                    anyString(),
-                    anyString());
+            ArgumentCaptor<MessageRequest> messageCaptor = ArgumentCaptor.forClass(MessageRequest.class);
+            verify(messageDispatcher, times(2)).dispatchAsync(messageCaptor.capture());
+            assertTrue(
+                    messageCaptor.getAllValues()
+                            .stream()
+                            .allMatch(
+                                    request -> request.channel() == MessageChannel.EMAIL
+                                            && request.contentType() == MessageContentType.HTML));
         }
     }
 
@@ -468,7 +475,7 @@ class AssessmentJudgementServiceImplTest {
             int result = assessmentJudgementService.publishDecisions(ASSESSMENT_TIME_ID);
 
             assertEquals(0, result);
-            verifyNoInteractions(emailSender);
+            verifyNoInteractions(messageDispatcher);
         }
     }
 
@@ -485,7 +492,7 @@ class AssessmentJudgementServiceImplTest {
             assertThrows(
                     com.bluenet.web.domain.exception.DataNotFound.class,
                     () -> assessmentJudgementService.publishDecisions(999L));
-            verifyNoInteractions(emailSender);
+            verifyNoInteractions(messageDispatcher);
         }
     }
 
@@ -501,7 +508,7 @@ class AssessmentJudgementServiceImplTest {
             assertThrows(
                     Forbidden.class,
                     () -> assessmentJudgementService.publishDecisions(ASSESSMENT_TIME_ID));
-            verifyNoInteractions(emailSender);
+            verifyNoInteractions(messageDispatcher);
         }
     }
 
@@ -527,10 +534,11 @@ class AssessmentJudgementServiceImplTest {
             int result = assessmentJudgementService.publishDecisions(ASSESSMENT_TIME_ID);
 
             assertEquals(1, result);
-            verify(emailSender, times(1)).sendHtmlAsync(
-                    eq("b@test.com"),
-                    anyString(),
-                    anyString());
+            ArgumentCaptor<MessageRequest> messageCaptor = ArgumentCaptor.forClass(MessageRequest.class);
+            verify(messageDispatcher, times(1)).dispatchAsync(messageCaptor.capture());
+            assertEquals("b@test.com", messageCaptor.getValue().recipient());
+            assertEquals(MessageChannel.EMAIL, messageCaptor.getValue().channel());
+            assertEquals(MessageContentType.HTML, messageCaptor.getValue().contentType());
         }
     }
 
@@ -552,13 +560,13 @@ class AssessmentJudgementServiceImplTest {
                     .thenReturn(Optional.of(createUserWithEmail(CANDIDATE_ID, "a@test.com")));
             when(userDomainService.getUser(41L))
                     .thenReturn(Optional.of(createUserWithEmail(41L, "b@test.com")));
-            doThrow(new RuntimeException("SMTP error")).when(emailSender)
-                    .sendHtmlAsync(eq("a@test.com"), anyString(), anyString());
+            doThrow(new RuntimeException("SMTP error")).when(messageDispatcher)
+                    .dispatchAsync(argThat(request -> "a@test.com".equals(request.recipient())));
 
             int result = assessmentJudgementService.publishDecisions(ASSESSMENT_TIME_ID);
 
             assertEquals(1, result);
-            verify(emailSender).sendHtmlAsync(eq("b@test.com"), anyString(), anyString());
+            verify(messageDispatcher).dispatchAsync(argThat(request -> "b@test.com".equals(request.recipient())));
         }
     }
 

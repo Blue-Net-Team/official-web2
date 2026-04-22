@@ -9,7 +9,9 @@ import com.bluenet.web.application.converter.UserConverter;
 import com.bluenet.web.domain.model.vo.VerifyCodeVO;
 import com.bluenet.web.domain.repository.VerificationCodeRepository;
 import com.bluenet.web.domain.service.VerificationCodeDomainService;
-import com.bluenet.web.infrastructure.email.EmailSender;
+import com.bluenet.web.application.port.MessageDispatcher;
+import com.bluenet.web.application.message.MessageChannel;
+import com.bluenet.web.application.message.MessageRequest;
 import com.bluenet.web.domain.model.vo.GitHubUserInfo;
 import com.bluenet.web.domain.model.vo.OAuthState;
 import com.bluenet.web.domain.service.GitHubOAuthService;
@@ -60,7 +62,7 @@ public class AuthServiceImpl implements AuthService {
     private final CsrfTokenService csrfTokenService;
     private final VerificationCodeDomainService verificationCodeDomainService;
     private final VerificationCodeRepository verificationCodeRepository;
-    private final EmailSender emailSender;
+    private final MessageDispatcher messageDispatcher;
     private final GitHubOAuthService gitHubOAuthService;
     private final UserRepository userRepository;
     private final StringRedisTemplate redisTemplate;
@@ -150,7 +152,7 @@ public class AuthServiceImpl implements AuthService {
 
         String subject = "蓝网登录验证码";
         String htmlContent = buildVerificationCodeEmail(verifyCodeVO.getCode());
-        emailSender.sendHtmlAsync(email, subject, htmlContent);
+        messageDispatcher.dispatchAsync(MessageRequest.html(MessageChannel.EMAIL, email, subject, htmlContent));
 
         log.info("验证码已发送 - email={}, scene={}", email, scene);
     }

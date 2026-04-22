@@ -1,5 +1,8 @@
 package com.bluenet.web.infrastructure.email;
 
+import com.bluenet.web.application.message.MessageRequest;
+import com.bluenet.web.application.message.MessageChannel;
+import com.bluenet.web.infrastructure.message.EmailMessageSenderStrategy;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -21,11 +24,11 @@ class EmailSenderImplTest {
     @Mock
     private JavaMailSender mailSender;
 
-    private EmailSenderImpl emailSender;
+    private EmailMessageSenderStrategy emailSender;
 
     @BeforeEach
     void setUp() {
-        emailSender = new EmailSenderImpl(mailSender);
+        emailSender = new EmailMessageSenderStrategy(mailSender);
     }
 
     @Test
@@ -33,7 +36,13 @@ class EmailSenderImplTest {
     void send_shouldSendTextEmail() {
         doNothing().when(mailSender).send(any(MimeMessagePreparator.class));
 
-        assertDoesNotThrow(() -> emailSender.send("test@example.com", "Test Subject", "Test Content"));
+        assertDoesNotThrow(
+                () -> emailSender.send(
+                        MessageRequest.text(
+                                MessageChannel.EMAIL,
+                                "test@example.com",
+                                "Test Subject",
+                                "Test Content")));
 
         verify(mailSender, times(1)).send(any(MimeMessagePreparator.class));
     }
@@ -41,19 +50,25 @@ class EmailSenderImplTest {
     @Test
     @DisplayName("Should throw IllegalArgumentException when recipient is null")
     void send_shouldThrowWhenRecipientIsNull() {
-        assertThrows(IllegalArgumentException.class, () -> emailSender.send(null, "Subject", "Content"));
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> emailSender.send(MessageRequest.text(MessageChannel.EMAIL, null, "Subject", "Content")));
     }
 
     @Test
     @DisplayName("Should throw IllegalArgumentException when recipient is empty")
     void send_shouldThrowWhenRecipientIsEmpty() {
-        assertThrows(IllegalArgumentException.class, () -> emailSender.send("", "Subject", "Content"));
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> emailSender.send(MessageRequest.text(MessageChannel.EMAIL, "", "Subject", "Content")));
     }
 
     @Test
     @DisplayName("Should throw IllegalArgumentException when recipient is blank")
     void send_shouldThrowWhenRecipientIsBlank() {
-        assertThrows(IllegalArgumentException.class, () -> emailSender.send("   ", "Subject", "Content"));
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> emailSender.send(MessageRequest.text(MessageChannel.EMAIL, "   ", "Subject", "Content")));
     }
 
     @Test
@@ -61,7 +76,14 @@ class EmailSenderImplTest {
     void send_shouldThrowEmailSendExceptionWhenMailSenderFails() {
         doThrow(new RuntimeException("SMTP error")).when(mailSender).send(any(MimeMessagePreparator.class));
 
-        assertThrows(EmailSendException.class, () -> emailSender.send("test@example.com", "Subject", "Content"));
+        assertThrows(
+                EmailSendException.class,
+                () -> emailSender.send(
+                        MessageRequest.text(
+                                MessageChannel.EMAIL,
+                                "test@example.com",
+                                "Subject",
+                                "Content")));
     }
 
     @Test
@@ -70,7 +92,12 @@ class EmailSenderImplTest {
         doNothing().when(mailSender).send(any(MimeMessagePreparator.class));
 
         assertDoesNotThrow(
-                () -> emailSender.sendHtml("test@example.com", "Test Subject", "<html><body>Test</body></html>"));
+                () -> emailSender.send(
+                        MessageRequest.html(
+                                MessageChannel.EMAIL,
+                                "test@example.com",
+                                "Test Subject",
+                                "<html><body>Test</body></html>")));
 
         verify(mailSender, times(1)).send(any(MimeMessagePreparator.class));
     }
@@ -83,7 +110,14 @@ class EmailSenderImplTest {
         String template = "<html><body>Hello {{username}}, your code is {{code}}</body></html>";
         Map<String, String> variables = Map.of("username", "John", "code", "123456");
 
-        assertDoesNotThrow(() -> emailSender.sendWithTemplate("test@example.com", "Subject", template, variables));
+        assertDoesNotThrow(
+                () -> emailSender.send(
+                        MessageRequest.template(
+                                MessageChannel.EMAIL,
+                                "test@example.com",
+                                "Subject",
+                                template,
+                                variables)));
 
         verify(mailSender, times(1)).send(any(MimeMessagePreparator.class));
     }
@@ -93,7 +127,13 @@ class EmailSenderImplTest {
     void sendAsync_shouldSendAsync() {
         doNothing().when(mailSender).send(any(MimeMessagePreparator.class));
 
-        assertDoesNotThrow(() -> emailSender.sendAsync("test@example.com", "Subject", "Content"));
+        assertDoesNotThrow(
+                () -> emailSender.send(
+                        MessageRequest.text(
+                                MessageChannel.EMAIL,
+                                "test@example.com",
+                                "Subject",
+                                "Content")));
 
         verify(mailSender, times(1)).send(any(MimeMessagePreparator.class));
     }

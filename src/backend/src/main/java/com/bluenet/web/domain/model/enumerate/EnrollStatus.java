@@ -1,15 +1,13 @@
 package com.bluenet.web.domain.model.enumerate;
 
-import com.baomidou.mybatisplus.annotation.EnumValue;
 import lombok.Getter;
 
 @Getter
-public enum EnrollStatus {
+public enum EnrollStatus implements ValueEnum {
     PENDING("pending", "待审核"),
     APPROVED("approved", "已通过"),
     REJECTED("rejected", "已拒绝");
 
-    @EnumValue
     private final String value;
     private final String description;
 

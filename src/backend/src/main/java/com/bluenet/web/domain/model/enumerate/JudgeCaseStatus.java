@@ -1,13 +1,12 @@
 package com.bluenet.web.domain.model.enumerate;
 
-import com.baomidou.mybatisplus.annotation.EnumValue;
 import lombok.Getter;
 
 /**
  * Stores ACM-style per-case execution outcomes.
  */
 @Getter
-public enum JudgeCaseStatus {
+public enum JudgeCaseStatus implements ValueEnum {
     AC("AC", "通过"),
     WA("WA", "答案错误"),
     TLE("TLE", "超时"),
@@ -15,7 +14,6 @@ public enum JudgeCaseStatus {
     CE("CE", "编译错误"),
     MLE("MLE", "内存超限");
 
-    @EnumValue
     private final String value;
     private final String description;
 
