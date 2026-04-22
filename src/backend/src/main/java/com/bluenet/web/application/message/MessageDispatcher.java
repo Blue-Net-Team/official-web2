@@ -1,12 +1,9 @@
-package com.bluenet.web.application.port;
-
-import com.bluenet.web.application.message.MessageRequest;
+package com.bluenet.web.application.message;
 
 /**
  * 应用层消息分发端口。
  *
  * <p>
- * port 包只放“应用层对外部能力的抽象接口”；消息请求模型放在 application.message 包。
  * 调用方通过该端口提交消息请求，基础设施层根据通道选择具体发送策略。
  * </p>
  */

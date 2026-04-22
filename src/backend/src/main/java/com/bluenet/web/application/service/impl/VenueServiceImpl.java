@@ -33,11 +33,7 @@ public class VenueServiceImpl implements VenueService {
 
     @Override
     public VenueDTO getVenueDetail(Long id) {
-        Optional<VenueVO> venueOpt = venueDomainService.getVenueById(id);
-        if (venueOpt.isEmpty()) {
-            throw new DataNotFound("场地不存在");
-        }
-        return venueConverter.convertToDTO(venueOpt.get());
+        return venueConverter.convertToDTO(requireVenue(id));
     }
 
     @Override
@@ -50,20 +46,13 @@ public class VenueServiceImpl implements VenueService {
                 request.getImageFileId(),
                 request.getSortOrder());
 
-        Optional<VenueVO> created = venueDomainService.getVenueById(id);
-        if (created.isEmpty()) {
-            throw new GlobalException("创建场地失败");
-        }
-
-        return venueConverter.convertToDTO(created.get());
+        return venueConverter.convertToDTO(loadAfterWrite(id, "创建场地失败"));
     }
 
     @Override
     @Transactional
     public VenueDTO updateVenue(Long id, UpdateVenueRequestDTO request) {
-        if (!venueDomainService.existsById(id)) {
-            throw new DataNotFound("场地不存在");
-        }
+        requireVenueExists(id);
 
         venueDomainService.updateVenue(
                 id,
@@ -73,29 +62,48 @@ public class VenueServiceImpl implements VenueService {
                 request.getImageFileId(),
                 request.getSortOrder());
 
-        Optional<VenueVO> updated = venueDomainService.getVenueById(id);
-        if (updated.isEmpty()) {
-            throw new GlobalException("更新场地失败");
-        }
-
-        return venueConverter.convertToDTO(updated.get());
+        return venueConverter.convertToDTO(loadAfterWrite(id, "更新场地失败"));
     }
 
     @Override
     @Transactional
     public void deleteVenue(Long id) {
-        if (!venueDomainService.existsById(id)) {
-            throw new DataNotFound("场地不存在");
-        }
+        requireVenueExists(id);
         venueDomainService.deleteVenue(id);
     }
 
     @Override
     @Transactional
     public void updateVenueImage(Long id, Long imageFileId) {
+        requireVenueExists(id);
+        venueDomainService.updateImage(id, imageFileId);
+    }
+
+    /**
+     * 读取场地详情，不存在时统一抛出业务 404。
+     */
+    private VenueVO requireVenue(Long id) {
+        return venueDomainService.getVenueById(id)
+                .orElseThrow(() -> new DataNotFound("场地不存在"));
+    }
+
+    /**
+     * 写操作后重新读取，集中处理“写入成功但回读失败”的异常分支。
+     */
+    private VenueVO loadAfterWrite(Long id, String errorMessage) {
+        Optional<VenueVO> venue = venueDomainService.getVenueById(id);
+        if (venue.isEmpty()) {
+            throw new GlobalException(errorMessage);
+        }
+        return venue.get();
+    }
+
+    /**
+     * 更新、删除和图片替换前统一校验场地存在性。
+     */
+    private void requireVenueExists(Long id) {
         if (!venueDomainService.existsById(id)) {
             throw new DataNotFound("场地不存在");
         }
-        venueDomainService.updateImage(id, imageFileId);
     }
 }

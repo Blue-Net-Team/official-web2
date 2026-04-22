@@ -1,6 +1,6 @@
 package com.bluenet.web.infrastructure.message;
 
-import com.bluenet.web.application.port.MessageDispatcher;
+import com.bluenet.web.application.message.MessageDispatcher;
 import com.bluenet.web.application.message.MessageRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Async;

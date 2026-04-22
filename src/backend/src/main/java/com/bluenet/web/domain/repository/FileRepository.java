@@ -7,9 +7,6 @@ import org.springframework.core.io.Resource;
 
 import com.bluenet.web.domain.model.entity.File;
 import com.bluenet.web.domain.model.enumerate.FileType;
-import com.bluenet.web.domain.model.vo.AssessmentAnswerVO;
-import com.bluenet.web.domain.model.vo.AssessmentQuestionVO;
-import com.bluenet.web.domain.model.vo.AssessmentTimeVO;
 import com.bluenet.web.domain.model.vo.FileVO;
 
 public interface FileRepository {
@@ -21,33 +18,6 @@ public interface FileRepository {
      * @return 查询到的文件 结果；不存在时为空。
      */
     Optional<FileVO> findById(Long id);
-
-    /**
-     * 查询符合条件的文件 记录。
-     *
-     * @param fileId
-     *            文件主键。
-     * @return 查询到的文件 结果；不存在时为空。
-     */
-    Optional<AssessmentAnswerVO> findAnswerByFileId(Long fileId);
-
-    /**
-     * 查询符合条件的文件 记录。
-     *
-     * @param attachmentId
-     *            附件文件主键。
-     * @return 查询到的文件 结果；不存在时为空。
-     */
-    Optional<AssessmentQuestionVO> findQuestionByAttachmentId(Long attachmentId);
-
-    /**
-     * 查询符合条件的文件 记录。
-     *
-     * @param id
-     *            业务记录主键。
-     * @return 查询或处理得到的文件 结果。
-     */
-    AssessmentTimeVO findTimeById(Long id);
 
     /**
      * 处理文件 仓储职责中的业务数据访问逻辑。

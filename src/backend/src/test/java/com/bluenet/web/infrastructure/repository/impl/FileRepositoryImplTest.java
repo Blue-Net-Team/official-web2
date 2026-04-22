@@ -3,9 +3,6 @@ package com.bluenet.web.infrastructure.repository.impl;
 import com.bluenet.web.domain.model.entity.File;
 import com.bluenet.web.infrastructure.repository.dataobject.FileDO;
 import com.bluenet.web.domain.model.enumerate.FileType;
-import com.bluenet.web.infrastructure.repository.mapper.AssessmentAnswerMapper;
-import com.bluenet.web.infrastructure.repository.mapper.AssessmentQuestionMapper;
-import com.bluenet.web.infrastructure.repository.mapper.AssessmentTimeMapper;
 import com.bluenet.web.infrastructure.repository.mapper.FileMapper;
 import com.bluenet.web.infrastructure.storage.ObjectStorage;
 import org.junit.jupiter.api.BeforeEach;
@@ -30,25 +27,12 @@ class FileRepositoryImplTest {
     @Mock
     private FileMapper fileMapper;
 
-    @Mock
-    private AssessmentAnswerMapper assessmentAnswerMapper;
-
-    @Mock
-    private AssessmentQuestionMapper assessmentQuestionMapper;
-
-    @Mock
-    private AssessmentTimeMapper assessmentTimeMapper;
-
     private FileRepositoryImpl repository;
 
     @BeforeEach
     void setUp() {
-        repository = new FileRepositoryImpl(
-                objectStorage,
-                fileMapper,
-                assessmentAnswerMapper,
-                assessmentQuestionMapper,
-                assessmentTimeMapper);
+        // 文件仓储已收敛为文件元数据 + 对象存储边界，测试只注入这两个依赖。
+        repository = new FileRepositoryImpl(objectStorage, fileMapper);
     }
 
     @Test

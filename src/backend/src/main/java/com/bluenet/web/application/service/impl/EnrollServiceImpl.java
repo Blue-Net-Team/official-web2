@@ -1,8 +1,8 @@
 package com.bluenet.web.application.service.impl;
 
 import com.bluenet.web.api.dto.enrollment.*;
-import com.bluenet.web.application.message.MessageChannel;
-import com.bluenet.web.application.port.MessageDispatcher;
+import com.bluenet.web.domain.model.enumerate.MessageChannel;
+import com.bluenet.web.application.message.MessageDispatcher;
 import com.bluenet.web.application.message.MessageRequest;
 import com.bluenet.web.application.service.EnrollService;
 import com.bluenet.web.domain.exception.BadRequest;

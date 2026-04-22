@@ -7,6 +7,9 @@ import com.bluenet.web.domain.model.vo.AssessmentAnswerVO;
 import com.bluenet.web.domain.model.vo.AssessmentQuestionVO;
 import com.bluenet.web.domain.model.vo.AssessmentTimeVO;
 import com.bluenet.web.domain.model.vo.FileVO;
+import com.bluenet.web.domain.repository.AssessmentAnswerRepository;
+import com.bluenet.web.domain.repository.AssessmentQuestionRepository;
+import com.bluenet.web.domain.repository.AssessmentTimeRepository;
 import com.bluenet.web.domain.repository.FileRepository;
 import com.bluenet.web.domain.service.FileDomainService;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +27,9 @@ import static com.google.common.io.Files.getFileExtension;
 @RequiredArgsConstructor
 public class FileDomainServiceImpl implements FileDomainService {
     private final FileRepository fileRepository;
+    private final AssessmentAnswerRepository assessmentAnswerRepository;
+    private final AssessmentQuestionRepository assessmentQuestionRepository;
+    private final AssessmentTimeRepository assessmentTimeRepository;
     private final ApplicationEventPublisher applicationEventPublisher;
 
     @Override
@@ -34,19 +40,22 @@ public class FileDomainServiceImpl implements FileDomainService {
 
     @Override
     public AssessmentAnswerVO getAnswerByFileId(Long fileId) {
-        return fileRepository.findAnswerByFileId(fileId)
+        // 作答关联查询回归考核作答仓储，文件仓储只保留文件边界。
+        return assessmentAnswerRepository.findByFileId(fileId)
                 .orElseThrow(() -> new DataNotFound("答题不存在，文件ID: " + fileId));
     }
 
     @Override
     public AssessmentQuestionVO getQuestionByAttachmentId(Long attachmentId) {
-        return fileRepository.findQuestionByAttachmentId(attachmentId)
+        // 附件关联查询回归考核题目仓储，避免文件仓储依赖题目 mapper。
+        return assessmentQuestionRepository.findByAttachmentId(attachmentId)
                 .orElseThrow(() -> new DataNotFound("题目不存在，附件ID: " + attachmentId));
     }
 
     @Override
     public AssessmentTimeVO getAssessmentTimeById(Long id) {
-        return fileRepository.findTimeById(id);
+        return assessmentTimeRepository.findById(id)
+                .orElseThrow(() -> new DataNotFound("Assessment time not found, ID: " + id));
     }
 
     @Override

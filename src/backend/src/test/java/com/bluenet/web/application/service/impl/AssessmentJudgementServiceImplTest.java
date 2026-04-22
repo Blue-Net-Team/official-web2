@@ -8,6 +8,7 @@ import com.bluenet.web.api.dto.assessment_judgement.AssessmentJudgementDTO;
 import com.bluenet.web.api.dto.assessment_judgement.AssessmentQuestionScoreboardDTO;
 import com.bluenet.web.api.dto.assessment_judgement.AssessmentQuestionSubmissionDTO;
 import com.bluenet.web.api.dto.assessment_judgement.ManualReviewRequestDTO;
+import com.bluenet.web.application.converter.AssessmentJudgementConverter;
 import com.bluenet.web.domain.exception.BadRequest;
 import com.bluenet.web.domain.exception.Forbidden;
 import com.bluenet.web.domain.model.enumerate.JudgementSource;
@@ -33,9 +34,9 @@ import com.bluenet.web.domain.service.AssessmentJudgementDomainService;
 import com.bluenet.web.domain.service.AssessmentQuestionDomainService;
 import com.bluenet.web.domain.service.AssessmentTimeDomainService;
 import com.bluenet.web.domain.service.UserDomainService;
-import com.bluenet.web.application.message.MessageChannel;
-import com.bluenet.web.application.message.MessageContentType;
-import com.bluenet.web.application.port.MessageDispatcher;
+import com.bluenet.web.domain.model.enumerate.MessageChannel;
+import com.bluenet.web.domain.model.enumerate.MessageContentType;
+import com.bluenet.web.application.message.MessageDispatcher;
 import com.bluenet.web.application.message.MessageRequest;
 import com.bluenet.web.infrastructure.security.util.UserCTX;
 import org.junit.jupiter.api.DisplayName;
@@ -45,6 +46,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
@@ -93,6 +95,9 @@ class AssessmentJudgementServiceImplTest {
 
     @Mock
     private MessageDispatcher messageDispatcher;
+
+    @Spy
+    private AssessmentJudgementConverter assessmentJudgementConverter = new AssessmentJudgementConverter();
 
     @InjectMocks
     private AssessmentJudgementServiceImpl assessmentJudgementService;

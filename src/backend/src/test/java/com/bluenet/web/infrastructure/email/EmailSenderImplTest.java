@@ -1,8 +1,7 @@
 package com.bluenet.web.infrastructure.email;
 
 import com.bluenet.web.application.message.MessageRequest;
-import com.bluenet.web.application.message.MessageChannel;
-import com.bluenet.web.infrastructure.message.EmailMessageSenderStrategy;
+import com.bluenet.web.domain.model.enumerate.MessageChannel;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

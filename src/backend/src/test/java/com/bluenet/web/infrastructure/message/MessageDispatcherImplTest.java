@@ -1,6 +1,6 @@
 package com.bluenet.web.infrastructure.message;
 
-import com.bluenet.web.application.message.MessageChannel;
+import com.bluenet.web.domain.model.enumerate.MessageChannel;
 import com.bluenet.web.application.message.MessageRequest;
 import org.junit.jupiter.api.Test;
 

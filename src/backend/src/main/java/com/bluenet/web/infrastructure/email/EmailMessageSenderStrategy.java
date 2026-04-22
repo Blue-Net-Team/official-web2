@@ -1,16 +1,16 @@
-package com.bluenet.web.infrastructure.message;
+package com.bluenet.web.infrastructure.email;
 
-import com.bluenet.web.application.message.MessageChannel;
-import com.bluenet.web.application.message.MessageContentType;
+import com.bluenet.web.domain.model.enumerate.MessageChannel;
+import com.bluenet.web.domain.model.enumerate.MessageContentType;
 import com.bluenet.web.application.message.MessageRequest;
-import com.bluenet.web.infrastructure.email.EmailSendException;
-import com.bluenet.web.infrastructure.email.TemplateVariableSubstitutor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Component;
+
+import com.bluenet.web.infrastructure.message.MessageSenderStrategy;
 
 import java.nio.charset.StandardCharsets;
 

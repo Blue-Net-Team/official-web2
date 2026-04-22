@@ -33,11 +33,7 @@ public class EquipmentServiceImpl implements EquipmentService {
 
     @Override
     public EquipmentDTO getEquipmentDetail(Long id) {
-        Optional<EquipmentVO> equipmentOpt = equipmentDomainService.getEquipmentById(id);
-        if (equipmentOpt.isEmpty()) {
-            throw new DataNotFound("设备不存在");
-        }
-        return equipmentConverter.convertToDTO(equipmentOpt.get());
+        return equipmentConverter.convertToDTO(requireEquipment(id));
     }
 
     @Override
@@ -50,20 +46,13 @@ public class EquipmentServiceImpl implements EquipmentService {
                 request.getImageFileId(),
                 request.getSortOrder());
 
-        Optional<EquipmentVO> created = equipmentDomainService.getEquipmentById(id);
-        if (created.isEmpty()) {
-            throw new GlobalException("创建设备失败");
-        }
-
-        return equipmentConverter.convertToDTO(created.get());
+        return equipmentConverter.convertToDTO(loadAfterWrite(id, "创建设备失败"));
     }
 
     @Override
     @Transactional
     public EquipmentDTO updateEquipment(Long id, UpdateEquipmentRequestDTO request) {
-        if (!equipmentDomainService.existsById(id)) {
-            throw new DataNotFound("设备不存在");
-        }
+        requireEquipmentExists(id);
 
         equipmentDomainService.updateEquipment(
                 id,
@@ -73,29 +62,48 @@ public class EquipmentServiceImpl implements EquipmentService {
                 request.getImageFileId(),
                 request.getSortOrder());
 
-        Optional<EquipmentVO> updated = equipmentDomainService.getEquipmentById(id);
-        if (updated.isEmpty()) {
-            throw new GlobalException("更新设备失败");
-        }
-
-        return equipmentConverter.convertToDTO(updated.get());
+        return equipmentConverter.convertToDTO(loadAfterWrite(id, "更新设备失败"));
     }
 
     @Override
     @Transactional
     public void deleteEquipment(Long id) {
-        if (!equipmentDomainService.existsById(id)) {
-            throw new DataNotFound("设备不存在");
-        }
+        requireEquipmentExists(id);
         equipmentDomainService.deleteEquipment(id);
     }
 
     @Override
     @Transactional
     public void updateEquipmentImage(Long id, Long imageFileId) {
+        requireEquipmentExists(id);
+        equipmentDomainService.updateImage(id, imageFileId);
+    }
+
+    /**
+     * 读取设备详情，不存在时统一抛出业务 404。
+     */
+    private EquipmentVO requireEquipment(Long id) {
+        return equipmentDomainService.getEquipmentById(id)
+                .orElseThrow(() -> new DataNotFound("设备不存在"));
+    }
+
+    /**
+     * 写操作后重新读取，集中处理“写入成功但回读失败”的异常分支。
+     */
+    private EquipmentVO loadAfterWrite(Long id, String errorMessage) {
+        Optional<EquipmentVO> equipment = equipmentDomainService.getEquipmentById(id);
+        if (equipment.isEmpty()) {
+            throw new GlobalException(errorMessage);
+        }
+        return equipment.get();
+    }
+
+    /**
+     * 更新、删除和图片替换前统一校验设备存在性。
+     */
+    private void requireEquipmentExists(Long id) {
         if (!equipmentDomainService.existsById(id)) {
             throw new DataNotFound("设备不存在");
         }
-        equipmentDomainService.updateImage(id, imageFileId);
     }
 }

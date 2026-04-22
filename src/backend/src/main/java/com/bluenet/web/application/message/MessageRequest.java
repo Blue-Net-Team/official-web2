@@ -1,5 +1,7 @@
 package com.bluenet.web.application.message;
 
+import com.bluenet.web.domain.model.enumerate.MessageChannel;
+import com.bluenet.web.domain.model.enumerate.MessageContentType;
 import lombok.Builder;
 
 import java.util.Map;
@@ -8,7 +10,7 @@ import java.util.Map;
  * 消息分发请求模型。
  *
  * <p>
- * 这是 application 层提交给消息端口的命令参数，不是端口本身；端口接口保留在 application.port 包。
+ * 这是 application 层提交给消息端口的命令参数，不是端口本身；端口接口保留在 application.message 包。
  * </p>
  */
 @Builder

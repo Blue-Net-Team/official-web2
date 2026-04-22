@@ -1,4 +1,4 @@
-package com.bluenet.web.application.message;
+package com.bluenet.web.domain.model.enumerate;
 
 /**
  * 消息内容格式。

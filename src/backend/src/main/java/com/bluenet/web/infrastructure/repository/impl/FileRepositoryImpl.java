@@ -2,22 +2,13 @@ package com.bluenet.web.infrastructure.repository.impl;
 
 import com.bluenet.web.infrastructure.repository.support.RepositoryObjectConverter;
 
-import com.bluenet.web.infrastructure.repository.dataobject.*;
+import com.bluenet.web.infrastructure.repository.dataobject.FileDO;
 
 import com.bluenet.web.domain.exception.DataNotFound;
-import com.bluenet.web.domain.model.entity.AssessmentAnswer;
-import com.bluenet.web.domain.model.entity.AssessmentQuestion;
-import com.bluenet.web.domain.model.entity.AssessmentTime;
 import com.bluenet.web.domain.model.entity.File;
 import com.bluenet.web.domain.model.enumerate.FileType;
-import com.bluenet.web.domain.model.vo.AssessmentAnswerVO;
-import com.bluenet.web.domain.model.vo.AssessmentQuestionVO;
-import com.bluenet.web.domain.model.vo.AssessmentTimeVO;
 import com.bluenet.web.domain.model.vo.FileVO;
 import com.bluenet.web.domain.repository.FileRepository;
-import com.bluenet.web.infrastructure.repository.mapper.AssessmentAnswerMapper;
-import com.bluenet.web.infrastructure.repository.mapper.AssessmentQuestionMapper;
-import com.bluenet.web.infrastructure.repository.mapper.AssessmentTimeMapper;
 import com.bluenet.web.infrastructure.repository.mapper.FileMapper;
 import com.bluenet.web.infrastructure.storage.ObjectStorage;
 import lombok.RequiredArgsConstructor;
@@ -33,7 +24,7 @@ import java.util.Optional;
 /**
  * 文件仓储实现类。
  * <p>
- * 负责文件元数据和考核业务关联查询，文件对象本身的读写删除委托给当前启用的 {@link ObjectStorage} 适配器。
+ * 只负责文件元数据和对象存储，考核答案、题目、时间等业务关联查询由对应考核仓储承接。
  * </p>
  */
 @Slf4j
@@ -44,9 +35,6 @@ public class FileRepositoryImpl implements FileRepository {
 
     private final ObjectStorage objectStorage;
     private final FileMapper fileMapper;
-    private final AssessmentAnswerMapper assessmentAnswerMapper;
-    private final AssessmentQuestionMapper assessmentQuestionMapper;
-    private final AssessmentTimeMapper assessmentTimeMapper;
 
     /**
      * 按主键查询文件 记录。
@@ -62,59 +50,6 @@ public class FileRepositoryImpl implements FileRepository {
             return Optional.empty();
         }
         return Optional.of(convertToVO(file));
-    }
-
-    /**
-     * 查询符合条件的文件 记录。
-     *
-     * @param fileId
-     *            文件主键。
-     * @return 查询到的文件 结果；不存在时为空。
-     */
-    @Override
-    public Optional<AssessmentAnswerVO> findAnswerByFileId(Long fileId) {
-        AssessmentAnswer answer = RepositoryObjectConverter.toDomain(
-                assessmentAnswerMapper.selectFirstByFileId(fileId),
-                AssessmentAnswer.class);
-        if (answer == null) {
-            return Optional.empty();
-        }
-        return Optional.of(convertToAnswerVO(answer));
-    }
-
-    /**
-     * 查询符合条件的文件 记录。
-     *
-     * @param attachmentId
-     *            附件文件主键。
-     * @return 查询到的文件 结果；不存在时为空。
-     */
-    @Override
-    public Optional<AssessmentQuestionVO> findQuestionByAttachmentId(Long attachmentId) {
-        AssessmentQuestion question = RepositoryObjectConverter.toDomain(
-                assessmentQuestionMapper.selectFirstByAttachmentId(attachmentId),
-                AssessmentQuestion.class);
-        if (question == null) {
-            return Optional.empty();
-        }
-        return Optional.of(convertToQuestionVO(question));
-    }
-
-    /**
-     * 查询符合条件的文件 记录。
-     *
-     * @param id
-     *            业务记录主键。
-     * @return 查询或处理得到的文件 结果。
-     */
-    @Override
-    public AssessmentTimeVO findTimeById(Long id) {
-        AssessmentTime assessmentTime = RepositoryObjectConverter
-                .toDomain(assessmentTimeMapper.selectById(id), AssessmentTime.class);
-        if (assessmentTime == null) {
-            throw new DataNotFound("Assessment time not found, ID: " + id);
-        }
-        return convertToTimeVO(assessmentTime);
     }
 
     /**
@@ -258,61 +193,4 @@ public class FileRepositoryImpl implements FileRepository {
                 .build();
     }
 
-    /**
-     * 处理文件 仓储职责中的业务数据访问逻辑。
-     *
-     * @param answer
-     *            考核作答对象。
-     * @return 转换后的目标模型对象。
-     */
-    private AssessmentAnswerVO convertToAnswerVO(AssessmentAnswer answer) {
-        return AssessmentAnswerVO.builder()
-                .id(answer.getId())
-                .userId(answer.getUserId())
-                .questionId(answer.getQuestionId())
-                .content(answer.getContent())
-                .language(answer.getLanguage())
-                .fileId(answer.getFileId())
-                .submitTime(answer.getSubmitTime())
-                .build();
-    }
-
-    /**
-     * 处理文件 仓储职责中的业务数据访问逻辑。
-     *
-     * @param question
-     *            考核题目对象。
-     * @return 转换后的目标模型对象。
-     */
-    private AssessmentQuestionVO convertToQuestionVO(AssessmentQuestion question) {
-        return AssessmentQuestionVO.builder()
-                .id(question.getId())
-                .assessmentTimeId(question.getAssessmentTimeId())
-                .questionNo(question.getQuestionNo())
-                .title(question.getTitle())
-                .content(question.getContent())
-                .attachmentId(question.getAttachmentId())
-                .questionType(question.getQuestionType())
-                .score(question.getScore())
-                .build();
-    }
-
-    /**
-     * 处理文件 仓储职责中的业务数据访问逻辑。
-     *
-     * @param assessmentTime
-     *            考核场次对象。
-     * @return 转换后的目标模型对象。
-     */
-    private AssessmentTimeVO convertToTimeVO(AssessmentTime assessmentTime) {
-        return AssessmentTimeVO.builder()
-                .id(assessmentTime.getId())
-                .direction(assessmentTime.getDirection())
-                .epoch(assessmentTime.getEpoch())
-                .startTime(assessmentTime.getStartTime())
-                .endTime(assessmentTime.getEndTime())
-                .timeLimit(assessmentTime.getTimeLimit())
-                .timeLimitMinutes(assessmentTime.getTimeLimitMinutes())
-                .build();
-    }
 }

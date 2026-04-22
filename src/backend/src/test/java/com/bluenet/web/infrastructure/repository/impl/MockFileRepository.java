@@ -2,9 +2,6 @@ package com.bluenet.web.infrastructure.repository.impl;
 
 import com.bluenet.web.domain.model.entity.File;
 import com.bluenet.web.domain.model.enumerate.FileType;
-import com.bluenet.web.domain.model.vo.AssessmentAnswerVO;
-import com.bluenet.web.domain.model.vo.AssessmentQuestionVO;
-import com.bluenet.web.domain.model.vo.AssessmentTimeVO;
 import com.bluenet.web.domain.model.vo.FileVO;
 import com.bluenet.web.domain.repository.FileRepository;
 import lombok.extern.slf4j.Slf4j;
@@ -27,21 +24,6 @@ public class MockFileRepository implements FileRepository {
     @Override
     public Optional<FileVO> findById(Long id) {
         return Optional.empty();
-    }
-
-    @Override
-    public Optional<AssessmentAnswerVO> findAnswerByFileId(Long fileId) {
-        return Optional.empty();
-    }
-
-    @Override
-    public Optional<AssessmentQuestionVO> findQuestionByAttachmentId(Long attachmentId) {
-        return Optional.empty();
-    }
-
-    @Override
-    public AssessmentTimeVO findTimeById(Long id) {
-        return null;
     }
 
     @Override

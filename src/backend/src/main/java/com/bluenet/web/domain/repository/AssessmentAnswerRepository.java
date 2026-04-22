@@ -22,6 +22,15 @@ public interface AssessmentAnswerRepository {
      * @return 查询到的考核作答 结果；不存在时为空。
      */
     Optional<AssessmentAnswerVO> findById(Long id);
+
+    /**
+     * 按文件主键查询关联的考核作答记录。
+     *
+     * @param fileId
+     *            文件主键。
+     * @return 查询到的考核作答结果；不存在时为空。
+     */
+    Optional<AssessmentAnswerVO> findByFileId(Long fileId);
     /**
      * 更新考核作答关联的提交文件。
      *

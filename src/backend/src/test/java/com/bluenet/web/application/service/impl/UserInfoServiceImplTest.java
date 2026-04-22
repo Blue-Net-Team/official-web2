@@ -32,7 +32,7 @@ import static org.mockito.Mockito.*;
 
 import com.bluenet.web.domain.repository.VerificationCodeRepository;
 import com.bluenet.web.domain.service.VerificationCodeDomainService;
-import com.bluenet.web.application.port.MessageDispatcher;
+import com.bluenet.web.application.message.MessageDispatcher;
 
 /**
  * UserInfoServiceImpl 单元测试

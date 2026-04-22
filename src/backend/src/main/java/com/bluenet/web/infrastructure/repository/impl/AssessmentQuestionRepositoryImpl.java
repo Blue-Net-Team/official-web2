@@ -55,6 +55,24 @@ public class AssessmentQuestionRepositoryImpl implements AssessmentQuestionRepos
     }
 
     /**
+     * 按附件文件主键查询关联的考核题目记录。
+     *
+     * @param attachmentId
+     *            附件文件主键。
+     * @return 查询到的考核题目结果；不存在时为空。
+     */
+    @Override
+    public Optional<AssessmentQuestionVO> findByAttachmentId(Long attachmentId) {
+        AssessmentQuestion question = RepositoryObjectConverter.toDomain(
+                assessmentQuestionMapper.selectFirstByAttachmentId(attachmentId),
+                AssessmentQuestion.class);
+        if (question == null) {
+            return Optional.empty();
+        }
+        return Optional.of(convertToVO(question));
+    }
+
+    /**
      * 更新考核题目附件文件关联。
      *
      * @param questionId

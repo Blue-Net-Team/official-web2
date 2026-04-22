@@ -17,7 +17,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 
 import com.bluenet.web.api.dto.enrollment.*;
-import com.bluenet.web.application.port.MessageDispatcher;
+import com.bluenet.web.application.message.MessageDispatcher;
 import com.bluenet.web.domain.exception.DataNotFound;
 import com.bluenet.web.domain.model.enumerate.Direction;
 import com.bluenet.web.domain.model.enumerate.EnrollStatus;

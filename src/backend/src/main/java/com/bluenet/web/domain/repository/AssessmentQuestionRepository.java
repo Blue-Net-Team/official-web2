@@ -23,6 +23,15 @@ public interface AssessmentQuestionRepository {
      * @return 查询到的考核题目 结果；不存在时为空。
      */
     Optional<AssessmentQuestionVO> findById(Long id);
+
+    /**
+     * 按附件文件主键查询关联的考核题目记录。
+     *
+     * @param attachmentId
+     *            附件文件主键。
+     * @return 查询到的考核题目结果；不存在时为空。
+     */
+    Optional<AssessmentQuestionVO> findByAttachmentId(Long attachmentId);
     /**
      * 更新考核题目附件文件关联。
      *
