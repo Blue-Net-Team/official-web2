@@ -15,7 +15,7 @@ import com.bluenet.web.domain.repository.AchievementRepository;
 import com.bluenet.web.infrastructure.repository.mapper.AchievementMapper;
 import com.bluenet.web.infrastructure.repository.mapper.CompetitionMapper;
 import com.bluenet.web.infrastructure.repository.mapper.FileMapper;
-import com.bluenet.web.infrastructure.repository.projection.AchievementStatsProjection;
+import com.bluenet.web.infrastructure.repository.dataobject.query.AchievementStatsQueryDO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -65,7 +65,7 @@ public class AchievementRepositoryImpl implements AchievementRepository {
      */
     @Override
     public AchievementStatsVO findAchievementStats() {
-        AchievementStatsProjection stats = achievementMapper.selectAchievementStats();
+        AchievementStatsQueryDO stats = achievementMapper.selectAchievementStats();
         return AchievementStatsVO.builder()
                 .totalAchievements(stats.getTotalAchievements())
                 .nationalCount(stats.getNationalCount())

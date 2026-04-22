@@ -1,4 +1,4 @@
-package com.bluenet.web.infrastructure.repository.projection;
+package com.bluenet.web.infrastructure.repository.dataobject.query;
 
 import com.bluenet.web.domain.model.enumerate.JudgementSource;
 import com.bluenet.web.domain.model.enumerate.JudgementStatus;
@@ -11,10 +11,10 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /**
- * 候选人评分矩阵查询投影，仅用于仓储查询映射。
+ * 候选人评分矩阵查询数据对象，仅用于承接 XML 查询结果。
  */
 @Data
-public class AssessmentCandidateScoreRowProjection {
+public class AssessmentCandidateScoreQueryDO {
     /**
      * 参加考核的候选用户标识。
      */

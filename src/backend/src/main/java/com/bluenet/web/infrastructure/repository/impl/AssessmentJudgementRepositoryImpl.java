@@ -11,9 +11,9 @@ import com.bluenet.web.domain.model.vo.AssessmentQuestionSubmissionVO;
 import com.bluenet.web.domain.repository.AssessmentJudgementRepository;
 import com.bluenet.web.infrastructure.repository.dataobject.AssessmentJudgementDO;
 import com.bluenet.web.infrastructure.repository.mapper.AssessmentJudgementMapper;
-import com.bluenet.web.infrastructure.repository.projection.AssessmentCandidateScoreRowProjection;
-import com.bluenet.web.infrastructure.repository.projection.AssessmentQuestionScoreboardProjection;
-import com.bluenet.web.infrastructure.repository.projection.AssessmentQuestionSubmissionRowProjection;
+import com.bluenet.web.infrastructure.repository.dataobject.query.AssessmentCandidateScoreQueryDO;
+import com.bluenet.web.infrastructure.repository.dataobject.query.AssessmentQuestionScoreboardQueryDO;
+import com.bluenet.web.infrastructure.repository.dataobject.query.AssessmentQuestionSubmissionQueryDO;
 import com.bluenet.web.infrastructure.repository.support.RepositoryObjectConverter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -289,7 +289,7 @@ public class AssessmentJudgementRepositoryImpl implements AssessmentJudgementRep
      * @return 转换后的目标模型对象。
      */
     private AssessmentQuestionSubmissionHistoryVO convertSubmissionHistoryToVO(
-            AssessmentQuestionSubmissionRowProjection row) {
+            AssessmentQuestionSubmissionQueryDO row) {
         AssessmentJudgementVO judgement = null;
         if (row.getJudgementId() != null) {
             judgement = AssessmentJudgementVO.builder()
@@ -322,7 +322,7 @@ public class AssessmentJudgementRepositoryImpl implements AssessmentJudgementRep
      *            Mapper 返回的投影数据行。
      * @return 转换后的目标模型对象。
      */
-    private AssessmentQuestionScoreboardVO convertScoreboardToVO(AssessmentQuestionScoreboardProjection row) {
+    private AssessmentQuestionScoreboardVO convertScoreboardToVO(AssessmentQuestionScoreboardQueryDO row) {
         return AssessmentQuestionScoreboardVO.builder()
                 .questionId(row.getQuestionId())
                 .assessmentTimeId(row.getAssessmentTimeId())
@@ -344,7 +344,7 @@ public class AssessmentJudgementRepositoryImpl implements AssessmentJudgementRep
      *            Mapper 返回的投影数据行。
      * @return 转换后的目标模型对象。
      */
-    private AssessmentQuestionSubmissionVO convertSubmissionToVO(AssessmentQuestionSubmissionRowProjection row) {
+    private AssessmentQuestionSubmissionVO convertSubmissionToVO(AssessmentQuestionSubmissionQueryDO row) {
         return AssessmentQuestionSubmissionVO.builder()
                 .answerId(row.getAnswerId())
                 .questionId(row.getQuestionId())
@@ -382,7 +382,7 @@ public class AssessmentJudgementRepositoryImpl implements AssessmentJudgementRep
      *            Mapper 返回的投影数据行。
      * @return 转换后的目标模型对象。
      */
-    private AssessmentCandidateScoreRowVO convertCandidateScoreRowToVO(AssessmentCandidateScoreRowProjection row) {
+    private AssessmentCandidateScoreRowVO convertCandidateScoreRowToVO(AssessmentCandidateScoreQueryDO row) {
         return AssessmentCandidateScoreRowVO.builder()
                 .candidateUserId(row.getCandidateUserId())
                 .studentId(row.getStudentId())

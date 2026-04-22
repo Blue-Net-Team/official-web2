@@ -50,7 +50,7 @@
         ORDER BY user_id, updated_at DESC, id DESC
     </select>
 
-    <select id="selectQuestionScoreboard" resultType="com.bluenet.web.infrastructure.repository.projection.AssessmentQuestionScoreboardProjection">
+    <select id="selectQuestionScoreboard" resultType="com.bluenet.web.infrastructure.repository.dataobject.query.AssessmentQuestionScoreboardQueryDO">
         WITH ranked_judgement AS (
             SELECT
                 j.*,
@@ -95,7 +95,7 @@
         ORDER BY q.question_no ASC, q.id ASC
     </select>
 
-    <select id="selectQuestionSubmissions" resultType="com.bluenet.web.infrastructure.repository.projection.AssessmentQuestionSubmissionRowProjection">
+    <select id="selectQuestionSubmissions" resultType="com.bluenet.web.infrastructure.repository.dataobject.query.AssessmentQuestionSubmissionQueryDO">
         WITH ranked_judgement AS (
             SELECT
                 j.*,
@@ -160,7 +160,7 @@
         ORDER BY u.student_id ASC, a.submit_time DESC, a.id DESC
     </select>
 
-    <select id="selectQuestionSubmissionHistories" resultType="com.bluenet.web.infrastructure.repository.projection.AssessmentQuestionSubmissionRowProjection">
+    <select id="selectQuestionSubmissionHistories" resultType="com.bluenet.web.infrastructure.repository.dataobject.query.AssessmentQuestionSubmissionQueryDO">
         WITH ranked_history AS (
             SELECT
                 j.*,
@@ -203,7 +203,7 @@
         ORDER BY j.user_id ASC, j.judged_at DESC NULLS LAST, j.id DESC
     </select>
 
-    <select id="selectCandidateScoreRows" resultType="com.bluenet.web.infrastructure.repository.projection.AssessmentCandidateScoreRowProjection">
+    <select id="selectCandidateScoreRows" resultType="com.bluenet.web.infrastructure.repository.dataobject.query.AssessmentCandidateScoreQueryDO">
         WITH selected_time AS (
             SELECT * FROM tb_assessment_time WHERE id = #{assessmentTimeId}
         ),

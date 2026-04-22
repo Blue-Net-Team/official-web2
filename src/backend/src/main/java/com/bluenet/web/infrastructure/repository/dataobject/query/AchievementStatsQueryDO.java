@@ -1,12 +1,12 @@
-package com.bluenet.web.infrastructure.repository.projection;
+package com.bluenet.web.infrastructure.repository.dataobject.query;
 
 import lombok.Data;
 
 /**
- * Aggregate query projection for achievement statistics; it is not a table DO.
+ * 成果统计查询数据对象，仅用于承接 XML 聚合查询结果。
  */
 @Data
-public class AchievementStatsProjection {
+public class AchievementStatsQueryDO {
     /**
      * 成果总数量。
      */

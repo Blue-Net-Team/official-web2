@@ -1,4 +1,4 @@
-package com.bluenet.web.infrastructure.repository.projection;
+package com.bluenet.web.infrastructure.repository.dataobject.query;
 
 import com.bluenet.web.domain.model.enumerate.JudgementSource;
 import com.bluenet.web.domain.model.enumerate.JudgementStatus;
@@ -12,10 +12,10 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /**
- * 题目提交列表与历史查询投影，仅用于仓储查询映射。
+ * 题目提交列表与历史查询数据对象，仅用于承接 XML 查询结果。
  */
 @Data
-public class AssessmentQuestionSubmissionRowProjection {
+public class AssessmentQuestionSubmissionQueryDO {
     /**
      * 考核作答记录标识。
      */

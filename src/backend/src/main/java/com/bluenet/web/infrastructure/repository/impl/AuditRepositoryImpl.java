@@ -8,9 +8,9 @@ import com.bluenet.web.domain.model.vo.AuditTrendPointVO;
 import com.bluenet.web.domain.repository.AuditRepository;
 import com.bluenet.web.infrastructure.repository.dataobject.AuditDO;
 import com.bluenet.web.infrastructure.repository.mapper.AuditMapper;
-import com.bluenet.web.infrastructure.repository.projection.AuditEndpointLatencyProjection;
-import com.bluenet.web.infrastructure.repository.projection.AuditEndpointRankingProjection;
-import com.bluenet.web.infrastructure.repository.projection.AuditTrendPointProjection;
+import com.bluenet.web.infrastructure.repository.dataobject.query.AuditEndpointLatencyQueryDO;
+import com.bluenet.web.infrastructure.repository.dataobject.query.AuditEndpointRankingQueryDO;
+import com.bluenet.web.infrastructure.repository.dataobject.query.AuditTrendPointQueryDO;
 import com.bluenet.web.infrastructure.repository.support.RepositoryObjectConverter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
@@ -89,7 +89,7 @@ public class AuditRepositoryImpl implements AuditRepository {
      *            Mapper 返回的投影数据行。
      * @return 转换后的目标模型对象。
      */
-    private AuditTrendPointVO toTrendPointVO(AuditTrendPointProjection row) {
+    private AuditTrendPointVO toTrendPointVO(AuditTrendPointQueryDO row) {
         return AuditTrendPointVO.builder()
                 .time(row.getTime())
                 .count(row.getCount())
@@ -103,7 +103,7 @@ public class AuditRepositoryImpl implements AuditRepository {
      *            Mapper 返回的投影数据行。
      * @return 转换后的目标模型对象。
      */
-    private AuditEndpointRankingVO toEndpointRankingVO(AuditEndpointRankingProjection row) {
+    private AuditEndpointRankingVO toEndpointRankingVO(AuditEndpointRankingQueryDO row) {
         return AuditEndpointRankingVO.builder()
                 .pattern(row.getPattern())
                 .count(row.getCount())
@@ -119,7 +119,7 @@ public class AuditRepositoryImpl implements AuditRepository {
      *            Mapper 返回的投影数据行。
      * @return 转换后的目标模型对象。
      */
-    private AuditEndpointLatencyVO toEndpointLatencyVO(AuditEndpointLatencyProjection row) {
+    private AuditEndpointLatencyVO toEndpointLatencyVO(AuditEndpointLatencyQueryDO row) {
         return AuditEndpointLatencyVO.builder()
                 .pattern(row.getPattern())
                 .avgDurationMs(row.getAvgDurationMs())

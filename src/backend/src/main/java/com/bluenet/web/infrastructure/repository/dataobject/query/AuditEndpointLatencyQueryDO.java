@@ -1,12 +1,12 @@
-package com.bluenet.web.infrastructure.repository.projection;
+package com.bluenet.web.infrastructure.repository.dataobject.query;
 
 import lombok.Data;
 
 /**
- * 审计接口耗时排名聚合查询投影，仅用于仓储查询映射。
+ * 审计接口耗时排名聚合查询数据对象，仅用于承接 XML 查询结果。
  */
 @Data
-public class AuditEndpointLatencyProjection {
+public class AuditEndpointLatencyQueryDO {
     /**
      * 归一化后的接口路径模式。
      */

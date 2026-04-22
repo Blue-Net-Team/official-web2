@@ -3,9 +3,9 @@ package com.bluenet.web.infrastructure.repository.mapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.bluenet.web.domain.model.enumerate.QuestionType;
 import com.bluenet.web.infrastructure.repository.dataobject.AssessmentJudgementDO;
-import com.bluenet.web.infrastructure.repository.projection.AssessmentCandidateScoreRowProjection;
-import com.bluenet.web.infrastructure.repository.projection.AssessmentQuestionScoreboardProjection;
-import com.bluenet.web.infrastructure.repository.projection.AssessmentQuestionSubmissionRowProjection;
+import com.bluenet.web.infrastructure.repository.dataobject.query.AssessmentCandidateScoreQueryDO;
+import com.bluenet.web.infrastructure.repository.dataobject.query.AssessmentQuestionScoreboardQueryDO;
+import com.bluenet.web.infrastructure.repository.dataobject.query.AssessmentQuestionSubmissionQueryDO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -63,7 +63,7 @@ public interface AssessmentJudgementMapper extends BaseMapper<AssessmentJudgemen
      *            搜索关键字。
      * @return 满足条件的考核评审结果 结果集合。
      */
-    List<AssessmentQuestionScoreboardProjection> selectQuestionScoreboard(
+    List<AssessmentQuestionScoreboardQueryDO> selectQuestionScoreboard(
             @Param("assessmentTimeId") Long assessmentTimeId,
             @Param("questionType") QuestionType questionType,
             @Param("keyword") String keyword);
@@ -79,7 +79,7 @@ public interface AssessmentJudgementMapper extends BaseMapper<AssessmentJudgemen
      *            业务状态过滤条件。
      * @return 满足条件的考核评审结果 结果集合。
      */
-    List<AssessmentQuestionSubmissionRowProjection> selectQuestionSubmissions(
+    List<AssessmentQuestionSubmissionQueryDO> selectQuestionSubmissions(
             @Param("questionId") Long questionId,
             @Param("keyword") String keyword,
             @Param("status") String status);
@@ -93,7 +93,7 @@ public interface AssessmentJudgementMapper extends BaseMapper<AssessmentJudgemen
      *            候选用户主键集合。
      * @return 满足条件的考核评审结果 结果集合。
      */
-    List<AssessmentQuestionSubmissionRowProjection> selectQuestionSubmissionHistories(
+    List<AssessmentQuestionSubmissionQueryDO> selectQuestionSubmissionHistories(
             @Param("questionId") Long questionId,
             @Param("userIds") List<Long> userIds);
 
@@ -106,7 +106,7 @@ public interface AssessmentJudgementMapper extends BaseMapper<AssessmentJudgemen
      *            搜索关键字。
      * @return 满足条件的考核评审结果 结果集合。
      */
-    List<AssessmentCandidateScoreRowProjection> selectCandidateScoreRows(
+    List<AssessmentCandidateScoreQueryDO> selectCandidateScoreRows(
             @Param("assessmentTimeId") Long assessmentTimeId,
             @Param("keyword") String keyword);
 }

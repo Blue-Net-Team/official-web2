@@ -18,7 +18,7 @@
         <result column="success_state" property="successState"/>
     </resultMap>
 
-    <select id="selectTrends" resultType="com.bluenet.web.infrastructure.repository.projection.AuditTrendPointProjection">
+    <select id="selectTrends" resultType="com.bluenet.web.infrastructure.repository.dataobject.query.AuditTrendPointQueryDO">
         <choose>
             <when test="period == 'H24'">
                 SELECT bucket::timestamp AS time, COALESCE(a.cnt, 0) AS count
@@ -68,7 +68,7 @@
         </choose>
     </select>
 
-    <select id="selectEndpointRanking" resultType="com.bluenet.web.infrastructure.repository.projection.AuditEndpointRankingProjection">
+    <select id="selectEndpointRanking" resultType="com.bluenet.web.infrastructure.repository.dataobject.query.AuditEndpointRankingQueryDO">
         SELECT request_uri_pattern AS pattern,
                COUNT(*) AS count,
                AVG(duration_ms) AS avgDurationMs,
@@ -91,7 +91,7 @@
         LIMIT #{limit}
     </select>
 
-    <select id="selectEndpointLatencyRanking" resultType="com.bluenet.web.infrastructure.repository.projection.AuditEndpointLatencyProjection">
+    <select id="selectEndpointLatencyRanking" resultType="com.bluenet.web.infrastructure.repository.dataobject.query.AuditEndpointLatencyQueryDO">
         SELECT request_uri_pattern AS pattern,
                AVG(duration_ms) AS avgDurationMs,
                MAX(duration_ms) AS maxDurationMs,

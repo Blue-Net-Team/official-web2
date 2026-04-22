@@ -6,7 +6,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bluenet.web.domain.model.enumerate.AchievementType;
 import com.bluenet.web.domain.model.enumerate.AwardLevel;
 import com.bluenet.web.infrastructure.repository.dataobject.AchievementDO;
-import com.bluenet.web.infrastructure.repository.projection.AchievementStatsProjection;
+import com.bluenet.web.infrastructure.repository.dataobject.query.AchievementStatsQueryDO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -36,7 +36,7 @@ public interface AchievementMapper extends BaseMapper<AchievementDO> {
      *
      * @return 匹配条件的成果 数据行；不存在时为 null。
      */
-    AchievementStatsProjection selectAchievementStats();
+    AchievementStatsQueryDO selectAchievementStats();
 
     /**
      * 统计指定成果类型和奖项级别下的成果数量。

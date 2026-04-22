@@ -1,4 +1,4 @@
-package com.bluenet.web.infrastructure.repository.projection;
+package com.bluenet.web.infrastructure.repository.dataobject.query;
 
 import com.bluenet.web.domain.model.enumerate.QuestionType;
 import lombok.Data;
@@ -6,10 +6,10 @@ import lombok.Data;
 import java.math.BigDecimal;
 
 /**
- * 题目评分汇总查询投影，仅用于仓储查询映射。
+ * 题目评分汇总查询数据对象，仅用于承接 XML 查询结果。
  */
 @Data
-public class AssessmentQuestionScoreboardProjection {
+public class AssessmentQuestionScoreboardQueryDO {
     /**
      * 考核题目标识。
      */

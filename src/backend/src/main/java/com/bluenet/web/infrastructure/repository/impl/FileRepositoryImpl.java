@@ -4,7 +4,6 @@ import com.bluenet.web.infrastructure.repository.support.RepositoryObjectConvert
 
 import com.bluenet.web.infrastructure.repository.dataobject.*;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.bluenet.web.domain.exception.DataNotFound;
 import com.bluenet.web.domain.model.entity.AssessmentAnswer;
 import com.bluenet.web.domain.model.entity.AssessmentQuestion;
@@ -75,10 +74,7 @@ public class FileRepositoryImpl implements FileRepository {
     @Override
     public Optional<AssessmentAnswerVO> findAnswerByFileId(Long fileId) {
         AssessmentAnswer answer = RepositoryObjectConverter.toDomain(
-                assessmentAnswerMapper.selectOne(
-                        new LambdaQueryWrapper<AssessmentAnswerDO>()
-                                .eq(AssessmentAnswerDO::getFileId, fileId)
-                                .last("LIMIT 1")),
+                assessmentAnswerMapper.selectFirstByFileId(fileId),
                 AssessmentAnswer.class);
         if (answer == null) {
             return Optional.empty();
@@ -96,10 +92,7 @@ public class FileRepositoryImpl implements FileRepository {
     @Override
     public Optional<AssessmentQuestionVO> findQuestionByAttachmentId(Long attachmentId) {
         AssessmentQuestion question = RepositoryObjectConverter.toDomain(
-                assessmentQuestionMapper.selectOne(
-                        new LambdaQueryWrapper<AssessmentQuestionDO>()
-                                .eq(AssessmentQuestionDO::getAttachmentId, attachmentId)
-                                .last("LIMIT 1")),
+                assessmentQuestionMapper.selectFirstByAttachmentId(attachmentId),
                 AssessmentQuestion.class);
         if (question == null) {
             return Optional.empty();

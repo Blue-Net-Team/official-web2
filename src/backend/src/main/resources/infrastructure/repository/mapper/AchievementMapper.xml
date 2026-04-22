@@ -12,7 +12,7 @@
         <result column="file_id" property="fileId"/>
     </resultMap>
 
-    <resultMap id="AchievementStatsProjectionResultMap" type="com.bluenet.web.infrastructure.repository.projection.AchievementStatsProjection">
+    <resultMap id="AchievementStatsQueryResultMap" type="com.bluenet.web.infrastructure.repository.dataobject.query.AchievementStatsQueryDO">
         <result column="total_achievements" property="totalAchievements"/>
         <result column="national_count" property="nationalCount"/>
         <result column="provincial_count" property="provincialCount"/>
@@ -44,7 +44,7 @@
         ORDER BY a.achieve_at DESC, a.id DESC
     </select>
 
-    <select id="selectAchievementStats" resultMap="AchievementStatsProjectionResultMap">
+    <select id="selectAchievementStats" resultMap="AchievementStatsQueryResultMap">
         SELECT
             COUNT(*) AS total_achievements,
             COALESCE(SUM(CASE WHEN award_level = 'national' THEN 1 ELSE 0 END), 0) AS national_count,
