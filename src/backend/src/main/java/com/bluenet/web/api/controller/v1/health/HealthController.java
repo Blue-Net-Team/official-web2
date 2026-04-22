@@ -16,6 +16,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.bluenet.web.api.dto.ResponseMessage;
 import com.bluenet.web.api.dto.health.HealthStatusDTO;
 import com.bluenet.web.api.dto.health.HealthStatusDTO.ComponentHealth;
+import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
+import com.bluenet.web.infrastructure.security.annotation.RequiresPermission;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -41,6 +43,7 @@ public class HealthController {
     @Operation(summary = "健康检查", description = "检查后端及依赖中间件（数据库、Redis、MinIO）的健康状态")
     @ApiResponse(responseCode = "200", description = "成功，返回健康状态", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseMessage.class)))
     @ApiResponse(responseCode = "503", description = "服务不可用，至少一个组件状态为 DOWN")
+    @RequiresPermission(value = "system:health", name = "健康检查", access = AccessLevel.PUBLIC)
     @GetMapping("/health")
     public ResponseMessage<HealthStatusDTO> health() {
         HealthComponent healthComponent = healthEndpoint.health();

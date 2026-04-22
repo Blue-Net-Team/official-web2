@@ -2,6 +2,8 @@ package com.bluenet.web.api.controller.v1.file;
 
 import com.bluenet.web.api.dto.ResponseMessage;
 import com.bluenet.web.application.service.FileDownloadService;
+import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
+import com.bluenet.web.infrastructure.security.annotation.RequiresPermission;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -47,6 +49,7 @@ public class FileDownloadController {
                     @ExampleObject(value = "{\"code\":403,\"msg\":\"权限不足\",\"data\":null}") })),
             @ApiResponse(responseCode = "404", description = "文件不存在", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseMessage.class), examples = {
                     @ExampleObject(value = "{\"code\":404,\"msg\":\"文件不存在\",\"data\":null}") })) })
+    @RequiresPermission(value = "file:download", name = "下载文件", access = AccessLevel.PUBLIC)
     @GetMapping("/{fileId}")
     @SecurityRequirement(name = "bearer-jwt")
     public ResponseEntity<?> downloadFile(@Parameter(description = "文件ID", required = true) @PathVariable Long fileId) {
