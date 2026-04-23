@@ -99,4 +99,148 @@ public class User {
         }
         this.password = encodedPassword;
     }
+
+    /**
+     * 构造新用户聚合根
+     *
+     * @param studentId
+     *            学生学号
+     * @param email
+     *            邮箱地址
+     * @param roleId
+     *            角色标识
+     * @param password
+     *            密码
+     * @param username
+     *            用户名
+     * @param nickname
+     *            昵称
+     * @param collegeId
+     *            学院标识
+     * @param major
+     *            专业
+     * @param assessmentGradeYear
+     *            考核年级年份
+     * @param direction
+     *            技术方向
+     * @param gender
+     *            性别
+     * @param job
+     *            岗位
+     * @param avatarId
+     *            头像文件标识
+     * @param qrcodeId
+     *            二维码文件标识
+     * @param githubId
+     *            GitHub 用户标识
+     * @param githubUsername
+     *            GitHub 登录名
+     * @param internalReferralCode
+     *            内部推荐码
+     * @param bio
+     *            个人简介
+     * @return 新的用户实体
+     */
+    public static User create(String studentId, String email, Long roleId, String password,
+            String username, String nickname, Long collegeId, String major,
+            Integer assessmentGradeYear, Direction direction, Gender gender,
+            String job, Long avatarId, Long qrcodeId, String githubId,
+            String githubUsername, String internalReferralCode, String bio) {
+        User user = new User();
+        user.setStudentId(studentId);
+        user.setEmail(email);
+        user.setRoleId(roleId);
+        user.setPassword(password);
+        user.setUsername(username);
+        user.setNickname(nickname);
+        user.setCollegeId(collegeId);
+        user.setMajor(major);
+        user.setAssessmentGradeYear(assessmentGradeYear);
+        user.setDirection(direction);
+        user.setGender(gender);
+        user.setJob(job);
+        user.setAvatarId(avatarId);
+        user.setDisable(false);
+        user.setQrcodeId(qrcodeId);
+        user.setGithubId(githubId);
+        user.setGithubUsername(githubUsername);
+        user.setInternalReferralCode(internalReferralCode);
+        user.setBio(bio);
+        return user;
+    }
+
+    /**
+     * 从数据库重建 —— 跳过创建校验
+     *
+     * @param id
+     *            用户ID
+     * @param studentId
+     *            学生学号
+     * @param email
+     *            邮箱地址
+     * @param roleId
+     *            角色标识
+     * @param password
+     *            密码
+     * @param username
+     *            用户名
+     * @param nickname
+     *            昵称
+     * @param collegeId
+     *            学院标识
+     * @param major
+     *            专业
+     * @param assessmentGradeYear
+     *            考核年级年份
+     * @param direction
+     *            技术方向
+     * @param gender
+     *            性别
+     * @param job
+     *            岗位
+     * @param avatarId
+     *            头像文件标识
+     * @param disable
+     *            是否禁用
+     * @param qrcodeId
+     *            二维码文件标识
+     * @param githubId
+     *            GitHub 用户标识
+     * @param githubUsername
+     *            GitHub 登录名
+     * @param internalReferralCode
+     *            内部推荐码
+     * @param bio
+     *            个人简介
+     * @return 重建的用户实体
+     */
+    public static User reconstruct(Long id, String studentId, String email, Long roleId, String password,
+            String username, String nickname, Long collegeId, String major,
+            Integer assessmentGradeYear, Direction direction, Gender gender,
+            String job, Long avatarId, Boolean disable, Long qrcodeId,
+            String githubId, String githubUsername, String internalReferralCode,
+            String bio) {
+        User user = new User();
+        user.setId(id);
+        user.setStudentId(studentId);
+        user.setEmail(email);
+        user.setRoleId(roleId);
+        user.setPassword(password);
+        user.setUsername(username);
+        user.setNickname(nickname);
+        user.setCollegeId(collegeId);
+        user.setMajor(major);
+        user.setAssessmentGradeYear(assessmentGradeYear);
+        user.setDirection(direction);
+        user.setGender(gender);
+        user.setJob(job);
+        user.setAvatarId(avatarId);
+        user.setDisable(disable);
+        user.setQrcodeId(qrcodeId);
+        user.setGithubId(githubId);
+        user.setGithubUsername(githubUsername);
+        user.setInternalReferralCode(internalReferralCode);
+        user.setBio(bio);
+        return user;
+    }
 }

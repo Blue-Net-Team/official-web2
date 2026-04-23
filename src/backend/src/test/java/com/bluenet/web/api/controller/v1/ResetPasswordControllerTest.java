@@ -1,6 +1,8 @@
 package com.bluenet.web.api.controller.v1;
 
-import com.bluenet.web.application.service.ResetPasswordService;
+import com.bluenet.web.application.ResetPasswordResult;
+import com.bluenet.web.application.command.resetpassword.ResetPasswordCommands;
+import com.bluenet.web.application.service.ResetPasswordAppService;
 import com.bluenet.web.testcontainers.TestcontainersConfiguration;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -19,7 +21,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -36,7 +37,7 @@ class ResetPasswordControllerTest {
     private MockMvc mockMvc;
 
     @MockBean
-    private ResetPasswordService resetPasswordService;
+    private ResetPasswordAppService resetPasswordAppService;
 
     @Autowired
     private StringRedisTemplate redisTemplate;
@@ -61,7 +62,8 @@ class ResetPasswordControllerTest {
         @Test
         @DisplayName("正常请求：应返回 200 和 resetToken")
         void verifyStudent_validRequest_shouldReturnToken() throws Exception {
-            when(resetPasswordService.verifyStudent(TEST_STUDENT_ID)).thenReturn(TEST_TOKEN);
+            when(resetPasswordAppService.verifyStudent(any(ResetPasswordCommands.VerifyStudentCommand.class)))
+                    .thenReturn(new ResetPasswordResult.VerifyStudent(TEST_TOKEN));
 
             mockMvc.perform(
                     post(BASE_URL + "/verify-student")
@@ -71,7 +73,7 @@ class ResetPasswordControllerTest {
                     .andExpect(jsonPath("$.code").value(200))
                     .andExpect(jsonPath("$.data").value(TEST_TOKEN));
 
-            verify(resetPasswordService).verifyStudent(TEST_STUDENT_ID);
+            verify(resetPasswordAppService).verifyStudent(any(ResetPasswordCommands.VerifyStudentCommand.class));
         }
 
         @Test
@@ -87,7 +89,7 @@ class ResetPasswordControllerTest {
         @Test
         @DisplayName("学号不存在：应返回 400")
         void verifyStudent_nonExistingStudent_shouldReturn400() throws Exception {
-            when(resetPasswordService.verifyStudent("9999999"))
+            when(resetPasswordAppService.verifyStudent(any(ResetPasswordCommands.VerifyStudentCommand.class)))
                     .thenThrow(new com.bluenet.web.domain.exception.BadRequest("学号不存在"));
 
             mockMvc.perform(
@@ -108,7 +110,8 @@ class ResetPasswordControllerTest {
         @Test
         @DisplayName("正常请求：应返回 200 和 resetToken")
         void verifyEmail_validRequest_shouldReturnToken() throws Exception {
-            when(resetPasswordService.verifyEmail(TEST_TOKEN, TEST_EMAIL)).thenReturn(TEST_TOKEN);
+            when(resetPasswordAppService.verifyEmail(any(ResetPasswordCommands.VerifyEmailCommand.class)))
+                    .thenReturn(new ResetPasswordResult.VerifyEmail(TEST_TOKEN));
 
             mockMvc.perform(
                     post(BASE_URL + "/verify-email")
@@ -118,7 +121,7 @@ class ResetPasswordControllerTest {
                     .andExpect(jsonPath("$.code").value(200))
                     .andExpect(jsonPath("$.data").value(TEST_TOKEN));
 
-            verify(resetPasswordService).verifyEmail(TEST_TOKEN, TEST_EMAIL);
+            verify(resetPasswordAppService).verifyEmail(any(ResetPasswordCommands.VerifyEmailCommand.class));
         }
 
         @Test
@@ -151,7 +154,7 @@ class ResetPasswordControllerTest {
         @Test
         @DisplayName("正常请求：应返回 200")
         void sendCode_validRequest_shouldReturn200() throws Exception {
-            doNothing().when(resetPasswordService).sendCode(TEST_TOKEN);
+            doNothing().when(resetPasswordAppService).sendCode(any(ResetPasswordCommands.SendCodeCommand.class));
 
             mockMvc.perform(
                     post(BASE_URL + "/send-code")
@@ -160,7 +163,7 @@ class ResetPasswordControllerTest {
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.code").value(200));
 
-            verify(resetPasswordService).sendCode(TEST_TOKEN);
+            verify(resetPasswordAppService).sendCode(any(ResetPasswordCommands.SendCodeCommand.class));
         }
 
         @Test
@@ -177,8 +180,8 @@ class ResetPasswordControllerTest {
         @DisplayName("Token 过期：应返回 400")
         void sendCode_expiredToken_shouldReturn400() throws Exception {
             doThrow(new com.bluenet.web.domain.exception.BadRequest("重置流程已过期，请重新开始"))
-                    .when(resetPasswordService)
-                    .sendCode("expired-token");
+                    .when(resetPasswordAppService)
+                    .sendCode(any(ResetPasswordCommands.SendCodeCommand.class));
 
             mockMvc.perform(
                     post(BASE_URL + "/send-code")
@@ -198,7 +201,7 @@ class ResetPasswordControllerTest {
         @Test
         @DisplayName("验证码正确：应返回 200")
         void verifyCode_validRequest_shouldReturn200() throws Exception {
-            doNothing().when(resetPasswordService).verifyCode(TEST_TOKEN, TEST_CODE);
+            doNothing().when(resetPasswordAppService).verifyCode(any(ResetPasswordCommands.VerifyCodeCommand.class));
 
             mockMvc.perform(
                     post(BASE_URL + "/verify-code")
@@ -207,7 +210,7 @@ class ResetPasswordControllerTest {
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.code").value(200));
 
-            verify(resetPasswordService).verifyCode(TEST_TOKEN, TEST_CODE);
+            verify(resetPasswordAppService).verifyCode(any(ResetPasswordCommands.VerifyCodeCommand.class));
         }
 
         @Test
@@ -224,8 +227,8 @@ class ResetPasswordControllerTest {
         @DisplayName("验证码错误：应返回 400")
         void verifyCode_wrongCode_shouldReturn400() throws Exception {
             doThrow(new com.bluenet.web.domain.exception.BadRequest("验证码错误"))
-                    .when(resetPasswordService)
-                    .verifyCode(eq(TEST_TOKEN), eq("000000"));
+                    .when(resetPasswordAppService)
+                    .verifyCode(any(ResetPasswordCommands.VerifyCodeCommand.class));
 
             mockMvc.perform(
                     post(BASE_URL + "/verify-code")
@@ -239,8 +242,8 @@ class ResetPasswordControllerTest {
         @DisplayName("验证码已过期：应返回 400")
         void verifyCode_expiredCode_shouldReturn400() throws Exception {
             doThrow(new com.bluenet.web.domain.exception.BadRequest("验证码已过期"))
-                    .when(resetPasswordService)
-                    .verifyCode(TEST_TOKEN, TEST_CODE);
+                    .when(resetPasswordAppService)
+                    .verifyCode(any(ResetPasswordCommands.VerifyCodeCommand.class));
 
             mockMvc.perform(
                     post(BASE_URL + "/verify-code")
@@ -260,7 +263,8 @@ class ResetPasswordControllerTest {
         @Test
         @DisplayName("正常请求：应返回 200")
         void resetPassword_validRequest_shouldReturn200() throws Exception {
-            doNothing().when(resetPasswordService).resetPassword(TEST_TOKEN, "newPassword123");
+            doNothing().when(resetPasswordAppService)
+                    .resetPassword(any(ResetPasswordCommands.ResetPasswordCommand.class));
 
             mockMvc.perform(
                     post(BASE_URL + "/reset")
@@ -272,7 +276,7 @@ class ResetPasswordControllerTest {
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.code").value(200));
 
-            verify(resetPasswordService).resetPassword(TEST_TOKEN, "newPassword123");
+            verify(resetPasswordAppService).resetPassword(any(ResetPasswordCommands.ResetPasswordCommand.class));
         }
 
         @Test
@@ -303,8 +307,8 @@ class ResetPasswordControllerTest {
         @DisplayName("流程已过期：应返回 400")
         void resetPassword_expiredToken_shouldReturn400() throws Exception {
             doThrow(new com.bluenet.web.domain.exception.BadRequest("重置流程已过期，请重新开始"))
-                    .when(resetPasswordService)
-                    .resetPassword(eq("expired-token"), any());
+                    .when(resetPasswordAppService)
+                    .resetPassword(any(ResetPasswordCommands.ResetPasswordCommand.class));
 
             mockMvc.perform(
                     post(BASE_URL + "/reset")

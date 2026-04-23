@@ -1,7 +1,9 @@
 package com.bluenet.web.api.controller.v1.admin;
 
 import com.bluenet.web.api.dto.ResponseMessage;
-import com.bluenet.web.application.service.QrcodeService;
+import com.bluenet.web.api.converter.qrcode.QrcodeRequestConverter;
+import com.bluenet.web.application.command.qrcode.QrcodeCommands;
+import com.bluenet.web.application.service.QrcodeAppService;
 import com.bluenet.web.domain.exception.GlobalException;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
 import com.bluenet.web.infrastructure.security.annotation.RequiresPermission;
@@ -30,7 +32,8 @@ import org.springframework.web.bind.annotation.*;
 @Slf4j
 public class AdminQrcodeController {
 
-    private final QrcodeService qrcodeService;
+    private final QrcodeAppService qrcodeAppService;
+    private final QrcodeRequestConverter qrcodeRequestConverter;
 
     @Operation(summary = "创建咨询群二维码", description = "通过已上传的 fileId 创建咨询群二维码，文件类型必须为 QRCODE")
     @ApiResponses({
@@ -44,7 +47,8 @@ public class AdminQrcodeController {
     public ResponseMessage<Void> createConsultationQrcode(
             @Parameter(description = "文件ID", required = true) @RequestParam("fileId") Long fileId) {
         try {
-            qrcodeService.createQrcode(fileId);
+            QrcodeCommands.CreateConsultationQrcodeCommand command = qrcodeRequestConverter.toCreateCommand(fileId);
+            qrcodeAppService.createConsultationQrcode(command);
             return ResponseMessage.success();
         } catch (GlobalException e) {
             return ResponseMessage.error(e);
@@ -57,7 +61,8 @@ public class AdminQrcodeController {
     @DeleteMapping("/{id}")
     public ResponseMessage<Void> deleteConsultationQrcode(@PathVariable Long id) {
         try {
-            qrcodeService.deleteConsultationQrcode(id);
+            QrcodeCommands.DeleteConsultationQrcodeCommand command = qrcodeRequestConverter.toDeleteCommand(id);
+            qrcodeAppService.deleteConsultationQrcode(command);
             return ResponseMessage.success();
         } catch (GlobalException e) {
             return ResponseMessage.error(e);

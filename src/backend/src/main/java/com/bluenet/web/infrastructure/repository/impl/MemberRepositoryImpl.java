@@ -1,31 +1,38 @@
 package com.bluenet.web.infrastructure.repository.impl;
 
-import com.bluenet.web.infrastructure.repository.support.RepositoryObjectConverter;
-
-import com.bluenet.web.infrastructure.repository.dataobject.*;
-
-import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bluenet.web.domain.model.entity.College;
 import com.bluenet.web.domain.model.entity.File;
+import com.bluenet.web.domain.model.entity.Member;
 import com.bluenet.web.domain.model.entity.Qrcode;
 import com.bluenet.web.domain.model.entity.Role;
 import com.bluenet.web.domain.model.entity.User;
 import com.bluenet.web.domain.model.enumerate.Direction;
-import com.bluenet.web.domain.model.vo.MemberVO;
+import com.bluenet.web.domain.model.enumerate.RoleType;
 import com.bluenet.web.domain.repository.MemberRepository;
+import com.bluenet.web.domain.util.GradeCalculator;
+import com.bluenet.web.infrastructure.repository.converter.CollegeRepositoryConverter;
+import com.bluenet.web.infrastructure.repository.converter.FileRepositoryConverter;
+import com.bluenet.web.infrastructure.repository.converter.MemberRepositoryConverter;
+import com.bluenet.web.infrastructure.repository.converter.QrcodeRepositoryConverter;
+import com.bluenet.web.infrastructure.repository.dataobject.RoleDO;
+import com.bluenet.web.infrastructure.repository.dataobject.UserDO;
 import com.bluenet.web.infrastructure.repository.mapper.CollegeMapper;
 import com.bluenet.web.infrastructure.repository.mapper.FileMapper;
 import com.bluenet.web.infrastructure.repository.mapper.QrcodeMapper;
 import com.bluenet.web.infrastructure.repository.mapper.RoleMapper;
 import com.bluenet.web.infrastructure.repository.mapper.UserMapper;
-import com.bluenet.web.domain.model.enumerate.RoleType;
-import com.bluenet.web.domain.util.GradeCalculator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Repository
@@ -36,6 +43,10 @@ public class MemberRepositoryImpl implements MemberRepository {
     private final FileMapper fileMapper;
     private final QrcodeMapper qrcodeMapper;
     private final RoleMapper roleMapper;
+    private final MemberRepositoryConverter converter;
+    private final CollegeRepositoryConverter collegeConverter;
+    private final QrcodeRepositoryConverter qrcodeConverter;
+    private final FileRepositoryConverter fileConverter;
     private final String systemUsername;
 
     public MemberRepositoryImpl(
@@ -44,113 +55,86 @@ public class MemberRepositoryImpl implements MemberRepository {
             FileMapper fileMapper,
             QrcodeMapper qrcodeMapper,
             RoleMapper roleMapper,
+            MemberRepositoryConverter converter,
+            CollegeRepositoryConverter collegeConverter,
+            QrcodeRepositoryConverter qrcodeConverter,
+            FileRepositoryConverter fileConverter,
             @Value("${system-user.username}") String systemUsername) {
         this.userMapper = userMapper;
         this.collegeMapper = collegeMapper;
         this.fileMapper = fileMapper;
         this.qrcodeMapper = qrcodeMapper;
         this.roleMapper = roleMapper;
+        this.converter = converter;
+        this.collegeConverter = collegeConverter;
+        this.qrcodeConverter = qrcodeConverter;
+        this.fileConverter = fileConverter;
         this.systemUsername = systemUsername;
     }
 
-    /**
-     * 查询全部成员 记录。
-     *
-     * @param direction
-     *            技术方向过滤条件。
-     * @param pageable
-     *            Spring 分页请求对象。
-     * @return 分页后的成员 结果。
-     */
     @Override
-    public org.springframework.data.domain.Page<MemberVO> findAll(Direction direction,
-            org.springframework.data.domain.Pageable pageable) {
-        Page<UserDO> mybatisPage = new Page<>(pageable.getPageNumber() + 1, pageable.getPageSize());
+    public Page<Member> findAll(Direction direction, Pageable pageable) {
+        com.baomidou.mybatisplus.extension.plugins.pagination.Page<UserDO> mybatisPage = new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>(
+                pageable.getPageNumber() + 1, pageable.getPageSize());
 
         List<String> roleNames = List.of(
                 RoleType.MEMBER.getName(),
                 RoleType.DIRECTION_ADMIN.getName(),
                 RoleType.SUPER_ADMIN.getName());
 
-        IPage<UserDO> result = userMapper.selectByRoleNamesAndDirection(
+        com.baomidou.mybatisplus.core.metadata.IPage<UserDO> result = userMapper.selectByRoleNamesAndDirection(
                 mybatisPage,
                 roleNames,
                 direction,
                 false,
                 systemUsername);
 
-        // 批量查询角色
-        List<User> users = RepositoryObjectConverter.toDomainList(result.getRecords(), User.class);
+        List<User> users = toUserList(result.getRecords());
         Map<Long, String> roleIdToNameMap = buildRoleIdToNameMap(users);
 
-        List<MemberVO> members = users
-                .stream()
-                .map(user -> convertToVO(user, roleIdToNameMap))
+        List<Member> members = users.stream()
+                .map(user -> convertToEntity(user, roleIdToNameMap))
                 .collect(Collectors.toList());
 
-        return new org.springframework.data.domain.PageImpl<>(
-                members,
-                pageable,
-                result.getTotal());
+        return new PageImpl<>(members, pageable, result.getTotal());
     }
 
-    /**
-     * 按主键查询成员 记录。
-     *
-     * @param id
-     *            业务记录主键。
-     * @return 查询到的成员 结果；不存在时为空。
-     */
     @Override
-    public Optional<MemberVO> findById(Long id) {
-        User user = RepositoryObjectConverter.toDomain(userMapper.selectById(id), User.class);
+    public Optional<Member> findById(Long id) {
+        User user = toUser(userMapper.selectById(id));
         if (user == null || user.getDisable() || user.getRoleId() == null
                 || systemUsername.equals(user.getUsername())) {
             return Optional.empty();
         }
 
-        // 查询单个用户的角色
         Map<Long, String> roleIdToNameMap = buildRoleIdToNameMap(List.of(user));
-        return Optional.of(convertToVO(user, roleIdToNameMap));
+        return Optional.of(convertToEntity(user, roleIdToNameMap));
     }
 
-    /**
-     * 查询各技术方向负责人成员列表。
-     *
-     * @return 满足条件的成员 结果集合。
-     */
     @Override
-    public List<MemberVO> findDirectionLeaders() {
-        Page<UserDO> mybatisPage = new Page<>(1, Integer.MAX_VALUE);
+    public List<Member> findDirectionLeaders() {
+        com.baomidou.mybatisplus.extension.plugins.pagination.Page<UserDO> mybatisPage = new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>(
+                1, Integer.MAX_VALUE);
 
         List<String> roleNames = List.of(
                 RoleType.DIRECTION_ADMIN.getName(),
                 RoleType.SUPER_ADMIN.getName());
 
-        IPage<UserDO> result = userMapper.selectByRoleNamesAndDirection(
+        com.baomidou.mybatisplus.core.metadata.IPage<UserDO> result = userMapper.selectByRoleNamesAndDirection(
                 mybatisPage,
                 roleNames,
                 null,
                 true,
                 systemUsername);
 
-        // 批量查询角色
-        List<User> users = RepositoryObjectConverter.toDomainList(result.getRecords(), User.class);
+        List<User> users = toUserList(result.getRecords());
         Map<Long, String> roleIdToNameMap = buildRoleIdToNameMap(users);
 
-        return users
-                .stream()
-                .map(user -> convertToVO(user, roleIdToNameMap))
+        return users.stream()
+                .map(user -> convertToEntity(user, roleIdToNameMap))
                 .collect(Collectors.toList());
     }
 
-    /**
-     * 处理成员 仓储职责中的业务数据访问逻辑。
-     *
-     * @param users
-     *            用户数据行集合。
-     * @return 转换后的目标模型对象。
-     */
     private Map<Long, String> buildRoleIdToNameMap(List<User> users) {
         List<Long> roleIds = users.stream()
                 .map(User::getRoleId)
@@ -162,35 +146,23 @@ public class MemberRepositoryImpl implements MemberRepository {
             return Collections.emptyMap();
         }
 
-        List<Role> roles = RepositoryObjectConverter.toDomainList(roleMapper.selectBatchIds(roleIds), Role.class);
+        List<Role> roles = toRoleList(roleMapper.selectBatchIds(roleIds));
         return roles.stream()
                 .collect(Collectors.toMap(Role::getId, Role::getName));
     }
 
-    /**
-     * 在成员 的持久层对象、领域对象和视图对象之间转换。
-     *
-     * @param user
-     *            用户领域对象。
-     * @param roleIdToNameMap
-     *            角色主键到角色名称的映射。
-     * @return 转换后的目标模型对象。
-     */
-    private MemberVO convertToVO(User user, Map<Long, String> roleIdToNameMap) {
+    private Member convertToEntity(User user, Map<Long, String> roleIdToNameMap) {
         String collegeName = null;
         if (user.getCollegeId() != null) {
-            College college = RepositoryObjectConverter
-                    .toDomain(collegeMapper.selectById(user.getCollegeId()), College.class);
+            College college = collegeConverter.toEntity(collegeMapper.selectById(user.getCollegeId()));
             collegeName = college != null ? college.getName() : null;
         }
 
         String wechatQrCodeUrl = null;
         if (user.getQrcodeId() != null) {
-            Qrcode qrcode = RepositoryObjectConverter
-                    .toDomain(qrcodeMapper.selectById(user.getQrcodeId()), Qrcode.class);
+            Qrcode qrcode = qrcodeConverter.toEntity(qrcodeMapper.selectById(user.getQrcodeId()));
             if (qrcode != null && qrcode.getFileId() != null) {
-                File wechatQrCode = RepositoryObjectConverter
-                        .toDomain(fileMapper.selectById(qrcode.getFileId()), File.class);
+                File wechatQrCode = fileConverter.toEntity(fileMapper.selectById(qrcode.getFileId()));
                 wechatQrCodeUrl = wechatQrCode != null ? wechatQrCode.getUrl() : null;
             }
         }
@@ -200,26 +172,62 @@ public class MemberRepositoryImpl implements MemberRepository {
                 user.getAssessmentGradeYear());
         String roleName = user.getRoleId() != null ? roleIdToNameMap.get(user.getRoleId()) : null;
 
-        RoleType roleType = roleName != null ? RoleType.fromName(roleName) : null;
+        return converter.toEntity(user, collegeName, wechatQrCodeUrl, roleName, enrollmentYear);
+    }
 
-        return MemberVO.builder()
-                .id(user.getId())
-                .studentId(user.getStudentId())
-                .username(user.getUsername())
-                .nickname(user.getNickname())
-                .direction(user.getDirection())
-                .job(user.getJob())
-                .avatarFileId(user.getAvatarId())
-                .college(collegeName)
-                .major(user.getMajor())
-                .gender(user.getGender())
-                .role(roleType)
-                .bio(user.getBio())
-                .githubUsername(user.getGithubUsername())
-                .wechatQrcode(wechatQrCodeUrl)
-                .enrollmentYear(enrollmentYear)
-                .assessmentGradeYear(user.getAssessmentGradeYear())
-                .roleName(roleName)
+    private User toUser(UserDO dataObject) {
+        if (dataObject == null) {
+            return null;
+        }
+        return User.builder()
+                .id(dataObject.getId())
+                .studentId(dataObject.getStudentId())
+                .email(dataObject.getEmail())
+                .roleId(dataObject.getRoleId())
+                .password(dataObject.getPassword())
+                .username(dataObject.getUsername())
+                .nickname(dataObject.getNickname())
+                .collegeId(dataObject.getCollegeId())
+                .major(dataObject.getMajor())
+                .assessmentGradeYear(dataObject.getAssessmentGradeYear())
+                .direction(dataObject.getDirection())
+                .gender(dataObject.getGender())
+                .job(dataObject.getJob())
+                .avatarId(dataObject.getAvatarId())
+                .disable(dataObject.getDisable())
+                .qrcodeId(dataObject.getQrcodeId())
+                .githubId(dataObject.getGithubId())
+                .githubUsername(dataObject.getGithubUsername())
+                .internalReferralCode(dataObject.getInternalReferralCode())
+                .bio(dataObject.getBio())
                 .build();
+    }
+
+    private List<User> toUserList(List<UserDO> dataObjects) {
+        if (dataObjects == null) {
+            return Collections.emptyList();
+        }
+        return dataObjects.stream()
+                .map(this::toUser)
+                .toList();
+    }
+
+    private Role toRole(RoleDO dataObject) {
+        if (dataObject == null) {
+            return null;
+        }
+        return Role.builder()
+                .id(dataObject.getId())
+                .name(dataObject.getName())
+                .build();
+    }
+
+    private List<Role> toRoleList(List<RoleDO> dataObjects) {
+        if (dataObjects == null) {
+            return Collections.emptyList();
+        }
+        return dataObjects.stream()
+                .map(this::toRole)
+                .toList();
     }
 }

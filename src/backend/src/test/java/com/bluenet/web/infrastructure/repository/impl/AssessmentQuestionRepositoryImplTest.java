@@ -1,5 +1,6 @@
 package com.bluenet.web.infrastructure.repository.impl;
 
+import com.bluenet.web.infrastructure.repository.converter.AssessmentQuestionRepositoryConverter;
 import com.bluenet.web.infrastructure.repository.dataobject.*;
 
 import com.bluenet.web.testsupport.RepositoryTestObjects;
@@ -15,7 +16,6 @@ import java.util.Optional;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bluenet.web.domain.model.entity.AssessmentQuestion;
 import com.bluenet.web.domain.model.enumerate.QuestionType;
-import com.bluenet.web.domain.model.vo.AssessmentQuestionVO;
 import com.bluenet.web.infrastructure.repository.mapper.AssessmentQuestionMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -23,6 +23,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Pageable;
 
@@ -33,6 +34,9 @@ class AssessmentQuestionRepositoryImplTest {
     @Mock
     private AssessmentQuestionMapper assessmentQuestionMapper;
 
+    @Spy
+    private AssessmentQuestionRepositoryConverter assessmentQuestionRepositoryConverter = new AssessmentQuestionRepositoryConverter();
+
     @InjectMocks
     private AssessmentQuestionRepositoryImpl assessmentQuestionRepository;
 
@@ -40,14 +44,15 @@ class AssessmentQuestionRepositoryImplTest {
     private static final Long TEST_TIME_ID = 100L;
 
     private AssessmentQuestion createTestEntity() {
-        AssessmentQuestion entity = new AssessmentQuestion();
-        entity.setId(TEST_ID);
-        entity.setAssessmentTimeId(TEST_TIME_ID);
-        entity.setQuestionNo(1);
-        entity.setQuestionType(QuestionType.SINGLE_CHOICE);
-        entity.setTitle("测试题目");
-        entity.setScore(BigDecimal.TEN);
-        return entity;
+        return AssessmentQuestion.reconstruct(
+                TEST_ID,
+                TEST_TIME_ID,
+                1,
+                QuestionType.SINGLE_CHOICE,
+                "测试题目",
+                null,
+                null,
+                BigDecimal.TEN);
     }
 
     @Nested
@@ -58,11 +63,15 @@ class AssessmentQuestionRepositoryImplTest {
         @DisplayName("正常分页查询：应返回按questionNo升序的分页结果")
         void findAllByTimeId_withData_shouldReturnPagedResult() {
             AssessmentQuestion q1 = createTestEntity();
-            q1.setId(1L);
-            q1.setQuestionNo(1);
-            AssessmentQuestion q2 = createTestEntity();
-            q2.setId(2L);
-            q2.setQuestionNo(2);
+            AssessmentQuestion q2 = AssessmentQuestion.reconstruct(
+                    2L,
+                    TEST_TIME_ID,
+                    2,
+                    QuestionType.SINGLE_CHOICE,
+                    "测试题目2",
+                    null,
+                    null,
+                    BigDecimal.TEN);
 
             Page<AssessmentQuestionDO> mockPage = new Page<>(1, 10, 2);
             mockPage.setRecords(
@@ -73,7 +82,7 @@ class AssessmentQuestionRepositoryImplTest {
             when(assessmentQuestionMapper.selectPageByAssessmentTimeId(any(Page.class), eq(TEST_TIME_ID)))
                     .thenReturn(mockPage);
 
-            org.springframework.data.domain.Page<AssessmentQuestionVO> result = assessmentQuestionRepository
+            org.springframework.data.domain.Page<AssessmentQuestion> result = assessmentQuestionRepository
                     .findAllByTimeId(TEST_TIME_ID, Pageable.ofSize(10));
 
             assertEquals(2, result.getContent().size());
@@ -90,7 +99,7 @@ class AssessmentQuestionRepositoryImplTest {
             when(assessmentQuestionMapper.selectPageByAssessmentTimeId(any(Page.class), eq(TEST_TIME_ID)))
                     .thenReturn(mockPage);
 
-            org.springframework.data.domain.Page<AssessmentQuestionVO> result = assessmentQuestionRepository
+            org.springframework.data.domain.Page<AssessmentQuestion> result = assessmentQuestionRepository
                     .findAllByTimeId(TEST_TIME_ID, Pageable.ofSize(10));
 
             assertTrue(result.getContent().isEmpty());
@@ -105,15 +114,19 @@ class AssessmentQuestionRepositoryImplTest {
         @Test
         @DisplayName("正常更新：应调用mapper更新并返回影响行数")
         void update_withExistingQuestion_shouldUpdateSuccessfully() {
-            AssessmentQuestionVO vo = AssessmentQuestionVO.builder()
-                    .id(TEST_ID)
-                    .title("更新后的标题")
-                    .score(BigDecimal.valueOf(20))
-                    .build();
+            AssessmentQuestion entity = AssessmentQuestion.reconstruct(
+                    TEST_ID,
+                    TEST_TIME_ID,
+                    1,
+                    QuestionType.SINGLE_CHOICE,
+                    "更新后的标题",
+                    null,
+                    null,
+                    BigDecimal.valueOf(20));
 
             when(assessmentQuestionMapper.updateById(any(AssessmentQuestionDO.class))).thenReturn(1);
 
-            assessmentQuestionRepository.update(vo);
+            assessmentQuestionRepository.update(entity);
 
             verify(assessmentQuestionMapper).updateById(any(AssessmentQuestionDO.class));
         }
@@ -121,14 +134,19 @@ class AssessmentQuestionRepositoryImplTest {
         @Test
         @DisplayName("更新不存在的考题：影响行数为0")
         void update_nonExistingQuestion_shouldReturnZero() {
-            AssessmentQuestionVO vo = AssessmentQuestionVO.builder()
-                    .id(999L)
-                    .title("不存在的题目")
-                    .build();
+            AssessmentQuestion entity = AssessmentQuestion.reconstruct(
+                    999L,
+                    TEST_TIME_ID,
+                    1,
+                    QuestionType.SINGLE_CHOICE,
+                    "不存在的题目",
+                    null,
+                    null,
+                    null);
 
             when(assessmentQuestionMapper.updateById(any(AssessmentQuestionDO.class))).thenReturn(0);
 
-            assessmentQuestionRepository.update(vo);
+            assessmentQuestionRepository.update(entity);
 
             verify(assessmentQuestionMapper).updateById(any(AssessmentQuestionDO.class));
         }
@@ -192,7 +210,7 @@ class AssessmentQuestionRepositoryImplTest {
             when(assessmentQuestionMapper.selectByAssessmentTimeIdAndQuestionNo(TEST_TIME_ID, 1))
                     .thenReturn(RepositoryTestObjects.toDataObject(createTestEntity(), AssessmentQuestionDO.class));
 
-            Optional<AssessmentQuestionVO> result = assessmentQuestionRepository
+            Optional<AssessmentQuestion> result = assessmentQuestionRepository
                     .findByTimeIdAndQuestionNo(TEST_TIME_ID, 1);
 
             assertTrue(result.isPresent());
@@ -204,7 +222,7 @@ class AssessmentQuestionRepositoryImplTest {
         void findByTimeIdAndQuestionNo_notExisting_shouldReturnEmpty() {
             when(assessmentQuestionMapper.selectByAssessmentTimeIdAndQuestionNo(TEST_TIME_ID, 99)).thenReturn(null);
 
-            Optional<AssessmentQuestionVO> result = assessmentQuestionRepository
+            Optional<AssessmentQuestion> result = assessmentQuestionRepository
                     .findByTimeIdAndQuestionNo(TEST_TIME_ID, 99);
 
             assertTrue(result.isEmpty());

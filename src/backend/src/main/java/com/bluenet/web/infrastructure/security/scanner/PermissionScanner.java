@@ -5,7 +5,7 @@ import com.bluenet.web.infrastructure.repository.dataobject.PermissionDO;
 import com.bluenet.web.infrastructure.repository.dataobject.RolePermissionDO;
 import com.bluenet.web.infrastructure.repository.mapper.PermissionMapper;
 import com.bluenet.web.infrastructure.repository.mapper.RolePermissionMapper;
-import com.bluenet.web.infrastructure.repository.support.RepositoryObjectConverter;
+import com.bluenet.web.infrastructure.repository.converter.PermissionRepositoryConverter;
 import com.bluenet.web.infrastructure.security.util.PermissionResolver;
 import com.bluenet.web.infrastructure.security.util.PermissionValidator;
 import org.slf4j.Logger;
@@ -34,14 +34,17 @@ public class PermissionScanner implements InitializingBean {
     private final RequestMappingHandlerMapping handlerMapping;
     private final PermissionMapper permissionMapper;
     private final RolePermissionMapper rolePermissionMapper;
+    private final PermissionRepositoryConverter permissionRepositoryConverter;
 
     public PermissionScanner(
             @Qualifier("requestMappingHandlerMapping") RequestMappingHandlerMapping handlerMapping,
             PermissionMapper permissionMapper,
-            RolePermissionMapper rolePermissionMapper) {
+            RolePermissionMapper rolePermissionMapper,
+            PermissionRepositoryConverter permissionRepositoryConverter) {
         this.handlerMapping = handlerMapping;
         this.permissionMapper = permissionMapper;
         this.rolePermissionMapper = rolePermissionMapper;
+        this.permissionRepositoryConverter = permissionRepositoryConverter;
     }
 
     @Override
@@ -71,7 +74,7 @@ public class PermissionScanner implements InitializingBean {
         List<Permission> existingPermissions = permissionMapper.selectList(null)
                 .stream()
                 // 扫描器内部沿用领域对象做差异比较，Mapper 只暴露 PermissionDO。
-                .map(permission -> RepositoryObjectConverter.copy(permission, Permission.class))
+                .map(permissionRepositoryConverter::toEntity)
                 .toList();
         Map<String, Permission> existingMap = existingPermissions.stream()
                 .collect(Collectors.toMap(Permission::getValue, p -> p, (p1, p2) -> p1));

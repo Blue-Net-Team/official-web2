@@ -1,13 +1,10 @@
 package com.bluenet.web.infrastructure.repository.impl;
 
-import com.bluenet.web.infrastructure.repository.support.RepositoryObjectConverter;
-
-import com.bluenet.web.infrastructure.repository.dataobject.*;
-
 import com.bluenet.web.domain.model.entity.Qrcode;
 import com.bluenet.web.domain.model.enumerate.QrcodeType;
-import com.bluenet.web.domain.model.vo.QrcodeVO;
 import com.bluenet.web.domain.repository.QrcodeRepository;
+import com.bluenet.web.infrastructure.repository.converter.QrcodeRepositoryConverter;
+import com.bluenet.web.infrastructure.repository.dataobject.QrcodeDO;
 import com.bluenet.web.infrastructure.repository.mapper.QrcodeMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,25 +22,23 @@ import java.util.Optional;
 public class QrcodeRepositoryImpl implements QrcodeRepository {
 
     private final QrcodeMapper qrcodeMapper;
+    private final QrcodeRepositoryConverter converter;
 
     /**
      * 保存新的二维码 记录。
      *
-     * @param qrcodeVO
-     *            二维码视图对象。
+     * @param qrcode
+     *            二维码领域对象。
      */
     @Override
-    public void save(QrcodeVO qrcodeVO) {
-        log.info("保存二维码: {}", qrcodeVO);
-        Qrcode qrcode = Qrcode.builder()
-                .id(qrcodeVO.getId())
-                .fileId(qrcodeVO.getFileId())
-                .type(qrcodeVO.getType())
-                .build();
+    public void save(Qrcode qrcode) {
+        log.info("保存二维码: {}", qrcode);
+        QrcodeDO dataObject = converter.toDataObject(qrcode);
         if (qrcode.getId() == null) {
-            RepositoryObjectConverter.insert(qrcodeMapper, qrcode, QrcodeDO.class);
+            qrcodeMapper.insert(dataObject);
+            qrcode.setId(dataObject.getId());
         } else {
-            RepositoryObjectConverter.updateById(qrcodeMapper, qrcode, QrcodeDO.class);
+            qrcodeMapper.updateById(dataObject);
         }
     }
 
@@ -56,7 +51,7 @@ public class QrcodeRepositoryImpl implements QrcodeRepository {
      */
     @Override
     public Optional<Qrcode> findById(Long id) {
-        Qrcode qrcode = RepositoryObjectConverter.toDomain(qrcodeMapper.selectById(id), Qrcode.class);
+        Qrcode qrcode = converter.toEntity(qrcodeMapper.selectById(id));
         if (qrcode == null) {
             log.warn("二维码不存在: id={}", id);
             return Optional.empty();
@@ -73,7 +68,7 @@ public class QrcodeRepositoryImpl implements QrcodeRepository {
      */
     @Override
     public Optional<Qrcode> findByFileId(Long fileId) {
-        Qrcode qrcode = RepositoryObjectConverter.toDomain(qrcodeMapper.selectByFileId(fileId), Qrcode.class);
+        Qrcode qrcode = converter.toEntity(qrcodeMapper.selectByFileId(fileId));
         if (qrcode == null) {
             log.warn("二维码不存在: fileId={}", fileId);
             return Optional.empty();
@@ -90,7 +85,7 @@ public class QrcodeRepositoryImpl implements QrcodeRepository {
      */
     @Override
     public List<Qrcode> findByType(QrcodeType type) {
-        return RepositoryObjectConverter.toDomainList(qrcodeMapper.selectByType(type), Qrcode.class);
+        return converter.toEntityList(qrcodeMapper.selectByType(type));
     }
 
     /**
@@ -105,25 +100,4 @@ public class QrcodeRepositoryImpl implements QrcodeRepository {
         log.info("删除二维码: id={}", id);
     }
 
-    /**
-     * 在二维码 的持久层对象、领域对象和视图对象之间转换。
-     *
-     * @param qrcode
-     *            二维码领域对象或视图对象。
-     * @return 转换后的目标模型对象。
-     */
-    private QrcodeVO convertToVO(Qrcode qrcode) {
-        return QrcodeVO.builder().id(qrcode.getId()).fileId(qrcode.getFileId()).type(qrcode.getType()).build();
-    }
-
-    /**
-     * 在二维码 的持久层对象、领域对象和视图对象之间转换。
-     *
-     * @param qrcodeVO
-     *            二维码视图对象。
-     * @return 转换后的目标模型对象。
-     */
-    private Qrcode convertToEntity(QrcodeVO qrcodeVO) {
-        return Qrcode.builder().id(qrcodeVO.getId()).fileId(qrcodeVO.getFileId()).type(qrcodeVO.getType()).build();
-    }
 }

@@ -1,5 +1,7 @@
 package com.bluenet.web.infrastructure.repository.impl;
 
+import com.bluenet.web.infrastructure.repository.converter.CollegeRepositoryConverter;
+import com.bluenet.web.infrastructure.repository.converter.EnrollRepositoryConverter;
 import com.bluenet.web.infrastructure.repository.dataobject.*;
 
 import com.bluenet.web.testsupport.RepositoryTestObjects;
@@ -9,11 +11,11 @@ import static org.mockito.Mockito.*;
 
 import java.util.*;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
@@ -25,9 +27,7 @@ import com.bluenet.web.domain.model.entity.College;
 import com.bluenet.web.domain.model.entity.Enroll;
 import com.bluenet.web.domain.model.enumerate.Direction;
 import com.bluenet.web.domain.model.enumerate.EnrollStatus;
-import com.bluenet.web.domain.model.vo.EnrollBriefVO;
 import com.bluenet.web.domain.model.vo.EnrollStatisticsVO;
-import com.bluenet.web.domain.model.vo.EnrollVO;
 import com.bluenet.web.infrastructure.repository.dataobject.UserDO;
 import com.bluenet.web.infrastructure.repository.mapper.CollegeMapper;
 import com.bluenet.web.infrastructure.repository.mapper.EnrollMapper;
@@ -46,7 +46,6 @@ class EnrollRepositoryImplTest {
     @Mock
     private UserMapper userMapper;
 
-    @InjectMocks
     private EnrollRepositoryImpl enrollRepository;
 
     private static final Long TEST_ID = 1L;
@@ -59,25 +58,35 @@ class EnrollRepositoryImplTest {
     private static final Long TEST_AVATAR_ID = 100L;
     private static final String TEST_REFERRAL_CODE = "ABC12345";
 
+    @BeforeEach
+    void setUp() {
+        enrollRepository = new EnrollRepositoryImpl(
+                enrollMapper, collegeMapper, userMapper, new EnrollRepositoryConverter(),
+                new CollegeRepositoryConverter());
+    }
+
     private Enroll createTestEnroll() {
-        return Enroll.builder()
-                .id(TEST_ID)
-                .username(TEST_USERNAME)
-                .studentId(TEST_STUDENT_ID)
-                .collegeId(TEST_COLLEGE_ID)
-                .major(TEST_MAJOR)
-                .direction(TEST_DIRECTION)
-                .avatarId(TEST_AVATAR_ID)
-                .status(EnrollStatus.PENDING)
-                .internalReferralCode(TEST_REFERRAL_CODE)
-                .build();
+        return Enroll.reconstruct(
+                TEST_ID,
+                TEST_USERNAME,
+                TEST_STUDENT_ID,
+                "password",
+                TEST_REFERRAL_CODE,
+                TEST_COLLEGE_ID,
+                TEST_MAJOR,
+                null,
+                TEST_DIRECTION,
+                TEST_AVATAR_ID,
+                EnrollStatus.PENDING,
+                null,
+                null,
+                null,
+                null,
+                null);
     }
 
     private College createTestCollege() {
-        return College.builder()
-                .id(TEST_COLLEGE_ID)
-                .name(TEST_COLLEGE_NAME)
-                .build();
+        return College.reconstruct(TEST_COLLEGE_ID, TEST_COLLEGE_NAME);
     }
 
     @Nested
@@ -85,8 +94,8 @@ class EnrollRepositoryImplTest {
     class FindByIdTests {
 
         @Test
-        @DisplayName("正常情况：应返回EnrollVO")
-        void findById_existingEnroll_shouldReturnEnrollVO() {
+        @DisplayName("正常情况：应返回Enroll")
+        void findById_existingEnroll_shouldReturnEnroll() {
             Enroll enroll = createTestEnroll();
             College college = createTestCollege();
 
@@ -95,14 +104,14 @@ class EnrollRepositoryImplTest {
             when(collegeMapper.selectById(TEST_COLLEGE_ID))
                     .thenReturn(RepositoryTestObjects.toDataObject(college, CollegeDO.class));
 
-            Optional<EnrollVO> result = enrollRepository.findById(TEST_ID);
+            Optional<Enroll> result = enrollRepository.findById(TEST_ID);
 
             assertTrue(result.isPresent());
             assertEquals(TEST_ID, result.get().getId());
             assertEquals(TEST_USERNAME, result.get().getUsername());
             assertEquals(TEST_STUDENT_ID, result.get().getStudentId());
             assertEquals(TEST_COLLEGE_NAME, result.get().getCollegeName());
-            assertEquals(TEST_AVATAR_ID, result.get().getAvatarFileId());
+            assertEquals(TEST_AVATAR_ID, result.get().getAvatarId());
             verify(enrollMapper).selectById(TEST_ID);
             verify(collegeMapper).selectById(TEST_COLLEGE_ID);
         }
@@ -112,7 +121,7 @@ class EnrollRepositoryImplTest {
         void findById_nonExistingEnroll_shouldReturnEmpty() {
             when(enrollMapper.selectById(TEST_ID)).thenReturn(RepositoryTestObjects.toDataObject(null, EnrollDO.class));
 
-            Optional<EnrollVO> result = enrollRepository.findById(TEST_ID);
+            Optional<Enroll> result = enrollRepository.findById(TEST_ID);
 
             assertTrue(result.isEmpty());
             verify(enrollMapper).selectById(TEST_ID);
@@ -129,7 +138,7 @@ class EnrollRepositoryImplTest {
             when(collegeMapper.selectById(TEST_COLLEGE_ID))
                     .thenReturn(RepositoryTestObjects.toDataObject(null, CollegeDO.class));
 
-            Optional<EnrollVO> result = enrollRepository.findById(TEST_ID);
+            Optional<Enroll> result = enrollRepository.findById(TEST_ID);
 
             assertTrue(result.isPresent());
             assertNull(result.get().getCollegeName());
@@ -141,8 +150,8 @@ class EnrollRepositoryImplTest {
     class FindByStudentIdTests {
 
         @Test
-        @DisplayName("正常情况：应返回EnrollVO")
-        void findByStudentId_existingEnroll_shouldReturnEnrollVO() {
+        @DisplayName("正常情况：应返回Enroll")
+        void findByStudentId_existingEnroll_shouldReturnEnroll() {
             Enroll enroll = createTestEnroll();
             College college = createTestCollege();
 
@@ -151,7 +160,7 @@ class EnrollRepositoryImplTest {
             when(collegeMapper.selectById(TEST_COLLEGE_ID))
                     .thenReturn(RepositoryTestObjects.toDataObject(college, CollegeDO.class));
 
-            Optional<EnrollVO> result = enrollRepository.findByStudentId(TEST_STUDENT_ID);
+            Optional<Enroll> result = enrollRepository.findByStudentId(TEST_STUDENT_ID);
 
             assertTrue(result.isPresent());
             assertEquals(TEST_STUDENT_ID, result.get().getStudentId());
@@ -164,7 +173,7 @@ class EnrollRepositoryImplTest {
             when(enrollMapper.selectByStudentId(TEST_STUDENT_ID))
                     .thenReturn(RepositoryTestObjects.toDataObject(null, EnrollDO.class));
 
-            Optional<EnrollVO> result = enrollRepository.findByStudentId(TEST_STUDENT_ID);
+            Optional<Enroll> result = enrollRepository.findByStudentId(TEST_STUDENT_ID);
 
             assertTrue(result.isEmpty());
         }
@@ -200,27 +209,30 @@ class EnrollRepositoryImplTest {
     class SaveTests {
 
         @Test
-        @DisplayName("正常保存：应返回生成的ID")
-        void save_validEnrollVO_shouldReturnId() {
-            EnrollVO vo = EnrollVO.builder()
-                    .username(TEST_USERNAME)
-                    .studentId(TEST_STUDENT_ID)
-                    .collegeId(TEST_COLLEGE_ID)
-                    .major(TEST_MAJOR)
-                    .direction(TEST_DIRECTION)
-                    .avatarFileId(TEST_AVATAR_ID)
-                    .status(EnrollStatus.PENDING)
-                    .build();
+        @DisplayName("正常保存：应设置生成的ID")
+        void validEnroll_shouldSetId() {
+            Enroll enroll = Enroll.create(
+                    TEST_USERNAME,
+                    TEST_STUDENT_ID,
+                    "password",
+                    null,
+                    TEST_COLLEGE_ID,
+                    TEST_MAJOR,
+                    null,
+                    TEST_DIRECTION,
+                    TEST_AVATAR_ID,
+                    null,
+                    null);
 
             when(enrollMapper.insert(any(EnrollDO.class))).thenAnswer(invocation -> {
-                EnrollDO enroll = invocation.getArgument(0);
-                enroll.setId(TEST_ID);
+                EnrollDO doObj = invocation.getArgument(0);
+                doObj.setId(TEST_ID);
                 return 1;
             });
 
-            Long result = enrollRepository.save(vo);
+            enrollRepository.save(enroll);
 
-            assertEquals(TEST_ID, result);
+            assertEquals(TEST_ID, enroll.getId());
             verify(enrollMapper).insert(any(EnrollDO.class));
         }
     }
@@ -231,17 +243,28 @@ class EnrollRepositoryImplTest {
 
         @Test
         @DisplayName("正常更新：应调用mapper更新")
-        void update_validEnrollVO_shouldCallMapperUpdate() {
-            EnrollVO vo = EnrollVO.builder()
-                    .id(TEST_ID)
-                    .username(TEST_USERNAME)
-                    .studentId(TEST_STUDENT_ID)
-                    .status(EnrollStatus.APPROVED)
-                    .build();
+        void update_validEnroll_shouldCallMapperUpdate() {
+            Enroll enroll = Enroll.reconstruct(
+                    TEST_ID,
+                    TEST_USERNAME,
+                    TEST_STUDENT_ID,
+                    "password",
+                    null,
+                    TEST_COLLEGE_ID,
+                    TEST_MAJOR,
+                    null,
+                    TEST_DIRECTION,
+                    TEST_AVATAR_ID,
+                    EnrollStatus.APPROVED,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null);
 
             when(enrollMapper.updateById(any(EnrollDO.class))).thenReturn(1);
 
-            enrollRepository.update(vo);
+            enrollRepository.update(enroll);
 
             verify(enrollMapper).updateById(any(EnrollDO.class));
         }
@@ -266,7 +289,7 @@ class EnrollRepositoryImplTest {
             when(collegeMapper.selectById(TEST_COLLEGE_ID))
                     .thenReturn(RepositoryTestObjects.toDataObject(createTestCollege(), CollegeDO.class));
 
-            Page<EnrollBriefVO> result = enrollRepository.search(null, null, null, pageable);
+            Page<Enroll> result = enrollRepository.search(null, null, null, pageable);
 
             assertNotNull(result);
             assertEquals(1, result.getTotalElements());
@@ -290,7 +313,7 @@ class EnrollRepositoryImplTest {
             when(collegeMapper.selectById(TEST_COLLEGE_ID))
                     .thenReturn(RepositoryTestObjects.toDataObject(createTestCollege(), CollegeDO.class));
 
-            Page<EnrollBriefVO> result = enrollRepository.search(null, EnrollStatus.PENDING, null, pageable);
+            Page<Enroll> result = enrollRepository.search(null, EnrollStatus.PENDING, null, pageable);
 
             assertNotNull(result);
             assertEquals(1, result.getTotalElements());
@@ -312,7 +335,7 @@ class EnrollRepositoryImplTest {
             when(collegeMapper.selectById(TEST_COLLEGE_ID))
                     .thenReturn(RepositoryTestObjects.toDataObject(createTestCollege(), CollegeDO.class));
 
-            Page<EnrollBriefVO> result = enrollRepository.search(null, null, TEST_DIRECTION, pageable);
+            Page<Enroll> result = enrollRepository.search(null, null, TEST_DIRECTION, pageable);
 
             assertNotNull(result);
             assertEquals(1, result.getTotalElements());
@@ -333,7 +356,7 @@ class EnrollRepositoryImplTest {
             when(collegeMapper.selectById(TEST_COLLEGE_ID))
                     .thenReturn(RepositoryTestObjects.toDataObject(createTestCollege(), CollegeDO.class));
 
-            Page<EnrollBriefVO> result = enrollRepository.search("张三", null, null, pageable);
+            Page<Enroll> result = enrollRepository.search("张三", null, null, pageable);
 
             assertNotNull(result);
             assertEquals(1, result.getTotalElements());
@@ -354,7 +377,7 @@ class EnrollRepositoryImplTest {
             when(collegeMapper.selectById(TEST_COLLEGE_ID))
                     .thenReturn(RepositoryTestObjects.toDataObject(createTestCollege(), CollegeDO.class));
 
-            Page<EnrollBriefVO> result = enrollRepository.search("张三", EnrollStatus.PENDING, TEST_DIRECTION, pageable);
+            Page<Enroll> result = enrollRepository.search("张三", EnrollStatus.PENDING, TEST_DIRECTION, pageable);
 
             assertNotNull(result);
             assertEquals(1, result.getTotalElements());
@@ -371,7 +394,7 @@ class EnrollRepositoryImplTest {
 
             when(enrollMapper.selectPageByConditions(any(IPage.class), any(), any(), any())).thenReturn(mockPage);
 
-            Page<EnrollBriefVO> result = enrollRepository.search("不存在", null, null, pageable);
+            Page<Enroll> result = enrollRepository.search("不存在", null, null, pageable);
 
             assertNotNull(result);
             assertTrue(result.isEmpty());
@@ -422,7 +445,6 @@ class EnrollRepositoryImplTest {
             Enroll enroll = createTestEnroll();
             College college = createTestCollege();
             UserDO referralUser = new UserDO();
-            // Mapper mock 返回持久层 DO，RepositoryImpl 再按领域模型读取推荐人信息。
             referralUser.setId(999L);
             referralUser.setUsername("推荐人");
             referralUser.setInternalReferralCode(TEST_REFERRAL_CODE);
@@ -433,7 +455,7 @@ class EnrollRepositoryImplTest {
                     .thenReturn(RepositoryTestObjects.toDataObject(college, CollegeDO.class));
             when(userMapper.selectByInternalReferralCode(TEST_REFERRAL_CODE)).thenReturn(referralUser);
 
-            Optional<EnrollVO> result = enrollRepository.findById(TEST_ID);
+            Optional<Enroll> result = enrollRepository.findById(TEST_ID);
 
             assertTrue(result.isPresent());
             assertEquals("推荐人", result.get().getReferralUserName());
@@ -453,7 +475,7 @@ class EnrollRepositoryImplTest {
                     .thenReturn(RepositoryTestObjects.toDataObject(college, CollegeDO.class));
             when(userMapper.selectByInternalReferralCode(TEST_REFERRAL_CODE)).thenReturn(null);
 
-            Optional<EnrollVO> result = enrollRepository.findById(TEST_ID);
+            Optional<Enroll> result = enrollRepository.findById(TEST_ID);
 
             assertTrue(result.isPresent());
             assertNull(result.get().getReferralUserName());
@@ -473,7 +495,7 @@ class EnrollRepositoryImplTest {
             when(collegeMapper.selectById(TEST_COLLEGE_ID))
                     .thenReturn(RepositoryTestObjects.toDataObject(college, CollegeDO.class));
 
-            Optional<EnrollVO> result = enrollRepository.findById(TEST_ID);
+            Optional<Enroll> result = enrollRepository.findById(TEST_ID);
 
             assertTrue(result.isPresent());
             assertNull(result.get().getReferralUserName());

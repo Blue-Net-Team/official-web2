@@ -62,14 +62,27 @@ class AuthControllerGithubIntegrationTest extends BaseIntegrationTest {
             userMapper.deleteById(existing.getId());
         }
 
-        User user = new User();
-        user.setStudentId(TEST_STUDENT_ID);
-        user.setUsername("github_test_user");
-        user.setEmail("github_test@example.com");
-        user.setPassword(passwordEncoder.encode(TEST_PASSWORD));
-        user.setRoleId(1L);
-        user.setDisable(false);
-        user.setDirection(Direction.COMPUTER_VISION);
+        User user = User.reconstruct(
+                null,
+                TEST_STUDENT_ID,
+                "github_test@example.com",
+                1L,
+                passwordEncoder.encode(TEST_PASSWORD),
+                "github_test_user",
+                null,
+                null,
+                null,
+                null,
+                Direction.COMPUTER_VISION,
+                null,
+                null,
+                null,
+                false,
+                null,
+                null,
+                null,
+                null,
+                null);
         RepositoryTestObjects.insert(userMapper, user, UserDO.class);
     }
 

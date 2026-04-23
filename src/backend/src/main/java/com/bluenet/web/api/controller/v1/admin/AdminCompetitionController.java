@@ -2,7 +2,9 @@ package com.bluenet.web.api.controller.v1.admin;
 
 import com.bluenet.web.api.dto.ResponseMessage;
 import com.bluenet.web.api.dto.competition.*;
-import com.bluenet.web.application.service.CompetitionService;
+import com.bluenet.web.api.converter.competition.CompetitionRequestConverter;
+import com.bluenet.web.application.CompetitionResult;
+import com.bluenet.web.application.service.CompetitionAppService;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
 import com.bluenet.web.infrastructure.security.annotation.RequiresPermission;
 import io.swagger.v3.oas.annotations.Operation;
@@ -24,7 +26,8 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 @SecurityRequirement(name = "bearer-jwt")
 public class AdminCompetitionController {
-    private final CompetitionService competitionService;
+    private final CompetitionAppService competitionAppService;
+    private final CompetitionRequestConverter competitionRequestConverter;
 
     @Operation(summary = "创建竞赛", description = "创建新的竞赛")
     @ApiResponses({
@@ -35,8 +38,9 @@ public class AdminCompetitionController {
     public ResponseMessage<CompetitionResponseDTO> createCompetition(
             @Valid @RequestBody CompetitionRequestDTO request) {
         try {
-            CompetitionResponseDTO created = competitionService.createCompetition(request);
-            return ResponseMessage.success(created);
+            CompetitionResult result = competitionAppService.createCompetition(
+                    competitionRequestConverter.toCreateCommand(request));
+            return ResponseMessage.success(toResponseDTO(result));
         } catch (IllegalArgumentException e) {
             return ResponseMessage.error(400, e.getMessage());
         }
@@ -52,8 +56,9 @@ public class AdminCompetitionController {
             @Parameter(description = "竞赛ID", required = true) @PathVariable Long id,
             @Valid @RequestBody CompetitionRequestDTO request) {
         try {
-            CompetitionResponseDTO updated = competitionService.updateCompetition(id, request);
-            return ResponseMessage.success(updated);
+            CompetitionResult result = competitionAppService.updateCompetition(
+                    competitionRequestConverter.toUpdateCommand(id, request));
+            return ResponseMessage.success(toResponseDTO(result));
         } catch (IllegalArgumentException e) {
             return ResponseMessage.error(404, e.getMessage());
         }
@@ -68,7 +73,7 @@ public class AdminCompetitionController {
     public ResponseMessage<Void> deleteCompetition(
             @Parameter(description = "竞赛ID", required = true) @PathVariable Long id) {
         try {
-            competitionService.deleteCompetition(id);
+            competitionAppService.deleteCompetition(id);
             return ResponseMessage.success(null);
         } catch (IllegalArgumentException e) {
             return ResponseMessage.error(404, e.getMessage());
@@ -84,7 +89,7 @@ public class AdminCompetitionController {
     public ResponseMessage<Void> batchUpdateSortOrder(
             @Valid @RequestBody BatchSortRequestDTO request) {
         try {
-            competitionService.batchUpdateSortOrder(request);
+            competitionAppService.batchUpdateSortOrder(request);
             return ResponseMessage.success(null);
         } catch (IllegalArgumentException e) {
             return ResponseMessage.error(404, e.getMessage());
@@ -102,7 +107,7 @@ public class AdminCompetitionController {
             @Parameter(description = "竞赛ID", required = true) @PathVariable Long id,
             @Valid @RequestBody MoveCompetitionRequestDTO request) {
         try {
-            competitionService.moveCompetition(id, request);
+            competitionAppService.moveCompetition(competitionRequestConverter.toCommand(id, request));
             return ResponseMessage.success(null);
         } catch (IllegalArgumentException e) {
             String msg = e.getMessage();
@@ -113,4 +118,18 @@ public class AdminCompetitionController {
         }
     }
 
+    private CompetitionResponseDTO toResponseDTO(CompetitionResult result) {
+        return CompetitionResponseDTO.builder()
+                .id(result.id())
+                .name(result.name())
+                .shortName(result.shortName())
+                .level(result.level())
+                .month(result.month())
+                .organizer(result.organizer())
+                .summary(result.summary())
+                .logoFileId(result.logoFileId())
+                .coverFileId(result.coverFileId())
+                .sortOrder(result.sortOrder())
+                .build();
+    }
 }

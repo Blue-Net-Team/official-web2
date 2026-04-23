@@ -1,17 +1,15 @@
 package com.bluenet.web.api.controller.v1;
 
 import com.bluenet.web.api.dto.ResponseMessage;
-import com.bluenet.web.api.dto.auth.ResetPasswordRequestDTO;
-import com.bluenet.web.api.dto.auth.SendResetCodeRequestDTO;
-import com.bluenet.web.api.dto.auth.VerifyEmailRequestDTO;
-import com.bluenet.web.api.dto.auth.VerifyResetCodeRequestDTO;
-import com.bluenet.web.api.dto.auth.VerifyStudentRequestDTO;
-import com.bluenet.web.application.service.ResetPasswordService;
+import com.bluenet.web.api.dto.auth.*;
+import com.bluenet.web.api.converter.resetpassword.ResetPasswordRequestConverter;
+import com.bluenet.web.application.converter.ResetPasswordAppConverter;
+import com.bluenet.web.application.ResetPasswordResult;
+import com.bluenet.web.application.service.ResetPasswordAppService;
 import com.bluenet.web.domain.exception.BadRequest;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
 import com.bluenet.web.infrastructure.security.annotation.RateLimit;
 import com.bluenet.web.infrastructure.security.annotation.RequiresPermission;
-
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -34,7 +32,9 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class ResetPasswordController {
 
-    private final ResetPasswordService resetPasswordService;
+    private final ResetPasswordAppService resetPasswordAppService;
+    private final ResetPasswordRequestConverter resetPasswordRequestConverter;
+    private final ResetPasswordAppConverter resetPasswordAppConverter;
 
     @Operation(summary = "验证学号", description = "验证学号是否存在，返回 resetToken 用于后续步骤")
     @ApiResponses({
@@ -44,8 +44,9 @@ public class ResetPasswordController {
     @PostMapping("/verify-student")
     public ResponseMessage<String> verifyStudent(
             @Valid @RequestBody VerifyStudentRequestDTO requestDTO) {
-        String resetToken = resetPasswordService.verifyStudent(requestDTO.getStudentId());
-        return ResponseMessage.success(resetToken);
+        ResetPasswordResult.VerifyStudent result = resetPasswordAppService
+                .verifyStudent(resetPasswordRequestConverter.toCommand(requestDTO));
+        return ResponseMessage.success(resetPasswordAppConverter.toDTO(result));
     }
 
     @Operation(summary = "验证邮箱", description = "验证邮箱是否与学号关联")
@@ -56,10 +57,9 @@ public class ResetPasswordController {
     @PostMapping("/verify-email")
     public ResponseMessage<String> verifyEmail(
             @Valid @RequestBody VerifyEmailRequestDTO requestDTO) {
-        String resetToken = resetPasswordService.verifyEmail(
-                requestDTO.getResetToken(),
-                requestDTO.getEmail());
-        return ResponseMessage.success(resetToken);
+        ResetPasswordResult.VerifyEmail result = resetPasswordAppService
+                .verifyEmail(resetPasswordRequestConverter.toCommand(requestDTO));
+        return ResponseMessage.success(resetPasswordAppConverter.toDTO(result));
     }
 
     @Operation(summary = "发送验证码", description = "向已验证的邮箱发送6位验证码，有效期5分钟")
@@ -71,7 +71,7 @@ public class ResetPasswordController {
     @PostMapping("/send-code")
     public ResponseMessage<Void> sendCode(
             @Valid @RequestBody SendResetCodeRequestDTO requestDTO) {
-        resetPasswordService.sendCode(requestDTO.getResetToken());
+        resetPasswordAppService.sendCode(resetPasswordRequestConverter.toCommand(requestDTO));
         return ResponseMessage.success();
     }
 
@@ -83,7 +83,7 @@ public class ResetPasswordController {
     @PostMapping("/verify-code")
     public ResponseMessage<Void> verifyCode(
             @Valid @RequestBody VerifyResetCodeRequestDTO requestDTO) {
-        resetPasswordService.verifyCode(requestDTO.getResetToken(), requestDTO.getCode());
+        resetPasswordAppService.verifyCode(resetPasswordRequestConverter.toCommand(requestDTO));
         return ResponseMessage.success();
     }
 
@@ -98,9 +98,7 @@ public class ResetPasswordController {
         if (!requestDTO.getNewPassword().equals(requestDTO.getConfirmPassword())) {
             throw new BadRequest("新密码与确认密码不一致");
         }
-        resetPasswordService.resetPassword(
-                requestDTO.getResetToken(),
-                requestDTO.getNewPassword());
+        resetPasswordAppService.resetPassword(resetPasswordRequestConverter.toCommand(requestDTO));
         return ResponseMessage.success();
     }
 }

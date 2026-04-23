@@ -2,7 +2,9 @@ package com.bluenet.web.api.controller.v1.qrcode;
 
 import com.bluenet.web.api.dto.ResponseMessage;
 import com.bluenet.web.api.dto.qrcode.ConsultationQrcodeDTO;
-import com.bluenet.web.application.service.QrcodeService;
+import com.bluenet.web.application.QrcodeResult;
+import com.bluenet.web.application.converter.QrcodeAppConverter;
+import com.bluenet.web.application.service.QrcodeAppService;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
 import com.bluenet.web.infrastructure.security.annotation.RequiresPermission;
 import io.swagger.v3.oas.annotations.Operation;
@@ -26,13 +28,14 @@ import java.util.List;
 @RequiredArgsConstructor
 public class QrcodeController {
 
-    private final QrcodeService qrcodeService;
+    private final QrcodeAppService qrcodeAppService;
+    private final QrcodeAppConverter qrcodeAppConverter;
 
     @Operation(summary = "获取咨询群二维码列表", description = "获取所有咨询群二维码，公开接口")
     @RequiresPermission(name = "获取咨询群列表", value = "qrcode:consultation:list", access = AccessLevel.PUBLIC)
     @GetMapping("/consultation")
     public ResponseMessage<List<ConsultationQrcodeDTO>> getConsultationQrcodes() {
-        List<ConsultationQrcodeDTO> qrcodes = qrcodeService.getConsultationQrcodes();
-        return ResponseMessage.success(qrcodes);
+        List<QrcodeResult> results = qrcodeAppService.getConsultationQrcodes();
+        return ResponseMessage.success(qrcodeAppConverter.toDTOList(results));
     }
 }

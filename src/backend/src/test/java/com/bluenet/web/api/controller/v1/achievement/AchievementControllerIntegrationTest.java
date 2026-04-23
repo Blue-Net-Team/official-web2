@@ -64,14 +64,14 @@ class AchievementControllerIntegrationTest extends BaseIntegrationTest {
     }
 
     private Achievement createAchievement(String title, AchievementType type, AwardLevel awardLevel, int year) {
-        Achievement achievement = new Achievement();
-        achievement.setTitle(title);
-        achievement.setType(type);
-        achievement.setRelateTo("测试关联项");
-        achievement.setAchieveAt(LocalDate.of(year, 4, 15));
-        achievement.setAwardLevel(awardLevel);
-        achievement.setAwardName(awardLevel != null ? "测试奖项" : null);
-        achievement.setFileId(testFileId);
+        Achievement achievement = Achievement.create(
+                title,
+                type,
+                "测试关联项",
+                LocalDate.of(year, 4, 15),
+                awardLevel,
+                awardLevel != null ? "测试奖项" : null,
+                testFileId);
         RepositoryTestObjects.insert(achievementMapper, achievement, AchievementDO.class);
         return achievement;
     }

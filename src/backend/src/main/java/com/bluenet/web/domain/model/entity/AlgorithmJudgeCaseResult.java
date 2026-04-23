@@ -2,7 +2,9 @@ package com.bluenet.web.domain.model.entity;
 
 import com.bluenet.web.domain.model.enumerate.AlgorithmTestcaseType;
 import com.bluenet.web.domain.model.enumerate.JudgeCaseStatus;
+import lombok.AccessLevel;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
@@ -10,6 +12,7 @@ import java.time.LocalDateTime;
  * Stores the execution result for a single algorithm testcase.
  */
 @Data
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class AlgorithmJudgeCaseResult {
     /**
      * 当前对象在系统中的唯一标识。
@@ -71,4 +74,109 @@ public class AlgorithmJudgeCaseResult {
      * 记录创建时间。
      */
     private LocalDateTime createdAt;
+
+    private AlgorithmJudgeCaseResult(
+            Long id,
+            Long judgeJobId,
+            Integer caseNo,
+            AlgorithmTestcaseType testcaseType,
+            JudgeCaseStatus status,
+            String input,
+            String expectedOutput,
+            String actualOutput,
+            String stdout,
+            String stderr,
+            Integer timeUsedMs,
+            Integer memoryUsedKb,
+            String message,
+            Boolean visibleToCandidate,
+            LocalDateTime createdAt) {
+        this.id = id;
+        this.judgeJobId = judgeJobId;
+        this.caseNo = caseNo;
+        this.testcaseType = testcaseType;
+        this.status = status;
+        this.input = input;
+        this.expectedOutput = expectedOutput;
+        this.actualOutput = actualOutput;
+        this.stdout = stdout;
+        this.stderr = stderr;
+        this.timeUsedMs = timeUsedMs;
+        this.memoryUsedKb = memoryUsedKb;
+        this.message = message;
+        this.visibleToCandidate = visibleToCandidate;
+        this.createdAt = createdAt;
+    }
+
+    /**
+     * 构造新评测用例结果
+     */
+    public static AlgorithmJudgeCaseResult create(
+            Long judgeJobId,
+            Integer caseNo,
+            AlgorithmTestcaseType testcaseType,
+            JudgeCaseStatus status,
+            String input,
+            String expectedOutput,
+            String actualOutput,
+            String stdout,
+            String stderr,
+            Integer timeUsedMs,
+            Integer memoryUsedKb,
+            String message,
+            Boolean visibleToCandidate) {
+        return new AlgorithmJudgeCaseResult(
+                null,
+                judgeJobId,
+                caseNo,
+                testcaseType,
+                status,
+                input,
+                expectedOutput,
+                actualOutput,
+                stdout,
+                stderr,
+                timeUsedMs,
+                memoryUsedKb,
+                message,
+                visibleToCandidate,
+                LocalDateTime.now());
+    }
+
+    /**
+     * 从数据库重建 —— 跳过创建校验
+     */
+    public static AlgorithmJudgeCaseResult reconstruct(
+            Long id,
+            Long judgeJobId,
+            Integer caseNo,
+            AlgorithmTestcaseType testcaseType,
+            JudgeCaseStatus status,
+            String input,
+            String expectedOutput,
+            String actualOutput,
+            String stdout,
+            String stderr,
+            Integer timeUsedMs,
+            Integer memoryUsedKb,
+            String message,
+            Boolean visibleToCandidate,
+            LocalDateTime createdAt) {
+        return new AlgorithmJudgeCaseResult(
+                id,
+                judgeJobId,
+                caseNo,
+                testcaseType,
+                status,
+                input,
+                expectedOutput,
+                actualOutput,
+                stdout,
+                stderr,
+                timeUsedMs,
+                memoryUsedKb,
+                message,
+                visibleToCandidate,
+                createdAt);
+    }
 }

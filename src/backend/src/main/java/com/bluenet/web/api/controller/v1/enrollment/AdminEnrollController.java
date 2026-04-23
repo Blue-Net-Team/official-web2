@@ -2,7 +2,10 @@ package com.bluenet.web.api.controller.v1.enrollment;
 
 import com.bluenet.web.api.dto.ResponseMessage;
 import com.bluenet.web.api.dto.enrollment.*;
-import com.bluenet.web.application.service.EnrollService;
+import com.bluenet.web.api.converter.enroll.EnrollRequestConverter;
+import com.bluenet.web.application.converter.EnrollAppConverter;
+import com.bluenet.web.application.EnrollResult;
+import com.bluenet.web.application.service.EnrollAppService;
 import com.bluenet.web.domain.exception.DataNotFound;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
 import com.bluenet.web.infrastructure.security.annotation.RequiresPermission;
@@ -27,7 +30,9 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 @SecurityRequirement(name = "bearer-jwt")
 public class AdminEnrollController {
-    private final EnrollService enrollService;
+    private final EnrollAppService enrollAppService;
+    private final EnrollRequestConverter enrollRequestConverter;
+    private final EnrollAppConverter enrollAppConverter;
 
     @Operation(summary = "分页查询报名列表", description = "管理员分页查询报名列表，支持按状态、方向、关键词筛选")
     @ApiResponses({
@@ -42,28 +47,9 @@ public class AdminEnrollController {
             @Parameter(description = "方向筛选") @RequestParam(required = false) String direction,
             @Parameter(description = "关键词搜索（姓名/学号）") @RequestParam(required = false) String keyword) {
 
-        EnrollmentListQueryDTO query = EnrollmentListQueryDTO.builder()
-                .page(page)
-                .size(size)
-                .keyword(keyword)
-                .build();
-
-        if (status != null) {
-            try {
-                query.setStatus(com.bluenet.web.domain.model.enumerate.EnrollStatus.valueOf(status.toUpperCase()));
-            } catch (IllegalArgumentException ignored) {
-            }
-        }
-
-        if (direction != null) {
-            try {
-                query.setDirection(com.bluenet.web.domain.model.enumerate.Direction.valueOf(direction.toUpperCase()));
-            } catch (IllegalArgumentException ignored) {
-            }
-        }
-
-        Page<EnrollmentBriefDTO> result = enrollService.getEnrollmentList(query);
-        return ResponseMessage.success(result);
+        var command = enrollRequestConverter.toListCommand(page, size, keyword, status, direction);
+        Page<EnrollResult.Brief> result = enrollAppService.getEnrollmentList(command);
+        return ResponseMessage.success(enrollAppConverter.toBriefDTOPage(result));
     }
 
     @Operation(summary = "获取报名详情", description = "管理员获取单个报名的详细信息")
@@ -76,8 +62,8 @@ public class AdminEnrollController {
     public ResponseMessage<EnrollmentDetailDTO> getEnrollmentDetail(
             @Parameter(description = "报名ID", required = true) @PathVariable Long id) {
         try {
-            EnrollmentDetailDTO detail = enrollService.getEnrollmentDetail(id);
-            return ResponseMessage.success(detail);
+            EnrollResult.Detail detail = enrollAppService.getEnrollmentDetail(id);
+            return ResponseMessage.success(enrollAppConverter.toDetailDTO(detail));
         } catch (DataNotFound e) {
             return ResponseMessage.error(HttpStatus.NOT_FOUND.value(), e.getMessage());
         }
@@ -95,8 +81,9 @@ public class AdminEnrollController {
             @Parameter(description = "报名ID", required = true) @PathVariable Long id,
             @Valid @RequestBody(required = false) ApproveEnrollmentRequestDTO request) {
         try {
-            EnrollmentApprovalResultDTO result = enrollService.approveEnrollment(id, request);
-            return ResponseMessage.success("审核通过，账号已发放", result);
+            var command = enrollRequestConverter.toCommand(request);
+            EnrollResult.Approval result = enrollAppService.approveEnrollment(id, command);
+            return ResponseMessage.success("审核通过，账号已发放", enrollAppConverter.toApprovalDTO(result));
         } catch (DataNotFound e) {
             return ResponseMessage.error(HttpStatus.NOT_FOUND.value(), e.getMessage());
         }
@@ -114,8 +101,9 @@ public class AdminEnrollController {
             @Parameter(description = "报名ID", required = true) @PathVariable Long id,
             @RequestBody(required = false) RejectEnrollmentRequestDTO request) {
         try {
-            EnrollmentApprovalResultDTO result = enrollService.rejectEnrollment(id, request);
-            return ResponseMessage.success("已拒绝", result);
+            var command = enrollRequestConverter.toCommand(request);
+            EnrollResult.Approval result = enrollAppService.rejectEnrollment(id, command);
+            return ResponseMessage.success("已拒绝", enrollAppConverter.toApprovalDTO(result));
         } catch (DataNotFound e) {
             return ResponseMessage.error(HttpStatus.NOT_FOUND.value(), e.getMessage());
         }
@@ -128,7 +116,7 @@ public class AdminEnrollController {
     @RequiresPermission(name = "报名统计", value = "enrollment:statistics", access = AccessLevel.PROTECTED)
     @GetMapping("/statistics")
     public ResponseMessage<EnrollmentStatisticsDTO> getStatistics() {
-        EnrollmentStatisticsDTO statistics = enrollService.getStatistics();
-        return ResponseMessage.success(statistics);
+        EnrollResult.Statistics statistics = enrollAppService.getStatistics();
+        return ResponseMessage.success(enrollAppConverter.toStatisticsDTO(statistics));
     }
 }

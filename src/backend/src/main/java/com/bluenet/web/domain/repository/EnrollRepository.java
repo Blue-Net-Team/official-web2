@@ -1,83 +1,95 @@
 package com.bluenet.web.domain.repository;
 
+import com.bluenet.web.domain.model.entity.Enroll;
 import com.bluenet.web.domain.model.enumerate.Direction;
 import com.bluenet.web.domain.model.enumerate.EnrollStatus;
-import com.bluenet.web.domain.model.vo.EnrollBriefVO;
 import com.bluenet.web.domain.model.vo.EnrollStatisticsVO;
-import com.bluenet.web.domain.model.vo.EnrollVO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.util.Optional;
 
+/**
+ * 报名仓库接口
+ * <p>
+ * 负责报名数据的持久化操作，只操作 Entity，不暴露 VO 或 DTO
+ * </p>
+ */
 public interface EnrollRepository {
     /**
-     * 按主键查询报名申请 记录。
+     * 按主键查询报名申请记录。
      *
      * @param id
      *            业务记录主键。
-     * @return 查询到的报名申请 结果；不存在时为空。
+     * @return 查询到的报名实体；不存在时为空。
      */
-    Optional<EnrollVO> findById(Long id);
+    Optional<Enroll> findById(Long id);
+
     /**
-     * 按学号查询用户或报名申请。
+     * 按学号查询报名申请。
      *
      * @param studentId
-     *            学生学号，用于定位用户或报名申请。
-     * @return 查询到的报名申请 结果；不存在时为空。
+     *            学生学号。
+     * @return 查询到的报名实体；不存在时为空。
      */
-    Optional<EnrollVO> findByStudentId(String studentId);
+    Optional<Enroll> findByStudentId(String studentId);
+
     /**
-     * 判断是否存在满足条件的报名申请 记录。
+     * 判断是否存在满足条件的报名申请记录。
      *
      * @param studentId
-     *            学生学号，用于定位用户或报名申请。
+     *            学生学号。
      * @return 满足条件时返回 true，否则返回 false。
      */
     boolean existsByStudentId(String studentId);
+
     /**
-     * 保存新的报名申请 记录。
+     * 保存新的报名申请记录。
      *
      * @param enroll
-     *            报名申请领域对象。
-     * @return 新记录的主键。
+     *            报名实体。
      */
-    Long save(EnrollVO enroll);
+    void save(Enroll enroll);
+
     /**
-     * 更新已有报名申请 记录。
+     * 更新已有报名申请记录。
      *
      * @param enroll
-     *            报名申请领域对象。
+     *            报名实体（id 必须非空）。
      */
-    void update(EnrollVO enroll);
+    void update(Enroll enroll);
+
     /**
-     * 查询全部报名申请 记录。
+     * 查询全部报名申请记录。
      *
      * @param pageable
      *            Spring 分页请求对象。
-     * @return 分页后的报名申请 结果。
+     * @return 分页后的报名实体。
      */
-    Page<EnrollBriefVO> findAll(Pageable pageable);
+    Page<Enroll> findAll(Pageable pageable);
+
     /**
-     * 按业务状态查询报名申请 记录。
+     * 按业务状态查询报名申请记录。
      *
      * @param status
      *            业务状态过滤条件。
      * @param pageable
      *            Spring 分页请求对象。
-     * @return 分页后的报名申请 结果。
+     * @return 分页后的报名实体。
      */
-    Page<EnrollBriefVO> findByStatus(EnrollStatus status, Pageable pageable);
+    Page<Enroll> findByStatus(EnrollStatus status, Pageable pageable);
+
     /**
-     * 按技术方向查询报名申请 记录。
+     * 按技术方向查询报名申请记录。
      *
      * @param direction
      *            技术方向过滤条件。
      * @param pageable
      *            Spring 分页请求对象。
-     * @return 分页后的报名申请 结果。
+     * @return 分页后的报名实体。
      */
-    Page<EnrollBriefVO> findByDirection(Direction direction, Pageable pageable);
+    Page<Enroll> findByDirection(Direction direction, Pageable pageable);
+
     /**
      * 按报名状态和技术方向查询报名申请。
      *
@@ -87,11 +99,12 @@ public interface EnrollRepository {
      *            技术方向过滤条件。
      * @param pageable
      *            Spring 分页请求对象。
-     * @return 分页后的报名申请 结果。
+     * @return 分页后的报名实体。
      */
-    Page<EnrollBriefVO> findByStatusAndDirection(EnrollStatus status, Direction direction, Pageable pageable);
+    Page<Enroll> findByStatusAndDirection(EnrollStatus status, Direction direction, Pageable pageable);
+
     /**
-     * 按关键字搜索报名申请 记录。
+     * 按关键字搜索报名申请记录。
      *
      * @param keyword
      *            搜索关键字。
@@ -101,13 +114,14 @@ public interface EnrollRepository {
      *            技术方向过滤条件。
      * @param pageable
      *            Spring 分页请求对象。
-     * @return 分页后的报名申请 结果。
+     * @return 分页后的报名实体。
      */
-    Page<EnrollBriefVO> search(String keyword, EnrollStatus status, Direction direction, Pageable pageable);
+    Page<Enroll> search(String keyword, EnrollStatus status, Direction direction, Pageable pageable);
+
     /**
-     * 汇总报名申请 相关的状态和方向统计数据。
+     * 汇总报名申请相关的状态和方向统计数据。
      *
-     * @return 查询或处理得到的报名申请 结果。
+     * @return 统计数据。
      */
     EnrollStatisticsVO getStatistics();
 }

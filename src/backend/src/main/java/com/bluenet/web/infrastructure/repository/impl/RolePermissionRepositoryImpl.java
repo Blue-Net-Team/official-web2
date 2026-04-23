@@ -1,12 +1,10 @@
 package com.bluenet.web.infrastructure.repository.impl;
 
-import com.bluenet.web.infrastructure.repository.support.RepositoryObjectConverter;
-
-import com.bluenet.web.infrastructure.repository.dataobject.*;
-
-import com.bluenet.web.domain.model.entity.Role;
 import com.bluenet.web.domain.model.entity.RolePermission;
 import com.bluenet.web.domain.repository.RolePermissionRepository;
+import com.bluenet.web.infrastructure.repository.converter.RolePermissionRepositoryConverter;
+import com.bluenet.web.infrastructure.repository.dataobject.RoleDO;
+import com.bluenet.web.infrastructure.repository.dataobject.RolePermissionDO;
 import com.bluenet.web.infrastructure.repository.mapper.RoleMapper;
 import com.bluenet.web.infrastructure.repository.mapper.RolePermissionMapper;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +14,12 @@ import org.springframework.stereotype.Repository;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * 角色权限关联仓储实现
+ * <p>
+ * 实现角色权限关联数据的持久化操作，使用显式转换器替代 BeanUtils
+ * </p>
+ */
 @Repository
 @Slf4j
 @RequiredArgsConstructor
@@ -23,23 +27,16 @@ public class RolePermissionRepositoryImpl implements RolePermissionRepository {
 
     private final RolePermissionMapper rolePermissionMapper;
     private final RoleMapper roleMapper;
+    private final RolePermissionRepositoryConverter converter;
 
-    /**
-     * 查询拥有任一指定权限的角色名称集合。
-     *
-     * @param permissionIds
-     *            权限主键集合。
-     * @return 满足条件的角色权限关系 结果集合。
-     */
     @Override
     public Map<Long, List<String>> findRoleNamesByPermissionIds(List<Long> permissionIds) {
         if (permissionIds == null || permissionIds.isEmpty()) {
             return Collections.emptyMap();
         }
 
-        List<RolePermission> rolePermissions = RepositoryObjectConverter.toDomainList(
-                rolePermissionMapper.selectByPermissionIds(permissionIds),
-                RolePermission.class);
+        List<RolePermission> rolePermissions = converter.toEntityList(
+                rolePermissionMapper.selectByPermissionIds(permissionIds));
 
         List<Long> roleIds = rolePermissions.stream()
                 .map(RolePermission::getRoleId)
@@ -48,8 +45,8 @@ public class RolePermissionRepositoryImpl implements RolePermissionRepository {
 
         Map<Long, String> roleIdToNameMap = new HashMap<>();
         if (!roleIds.isEmpty()) {
-            List<Role> roles = RepositoryObjectConverter.toDomainList(roleMapper.selectBatchIds(roleIds), Role.class);
-            for (Role role : roles) {
+            List<RoleDO> roles = roleMapper.selectBatchIds(roleIds);
+            for (RoleDO role : roles) {
                 roleIdToNameMap.put(role.getId(), role.getName());
             }
         }
@@ -68,66 +65,27 @@ public class RolePermissionRepositoryImpl implements RolePermissionRepository {
         return result;
     }
 
-    /**
-     * 查询拥有指定权限的角色名称集合。
-     *
-     * @param permissionId
-     *            权限主键。
-     * @return 满足条件的角色权限关系 结果集合。
-     */
     @Override
     public List<String> findRoleNamesByPermissionId(Long permissionId) {
         Map<Long, List<String>> map = findRoleNamesByPermissionIds(List.of(permissionId));
         return map.getOrDefault(permissionId, List.of());
     }
 
-    /**
-     * 查询角色已绑定的权限主键集合。
-     *
-     * @param roleId
-     *            角色主键。
-     * @return 满足条件的角色权限关系 结果集合。
-     */
     @Override
     public List<Long> findPermissionIdsByRoleId(Long roleId) {
         return rolePermissionMapper.selectPermissionIdsByRoleId(roleId);
     }
 
-    /**
-     * 查询拥有指定权限的角色主键集合。
-     *
-     * @param permissionId
-     *            权限主键。
-     * @return 满足条件的角色权限关系 结果集合。
-     */
     @Override
     public List<Long> findRoleIdsByPermissionId(Long permissionId) {
         return rolePermissionMapper.selectRoleIdsByPermissionId(permissionId);
     }
 
-    /**
-     * 判断角色与权限是否已经存在授权关系。
-     *
-     * @param roleId
-     *            角色主键。
-     * @param permissionId
-     *            权限主键。
-     * @return 满足条件时返回 true，否则返回 false。
-     */
     @Override
     public boolean existsByRoleIdAndPermissionId(Long roleId, Long permissionId) {
         return rolePermissionMapper.existsByRoleIdAndPermissionId(roleId, permissionId);
     }
 
-    /**
-     * 批量为角色授予权限。
-     *
-     * @param roleId
-     *            角色主键。
-     * @param permissionIds
-     *            权限主键集合。
-     * @return 数据库受影响行数。
-     */
     @Override
     public int batchAssignPermissionsToRole(Long roleId, List<Long> permissionIds) {
         List<RolePermission> existing = filterExistingAssignments(roleId, permissionIds);
@@ -139,7 +97,6 @@ public class RolePermissionRepositoryImpl implements RolePermissionRepository {
             return 0;
         }
 
-        // 批量插入仍通过 Mapper 的 DO 入参完成，避免暴露领域实体给持久层。
         List<RolePermissionDO> toInsert = newPermissionIds.stream()
                 .map(pid -> {
                     RolePermissionDO rp = new RolePermissionDO();
@@ -153,15 +110,6 @@ public class RolePermissionRepositoryImpl implements RolePermissionRepository {
         return newPermissionIds.size();
     }
 
-    /**
-     * 批量移除角色已授予的权限。
-     *
-     * @param roleId
-     *            角色主键。
-     * @param permissionIds
-     *            权限主键集合。
-     * @return 数据库受影响行数。
-     */
     @Override
     public int batchRemovePermissionsFromRole(Long roleId, List<Long> permissionIds) {
         if (permissionIds == null || permissionIds.isEmpty()) {
@@ -170,39 +118,19 @@ public class RolePermissionRepositoryImpl implements RolePermissionRepository {
         return rolePermissionMapper.batchDelete(roleId, permissionIds);
     }
 
-    /**
-     * 批量为权限绑定可访问角色。
-     *
-     * @param permissionId
-     *            权限主键。
-     * @param roleIds
-     *            角色主键集合。
-     * @return 数据库受影响行数。
-     */
     @Override
     public int batchAssignRolesToPermission(Long permissionId, List<Long> roleIds) {
         int count = 0;
         for (Long roleId : roleIds) {
             if (!existsByRoleIdAndPermissionId(roleId, permissionId)) {
-                RolePermission rp = new RolePermission();
-                rp.setRoleId(roleId);
-                rp.setPermissionId(permissionId);
-                RepositoryObjectConverter.insert(rolePermissionMapper, rp, RolePermissionDO.class);
+                RolePermission rp = RolePermission.create(roleId, permissionId);
+                rolePermissionMapper.insert(converter.toDataObject(rp));
                 count++;
             }
         }
         return count;
     }
 
-    /**
-     * 批量移除权限与角色的绑定关系。
-     *
-     * @param permissionId
-     *            权限主键。
-     * @param roleIds
-     *            角色主键集合。
-     * @return 数据库受影响行数。
-     */
     @Override
     public int batchRemoveRolesFromPermission(Long permissionId, List<Long> roleIds) {
         if (roleIds == null || roleIds.isEmpty()) {
@@ -211,18 +139,31 @@ public class RolePermissionRepositoryImpl implements RolePermissionRepository {
         return rolePermissionMapper.batchDeleteByPermissionId(permissionId, roleIds);
     }
 
-    /**
-     * 过滤已经存在的角色权限关系，避免重复插入。
-     *
-     * @param roleId
-     *            角色主键。
-     * @param permissionIds
-     *            权限主键集合。
-     * @return 满足条件的角色权限关系 结果集合。
-     */
+    @Override
+    public void save(RolePermission rolePermission) {
+        RolePermissionDO dataObject = converter.toDataObject(rolePermission);
+        rolePermissionMapper.insert(dataObject);
+        rolePermission.setId(dataObject.getId());
+    }
+
+    @Override
+    public void update(RolePermission rolePermission) {
+        RolePermissionDO dataObject = converter.toDataObject(rolePermission);
+        rolePermissionMapper.updateById(dataObject);
+    }
+
+    @Override
+    public void deleteById(Long id) {
+        rolePermissionMapper.deleteById(id);
+    }
+
+    @Override
+    public boolean existsById(Long id) {
+        return rolePermissionMapper.selectById(id) != null;
+    }
+
     private List<RolePermission> filterExistingAssignments(Long roleId, List<Long> permissionIds) {
-        return RepositoryObjectConverter.toDomainList(
-                rolePermissionMapper.selectByRoleIdAndPermissionIds(roleId, permissionIds),
-                RolePermission.class);
+        return converter.toEntityList(
+                rolePermissionMapper.selectByRoleIdAndPermissionIds(roleId, permissionIds));
     }
 }

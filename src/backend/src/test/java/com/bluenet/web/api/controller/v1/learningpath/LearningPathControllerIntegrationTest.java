@@ -53,12 +53,7 @@ class LearningPathControllerIntegrationTest extends BaseIntegrationTest {
 
     private DirectionLearningStep createTestStep(Direction direction, Integer stepNumber, String title,
             String videoUrl) {
-        DirectionLearningStep step = new DirectionLearningStep();
-        step.setDirection(direction);
-        step.setStepNumber(stepNumber);
-        step.setTitle(title);
-        step.setVideoUrl(videoUrl);
-        return step;
+        return DirectionLearningStep.create(direction, stepNumber, title, videoUrl);
     }
 
     @BeforeEach

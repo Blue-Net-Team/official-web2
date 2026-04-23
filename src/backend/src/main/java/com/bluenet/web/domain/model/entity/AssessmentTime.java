@@ -1,11 +1,20 @@
 package com.bluenet.web.domain.model.entity;
 
 import com.bluenet.web.domain.model.enumerate.Direction;
+import lombok.AccessLevel;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
+/**
+ * 考核时间聚合根
+ * <p>
+ * 承载考核时间相关的业务规则和行为
+ * </p>
+ */
 @Data
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class AssessmentTime {
     /**
      * 当前对象在系统中的唯一标识。
@@ -39,4 +48,95 @@ public class AssessmentTime {
      * 考核作答时长限制，单位分钟。
      */
     private Integer timeLimitMinutes;
+
+    private AssessmentTime(Long id, Direction direction, Integer epoch, Integer grade,
+            LocalDateTime startTime, LocalDateTime endTime,
+            Boolean timeLimit, Integer timeLimitMinutes) {
+        this.id = id;
+        this.direction = direction;
+        this.epoch = epoch;
+        this.grade = grade;
+        this.startTime = startTime;
+        this.endTime = endTime;
+        this.timeLimit = timeLimit;
+        this.timeLimitMinutes = timeLimitMinutes;
+    }
+
+    /**
+     * 构造新聚合根 —— 带领域校验
+     */
+    public static AssessmentTime create(Direction direction, Integer epoch, Integer grade,
+            LocalDateTime startTime, LocalDateTime endTime,
+            Boolean timeLimit, Integer timeLimitMinutes) {
+        if (startTime != null && endTime != null && !startTime.isBefore(endTime)) {
+            throw new IllegalArgumentException("开始时间必须早于结束时间");
+        }
+        if (Boolean.TRUE.equals(timeLimit) && (timeLimitMinutes == null || timeLimitMinutes <= 0)) {
+            throw new IllegalArgumentException("限时考核必须设置有效的限时分钟数");
+        }
+        return new AssessmentTime(null, direction, epoch, grade, startTime, endTime, timeLimit, timeLimitMinutes);
+    }
+
+    /**
+     * 从数据库重建 —— 跳过创建校验
+     */
+    public static AssessmentTime reconstruct(Long id, Direction direction, Integer epoch, Integer grade,
+            LocalDateTime startTime, LocalDateTime endTime,
+            Boolean timeLimit, Integer timeLimitMinutes) {
+        return new AssessmentTime(id, direction, epoch, grade, startTime, endTime, timeLimit, timeLimitMinutes);
+    }
+
+    /**
+     * 更新考核时间属性
+     */
+    public void update(Direction direction, Integer epoch, Integer grade,
+            LocalDateTime startTime, LocalDateTime endTime,
+            Boolean timeLimit, Integer timeLimitMinutes) {
+        if (direction != null) {
+            this.direction = direction;
+        }
+        if (epoch != null) {
+            this.epoch = epoch;
+        }
+        if (grade != null) {
+            this.grade = grade;
+        }
+        if (startTime != null) {
+            this.startTime = startTime;
+        }
+        if (endTime != null) {
+            this.endTime = endTime;
+        }
+        if (timeLimit != null) {
+            this.timeLimit = timeLimit;
+        }
+        if (timeLimitMinutes != null) {
+            this.timeLimitMinutes = timeLimitMinutes;
+        }
+    }
+
+    /**
+     * 校验开始时间早于结束时间
+     */
+    public void validateStartBeforeEnd() {
+        if (this.startTime != null && this.endTime != null && !this.startTime.isBefore(this.endTime)) {
+            throw new IllegalArgumentException("开始时间必须早于结束时间");
+        }
+    }
+
+    /**
+     * 校验限时考核必须设置限时分钟数
+     */
+    public void validateTimeLimit() {
+        if (Boolean.TRUE.equals(this.timeLimit) && (this.timeLimitMinutes == null || this.timeLimitMinutes <= 0)) {
+            throw new IllegalArgumentException("限时考核必须设置有效的限时分钟数");
+        }
+    }
+
+    /**
+     * 是否已经开始
+     */
+    public boolean hasStarted() {
+        return this.startTime != null && !this.startTime.isAfter(LocalDateTime.now());
+    }
 }

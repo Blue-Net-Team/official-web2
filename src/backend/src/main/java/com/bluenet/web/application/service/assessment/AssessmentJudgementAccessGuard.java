@@ -6,9 +6,9 @@ import com.bluenet.web.domain.exception.DataNotFound;
 import com.bluenet.web.domain.exception.Forbidden;
 import com.bluenet.web.domain.model.enumerate.RoleType;
 import com.bluenet.web.domain.model.policy.RoleHierarchy;
-import com.bluenet.web.domain.model.vo.AssessmentTimeVO;
+import com.bluenet.web.domain.model.entity.AssessmentTime;
 import com.bluenet.web.domain.model.vo.UserVO;
-import com.bluenet.web.domain.service.AssessmentTimeDomainService;
+import com.bluenet.web.domain.repository.AssessmentTimeRepository;
 import com.bluenet.web.infrastructure.security.util.UserCTX;
 
 import lombok.RequiredArgsConstructor;
@@ -20,7 +20,7 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 @Component
 public class AssessmentJudgementAccessGuard {
-    private final AssessmentTimeDomainService assessmentTimeDomainService;
+    private final AssessmentTimeRepository assessmentTimeRepository;
 
     /**
      * 获取当前登录用户，未登录时抛出安全异常。
@@ -81,7 +81,7 @@ public class AssessmentJudgementAccessGuard {
     }
 
     private void assertAssessmentTimeScope(Long assessmentTimeId, UserVO currentUser, RoleType roleType) {
-        AssessmentTimeVO assessmentTime = assessmentTimeDomainService.getById(assessmentTimeId)
+        AssessmentTime assessmentTime = assessmentTimeRepository.findById(assessmentTimeId)
                 .orElseThrow(() -> new DataNotFound("考核时间不存在，ID: " + assessmentTimeId));
         if (roleType == RoleType.DIRECTION_ADMIN
                 && currentUser.getDirection() != null

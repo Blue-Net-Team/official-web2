@@ -73,14 +73,27 @@ class AuthControllerIntegrationTest extends BaseIntegrationTest {
     @BeforeEach
     void setUp() {
         // 创建测试用户
-        User user = new User();
-        user.setStudentId(TEST_STUDENT_ID);
-        user.setUsername("测试用户");
-        user.setEmail(TEST_EMAIL);
-        user.setPassword(passwordEncoder.encode(TEST_PASSWORD));
-        user.setRoleId(1L);
-        user.setDisable(false);
-        user.setDirection(Direction.COMPUTER_VISION);
+        User user = User.reconstruct(
+                null,
+                TEST_STUDENT_ID,
+                TEST_EMAIL,
+                1L,
+                passwordEncoder.encode(TEST_PASSWORD),
+                "测试用户",
+                null,
+                null,
+                null,
+                null,
+                Direction.COMPUTER_VISION,
+                null,
+                null,
+                null,
+                false,
+                null,
+                null,
+                null,
+                null,
+                null);
 
         // 如果用户已存在则删除
         // Mapper 返回 DO，测试夹具转换为领域对象后再断言/清理。
@@ -388,11 +401,7 @@ class AuthControllerIntegrationTest extends BaseIntegrationTest {
      * 直接在数据库插入验证码记录
      */
     private void insertVerifyCode(String target, String code, LocalDateTime expireAt, LocalDateTime usedAt) {
-        VerifyCode verifyCode = new VerifyCode();
-        verifyCode.setTarget(target);
-        verifyCode.setCode(code);
-        verifyCode.setExpireAt(expireAt);
-        verifyCode.setUsedAt(usedAt);
+        VerifyCode verifyCode = VerifyCode.reconstruct(null, target, code, expireAt, usedAt, null);
         RepositoryTestObjects.insert(verifyCodeMapper, verifyCode, VerifyCodeDO.class);
     }
 }

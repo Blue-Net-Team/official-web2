@@ -1,15 +1,17 @@
 package com.bluenet.web.domain.repository;
 
+import com.bluenet.web.domain.model.entity.Competition;
 import com.bluenet.web.domain.model.vo.CompetitionVO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * 竞赛仓库接口
  * <p>
- * 负责竞赛数据的持久化操作，包括增删改查等基本操作
+ * 负责竞赛数据的持久化操作，只操作 Entity，不暴露 VO 或 DTO
  * </p>
  */
 public interface CompetitionRepository {
@@ -27,29 +29,28 @@ public interface CompetitionRepository {
      *
      * @param pageable
      *            Spring 分页请求对象。
-     * @return 分页后的竞赛 结果。
+     * @return 分页后的竞赛结果。
      */
     Page<CompetitionVO> findCompetitionsPage(Pageable pageable);
 
     /**
-     * 保存新的竞赛 记录。
+     * 保存新的竞赛记录。
      *
      * @param competition
-     *            竞赛领域对象。
-     * @return 新记录的主键。
+     *            竞赛实体。
      */
-    Long save(com.bluenet.web.domain.model.entity.Competition competition);
+    void save(Competition competition);
 
     /**
-     * 更新已有竞赛 记录。
+     * 更新已有竞赛记录。
      *
      * @param competition
-     *            竞赛领域对象。
+     *            竞赛实体（id 必须非空）。
      */
-    void update(com.bluenet.web.domain.model.entity.Competition competition);
+    void update(Competition competition);
 
     /**
-     * 删除指定竞赛 记录。
+     * 删除指定竞赛记录。
      *
      * @param id
      *            业务记录主键。
@@ -57,7 +58,7 @@ public interface CompetitionRepository {
     void deleteById(Long id);
 
     /**
-     * 判断是否存在满足条件的竞赛 记录。
+     * 判断是否存在满足条件的竞赛记录。
      *
      * @param id
      *            业务记录主键。
@@ -66,14 +67,14 @@ public interface CompetitionRepository {
     boolean existsById(Long id);
 
     /**
-     * 查询符合条件的竞赛 记录。
+     * 查询符合条件的竞赛记录。
      *
      * @return 转换后的目标模型对象。
      */
     Integer findMaxSortOrder();
 
     /**
-     * 批量更新竞赛 展示排序值。
+     * 批量更新竞赛展示排序值。
      *
      * @param sortItems
      *            需要更新排序的条目集合。
@@ -81,13 +82,13 @@ public interface CompetitionRepository {
     void batchUpdateSortOrder(List<SortItem> sortItems);
 
     /**
-     * 按主键查询竞赛 记录。
+     * 按主键查询竞赛记录。
      *
      * @param id
      *            业务记录主键。
-     * @return 查询或处理得到的竞赛 结果。
+     * @return 查询到的竞赛实体；不存在时为 Optional.empty()。
      */
-    com.bluenet.web.domain.model.entity.Competition findById(Long id);
+    Optional<Competition> findById(Long id);
 
     /**
      * 查询当前竞赛相邻位置的竞赛记录，用于排序调整。
@@ -96,9 +97,9 @@ public interface CompetitionRepository {
      *            展示排序值。
      * @param direction
      *            技术方向过滤条件。
-     * @return 查询或处理得到的竞赛 结果。
+     * @return 查询到的竞赛实体；不存在时为 Optional.empty()。
      */
-    com.bluenet.web.domain.model.entity.Competition findAdjacent(Integer sortOrder, String direction);
+    Optional<Competition> findAdjacent(Integer sortOrder, String direction);
 
     /**
      * 排序项记录

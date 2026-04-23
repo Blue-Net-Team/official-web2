@@ -1,6 +1,6 @@
 package com.bluenet.web.domain.repository;
 
-import com.bluenet.web.domain.model.vo.VenueVO;
+import com.bluenet.web.domain.model.entity.Venue;
 
 import java.util.List;
 import java.util.Optional;
@@ -8,45 +8,45 @@ import java.util.Optional;
 /**
  * 场地仓库接口
  * <p>
- * 负责场地数据的持久化操作
+ * 负责场地数据的持久化操作，只操作 Entity，不暴露 VO 或 DTO
  * </p>
  */
 public interface VenueRepository {
     /**
-     * 按展示排序倒序查询全部场地 视图。
+     * 按展示排序倒序查询全部场地。
      *
-     * @return 满足条件的场地 结果集合。
+     * @return 场地实体集合。
      */
-    List<VenueVO> findAllOrderBySortOrderDesc();
+    List<Venue> findAllOrderBySortOrderDesc();
 
     /**
-     * 处理场地 仓储职责中的业务数据访问逻辑。
+     * 按主键查询场地记录。
      *
      * @param id
      *            业务记录主键。
-     * @return 查询或处理得到的场地 结果。
+     * @return 查询到的场地实体；不存在时为 Optional.empty()。
      */
-    Optional<VenueVO> findById(Long id);
+    Optional<Venue> findById(Long id);
 
     /**
-     * 保存新的场地 记录。
+     * 保存新的场地记录。
      *
      * @param venue
-     *            场地领域对象。
+     *            场地实体。
      * @return 新记录的主键。
      */
-    Long save(com.bluenet.web.domain.model.entity.Venue venue);
+    Long save(Venue venue);
 
     /**
-     * 更新已有场地 记录。
+     * 更新已有场地记录。
      *
      * @param venue
-     *            场地领域对象。
+     *            场地实体（id 必须非空）。
      */
-    void update(com.bluenet.web.domain.model.entity.Venue venue);
+    void update(Venue venue);
 
     /**
-     * 删除指定场地 记录。
+     * 删除指定场地记录。
      *
      * @param id
      *            业务记录主键。
@@ -54,7 +54,7 @@ public interface VenueRepository {
     void deleteById(Long id);
 
     /**
-     * 判断是否存在满足条件的场地 记录。
+     * 判断是否存在满足条件的场地记录。
      *
      * @param id
      *            业务记录主键。
@@ -63,7 +63,7 @@ public interface VenueRepository {
     boolean existsById(Long id);
 
     /**
-     * 更新场地 展示图片文件关联。
+     * 更新场地展示图片文件关联。
      *
      * @param id
      *            业务记录主键。

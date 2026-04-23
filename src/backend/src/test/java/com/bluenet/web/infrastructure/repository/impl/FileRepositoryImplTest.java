@@ -1,8 +1,10 @@
 package com.bluenet.web.infrastructure.repository.impl;
 
 import com.bluenet.web.domain.model.entity.File;
-import com.bluenet.web.infrastructure.repository.dataobject.FileDO;
 import com.bluenet.web.domain.model.enumerate.FileType;
+import com.bluenet.web.domain.repository.FileRepository;
+import com.bluenet.web.infrastructure.repository.converter.FileRepositoryConverter;
+import com.bluenet.web.infrastructure.repository.dataobject.FileDO;
 import com.bluenet.web.infrastructure.repository.mapper.FileMapper;
 import com.bluenet.web.infrastructure.storage.ObjectStorage;
 import org.junit.jupiter.api.BeforeEach;
@@ -27,12 +29,13 @@ class FileRepositoryImplTest {
     @Mock
     private FileMapper fileMapper;
 
-    private FileRepositoryImpl repository;
+    private FileRepository repository;
 
     @BeforeEach
     void setUp() {
         // 文件仓储已收敛为文件元数据 + 对象存储边界，测试只注入这两个依赖。
-        repository = new FileRepositoryImpl(objectStorage, fileMapper);
+        FileRepositoryConverter converter = new FileRepositoryConverter();
+        repository = new FileRepositoryImpl(objectStorage, fileMapper, converter);
     }
 
     @Test

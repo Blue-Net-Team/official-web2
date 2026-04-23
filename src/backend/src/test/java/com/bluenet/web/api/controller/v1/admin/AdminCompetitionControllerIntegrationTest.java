@@ -102,28 +102,37 @@ class AdminCompetitionControllerIntegrationTest extends BaseIntegrationTest {
 
         permissionCache.refresh();
 
-        User adminUser = new User();
-        adminUser.setStudentId(TEST_STUDENT_ID);
-        adminUser.setUsername("管理员");
-        adminUser.setEmail("admin@example.com");
-        adminUser.setPassword(passwordEncoder.encode(TEST_PASSWORD));
-        adminUser.setRoleId(adminRoleId);
-        adminUser.setDisable(false);
-        adminUser.setDirection(Direction.COMPUTER_VISION);
+        User adminUser = User.reconstruct(
+                null,
+                TEST_STUDENT_ID,
+                "admin@example.com",
+                adminRoleId,
+                passwordEncoder.encode(TEST_PASSWORD),
+                "管理员",
+                null,
+                null,
+                null,
+                null,
+                Direction.COMPUTER_VISION,
+                null,
+                null,
+                null,
+                false,
+                null,
+                null,
+                null,
+                null,
+                null);
         RepositoryTestObjects.insert(userMapper, adminUser, UserDO.class);
 
         loginAndGetCookies();
     }
 
     private void createPermission(String value, String name) {
-        Permission permission = new Permission();
-        permission.setName(name);
-        permission.setValue(value);
+        Permission permission = Permission.create(name, value, null, null, null);
         RepositoryTestObjects.insert(permissionMapper, permission, PermissionDO.class);
 
-        RolePermission rolePermission = new RolePermission();
-        rolePermission.setRoleId(adminRoleId);
-        rolePermission.setPermissionId(permission.getId());
+        RolePermission rolePermission = RolePermission.create(adminRoleId, permission.getId());
         RepositoryTestObjects.insert(rolePermissionMapper, rolePermission, RolePermissionDO.class);
     }
 
@@ -227,11 +236,7 @@ class AdminCompetitionControllerIntegrationTest extends BaseIntegrationTest {
     @Test
     @DisplayName("集成测试：更新竞赛应成功")
     void updateCompetition_shouldUpdateSuccessfully() {
-        Competition competition = new Competition();
-        competition.setName("原竞赛名");
-        competition.setShortName("OLD");
-        competition.setSummary("原简介");
-        competition.setSortOrder(0);
+        Competition competition = Competition.create("原竞赛名", "OLD", null, null, "原简介", null, null, null, 0);
         RepositoryTestObjects.insert(competitionMapper, competition, CompetitionDO.class);
 
         CompetitionRequestDTO request = CompetitionRequestDTO.builder()
@@ -280,9 +285,7 @@ class AdminCompetitionControllerIntegrationTest extends BaseIntegrationTest {
     @Test
     @DisplayName("集成测试：删除竞赛应成功")
     void deleteCompetition_shouldDeleteSuccessfully() {
-        Competition competition = new Competition();
-        competition.setName("要删除的竞赛");
-        competition.setSortOrder(0);
+        Competition competition = Competition.create("要删除的竞赛", null, null, null, null, null, null, null, 0);
         RepositoryTestObjects.insert(competitionMapper, competition, CompetitionDO.class);
         Long competitionId = competition.getId();
 
@@ -324,9 +327,7 @@ class AdminCompetitionControllerIntegrationTest extends BaseIntegrationTest {
     @Test
     @DisplayName("集成测试：删除竞赛应成功")
     void deleteCompetition_shouldSucceed() {
-        Competition competition = new Competition();
-        competition.setName("要删除的竞赛");
-        competition.setSortOrder(0);
+        Competition competition = Competition.create("要删除的竞赛", null, null, null, null, null, null, null, 0);
         RepositoryTestObjects.insert(competitionMapper, competition, CompetitionDO.class);
         Long competitionId = competition.getId();
 

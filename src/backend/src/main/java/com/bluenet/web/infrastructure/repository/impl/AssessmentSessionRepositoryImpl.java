@@ -1,12 +1,9 @@
 package com.bluenet.web.infrastructure.repository.impl;
 
-import com.bluenet.web.infrastructure.repository.support.RepositoryObjectConverter;
-
-import com.bluenet.web.infrastructure.repository.dataobject.*;
-
 import com.bluenet.web.domain.model.entity.AssessmentSession;
-import com.bluenet.web.domain.model.vo.AssessmentSessionVO;
 import com.bluenet.web.domain.repository.AssessmentSessionRepository;
+import com.bluenet.web.infrastructure.repository.converter.AssessmentSessionRepositoryConverter;
+import com.bluenet.web.infrastructure.repository.dataobject.AssessmentSessionDO;
 import com.bluenet.web.infrastructure.repository.mapper.AssessmentSessionMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,61 +11,34 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
+/**
+ * 考核会话仓库实现类
+ * <p>
+ * 实现考核会话数据的持久化操作，使用显式转换器替代 BeanUtils
+ * </p>
+ */
 @Repository
 @Slf4j
 @RequiredArgsConstructor
 public class AssessmentSessionRepositoryImpl implements AssessmentSessionRepository {
     private final AssessmentSessionMapper assessmentSessionMapper;
+    private final AssessmentSessionRepositoryConverter converter;
 
-    /**
-     * 保存新的考核会话 记录。
-     *
-     * @param session
-     *            考核会话领域对象。
-     */
     @Override
     public void save(AssessmentSession session) {
         log.info(
                 "save assessment session for userId: {}, assessmentTimeId: {}",
                 session.getUserId(),
                 session.getAssessmentTimeId());
-        RepositoryObjectConverter.insert(assessmentSessionMapper, session, AssessmentSessionDO.class);
+        AssessmentSessionDO dataObject = converter.toDataObject(session);
+        assessmentSessionMapper.insert(dataObject);
+        session.setId(dataObject.getId());
     }
 
-    /**
-     * 按用户和考核场次查询对应记录。
-     *
-     * @param userId
-     *            用户主键，用于限定用户范围。
-     * @param assessmentTimeId
-     *            考核场次主键。
-     * @return 查询到的考核会话 结果；不存在时为空。
-     */
     @Override
-    public Optional<AssessmentSessionVO> findByUserIdAndAssessmentTimeId(Long userId, Long assessmentTimeId) {
-        AssessmentSession session = RepositoryObjectConverter.toDomain(
-                assessmentSessionMapper.selectByUserIdAndAssessmentTimeId(userId, assessmentTimeId),
-                AssessmentSession.class);
-        if (session == null) {
-            return Optional.empty();
-        }
-        return Optional.of(convertToVO(session));
-    }
-
-    /**
-     * 在考核会话 的持久层对象、领域对象和视图对象之间转换。
-     *
-     * @param session
-     *            考核会话领域对象。
-     * @return 转换后的目标模型对象。
-     */
-    private AssessmentSessionVO convertToVO(AssessmentSession session) {
-        return AssessmentSessionVO.builder()
-                .id(session.getId())
-                .userId(session.getUserId())
-                .assessmentTimeId(session.getAssessmentTimeId())
-                .startTime(session.getStartTime())
-                .deadline(session.getDeadline())
-                .build();
+    public Optional<AssessmentSession> findByUserIdAndAssessmentTimeId(Long userId, Long assessmentTimeId) {
+        AssessmentSessionDO dataObject = assessmentSessionMapper
+                .selectByUserIdAndAssessmentTimeId(userId, assessmentTimeId);
+        return Optional.ofNullable(converter.toEntity(dataObject));
     }
 }

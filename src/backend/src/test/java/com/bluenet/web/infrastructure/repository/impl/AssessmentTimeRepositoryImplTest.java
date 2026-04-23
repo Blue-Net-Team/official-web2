@@ -10,17 +10,17 @@ import java.util.List;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bluenet.web.domain.model.entity.AssessmentTime;
 import com.bluenet.web.domain.model.enumerate.Direction;
-import com.bluenet.web.domain.model.vo.AssessmentTimeVO;
+import com.bluenet.web.infrastructure.repository.converter.AssessmentTimeRepositoryConverter;
 import com.bluenet.web.infrastructure.repository.dataobject.AssessmentTimeDO;
 import com.bluenet.web.infrastructure.repository.mapper.AssessmentQuestionMapper;
 import com.bluenet.web.infrastructure.repository.mapper.AssessmentTimeMapper;
-import com.bluenet.web.testsupport.RepositoryTestObjects;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Pageable;
 
@@ -34,6 +34,9 @@ class AssessmentTimeRepositoryImplTest {
     @Mock
     private AssessmentQuestionMapper assessmentQuestionMapper;
 
+    @Spy
+    private AssessmentTimeRepositoryConverter converter = new AssessmentTimeRepositoryConverter();
+
     @InjectMocks
     private AssessmentTimeRepositoryImpl assessmentTimeRepository;
 
@@ -42,15 +45,20 @@ class AssessmentTimeRepositoryImplTest {
     private static final LocalDateTime END_TIME = LocalDateTime.of(2099, 1, 1, 11, 0);
 
     private AssessmentTime createTestEntity(Long id, Direction direction, int epoch, int grade) {
-        AssessmentTime entity = new AssessmentTime();
-        entity.setId(id);
-        entity.setDirection(direction);
-        entity.setEpoch(epoch);
-        entity.setGrade(grade);
-        entity.setStartTime(START_TIME);
-        entity.setEndTime(END_TIME);
-        entity.setTimeLimit(false);
-        return entity;
+        return AssessmentTime.reconstruct(id, direction, epoch, grade, START_TIME, END_TIME, false, null);
+    }
+
+    private AssessmentTimeDO toDataObject(AssessmentTime entity) {
+        return AssessmentTimeDO.builder()
+                .id(entity.getId())
+                .direction(entity.getDirection())
+                .epoch(entity.getEpoch())
+                .grade(entity.getGrade())
+                .startTime(entity.getStartTime())
+                .endTime(entity.getEndTime())
+                .timeLimit(entity.getTimeLimit())
+                .timeLimitMinutes(entity.getTimeLimitMinutes())
+                .build();
     }
 
     @Nested
@@ -60,18 +68,22 @@ class AssessmentTimeRepositoryImplTest {
         @Test
         @DisplayName("关闭限时时应清空timeLimitMinutes")
         void update_disableTimeLimit_shouldClearTimeLimitMinutes() {
-            AssessmentTimeVO updateVO = AssessmentTimeVO.builder()
-                    .id(1L)
-                    .timeLimit(false)
-                    .timeLimitMinutes(null)
-                    .build();
+            AssessmentTime entity = AssessmentTime.reconstruct(
+                    1L,
+                    Direction.COMPUTER_VISION,
+                    1,
+                    2024,
+                    START_TIME,
+                    END_TIME,
+                    false,
+                    null);
 
-            assessmentTimeRepository.update(updateVO);
+            assessmentTimeRepository.update(entity);
 
             verify(assessmentTimeMapper).updateById(
                     argThat(
-                            (AssessmentTimeDO entity) -> entity.getId().equals(1L)
-                                    && Boolean.FALSE.equals(entity.getTimeLimit())));
+                            (AssessmentTimeDO dataObject) -> dataObject.getId().equals(1L)
+                                    && Boolean.FALSE.equals(dataObject.getTimeLimit())));
             verify(assessmentTimeMapper).clearTimeLimitMinutesById(1L);
         }
     }
@@ -90,8 +102,8 @@ class AssessmentTimeRepositoryImplTest {
             Page<AssessmentTimeDO> mockPage = new Page<>(1, 10, 2);
             mockPage.setRecords(
                     List.of(
-                            RepositoryTestObjects.toDataObject(at2, AssessmentTimeDO.class),
-                            RepositoryTestObjects.toDataObject(at1, AssessmentTimeDO.class)));
+                            toDataObject(at2),
+                            toDataObject(at1)));
 
             when(
                     assessmentTimeMapper.selectPageByUserParticipation(
@@ -101,7 +113,7 @@ class AssessmentTimeRepositoryImplTest {
                             eq(2024)))
                                     .thenReturn(mockPage);
 
-            org.springframework.data.domain.Page<AssessmentTimeVO> result = assessmentTimeRepository
+            org.springframework.data.domain.Page<AssessmentTime> result = assessmentTimeRepository
                     .findByUserParticipation(
                             TEST_USER_ID,
                             Direction.COMPUTER_VISION,
@@ -121,7 +133,7 @@ class AssessmentTimeRepositoryImplTest {
         void findByUserParticipation_nullYear_shouldQueryByExistsOnly() {
             AssessmentTime at1 = createTestEntity(1L, Direction.STRUCTURAL_DESIGN, 1, 2024);
             Page<AssessmentTimeDO> mockPage = new Page<>(1, 10, 1);
-            mockPage.setRecords(List.of(RepositoryTestObjects.toDataObject(at1, AssessmentTimeDO.class)));
+            mockPage.setRecords(List.of(toDataObject(at1)));
 
             when(
                     assessmentTimeMapper.selectPageByUserParticipation(
@@ -131,7 +143,7 @@ class AssessmentTimeRepositoryImplTest {
                             isNull()))
                                     .thenReturn(mockPage);
 
-            org.springframework.data.domain.Page<AssessmentTimeVO> result = assessmentTimeRepository
+            org.springframework.data.domain.Page<AssessmentTime> result = assessmentTimeRepository
                     .findByUserParticipation(
                             TEST_USER_ID,
                             Direction.COMPUTER_VISION,
@@ -155,7 +167,7 @@ class AssessmentTimeRepositoryImplTest {
                             isNull()))
                                     .thenReturn(mockPage);
 
-            org.springframework.data.domain.Page<AssessmentTimeVO> result = assessmentTimeRepository
+            org.springframework.data.domain.Page<AssessmentTime> result = assessmentTimeRepository
                     .findByUserParticipation(TEST_USER_ID, null, null, Pageable.ofSize(10));
 
             assertTrue(result.getContent().isEmpty());
@@ -175,7 +187,7 @@ class AssessmentTimeRepositoryImplTest {
                             eq(2025)))
                                     .thenReturn(mockPage);
 
-            org.springframework.data.domain.Page<AssessmentTimeVO> result = assessmentTimeRepository
+            org.springframework.data.domain.Page<AssessmentTime> result = assessmentTimeRepository
                     .findByUserParticipation(
                             TEST_USER_ID,
                             Direction.EMBEDDED,
@@ -194,8 +206,8 @@ class AssessmentTimeRepositoryImplTest {
             Page<AssessmentTimeDO> mockPage = new Page<>(1, 10, 2);
             mockPage.setRecords(
                     List.of(
-                            RepositoryTestObjects.toDataObject(at2, AssessmentTimeDO.class),
-                            RepositoryTestObjects.toDataObject(at1, AssessmentTimeDO.class)));
+                            toDataObject(at2),
+                            toDataObject(at1)));
 
             when(
                     assessmentTimeMapper.selectPageByUserParticipation(
@@ -205,7 +217,7 @@ class AssessmentTimeRepositoryImplTest {
                             eq(2024)))
                                     .thenReturn(mockPage);
 
-            org.springframework.data.domain.Page<AssessmentTimeVO> result = assessmentTimeRepository
+            org.springframework.data.domain.Page<AssessmentTime> result = assessmentTimeRepository
                     .findByUserParticipation(
                             TEST_USER_ID,
                             Direction.COMPUTER_VISION,

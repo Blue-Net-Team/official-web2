@@ -1,7 +1,7 @@
 package com.bluenet.web.application.service.auth.session;
 
 import com.bluenet.web.api.dto.auth.UserAuthResponseDTO;
-import com.bluenet.web.application.converter.UserConverter;
+import com.bluenet.web.application.converter.UserAppConverter;
 import com.bluenet.web.domain.model.vo.UserVO;
 import com.bluenet.web.infrastructure.security.auth.AuthTokenService;
 import com.bluenet.web.infrastructure.security.cookie.CookieService;
@@ -18,7 +18,7 @@ import lombok.RequiredArgsConstructor;
 public class AuthSessionIssuer {
     private final JwtUtil jwtUtil;
     private final AuthTokenService authTokenService;
-    private final UserConverter userConverter;
+    private final UserAppConverter userConverter;
     private final CookieService cookieService;
     private final CsrfTokenService csrfTokenService;
 

@@ -13,12 +13,12 @@ import java.util.List;
  */
 public interface AuditRepository {
     /**
-     * 新增一条审计日志 记录。
+     * 保存审计日志记录。
      *
      * @param audit
      *            审计日志领域对象。
      */
-    void insert(Audit audit);
+    void save(Audit audit);
 
     /**
      * 按统计周期查询审计访问趋势点，供后台趋势图展示。

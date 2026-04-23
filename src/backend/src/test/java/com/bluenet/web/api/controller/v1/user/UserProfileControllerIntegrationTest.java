@@ -71,17 +71,27 @@ class UserProfileControllerIntegrationTest extends BaseIntegrationTest {
         var memberRole = roleMapper.selectByName("MEMBER");
         assertNotNull(memberRole, "MEMBER 角色应存在");
 
-        User user = new User();
-        user.setStudentId(TEST_STUDENT_ID);
-        user.setUsername("测试用户");
-        user.setNickname("测试昵称");
-        user.setEmail("test@example.com");
-        user.setPassword(passwordEncoder.encode(TEST_PASSWORD));
-        user.setRoleId(memberRole.getId());
-        user.setDisable(false);
-        user.setDirection(Direction.COMPUTER_VISION);
-        user.setBio("原个人简介");
-        user.setGender(Gender.MALE);
+        User user = User.reconstruct(
+                null,
+                TEST_STUDENT_ID,
+                "test@example.com",
+                memberRole.getId(),
+                passwordEncoder.encode(TEST_PASSWORD),
+                "测试用户",
+                "测试昵称",
+                null,
+                null,
+                null,
+                Direction.COMPUTER_VISION,
+                Gender.MALE,
+                null,
+                null,
+                false,
+                null,
+                null,
+                null,
+                null,
+                "原个人简介");
 
         RepositoryTestObjects.insert(userMapper, user, UserDO.class);
         testUserId = user.getId();
@@ -292,16 +302,27 @@ class UserProfileControllerIntegrationTest extends BaseIntegrationTest {
         var memberRole = roleMapper.selectByName("MEMBER");
         assertNotNull(memberRole, "MEMBER 角色应存在");
 
-        User memberUser = new User();
-        memberUser.setStudentId("2024001002");
-        memberUser.setUsername("成员用户");
-        memberUser.setEmail("member@example.com");
-        memberUser.setPassword(passwordEncoder.encode(TEST_PASSWORD));
-        memberUser.setRoleId(memberRole.getId());
-        memberUser.setDisable(false);
-        memberUser.setDirection(Direction.COMPUTER_VISION);
-        memberUser.setBio("原个人简介");
-        memberUser.setGender(Gender.MALE);
+        User memberUser = User.reconstruct(
+                null,
+                "2024001002",
+                "member@example.com",
+                memberRole.getId(),
+                passwordEncoder.encode(TEST_PASSWORD),
+                "成员用户",
+                null,
+                null,
+                null,
+                null,
+                Direction.COMPUTER_VISION,
+                Gender.MALE,
+                null,
+                null,
+                false,
+                null,
+                null,
+                null,
+                null,
+                "原个人简介");
         RepositoryTestObjects.insert(userMapper, memberUser, UserDO.class);
 
         // 登录获取 Cookie

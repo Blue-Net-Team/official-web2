@@ -2,7 +2,6 @@ package com.bluenet.web.domain.repository;
 
 import com.bluenet.web.domain.model.entity.Qrcode;
 import com.bluenet.web.domain.model.enumerate.QrcodeType;
-import com.bluenet.web.domain.model.vo.QrcodeVO;
 
 import java.util.List;
 import java.util.Optional;
@@ -16,9 +15,9 @@ public interface QrcodeRepository {
      * 保存新的二维码 记录。
      *
      * @param qrcode
-     *            二维码领域对象或视图对象。
+     *            二维码领域对象。
      */
-    void save(QrcodeVO qrcode);
+    void save(Qrcode qrcode);
 
     /**
      * 按主键查询二维码 记录。

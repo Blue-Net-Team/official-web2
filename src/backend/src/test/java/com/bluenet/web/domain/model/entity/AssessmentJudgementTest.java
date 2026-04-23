@@ -15,13 +15,21 @@ class AssessmentJudgementTest {
 
     @Test
     void applyJudgementResult_shouldUpdateJudgementFields() {
-        AssessmentJudgement judgement = AssessmentJudgement.builder()
-                .id(1L)
-                .answerId(2L)
-                .questionId(3L)
-                .assessmentTimeId(4L)
-                .userId(5L)
-                .build();
+        AssessmentJudgement judgement = AssessmentJudgement.create(
+                2L,
+                3L,
+                4L,
+                5L,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null);
+        judgement.setId(1L);
         LocalDateTime judgedAt = LocalDateTime.now().minusMinutes(1);
         LocalDateTime updatedAt = LocalDateTime.now();
 

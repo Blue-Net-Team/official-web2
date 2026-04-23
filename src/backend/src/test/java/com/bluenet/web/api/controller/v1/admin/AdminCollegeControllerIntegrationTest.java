@@ -39,7 +39,6 @@ import com.bluenet.web.domain.model.entity.Role;
 import com.bluenet.web.domain.model.entity.RolePermission;
 import com.bluenet.web.domain.model.entity.User;
 import com.bluenet.web.domain.model.enumerate.Direction;
-import com.bluenet.web.domain.model.enumerate.EnrollStatus;
 import com.bluenet.web.infrastructure.repository.mapper.CollegeMapper;
 import com.bluenet.web.infrastructure.repository.mapper.EnrollMapper;
 import com.bluenet.web.infrastructure.repository.mapper.PermissionMapper;
@@ -118,14 +117,27 @@ class AdminCollegeControllerIntegrationTest extends BaseIntegrationTest {
         permissionCache.refresh();
 
         // 创建管理员用户
-        User adminUser = new User();
-        adminUser.setStudentId(TEST_STUDENT_ID);
-        adminUser.setUsername("管理员");
-        adminUser.setEmail("admin@example.com");
-        adminUser.setPassword(passwordEncoder.encode(TEST_PASSWORD));
-        adminUser.setRoleId(adminRoleId);
-        adminUser.setDisable(false);
-        adminUser.setDirection(Direction.COMPUTER_VISION);
+        User adminUser = User.reconstruct(
+                null,
+                TEST_STUDENT_ID,
+                "admin@example.com",
+                adminRoleId,
+                passwordEncoder.encode(TEST_PASSWORD),
+                "管理员",
+                null,
+                null,
+                null,
+                null,
+                Direction.COMPUTER_VISION,
+                null,
+                null,
+                null,
+                false,
+                null,
+                null,
+                null,
+                null,
+                null);
         RepositoryTestObjects.insert(userMapper, adminUser, UserDO.class);
 
         // 登录获取 Cookie 和 CSRF Token
@@ -133,15 +145,11 @@ class AdminCollegeControllerIntegrationTest extends BaseIntegrationTest {
     }
 
     private void createPermission(String value, String name) {
-        Permission permission = new Permission();
-        permission.setName(name);
-        permission.setValue(value);
+        Permission permission = Permission.create(name, value, null, null, null);
         RepositoryTestObjects.insert(permissionMapper, permission, PermissionDO.class);
 
         // 关联到管理员角色
-        RolePermission rolePermission = new RolePermission();
-        rolePermission.setRoleId(adminRoleId);
-        rolePermission.setPermissionId(permission.getId());
+        RolePermission rolePermission = RolePermission.create(adminRoleId, permission.getId());
         RepositoryTestObjects.insert(rolePermissionMapper, rolePermission, RolePermissionDO.class);
     }
 
@@ -177,9 +185,7 @@ class AdminCollegeControllerIntegrationTest extends BaseIntegrationTest {
     }
 
     private College createTestCollege(String name) {
-        College college = new College();
-        college.setName(name);
-        return college;
+        return College.create(name);
     }
 
     // ==================== POST /api/v1/admin/colleges ====================
@@ -498,13 +504,27 @@ class AdminCollegeControllerIntegrationTest extends BaseIntegrationTest {
         Long collegeId = college.getId();
 
         // 创建关联用户
-        User user = new User();
-        user.setStudentId("test001");
-        user.setUsername("测试用户");
-        user.setEmail("test@example.com");
-        user.setPassword(passwordEncoder.encode("password"));
-        user.setCollegeId(collegeId);
-        user.setDirection(Direction.COMPUTER_VISION);
+        User user = User.reconstruct(
+                null,
+                "test001",
+                "test@example.com",
+                null,
+                passwordEncoder.encode("password"),
+                "测试用户",
+                null,
+                collegeId,
+                null,
+                null,
+                Direction.COMPUTER_VISION,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null);
         RepositoryTestObjects.insert(userMapper, user, UserDO.class);
 
         HttpHeaders headers = createAuthHeadersWithCsrf();
@@ -540,14 +560,18 @@ class AdminCollegeControllerIntegrationTest extends BaseIntegrationTest {
         Long collegeId = college.getId();
 
         // 创建关联报名记录
-        Enroll enroll = Enroll.builder()
-                .username("测试报名者")
-                .studentId("test002")
-                .collegeId(collegeId)
-                .major("计算机科学与技术")
-                .direction(Direction.COMPUTER_VISION)
-                .status(EnrollStatus.PENDING)
-                .build();
+        Enroll enroll = Enroll.create(
+                "测试报名者",
+                "test002",
+                "password",
+                null,
+                collegeId,
+                "计算机科学与技术",
+                null,
+                Direction.COMPUTER_VISION,
+                null,
+                null,
+                null);
         RepositoryTestObjects.insert(enrollMapper, enroll, EnrollDO.class);
 
         HttpHeaders headers = createAuthHeadersWithCsrf();

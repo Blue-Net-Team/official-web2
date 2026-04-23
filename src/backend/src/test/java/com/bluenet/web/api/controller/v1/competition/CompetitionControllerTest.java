@@ -1,7 +1,7 @@
 package com.bluenet.web.api.controller.v1.competition;
 
 import com.bluenet.web.api.dto.competition.CompetitionResponseDTO;
-import com.bluenet.web.application.service.CompetitionService;
+import com.bluenet.web.application.service.CompetitionAppService;
 import com.bluenet.web.testcontainers.TestcontainersConfiguration;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -36,7 +36,7 @@ class CompetitionControllerTest {
     private MockMvc mockMvc;
 
     @MockBean
-    private CompetitionService competitionService;
+    private CompetitionAppService competitionAppService;
 
     private static final Long TEST_ID = 1L;
     private static final String TEST_NAME = "蓝桥杯";
@@ -64,7 +64,7 @@ class CompetitionControllerTest {
         List<CompetitionResponseDTO> competitions = new ArrayList<>();
         competitions.add(createTestCompetitionResponseDTO());
 
-        when(competitionService.getCompetitionResponseList(anyInt())).thenReturn(competitions);
+        when(competitionAppService.getCompetitionResponseList(anyInt())).thenReturn(competitions);
 
         mockMvc.perform(
                 get("/api/v1/competitions")
@@ -82,14 +82,14 @@ class CompetitionControllerTest {
                 .andExpect(jsonPath("$.data[0].summary").value(TEST_SUMMARY))
                 .andExpect(jsonPath("$.data[0].coverFileId").value(TEST_COVER_FILE_ID));
 
-        verify(competitionService).getCompetitionResponseList(10);
+        verify(competitionAppService).getCompetitionResponseList(10);
     }
 
     @Test
     @DisplayName("获取竞赛列表：无参数时应使用默认 limit=10")
     void getCompetitionList_withoutLimitParam_shouldUseDefaultLimit() throws Exception {
         List<CompetitionResponseDTO> competitions = new ArrayList<>();
-        when(competitionService.getCompetitionResponseList(anyInt())).thenReturn(competitions);
+        when(competitionAppService.getCompetitionResponseList(anyInt())).thenReturn(competitions);
 
         mockMvc.perform(
                 get("/api/v1/competitions")
@@ -97,13 +97,13 @@ class CompetitionControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200));
 
-        verify(competitionService).getCompetitionResponseList(10);
+        verify(competitionAppService).getCompetitionResponseList(10);
     }
 
     @Test
     @DisplayName("获取竞赛列表：空列表时应返回空数组")
     void getCompetitionList_emptyList_shouldReturnEmptyArray() throws Exception {
-        when(competitionService.getCompetitionResponseList(anyInt())).thenReturn(new ArrayList<>());
+        when(competitionAppService.getCompetitionResponseList(anyInt())).thenReturn(new ArrayList<>());
 
         mockMvc.perform(
                 get("/api/v1/competitions")
@@ -114,7 +114,7 @@ class CompetitionControllerTest {
                 .andExpect(jsonPath("$.data").isArray())
                 .andExpect(jsonPath("$.data").isEmpty());
 
-        verify(competitionService).getCompetitionResponseList(10);
+        verify(competitionAppService).getCompetitionResponseList(10);
     }
 
     @Test
@@ -125,7 +125,7 @@ class CompetitionControllerTest {
                 CompetitionResponseDTO.builder().id(2L).name("ACM").level("national").build(),
                 CompetitionResponseDTO.builder().id(3L).name("数学建模").level("provincial").build());
 
-        when(competitionService.getCompetitionResponseList(anyInt())).thenReturn(competitions);
+        when(competitionAppService.getCompetitionResponseList(anyInt())).thenReturn(competitions);
 
         mockMvc.perform(
                 get("/api/v1/competitions")
@@ -138,6 +138,6 @@ class CompetitionControllerTest {
                 .andExpect(jsonPath("$.data[1].name").value("ACM"))
                 .andExpect(jsonPath("$.data[2].name").value("数学建模"));
 
-        verify(competitionService).getCompetitionResponseList(10);
+        verify(competitionAppService).getCompetitionResponseList(10);
     }
 }

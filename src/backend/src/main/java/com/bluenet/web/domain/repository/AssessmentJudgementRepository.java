@@ -3,7 +3,6 @@ package com.bluenet.web.domain.repository;
 import com.bluenet.web.domain.model.entity.AssessmentJudgement;
 import com.bluenet.web.domain.model.enumerate.QuestionType;
 import com.bluenet.web.domain.model.vo.AssessmentCandidateScoreRowVO;
-import com.bluenet.web.domain.model.vo.AssessmentJudgementVO;
 import com.bluenet.web.domain.model.vo.AssessmentQuestionScoreboardVO;
 import com.bluenet.web.domain.model.vo.AssessmentQuestionSubmissionHistoryVO;
 import com.bluenet.web.domain.model.vo.AssessmentQuestionSubmissionVO;
@@ -20,7 +19,7 @@ public interface AssessmentJudgementRepository {
      * 保存新的考核评审结果 记录。
      *
      * @param judgement
-     *            考核评审结果对象。
+     *            考核评审结果实体。
      */
     void save(AssessmentJudgement judgement);
 
@@ -29,26 +28,26 @@ public interface AssessmentJudgementRepository {
      *
      * @param id
      *            业务记录主键。
-     * @return 查询到的考核评审结果 结果；不存在时为空。
+     * @return 查询到的考核评审结果 实体；不存在时为空。
      */
-    Optional<AssessmentJudgementVO> findById(Long id);
+    Optional<AssessmentJudgement> findById(Long id);
 
     /**
      * 更新已有考核评审结果 记录。
      *
      * @param judgement
-     *            考核评审结果对象。
+     *            考核评审结果实体。
      */
-    void update(AssessmentJudgementVO judgement);
+    void update(AssessmentJudgement judgement);
 
     /**
      * 查询指定作答的最新评审结果。
      *
      * @param answerId
      *            考核作答主键。
-     * @return 查询到的考核评审结果 结果；不存在时为空。
+     * @return 查询到的考核评审结果 实体；不存在时为空。
      */
-    Optional<AssessmentJudgementVO> findLatestByAnswerId(Long answerId);
+    Optional<AssessmentJudgement> findLatestByAnswerId(Long answerId);
 
     /**
      * 查询用户在指定题目上的最新评审结果。
@@ -57,27 +56,27 @@ public interface AssessmentJudgementRepository {
      *            考核题目主键。
      * @param userId
      *            用户主键，用于限定用户范围。
-     * @return 查询到的考核评审结果 结果；不存在时为空。
+     * @return 查询到的考核评审结果 实体；不存在时为空。
      */
-    Optional<AssessmentJudgementVO> findLatestByQuestionIdAndUserId(Long questionId, Long userId);
+    Optional<AssessmentJudgement> findLatestByQuestionIdAndUserId(Long questionId, Long userId);
 
     /**
      * 查询指定题目的全部评审记录。
      *
      * @param questionId
      *            考核题目主键。
-     * @return 满足条件的考核评审结果 结果集合。
+     * @return 满足条件的考核评审结果 实体集合。
      */
-    List<AssessmentJudgementVO> findAllByQuestionId(Long questionId);
+    List<AssessmentJudgement> findAllByQuestionId(Long questionId);
 
     /**
      * 查询指定题目最新的客观题评审结果。
      *
      * @param questionId
      *            考核题目主键。
-     * @return 满足条件的考核评审结果 结果集合。
+     * @return 满足条件的考核评审结果 实体集合。
      */
-    List<AssessmentJudgementVO> findLatestObjectiveByQuestionId(Long questionId);
+    List<AssessmentJudgement> findLatestObjectiveByQuestionId(Long questionId);
 
     /**
      * 查询符合条件的考核评审结果 记录。

@@ -1,6 +1,6 @@
 package com.bluenet.web.infrastructure.repository.impl;
 
-import com.bluenet.web.infrastructure.repository.support.RepositoryObjectConverter;
+import com.bluenet.web.infrastructure.repository.converter.*;
 
 import com.bluenet.web.infrastructure.repository.dataobject.*;
 
@@ -35,6 +35,11 @@ public class UserRepositoryImpl implements UserRepository {
     private final PermissionCache permissionCache;
     private final RoleMapper roleMapper;
     private final UserExperienceMapper userExperienceMapper;
+    private final UserRepositoryConverter userConverter;
+    private final CollegeRepositoryConverter collegeConverter;
+    private final QrcodeRepositoryConverter qrcodeConverter;
+    private final FileRepositoryConverter fileConverter;
+    private final RoleRepositoryConverter roleConverter;
 
     /**
      * 保存新的用户 记录。
@@ -44,7 +49,9 @@ public class UserRepositoryImpl implements UserRepository {
      */
     @Override
     public void save(User user) {
-        RepositoryObjectConverter.insert(userMapper, user, UserDO.class);
+        UserDO dataObject = userConverter.toDataObject(user);
+        userMapper.insert(dataObject);
+        user.setId(dataObject.getId());
         log.info("save user {}", user);
     }
 
@@ -57,7 +64,7 @@ public class UserRepositoryImpl implements UserRepository {
      */
     @Override
     public Optional<UserVO> findById(Long id) {
-        User user = RepositoryObjectConverter.toDomain(userMapper.selectById(id), User.class);
+        User user = userConverter.toEntity(userMapper.selectById(id));
         if (user == null) {
             log.warn("user not found id {}", id);
             return Optional.empty();
@@ -74,7 +81,7 @@ public class UserRepositoryImpl implements UserRepository {
      */
     @Override
     public Optional<UserVO> findByEmail(String email) {
-        User user = RepositoryObjectConverter.toDomain(userMapper.selectByEmail(email), User.class);
+        User user = userConverter.toEntity(userMapper.selectByEmail(email));
         if (user == null) {
             log.warn("user not found email {}", email);
             return Optional.empty();
@@ -91,7 +98,7 @@ public class UserRepositoryImpl implements UserRepository {
      */
     @Override
     public Optional<UserVO> findByStudentId(String studentId) {
-        User user = RepositoryObjectConverter.toDomain(userMapper.selectByStudentId(studentId), User.class);
+        User user = userConverter.toEntity(userMapper.selectByStudentId(studentId));
         if (user == null) {
             log.warn("user not found studentId {}", studentId);
             return Optional.empty();
@@ -216,7 +223,7 @@ public class UserRepositoryImpl implements UserRepository {
      */
     @Override
     public Optional<UserVO> findByGithubId(String githubId) {
-        User user = RepositoryObjectConverter.toDomain(userMapper.selectByGithubId(githubId), User.class);
+        User user = userConverter.toEntity(userMapper.selectByGithubId(githubId));
         if (user == null) {
             return Optional.empty();
         }
@@ -298,8 +305,7 @@ public class UserRepositoryImpl implements UserRepository {
         // 学院
         String collegeName = null;
         if (user.getCollegeId() != null) {
-            College college = RepositoryObjectConverter
-                    .toDomain(collegeMapper.selectById(user.getCollegeId()), College.class);
+            College college = collegeConverter.toEntity(collegeMapper.selectById(user.getCollegeId()));
             collegeName = college != null ? college.getName() : null;
         } else {
             log.warn("user {} has no collegeId", user.getId());
@@ -308,11 +314,9 @@ public class UserRepositoryImpl implements UserRepository {
         // 微信二维码
         String wechatQrCodeUrl = null;
         if (user.getQrcodeId() != null) {
-            Qrcode qrcode = RepositoryObjectConverter
-                    .toDomain(qrcodeMapper.selectById(user.getQrcodeId()), Qrcode.class);
+            Qrcode qrcode = qrcodeConverter.toEntity(qrcodeMapper.selectById(user.getQrcodeId()));
             if (qrcode != null && qrcode.getFileId() != null) {
-                File wechatQrCode = RepositoryObjectConverter
-                        .toDomain(fileMapper.selectById(qrcode.getFileId()), File.class);
+                File wechatQrCode = fileConverter.toEntity(fileMapper.selectById(qrcode.getFileId()));
                 wechatQrCodeUrl = wechatQrCode != null ? wechatQrCode.getUrl() : null;
             }
         } else {
@@ -330,7 +334,7 @@ public class UserRepositoryImpl implements UserRepository {
         // 角色
         String roleName;
         if (user.getRoleId() != null) {
-            Role roleOptional = RepositoryObjectConverter.toDomain(roleMapper.selectById(user.getRoleId()), Role.class);
+            Role roleOptional = roleConverter.toEntity(roleMapper.selectById(user.getRoleId()));
             roleName = roleOptional != null ? roleOptional.getName() : null;
         } else {
             log.warn("user {} has no roleId", user.getId());

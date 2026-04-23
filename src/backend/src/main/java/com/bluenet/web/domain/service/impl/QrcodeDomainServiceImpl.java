@@ -4,7 +4,6 @@ import com.bluenet.web.domain.exception.DataNotFound;
 import com.bluenet.web.domain.model.entity.Qrcode;
 import com.bluenet.web.domain.model.enumerate.QrcodeType;
 import com.bluenet.web.domain.model.vo.FileVO;
-import com.bluenet.web.domain.model.vo.QrcodeVO;
 import com.bluenet.web.domain.repository.FileRepository;
 import com.bluenet.web.domain.repository.QrcodeRepository;
 import com.bluenet.web.domain.service.QrcodeDomainService;
@@ -31,11 +30,11 @@ public class QrcodeDomainServiceImpl implements QrcodeDomainService {
         if (type == null) {
             throw new IllegalArgumentException("二维码类型不能为空");
         }
-        QrcodeVO qrcodeVO = QrcodeVO.builder()
+        Qrcode qrcode = Qrcode.builder()
                 .fileId(fileVO.getId())
                 .type(type)
                 .build();
-        qrcodeRepository.save(qrcodeVO);
+        qrcodeRepository.save(qrcode);
         log.info("二维码保存成功，fileId={}, type={}", fileVO.getId(), type);
     }
 

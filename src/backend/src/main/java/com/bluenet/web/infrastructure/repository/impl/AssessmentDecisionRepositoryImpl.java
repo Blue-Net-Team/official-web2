@@ -1,6 +1,6 @@
 package com.bluenet.web.infrastructure.repository.impl;
 
-import com.bluenet.web.infrastructure.repository.support.RepositoryObjectConverter;
+import com.bluenet.web.infrastructure.repository.converter.AssessmentDecisionRepositoryConverter;
 
 import com.bluenet.web.infrastructure.repository.dataobject.*;
 
@@ -21,6 +21,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class AssessmentDecisionRepositoryImpl implements AssessmentDecisionRepository {
     private final AssessmentDecisionMapper assessmentDecisionMapper;
+    private final AssessmentDecisionRepositoryConverter converter;
 
     /**
      * 保存新的考核最终决策 记录。
@@ -31,7 +32,9 @@ public class AssessmentDecisionRepositoryImpl implements AssessmentDecisionRepos
     @Override
     public void save(AssessmentDecision decision) {
         log.info("save assessment decision {}", decision);
-        RepositoryObjectConverter.insert(assessmentDecisionMapper, decision, AssessmentDecisionDO.class);
+        AssessmentDecisionDO dataObject = converter.toDataObject(decision);
+        assessmentDecisionMapper.insert(dataObject);
+        decision.setId(dataObject.getId());
     }
 
     /**
@@ -43,8 +46,7 @@ public class AssessmentDecisionRepositoryImpl implements AssessmentDecisionRepos
      */
     @Override
     public Optional<AssessmentDecisionVO> findById(Long id) {
-        AssessmentDecision decision = RepositoryObjectConverter
-                .toDomain(assessmentDecisionMapper.selectById(id), AssessmentDecision.class);
+        AssessmentDecision decision = converter.toEntity(assessmentDecisionMapper.selectById(id));
         if (decision == null) {
             log.warn("assessment decision not found id {}", id);
             return Optional.empty();
@@ -61,8 +63,7 @@ public class AssessmentDecisionRepositoryImpl implements AssessmentDecisionRepos
     @Override
     public void update(AssessmentDecisionVO decision) {
         AssessmentDecision entity = convertToEntity(decision);
-        int influence = RepositoryObjectConverter
-                .updateById(assessmentDecisionMapper, entity, AssessmentDecisionDO.class);
+        int influence = assessmentDecisionMapper.updateById(converter.toDataObject(entity));
         if (influence == 0) {
             log.warn("更新考核通过决策失败，decisionId {}", decision.getId());
             throw new GlobalException("更新考核通过决策失败");
@@ -80,9 +81,8 @@ public class AssessmentDecisionRepositoryImpl implements AssessmentDecisionRepos
      */
     @Override
     public Optional<AssessmentDecisionVO> findByUserIdAndAssessmentTimeId(Long userId, Long assessmentTimeId) {
-        AssessmentDecision decision = RepositoryObjectConverter.toDomain(
-                assessmentDecisionMapper.selectByUserIdAndAssessmentTimeId(userId, assessmentTimeId),
-                AssessmentDecision.class);
+        AssessmentDecision decision = converter.toEntity(
+                assessmentDecisionMapper.selectByUserIdAndAssessmentTimeId(userId, assessmentTimeId));
         if (decision == null) {
             return Optional.empty();
         }
@@ -97,16 +97,15 @@ public class AssessmentDecisionRepositoryImpl implements AssessmentDecisionRepos
      * @return 转换后的目标模型对象。
      */
     private AssessmentDecision convertToEntity(AssessmentDecisionVO decision) {
-        AssessmentDecision entity = new AssessmentDecision();
-        entity.setId(decision.getId());
-        entity.setUserId(decision.getUserId());
-        entity.setAssessmentTimeId(decision.getAssessmentTimeId());
-        entity.setPassed(decision.getPassed());
-        entity.setDecidedBy(decision.getDecidedBy());
-        entity.setDecisionComment(decision.getDecisionComment());
-        entity.setDecidedAt(decision.getDecidedAt());
-        entity.setUpdatedAt(decision.getUpdatedAt());
-        return entity;
+        return AssessmentDecision.reconstruct(
+                decision.getId(),
+                decision.getUserId(),
+                decision.getAssessmentTimeId(),
+                decision.getPassed(),
+                decision.getDecidedBy(),
+                decision.getDecisionComment(),
+                decision.getDecidedAt(),
+                decision.getUpdatedAt());
     }
 
     /**
@@ -139,9 +138,8 @@ public class AssessmentDecisionRepositoryImpl implements AssessmentDecisionRepos
     @Override
     public List<AssessmentDecisionVO> findByAssessmentTimeId(Long assessmentTimeId) {
         // Mapper 只返回决策 DO，RepositoryImpl 负责转换成领域对象后再组装 VO。
-        return RepositoryObjectConverter.toDomainList(
-                assessmentDecisionMapper.selectByAssessmentTimeId(assessmentTimeId),
-                AssessmentDecision.class)
+        return converter.toEntityList(
+                assessmentDecisionMapper.selectByAssessmentTimeId(assessmentTimeId))
                 .stream()
                 .map(this::convertToVO)
                 .toList();

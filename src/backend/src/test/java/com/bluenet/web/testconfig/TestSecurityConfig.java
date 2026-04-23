@@ -15,7 +15,7 @@ public class TestSecurityConfig {
     @Primary
     public PermissionScanner permissionScanner() {
         // 返回一个不执行任何操作的 PermissionScanner
-        return new PermissionScanner(null, null, null) {
+        return new PermissionScanner(null, null, null, null) {
             @Override
             public void afterPropertiesSet() {
                 // 什么都不做，避免在测试中扫描权限

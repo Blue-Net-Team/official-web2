@@ -107,9 +107,7 @@ class QrcodeControllerIntegrationTest extends BaseIntegrationTest {
         RepositoryTestObjects.insert(qrcodeMapper, consultationQrcode, QrcodeDO.class);
 
         // 创建用户二维码（不应被查询出来）
-        Qrcode userQrcode = new Qrcode();
-        userQrcode.setFileId(file2.getId());
-        userQrcode.setType(QrcodeType.USER);
+        Qrcode userQrcode = Qrcode.reconstruct(null, file2.getId(), QrcodeType.USER, null, null, null);
         RepositoryTestObjects.insert(qrcodeMapper, userQrcode, QrcodeDO.class);
 
         mockMvc.perform(get("/api/v1/qrcodes/consultation"))
@@ -255,9 +253,7 @@ class QrcodeControllerIntegrationTest extends BaseIntegrationTest {
     void deleteConsultationQrcode_deleteUserType_shouldFail() throws Exception {
         // 创建用户类型二维码
         File file = createTestFile("user-qrcode.png");
-        Qrcode userQrcode = new Qrcode();
-        userQrcode.setFileId(file.getId());
-        userQrcode.setType(QrcodeType.USER);
+        Qrcode userQrcode = Qrcode.reconstruct(null, file.getId(), QrcodeType.USER, null, null, null);
         RepositoryTestObjects.insert(qrcodeMapper, userQrcode, QrcodeDO.class);
 
         mockMvc.perform(delete("/api/v1/admin/qrcodes/consultation/" + userQrcode.getId()))
@@ -271,7 +267,7 @@ class QrcodeControllerIntegrationTest extends BaseIntegrationTest {
     }
 
     private File createTestFileWithType(String filename, FileType type) {
-        File file = new File(null, filename, type, "test-url/" + filename);
+        File file = File.reconstruct(null, filename, type, "test-url/" + filename);
         RepositoryTestObjects.insert(fileMapper, file, FileDO.class);
         return file;
     }

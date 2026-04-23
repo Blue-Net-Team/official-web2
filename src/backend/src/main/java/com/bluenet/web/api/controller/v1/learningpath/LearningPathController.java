@@ -2,7 +2,9 @@ package com.bluenet.web.api.controller.v1.learningpath;
 
 import com.bluenet.web.api.dto.ResponseMessage;
 import com.bluenet.web.api.dto.learningpath.DirectionLearningPathDTO;
-import com.bluenet.web.application.service.LearningPathService;
+import com.bluenet.web.application.LearningPathResult;
+import com.bluenet.web.application.converter.LearningPathAppConverter;
+import com.bluenet.web.application.service.LearningPathAppService;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
 import com.bluenet.web.infrastructure.security.annotation.RequiresPermission;
 import io.swagger.v3.oas.annotations.Operation;
@@ -19,6 +21,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+
 /**
  * 学习路径公开接口Controller
  * <p>
@@ -30,7 +34,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1/directions")
 @RequiredArgsConstructor
 public class LearningPathController {
-    private final LearningPathService learningPathService;
+    private final LearningPathAppService learningPathAppService;
+    private final LearningPathAppConverter learningPathAppConverter;
 
     @Operation(summary = "获取方向学习路径", description = "获取指定方向的学习路径步骤列表，公开访问无需认证")
     @ApiResponses({
@@ -42,8 +47,8 @@ public class LearningPathController {
     public ResponseMessage<DirectionLearningPathDTO> getLearningPath(
             @Parameter(description = "方向标识（cv/embed/struct）", required = true, example = "cv") @PathVariable String slug) {
         try {
-            DirectionLearningPathDTO learningPath = learningPathService.getLearningPath(slug);
-            return ResponseMessage.success(learningPath);
+            List<LearningPathResult> results = learningPathAppService.getLearningPath(slug);
+            return ResponseMessage.success(learningPathAppConverter.toDirectionLearningPathDTO(slug, results));
         } catch (IllegalArgumentException e) {
             return ResponseMessage.error(404, e.getMessage());
         }

@@ -1,7 +1,7 @@
 package com.bluenet.web.domain.repository;
 
+import com.bluenet.web.domain.model.entity.AssessmentTime;
 import com.bluenet.web.domain.model.enumerate.Direction;
-import com.bluenet.web.domain.model.vo.AssessmentTimeVO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -10,38 +10,37 @@ import java.util.Optional;
 /**
  * 考核时间仓库接口
  * <p>
- * 负责考核时间数据的持久化操作
+ * 负责考核时间数据的持久化操作，只操作 Entity，不暴露 VO 或 DTO
  * </p>
  */
 public interface AssessmentTimeRepository {
     /**
-     * 处理考核场次 仓储职责中的业务数据访问逻辑。
+     * 按主键查询考核场次记录。
      *
      * @param id
      *            业务记录主键。
-     * @return 查询或处理得到的考核场次 结果。
+     * @return 查询到的考核场次实体；不存在时为 Optional.empty()。
      */
-    Optional<AssessmentTimeVO> findById(Long id);
+    Optional<AssessmentTime> findById(Long id);
 
     /**
-     * 保存新的考核场次 记录。
+     * 保存新的考核场次记录。
      *
-     * @param vo
-     *            领域视图对象。
-     * @return 新记录的主键。
+     * @param assessmentTime
+     *            考核时间实体。
      */
-    Long save(AssessmentTimeVO vo);
+    void save(AssessmentTime assessmentTime);
 
     /**
-     * 更新已有考核场次 记录。
+     * 更新已有考核场次记录。
      *
-     * @param vo
-     *            领域视图对象。
+     * @param assessmentTime
+     *            考核时间实体（id 必须非空）。
      */
-    void update(AssessmentTimeVO vo);
+    void update(AssessmentTime assessmentTime);
 
     /**
-     * 删除指定考核场次 记录。
+     * 删除指定考核场次记录。
      *
      * @param id
      *            业务记录主键。
@@ -49,7 +48,7 @@ public interface AssessmentTimeRepository {
     void deleteById(Long id);
 
     /**
-     * 判断是否存在满足条件的考核场次 记录。
+     * 判断是否存在满足条件的考核场次记录。
      *
      * @param id
      *            业务记录主键。
@@ -58,7 +57,7 @@ public interface AssessmentTimeRepository {
     boolean existsById(Long id);
 
     /**
-     * 判断是否存在满足条件的考核场次 记录。
+     * 判断是否存在满足条件的考核场次记录。
      *
      * @param direction
      *            技术方向过滤条件。
@@ -71,7 +70,7 @@ public interface AssessmentTimeRepository {
     boolean existsByDirectionAndEpochAndGrade(Direction direction, Integer epoch, Integer grade);
 
     /**
-     * 判断除当前记录外是否存在相同业务唯一键的考核场次 记录。
+     * 判断除当前记录外是否存在相同业务唯一键的考核场次记录。
      *
      * @param direction
      *            技术方向过滤条件。
@@ -96,7 +95,7 @@ public interface AssessmentTimeRepository {
     boolean hasAssociatedQuestions(Long assessmentTimeId);
 
     /**
-     * 按组合筛选条件分页查询考核场次 视图。
+     * 按组合筛选条件分页查询考核场次实体。
      *
      * @param direction
      *            技术方向过滤条件。
@@ -104,9 +103,9 @@ public interface AssessmentTimeRepository {
      *            考核年级。
      * @param pageable
      *            Spring 分页请求对象。
-     * @return 分页后的考核场次 结果。
+     * @return 分页后的考核场次结果。
      */
-    Page<AssessmentTimeVO> findByFilters(Direction direction, Integer grade, Pageable pageable);
+    Page<AssessmentTime> findByFilters(Direction direction, Integer grade, Pageable pageable);
 
     /**
      * 查询用户已经参与过的考核场次。
@@ -119,8 +118,8 @@ public interface AssessmentTimeRepository {
      *            入学年份过滤条件。
      * @param pageable
      *            Spring 分页请求对象。
-     * @return 分页后的考核场次 结果。
+     * @return 分页后的考核场次结果。
      */
-    Page<AssessmentTimeVO> findByUserParticipation(Long userId, Direction direction, Integer enrollmentYear,
+    Page<AssessmentTime> findByUserParticipation(Long userId, Direction direction, Integer enrollmentYear,
             Pageable pageable);
 }

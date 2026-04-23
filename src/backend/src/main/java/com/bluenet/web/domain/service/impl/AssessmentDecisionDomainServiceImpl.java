@@ -69,15 +69,14 @@ public class AssessmentDecisionDomainServiceImpl implements AssessmentDecisionDo
     }
 
     private AssessmentDecision convertToEntity(AssessmentDecisionVO decision) {
-        AssessmentDecision entity = new AssessmentDecision();
-        entity.setId(decision.getId());
-        entity.setUserId(decision.getUserId());
-        entity.setAssessmentTimeId(decision.getAssessmentTimeId());
-        entity.setPassed(decision.getPassed());
-        entity.setDecidedBy(decision.getDecidedBy());
-        entity.setDecisionComment(decision.getDecisionComment());
-        entity.setDecidedAt(decision.getDecidedAt());
-        entity.setUpdatedAt(decision.getUpdatedAt());
-        return entity;
+        return AssessmentDecision.reconstruct(
+                decision.getId(),
+                decision.getUserId(),
+                decision.getAssessmentTimeId(),
+                decision.getPassed(),
+                decision.getDecidedBy(),
+                decision.getDecisionComment(),
+                decision.getDecidedAt(),
+                decision.getUpdatedAt());
     }
 }

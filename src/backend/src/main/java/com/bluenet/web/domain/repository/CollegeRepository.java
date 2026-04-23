@@ -1,6 +1,6 @@
 package com.bluenet.web.domain.repository;
 
-import com.bluenet.web.domain.model.vo.CollegeVO;
+import com.bluenet.web.domain.model.entity.College;
 
 import java.util.List;
 import java.util.Optional;
@@ -8,47 +8,44 @@ import java.util.Optional;
 /**
  * 学院仓库接口
  * <p>
- * 负责学院数据的持久化操作，包括增删改查等基本操作
+ * 负责学院数据的持久化操作，只操作 Entity，不暴露 VO 或 DTO
  * </p>
  */
 public interface CollegeRepository {
     /**
-     * 查询全部学院 记录。
+     * 查询全部学院记录。
      *
-     * @return 满足条件的学院 结果集合。
+     * @return 学院实体集合。
      */
-    List<CollegeVO> findAll();
+    List<College> findAll();
 
     /**
-     * 处理学院 仓储职责中的业务数据访问逻辑。
-     *
-     * @param id
-     *            业务记录主键。
-     * @return 查询或处理得到的学院 结果。
-     */
-    Optional<CollegeVO> findById(Long id);
-
-    /**
-     * 保存新的学院 记录。
-     *
-     * @param name
-     *            业务对象名称。
-     * @return 新记录的主键。
-     */
-    Long save(String name);
-
-    /**
-     * 更新已有学院 记录。
+     * 按主键查询学院记录。
      *
      * @param id
      *            业务记录主键。
-     * @param name
-     *            业务对象名称。
+     * @return 查询到的学院实体；不存在时为 Optional.empty()。
      */
-    void update(Long id, String name);
+    Optional<College> findById(Long id);
 
     /**
-     * 删除指定学院 记录。
+     * 保存学院记录。
+     *
+     * @param college
+     *            学院实体
+     */
+    void save(College college);
+
+    /**
+     * 更新已有学院记录。
+     *
+     * @param college
+     *            学院实体（id 必须非空）
+     */
+    void update(College college);
+
+    /**
+     * 删除指定学院记录。
      *
      * @param id
      *            业务记录主键。
@@ -56,7 +53,7 @@ public interface CollegeRepository {
     void deleteById(Long id);
 
     /**
-     * 判断是否存在满足条件的学院 记录。
+     * 判断是否存在满足条件的学院记录。
      *
      * @param id
      *            业务记录主键。
@@ -65,7 +62,7 @@ public interface CollegeRepository {
     boolean existsById(Long id);
 
     /**
-     * 判断是否存在满足条件的学院 记录。
+     * 判断是否存在满足条件的学院记录。
      *
      * @param name
      *            业务对象名称。
@@ -74,7 +71,7 @@ public interface CollegeRepository {
     boolean existsByName(String name);
 
     /**
-     * 判断除当前记录外是否存在相同业务唯一键的学院 记录。
+     * 判断除当前记录外是否存在相同业务唯一键的学院记录。
      *
      * @param name
      *            业务对象名称。

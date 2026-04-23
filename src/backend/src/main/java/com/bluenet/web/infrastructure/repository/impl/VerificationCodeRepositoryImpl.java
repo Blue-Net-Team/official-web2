@@ -1,6 +1,6 @@
 package com.bluenet.web.infrastructure.repository.impl;
 
-import com.bluenet.web.infrastructure.repository.support.RepositoryObjectConverter;
+import com.bluenet.web.infrastructure.repository.converter.VerificationCodeRepositoryConverter;
 
 import com.bluenet.web.infrastructure.repository.dataobject.*;
 
@@ -21,6 +21,7 @@ import java.util.Optional;
 public class VerificationCodeRepositoryImpl implements VerificationCodeRepository {
 
     private final VerifyCodeMapper verifyCodeMapper;
+    private final VerificationCodeRepositoryConverter converter;
 
     /**
      * 按邮箱和验证码查询验证码记录。
@@ -33,9 +34,8 @@ public class VerificationCodeRepositoryImpl implements VerificationCodeRepositor
      */
     @Override
     public Optional<VerifyCodeVO> findByEmailAndCode(String email, String code) {
-        VerifyCode verifyCode = RepositoryObjectConverter.toDomain(
-                verifyCodeMapper.selectLatestByTargetAndCode(email, code),
-                VerifyCode.class);
+        VerifyCode verifyCode = converter.toEntity(
+                verifyCodeMapper.selectLatestByTargetAndCode(email, code));
 
         if (verifyCode == null) {
             return Optional.empty();
@@ -57,9 +57,8 @@ public class VerificationCodeRepositoryImpl implements VerificationCodeRepositor
      */
     @Override
     public Optional<VerifyCodeVO> findByEmailAndCodeAndScene(String email, String code, String scene) {
-        VerifyCode verifyCode = RepositoryObjectConverter.toDomain(
-                verifyCodeMapper.selectLatestByTargetAndCodeAndScene(email, code, scene),
-                VerifyCode.class);
+        VerifyCode verifyCode = converter.toEntity(
+                verifyCodeMapper.selectLatestByTargetAndCodeAndScene(email, code, scene));
 
         if (verifyCode == null) {
             return Optional.empty();
@@ -76,12 +75,14 @@ public class VerificationCodeRepositoryImpl implements VerificationCodeRepositor
      */
     @Override
     public void save(VerifyCodeVO verifyCodeVO) {
-        VerifyCode verifyCode = new VerifyCode();
-        verifyCode.setTarget(verifyCodeVO.getTarget());
-        verifyCode.setCode(verifyCodeVO.getCode());
-        verifyCode.setExpireAt(verifyCodeVO.getExpireAt());
-        verifyCode.setScene(verifyCodeVO.getScene());
-        RepositoryObjectConverter.insert(verifyCodeMapper, verifyCode, VerifyCodeDO.class);
+        VerifyCode verifyCode = VerifyCode.create(
+                verifyCodeVO.getTarget(),
+                verifyCodeVO.getCode(),
+                verifyCodeVO.getExpireAt(),
+                verifyCodeVO.getScene());
+        VerifyCodeDO dataObject = converter.toDataObject(verifyCode);
+        verifyCodeMapper.insert(dataObject);
+        verifyCode.setId(dataObject.getId());
         log.debug(
                 "验证码已存储 - target={}, scene={}, expireAt={}",
                 verifyCodeVO.getTarget(),

@@ -9,7 +9,9 @@ import com.bluenet.web.api.dto.user.UpdateAvatarRequestDTO;
 import com.bluenet.web.api.dto.user.UpdateProfileRequestDTO;
 import com.bluenet.web.api.dto.user.UserInfo;
 import com.bluenet.web.api.dto.user.VerifyPasswordRequestDTO;
-import com.bluenet.web.application.service.UserInfoService;
+import com.bluenet.web.api.converter.userinfo.UserInfoRequestConverter;
+import com.bluenet.web.application.converter.UserInfoAppConverter;
+import com.bluenet.web.application.service.UserInfoAppService;
 import com.bluenet.web.domain.exception.GlobalException;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
 import com.bluenet.web.infrastructure.security.annotation.RateLimit;
@@ -34,7 +36,9 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/v1/user")
 @RequiredArgsConstructor
 class UserProfileController {
-    private final UserInfoService userInfoService;
+    private final UserInfoAppService userInfoAppService;
+    private final UserInfoRequestConverter requestConverter;
+    private final UserInfoAppConverter userInfoAppConverter;
 
     @Operation(summary = "获取当前用户信息", description = "返回当前登录用户的基本信息")
     @ApiResponses({
@@ -46,7 +50,7 @@ class UserProfileController {
     @GetMapping("/info")
     public ResponseMessage<UserInfo> getMyInfo() {
         try {
-            return ResponseMessage.success(userInfoService.getMyInfo());
+            return ResponseMessage.success(userInfoAppConverter.toDTO(userInfoAppService.getMyInfo()));
         } catch (GlobalException e) {
             return ResponseMessage.error(e);
         }
@@ -62,7 +66,7 @@ class UserProfileController {
     @PutMapping("/info")
     public ResponseMessage<Void> updateProfile(@RequestBody UpdateProfileRequestDTO request) {
         try {
-            userInfoService.updateProfile(request);
+            userInfoAppService.updateProfile(requestConverter.toCommand(request));
             return ResponseMessage.success();
         } catch (GlobalException e) {
             return ResponseMessage.error(e);
@@ -79,7 +83,7 @@ class UserProfileController {
     @GetMapping("/tab-counts")
     public ResponseMessage<TabCountsDTO> getTabCounts() {
         try {
-            return ResponseMessage.success(userInfoService.getTabCounts());
+            return ResponseMessage.success(userInfoAppConverter.toTabCountsDTO(userInfoAppService.getTabCounts()));
         } catch (GlobalException e) {
             return ResponseMessage.error(e);
         }
@@ -93,7 +97,7 @@ class UserProfileController {
     public ResponseMessage<Void> sendEmailVerificationCode(
             @Valid @RequestBody SendEmailVerificationCodeRequestDTO request) {
         try {
-            userInfoService.sendEmailVerificationCode(request);
+            userInfoAppService.sendEmailVerificationCode(requestConverter.toCommand(request));
             return ResponseMessage.success();
         } catch (GlobalException e) {
             return ResponseMessage.error(e);
@@ -106,7 +110,7 @@ class UserProfileController {
     @PutMapping("/email")
     public ResponseMessage<Void> changeEmail(@Valid @RequestBody ChangeEmailRequestDTO request) {
         try {
-            userInfoService.changeEmail(request);
+            userInfoAppService.changeEmail(requestConverter.toCommand(request));
             return ResponseMessage.success();
         } catch (GlobalException e) {
             return ResponseMessage.error(e);
@@ -120,7 +124,7 @@ class UserProfileController {
     public ResponseMessage<String> verifyCurrentPassword(@Valid @RequestBody VerifyPasswordRequestDTO request) {
         try {
             Long userId = UserCTX.getCurrentUser().getId();
-            String token = userInfoService.verifyCurrentPassword(userId, request.getCurrentPassword());
+            String token = userInfoAppService.verifyCurrentPassword(requestConverter.toCommand(userId, request));
             return ResponseMessage.success(token);
         } catch (GlobalException e) {
             return ResponseMessage.error(e);
@@ -134,11 +138,7 @@ class UserProfileController {
     public ResponseMessage<Void> changePassword(@Valid @RequestBody ChangePasswordRequestDTO request) {
         try {
             Long userId = UserCTX.getCurrentUser().getId();
-            userInfoService.changePassword(
-                    userId,
-                    request.getToken(),
-                    request.getNewPassword(),
-                    request.getConfirmPassword());
+            userInfoAppService.changePassword(requestConverter.toCommand(userId, request));
             return ResponseMessage.success();
         } catch (GlobalException e) {
             return ResponseMessage.error(e);
@@ -151,7 +151,7 @@ class UserProfileController {
     @PutMapping("/avatar")
     public ResponseMessage<Void> updateAvatar(@Valid @RequestBody UpdateAvatarRequestDTO request) {
         try {
-            userInfoService.updateAvatar(request.getFileId());
+            userInfoAppService.updateAvatar(requestConverter.toCommand(request));
             return ResponseMessage.success();
         } catch (GlobalException e) {
             return ResponseMessage.error(e);

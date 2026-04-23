@@ -2,7 +2,6 @@ package com.bluenet.web.infrastructure.repository.impl;
 
 import com.bluenet.web.domain.model.entity.Qrcode;
 import com.bluenet.web.domain.model.enumerate.QrcodeType;
-import com.bluenet.web.domain.model.vo.QrcodeVO;
 import com.bluenet.web.domain.repository.QrcodeRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -11,7 +10,6 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicLong;
 
 @Slf4j
 @Repository
@@ -19,11 +17,9 @@ import java.util.concurrent.atomic.AtomicLong;
 @ConditionalOnProperty(name = "storage.enabled", havingValue = "false")
 public class MockQrcodeRepository implements QrcodeRepository {
 
-    private final AtomicLong idGenerator = new AtomicLong(1);
-
     @Override
-    public void save(QrcodeVO qrcodeVO) {
-        log.debug("Mock saving QRCode: {}", qrcodeVO);
+    public void save(Qrcode qrcode) {
+        log.debug("Mock saving QRCode: {}", qrcode);
     }
 
     @Override

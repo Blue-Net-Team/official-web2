@@ -38,8 +38,9 @@ public class AssessmentJudgementDomainServiceImpl implements AssessmentJudgement
         }
         assessmentJudgementRepository.save(entity);
 
-        return assessmentJudgementRepository.findById(entity.getId())
-                .orElseThrow(() -> new GlobalException("创建考核评判记录失败"));
+        return convertToVO(
+                assessmentJudgementRepository.findById(entity.getId())
+                        .orElseThrow(() -> new GlobalException("创建考核评判记录失败")));
     }
 
     @Override
@@ -51,52 +52,83 @@ public class AssessmentJudgementDomainServiceImpl implements AssessmentJudgement
         }
         getJudgementById(judgement.getId());
         judgement.setUpdatedAt(LocalDateTime.now());
-        assessmentJudgementRepository.update(judgement);
-        return assessmentJudgementRepository.findById(judgement.getId())
-                .orElseThrow(() -> new GlobalException("更新考核评判记录失败"));
+        assessmentJudgementRepository.update(convertToEntity(judgement));
+        return convertToVO(
+                assessmentJudgementRepository.findById(judgement.getId())
+                        .orElseThrow(() -> new GlobalException("更新考核评判记录失败")));
     }
 
     @Override
     public AssessmentJudgementVO getJudgementById(Long id) {
-        return assessmentJudgementRepository.findById(id)
-                .orElseThrow(() -> new DataNotFound("考核评判记录不存在，ID: " + id));
+        return convertToVO(
+                assessmentJudgementRepository.findById(id)
+                        .orElseThrow(() -> new DataNotFound("考核评判记录不存在，ID: " + id)));
     }
 
     @Override
     public AssessmentJudgementVO getLatestByAnswerId(Long answerId) {
-        return assessmentJudgementRepository.findLatestByAnswerId(answerId)
-                .orElseThrow(() -> new DataNotFound("答案暂无评判记录，answerId: " + answerId));
+        return convertToVO(
+                assessmentJudgementRepository.findLatestByAnswerId(answerId)
+                        .orElseThrow(() -> new DataNotFound("答案暂无评判记录，answerId: " + answerId)));
     }
 
     @Override
     public AssessmentJudgementVO getLatestByQuestionIdAndUserId(Long questionId, Long userId) {
-        return assessmentJudgementRepository.findLatestByQuestionIdAndUserId(questionId, userId)
-                .orElseThrow(() -> new DataNotFound("考生暂无该题评判记录"));
+        return convertToVO(
+                assessmentJudgementRepository.findLatestByQuestionIdAndUserId(questionId, userId)
+                        .orElseThrow(() -> new DataNotFound("考生暂无该题评判记录")));
     }
 
     @Override
     public List<AssessmentJudgementVO> listByQuestionId(Long questionId) {
-        return assessmentJudgementRepository.findAllByQuestionId(questionId);
+        return assessmentJudgementRepository.findAllByQuestionId(questionId)
+                .stream()
+                .map(this::convertToVO)
+                .toList();
     }
 
     private AssessmentJudgement convertToEntity(AssessmentJudgementVO judgement) {
-        AssessmentJudgement entity = new AssessmentJudgement();
+        AssessmentJudgement entity = AssessmentJudgement.create(
+                judgement.getAnswerId(),
+                judgement.getQuestionId(),
+                judgement.getAssessmentTimeId(),
+                judgement.getUserId(),
+                judgement.getScore(),
+                judgement.getMaxScore(),
+                judgement.getStatus(),
+                judgement.getResultCode(),
+                judgement.getSource(),
+                judgement.getReviewerId(),
+                judgement.getReviewerType(),
+                judgement.getComment(),
+                judgement.getJudgedAt());
         entity.setId(judgement.getId());
-        entity.setAnswerId(judgement.getAnswerId());
-        entity.setQuestionId(judgement.getQuestionId());
-        entity.setAssessmentTimeId(judgement.getAssessmentTimeId());
-        entity.setUserId(judgement.getUserId());
-        entity.setScore(judgement.getScore());
-        entity.setMaxScore(judgement.getMaxScore());
-        entity.setStatus(judgement.getStatus());
-        entity.setResultCode(judgement.getResultCode());
-        entity.setSource(judgement.getSource());
-        entity.setReviewerId(judgement.getReviewerId());
-        entity.setReviewerType(judgement.getReviewerType());
-        entity.setComment(judgement.getComment());
-        entity.setJudgedAt(judgement.getJudgedAt());
         entity.setCreatedAt(judgement.getCreatedAt());
         entity.setUpdatedAt(judgement.getUpdatedAt());
         return entity;
+    }
+
+    private AssessmentJudgementVO convertToVO(AssessmentJudgement entity) {
+        if (entity == null) {
+            return null;
+        }
+        return AssessmentJudgementVO.builder()
+                .id(entity.getId())
+                .answerId(entity.getAnswerId())
+                .questionId(entity.getQuestionId())
+                .assessmentTimeId(entity.getAssessmentTimeId())
+                .userId(entity.getUserId())
+                .score(entity.getScore())
+                .maxScore(entity.getMaxScore())
+                .status(entity.getStatus())
+                .resultCode(entity.getResultCode())
+                .source(entity.getSource())
+                .reviewerId(entity.getReviewerId())
+                .reviewerType(entity.getReviewerType())
+                .comment(entity.getComment())
+                .judgedAt(entity.getJudgedAt())
+                .createdAt(entity.getCreatedAt())
+                .updatedAt(entity.getUpdatedAt())
+                .build();
     }
 }

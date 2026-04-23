@@ -107,14 +107,27 @@ class AdminLearningPathControllerIntegrationTest extends BaseIntegrationTest {
         permissionCache.refresh();
 
         // 创建管理员用户
-        User adminUser = new User();
-        adminUser.setStudentId(TEST_STUDENT_ID);
-        adminUser.setUsername("管理员");
-        adminUser.setEmail("admin@example.com");
-        adminUser.setPassword(passwordEncoder.encode(TEST_PASSWORD));
-        adminUser.setRoleId(adminRoleId);
-        adminUser.setDisable(false);
-        adminUser.setDirection(Direction.COMPUTER_VISION);
+        User adminUser = User.reconstruct(
+                null,
+                TEST_STUDENT_ID,
+                "admin@example.com",
+                adminRoleId,
+                passwordEncoder.encode(TEST_PASSWORD),
+                "管理员",
+                null,
+                null,
+                null,
+                null,
+                Direction.COMPUTER_VISION,
+                null,
+                null,
+                null,
+                false,
+                null,
+                null,
+                null,
+                null,
+                null);
         RepositoryTestObjects.insert(userMapper, adminUser, UserDO.class);
 
         // 登录获取 Cookie 和 CSRF Token
@@ -122,15 +135,11 @@ class AdminLearningPathControllerIntegrationTest extends BaseIntegrationTest {
     }
 
     private void createPermission(String value, String name) {
-        Permission permission = new Permission();
-        permission.setName(name);
-        permission.setValue(value);
+        Permission permission = Permission.create(name, value, null, null, null);
         RepositoryTestObjects.insert(permissionMapper, permission, PermissionDO.class);
 
         // 关联到管理员角色
-        RolePermission rolePermission = new RolePermission();
-        rolePermission.setRoleId(adminRoleId);
-        rolePermission.setPermissionId(permission.getId());
+        RolePermission rolePermission = RolePermission.create(adminRoleId, permission.getId());
         RepositoryTestObjects.insert(rolePermissionMapper, rolePermission, RolePermissionDO.class);
     }
 

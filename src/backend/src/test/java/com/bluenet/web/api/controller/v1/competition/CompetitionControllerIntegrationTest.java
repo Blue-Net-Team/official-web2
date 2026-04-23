@@ -72,21 +72,12 @@ class CompetitionControllerIntegrationTest extends BaseIntegrationTest {
                 .build();
         RepositoryTestObjects.insert(fileMapper, file, FileDO.class);
 
-        Competition competition1 = new Competition();
-        competition1.setName(TEST_NAME);
-        competition1.setShortName(TEST_SHORT_NAME);
-        competition1.setLogoFileId(TEST_FILE_ID);
-        competition1.setCoverFileId(TEST_FILE_ID);
-        competition1.setSummary(TEST_SUMMARY);
-        competition1.setSortOrder(0);
+        Competition competition1 = Competition
+                .create(TEST_NAME, TEST_SHORT_NAME, TEST_FILE_ID, TEST_FILE_ID, TEST_SUMMARY, null, null, null, 0);
         RepositoryTestObjects.insert(competitionMapper, competition1, CompetitionDO.class);
 
-        Competition competition2 = new Competition();
-        competition2.setName("ACM程序设计大赛");
-        competition2.setShortName("ACM");
-        competition2.setLogoFileId(TEST_FILE_ID);
-        competition2.setSummary("ACM国际大学生程序设计竞赛");
-        competition2.setSortOrder(1);
+        Competition competition2 = Competition
+                .create("ACM程序设计大赛", "ACM", TEST_FILE_ID, null, "ACM国际大学生程序设计竞赛", null, null, null, 1);
         RepositoryTestObjects.insert(competitionMapper, competition2, CompetitionDO.class);
     }
 

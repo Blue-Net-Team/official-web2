@@ -2,7 +2,7 @@ package com.bluenet.web.application.service.auth.provider;
 
 import java.util.Optional;
 
-import com.bluenet.web.application.service.auth.credential.EmailCodeCredential;
+import com.bluenet.web.application.command.auth.AuthCommands;
 import com.bluenet.web.application.service.auth.strategy.AbstractAuthProvider;
 import com.bluenet.web.application.service.auth.strategy.AuthProviderType;
 import com.bluenet.web.domain.exception.Unauthorized;
@@ -17,7 +17,7 @@ import lombok.extern.slf4j.Slf4j;
  * 邮箱验证码登录 provider，封装验证码凭证校验和消费逻辑。
  */
 @Slf4j
-public class EmailCodeLoginProvider extends AbstractAuthProvider<EmailCodeCredential, UserVO> {
+public class EmailCodeLoginProvider extends AbstractAuthProvider<AuthCommands.EmailLoginCommand, UserVO> {
     private final AuthDomainService authDomainService;
     private final VerificationCodeRepository verificationCodeRepository;
 
@@ -31,13 +31,13 @@ public class EmailCodeLoginProvider extends AbstractAuthProvider<EmailCodeCreden
     /**
      * 校验邮箱验证码并返回用户。
      *
-     * @param credential
-     *            邮箱验证码登录凭证。
+     * @param command
+     *            邮箱验证码登录命令。
      * @return 通过校验的用户。
      */
-    public UserVO authenticate(EmailCodeCredential credential) {
-        String email = credential.email();
-        String verifyCode = credential.verifyCode();
+    public UserVO authenticate(AuthCommands.EmailLoginCommand command) {
+        String email = command.email();
+        String verifyCode = command.verifyCode();
         Optional<UserVO> userVOOptional = authDomainService.checkLocalValid(email, verifyCode, LocalLoginType.EMAIL);
         UserVO userVO = userVOOptional.orElseThrow(() -> {
             log.warn("Email login failed: invalid credentials - {}", email);

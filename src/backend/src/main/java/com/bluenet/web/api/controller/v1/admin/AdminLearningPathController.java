@@ -4,7 +4,11 @@ import com.bluenet.web.api.dto.ResponseMessage;
 import com.bluenet.web.api.dto.learningpath.CreateLearningStepRequestDTO;
 import com.bluenet.web.api.dto.learningpath.LearningStepDTO;
 import com.bluenet.web.api.dto.learningpath.UpdateLearningStepRequestDTO;
-import com.bluenet.web.application.service.LearningPathService;
+import com.bluenet.web.api.converter.learningpath.LearningPathRequestConverter;
+import com.bluenet.web.application.LearningPathResult;
+import com.bluenet.web.application.command.learningpath.LearningPathCommands;
+import com.bluenet.web.application.converter.LearningPathAppConverter;
+import com.bluenet.web.application.service.LearningPathAppService;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
 import com.bluenet.web.infrastructure.security.annotation.RequiresPermission;
 import io.swagger.v3.oas.annotations.Operation;
@@ -32,7 +36,9 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 @SecurityRequirement(name = "bearer-jwt")
 public class AdminLearningPathController {
-    private final LearningPathService learningPathService;
+    private final LearningPathAppService learningPathAppService;
+    private final LearningPathRequestConverter learningPathRequestConverter;
+    private final LearningPathAppConverter learningPathAppConverter;
 
     @Operation(summary = "创建学习步骤", description = "为指定方向创建新的学习步骤")
     @ApiResponses({
@@ -46,8 +52,10 @@ public class AdminLearningPathController {
             @Parameter(description = "方向标识（cv/embed/struct）", required = true, example = "cv") @PathVariable String slug,
             @Valid @RequestBody CreateLearningStepRequestDTO request) {
         try {
-            LearningStepDTO created = learningPathService.createStep(slug, request);
-            return ResponseMessage.success(created);
+            LearningPathCommands.CreateLearningStepCommand command = learningPathRequestConverter
+                    .toCommand(slug, request);
+            LearningPathResult result = learningPathAppService.createStep(command);
+            return ResponseMessage.success(learningPathAppConverter.toDTO(result));
         } catch (IllegalArgumentException e) {
             if (e.getMessage().contains("无效的方向标识")) {
                 return ResponseMessage.error(404, e.getMessage());
@@ -68,8 +76,10 @@ public class AdminLearningPathController {
             @Parameter(description = "步骤ID", required = true, example = "1") @PathVariable Long id,
             @Valid @RequestBody UpdateLearningStepRequestDTO request) {
         try {
-            LearningStepDTO updated = learningPathService.updateStep(id, request);
-            return ResponseMessage.success(updated);
+            LearningPathCommands.UpdateLearningStepCommand command = learningPathRequestConverter
+                    .toCommand(id, request);
+            LearningPathResult result = learningPathAppService.updateStep(command);
+            return ResponseMessage.success(learningPathAppConverter.toDTO(result));
         } catch (IllegalArgumentException e) {
             if (e.getMessage().contains("不存在")) {
                 return ResponseMessage.error(404, e.getMessage());
@@ -88,7 +98,7 @@ public class AdminLearningPathController {
     public ResponseMessage<Void> deleteStep(
             @Parameter(description = "步骤ID", required = true, example = "1") @PathVariable Long id) {
         try {
-            learningPathService.deleteStep(id);
+            learningPathAppService.deleteStep(id);
             return ResponseMessage.success(null);
         } catch (IllegalArgumentException e) {
             return ResponseMessage.error(404, e.getMessage());

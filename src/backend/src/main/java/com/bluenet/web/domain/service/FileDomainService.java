@@ -1,9 +1,9 @@
 package com.bluenet.web.domain.service;
 
 import com.bluenet.web.domain.model.enumerate.FileType;
-import com.bluenet.web.domain.model.vo.AssessmentAnswerVO;
-import com.bluenet.web.domain.model.vo.AssessmentQuestionVO;
-import com.bluenet.web.domain.model.vo.AssessmentTimeVO;
+import com.bluenet.web.domain.model.entity.AssessmentAnswer;
+import com.bluenet.web.domain.model.entity.AssessmentQuestion;
+import com.bluenet.web.domain.model.entity.AssessmentTime;
 import com.bluenet.web.domain.model.vo.FileVO;
 import org.springframework.core.io.Resource;
 
@@ -26,7 +26,7 @@ public interface FileDomainService {
      *            文件ID
      * @return 答题VO
      */
-    AssessmentAnswerVO getAnswerByFileId(Long fileId);
+    AssessmentAnswer getAnswerByFileId(Long fileId);
 
     /**
      * 根据题目的附件ID获取题目信息
@@ -35,7 +35,7 @@ public interface FileDomainService {
      *            附件ID
      * @return 题目VO
      */
-    AssessmentQuestionVO getQuestionByAttachmentId(Long attachmentId);
+    AssessmentQuestion getQuestionByAttachmentId(Long attachmentId);
 
     /**
      * 根据ID获取考试时间信息
@@ -44,7 +44,7 @@ public interface FileDomainService {
      *            考试时间ID
      * @return 考试时间VO
      */
-    AssessmentTimeVO getAssessmentTimeById(Long id);
+    AssessmentTime getAssessmentTimeById(Long id);
 
     /**
      * 生成唯一文件名

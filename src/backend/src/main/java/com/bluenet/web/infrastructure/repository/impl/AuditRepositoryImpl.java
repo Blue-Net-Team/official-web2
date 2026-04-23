@@ -11,7 +11,7 @@ import com.bluenet.web.infrastructure.repository.mapper.AuditMapper;
 import com.bluenet.web.infrastructure.repository.dataobject.query.AuditEndpointLatencyQueryDO;
 import com.bluenet.web.infrastructure.repository.dataobject.query.AuditEndpointRankingQueryDO;
 import com.bluenet.web.infrastructure.repository.dataobject.query.AuditTrendPointQueryDO;
-import com.bluenet.web.infrastructure.repository.support.RepositoryObjectConverter;
+import com.bluenet.web.infrastructure.repository.converter.AuditRepositoryConverter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
@@ -21,16 +21,19 @@ import java.util.List;
 @RequiredArgsConstructor
 public class AuditRepositoryImpl implements AuditRepository {
     private final AuditMapper auditMapper;
+    private final AuditRepositoryConverter converter;
 
     /**
-     * 新增一条审计日志 记录。
+     * 保存审计日志记录。
      *
      * @param audit
      *            审计日志领域对象。
      */
     @Override
-    public void insert(Audit audit) {
-        RepositoryObjectConverter.insert(auditMapper, audit, AuditDO.class);
+    public void save(Audit audit) {
+        AuditDO dataObject = converter.toDataObject(audit);
+        auditMapper.insert(dataObject);
+        audit.setId(dataObject.getId());
     }
 
     /**

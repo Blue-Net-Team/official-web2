@@ -1,6 +1,8 @@
 package com.bluenet.web.domain.model.entity;
 
+import lombok.AccessLevel;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
@@ -8,6 +10,7 @@ import java.time.LocalDateTime;
  * Stores the final pass decision for one candidate in one assessment time.
  */
 @Data
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class AssessmentDecision {
     /**
      * 当前对象在系统中的唯一标识。
@@ -41,4 +44,65 @@ public class AssessmentDecision {
      * 记录最后更新时间。
      */
     private LocalDateTime updatedAt;
+
+    private AssessmentDecision(Long id, Long userId, Long assessmentTimeId, Boolean passed, Long decidedBy,
+            String decisionComment, LocalDateTime decidedAt, LocalDateTime updatedAt) {
+        this.id = id;
+        this.userId = userId;
+        this.assessmentTimeId = assessmentTimeId;
+        this.passed = passed;
+        this.decidedBy = decidedBy;
+        this.decisionComment = decisionComment;
+        this.decidedAt = decidedAt;
+        this.updatedAt = updatedAt;
+    }
+
+    /**
+     * 构造新考核决策聚合根
+     *
+     * @param userId
+     *            关联用户标识
+     * @param assessmentTimeId
+     *            所属考核场次标识
+     * @param passed
+     *            是否通过
+     * @param decidedBy
+     *            决策人标识
+     * @param decisionComment
+     *            决策说明
+     * @return 新的考核决策实体
+     */
+    public static AssessmentDecision create(Long userId, Long assessmentTimeId, Boolean passed,
+            Long decidedBy, String decisionComment) {
+        return new AssessmentDecision(null, userId, assessmentTimeId, passed, decidedBy,
+                decisionComment, null, null);
+    }
+
+    /**
+     * 从数据库重建 —— 跳过创建校验
+     *
+     * @param id
+     *            决策ID
+     * @param userId
+     *            关联用户标识
+     * @param assessmentTimeId
+     *            所属考核场次标识
+     * @param passed
+     *            是否通过
+     * @param decidedBy
+     *            决策人标识
+     * @param decisionComment
+     *            决策说明
+     * @param decidedAt
+     *            决策时间
+     * @param updatedAt
+     *            更新时间
+     * @return 重建的考核决策实体
+     */
+    public static AssessmentDecision reconstruct(Long id, Long userId, Long assessmentTimeId, Boolean passed,
+            Long decidedBy, String decisionComment,
+            LocalDateTime decidedAt, LocalDateTime updatedAt) {
+        return new AssessmentDecision(id, userId, assessmentTimeId, passed, decidedBy,
+                decisionComment, decidedAt, updatedAt);
+    }
 }

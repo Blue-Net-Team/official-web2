@@ -77,9 +77,7 @@ class AdminEnrollControllerIntegrationTest extends BaseIntegrationTest {
     @BeforeEach
     void setUp() {
         // 创建测试学院
-        College college = College.builder()
-                .name("计算机学院")
-                .build();
+        College college = College.create("计算机学院");
         RepositoryTestObjects.insert(collegeMapper, college, CollegeDO.class);
         testCollegeId = college.getId();
 
@@ -100,15 +98,23 @@ class AdminEnrollControllerIntegrationTest extends BaseIntegrationTest {
      */
     private Enroll createTestEnroll(EnrollStatus status) {
         String uniqueSuffix = String.valueOf(System.nanoTime() % 100000);
-        Enroll enroll = Enroll.builder()
-                .username(TEST_USERNAME)
-                .studentId(TEST_STUDENT_ID.substring(0, 8) + uniqueSuffix)
-                .collegeId(testCollegeId)
-                .major("计算机科学与技术")
-                .direction(Direction.COMPUTER_VISION)
-                .status(status)
-                .build();
+        Enroll enroll = Enroll.create(
+                TEST_USERNAME,
+                TEST_STUDENT_ID.substring(0, 8) + uniqueSuffix,
+                "password",
+                null,
+                testCollegeId,
+                "计算机科学与技术",
+                null,
+                Direction.COMPUTER_VISION,
+                null,
+                null,
+                null);
         RepositoryTestObjects.insert(enrollMapper, enroll, EnrollDO.class);
+        if (status != EnrollStatus.PENDING) {
+            enroll.setStatus(status);
+            RepositoryTestObjects.updateById(enrollMapper, enroll, EnrollDO.class);
+        }
         return enroll;
     }
 
@@ -310,12 +316,27 @@ class AdminEnrollControllerIntegrationTest extends BaseIntegrationTest {
             Enroll enroll = createTestEnroll(EnrollStatus.PENDING);
 
             // 创建已存在的用户
-            User existingUser = User.builder()
-                    .studentId(enroll.getStudentId())
-                    .username("已存在用户")
-                    .roleId(memberRoleId)
-                    .disable(false)
-                    .build();
+            User existingUser = User.reconstruct(
+                    null,
+                    enroll.getStudentId(),
+                    null,
+                    memberRoleId,
+                    null,
+                    "已存在用户",
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    false,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null);
             RepositoryTestObjects.insert(userMapper, existingUser, UserDO.class);
 
             mockMvc.perform(

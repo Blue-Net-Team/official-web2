@@ -1,0 +1,314 @@
+package com.bluenet.web.application.service.impl;
+
+import com.bluenet.web.application.AuthResult;
+import com.bluenet.web.application.command.auth.AuthCommands;
+import com.bluenet.web.application.converter.UserAppConverter;
+import com.bluenet.web.application.message.MessageRequest;
+import com.bluenet.web.application.message.MessageDispatcher;
+import com.bluenet.web.application.service.AuthAppService;
+import com.bluenet.web.application.service.auth.credential.GitHubCallbackCredential;
+import com.bluenet.web.application.service.auth.provider.EmailCodeLoginProvider;
+import com.bluenet.web.application.service.auth.provider.GitHubAuthProvider;
+import com.bluenet.web.application.service.auth.provider.StudentIdLoginProvider;
+import com.bluenet.web.application.service.auth.session.AuthSessionIssuer;
+import com.bluenet.web.application.service.auth.strategy.AuthProviderRegistry;
+import com.bluenet.web.application.service.auth.strategy.AuthProviderType;
+import com.bluenet.web.domain.model.enumerate.MessageChannel;
+import com.bluenet.web.domain.model.vo.UserVO;
+import com.bluenet.web.domain.model.vo.VerifyCodeVO;
+import com.bluenet.web.domain.repository.UserRepository;
+import com.bluenet.web.domain.repository.VerificationCodeRepository;
+import com.bluenet.web.domain.service.AuthDomainService;
+import com.bluenet.web.domain.service.GitHubOAuthService;
+import com.bluenet.web.domain.service.VerificationCodeDomainService;
+import com.bluenet.web.infrastructure.config.GitHubOAuthProperties;
+import com.bluenet.web.infrastructure.security.auth.AuthTokenService;
+import com.bluenet.web.infrastructure.security.cookie.CookieService;
+import com.bluenet.web.infrastructure.security.csrf.CsrfTokenService;
+import com.bluenet.web.infrastructure.security.jwt.JwtPayload;
+import com.bluenet.web.infrastructure.security.jwt.JwtUtil;
+import com.bluenet.web.infrastructure.security.oauth.OAuthStateStore;
+import com.bluenet.web.infrastructure.security.util.UserCTX;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
+import java.util.List;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+/**
+ * 认证应用服务实现。
+ * <p>
+ * 实现认证聚合在应用层的业务逻辑编排。
+ * </p>
+ */
+@Slf4j
+@Service
+public class AuthAppServiceImpl implements AuthAppService {
+
+    private final AuthTokenService authTokenService;
+    private final CookieService cookieService;
+    private final CsrfTokenService csrfTokenService;
+    private final VerificationCodeDomainService verificationCodeDomainService;
+    private final VerificationCodeRepository verificationCodeRepository;
+    private final MessageDispatcher messageDispatcher;
+    private final AuthSessionIssuer authSessionIssuer;
+    private final AuthProviderRegistry authProviderRegistry;
+
+    /**
+     * 保持原依赖注入入口，内部组合更细粒度 provider，避免应用服务继续膨胀。
+     *
+     * @param authDomainService
+     *            认证领域服务
+     * @param jwtUtil
+     *            JWT工具
+     * @param authTokenService
+     *            认证令牌服务
+     * @param userConverter
+     *            用户转换器
+     * @param cookieService
+     *            Cookie服务
+     * @param csrfTokenService
+     *            CSRF令牌服务
+     * @param verificationCodeDomainService
+     *            验证码领域服务
+     * @param verificationCodeRepository
+     *            验证码仓储
+     * @param messageDispatcher
+     *            消息分发器
+     * @param gitHubOAuthService
+     *            GitHub OAuth服务
+     * @param userRepository
+     *            用户仓储
+     * @param redisTemplate
+     *            Redis模板
+     * @param objectMapper
+     *            对象映射器
+     * @param gitHubOAuthProperties
+     *            GitHub OAuth配置
+     */
+    public AuthAppServiceImpl(
+            AuthDomainService authDomainService,
+            JwtUtil jwtUtil,
+            AuthTokenService authTokenService,
+            UserAppConverter userConverter,
+            CookieService cookieService,
+            CsrfTokenService csrfTokenService,
+            VerificationCodeDomainService verificationCodeDomainService,
+            VerificationCodeRepository verificationCodeRepository,
+            MessageDispatcher messageDispatcher,
+            GitHubOAuthService gitHubOAuthService,
+            UserRepository userRepository,
+            StringRedisTemplate redisTemplate,
+            ObjectMapper objectMapper,
+            GitHubOAuthProperties gitHubOAuthProperties) {
+        this.authTokenService = authTokenService;
+        this.cookieService = cookieService;
+        this.csrfTokenService = csrfTokenService;
+        this.verificationCodeDomainService = verificationCodeDomainService;
+        this.verificationCodeRepository = verificationCodeRepository;
+        this.messageDispatcher = messageDispatcher;
+        this.authSessionIssuer = new AuthSessionIssuer(
+                jwtUtil,
+                authTokenService,
+                userConverter,
+                cookieService,
+                csrfTokenService);
+        StudentIdLoginProvider studentIdLoginProvider = new StudentIdLoginProvider(authDomainService);
+        EmailCodeLoginProvider emailCodeLoginProvider = new EmailCodeLoginProvider(authDomainService,
+                verificationCodeRepository);
+        GitHubAuthProvider githubAuthProvider = new GitHubAuthProvider(
+                gitHubOAuthService,
+                userRepository,
+                gitHubOAuthProperties,
+                new OAuthStateStore(redisTemplate, objectMapper),
+                authSessionIssuer);
+        this.authProviderRegistry = new AuthProviderRegistry(
+                List.of(studentIdLoginProvider, emailCodeLoginProvider, githubAuthProvider));
+    }
+
+    /**
+     * 用户登录。
+     *
+     * @param command
+     *            学号登录命令
+     * @param response
+     *            HTTP响应
+     * @return 登录结果
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public AuthResult.Login login(AuthCommands.StudentIdLoginCommand command, HttpServletResponse response) {
+        UserVO userVO = authProviderRegistry.authenticate(AuthProviderType.STUDENT_ID, command);
+        String csrfToken = authSessionIssuer.issueCookies(userVO, response);
+        log.info("User logged in successfully: {}", command.studentId());
+        return new AuthResult.Login(csrfToken, userVO);
+    }
+
+    /**
+     * 用户邮箱登录。
+     *
+     * @param command
+     *            邮箱登录命令
+     * @param response
+     *            HTTP响应
+     * @return 登录结果
+     */
+    @Override
+    @Transactional
+    public AuthResult.Login loginWithEmail(AuthCommands.EmailLoginCommand command, HttpServletResponse response) {
+        UserVO userVO = authProviderRegistry.authenticate(AuthProviderType.EMAIL_CODE, command);
+        String csrfToken = authSessionIssuer.issueCookies(userVO, response);
+        log.info("User logged in via email successfully: {}", command.email());
+        return new AuthResult.Login(csrfToken, userVO);
+    }
+
+    /**
+     * 发送验证码。
+     *
+     * @param command
+     *            发送验证码命令
+     */
+    @Override
+    public void sendVerificationCode(AuthCommands.SendVerificationCodeCommand command) {
+        String email = command.email();
+        String scene = command.scene() != null ? command.scene() : "login";
+
+        VerifyCodeVO verifyCodeVO = verificationCodeDomainService.generateCode(email, scene);
+        verificationCodeRepository.save(verifyCodeVO);
+
+        String subject = "蓝网登录验证码";
+        String htmlContent = buildVerificationCodeEmail(verifyCodeVO.getCode());
+        messageDispatcher.dispatchAsync(MessageRequest.html(MessageChannel.EMAIL, email, subject, htmlContent));
+
+        log.info("验证码已发送 - email={}, scene={}", email, scene);
+    }
+
+    /**
+     * 构建验证码邮件 HTML，发送仍复用现有 MessageDispatcher。
+     */
+    private String buildVerificationCodeEmail(String code) {
+        return """
+                <div style="max-width:400px;margin:0 auto;padding:20px;font-family:sans-serif;">
+                    <h2 style="color:#fa8c16;text-align:center;">蓝网登录验证码</h2>
+                    <p style="text-align:center;font-size:14px;color:#666;">您的验证码为：</p>
+                    <p style="text-align:center;font-size:32px;font-weight:bold;letter-spacing:8px;color:#fa8c16;">%s</p>
+                    <p style="text-align:center;font-size:12px;color:#999;">验证码5分钟内有效。</p>
+                </div>
+                """
+                .formatted(code);
+    }
+
+    /**
+     * 用户登出。
+     *
+     * @param response
+     *            HTTP响应
+     */
+    @Override
+    public void logout(HttpServletResponse response) {
+        UserVO currentUser = UserCTX.getCurrentUser();
+        if (currentUser != null) {
+            JwtPayload payload = (JwtPayload) SecurityContextHolder.getContext().getAuthentication().getCredentials();
+            if (payload != null && payload.getJti() != null) {
+                // Token 撤销仍由底层 token 服务负责，门面只处理登出流程编排。
+                authTokenService.revokeToken(payload.getJti());
+                log.info("Token revoked successfully for jti: {}", payload.getJti());
+            }
+        }
+
+        cookieService.clearAuthCookies(response);
+        UserCTX.clear();
+        log.info("User logged out successfully");
+    }
+
+    /**
+     * 获取当前用户认证信息。
+     *
+     * @param response
+     *            HTTP响应
+     * @return 当前用户认证结果
+     */
+    @Override
+    public AuthResult.AuthMe getAuthMe(HttpServletResponse response) {
+        UserVO currentUser = UserCTX.getCurrentUser();
+        if (currentUser == null) {
+            return new AuthResult.AuthMe(false, null, null);
+        }
+
+        String csrfToken = csrfTokenService.generateCsrfToken();
+        cookieService.setCsrfTokenCookie(response, csrfToken);
+
+        return new AuthResult.AuthMe(true, currentUser, csrfToken);
+    }
+
+    /**
+     * 启动GitHub登录。
+     *
+     * @param callbackBaseUrl
+     *            回调基础URL
+     * @return GitHub登录URL
+     */
+    @Override
+    public String initiateGithubLogin(String callbackBaseUrl) {
+        return githubProvider().initiateLogin(callbackBaseUrl);
+    }
+
+    /**
+     * 启动GitHub绑定。
+     *
+     * @param callbackBaseUrl
+     *            回调基础URL
+     * @return GitHub绑定URL
+     */
+    @Override
+    public String initiateGithubBind(String callbackBaseUrl) {
+        return githubProvider().initiateBind(callbackBaseUrl);
+    }
+
+    /**
+     * 处理GitHub回调。
+     *
+     * @param code
+     *            授权码
+     * @param state
+     *            状态码
+     * @param callbackBaseUrl
+     *            回调基础URL
+     * @param response
+     *            HTTP响应
+     */
+    @Override
+    @Transactional
+    public void handleGithubCallback(String code, String state, String callbackBaseUrl, HttpServletResponse response) {
+        authProviderRegistry.authenticate(
+                AuthProviderType.GITHUB,
+                new GitHubCallbackCredential(code, state, callbackBaseUrl, response));
+    }
+
+    /**
+     * 获取GitHub绑定状态。
+     *
+     * @return GitHub绑定状态
+     */
+    @Override
+    public String getGithubBindingStatus() {
+        return githubProvider().getBindingStatus();
+    }
+
+    /**
+     * 解绑GitHub。
+     */
+    @Override
+    @Transactional
+    public void unbindGithub() {
+        githubProvider().unbind();
+    }
+
+    private GitHubAuthProvider githubProvider() {
+        return authProviderRegistry.get(AuthProviderType.GITHUB, GitHubAuthProvider.class);
+    }
+}

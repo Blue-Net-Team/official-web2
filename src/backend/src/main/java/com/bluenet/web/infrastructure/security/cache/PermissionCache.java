@@ -14,7 +14,7 @@ import com.bluenet.web.domain.model.entity.Permission;
 import com.bluenet.web.infrastructure.repository.dataobject.RolePermissionDO;
 import com.bluenet.web.infrastructure.repository.mapper.PermissionMapper;
 import com.bluenet.web.infrastructure.repository.mapper.RolePermissionMapper;
-import com.bluenet.web.infrastructure.repository.support.RepositoryObjectConverter;
+import com.bluenet.web.infrastructure.repository.converter.PermissionRepositoryConverter;
 
 import jakarta.annotation.PostConstruct;
 
@@ -36,10 +36,13 @@ public class PermissionCache {
 
     private final PermissionMapper permissionMapper;
     private final RolePermissionMapper rolePermissionMapper;
+    private final PermissionRepositoryConverter permissionRepositoryConverter;
 
-    public PermissionCache(PermissionMapper permissionMapper, RolePermissionMapper rolePermissionMapper) {
+    public PermissionCache(PermissionMapper permissionMapper, RolePermissionMapper rolePermissionMapper,
+            PermissionRepositoryConverter permissionRepositoryConverter) {
         this.permissionMapper = permissionMapper;
         this.rolePermissionMapper = rolePermissionMapper;
+        this.permissionRepositoryConverter = permissionRepositoryConverter;
     }
 
     /**
@@ -58,7 +61,7 @@ public class PermissionCache {
         List<Permission> permissions = permissionMapper.selectList(null)
                 .stream()
                 // 缓存对外仍暴露领域 Permission，Mapper 边界只返回 PermissionDO。
-                .map(permission -> RepositoryObjectConverter.copy(permission, Permission.class))
+                .map(permissionRepositoryConverter::toEntity)
                 .toList();
         permissionMap.clear();
         permissions.forEach(p -> permissionMap.put(p.getValue(), p));

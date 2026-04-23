@@ -90,14 +90,27 @@ class PermissionAdminControllerIntegrationTest extends BaseIntegrationTest {
         superAdminRoleId = superAdminRole.getId();
 
         // 创建SUPER_ADMIN用户
-        User adminUser = User.builder()
-                .studentId(TEST_STUDENT_ID)
-                .username("超级管理员")
-                .email("superadmin@example.com")
-                .password(passwordEncoder.encode(TEST_PASSWORD))
-                .roleId(superAdminRoleId)
-                .disable(false)
-                .build();
+        User adminUser = User.reconstruct(
+                null,
+                TEST_STUDENT_ID,
+                "superadmin@example.com",
+                superAdminRoleId,
+                passwordEncoder.encode(TEST_PASSWORD),
+                "超级管理员",
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                false,
+                null,
+                null,
+                null,
+                null,
+                null);
         RepositoryTestObjects.insert(userMapper, adminUser, UserDO.class);
 
         // 登录获取认证信息
@@ -193,9 +206,7 @@ class PermissionAdminControllerIntegrationTest extends BaseIntegrationTest {
         // 分配权限给角色
         Role role = RepositoryTestObjects
                 .toDomain(roleMapper.selectByName(RoleType.DIRECTION_ADMIN.name()), Role.class);
-        RolePermission rp = new RolePermission();
-        rp.setRoleId(role.getId());
-        rp.setPermissionId(permission.getId());
+        RolePermission rp = RolePermission.create(role.getId(), permission.getId());
         RepositoryTestObjects.insert(rolePermissionMapper, rp, RolePermissionDO.class);
 
         HttpHeaders headers = createAuthHeadersWithCsrf();
@@ -277,14 +288,27 @@ class PermissionAdminControllerIntegrationTest extends BaseIntegrationTest {
         void setUpMemberUser() {
             // 创建普通 MEMBER 用户
             Role memberRole = RepositoryTestObjects.toDomain(roleMapper.selectByName("MEMBER"), Role.class);
-            User memberUser = User.builder()
-                    .studentId("member001")
-                    .username("普通成员")
-                    .email("member@example.com")
-                    .password(passwordEncoder.encode("password123"))
-                    .roleId(memberRole.getId())
-                    .disable(false)
-                    .build();
+            User memberUser = User.reconstruct(
+                    null,
+                    "member001",
+                    "member@example.com",
+                    memberRole.getId(),
+                    passwordEncoder.encode("password123"),
+                    "普通成员",
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    false,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null);
             RepositoryTestObjects.insert(userMapper, memberUser, UserDO.class);
 
             // 用 MEMBER 登录
@@ -357,11 +381,7 @@ class PermissionAdminControllerIntegrationTest extends BaseIntegrationTest {
     }
 
     private Permission createPermission(String value, String name, String url, String method) {
-        Permission permission = new Permission();
-        permission.setValue(value);
-        permission.setName(name);
-        permission.setUrl(url);
-        permission.setMethod(method);
+        Permission permission = Permission.create(name, value, url, method, null);
         RepositoryTestObjects.insert(permissionMapper, permission, PermissionDO.class);
         return permission;
     }

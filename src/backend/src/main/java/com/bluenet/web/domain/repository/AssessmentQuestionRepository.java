@@ -1,7 +1,6 @@
 package com.bluenet.web.domain.repository;
 
 import com.bluenet.web.domain.model.entity.AssessmentQuestion;
-import com.bluenet.web.domain.model.vo.AssessmentQuestionVO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -22,7 +21,7 @@ public interface AssessmentQuestionRepository {
      *            业务记录主键。
      * @return 查询到的考核题目 结果；不存在时为空。
      */
-    Optional<AssessmentQuestionVO> findById(Long id);
+    Optional<AssessmentQuestion> findById(Long id);
 
     /**
      * 按附件文件主键查询关联的考核题目记录。
@@ -31,7 +30,7 @@ public interface AssessmentQuestionRepository {
      *            附件文件主键。
      * @return 查询到的考核题目结果；不存在时为空。
      */
-    Optional<AssessmentQuestionVO> findByAttachmentId(Long attachmentId);
+    Optional<AssessmentQuestion> findByAttachmentId(Long attachmentId);
     /**
      * 更新考核题目附件文件关联。
      *
@@ -59,14 +58,14 @@ public interface AssessmentQuestionRepository {
      *            Spring 分页请求对象。
      * @return 分页后的考核题目 结果。
      */
-    Page<AssessmentQuestionVO> findAllByTimeId(Long assessmentTimeId, Pageable pageable);
+    Page<AssessmentQuestion> findAllByTimeId(Long assessmentTimeId, Pageable pageable);
     /**
      * 更新已有考核题目 记录。
      *
      * @param question
      *            考核题目对象。
      */
-    void update(AssessmentQuestionVO question);
+    void update(AssessmentQuestion question);
     /**
      * 删除指定考核题目 记录。
      *
@@ -91,5 +90,5 @@ public interface AssessmentQuestionRepository {
      *            题目在考核场次中的序号。
      * @return 查询到的考核题目 结果；不存在时为空。
      */
-    Optional<AssessmentQuestionVO> findByTimeIdAndQuestionNo(Long assessmentTimeId, Integer questionNo);
+    Optional<AssessmentQuestion> findByTimeIdAndQuestionNo(Long assessmentTimeId, Integer questionNo);
 }

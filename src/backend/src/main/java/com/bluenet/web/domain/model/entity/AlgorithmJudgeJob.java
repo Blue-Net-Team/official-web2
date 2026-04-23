@@ -3,7 +3,9 @@ package com.bluenet.web.domain.model.entity;
 import com.bluenet.web.domain.model.enumerate.AlgorithmTestcaseType;
 import com.bluenet.web.domain.model.enumerate.JudgeJobStatus;
 import com.bluenet.web.domain.model.enumerate.ProgrammingLanguage;
+import lombok.AccessLevel;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
@@ -11,6 +13,7 @@ import java.time.LocalDateTime;
  * Tracks algorithm run and formal submission jobs at queue/worker level.
  */
 @Data
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class AlgorithmJudgeJob {
     /**
      * 当前对象在系统中的唯一标识。
@@ -80,4 +83,157 @@ public class AlgorithmJudgeJob {
      * 记录最后更新时间。
      */
     private LocalDateTime updatedAt;
+
+    private AlgorithmJudgeJob(
+            Long id,
+            Long answerId,
+            Long questionId,
+            Long assessmentTimeId,
+            Long userId,
+            ProgrammingLanguage language,
+            String sourceCode,
+            AlgorithmTestcaseType testcaseType,
+            String customInput,
+            JudgeJobStatus status,
+            Integer retryCount,
+            Integer maxRetryCount,
+            String statusMessage,
+            LocalDateTime startedAt,
+            LocalDateTime finishedAt,
+            LocalDateTime createdAt,
+            LocalDateTime updatedAt) {
+        this.id = id;
+        this.answerId = answerId;
+        this.questionId = questionId;
+        this.assessmentTimeId = assessmentTimeId;
+        this.userId = userId;
+        this.language = language;
+        this.sourceCode = sourceCode;
+        this.testcaseType = testcaseType;
+        this.customInput = customInput;
+        this.status = status;
+        this.retryCount = retryCount;
+        this.maxRetryCount = maxRetryCount;
+        this.statusMessage = statusMessage;
+        this.startedAt = startedAt;
+        this.finishedAt = finishedAt;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+    }
+
+    /**
+     * 构造新算法评测任务 —— 带领域校验
+     */
+    public static AlgorithmJudgeJob create(
+            Long answerId,
+            Long questionId,
+            Long assessmentTimeId,
+            Long userId,
+            ProgrammingLanguage language,
+            String sourceCode,
+            AlgorithmTestcaseType testcaseType,
+            String customInput) {
+        if (language == null) {
+            throw new IllegalArgumentException("编程语言不能为空");
+        }
+        if (sourceCode == null || sourceCode.isBlank()) {
+            throw new IllegalArgumentException("源代码不能为空");
+        }
+        return new AlgorithmJudgeJob(
+                null,
+                answerId,
+                questionId,
+                assessmentTimeId,
+                userId,
+                language,
+                sourceCode,
+                testcaseType,
+                customInput,
+                JudgeJobStatus.PENDING,
+                0,
+                3,
+                "等待判题",
+                null,
+                null,
+                null,
+                null);
+    }
+
+    /**
+     * 从数据库重建 —— 跳过创建校验
+     */
+    public static AlgorithmJudgeJob reconstruct(
+            Long id,
+            Long answerId,
+            Long questionId,
+            Long assessmentTimeId,
+            Long userId,
+            ProgrammingLanguage language,
+            String sourceCode,
+            AlgorithmTestcaseType testcaseType,
+            String customInput,
+            JudgeJobStatus status,
+            Integer retryCount,
+            Integer maxRetryCount,
+            String statusMessage,
+            LocalDateTime startedAt,
+            LocalDateTime finishedAt,
+            LocalDateTime createdAt,
+            LocalDateTime updatedAt) {
+        return new AlgorithmJudgeJob(
+                id,
+                answerId,
+                questionId,
+                assessmentTimeId,
+                userId,
+                language,
+                sourceCode,
+                testcaseType,
+                customInput,
+                status,
+                retryCount,
+                maxRetryCount,
+                statusMessage,
+                startedAt,
+                finishedAt,
+                createdAt,
+                updatedAt);
+    }
+
+    /**
+     * 标记任务为运行中
+     */
+    public void markRunning() {
+        this.status = JudgeJobStatus.RUNNING;
+        this.startedAt = LocalDateTime.now();
+        this.statusMessage = "正在判题";
+    }
+
+    /**
+     * 标记任务为成功完成
+     */
+    public void markSucceeded() {
+        this.status = JudgeJobStatus.SUCCEEDED;
+        this.finishedAt = LocalDateTime.now();
+        this.statusMessage = "判题完成";
+    }
+
+    /**
+     * 标记任务为需要重试或人工复核
+     */
+    public void markRetryableOrReview(String message) {
+        int currentRetry = this.retryCount == null ? 0 : this.retryCount;
+        int maxRetry = this.maxRetryCount == null ? 3 : this.maxRetryCount;
+        this.retryCount = currentRetry + 1;
+        this.status = currentRetry + 1 >= maxRetry ? JudgeJobStatus.FAILED_REVIEW_REQUIRED : JudgeJobStatus.RETRYING;
+        this.statusMessage = message;
+    }
+
+    /**
+     * 标记任务为需要人工复核
+     */
+    public void markReviewRequired(String message) {
+        this.status = JudgeJobStatus.FAILED_REVIEW_REQUIRED;
+        this.statusMessage = message;
+    }
 }

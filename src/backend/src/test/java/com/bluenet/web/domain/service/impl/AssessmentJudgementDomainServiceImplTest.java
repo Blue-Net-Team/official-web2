@@ -46,13 +46,13 @@ class AssessmentJudgementDomainServiceImplTest {
     @DisplayName("创建评判记录：应保存时间戳并返回创建后的记录")
     void createJudgement_valid_shouldSaveAndReturnCreatedRecord() {
         AssessmentJudgementVO request = createJudgementVO(null, ObjectiveResultCode.AC);
-        AssessmentJudgementVO saved = createJudgementVO(JUDGEMENT_ID, ObjectiveResultCode.AC);
+        AssessmentJudgement savedEntity = createJudgementEntity(JUDGEMENT_ID, ObjectiveResultCode.AC);
         doAnswer(invocation -> {
             AssessmentJudgement entity = invocation.getArgument(0);
             entity.setId(JUDGEMENT_ID);
             return null;
         }).when(assessmentJudgementRepository).save(any(AssessmentJudgement.class));
-        when(assessmentJudgementRepository.findById(JUDGEMENT_ID)).thenReturn(Optional.of(saved));
+        when(assessmentJudgementRepository.findById(JUDGEMENT_ID)).thenReturn(Optional.of(savedEntity));
 
         AssessmentJudgementVO result = assessmentJudgementDomainService.createJudgement(request);
 
@@ -83,18 +83,18 @@ class AssessmentJudgementDomainServiceImplTest {
     @Test
     @DisplayName("更新评判记录：应先校验存在并返回更新后的记录")
     void updateJudgement_existing_shouldUpdateAndReturnLatestRecord() {
-        AssessmentJudgementVO existing = createJudgementVO(JUDGEMENT_ID, ObjectiveResultCode.WA);
         AssessmentJudgementVO update = createJudgementVO(JUDGEMENT_ID, ObjectiveResultCode.AC);
-        AssessmentJudgementVO updated = createJudgementVO(JUDGEMENT_ID, ObjectiveResultCode.AC);
+        AssessmentJudgement existingEntity = createJudgementEntity(JUDGEMENT_ID, ObjectiveResultCode.WA);
+        AssessmentJudgement updatedEntity = createJudgementEntity(JUDGEMENT_ID, ObjectiveResultCode.AC);
         when(assessmentJudgementRepository.findById(JUDGEMENT_ID))
-                .thenReturn(Optional.of(existing))
-                .thenReturn(Optional.of(updated));
+                .thenReturn(Optional.of(existingEntity))
+                .thenReturn(Optional.of(updatedEntity));
 
         AssessmentJudgementVO result = assessmentJudgementDomainService.updateJudgement(update);
 
         assertEquals(ObjectiveResultCode.AC, result.getResultCode());
         assertNotNull(update.getUpdatedAt());
-        verify(assessmentJudgementRepository).update(update);
+        verify(assessmentJudgementRepository).update(any(AssessmentJudgement.class));
     }
 
     @Test
@@ -117,8 +117,8 @@ class AssessmentJudgementDomainServiceImplTest {
     @Test
     @DisplayName("按答案查询最新评判记录：存在时应返回记录")
     void getLatestByAnswerId_existing_shouldReturnRecord() {
-        AssessmentJudgementVO judgement = createJudgementVO(JUDGEMENT_ID, ObjectiveResultCode.WA);
-        when(assessmentJudgementRepository.findLatestByAnswerId(ANSWER_ID)).thenReturn(Optional.of(judgement));
+        AssessmentJudgement judgementEntity = createJudgementEntity(JUDGEMENT_ID, ObjectiveResultCode.WA);
+        when(assessmentJudgementRepository.findLatestByAnswerId(ANSWER_ID)).thenReturn(Optional.of(judgementEntity));
 
         AssessmentJudgementVO result = assessmentJudgementDomainService.getLatestByAnswerId(ANSWER_ID);
 
@@ -129,8 +129,8 @@ class AssessmentJudgementDomainServiceImplTest {
     @Test
     @DisplayName("按题目查询评判记录列表：应透传仓储结果")
     void listByQuestionId_shouldReturnRepositoryRecords() {
-        AssessmentJudgementVO judgement = createJudgementVO(JUDGEMENT_ID, ObjectiveResultCode.AC);
-        when(assessmentJudgementRepository.findAllByQuestionId(QUESTION_ID)).thenReturn(List.of(judgement));
+        AssessmentJudgement judgementEntity = createJudgementEntity(JUDGEMENT_ID, ObjectiveResultCode.AC);
+        when(assessmentJudgementRepository.findAllByQuestionId(QUESTION_ID)).thenReturn(List.of(judgementEntity));
 
         List<AssessmentJudgementVO> result = assessmentJudgementDomainService.listByQuestionId(QUESTION_ID);
 
@@ -151,5 +151,25 @@ class AssessmentJudgementDomainServiceImplTest {
                 .resultCode(resultCode)
                 .source(JudgementSource.AUTO)
                 .build();
+    }
+
+    private AssessmentJudgement createJudgementEntity(Long id, ObjectiveResultCode resultCode) {
+        return AssessmentJudgement.reconstruct(
+                id,
+                ANSWER_ID,
+                QUESTION_ID,
+                ASSESSMENT_TIME_ID,
+                USER_ID,
+                resultCode == ObjectiveResultCode.AC ? BigDecimal.TEN : BigDecimal.ZERO,
+                BigDecimal.TEN,
+                JudgementStatus.JUDGED,
+                resultCode,
+                JudgementSource.AUTO,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null);
     }
 }

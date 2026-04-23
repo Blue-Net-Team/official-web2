@@ -3,15 +3,18 @@ package com.bluenet.web.domain.model.entity;
 import com.bluenet.web.domain.model.enumerate.Direction;
 import com.bluenet.web.domain.model.enumerate.EnrollStatus;
 import com.bluenet.web.domain.model.enumerate.Gender;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
+import lombok.AccessLevel;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * 报名聚合根
+ * <p>
+ * 承载报名相关的业务规则和行为
+ * </p>
+ */
 @Data
-@AllArgsConstructor
-@Builder
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class Enroll {
     /**
      * 当前对象在系统中的唯一标识。
@@ -65,4 +68,111 @@ public class Enroll {
      * 报名自我介绍或申请说明。
      */
     private String introduction;
+    /**
+     * 学院名称（展示用）。
+     */
+    private String collegeName;
+    /**
+     * 推荐人的用户标识。
+     */
+    private Long referralUserId;
+    /**
+     * 推荐人的展示名称。
+     */
+    private String referralUserName;
+
+    private Enroll(Long id, String username, String studentId, String password, String internalReferralCode,
+            Long collegeId, String major, Gender gender, Direction direction, Long avatarId,
+            EnrollStatus status, String email, String introduction, String collegeName,
+            Long referralUserId, String referralUserName) {
+        this.id = id;
+        this.username = username;
+        this.studentId = studentId;
+        this.password = password;
+        this.internalReferralCode = internalReferralCode;
+        this.collegeId = collegeId;
+        this.major = major;
+        this.gender = gender;
+        this.direction = direction;
+        this.avatarId = avatarId;
+        this.status = status;
+        this.email = email;
+        this.introduction = introduction;
+        this.collegeName = collegeName;
+        this.referralUserId = referralUserId;
+        this.referralUserName = referralUserName;
+    }
+
+    /**
+     * 构造新聚合根 —— 带领域校验
+     */
+    public static Enroll create(String username, String studentId, String password,
+            String internalReferralCode, Long collegeId, String major,
+            Gender gender, Direction direction, Long avatarId,
+            String email, String introduction) {
+        if (username == null || username.isBlank()) {
+            throw new IllegalArgumentException("用户名不能为空");
+        }
+        if (studentId == null || studentId.isBlank()) {
+            throw new IllegalArgumentException("学号不能为空");
+        }
+        return new Enroll(null, username.trim(), studentId, password, internalReferralCode,
+                collegeId, major, gender, direction, avatarId, EnrollStatus.PENDING,
+                email, introduction, null, null, null);
+    }
+
+    /**
+     * 从数据库重建 —— 跳过创建校验
+     */
+    public static Enroll reconstruct(Long id, String username, String studentId, String password,
+            String internalReferralCode, Long collegeId, String major,
+            Gender gender, Direction direction, Long avatarId,
+            EnrollStatus status, String email, String introduction,
+            String collegeName, Long referralUserId, String referralUserName) {
+        return new Enroll(id, username, studentId, password, internalReferralCode, collegeId, major,
+                gender, direction, avatarId, status, email, introduction, collegeName,
+                referralUserId, referralUserName);
+    }
+
+    /**
+     * 更新报名信息 —— 带领域校验
+     */
+    public void updateInfo(String username, String studentId, Long collegeId, String major,
+            Gender gender, Direction direction, Long avatarId, String email,
+            String introduction, String internalReferralCode, String password) {
+        if (this.status != EnrollStatus.PENDING) {
+            throw new IllegalArgumentException("报名已审核，无法更新报名信息");
+        }
+        this.username = username;
+        this.studentId = studentId;
+        this.collegeId = collegeId;
+        this.major = major;
+        this.gender = gender;
+        this.direction = direction;
+        this.avatarId = avatarId;
+        this.email = email;
+        this.introduction = introduction;
+        this.internalReferralCode = internalReferralCode;
+        this.password = password;
+    }
+
+    /**
+     * 审核通过 —— 带领域校验
+     */
+    public void approve() {
+        if (this.status != EnrollStatus.PENDING) {
+            throw new IllegalArgumentException("只能审核待审核状态的报名");
+        }
+        this.status = EnrollStatus.APPROVED;
+    }
+
+    /**
+     * 审核拒绝 —— 带领域校验
+     */
+    public void reject() {
+        if (this.status != EnrollStatus.PENDING) {
+            throw new IllegalArgumentException("只能审核待审核状态的报名");
+        }
+        this.status = EnrollStatus.REJECTED;
+    }
 }

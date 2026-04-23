@@ -1,13 +1,15 @@
 package com.bluenet.web.api.controller.v1;
 
 import com.bluenet.web.api.dto.ResponseMessage;
+import com.bluenet.web.api.converter.auth.AuthRequestConverter;
 import com.bluenet.web.api.dto.auth.AuthMeResponseDTO;
 import com.bluenet.web.api.dto.auth.EmailLoginRequestDTO;
 import com.bluenet.web.api.dto.auth.ResponseMessageUserAuthResponseDTO;
 import com.bluenet.web.api.dto.auth.SendVerificationCodeRequestDTO;
 import com.bluenet.web.api.dto.auth.StudentIdLoginRequestDTO;
-import com.bluenet.web.api.dto.auth.UserAuthResponseDTO;
-import com.bluenet.web.application.service.AuthService;
+import com.bluenet.web.application.AuthResult;
+import com.bluenet.web.application.converter.AuthAppConverter;
+import com.bluenet.web.application.service.AuthAppService;
 import com.bluenet.web.domain.exception.Unauthorized;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
 import com.bluenet.web.infrastructure.security.annotation.RateLimit;
@@ -40,7 +42,9 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class AuthController {
 
-    private final AuthService authService;
+    private final AuthAppService authAppService;
+    private final AuthRequestConverter requestConverter;
+    private final AuthAppConverter authAppConverter;
 
     @Value("${github.oauth.callback-base-url:http://localhost:8080}")
     private String callbackBaseUrl;
@@ -55,8 +59,8 @@ public class AuthController {
             @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "学号与密码", required = true, content = @Content(schema = @Schema(implementation = StudentIdLoginRequestDTO.class))) @Valid @RequestBody StudentIdLoginRequestDTO requestDTO,
             HttpServletResponse response) {
         try {
-            UserAuthResponseDTO responseDTO = authService.login(requestDTO, response);
-            return ResponseEntity.ok(ResponseMessage.success(responseDTO));
+            AuthResult.Login result = authAppService.login(requestConverter.toCommand(requestDTO), response);
+            return ResponseEntity.ok(ResponseMessage.success(authAppConverter.toDTO(result)));
         } catch (Unauthorized unauthorized) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseMessage.error(unauthorized));
         }
@@ -72,11 +76,10 @@ public class AuthController {
             @Valid @RequestBody EmailLoginRequestDTO requestDTO,
             HttpServletResponse response) {
         try {
-            UserAuthResponseDTO responseDTO = authService.loginWithEmail(
-                    requestDTO.getEmail(),
-                    requestDTO.getVerifyCode(),
+            AuthResult.Login result = authAppService.loginWithEmail(
+                    requestConverter.toCommand(requestDTO),
                     response);
-            return ResponseEntity.ok(ResponseMessage.success(responseDTO));
+            return ResponseEntity.ok(ResponseMessage.success(authAppConverter.toDTO(result)));
         } catch (Unauthorized unauthorized) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseMessage.error(unauthorized));
         }
@@ -91,7 +94,7 @@ public class AuthController {
     @PostMapping("/verification-code/send")
     public ResponseMessage<Void> sendVerificationCode(
             @Valid @RequestBody SendVerificationCodeRequestDTO requestDTO) {
-        authService.sendVerificationCode(requestDTO);
+        authAppService.sendVerificationCode(requestConverter.toCommand(requestDTO));
         return ResponseMessage.success();
     }
 
@@ -100,7 +103,7 @@ public class AuthController {
     @RequiresPermission(value = "auth:logout", name = "用户登出", access = AccessLevel.AUTHENTICATED)
     @PostMapping("/logout")
     public ResponseMessage<Void> logout(HttpServletResponse response) {
-        authService.logout(response);
+        authAppService.logout(response);
         return ResponseMessage.success();
     }
 
@@ -108,8 +111,8 @@ public class AuthController {
     @RequiresPermission(value = "auth:me", name = "获取登录状态", access = AccessLevel.PUBLIC)
     @GetMapping("/me")
     public ResponseMessage<AuthMeResponseDTO> getAuthMe(HttpServletResponse response) {
-        AuthMeResponseDTO responseDTO = authService.getAuthMe(response);
-        return ResponseMessage.success(responseDTO);
+        AuthResult.AuthMe result = authAppService.getAuthMe(response);
+        return ResponseMessage.success(authAppConverter.toDTO(result));
     }
 
     // ==================== GitHub OAuth ====================
@@ -118,7 +121,7 @@ public class AuthController {
     @RequiresPermission(value = "auth:github:login", name = "GitHub登录", access = AccessLevel.PUBLIC)
     @GetMapping("/github")
     public ResponseMessage<String> initiateGithubLogin() {
-        String authorizeUrl = authService.initiateGithubLogin(callbackBaseUrl);
+        String authorizeUrl = authAppService.initiateGithubLogin(callbackBaseUrl);
         return ResponseMessage.success(authorizeUrl);
     }
 
@@ -129,7 +132,7 @@ public class AuthController {
             @Parameter(description = "GitHub 返回的授权码") @RequestParam String code,
             @Parameter(description = "防 CSRF 的 state 参数") @RequestParam String state,
             HttpServletResponse response) {
-        authService.handleGithubCallback(code, state, callbackBaseUrl, response);
+        authAppService.handleGithubCallback(code, state, callbackBaseUrl, response);
     }
 
     @Operation(summary = "查询 GitHub 绑定状态", description = "获取当前用户的 GitHub 绑定状态")
@@ -137,7 +140,7 @@ public class AuthController {
     @RequiresPermission(value = "auth:github:status", name = "GitHub绑定状态", access = AccessLevel.AUTHENTICATED)
     @GetMapping("/github/status")
     public ResponseMessage<String> getGithubBindingStatus() {
-        String githubUsername = authService.getGithubBindingStatus();
+        String githubUsername = authAppService.getGithubBindingStatus();
         return ResponseMessage.success(githubUsername);
     }
 
@@ -146,7 +149,7 @@ public class AuthController {
     @RequiresPermission(value = "auth:github:bind", name = "GitHub绑定", access = AccessLevel.AUTHENTICATED)
     @GetMapping("/github/bind")
     public ResponseMessage<String> initiateGithubBind() {
-        String authorizeUrl = authService.initiateGithubBind(callbackBaseUrl);
+        String authorizeUrl = authAppService.initiateGithubBind(callbackBaseUrl);
         return ResponseMessage.success(authorizeUrl);
     }
 
@@ -155,7 +158,7 @@ public class AuthController {
     @RequiresPermission(value = "auth:github:unbind", name = "GitHub解绑", access = AccessLevel.AUTHENTICATED)
     @DeleteMapping("/github/bind")
     public ResponseMessage<Void> unbindGithub() {
-        authService.unbindGithub();
+        authAppService.unbindGithub();
         return ResponseMessage.success();
     }
 }

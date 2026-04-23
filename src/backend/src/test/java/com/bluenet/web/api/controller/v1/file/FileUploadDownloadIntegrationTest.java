@@ -91,9 +91,15 @@ class FileUploadDownloadIntegrationTest extends BaseIntegrationTest {
     }
 
     private FileVO createFileInMinio(String filename, FileType fileType) {
-        File file = File.builder().name(filename).type(fileType).url("test-url").build();
+        File file = File.reconstruct(null, filename, fileType, "test-url");
         ByteArrayInputStream inputStream = new ByteArrayInputStream("test content".getBytes(StandardCharsets.UTF_8));
-        return fileRepository.saveFile(inputStream, file);
+        var savedFile = fileRepository.saveFile(inputStream, file);
+        return FileVO.builder()
+                .id(savedFile.getId())
+                .name(savedFile.getName())
+                .type(savedFile.getType())
+                .url(savedFile.getUrl())
+                .build();
     }
 
     // ==================== 上传测试 ====================
@@ -169,28 +175,37 @@ class FileUploadDownloadIntegrationTest extends BaseIntegrationTest {
     @DisplayName("下载作品文件 - 提交者下载自己的作品应返回200")
     @WithUserVO(userId = 100L, studentId = "2024001100", username = "提交者", roleName = "CANDIDATE", direction = Direction.COMPUTER_VISION)
     void downloadWorkFile_asSubmitter_shouldReturn200() throws Exception {
-        User user = new User();
-        user.setId(100L);
-        user.setStudentId("2024001100");
-        user.setUsername("提交者");
-        user.setDirection(Direction.COMPUTER_VISION);
+        User user = User.reconstruct(
+                100L,
+                "2024001100",
+                null,
+                null,
+                null,
+                "提交者",
+                null,
+                null,
+                null,
+                null,
+                Direction.COMPUTER_VISION,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null);
         RepositoryTestObjects.insert(userMapper, user, UserDO.class);
 
-        AssessmentTime time = new AssessmentTime();
-        time.setId(100L);
-        time.setDirection(Direction.COMPUTER_VISION);
+        AssessmentTime time = AssessmentTime
+                .reconstruct(100L, Direction.COMPUTER_VISION, null, null, null, null, false, null);
         RepositoryTestObjects.insert(assessmentTimeMapper, time, AssessmentTimeDO.class);
 
-        AssessmentQuestion question = new AssessmentQuestion();
-        question.setId(100L);
-        question.setAssessmentTimeId(100L);
-        question.setQuestionNo(1);
+        AssessmentQuestion question = AssessmentQuestion.reconstruct(100L, 100L, 1, null, null, null, null, null);
         RepositoryTestObjects.insert(assessmentQuestionMapper, question, AssessmentQuestionDO.class);
 
-        AssessmentAnswer answer = new AssessmentAnswer();
-        answer.setId(100L);
-        answer.setUserId(100L);
-        answer.setQuestionId(100L);
+        AssessmentAnswer answer = AssessmentAnswer.reconstruct(100L, 100L, 100L, null, null, null, null);
         RepositoryTestObjects.insert(assessmentAnswerMapper, answer, AssessmentAnswerDO.class);
 
         FileVO workFileVO = createFileInMinio("work.zip", FileType.WORK);
@@ -205,28 +220,37 @@ class FileUploadDownloadIntegrationTest extends BaseIntegrationTest {
     @DisplayName("下载作品文件 - 其他考生尝试下载应返回403")
     @WithUserVO(userId = 101L, studentId = "2024001101", username = "其他考生", roleName = "CANDIDATE", direction = Direction.COMPUTER_VISION)
     void downloadWorkFile_asOtherCandidate_shouldReturn403() throws Exception {
-        User submitter = new User();
-        submitter.setId(102L);
-        submitter.setStudentId("2024001102");
-        submitter.setUsername("提交者");
-        submitter.setDirection(Direction.COMPUTER_VISION);
+        User submitter = User.reconstruct(
+                102L,
+                "2024001102",
+                null,
+                null,
+                null,
+                "提交者",
+                null,
+                null,
+                null,
+                null,
+                Direction.COMPUTER_VISION,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null);
         RepositoryTestObjects.insert(userMapper, submitter, UserDO.class);
 
-        AssessmentTime time = new AssessmentTime();
-        time.setId(101L);
-        time.setDirection(Direction.COMPUTER_VISION);
+        AssessmentTime time = AssessmentTime
+                .reconstruct(101L, Direction.COMPUTER_VISION, null, null, null, null, false, null);
         RepositoryTestObjects.insert(assessmentTimeMapper, time, AssessmentTimeDO.class);
 
-        AssessmentQuestion question = new AssessmentQuestion();
-        question.setId(101L);
-        question.setAssessmentTimeId(101L);
-        question.setQuestionNo(1);
+        AssessmentQuestion question = AssessmentQuestion.reconstruct(101L, 101L, 1, null, null, null, null, null);
         RepositoryTestObjects.insert(assessmentQuestionMapper, question, AssessmentQuestionDO.class);
 
-        AssessmentAnswer answer = new AssessmentAnswer();
-        answer.setId(101L);
-        answer.setUserId(102L);
-        answer.setQuestionId(101L);
+        AssessmentAnswer answer = AssessmentAnswer.reconstruct(101L, 102L, 101L, null, null, null, null);
         RepositoryTestObjects.insert(assessmentAnswerMapper, answer, AssessmentAnswerDO.class);
 
         FileVO workFileVO = createFileInMinio("work.zip", FileType.WORK);
@@ -241,28 +265,37 @@ class FileUploadDownloadIntegrationTest extends BaseIntegrationTest {
     @DisplayName("下载作品文件 - MEMBER角色下载任意作品应返回200")
     @WithUserVO(userId = 103L, studentId = "2024001103", username = "管理员", roleName = "MEMBER", direction = Direction.COMPUTER_VISION)
     void downloadWorkFile_asMember_shouldReturn200() throws Exception {
-        User submitter = new User();
-        submitter.setId(104L);
-        submitter.setStudentId("2024001104");
-        submitter.setUsername("提交者");
-        submitter.setDirection(Direction.COMPUTER_VISION);
+        User submitter = User.reconstruct(
+                104L,
+                "2024001104",
+                null,
+                null,
+                null,
+                "提交者",
+                null,
+                null,
+                null,
+                null,
+                Direction.COMPUTER_VISION,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null);
         RepositoryTestObjects.insert(userMapper, submitter, UserDO.class);
 
-        AssessmentTime time = new AssessmentTime();
-        time.setId(102L);
-        time.setDirection(Direction.COMPUTER_VISION);
+        AssessmentTime time = AssessmentTime
+                .reconstruct(102L, Direction.COMPUTER_VISION, null, null, null, null, false, null);
         RepositoryTestObjects.insert(assessmentTimeMapper, time, AssessmentTimeDO.class);
 
-        AssessmentQuestion question = new AssessmentQuestion();
-        question.setId(102L);
-        question.setAssessmentTimeId(102L);
-        question.setQuestionNo(1);
+        AssessmentQuestion question = AssessmentQuestion.reconstruct(102L, 102L, 1, null, null, null, null, null);
         RepositoryTestObjects.insert(assessmentQuestionMapper, question, AssessmentQuestionDO.class);
 
-        AssessmentAnswer answer = new AssessmentAnswer();
-        answer.setId(102L);
-        answer.setUserId(104L);
-        answer.setQuestionId(102L);
+        AssessmentAnswer answer = AssessmentAnswer.reconstruct(102L, 104L, 102L, null, null, null, null);
         RepositoryTestObjects.insert(assessmentAnswerMapper, answer, AssessmentAnswerDO.class);
 
         FileVO workFileVO = createFileInMinio("work.zip", FileType.WORK);
@@ -277,22 +310,34 @@ class FileUploadDownloadIntegrationTest extends BaseIntegrationTest {
     @DisplayName("下载考题附件 - 方向匹配应返回200")
     @WithUserVO(userId = 105L, studentId = "2024001105", username = "考生A", roleName = "CANDIDATE", direction = Direction.COMPUTER_VISION)
     void downloadAssessmentAttachment_asMatchingDirection_shouldReturn200() throws Exception {
-        User user = new User();
-        user.setId(105L);
-        user.setStudentId("2024001105");
-        user.setUsername("考生A");
-        user.setDirection(Direction.COMPUTER_VISION);
+        User user = User.reconstruct(
+                105L,
+                "2024001105",
+                null,
+                null,
+                null,
+                "考生A",
+                null,
+                null,
+                null,
+                null,
+                Direction.COMPUTER_VISION,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null);
         RepositoryTestObjects.insert(userMapper, user, UserDO.class);
 
-        AssessmentTime time = new AssessmentTime();
-        time.setId(103L);
-        time.setDirection(Direction.COMPUTER_VISION);
+        AssessmentTime time = AssessmentTime
+                .reconstruct(103L, Direction.COMPUTER_VISION, null, null, null, null, false, null);
         RepositoryTestObjects.insert(assessmentTimeMapper, time, AssessmentTimeDO.class);
 
-        AssessmentQuestion question = new AssessmentQuestion();
-        question.setId(103L);
-        question.setAssessmentTimeId(103L);
-        question.setQuestionNo(1);
+        AssessmentQuestion question = AssessmentQuestion.reconstruct(103L, 103L, 1, null, null, null, null, null);
         RepositoryTestObjects.insert(assessmentQuestionMapper, question, AssessmentQuestionDO.class);
 
         FileVO attachmentFileVO = createFileInMinio("attachment.pdf", FileType.ASSESSMENT_ATTACHMENT);
@@ -307,22 +352,34 @@ class FileUploadDownloadIntegrationTest extends BaseIntegrationTest {
     @DisplayName("下载考题附件 - 方向不匹配应返回403")
     @WithUserVO(userId = 106L, studentId = "2024001106", username = "考生B", roleName = "CANDIDATE", direction = Direction.EMBEDDED)
     void downloadAssessmentAttachment_asDifferentDirection_shouldReturn403() throws Exception {
-        User user = new User();
-        user.setId(106L);
-        user.setStudentId("2024001106");
-        user.setUsername("考生B");
-        user.setDirection(Direction.EMBEDDED);
+        User user = User.reconstruct(
+                106L,
+                "2024001106",
+                null,
+                null,
+                null,
+                "考生B",
+                null,
+                null,
+                null,
+                null,
+                Direction.EMBEDDED,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null);
         RepositoryTestObjects.insert(userMapper, user, UserDO.class);
 
-        AssessmentTime time = new AssessmentTime();
-        time.setId(104L);
-        time.setDirection(Direction.COMPUTER_VISION);
+        AssessmentTime time = AssessmentTime
+                .reconstruct(104L, Direction.COMPUTER_VISION, null, null, null, null, false, null);
         RepositoryTestObjects.insert(assessmentTimeMapper, time, AssessmentTimeDO.class);
 
-        AssessmentQuestion question = new AssessmentQuestion();
-        question.setId(104L);
-        question.setAssessmentTimeId(104L);
-        question.setQuestionNo(1);
+        AssessmentQuestion question = AssessmentQuestion.reconstruct(104L, 104L, 1, null, null, null, null, null);
         RepositoryTestObjects.insert(assessmentQuestionMapper, question, AssessmentQuestionDO.class);
 
         FileVO attachmentFileVO = createFileInMinio("attachment.pdf", FileType.ASSESSMENT_ATTACHMENT);
@@ -361,22 +418,34 @@ class FileUploadDownloadIntegrationTest extends BaseIntegrationTest {
     @DisplayName("下载考题附件 - 用户无方向应返回403")
     @WithUserVO(userId = 107L, studentId = "2024001107", username = "未报名考生", roleName = "CANDIDATE", noDirection = true)
     void downloadAssessmentAttachment_asNoDirection_shouldReturn403() throws Exception {
-        User user = new User();
-        user.setId(107L);
-        user.setStudentId("2024001107");
-        user.setUsername("未报名考生");
-        user.setDirection(null);
+        User user = User.reconstruct(
+                107L,
+                "2024001107",
+                null,
+                null,
+                null,
+                "未报名考生",
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null);
         RepositoryTestObjects.insert(userMapper, user, UserDO.class);
 
-        AssessmentTime time = new AssessmentTime();
-        time.setId(105L);
-        time.setDirection(Direction.COMPUTER_VISION);
+        AssessmentTime time = AssessmentTime
+                .reconstruct(105L, Direction.COMPUTER_VISION, null, null, null, null, false, null);
         RepositoryTestObjects.insert(assessmentTimeMapper, time, AssessmentTimeDO.class);
 
-        AssessmentQuestion question = new AssessmentQuestion();
-        question.setId(105L);
-        question.setAssessmentTimeId(105L);
-        question.setQuestionNo(1);
+        AssessmentQuestion question = AssessmentQuestion.reconstruct(105L, 105L, 1, null, null, null, null, null);
         RepositoryTestObjects.insert(assessmentQuestionMapper, question, AssessmentQuestionDO.class);
 
         FileVO attachmentFileVO = createFileInMinio("attachment.pdf", FileType.ASSESSMENT_ATTACHMENT);

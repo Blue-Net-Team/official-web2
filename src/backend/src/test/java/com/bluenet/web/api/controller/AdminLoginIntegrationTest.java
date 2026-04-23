@@ -77,12 +77,27 @@ class AdminLoginIntegrationTest extends BaseIntegrationTest {
             String sha256HashedPassword = sha256Hash(ADMIN_PASSWORD);
             String encodedPassword = passwordEncoder.encode(sha256HashedPassword);
 
-            User adminUser = new User();
-            adminUser.setStudentId(ADMIN_STUDENT_ID);
-            adminUser.setUsername("系统管理员");
-            adminUser.setPassword(encodedPassword);
-            adminUser.setRoleId(1L);
-            adminUser.setDisable(false);
+            User adminUser = User.reconstruct(
+                    null,
+                    ADMIN_STUDENT_ID,
+                    null,
+                    1L,
+                    encodedPassword,
+                    "系统管理员",
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    false,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null);
             RepositoryTestObjects.insert(userMapper, adminUser, UserDO.class);
 
             StudentIdLoginRequestDTO request = new StudentIdLoginRequestDTO();
@@ -116,12 +131,27 @@ class AdminLoginIntegrationTest extends BaseIntegrationTest {
             String sha256HashedPassword = sha256Hash(ADMIN_PASSWORD);
             String encodedPassword = passwordEncoder.encode(sha256HashedPassword);
 
-            User adminUser = new User();
-            adminUser.setStudentId(ADMIN_STUDENT_ID);
-            adminUser.setUsername("系统管理员");
-            adminUser.setPassword(encodedPassword);
-            adminUser.setRoleId(1L);
-            adminUser.setDisable(false);
+            User adminUser = User.reconstruct(
+                    null,
+                    ADMIN_STUDENT_ID,
+                    null,
+                    1L,
+                    encodedPassword,
+                    "系统管理员",
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    false,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null);
             RepositoryTestObjects.insert(userMapper, adminUser, UserDO.class);
 
             StudentIdLoginRequestDTO request = new StudentIdLoginRequestDTO();
@@ -142,12 +172,27 @@ class AdminLoginIntegrationTest extends BaseIntegrationTest {
             String sha256HashedPassword = sha256Hash(ADMIN_PASSWORD);
             String encodedPassword = passwordEncoder.encode(sha256HashedPassword);
 
-            User adminUser = new User();
-            adminUser.setStudentId(ADMIN_STUDENT_ID);
-            adminUser.setUsername("系统管理员");
-            adminUser.setPassword(encodedPassword);
-            adminUser.setRoleId(1L);
-            adminUser.setDisable(false);
+            User adminUser = User.reconstruct(
+                    null,
+                    ADMIN_STUDENT_ID,
+                    null,
+                    1L,
+                    encodedPassword,
+                    "系统管理员",
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    false,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null);
             RepositoryTestObjects.insert(userMapper, adminUser, UserDO.class);
 
             String wrongSha256Hash = sha256Hash("wrongPassword");

@@ -71,30 +71,18 @@ class EquipmentControllerIntegrationTest extends BaseIntegrationTest {
         RepositoryTestObjects.insert(fileMapper, file, FileDO.class);
 
         // 创建测试设备1
-        Equipment equipment1 = new Equipment();
-        equipment1.setName(TEST_NAME + "1");
-        equipment1.setBrand(TEST_BRAND + "1");
-        equipment1.setDescription(TEST_DESCRIPTION);
-        equipment1.setImageFileId(TEST_FILE_ID);
-        equipment1.setSortOrder(10);
+        Equipment equipment1 = Equipment
+                .reconstruct(null, TEST_NAME + "1", TEST_BRAND + "1", TEST_DESCRIPTION, TEST_FILE_ID, 10);
         RepositoryTestObjects.insert(equipmentMapper, equipment1, EquipmentDO.class);
 
         // 创建测试设备2
-        Equipment equipment2 = new Equipment();
-        equipment2.setName(TEST_NAME + "2");
-        equipment2.setBrand(TEST_BRAND + "2");
-        equipment2.setDescription(TEST_DESCRIPTION);
-        equipment2.setImageFileId(TEST_FILE_ID);
-        equipment2.setSortOrder(20);
+        Equipment equipment2 = Equipment
+                .reconstruct(null, TEST_NAME + "2", TEST_BRAND + "2", TEST_DESCRIPTION, TEST_FILE_ID, 20);
         RepositoryTestObjects.insert(equipmentMapper, equipment2, EquipmentDO.class);
 
         // 创建测试设备3
-        Equipment equipment3 = new Equipment();
-        equipment3.setName(TEST_NAME + "3");
-        equipment3.setBrand(TEST_BRAND + "3");
-        equipment3.setDescription(TEST_DESCRIPTION);
-        equipment3.setImageFileId(TEST_FILE_ID);
-        equipment3.setSortOrder(30);
+        Equipment equipment3 = Equipment
+                .reconstruct(null, TEST_NAME + "3", TEST_BRAND + "3", TEST_DESCRIPTION, TEST_FILE_ID, 30);
         RepositoryTestObjects.insert(equipmentMapper, equipment3, EquipmentDO.class);
     }
 

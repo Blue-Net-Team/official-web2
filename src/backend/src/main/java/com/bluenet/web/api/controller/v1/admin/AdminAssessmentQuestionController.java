@@ -7,7 +7,10 @@ import com.bluenet.web.api.dto.assessment_question.CreateQuestionRequestDTO;
 import com.bluenet.web.api.dto.assessment_question.ResponseMessageAssessmentQuestion;
 import com.bluenet.web.api.dto.assessment_question.ResponseMessageAssessmentQuestionList;
 import com.bluenet.web.api.dto.assessment_question.UpdateQuestionRequestDTO;
-import com.bluenet.web.application.service.AssessmentQuestionService;
+import com.bluenet.web.application.command.assessment_question.AssessmentQuestionCommands;
+import com.bluenet.web.application.converter.AssessmentQuestionAppConverter;
+import com.bluenet.web.api.converter.assessment_question.AssessmentQuestionRequestConverter;
+import com.bluenet.web.application.service.AssessmentQuestionAppService;
 import com.bluenet.web.domain.exception.GlobalException;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
 import com.bluenet.web.infrastructure.security.annotation.RequiresPermission;
@@ -35,7 +38,9 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 @SecurityRequirement(name = "bearer-jwt")
 public class AdminAssessmentQuestionController {
-    private final AssessmentQuestionService assessmentQuestionService;
+    private final AssessmentQuestionAppService assessmentQuestionAppService;
+    private final AssessmentQuestionRequestConverter assessmentQuestionRequestConverter;
+    private final AssessmentQuestionAppConverter assessmentQuestionConverter;
 
     @Operation(summary = "创建考题", description = "创建新的考题")
     @ApiResponses({
@@ -48,7 +53,10 @@ public class AdminAssessmentQuestionController {
     public ResponseMessage<AssessmentQuestionDTO> createQuestion(
             @Valid @RequestBody CreateQuestionRequestDTO request) {
         try {
-            AssessmentQuestionDTO created = assessmentQuestionService.createQuestion(request);
+            AssessmentQuestionCommands.CreateAssessmentQuestionCommand command = assessmentQuestionRequestConverter
+                    .toCommand(request);
+            AssessmentQuestionDTO created = assessmentQuestionConverter
+                    .convertToDTO(assessmentQuestionAppService.createQuestion(command));
             return ResponseMessage.success(created);
         } catch (IllegalArgumentException e) {
             return ResponseMessage.error(400, e.getMessage());
@@ -67,7 +75,10 @@ public class AdminAssessmentQuestionController {
             @Parameter(description = "考题ID", required = true) @PathVariable Long id,
             @Valid @RequestBody UpdateQuestionRequestDTO request) {
         try {
-            AssessmentQuestionDTO updated = assessmentQuestionService.updateQuestion(id, request);
+            AssessmentQuestionCommands.UpdateAssessmentQuestionCommand command = assessmentQuestionRequestConverter
+                    .toCommand(id, request);
+            AssessmentQuestionDTO updated = assessmentQuestionConverter
+                    .convertToDTO(assessmentQuestionAppService.updateQuestion(command));
             return ResponseMessage.success(updated);
         } catch (IllegalArgumentException e) {
             if (e.getMessage().contains("不存在")) {
@@ -87,7 +98,7 @@ public class AdminAssessmentQuestionController {
     public ResponseMessage<Void> deleteQuestion(
             @Parameter(description = "考题ID", required = true) @PathVariable Long id) {
         try {
-            assessmentQuestionService.deleteQuestion(id);
+            assessmentQuestionAppService.deleteQuestion(id);
             return ResponseMessage.success(null);
         } catch (IllegalArgumentException e) {
             return ResponseMessage.error(404, e.getMessage());
@@ -104,8 +115,9 @@ public class AdminAssessmentQuestionController {
             @Parameter(description = "考核时间ID", required = true) @RequestParam Long assessmentTimeId,
             @Parameter(description = "页码（从0开始，默认0）") @RequestParam(required = false, defaultValue = "0") Integer page,
             @Parameter(description = "每页大小（默认10）") @RequestParam(required = false, defaultValue = "10") Integer size) {
-        PageDTO<AssessmentQuestionDTO> result = assessmentQuestionService
-                .listQuestionsForAdmin(assessmentTimeId, page, size);
+        PageDTO<AssessmentQuestionDTO> result = PageDTO.from(
+                assessmentQuestionAppService.listQuestionsForAdmin(assessmentTimeId, page, size)
+                        .map(assessmentQuestionConverter::convertToDTO));
         return ResponseMessage.success(result);
     }
 
@@ -117,7 +129,7 @@ public class AdminAssessmentQuestionController {
             @Parameter(description = "考题ID", required = true) @PathVariable Long id,
             @Parameter(description = "文件ID", required = true) @RequestParam("fileId") Long fileId) {
         try {
-            assessmentQuestionService.updateAttachment(id, fileId);
+            assessmentQuestionAppService.updateAttachment(id, fileId);
             return ResponseMessage.success();
         } catch (GlobalException e) {
             return ResponseMessage.error(e);

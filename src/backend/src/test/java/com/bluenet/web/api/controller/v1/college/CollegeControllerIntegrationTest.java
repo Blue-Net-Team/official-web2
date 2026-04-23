@@ -53,9 +53,7 @@ class CollegeControllerIntegrationTest extends BaseIntegrationTest {
     private static final String TEST_NAME_3 = "人工智能学院";
 
     private College createTestCollege(String name) {
-        College college = new College();
-        college.setName(name);
-        return college;
+        return College.create(name);
     }
 
     @BeforeEach

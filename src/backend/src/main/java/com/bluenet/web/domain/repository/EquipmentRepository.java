@@ -1,6 +1,6 @@
 package com.bluenet.web.domain.repository;
 
-import com.bluenet.web.domain.model.vo.EquipmentVO;
+import com.bluenet.web.domain.model.entity.Equipment;
 
 import java.util.List;
 import java.util.Optional;
@@ -8,45 +8,45 @@ import java.util.Optional;
 /**
  * 设备仓库接口
  * <p>
- * 负责设备数据的持久化操作
+ * 负责设备数据的持久化操作，只操作 Entity，不暴露 VO 或 DTO
  * </p>
  */
 public interface EquipmentRepository {
     /**
-     * 按展示排序倒序查询全部设备 视图。
+     * 按展示排序倒序查询全部设备。
      *
-     * @return 满足条件的设备 结果集合。
+     * @return 设备实体集合。
      */
-    List<EquipmentVO> findAllOrderBySortOrderDesc();
+    List<Equipment> findAllOrderBySortOrderDesc();
 
     /**
-     * 处理设备 仓储职责中的业务数据访问逻辑。
+     * 按主键查询设备记录。
      *
      * @param id
      *            业务记录主键。
-     * @return 设备信息，如果不存在则返回Optional.empty()
+     * @return 查询到的设备实体；不存在时为 Optional.empty()。
      */
-    Optional<EquipmentVO> findById(Long id);
+    Optional<Equipment> findById(Long id);
 
     /**
-     * 保存新的设备 记录。
+     * 保存新的设备记录。
      *
      * @param equipment
-     *            设备领域对象。
+     *            设备实体。
      * @return 新记录的主键。
      */
-    Long save(com.bluenet.web.domain.model.entity.Equipment equipment);
+    Long save(Equipment equipment);
 
     /**
-     * 更新已有设备 记录。
+     * 更新已有设备记录。
      *
      * @param equipment
-     *            设备领域对象。
+     *            设备实体（id 必须非空）。
      */
-    void update(com.bluenet.web.domain.model.entity.Equipment equipment);
+    void update(Equipment equipment);
 
     /**
-     * 删除指定设备 记录。
+     * 删除指定设备记录。
      *
      * @param id
      *            业务记录主键。
@@ -54,7 +54,7 @@ public interface EquipmentRepository {
     void deleteById(Long id);
 
     /**
-     * 判断是否存在满足条件的设备 记录。
+     * 判断是否存在满足条件的设备记录。
      *
      * @param id
      *            业务记录主键。
@@ -63,7 +63,7 @@ public interface EquipmentRepository {
     boolean existsById(Long id);
 
     /**
-     * 更新设备 展示图片文件关联。
+     * 更新设备展示图片文件关联。
      *
      * @param id
      *            业务记录主键。

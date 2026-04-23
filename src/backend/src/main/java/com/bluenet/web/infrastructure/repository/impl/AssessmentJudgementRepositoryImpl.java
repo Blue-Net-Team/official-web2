@@ -9,12 +9,12 @@ import com.bluenet.web.domain.model.vo.AssessmentQuestionScoreboardVO;
 import com.bluenet.web.domain.model.vo.AssessmentQuestionSubmissionHistoryVO;
 import com.bluenet.web.domain.model.vo.AssessmentQuestionSubmissionVO;
 import com.bluenet.web.domain.repository.AssessmentJudgementRepository;
+import com.bluenet.web.infrastructure.repository.converter.AssessmentJudgementRepositoryConverter;
 import com.bluenet.web.infrastructure.repository.dataobject.AssessmentJudgementDO;
 import com.bluenet.web.infrastructure.repository.mapper.AssessmentJudgementMapper;
 import com.bluenet.web.infrastructure.repository.dataobject.query.AssessmentCandidateScoreQueryDO;
 import com.bluenet.web.infrastructure.repository.dataobject.query.AssessmentQuestionScoreboardQueryDO;
 import com.bluenet.web.infrastructure.repository.dataobject.query.AssessmentQuestionSubmissionQueryDO;
-import com.bluenet.web.infrastructure.repository.support.RepositoryObjectConverter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
@@ -27,17 +27,20 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class AssessmentJudgementRepositoryImpl implements AssessmentJudgementRepository {
     private final AssessmentJudgementMapper assessmentJudgementMapper;
+    private final AssessmentJudgementRepositoryConverter converter;
 
     /**
      * 保存新的考核评审结果 记录。
      *
      * @param judgement
-     *            考核评审结果对象。
+     *            考核评审结果实体。
      */
     @Override
     public void save(AssessmentJudgement judgement) {
         log.info("save assessment judgement {}", judgement);
-        RepositoryObjectConverter.insert(assessmentJudgementMapper, judgement, AssessmentJudgementDO.class);
+        AssessmentJudgementDO dataObject = converter.toDataObject(judgement);
+        assessmentJudgementMapper.insert(dataObject);
+        judgement.setId(dataObject.getId());
     }
 
     /**
@@ -45,30 +48,24 @@ public class AssessmentJudgementRepositoryImpl implements AssessmentJudgementRep
      *
      * @param id
      *            业务记录主键。
-     * @return 查询到的考核评审结果 结果；不存在时为空。
+     * @return 查询到的考核评审结果 实体；不存在时为空。
      */
     @Override
-    public Optional<AssessmentJudgementVO> findById(Long id) {
-        AssessmentJudgement judgement = RepositoryObjectConverter
-                .toDomain(assessmentJudgementMapper.selectById(id), AssessmentJudgement.class);
-        if (judgement == null) {
-            log.warn("assessment judgement not found id {}", id);
-            return Optional.empty();
-        }
-        return Optional.of(convertToVO(judgement));
+    public Optional<AssessmentJudgement> findById(Long id) {
+        AssessmentJudgementDO dataObject = assessmentJudgementMapper.selectById(id);
+        return Optional.ofNullable(converter.toEntity(dataObject));
     }
 
     /**
      * 更新已有考核评审结果 记录。
      *
      * @param judgement
-     *            考核评审结果对象。
+     *            考核评审结果实体。
      */
     @Override
-    public void update(AssessmentJudgementVO judgement) {
-        AssessmentJudgement entity = convertToEntity(judgement);
-        int influence = RepositoryObjectConverter
-                .updateById(assessmentJudgementMapper, entity, AssessmentJudgementDO.class);
+    public void update(AssessmentJudgement judgement) {
+        AssessmentJudgementDO dataObject = converter.toDataObject(judgement);
+        int influence = assessmentJudgementMapper.updateById(dataObject);
         if (influence == 0) {
             log.warn("更新考核评判记录失败，judgementId {}", judgement.getId());
             throw new GlobalException("更新考核评判记录失败");
@@ -80,16 +77,12 @@ public class AssessmentJudgementRepositoryImpl implements AssessmentJudgementRep
      *
      * @param answerId
      *            考核作答主键。
-     * @return 查询到的考核评审结果 结果；不存在时为空。
+     * @return 查询到的考核评审结果 实体；不存在时为空。
      */
     @Override
-    public Optional<AssessmentJudgementVO> findLatestByAnswerId(Long answerId) {
-        AssessmentJudgement judgement = RepositoryObjectConverter
-                .toDomain(assessmentJudgementMapper.selectLatestByAnswerId(answerId), AssessmentJudgement.class);
-        if (judgement == null) {
-            return Optional.empty();
-        }
-        return Optional.of(convertToVO(judgement));
+    public Optional<AssessmentJudgement> findLatestByAnswerId(Long answerId) {
+        AssessmentJudgementDO dataObject = assessmentJudgementMapper.selectLatestByAnswerId(answerId);
+        return Optional.ofNullable(converter.toEntity(dataObject));
     }
 
     /**
@@ -99,17 +92,13 @@ public class AssessmentJudgementRepositoryImpl implements AssessmentJudgementRep
      *            考核题目主键。
      * @param userId
      *            用户主键，用于限定用户范围。
-     * @return 查询到的考核评审结果 结果；不存在时为空。
+     * @return 查询到的考核评审结果 实体；不存在时为空。
      */
     @Override
-    public Optional<AssessmentJudgementVO> findLatestByQuestionIdAndUserId(Long questionId, Long userId) {
-        AssessmentJudgement judgement = RepositoryObjectConverter.toDomain(
-                assessmentJudgementMapper.selectLatestByQuestionIdAndUserId(questionId, userId),
-                AssessmentJudgement.class);
-        if (judgement == null) {
-            return Optional.empty();
-        }
-        return Optional.of(convertToVO(judgement));
+    public Optional<AssessmentJudgement> findLatestByQuestionIdAndUserId(Long questionId, Long userId) {
+        AssessmentJudgementDO dataObject = assessmentJudgementMapper
+                .selectLatestByQuestionIdAndUserId(questionId, userId);
+        return Optional.ofNullable(converter.toEntity(dataObject));
     }
 
     /**
@@ -117,17 +106,12 @@ public class AssessmentJudgementRepositoryImpl implements AssessmentJudgementRep
      *
      * @param questionId
      *            考核题目主键。
-     * @return 满足条件的考核评审结果 结果集合。
+     * @return 满足条件的考核评审结果 实体集合。
      */
     @Override
-    public List<AssessmentJudgementVO> findAllByQuestionId(Long questionId) {
-        // Mapper 层返回评判 DO，RepositoryImpl 在这里统一转换为领域对象。
-        return RepositoryObjectConverter.toDomainList(
-                assessmentJudgementMapper.selectAllByQuestionId(questionId),
-                AssessmentJudgement.class)
-                .stream()
-                .map(this::convertToVO)
-                .toList();
+    public List<AssessmentJudgement> findAllByQuestionId(Long questionId) {
+        List<AssessmentJudgementDO> dataObjects = assessmentJudgementMapper.selectAllByQuestionId(questionId);
+        return converter.toEntityList(dataObjects);
     }
 
     /**
@@ -135,75 +119,13 @@ public class AssessmentJudgementRepositoryImpl implements AssessmentJudgementRep
      *
      * @param questionId
      *            考核题目主键。
-     * @return 满足条件的考核评审结果 结果集合。
+     * @return 满足条件的考核评审结果 实体集合。
      */
     @Override
-    public List<AssessmentJudgementVO> findLatestObjectiveByQuestionId(Long questionId) {
-        // Mapper 层返回评判 DO，RepositoryImpl 在这里统一转换为领域对象。
-        return RepositoryObjectConverter.toDomainList(
-                assessmentJudgementMapper.selectLatestObjectiveByQuestionId(questionId),
-                AssessmentJudgement.class)
-                .stream()
-                .map(this::convertToVO)
-                .toList();
-    }
-
-    /**
-     * 在考核评审结果 的持久层对象、领域对象和视图对象之间转换。
-     *
-     * @param judgement
-     *            考核评审结果对象。
-     * @return 转换后的目标模型对象。
-     */
-    private AssessmentJudgement convertToEntity(AssessmentJudgementVO judgement) {
-        AssessmentJudgement entity = AssessmentJudgement.builder()
-                .id(judgement.getId())
-                .answerId(judgement.getAnswerId())
-                .questionId(judgement.getQuestionId())
-                .assessmentTimeId(judgement.getAssessmentTimeId())
-                .userId(judgement.getUserId())
-                .createdAt(judgement.getCreatedAt())
-                .build();
-        entity.applyJudgementResult(
-                judgement.getScore(),
-                judgement.getMaxScore(),
-                judgement.getStatus(),
-                judgement.getResultCode(),
-                judgement.getSource(),
-                judgement.getReviewerId(),
-                judgement.getReviewerType(),
-                judgement.getComment(),
-                judgement.getJudgedAt(),
-                judgement.getUpdatedAt());
-        return entity;
-    }
-
-    /**
-     * 在考核评审结果 的持久层对象、领域对象和视图对象之间转换。
-     *
-     * @param judgement
-     *            考核评审结果对象。
-     * @return 转换后的目标模型对象。
-     */
-    private AssessmentJudgementVO convertToVO(AssessmentJudgement judgement) {
-        return AssessmentJudgementVO.builder()
-                .id(judgement.getId())
-                .answerId(judgement.getAnswerId())
-                .questionId(judgement.getQuestionId())
-                .assessmentTimeId(judgement.getAssessmentTimeId())
-                .userId(judgement.getUserId())
-                .score(judgement.getScore())
-                .maxScore(judgement.getMaxScore())
-                .status(judgement.getStatus())
-                .resultCode(judgement.getResultCode())
-                .source(judgement.getSource())
-                .reviewerId(judgement.getReviewerId())
-                .reviewerType(judgement.getReviewerType())
-                .comment(judgement.getComment())
-                .judgedAt(judgement.getJudgedAt())
-                .createdAt(judgement.getCreatedAt())
-                .updatedAt(judgement.getUpdatedAt())
-                .build();
+    public List<AssessmentJudgement> findLatestObjectiveByQuestionId(Long questionId) {
+        List<AssessmentJudgementDO> dataObjects = assessmentJudgementMapper
+                .selectLatestObjectiveByQuestionId(questionId);
+        return converter.toEntityList(dataObjects);
     }
 
     /**

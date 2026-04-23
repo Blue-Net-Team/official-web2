@@ -3,7 +3,9 @@ package com.bluenet.web.api.controller.v1.admin;
 import com.bluenet.web.api.dto.ResponseMessage;
 import com.bluenet.web.api.dto.permission.RolePermissionBatchRequestDTO;
 import com.bluenet.web.api.dto.permission.RolePermissionResponseDTO;
-import com.bluenet.web.application.service.RolePermissionManageService;
+import com.bluenet.web.api.converter.rolepermission.RolePermissionManageRequestConverter;
+import com.bluenet.web.application.RolePermissionManageResult;
+import com.bluenet.web.application.service.RolePermissionManageAppService;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
 import com.bluenet.web.infrastructure.security.annotation.RequiresPermission;
 import io.swagger.v3.oas.annotations.Operation;
@@ -25,7 +27,8 @@ import java.util.List;
 @SecurityRequirement(name = "bearer-jwt")
 public class RolePermissionAdminController {
 
-    private final RolePermissionManageService rolePermissionManageService;
+    private final RolePermissionManageAppService rolePermissionManageAppService;
+    private final RolePermissionManageRequestConverter rolePermissionManageRequestConverter;
 
     @Operation(summary = "获取角色权限列表", description = "获取指定角色当前拥有的所有权限标识符列表")
     @ApiResponses({
@@ -36,7 +39,7 @@ public class RolePermissionAdminController {
     @GetMapping("/{roleName}/permissions")
     public ResponseMessage<List<String>> getRolePermissions(
             @Parameter(description = "角色名称", required = true, example = "MEMBER") @PathVariable String roleName) {
-        List<String> permissions = rolePermissionManageService.getRolePermissions(roleName);
+        List<String> permissions = rolePermissionManageAppService.getRolePermissions(roleName);
         return ResponseMessage.success(permissions);
     }
 
@@ -51,10 +54,13 @@ public class RolePermissionAdminController {
     public ResponseMessage<RolePermissionResponseDTO> assignPermissionsToRole(
             @Parameter(description = "角色名称", required = true, example = "MEMBER") @PathVariable String roleName,
             @Valid @RequestBody RolePermissionBatchRequestDTO request) {
-        RolePermissionResponseDTO result = rolePermissionManageService.assignPermissionsToRole(
-                roleName,
-                request.getPermissionIds());
-        return ResponseMessage.success(result);
+        RolePermissionManageResult result = rolePermissionManageAppService.assignPermissionsToRole(
+                rolePermissionManageRequestConverter.toAssignPermissionsCommand(roleName, request));
+        return ResponseMessage.success(
+                RolePermissionResponseDTO.builder()
+                        .successCount(result.successCount())
+                        .currentPermissions(result.currentPermissions())
+                        .build());
     }
 
     @Operation(summary = "批量移除角色权限", description = "从指定角色批量移除权限")
@@ -68,9 +74,12 @@ public class RolePermissionAdminController {
     public ResponseMessage<RolePermissionResponseDTO> removePermissionsFromRole(
             @Parameter(description = "角色名称", required = true, example = "MEMBER") @PathVariable String roleName,
             @Valid @RequestBody RolePermissionBatchRequestDTO request) {
-        RolePermissionResponseDTO result = rolePermissionManageService.removePermissionsFromRole(
-                roleName,
-                request.getPermissionIds());
-        return ResponseMessage.success(result);
+        RolePermissionManageResult result = rolePermissionManageAppService.removePermissionsFromRole(
+                rolePermissionManageRequestConverter.toRemovePermissionsCommand(roleName, request));
+        return ResponseMessage.success(
+                RolePermissionResponseDTO.builder()
+                        .successCount(result.successCount())
+                        .currentPermissions(result.currentPermissions())
+                        .build());
     }
 }

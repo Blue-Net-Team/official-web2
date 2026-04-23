@@ -102,28 +102,37 @@ class AdminAchievementControllerIntegrationTest extends BaseIntegrationTest {
 
         permissionCache.refresh();
 
-        User adminUser = new User();
-        adminUser.setStudentId(TEST_STUDENT_ID);
-        adminUser.setUsername("管理员");
-        adminUser.setEmail("admin@example.com");
-        adminUser.setPassword(passwordEncoder.encode(TEST_PASSWORD));
-        adminUser.setRoleId(adminRoleId);
-        adminUser.setDisable(false);
-        adminUser.setDirection(Direction.COMPUTER_VISION);
+        User adminUser = User.reconstruct(
+                null,
+                TEST_STUDENT_ID,
+                "admin@example.com",
+                adminRoleId,
+                passwordEncoder.encode(TEST_PASSWORD),
+                "管理员",
+                null,
+                null,
+                null,
+                null,
+                Direction.COMPUTER_VISION,
+                null,
+                null,
+                null,
+                false,
+                null,
+                null,
+                null,
+                null,
+                null);
         RepositoryTestObjects.insert(userMapper, adminUser, UserDO.class);
 
         loginAndGetCookies();
     }
 
     private void createPermission(String value, String name) {
-        Permission permission = new Permission();
-        permission.setName(name);
-        permission.setValue(value);
+        Permission permission = Permission.create(name, value, null, null, null);
         RepositoryTestObjects.insert(permissionMapper, permission, PermissionDO.class);
 
-        RolePermission rolePermission = new RolePermission();
-        rolePermission.setRoleId(adminRoleId);
-        rolePermission.setPermissionId(permission.getId());
+        RolePermission rolePermission = RolePermission.create(adminRoleId, permission.getId());
         RepositoryTestObjects.insert(rolePermissionMapper, rolePermission, RolePermissionDO.class);
     }
 
@@ -307,14 +316,14 @@ class AdminAchievementControllerIntegrationTest extends BaseIntegrationTest {
     @Test
     @DisplayName("集成测试：更新成就应成功")
     void updateAchievement_shouldUpdateSuccessfully() {
-        Achievement achievement = new Achievement();
-        achievement.setTitle("原始标题");
-        achievement.setType(AchievementType.COMPETITION);
-        achievement.setRelateTo("原始关联项");
-        achievement.setAchieveAt(LocalDate.of(2024, 1, 1));
-        achievement.setAwardLevel(AwardLevel.NATIONAL);
-        achievement.setAwardName("一等奖");
-        achievement.setFileId(testFileId);
+        Achievement achievement = Achievement.create(
+                "原始标题",
+                AchievementType.COMPETITION,
+                "原始关联项",
+                LocalDate.of(2024, 1, 1),
+                AwardLevel.NATIONAL,
+                "一等奖",
+                testFileId);
         RepositoryTestObjects.insert(achievementMapper, achievement, AchievementDO.class);
         Long achievementId = achievement.getId();
 
@@ -387,12 +396,8 @@ class AdminAchievementControllerIntegrationTest extends BaseIntegrationTest {
     @Test
     @DisplayName("集成测试：删除成就应成功")
     void deleteAchievement_shouldDeleteSuccessfully() {
-        Achievement achievement = new Achievement();
-        achievement.setTitle("待删除成就");
-        achievement.setType(AchievementType.PAPER);
-        achievement.setRelateTo("待删除期刊");
-        achievement.setAchieveAt(LocalDate.of(2024, 1, 1));
-        achievement.setFileId(testFileId);
+        Achievement achievement = Achievement
+                .create("待删除成就", AchievementType.PAPER, "待删除期刊", LocalDate.of(2024, 1, 1), null, null, testFileId);
         RepositoryTestObjects.insert(achievementMapper, achievement, AchievementDO.class);
         Long achievementId = achievement.getId();
 

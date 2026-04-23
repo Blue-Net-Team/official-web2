@@ -58,9 +58,7 @@ class EnrollControllerIntegrationTest extends BaseIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        College college = College.builder()
-                .name("计算机学院")
-                .build();
+        College college = College.create("计算机学院");
         RepositoryTestObjects.insert(collegeMapper, college, CollegeDO.class);
         testCollegeId = college.getId();
     }

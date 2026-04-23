@@ -2,7 +2,7 @@ package com.bluenet.web.application.service.auth.provider;
 
 import java.util.Optional;
 
-import com.bluenet.web.api.dto.auth.StudentIdLoginRequestDTO;
+import com.bluenet.web.application.command.auth.AuthCommands;
 import com.bluenet.web.application.service.auth.strategy.AbstractAuthProvider;
 import com.bluenet.web.application.service.auth.strategy.AuthProviderType;
 import com.bluenet.web.domain.exception.Unauthorized;
@@ -16,7 +16,7 @@ import lombok.extern.slf4j.Slf4j;
  * 学号密码登录凭证校验 provider。
  */
 @Slf4j
-public class StudentIdLoginProvider extends AbstractAuthProvider<StudentIdLoginRequestDTO, UserVO> {
+public class StudentIdLoginProvider extends AbstractAuthProvider<AuthCommands.StudentIdLoginCommand, UserVO> {
     private final AuthDomainService authDomainService;
 
     public StudentIdLoginProvider(AuthDomainService authDomainService) {
@@ -27,17 +27,17 @@ public class StudentIdLoginProvider extends AbstractAuthProvider<StudentIdLoginR
     /**
      * 校验学号密码并返回用户。
      *
-     * @param request
-     *            登录请求。
+     * @param command
+     *            登录命令。
      * @return 通过校验的用户。
      */
-    public UserVO authenticate(StudentIdLoginRequestDTO request) {
+    public UserVO authenticate(AuthCommands.StudentIdLoginCommand command) {
         Optional<UserVO> userVOOptional = authDomainService.checkLocalValid(
-                request.getStudentId(),
-                request.getPassword(),
+                command.studentId(),
+                command.password(),
                 LocalLoginType.STUDENT_ID);
         return userVOOptional.orElseThrow(() -> {
-            log.warn("Login failed: invalid credentials - {}", request.getStudentId());
+            log.warn("Login failed: invalid credentials - {}", command.studentId());
             return new Unauthorized("学号或密码错误");
         });
     }

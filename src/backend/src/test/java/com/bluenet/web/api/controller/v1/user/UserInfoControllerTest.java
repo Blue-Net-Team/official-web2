@@ -1,7 +1,7 @@
 package com.bluenet.web.api.controller.v1.user;
 
-import com.bluenet.web.api.dto.user.UserInfo;
-import com.bluenet.web.application.service.UserInfoService;
+import com.bluenet.web.application.UserInfoResult;
+import com.bluenet.web.application.service.UserInfoAppService;
 import com.bluenet.web.domain.exception.Unauthorized;
 import com.bluenet.web.domain.model.enumerate.Direction;
 import com.bluenet.web.domain.model.enumerate.Gender;
@@ -36,7 +36,7 @@ class UserInfoControllerTest {
     private MockMvc mockMvc;
 
     @MockBean
-    private UserInfoService userInfoService;
+    private UserInfoAppService userInfoAppService;
 
     @AfterEach
     void tearDown() {
@@ -46,20 +46,22 @@ class UserInfoControllerTest {
     @Test
     @WithUserVO(userId = 1L, studentId = "2024001001", username = "张三", roleName = "MEMBER", permissions = "user:info:me")
     void getMyInfo_whenAuthenticated_returnsUserInfo() throws Exception {
-        UserInfo expected = UserInfo.builder()
-                .id(1L)
-                .username("张三")
-                .college("计算机学院")
-                .major("软件工程")
-                .grade("2024")
-                .email("zhangsan@example.com")
-                .avatarFileId(null)
-                .roleName("MEMBER")
-                .direction(Direction.COMPUTER_VISION)
-                .gender(Gender.UNKNOWN)
-                .build();
+        UserInfoResult expected = new UserInfoResult(
+                1L,
+                "张三",
+                null,
+                "计算机学院",
+                "软件工程",
+                "2024",
+                "zhangsan@example.com",
+                null,
+                "MEMBER",
+                Direction.COMPUTER_VISION,
+                Gender.UNKNOWN,
+                null,
+                null);
 
-        when(userInfoService.getMyInfo()).thenReturn(expected);
+        when(userInfoAppService.getMyInfo()).thenReturn(expected);
 
         mockMvc.perform(get("/api/v1/user/info/me").contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
@@ -68,13 +70,13 @@ class UserInfoControllerTest {
                 .andExpect(jsonPath("$.data.username").value("张三"))
                 .andExpect(jsonPath("$.data.roleName").value("MEMBER"));
 
-        verify(userInfoService).getMyInfo();
+        verify(userInfoAppService).getMyInfo();
     }
 
     @Test
     @WithUserVO(permissions = "user:info:me")
     void getMyInfo_whenServiceThrowsUnauthorized_returnsErrorResponse() throws Exception {
-        when(userInfoService.getMyInfo()).thenThrow(new Unauthorized("未认证"));
+        when(userInfoAppService.getMyInfo()).thenThrow(new Unauthorized("未认证"));
 
         mockMvc.perform(get("/api/v1/user/info/me").contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isUnauthorized()) // 控制器捕获异常后返回
@@ -82,6 +84,6 @@ class UserInfoControllerTest {
                 .andExpect(jsonPath("$.msg").value("未认证"))
                 .andExpect(jsonPath("$.data").isEmpty());
 
-        verify(userInfoService).getMyInfo();
+        verify(userInfoAppService).getMyInfo();
     }
 }

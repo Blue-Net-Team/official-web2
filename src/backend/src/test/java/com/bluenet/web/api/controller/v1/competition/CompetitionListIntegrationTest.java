@@ -82,15 +82,8 @@ class CompetitionListIntegrationTest extends BaseIntegrationTest {
     @DisplayName("集成测试：正常查询竞赛列表应返回包含 level、month、organizer 字段的数据")
     void getCompetitionList_shouldReturnCompetitionsWithAllFields() {
         // 准备：创建测试竞赛
-        Competition competition = new Competition();
-        competition.setName("蓝桥杯");
-        competition.setShortName("蓝桥杯");
-        competition.setLogoFileId(logoFileId);
-        competition.setSummary("全国软件和信息技术专业人才大赛");
-        competition.setLevel(TEST_LEVEL);
-        competition.setMonth(TEST_MONTH);
-        competition.setOrganizer(TEST_ORGANIZER);
-        competition.setSortOrder(100);
+        Competition competition = Competition
+                .create("蓝桥杯", "蓝桥杯", logoFileId, null, "全国软件和信息技术专业人才大赛", TEST_LEVEL, TEST_MONTH, TEST_ORGANIZER, 100);
         RepositoryTestObjects.insert(competitionMapper, competition, CompetitionDO.class);
 
         // 执行
@@ -135,14 +128,8 @@ class CompetitionListIntegrationTest extends BaseIntegrationTest {
         RepositoryTestObjects.insert(fileMapper, coverFile, FileDO.class);
 
         // 准备：创建竞赛并设置封面
-        Competition competition = new Competition();
-        competition.setName("蓝桥杯");
-        competition.setShortName("蓝桥杯");
-        competition.setLogoFileId(logoFileId);
-        competition.setCoverFileId(coverFile.getId());
-        competition.setSummary("全国软件和信息技术专业人才大赛");
-        competition.setLevel(TEST_LEVEL);
-        competition.setSortOrder(100);
+        Competition competition = Competition
+                .create("蓝桥杯", "蓝桥杯", logoFileId, coverFile.getId(), "全国软件和信息技术专业人才大赛", TEST_LEVEL, null, null, 100);
         RepositoryTestObjects.insert(competitionMapper, competition, CompetitionDO.class);
 
         // 执行
@@ -169,12 +156,8 @@ class CompetitionListIntegrationTest extends BaseIntegrationTest {
     @DisplayName("集成测试：无封面时 coverFileId 应为 null")
     void getCompetitionList_noCoverFile_shouldReturnNullCoverFileId() {
         // 准备：创建竞赛但不设置封面
-        Competition competition = new Competition();
-        competition.setName("无封面竞赛");
-        competition.setShortName("无封面");
-        competition.setLogoFileId(logoFileId);
-        competition.setSummary("这个竞赛没有封面");
-        competition.setSortOrder(100);
+        Competition competition = Competition
+                .create("无封面竞赛", "无封面", logoFileId, null, "这个竞赛没有封面", null, null, null, 100);
         RepositoryTestObjects.insert(competitionMapper, competition, CompetitionDO.class);
 
         // 执行
@@ -230,12 +213,8 @@ class CompetitionListIntegrationTest extends BaseIntegrationTest {
     void getCompetitionList_limitLessThanOne_shouldReturnData() {
         // 准备：创建多个竞赛
         for (int i = 1; i <= 5; i++) {
-            Competition competition = new Competition();
-            competition.setName("竞赛" + i);
-            competition.setShortName("竞赛" + i);
-            competition.setLogoFileId(logoFileId);
-            competition.setSummary("竞赛" + i + "简介");
-            competition.setSortOrder(100 - i);
+            Competition competition = Competition
+                    .create("竞赛" + i, "竞赛" + i, logoFileId, null, "竞赛" + i + "简介", null, null, null, 100 - i);
             RepositoryTestObjects.insert(competitionMapper, competition, CompetitionDO.class);
         }
 
@@ -262,12 +241,8 @@ class CompetitionListIntegrationTest extends BaseIntegrationTest {
     void getCompetitionList_limitGreaterThan50_shouldLimitTo50() {
         // 准备：创建 60 个竞赛
         for (int i = 1; i <= 60; i++) {
-            Competition competition = new Competition();
-            competition.setName("竞赛" + i);
-            competition.setShortName("竞赛" + i);
-            competition.setLogoFileId(logoFileId);
-            competition.setSummary("竞赛" + i + "简介");
-            competition.setSortOrder(100 - i);
+            Competition competition = Competition
+                    .create("竞赛" + i, "竞赛" + i, logoFileId, null, "竞赛" + i + "简介", null, null, null, 100 - i);
             RepositoryTestObjects.insert(competitionMapper, competition, CompetitionDO.class);
         }
 
@@ -294,12 +269,8 @@ class CompetitionListIntegrationTest extends BaseIntegrationTest {
     void getCompetitionList_defaultLimit_shouldBe10() {
         // 准备：创建 15 个竞赛
         for (int i = 1; i <= 15; i++) {
-            Competition competition = new Competition();
-            competition.setName("竞赛" + i);
-            competition.setShortName("竞赛" + i);
-            competition.setLogoFileId(logoFileId);
-            competition.setSummary("竞赛" + i + "简介");
-            competition.setSortOrder(100 - i);
+            Competition competition = Competition
+                    .create("竞赛" + i, "竞赛" + i, logoFileId, null, "竞赛" + i + "简介", null, null, null, 100 - i);
             RepositoryTestObjects.insert(competitionMapper, competition, CompetitionDO.class);
         }
 
@@ -340,22 +311,12 @@ class CompetitionListIntegrationTest extends BaseIntegrationTest {
         RepositoryTestObjects.insert(fileMapper, coverFile2, FileDO.class);
 
         // 准备：创建两个竞赛，各自有封面
-        Competition competition1 = new Competition();
-        competition1.setName("竞赛1");
-        competition1.setShortName("C1");
-        competition1.setLogoFileId(logoFileId);
-        competition1.setCoverFileId(coverFile1.getId());
-        competition1.setSummary("竞赛1简介");
-        competition1.setSortOrder(0);
+        Competition competition1 = Competition
+                .create("竞赛1", "C1", logoFileId, coverFile1.getId(), "竞赛1简介", null, null, null, 0);
         RepositoryTestObjects.insert(competitionMapper, competition1, CompetitionDO.class);
 
-        Competition competition2 = new Competition();
-        competition2.setName("竞赛2");
-        competition2.setShortName("C2");
-        competition2.setLogoFileId(logoFileId);
-        competition2.setCoverFileId(coverFile2.getId());
-        competition2.setSummary("竞赛2简介");
-        competition2.setSortOrder(1);
+        Competition competition2 = Competition
+                .create("竞赛2", "C2", logoFileId, coverFile2.getId(), "竞赛2简介", null, null, null, 1);
         RepositoryTestObjects.insert(competitionMapper, competition2, CompetitionDO.class);
 
         // 执行

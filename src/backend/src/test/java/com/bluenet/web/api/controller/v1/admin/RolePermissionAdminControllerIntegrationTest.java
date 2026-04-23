@@ -77,14 +77,27 @@ class RolePermissionAdminControllerIntegrationTest extends BaseIntegrationTest {
     @BeforeEach
     void setUp() {
         Role superAdminRole = RepositoryTestObjects.toDomain(roleMapper.selectByName("SUPER_ADMIN"), Role.class);
-        User adminUser = User.builder()
-                .studentId(TEST_STUDENT_ID)
-                .username("权限管理员")
-                .email("permadmin@example.com")
-                .password(passwordEncoder.encode(TEST_PASSWORD))
-                .roleId(superAdminRole.getId())
-                .disable(false)
-                .build();
+        User adminUser = User.reconstruct(
+                null,
+                TEST_STUDENT_ID,
+                "permadmin@example.com",
+                superAdminRole.getId(),
+                passwordEncoder.encode(TEST_PASSWORD),
+                "权限管理员",
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                false,
+                null,
+                null,
+                null,
+                null,
+                null);
         RepositoryTestObjects.insert(userMapper, adminUser, UserDO.class);
         loginAndGetCookies();
     }
@@ -378,19 +391,13 @@ class RolePermissionAdminControllerIntegrationTest extends BaseIntegrationTest {
     }
 
     private Permission createPermission(String value, String name) {
-        Permission permission = new Permission();
-        permission.setValue(value);
-        permission.setName(name);
-        permission.setUrl("/api/v1/test");
-        permission.setMethod("GET");
+        Permission permission = Permission.create(name, value, "/api/v1/test", "GET", null);
         RepositoryTestObjects.insert(permissionMapper, permission, PermissionDO.class);
         return permission;
     }
 
     private void assignPermissionToRole(Long roleId, Long permissionId) {
-        RolePermission rp = new RolePermission();
-        rp.setRoleId(roleId);
-        rp.setPermissionId(permissionId);
+        RolePermission rp = RolePermission.create(roleId, permissionId);
         RepositoryTestObjects.insert(rolePermissionMapper, rp, RolePermissionDO.class);
     }
 }

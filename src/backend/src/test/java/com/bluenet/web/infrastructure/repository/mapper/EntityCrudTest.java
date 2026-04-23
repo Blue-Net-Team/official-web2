@@ -45,22 +45,33 @@ class EntityCrudTest extends BaseIntegrationTest {
     @Test
     void testUserCrudWithEnum() {
         // 创建学院和角色
-        College college = new College();
-        college.setName("计算机学院");
+        College college = College.create("计算机学院");
         RepositoryTestObjects.insert(collegeMapper, college, CollegeDO.class);
 
         Role role = RepositoryTestObjects.toDomain(roleMapper.selectByName("MEMBER"), Role.class);
 
         // 创建用户
-        User user = new User();
-        user.setStudentId("202401010001");
-        user.setEmail("test@example.com");
-        user.setUsername("测试用户");
-        user.setCollegeId(college.getId());
-        user.setRoleId(role.getId());
-        user.setDirection(Direction.COMPUTER_VISION);
-        user.setGender(Gender.MALE);
-        user.setDisable(false);
+        User user = User.reconstruct(
+                null,
+                "202401010001",
+                "test@example.com",
+                role.getId(),
+                null,
+                "测试用户",
+                null,
+                college.getId(),
+                null,
+                null,
+                Direction.COMPUTER_VISION,
+                Gender.MALE,
+                null,
+                null,
+                false,
+                null,
+                null,
+                null,
+                null,
+                null);
 
         // 插入
         int insertCount = RepositoryTestObjects.insert(userMapper, user, UserDO.class);
@@ -81,28 +92,30 @@ class EntityCrudTest extends BaseIntegrationTest {
     @Test
     void testEvaluationQuestionWithJsonContent() {
         // 创建考核时间
-        AssessmentTime evalTime = new AssessmentTime();
-        evalTime.setDirection(Direction.COMPUTER_VISION);
-        evalTime.setEpoch(1);
-        evalTime.setStartTime(LocalDateTime.now());
-        evalTime.setEndTime(LocalDateTime.now().plusDays(7));
-        evalTime.setTimeLimit(true);
-        evalTime.setTimeLimitMinutes(120);
+        AssessmentTime evalTime = AssessmentTime.create(
+                Direction.COMPUTER_VISION,
+                1,
+                null,
+                LocalDateTime.now(),
+                LocalDateTime.now().plusDays(7),
+                true,
+                120);
         RepositoryTestObjects.insert(assessmentTimeMapper, evalTime, AssessmentTimeDO.class);
 
         // 创建题目 - 单选题
-        AssessmentQuestion question = new AssessmentQuestion();
-        question.setAssessmentTimeId(evalTime.getId());
-        question.setQuestionNo(1);
-        question.setQuestionType(QuestionType.SINGLE_CHOICE);
-        question.setTitle("测试单选题");
-        question.setScore(new BigDecimal("10.00"));
-
         SingleChoiceContent content = new SingleChoiceContent();
         content.setContent("这是题干");
         content.setOptions(Arrays.asList("A. 选项1", "B. 选项2", "C. 选项3"));
         content.setCorrectAnswer("B");
-        question.setContent(content);
+
+        AssessmentQuestion question = AssessmentQuestion.create(
+                evalTime.getId(),
+                1,
+                QuestionType.SINGLE_CHOICE,
+                "测试单选题",
+                content,
+                null,
+                new BigDecimal("10.00"));
 
         // 插入
         int insertCount = RepositoryTestObjects.insert(assessmentQuestionMapper, question, AssessmentQuestionDO.class);
@@ -128,19 +141,15 @@ class EntityCrudTest extends BaseIntegrationTest {
     @Test
     void testEvaluationQuestionWithAlgorithmContent() {
         // 先创建考核时间
-        AssessmentTime evalTime = new AssessmentTime();
-        evalTime.setDirection(Direction.EMBEDDED);
-        evalTime.setEpoch(1);
-        evalTime.setStartTime(LocalDateTime.now());
-        evalTime.setEndTime(LocalDateTime.now().plusDays(7));
+        AssessmentTime evalTime = AssessmentTime.create(
+                Direction.EMBEDDED,
+                1,
+                null,
+                LocalDateTime.now(),
+                LocalDateTime.now().plusDays(7),
+                false,
+                null);
         RepositoryTestObjects.insert(assessmentTimeMapper, evalTime, AssessmentTimeDO.class);
-
-        AssessmentQuestion question = new AssessmentQuestion();
-        question.setAssessmentTimeId(evalTime.getId());
-        question.setQuestionNo(2);
-        question.setQuestionType(QuestionType.ALGORITHM);
-        question.setTitle("两数之和");
-        question.setScore(new BigDecimal("20.00"));
 
         AlgorithmContent content = new AlgorithmContent();
         content.setContent("给定一个整数数组，返回两数之和为目标值的索引");
@@ -152,7 +161,15 @@ class EntityCrudTest extends BaseIntegrationTest {
 
         content.setTimeLimit(1000);
         content.setMemoryLimit(256);
-        question.setContent(content);
+
+        AssessmentQuestion question = AssessmentQuestion.create(
+                evalTime.getId(),
+                2,
+                QuestionType.ALGORITHM,
+                "两数之和",
+                content,
+                null,
+                new BigDecimal("20.00"));
 
         // 插入并验证
         RepositoryTestObjects.insert(assessmentQuestionMapper, question, AssessmentQuestionDO.class);
@@ -170,19 +187,27 @@ class EntityCrudTest extends BaseIntegrationTest {
     @Test
     void testEnrollCrud() {
         // 创建学院
-        College college = new College();
-        college.setName("测试学院");
+        College college = College.create("测试学院");
         RepositoryTestObjects.insert(collegeMapper, college, CollegeDO.class);
 
         // 创建报名记录
-        Enroll enroll = new Enroll();
-        enroll.setStudentId("202401020001");
-        enroll.setUsername("报名测试");
-        enroll.setPassword("password123");
-        enroll.setCollegeId(college.getId());
-        enroll.setMajor("软件工程");
-        enroll.setDirection(Direction.STRUCTURAL_DESIGN);
-        enroll.setStatus(EnrollStatus.PENDING);
+        Enroll enroll = Enroll.reconstruct(
+                null,
+                "报名测试",
+                "202401020001",
+                "password123",
+                null,
+                college.getId(),
+                "软件工程",
+                null,
+                Direction.STRUCTURAL_DESIGN,
+                null,
+                EnrollStatus.PENDING,
+                null,
+                null,
+                null,
+                null,
+                null);
 
         // 插入
         int insertCount = RepositoryTestObjects.insert(enrollMapper, enroll, EnrollDO.class);
@@ -206,23 +231,27 @@ class EntityCrudTest extends BaseIntegrationTest {
         assertEquals(FileType.AVATAR, file.getType());
 
         // ExperienceType 在 UserExperience 中
-        UserExperience experience = new UserExperience();
-        experience.setType(ExperienceType.COMPETITION);
-        experience.setTitle("蓝桥杯");
+        UserExperience experience = UserExperience.reconstruct(
+                null,
+                null,
+                ExperienceType.COMPETITION,
+                "蓝桥杯",
+                null,
+                null,
+                null);
 
         assertEquals(ExperienceType.COMPETITION, experience.getType());
 
         // AchievementType 在 Achievement 中
-        Achievement achievement = new Achievement();
-        achievement.setTitle("一等奖");
+        Achievement achievement = Achievement
+                .create("一等奖", AchievementType.COMPETITION, null, null, AwardLevel.NATIONAL, null, null);
         achievement.setType(AchievementType.COMPETITION);
 
         assertEquals(AchievementType.COMPETITION, achievement.getType());
 
         // ProgrammingLanguage 在 AssessmentAnswer 中
-        AssessmentAnswer answer = new AssessmentAnswer();
-        answer.setLanguage(ProgrammingLanguage.JAVA);
-        answer.setContent("public class Main {}");
+        AssessmentAnswer answer = AssessmentAnswer
+                .create(1L, 1L, "public class Main {}", ProgrammingLanguage.JAVA, null);
 
         assertEquals(ProgrammingLanguage.JAVA, answer.getLanguage());
     }

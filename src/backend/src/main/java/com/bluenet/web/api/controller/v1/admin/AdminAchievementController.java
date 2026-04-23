@@ -4,7 +4,10 @@ import com.bluenet.web.api.dto.ResponseMessage;
 import com.bluenet.web.api.dto.achievement.AchievementDTO;
 import com.bluenet.web.api.dto.achievement.CreateAchievementRequestDTO;
 import com.bluenet.web.api.dto.achievement.UpdateAchievementRequestDTO;
-import com.bluenet.web.application.service.AchievementService;
+import com.bluenet.web.api.converter.achievement.AchievementRequestConverter;
+import com.bluenet.web.application.AchievementResult;
+import com.bluenet.web.application.converter.AchievementAppConverter;
+import com.bluenet.web.application.service.AchievementAppService;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
 import com.bluenet.web.infrastructure.security.annotation.RequiresPermission;
 import io.swagger.v3.oas.annotations.Operation;
@@ -25,7 +28,9 @@ import org.springframework.web.bind.annotation.*;
 @SecurityRequirement(name = "bearer-jwt")
 @RequiredArgsConstructor
 public class AdminAchievementController {
-    private final AchievementService achievementService;
+    private final AchievementAppService achievementAppService;
+    private final AchievementRequestConverter achievementRequestConverter;
+    private final AchievementAppConverter achievementAppConverter;
 
     @Operation(summary = "创建成就", description = "创建新的成就")
     @ApiResponses({
@@ -35,8 +40,9 @@ public class AdminAchievementController {
     @PostMapping
     public ResponseMessage<AchievementDTO> createAchievement(
             @Valid @RequestBody CreateAchievementRequestDTO request) {
-        AchievementDTO created = achievementService.createAchievement(request);
-        return ResponseMessage.success(created);
+        AchievementResult result = achievementAppService.createAchievement(
+                achievementRequestConverter.toCommand(request));
+        return ResponseMessage.success(achievementAppConverter.toDTO(result));
     }
 
     @Operation(summary = "更新成就", description = "更新成就信息")
@@ -48,8 +54,9 @@ public class AdminAchievementController {
     public ResponseMessage<AchievementDTO> updateAchievement(
             @Parameter(description = "成就ID", required = true) @PathVariable Long id,
             @Valid @RequestBody UpdateAchievementRequestDTO request) {
-        AchievementDTO updated = achievementService.updateAchievement(id, request);
-        return ResponseMessage.success(updated);
+        AchievementResult result = achievementAppService.updateAchievement(
+                achievementRequestConverter.toCommand(id, request));
+        return ResponseMessage.success(achievementAppConverter.toDTO(result));
     }
 
     @Operation(summary = "删除成就", description = "删除成就")
@@ -60,7 +67,7 @@ public class AdminAchievementController {
     @DeleteMapping("/{id}")
     public ResponseMessage<Void> deleteAchievement(
             @Parameter(description = "成就ID", required = true) @PathVariable Long id) {
-        achievementService.deleteAchievement(id);
+        achievementAppService.deleteAchievement(id);
         return ResponseMessage.success(null);
     }
 }

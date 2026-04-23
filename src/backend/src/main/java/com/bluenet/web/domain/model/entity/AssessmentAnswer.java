@@ -1,38 +1,41 @@
 package com.bluenet.web.domain.model.entity;
 
 import com.bluenet.web.domain.model.enumerate.ProgrammingLanguage;
+import lombok.AccessLevel;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
 @Data
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class AssessmentAnswer {
-    /**
-     * 当前对象在系统中的唯一标识。
-     */
     private Long id;
-    /**
-     * 关联用户标识。
-     */
     private Long userId;
-    /**
-     * 考核题目标识。
-     */
     private Long questionId;
-    /**
-     * 正文内容、题目内容或结构化配置内容。
-     */
     private String content;
-    /**
-     * 提交代码使用的编程语言。
-     */
     private ProgrammingLanguage language;
-    /**
-     * 关联文件记录标识。
-     */
     private Long fileId;
-    /**
-     * 答案提交时间。
-     */
     private LocalDateTime submitTime;
+
+    private AssessmentAnswer(Long id, Long userId, Long questionId, String content,
+            ProgrammingLanguage language, Long fileId, LocalDateTime submitTime) {
+        this.id = id;
+        this.userId = userId;
+        this.questionId = questionId;
+        this.content = content;
+        this.language = language;
+        this.fileId = fileId;
+        this.submitTime = submitTime;
+    }
+
+    public static AssessmentAnswer create(Long userId, Long questionId, String content,
+            ProgrammingLanguage language, Long fileId) {
+        return new AssessmentAnswer(null, userId, questionId, content, language, fileId, LocalDateTime.now());
+    }
+
+    public static AssessmentAnswer reconstruct(Long id, Long userId, Long questionId, String content,
+            ProgrammingLanguage language, Long fileId, LocalDateTime submitTime) {
+        return new AssessmentAnswer(id, userId, questionId, content, language, fileId, submitTime);
+    }
 }

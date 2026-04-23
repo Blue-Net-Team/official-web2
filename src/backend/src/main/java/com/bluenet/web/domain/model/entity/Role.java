@@ -29,4 +29,38 @@ public class Role {
     public static Role buildSuperAdmin() {
         return buildSuperAdmin(1L);
     }
+
+    /**
+     * 构造新角色聚合根
+     *
+     * @param name
+     *            角色名称
+     * @return 新的角色实体
+     * @throws IllegalArgumentException
+     *             如果名称为空
+     */
+    public static Role create(String name) {
+        if (name == null || name.isBlank()) {
+            throw new IllegalArgumentException("角色名称不能为空");
+        }
+        Role role = new Role();
+        role.setName(name.trim());
+        return role;
+    }
+
+    /**
+     * 从数据库重建 —— 跳过创建校验
+     *
+     * @param id
+     *            角色ID
+     * @param name
+     *            角色名称
+     * @return 重建的角色实体
+     */
+    public static Role reconstruct(Long id, String name) {
+        Role role = new Role();
+        role.setId(id);
+        role.setName(name);
+        return role;
+    }
 }

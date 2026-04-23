@@ -91,14 +91,27 @@ class UserExperienceControllerIntegrationTest extends BaseIntegrationTest {
         createExperiencePermissions();
 
         // 创建测试用户（默认为MEMBER角色）
-        User user = new User();
-        user.setStudentId(TEST_STUDENT_ID);
-        user.setUsername("测试用户");
-        user.setEmail("test@example.com");
-        user.setPassword(passwordEncoder.encode(TEST_PASSWORD));
-        user.setRoleId(memberRoleId);
-        user.setDisable(false);
-        user.setDirection(Direction.COMPUTER_VISION);
+        User user = User.reconstruct(
+                null,
+                TEST_STUDENT_ID,
+                "test@example.com",
+                memberRoleId,
+                passwordEncoder.encode(TEST_PASSWORD),
+                "测试用户",
+                null,
+                null,
+                null,
+                null,
+                Direction.COMPUTER_VISION,
+                null,
+                null,
+                null,
+                false,
+                null,
+                null,
+                null,
+                null,
+                null);
 
         RepositoryTestObjects.insert(userMapper, user, UserDO.class);
         testUserId = user.getId();
@@ -117,9 +130,7 @@ class UserExperienceControllerIntegrationTest extends BaseIntegrationTest {
                         new LambdaQueryWrapper<PermissionDO>().eq(PermissionDO::getValue, value)),
                 Permission.class);
         if (permission == null) {
-            permission = new Permission();
-            permission.setName(value);
-            permission.setValue(value);
+            permission = Permission.create(value, value, null, null, null);
             RepositoryTestObjects.insert(permissionMapper, permission, PermissionDO.class);
         }
 
@@ -128,9 +139,7 @@ class UserExperienceControllerIntegrationTest extends BaseIntegrationTest {
                         .eq(RolePermissionDO::getRoleId, memberRoleId)
                         .eq(RolePermissionDO::getPermissionId, permission.getId()));
         if (existingCount == 0) {
-            RolePermission rolePermission = new RolePermission();
-            rolePermission.setRoleId(memberRoleId);
-            rolePermission.setPermissionId(permission.getId());
+            RolePermission rolePermission = RolePermission.create(memberRoleId, permission.getId());
             RepositoryTestObjects.insert(rolePermissionMapper, rolePermission, RolePermissionDO.class);
         }
     }
@@ -142,8 +151,7 @@ class UserExperienceControllerIntegrationTest extends BaseIntegrationTest {
                         new LambdaQueryWrapper<RoleDO>().eq(RoleDO::getName, "MEMBER")),
                 Role.class);
         if (memberRole == null) {
-            memberRole = new Role();
-            memberRole.setName("MEMBER");
+            memberRole = Role.create("MEMBER");
             RepositoryTestObjects.insert(roleMapper, memberRole, RoleDO.class);
         }
         memberRoleId = memberRole.getId();
@@ -154,8 +162,7 @@ class UserExperienceControllerIntegrationTest extends BaseIntegrationTest {
                         new LambdaQueryWrapper<RoleDO>().eq(RoleDO::getName, "CANDIDATE")),
                 Role.class);
         if (candidateRole == null) {
-            candidateRole = new Role();
-            candidateRole.setName("CANDIDATE");
+            candidateRole = Role.create("CANDIDATE");
             RepositoryTestObjects.insert(roleMapper, candidateRole, RoleDO.class);
         }
         candidateRoleId = candidateRole.getId();
@@ -165,14 +172,27 @@ class UserExperienceControllerIntegrationTest extends BaseIntegrationTest {
      * 创建指定角色的测试用户
      */
     private Long createUserWithRole(String studentId, String username, Long roleId) {
-        User user = new User();
-        user.setStudentId(studentId);
-        user.setUsername(username);
-        user.setEmail(studentId + "@example.com");
-        user.setPassword(passwordEncoder.encode(TEST_PASSWORD));
-        user.setRoleId(roleId);
-        user.setDisable(false);
-        user.setDirection(Direction.COMPUTER_VISION);
+        User user = User.reconstruct(
+                null,
+                studentId,
+                studentId + "@example.com",
+                roleId,
+                passwordEncoder.encode(TEST_PASSWORD),
+                username,
+                null,
+                null,
+                null,
+                null,
+                Direction.COMPUTER_VISION,
+                null,
+                null,
+                null,
+                false,
+                null,
+                null,
+                null,
+                null,
+                null);
         RepositoryTestObjects.insert(userMapper, user, UserDO.class);
         return user.getId();
     }

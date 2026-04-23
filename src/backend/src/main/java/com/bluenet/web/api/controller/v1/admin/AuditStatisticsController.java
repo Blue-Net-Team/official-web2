@@ -3,9 +3,10 @@ package com.bluenet.web.api.controller.v1.admin;
 import com.bluenet.web.api.dto.ResponseMessage;
 import com.bluenet.web.api.dto.audit.EndpointLatencyDTO;
 import com.bluenet.web.api.dto.audit.EndpointRankingDTO;
-import com.bluenet.web.api.dto.audit.StatisticsPeriod;
 import com.bluenet.web.api.dto.audit.TrendPointDTO;
-import com.bluenet.web.application.service.AuditStatisticsService;
+import com.bluenet.web.api.converter.auditstatistics.AuditStatisticsRequestConverter;
+import com.bluenet.web.application.converter.AuditStatisticsAppConverter;
+import com.bluenet.web.application.service.AuditStatisticsAppService;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
 import com.bluenet.web.infrastructure.security.annotation.RequiresPermission;
 import io.swagger.v3.oas.annotations.Operation;
@@ -34,7 +35,9 @@ import java.util.List;
 @RequiredArgsConstructor
 @SecurityRequirement(name = "bearer-jwt")
 public class AuditStatisticsController {
-    private final AuditStatisticsService auditStatisticsService;
+    private final AuditStatisticsAppService auditStatisticsAppService;
+    private final AuditStatisticsRequestConverter requestConverter;
+    private final AuditStatisticsAppConverter appConverter;
 
     @Operation(summary = "请求量趋势", description = "返回指定时间段内的请求量聚合数据")
     @ApiResponses({
@@ -46,8 +49,9 @@ public class AuditStatisticsController {
     @GetMapping("/trends")
     public ResponseMessage<List<TrendPointDTO>> getTrends(
             @Parameter(description = "时间范围：24h、7d、30d，默认 7d") @RequestParam(defaultValue = "7d") String period) {
-        StatisticsPeriod sp = StatisticsPeriod.fromValue(period);
-        return ResponseMessage.success(auditStatisticsService.getTrends(sp));
+        return ResponseMessage.success(
+                appConverter.toTrendPointDTOList(
+                        auditStatisticsAppService.getTrends(requestConverter.toTrendsCommand(period))));
     }
 
     @Operation(summary = "接口访问排名", description = "返回按请求量排序的接口排名")
@@ -61,8 +65,10 @@ public class AuditStatisticsController {
     public ResponseMessage<List<EndpointRankingDTO>> getEndpointRanking(
             @Parameter(description = "时间范围：24h、7d、30d，默认 7d") @RequestParam(defaultValue = "7d") String period,
             @Parameter(description = "返回条数，默认 20") @RequestParam(defaultValue = "20") int limit) {
-        StatisticsPeriod sp = StatisticsPeriod.fromValue(period);
-        return ResponseMessage.success(auditStatisticsService.getEndpointRanking(sp, limit));
+        return ResponseMessage.success(
+                appConverter.toEndpointRankingDTOList(
+                        auditStatisticsAppService
+                                .getEndpointRanking(requestConverter.toEndpointRankingCommand(period, limit))));
     }
 
     @Operation(summary = "接口响应时间排名", description = "返回按平均响应时间排序的接口排名")
@@ -76,7 +82,9 @@ public class AuditStatisticsController {
     public ResponseMessage<List<EndpointLatencyDTO>> getEndpointLatencyRanking(
             @Parameter(description = "时间范围：24h、7d、30d，默认 7d") @RequestParam(defaultValue = "7d") String period,
             @Parameter(description = "返回条数，默认 20") @RequestParam(defaultValue = "20") int limit) {
-        StatisticsPeriod sp = StatisticsPeriod.fromValue(period);
-        return ResponseMessage.success(auditStatisticsService.getEndpointLatencyRanking(sp, limit));
+        return ResponseMessage.success(
+                appConverter.toEndpointLatencyDTOList(
+                        auditStatisticsAppService.getEndpointLatencyRanking(
+                                requestConverter.toEndpointLatencyRankingCommand(period, limit))));
     }
 }

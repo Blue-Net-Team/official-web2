@@ -1,15 +1,23 @@
 package com.bluenet.web.domain.repository;
 
+import com.bluenet.web.domain.model.entity.RolePermission;
+
 import java.util.List;
 import java.util.Map;
 
+/**
+ * 角色权限关联仓储接口
+ * <p>
+ * 负责角色权限关联数据的持久化操作，只操作 Entity，不暴露 VO 或 DTO
+ * </p>
+ */
 public interface RolePermissionRepository {
     /**
      * 查询拥有任一指定权限的角色名称集合。
      *
      * @param permissionIds
      *            权限主键集合。
-     * @return 满足条件的角色权限关系 结果集合。
+     * @return 满足条件的角色权限关系结果集合。
      */
     Map<Long, List<String>> findRoleNamesByPermissionIds(List<Long> permissionIds);
 
@@ -18,7 +26,7 @@ public interface RolePermissionRepository {
      *
      * @param permissionId
      *            权限主键。
-     * @return 满足条件的角色权限关系 结果集合。
+     * @return 满足条件的角色权限关系结果集合。
      */
     List<String> findRoleNamesByPermissionId(Long permissionId);
 
@@ -27,7 +35,7 @@ public interface RolePermissionRepository {
      *
      * @param roleId
      *            角色主键。
-     * @return 满足条件的角色权限关系 结果集合。
+     * @return 满足条件的角色权限关系结果集合。
      */
     List<Long> findPermissionIdsByRoleId(Long roleId);
 
@@ -36,7 +44,7 @@ public interface RolePermissionRepository {
      *
      * @param permissionId
      *            权限主键。
-     * @return 满足条件的角色权限关系 结果集合。
+     * @return 满足条件的角色权限关系结果集合。
      */
     List<Long> findRoleIdsByPermissionId(Long permissionId);
 
@@ -94,4 +102,37 @@ public interface RolePermissionRepository {
      * @return 数据库受影响行数。
      */
     int batchRemoveRolesFromPermission(Long permissionId, List<Long> roleIds);
+
+    /**
+     * 保存角色权限关联记录。
+     *
+     * @param rolePermission
+     *            角色权限关联实体
+     */
+    void save(RolePermission rolePermission);
+
+    /**
+     * 更新已有角色权限关联记录。
+     *
+     * @param rolePermission
+     *            角色权限关联实体（id 必须非空）
+     */
+    void update(RolePermission rolePermission);
+
+    /**
+     * 删除指定角色权限关联记录。
+     *
+     * @param id
+     *            业务记录主键。
+     */
+    void deleteById(Long id);
+
+    /**
+     * 判断是否存在满足条件的角色权限关联记录。
+     *
+     * @param id
+     *            业务记录主键。
+     * @return 满足条件时返回 true，否则返回 false。
+     */
+    boolean existsById(Long id);
 }

@@ -27,18 +27,31 @@ class EnumMappingTest extends BaseIntegrationTest {
     @Test
     void testDirectionEnumMapping() {
         // 创建学院
-        College college = new College();
-        college.setName("测试学院");
+        College college = College.create("测试学院");
         RepositoryTestObjects.insert(collegeMapper, college, CollegeDO.class);
 
         // 创建用户并设置枚举值
-        User user = new User();
-        user.setStudentId("202401010001");
-        user.setUsername("测试用户");
-        user.setEmail("test@example.com");
-        user.setCollegeId(college.getId());
-        user.setDirection(Direction.COMPUTER_VISION);
-        user.setDisable(false);
+        User user = User.reconstruct(
+                null,
+                "202401010001",
+                "test@example.com",
+                null,
+                null,
+                "测试用户",
+                null,
+                college.getId(),
+                null,
+                null,
+                Direction.COMPUTER_VISION,
+                null,
+                null,
+                null,
+                false,
+                null,
+                null,
+                null,
+                null,
+                null);
 
         // 保存到数据库
         RepositoryTestObjects.insert(userMapper, user, UserDO.class);

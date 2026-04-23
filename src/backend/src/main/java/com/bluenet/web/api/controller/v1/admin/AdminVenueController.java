@@ -4,7 +4,12 @@ import com.bluenet.web.api.dto.ResponseMessage;
 import com.bluenet.web.api.dto.venue.CreateVenueRequestDTO;
 import com.bluenet.web.api.dto.venue.UpdateVenueRequestDTO;
 import com.bluenet.web.api.dto.venue.VenueDTO;
-import com.bluenet.web.application.service.VenueService;
+import com.bluenet.web.api.converter.venue.VenueRequestConverter;
+import com.bluenet.web.application.VenueResult;
+import com.bluenet.web.application.command.venue.VenueCommands;
+import com.bluenet.web.application.converter.VenueAppConverter;
+import com.bluenet.web.application.service.VenueAppService;
+import com.bluenet.web.domain.exception.DataNotFound;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
 import com.bluenet.web.infrastructure.security.annotation.RequiresPermission;
 import io.swagger.v3.oas.annotations.Operation;
@@ -27,15 +32,18 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 @SecurityRequirement(name = "bearer-jwt")
 public class AdminVenueController {
-    private final VenueService venueService;
+    private final VenueAppService venueAppService;
+    private final VenueRequestConverter venueRequestConverter;
+    private final VenueAppConverter venueAppConverter;
 
     @Operation(summary = "创建场地", description = "创建新的场地")
     @RequiresPermission(name = "创建场地", value = "venue:create", access = AccessLevel.PROTECTED)
     @PostMapping
     public ResponseMessage<VenueDTO> createVenue(@Valid @RequestBody CreateVenueRequestDTO request) {
         try {
-            VenueDTO created = venueService.createVenue(request);
-            return ResponseMessage.success(created);
+            VenueCommands.CreateVenueCommand command = venueRequestConverter.toCommand(request);
+            VenueResult result = venueAppService.createVenue(command);
+            return ResponseMessage.success(venueAppConverter.toDTO(result));
         } catch (IllegalArgumentException e) {
             return ResponseMessage.error(400, e.getMessage());
         }
@@ -48,10 +56,13 @@ public class AdminVenueController {
             @Parameter(description = "场地ID", required = true) @PathVariable Long id,
             @Valid @RequestBody UpdateVenueRequestDTO request) {
         try {
-            VenueDTO updated = venueService.updateVenue(id, request);
-            return ResponseMessage.success(updated);
-        } catch (IllegalArgumentException e) {
+            VenueCommands.UpdateVenueCommand command = venueRequestConverter.toCommand(id, request);
+            VenueResult result = venueAppService.updateVenue(command);
+            return ResponseMessage.success(venueAppConverter.toDTO(result));
+        } catch (DataNotFound e) {
             return ResponseMessage.error(404, e.getMessage());
+        } catch (IllegalArgumentException e) {
+            return ResponseMessage.error(400, e.getMessage());
         }
     }
 
@@ -61,9 +72,9 @@ public class AdminVenueController {
     public ResponseMessage<Void> deleteVenue(
             @Parameter(description = "场地ID", required = true) @PathVariable Long id) {
         try {
-            venueService.deleteVenue(id);
+            venueAppService.deleteVenue(id);
             return ResponseMessage.success(null);
-        } catch (IllegalArgumentException e) {
+        } catch (DataNotFound e) {
             return ResponseMessage.error(404, e.getMessage());
         }
     }
@@ -75,9 +86,9 @@ public class AdminVenueController {
             @Parameter(description = "场地ID", required = true) @PathVariable Long id,
             @Parameter(description = "图片文件ID", required = true) @RequestParam Long imageFileId) {
         try {
-            venueService.updateVenueImage(id, imageFileId);
+            venueAppService.updateVenueImage(id, imageFileId);
             return ResponseMessage.success(null);
-        } catch (IllegalArgumentException e) {
+        } catch (DataNotFound e) {
             return ResponseMessage.error(404, e.getMessage());
         }
     }

@@ -2,7 +2,10 @@ package com.bluenet.web.api.controller.v1.file;
 
 import com.bluenet.web.api.dto.ResponseMessage;
 import com.bluenet.web.api.dto.file.FileInfo;
-import com.bluenet.web.application.service.FileService;
+import com.bluenet.web.api.converter.file.FileRequestConverter;
+import com.bluenet.web.application.FileResult;
+import com.bluenet.web.application.converter.FileAppConverter;
+import com.bluenet.web.application.service.FileAppService;
 import com.bluenet.web.domain.exception.Unauthorized;
 import com.bluenet.web.domain.model.enumerate.FileType;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
@@ -38,7 +41,9 @@ import org.springframework.web.multipart.MultipartFile;
 @Tag(name = "文件上传", description = "统一文件上传接口")
 public class FileUploadController {
 
-    private final FileService fileService;
+    private final FileAppService fileAppService;
+    private final FileRequestConverter fileRequestConverter;
+    private final FileAppConverter fileAppConverter;
 
     @Operation(summary = "统一文件上传", description = "上传文件到指定类型的存储桶。AVATAR 类型无需登录（报名场景），其他类型需要登录。")
     @PostMapping
@@ -56,8 +61,8 @@ public class FileUploadController {
             throw new Unauthorized("该文件类型需要登录");
         }
 
-        FileInfo fileInfo = fileService.uploadFile(file, type);
-        log.info("文件上传成功，文件id: {}, 类型: {}", fileInfo.getId(), type);
-        return ResponseMessage.success(fileInfo);
+        FileResult result = fileAppService.uploadFile(fileRequestConverter.toCommand(file, type));
+        log.info("文件上传成功，文件id: {}, 类型: {}", result.id(), type);
+        return ResponseMessage.success(fileAppConverter.toDTO(result));
     }
 }

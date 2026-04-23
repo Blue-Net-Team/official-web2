@@ -1,6 +1,6 @@
 package com.bluenet.web.infrastructure.repository.impl;
 
-import com.bluenet.web.infrastructure.repository.support.RepositoryObjectConverter;
+import com.bluenet.web.infrastructure.repository.converter.RoleRepositoryConverter;
 
 import com.bluenet.web.infrastructure.repository.dataobject.*;
 
@@ -20,6 +20,7 @@ import java.util.Optional;
 public class RoleRepositoryImpl implements RoleRepository {
 
     private final RoleMapper roleMapper;
+    private final RoleRepositoryConverter converter;
 
     /**
      * 按名称查询角色 记录。
@@ -30,7 +31,7 @@ public class RoleRepositoryImpl implements RoleRepository {
      */
     @Override
     public Optional<RoleVO> findByName(String name) {
-        Role role = RepositoryObjectConverter.toDomain(roleMapper.selectByName(name), Role.class);
+        Role role = converter.toEntity(roleMapper.selectByName(name));
         if (role == null) {
             return Optional.empty();
         }

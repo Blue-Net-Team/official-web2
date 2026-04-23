@@ -9,7 +9,27 @@ class UserTest {
 
     @Test
     void changePassword_shouldUpdatePassword() {
-        User user = User.builder().id(1L).password("old").build();
+        User user = User.reconstruct(
+                1L,
+                null,
+                null,
+                null,
+                "old",
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null);
 
         user.changePassword("encoded-new");
 
@@ -18,7 +38,27 @@ class UserTest {
 
     @Test
     void changePassword_withBlankPassword_shouldThrow() {
-        User user = User.builder().id(1L).password("old").build();
+        User user = User.reconstruct(
+                1L,
+                null,
+                null,
+                null,
+                "old",
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null);
 
         assertThrows(IllegalArgumentException.class, () -> user.changePassword(" "));
     }

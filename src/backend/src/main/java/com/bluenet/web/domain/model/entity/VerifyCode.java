@@ -1,10 +1,13 @@
 package com.bluenet.web.domain.model.entity;
 
+import lombok.AccessLevel;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
 @Data
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class VerifyCode {
     /**
      * 当前对象在系统中的唯一标识。
@@ -30,4 +33,53 @@ public class VerifyCode {
      * 验证码或模板适用的业务场景。
      */
     private String scene;
+
+    private VerifyCode(Long id, String target, String code, LocalDateTime expireAt,
+            LocalDateTime usedAt, String scene) {
+        this.id = id;
+        this.target = target;
+        this.code = code;
+        this.expireAt = expireAt;
+        this.usedAt = usedAt;
+        this.scene = scene;
+    }
+
+    /**
+     * 构造新验证码聚合根
+     *
+     * @param target
+     *            发送目标
+     * @param code
+     *            验证码
+     * @param expireAt
+     *            过期时间
+     * @param scene
+     *            业务场景
+     * @return 新的验证码实体
+     */
+    public static VerifyCode create(String target, String code, LocalDateTime expireAt, String scene) {
+        return new VerifyCode(null, target, code, expireAt, null, scene);
+    }
+
+    /**
+     * 从数据库重建 —— 跳过创建校验
+     *
+     * @param id
+     *            验证码ID
+     * @param target
+     *            发送目标
+     * @param code
+     *            验证码
+     * @param expireAt
+     *            过期时间
+     * @param usedAt
+     *            使用时间
+     * @param scene
+     *            业务场景
+     * @return 重建的验证码实体
+     */
+    public static VerifyCode reconstruct(Long id, String target, String code, LocalDateTime expireAt,
+            LocalDateTime usedAt, String scene) {
+        return new VerifyCode(id, target, code, expireAt, usedAt, scene);
+    }
 }

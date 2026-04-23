@@ -9,7 +9,12 @@ import com.bluenet.web.api.dto.assessment_judgement.AssessmentJudgementDTO;
 import com.bluenet.web.api.dto.assessment_judgement.AssessmentQuestionScoreboardDTO;
 import com.bluenet.web.api.dto.assessment_judgement.AssessmentQuestionSubmissionDTO;
 import com.bluenet.web.api.dto.assessment_judgement.ManualReviewRequestDTO;
-import com.bluenet.web.application.service.AssessmentJudgementService;
+import com.bluenet.web.api.converter.assessment_judgement.AssessmentJudgementRequestConverter;
+import com.bluenet.web.application.AssessmentDecisionResult;
+import com.bluenet.web.application.AssessmentJudgementResult;
+import com.bluenet.web.application.command.assessment_judgement.AssessmentJudgementCommands;
+import com.bluenet.web.application.converter.AssessmentJudgementAppConverter;
+import com.bluenet.web.application.service.AssessmentJudgementAppService;
 import com.bluenet.web.domain.model.enumerate.QuestionType;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
 import com.bluenet.web.infrastructure.security.annotation.RequiresPermission;
@@ -32,7 +37,9 @@ import java.util.List;
 @RequiredArgsConstructor
 @SecurityRequirement(name = "bearer-jwt")
 public class AdminAssessmentJudgementController {
-    private final AssessmentJudgementService assessmentJudgementService;
+    private final AssessmentJudgementAppService assessmentJudgementAppService;
+    private final AssessmentJudgementRequestConverter assessmentJudgementRequestConverter;
+    private final AssessmentJudgementAppConverter assessmentJudgementAppConverter;
 
     /**
      * 查询指定答案的最新评判结果。
@@ -46,7 +53,8 @@ public class AdminAssessmentJudgementController {
     @GetMapping("/answers/{answerId}/latest")
     public ResponseMessage<AssessmentJudgementDTO> getLatestByAnswerId(
             @Parameter(description = "答案ID", required = true) @PathVariable Long answerId) {
-        return ResponseMessage.success(assessmentJudgementService.getLatestByAnswerId(answerId));
+        AssessmentJudgementResult result = assessmentJudgementAppService.getLatestByAnswerId(answerId);
+        return ResponseMessage.success(assessmentJudgementAppConverter.toDTO(result));
     }
 
     /**
@@ -61,7 +69,11 @@ public class AdminAssessmentJudgementController {
     @GetMapping
     public ResponseMessage<List<AssessmentJudgementDTO>> listByQuestionId(
             @Parameter(description = "题目ID", required = true) @RequestParam Long questionId) {
-        return ResponseMessage.success(assessmentJudgementService.listByQuestionId(questionId));
+        List<AssessmentJudgementResult> results = assessmentJudgementAppService.listByQuestionId(questionId);
+        return ResponseMessage.success(
+                results.stream()
+                        .map(assessmentJudgementAppConverter::toDTO)
+                        .toList());
     }
 
     /**
@@ -76,7 +88,10 @@ public class AdminAssessmentJudgementController {
     @PostMapping("/manual-review")
     public ResponseMessage<AssessmentJudgementDTO> reviewFileUploadAnswer(
             @Valid @RequestBody ManualReviewRequestDTO request) {
-        return ResponseMessage.success(assessmentJudgementService.reviewFileUploadAnswer(request));
+        AssessmentJudgementCommands.ManualReviewCommand command = assessmentJudgementRequestConverter
+                .toCommand(request);
+        AssessmentJudgementResult result = assessmentJudgementAppService.reviewFileUploadAnswer(command);
+        return ResponseMessage.success(assessmentJudgementAppConverter.toDTO(result));
     }
 
     /**
@@ -91,7 +106,10 @@ public class AdminAssessmentJudgementController {
     @PostMapping("/decisions")
     public ResponseMessage<AssessmentDecisionDTO> decideAssessment(
             @Valid @RequestBody AssessmentDecisionRequestDTO request) {
-        return ResponseMessage.success(assessmentJudgementService.decideAssessment(request));
+        AssessmentJudgementCommands.DecideAssessmentCommand command = assessmentJudgementRequestConverter
+                .toCommand(request);
+        AssessmentDecisionResult result = assessmentJudgementAppService.decideAssessment(command);
+        return ResponseMessage.success(assessmentJudgementAppConverter.toDTO(result));
     }
 
     /**
@@ -113,7 +131,7 @@ public class AdminAssessmentJudgementController {
             @Parameter(description = "题型") @RequestParam(required = false) QuestionType questionType,
             @Parameter(description = "题目关键词") @RequestParam(required = false) String keyword) {
         return ResponseMessage.success(
-                assessmentJudgementService
+                assessmentJudgementAppService
                         .listQuestionScoreboard(assessmentTimeId, questionType, keyword));
     }
 
@@ -136,7 +154,7 @@ public class AdminAssessmentJudgementController {
             @Parameter(description = "考生关键词") @RequestParam(required = false) String keyword,
             @Parameter(description = "评分状态：JUDGED/PENDING") @RequestParam(required = false) String status) {
         return ResponseMessage.success(
-                assessmentJudgementService
+                assessmentJudgementAppService
                         .listQuestionSubmissions(questionId, keyword, status));
     }
 
@@ -156,7 +174,7 @@ public class AdminAssessmentJudgementController {
             @Parameter(description = "考核时间ID", required = true) @RequestParam Long assessmentTimeId,
             @Parameter(description = "考生关键词") @RequestParam(required = false) String keyword) {
         return ResponseMessage.success(
-                assessmentJudgementService
+                assessmentJudgementAppService
                         .listCandidateScoreboard(assessmentTimeId, keyword));
     }
 
@@ -179,7 +197,7 @@ public class AdminAssessmentJudgementController {
             @Parameter(description = "考生关键词") @RequestParam(required = false) String keyword,
             @Parameter(description = "决策状态：PENDING/PASSED/ELIMINATED") @RequestParam(required = false) String decisionStatus) {
         return ResponseMessage.success(
-                assessmentJudgementService
+                assessmentJudgementAppService
                         .getDecisionWorkspace(assessmentTimeId, keyword, decisionStatus));
     }
 
@@ -195,6 +213,6 @@ public class AdminAssessmentJudgementController {
     @PostMapping("/decisions/publish")
     public ResponseMessage<Integer> publishDecisions(
             @Parameter(description = "考核时间ID", required = true) @RequestParam Long assessmentTimeId) {
-        return ResponseMessage.success(assessmentJudgementService.publishDecisions(assessmentTimeId));
+        return ResponseMessage.success(assessmentJudgementAppService.publishDecisions(assessmentTimeId));
     }
 }

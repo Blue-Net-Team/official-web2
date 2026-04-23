@@ -1,11 +1,16 @@
 package com.bluenet.web.api.controller.v1;
 
+import com.bluenet.web.api.converter.assessment_answer.AssessmentAnswerRequestConverter;
 import com.bluenet.web.api.dto.ResponseMessage;
 import com.bluenet.web.api.dto.assessment_answer.AssessmentAnswerDTO;
 import com.bluenet.web.api.dto.assessment_answer.CreateAnswerRequestDTO;
-import com.bluenet.web.application.service.AssessmentAnswerService;
+import com.bluenet.web.application.AssessmentAnswerResult;
+import com.bluenet.web.application.converter.AssessmentAnswerAppConverter;
+import com.bluenet.web.application.service.AssessmentAnswerAppService;
+import com.bluenet.web.domain.model.vo.UserVO;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
 import com.bluenet.web.infrastructure.security.annotation.RequiresPermission;
+import com.bluenet.web.infrastructure.security.util.UserCTX;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -18,12 +23,6 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
-/**
- * 答案控制器
- * <p>
- * 提供已登录用户提交答案和查询答案接口
- * </p>
- */
 @Tag(name = "答题", description = "答案提交与查询接口，已登录用户可访问")
 @RestController
 @RequestMapping("/api/v1/assessment-answers")
@@ -31,7 +30,9 @@ import org.springframework.web.bind.annotation.*;
 @SecurityRequirement(name = "bearer-jwt")
 public class AssessmentAnswerController {
 
-    private final AssessmentAnswerService assessmentAnswerService;
+    private final AssessmentAnswerAppService assessmentAnswerAppService;
+    private final AssessmentAnswerRequestConverter requestConverter;
+    private final AssessmentAnswerAppConverter appConverter;
 
     @Operation(summary = "提交答案", description = "提交指定题目的答案。支持文件上传题（传fileId）和内容题（传content）。")
     @ApiResponses({
@@ -43,8 +44,13 @@ public class AssessmentAnswerController {
     @PostMapping
     public ResponseMessage<AssessmentAnswerDTO> createAnswer(
             @Valid @RequestBody CreateAnswerRequestDTO request) {
-        AssessmentAnswerDTO result = assessmentAnswerService.createAnswer(request);
-        return ResponseMessage.success(result);
+        UserVO currentUser = UserCTX.getCurrentUser();
+        if (currentUser == null) {
+            throw new SecurityException("未登录");
+        }
+        AssessmentAnswerResult result = assessmentAnswerAppService.createAnswer(
+                requestConverter.toCreateCommand(currentUser.getId(), request));
+        return ResponseMessage.success(appConverter.toDTO(result));
     }
 
     @Operation(summary = "更新答案", description = "重新提交指定题目的答案。支持文件上传题（传fileId）和内容题（传content）。")
@@ -56,8 +62,13 @@ public class AssessmentAnswerController {
     @PutMapping
     public ResponseMessage<AssessmentAnswerDTO> updateAnswer(
             @Valid @RequestBody CreateAnswerRequestDTO request) {
-        AssessmentAnswerDTO result = assessmentAnswerService.updateAnswer(request);
-        return ResponseMessage.success(result);
+        UserVO currentUser = UserCTX.getCurrentUser();
+        if (currentUser == null) {
+            throw new SecurityException("未登录");
+        }
+        AssessmentAnswerResult result = assessmentAnswerAppService.updateAnswer(
+                requestConverter.toUpdateCommand(currentUser.getId(), request));
+        return ResponseMessage.success(appConverter.toDTO(result));
     }
 
     @Operation(summary = "查询我的答案", description = "查询当前用户对指定题目的答案")
@@ -69,10 +80,14 @@ public class AssessmentAnswerController {
     @GetMapping
     public ResponseMessage<AssessmentAnswerDTO> getMyAnswer(
             @Parameter(description = "题目ID", required = true) @RequestParam Long questionId) {
-        AssessmentAnswerDTO result = assessmentAnswerService.getMyAnswer(questionId);
+        UserVO currentUser = UserCTX.getCurrentUser();
+        if (currentUser == null) {
+            throw new SecurityException("未登录");
+        }
+        AssessmentAnswerResult result = assessmentAnswerAppService.getMyAnswer(currentUser.getId(), questionId);
         if (result == null) {
             return ResponseMessage.error(404, "未找到答案");
         }
-        return ResponseMessage.success(result);
+        return ResponseMessage.success(appConverter.toDTO(result));
     }
 }

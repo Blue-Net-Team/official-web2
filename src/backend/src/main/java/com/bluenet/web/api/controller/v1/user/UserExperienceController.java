@@ -1,8 +1,12 @@
 package com.bluenet.web.api.controller.v1.user;
 
 import com.bluenet.web.api.dto.ResponseMessage;
-import com.bluenet.web.api.dto.experience.*;
-import com.bluenet.web.application.service.UserExperienceService;
+import com.bluenet.web.api.dto.experience.CreateExperienceRequestDTO;
+import com.bluenet.web.api.dto.experience.ExperienceDTO;
+import com.bluenet.web.api.dto.experience.UpdateExperienceRequestDTO;
+import com.bluenet.web.api.converter.userexperience.UserExperienceRequestConverter;
+import com.bluenet.web.application.converter.UserExperienceAppConverter;
+import com.bluenet.web.application.service.UserExperienceAppService;
 import com.bluenet.web.domain.exception.GlobalException;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
 import com.bluenet.web.infrastructure.security.annotation.RequiresPermission;
@@ -28,7 +32,9 @@ import java.util.List;
 @RequestMapping("/api/v1/user/experiences")
 @RequiredArgsConstructor
 class UserExperienceController {
-    private final UserExperienceService userExperienceService;
+    private final UserExperienceAppService userExperienceAppService;
+    private final UserExperienceRequestConverter requestConverter;
+    private final UserExperienceAppConverter appConverter;
 
     @Operation(summary = "获取经历列表", description = "返回当前登录用户的经历列表，可通过type参数过滤")
     @ApiResponses({
@@ -41,7 +47,7 @@ class UserExperienceController {
     public ResponseMessage<List<ExperienceDTO>> getExperiences(
             @Parameter(description = "经历类型：PROJECT/COMPETITION/INTERNSHIP") @RequestParam(required = false) String type) {
         try {
-            return ResponseMessage.success(userExperienceService.getExperiences(type));
+            return ResponseMessage.success(appConverter.toDTOList(userExperienceAppService.getExperiences(type)));
         } catch (GlobalException e) {
             return ResponseMessage.error(e);
         }
@@ -59,7 +65,9 @@ class UserExperienceController {
     @PostMapping
     public ResponseMessage<ExperienceDTO> createExperience(@RequestBody CreateExperienceRequestDTO request) {
         try {
-            return ResponseMessage.success(userExperienceService.createExperience(request));
+            return ResponseMessage.success(
+                    appConverter.toDTO(
+                            userExperienceAppService.createExperience(requestConverter.toCommand(request))));
         } catch (GlobalException e) {
             return ResponseMessage.error(e);
         } catch (IllegalArgumentException e) {
@@ -81,7 +89,9 @@ class UserExperienceController {
             @Parameter(description = "经历ID") @PathVariable Long id,
             @RequestBody UpdateExperienceRequestDTO request) {
         try {
-            return ResponseMessage.success(userExperienceService.updateExperience(id, request));
+            return ResponseMessage.success(
+                    appConverter.toDTO(
+                            userExperienceAppService.updateExperience(requestConverter.toCommand(id, request))));
         } catch (GlobalException e) {
             return ResponseMessage.error(e);
         } catch (IllegalArgumentException e) {
@@ -102,7 +112,7 @@ class UserExperienceController {
     public ResponseMessage<Void> deleteExperience(
             @Parameter(description = "经历ID") @PathVariable Long id) {
         try {
-            userExperienceService.deleteExperience(id);
+            userExperienceAppService.deleteExperience(id);
             return ResponseMessage.success();
         } catch (GlobalException e) {
             return ResponseMessage.error(e);

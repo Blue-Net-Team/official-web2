@@ -2,11 +2,14 @@ package com.bluenet.web.domain.model.entity;
 
 import com.bluenet.web.domain.model.enumerate.QuestionType;
 import com.bluenet.web.domain.model.vo.evaluation.QuestionContent;
+import lombok.AccessLevel;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 
 @Data
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class AssessmentQuestion {
     /**
      * 当前对象在系统中的唯一标识。
@@ -40,4 +43,55 @@ public class AssessmentQuestion {
      * 答案、题目或评审记录在考核中的得分。
      */
     private BigDecimal score;
+
+    private AssessmentQuestion(Long id, Long assessmentTimeId, Integer questionNo,
+            QuestionType questionType, String title, QuestionContent content,
+            Long attachmentId, BigDecimal score) {
+        this.id = id;
+        this.assessmentTimeId = assessmentTimeId;
+        this.questionNo = questionNo;
+        this.questionType = questionType;
+        this.title = title;
+        this.content = content;
+        this.attachmentId = attachmentId;
+        this.score = score;
+    }
+
+    public static AssessmentQuestion create(Long assessmentTimeId, Integer questionNo,
+            QuestionType questionType, String title,
+            QuestionContent content, Long attachmentId,
+            BigDecimal score) {
+        return new AssessmentQuestion(null, assessmentTimeId, questionNo, questionType,
+                title, content, attachmentId, score);
+    }
+
+    public static AssessmentQuestion reconstruct(Long id, Long assessmentTimeId,
+            Integer questionNo, QuestionType questionType,
+            String title, QuestionContent content,
+            Long attachmentId, BigDecimal score) {
+        return new AssessmentQuestion(id, assessmentTimeId, questionNo, questionType,
+                title, content, attachmentId, score);
+    }
+
+    public void update(Integer questionNo, QuestionType questionType, String title,
+            QuestionContent content, Long attachmentId, BigDecimal score) {
+        if (questionNo != null) {
+            this.questionNo = questionNo;
+        }
+        if (questionType != null) {
+            this.questionType = questionType;
+        }
+        if (title != null) {
+            this.title = title;
+        }
+        if (content != null) {
+            this.content = content;
+        }
+        if (attachmentId != null) {
+            this.attachmentId = attachmentId;
+        }
+        if (score != null) {
+            this.score = score;
+        }
+    }
 }

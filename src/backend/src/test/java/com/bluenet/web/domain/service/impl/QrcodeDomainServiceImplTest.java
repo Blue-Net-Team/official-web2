@@ -5,7 +5,6 @@ import com.bluenet.web.domain.model.entity.Qrcode;
 import com.bluenet.web.domain.model.enumerate.FileType;
 import com.bluenet.web.domain.model.enumerate.QrcodeType;
 import com.bluenet.web.domain.model.vo.FileVO;
-import com.bluenet.web.domain.model.vo.QrcodeVO;
 import com.bluenet.web.domain.repository.FileRepository;
 import com.bluenet.web.domain.repository.QrcodeRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -59,7 +58,7 @@ class QrcodeDomainServiceImplTest {
         qrcodeDomainService.saveQrcode(fileVO, QrcodeType.CONSULTATION);
 
         // Then
-        verify(qrcodeRepository).save(any(QrcodeVO.class));
+        verify(qrcodeRepository).save(any(Qrcode.class));
     }
 
     @Test
@@ -69,7 +68,7 @@ class QrcodeDomainServiceImplTest {
         qrcodeDomainService.saveQrcode(fileVO, QrcodeType.USER);
 
         // Then
-        verify(qrcodeRepository).save(any(QrcodeVO.class));
+        verify(qrcodeRepository).save(any(Qrcode.class));
     }
 
     @Test
@@ -79,7 +78,7 @@ class QrcodeDomainServiceImplTest {
         qrcodeDomainService.saveQrcode(fileVO, QrcodeType.ASSESSMENT);
 
         // Then
-        verify(qrcodeRepository).save(any(QrcodeVO.class));
+        verify(qrcodeRepository).save(any(Qrcode.class));
     }
 
     @Test
@@ -172,10 +171,7 @@ class QrcodeDomainServiceImplTest {
     @DisplayName("删除咨询群二维码 - 非CONSULTATION类型应抛出异常")
     void deleteConsultationQrcode_wrongType_shouldThrowException() {
         // Given
-        Qrcode userQrcode = new Qrcode();
-        userQrcode.setId(1L);
-        userQrcode.setFileId(1L);
-        userQrcode.setType(QrcodeType.USER);
+        Qrcode userQrcode = Qrcode.reconstruct(1L, 1L, QrcodeType.USER, null, null, null);
 
         when(qrcodeRepository.findById(1L)).thenReturn(Optional.of(userQrcode));
 
@@ -211,10 +207,7 @@ class QrcodeDomainServiceImplTest {
     @DisplayName("删除咨询群二维码 - 删除ASSESSMENT类型应抛出异常")
     void deleteConsultationQrcode_assessmentType_shouldThrowException() {
         // Given
-        Qrcode assessmentQrcode = new Qrcode();
-        assessmentQrcode.setId(1L);
-        assessmentQrcode.setFileId(1L);
-        assessmentQrcode.setType(QrcodeType.ASSESSMENT);
+        Qrcode assessmentQrcode = Qrcode.reconstruct(1L, 1L, QrcodeType.ASSESSMENT, null, null, null);
 
         when(qrcodeRepository.findById(1L)).thenReturn(Optional.of(assessmentQrcode));
 

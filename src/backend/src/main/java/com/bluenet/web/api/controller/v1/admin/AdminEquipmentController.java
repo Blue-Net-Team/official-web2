@@ -4,7 +4,12 @@ import com.bluenet.web.api.dto.ResponseMessage;
 import com.bluenet.web.api.dto.equipment.CreateEquipmentRequestDTO;
 import com.bluenet.web.api.dto.equipment.EquipmentDTO;
 import com.bluenet.web.api.dto.equipment.UpdateEquipmentRequestDTO;
-import com.bluenet.web.application.service.EquipmentService;
+import com.bluenet.web.api.converter.equipment.EquipmentRequestConverter;
+import com.bluenet.web.application.EquipmentResult;
+import com.bluenet.web.application.command.equipment.EquipmentCommands;
+import com.bluenet.web.application.converter.EquipmentAppConverter;
+import com.bluenet.web.application.service.EquipmentAppService;
+import com.bluenet.web.domain.exception.DataNotFound;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
 import com.bluenet.web.infrastructure.security.annotation.RequiresPermission;
 import io.swagger.v3.oas.annotations.Operation;
@@ -27,15 +32,18 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 @SecurityRequirement(name = "bearer-jwt")
 public class AdminEquipmentController {
-    private final EquipmentService equipmentService;
+    private final EquipmentAppService equipmentAppService;
+    private final EquipmentRequestConverter equipmentRequestConverter;
+    private final EquipmentAppConverter equipmentAppConverter;
 
     @Operation(summary = "创建设备", description = "创建新的设备")
     @RequiresPermission(name = "创建设备", value = "equipment:create", access = AccessLevel.PROTECTED)
     @PostMapping
     public ResponseMessage<EquipmentDTO> createEquipment(@Valid @RequestBody CreateEquipmentRequestDTO request) {
         try {
-            EquipmentDTO created = equipmentService.createEquipment(request);
-            return ResponseMessage.success(created);
+            EquipmentCommands.CreateEquipmentCommand command = equipmentRequestConverter.toCommand(request);
+            EquipmentResult result = equipmentAppService.createEquipment(command);
+            return ResponseMessage.success(equipmentAppConverter.toDTO(result));
         } catch (IllegalArgumentException e) {
             return ResponseMessage.error(400, e.getMessage());
         }
@@ -48,10 +56,13 @@ public class AdminEquipmentController {
             @Parameter(description = "设备ID", required = true) @PathVariable Long id,
             @Valid @RequestBody UpdateEquipmentRequestDTO request) {
         try {
-            EquipmentDTO updated = equipmentService.updateEquipment(id, request);
-            return ResponseMessage.success(updated);
-        } catch (IllegalArgumentException e) {
+            EquipmentCommands.UpdateEquipmentCommand command = equipmentRequestConverter.toCommand(id, request);
+            EquipmentResult result = equipmentAppService.updateEquipment(command);
+            return ResponseMessage.success(equipmentAppConverter.toDTO(result));
+        } catch (DataNotFound e) {
             return ResponseMessage.error(404, e.getMessage());
+        } catch (IllegalArgumentException e) {
+            return ResponseMessage.error(400, e.getMessage());
         }
     }
 
@@ -61,9 +72,9 @@ public class AdminEquipmentController {
     public ResponseMessage<Void> deleteEquipment(
             @Parameter(description = "设备ID", required = true) @PathVariable Long id) {
         try {
-            equipmentService.deleteEquipment(id);
+            equipmentAppService.deleteEquipment(id);
             return ResponseMessage.success(null);
-        } catch (IllegalArgumentException e) {
+        } catch (DataNotFound e) {
             return ResponseMessage.error(404, e.getMessage());
         }
     }
@@ -75,9 +86,9 @@ public class AdminEquipmentController {
             @Parameter(description = "设备ID", required = true) @PathVariable Long id,
             @Parameter(description = "图片文件ID", required = true) @RequestParam Long imageFileId) {
         try {
-            equipmentService.updateEquipmentImage(id, imageFileId);
+            equipmentAppService.updateEquipmentImage(id, imageFileId);
             return ResponseMessage.success(null);
-        } catch (IllegalArgumentException e) {
+        } catch (DataNotFound e) {
             return ResponseMessage.error(404, e.getMessage());
         }
     }

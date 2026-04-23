@@ -79,8 +79,7 @@ class MemberControllerIntegrationTest extends BaseIntegrationTest {
                         new LambdaQueryWrapper<RoleDO>().eq(RoleDO::getName, "MEMBER")),
                 Role.class);
         if (memberRole == null) {
-            memberRole = new Role();
-            memberRole.setName("MEMBER");
+            memberRole = Role.create("MEMBER");
             RepositoryTestObjects.insert(roleMapper, memberRole, RoleDO.class);
         }
         memberRoleId = memberRole.getId();
@@ -90,8 +89,7 @@ class MemberControllerIntegrationTest extends BaseIntegrationTest {
                         new LambdaQueryWrapper<RoleDO>().eq(RoleDO::getName, "DIRECTION_ADMIN")),
                 Role.class);
         if (directionAdminRole == null) {
-            directionAdminRole = new Role();
-            directionAdminRole.setName("DIRECTION_ADMIN");
+            directionAdminRole = Role.create("DIRECTION_ADMIN");
             RepositoryTestObjects.insert(roleMapper, directionAdminRole, RoleDO.class);
         }
         directionAdminRoleId = directionAdminRole.getId();
@@ -101,16 +99,14 @@ class MemberControllerIntegrationTest extends BaseIntegrationTest {
                         new LambdaQueryWrapper<RoleDO>().eq(RoleDO::getName, "SUPER_ADMIN")),
                 Role.class);
         if (superAdminRole == null) {
-            superAdminRole = new Role();
-            superAdminRole.setName("SUPER_ADMIN");
+            superAdminRole = Role.create("SUPER_ADMIN");
             RepositoryTestObjects.insert(roleMapper, superAdminRole, RoleDO.class);
         }
         superAdminRoleId = superAdminRole.getId();
     }
 
     private void createCollege() {
-        College college = new College();
-        college.setName("计算机学院");
+        College college = College.create("计算机学院");
         RepositoryTestObjects.insert(collegeMapper, college, CollegeDO.class);
         collegeId = college.getId();
     }
@@ -135,18 +131,27 @@ class MemberControllerIntegrationTest extends BaseIntegrationTest {
 
     private User createUser(String studentId, String username, String nickname, Direction direction, Long roleId,
             Integer enrollmentYear) {
-        return User.builder()
-                .studentId(studentId)
-                .username(username)
-                .nickname(nickname)
-                .direction(direction)
-                .roleId(roleId)
-                .collegeId(collegeId)
-                .major("计算机科学与技术")
-                .gender(Gender.MALE)
-                .job("开发")
-                .disable(false)
-                .build();
+        return User.reconstruct(
+                null,
+                studentId,
+                null,
+                roleId,
+                null,
+                username,
+                nickname,
+                collegeId,
+                "计算机科学与技术",
+                enrollmentYear,
+                direction,
+                Gender.MALE,
+                "开发",
+                null,
+                false,
+                null,
+                null,
+                null,
+                null,
+                null);
     }
 
     @Nested
@@ -494,22 +499,31 @@ class MemberControllerIntegrationTest extends BaseIntegrationTest {
                     roleMapper.selectOne(new LambdaQueryWrapper<RoleDO>().eq(RoleDO::getName, "CANDIDATE")),
                     Role.class);
             if (candidateRole == null) {
-                candidateRole = new Role();
-                candidateRole.setName("CANDIDATE");
+                candidateRole = Role.create("CANDIDATE");
                 RepositoryTestObjects.insert(roleMapper, candidateRole, RoleDO.class);
             }
 
-            User candidateUser = User.builder()
-                    .studentId("2024001999")
-                    .username("考生用户")
-                    .nickname("考生")
-                    .direction(Direction.COMPUTER_VISION)
-                    .roleId(candidateRole.getId())
-                    .collegeId(collegeId)
-                    .major("计算机科学与技术")
-                    .gender(Gender.MALE)
-                    .disable(false)
-                    .build();
+            User candidateUser = User.reconstruct(
+                    null,
+                    "2024001999",
+                    null,
+                    candidateRole.getId(),
+                    null,
+                    "考生用户",
+                    "考生",
+                    collegeId,
+                    "计算机科学与技术",
+                    null,
+                    Direction.COMPUTER_VISION,
+                    Gender.MALE,
+                    null,
+                    null,
+                    false,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null);
             RepositoryTestObjects.insert(userMapper, candidateUser, UserDO.class);
 
             ResponseEntity<ResponseMessage<List<ExperienceDTO>>> response = restTemplate.exchange(

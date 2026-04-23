@@ -2,7 +2,6 @@ package com.bluenet.web.infrastructure.repository.impl;
 
 import com.bluenet.web.domain.model.entity.File;
 import com.bluenet.web.domain.model.enumerate.FileType;
-import com.bluenet.web.domain.model.vo.FileVO;
 import com.bluenet.web.domain.repository.FileRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -22,17 +21,17 @@ public class MockFileRepository implements FileRepository {
     private final AtomicLong idGenerator = new AtomicLong(1);
 
     @Override
-    public Optional<FileVO> findById(Long id) {
+    public Optional<File> findById(Long id) {
         return Optional.empty();
     }
 
     @Override
-    public FileVO saveFile(InputStream inputStream, File file) {
+    public File saveFile(InputStream inputStream, File file) {
         log.debug("Mock saving file: {}", file.getName());
 
         file.setId(idGenerator.getAndIncrement());
 
-        return FileVO.builder().id(file.getId()).name(file.getName()).type(file.getType()).url(file.getUrl()).build();
+        return file;
     }
 
     @Override

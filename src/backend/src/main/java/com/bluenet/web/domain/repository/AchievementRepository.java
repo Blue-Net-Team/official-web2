@@ -8,6 +8,8 @@ import com.bluenet.web.domain.model.vo.AchievementVO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.Optional;
+
 public interface AchievementRepository {
     /**
      * 按成果类型和奖项级别分页查询成果视图。
@@ -20,7 +22,7 @@ public interface AchievementRepository {
      *            成果取得年份过滤条件。
      * @param pageable
      *            Spring 分页请求对象。
-     * @return 分页后的成果 结果。
+     * @return 分页后的成果结果。
      */
     Page<AchievementVO> findAchievementsWithFilter(AchievementType type, AwardLevel awardLevel, Integer year,
             Pageable pageable);
@@ -28,42 +30,40 @@ public interface AchievementRepository {
     /**
      * 统计各级别成果数量和成果总数。
      *
-     * @return 查询或处理得到的成果 结果。
+     * @return 查询或处理得到的成果结果。
      */
     AchievementStatsVO findAchievementStats();
 
     /**
-     * 保存新的成果 记录。
+     * 保存新的成果记录。
      *
      * @param achievement
-     *            成果领域对象。
-     * @return 查询或处理得到的成果 结果。
+     *            成果实体。
      */
-    AchievementVO save(Achievement achievement);
+    void save(Achievement achievement);
 
     /**
-     * 按主键查询成果 记录。
+     * 按主键查询成果记录。
      *
      * @param id
      *            业务记录主键。
-     * @return 查询或处理得到的成果 结果。
+     * @return 查询到的成就实体；不存在时为 Optional.empty()。
      */
-    AchievementVO findById(Long id);
+    Optional<Achievement> findById(Long id);
 
     /**
-     * 更新已有成果 记录。
+     * 更新已有成果记录。
      *
      * @param achievement
-     *            成果领域对象。
-     * @return 数据库受影响行数。
+     *            成果实体（id 必须非空）。
      */
-    AchievementVO update(Achievement achievement);
+    void update(Achievement achievement);
 
     /**
-     * 删除指定成果 记录。
+     * 删除指定成果记录。
      *
      * @param id
      *            业务记录主键。
      */
-    void delete(Long id);
+    void deleteById(Long id);
 }

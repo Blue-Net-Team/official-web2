@@ -6,15 +6,15 @@ import com.bluenet.web.domain.model.enumerate.JudgeJobStatus;
 import com.bluenet.web.domain.model.enumerate.ObjectiveResultCode;
 import com.bluenet.web.domain.model.enumerate.ProgrammingLanguage;
 import com.bluenet.web.domain.model.enumerate.QuestionType;
-import com.bluenet.web.domain.model.vo.AlgorithmJudgeCaseResultVO;
-import com.bluenet.web.domain.model.vo.AlgorithmJudgeJobVO;
+import com.bluenet.web.domain.model.entity.AlgorithmJudgeCaseResult;
+import com.bluenet.web.domain.model.entity.AlgorithmJudgeJob;
 import com.bluenet.web.domain.model.vo.AssessmentJudgementVO;
-import com.bluenet.web.domain.model.vo.AssessmentQuestionVO;
+import com.bluenet.web.domain.model.entity.AssessmentQuestion;
 import com.bluenet.web.domain.model.vo.evaluation.AlgorithmContent;
 import com.bluenet.web.domain.repository.AlgorithmJudgeCaseResultRepository;
 import com.bluenet.web.domain.repository.AlgorithmJudgeJobRepository;
 import com.bluenet.web.domain.service.AssessmentJudgementDomainService;
-import com.bluenet.web.domain.service.AssessmentQuestionDomainService;
+import com.bluenet.web.domain.repository.AssessmentQuestionRepository;
 import com.bluenet.web.infrastructure.judge.sandbox.SandboxCaseResult;
 import com.bluenet.web.infrastructure.judge.sandbox.SandboxExecutionRequest;
 import com.bluenet.web.infrastructure.judge.sandbox.SandboxExecutionResult;
@@ -52,7 +52,7 @@ class AlgorithmJudgeWorkerTest {
     @Mock
     private AlgorithmJudgeCaseResultRepository algorithmJudgeCaseResultRepository;
     @Mock
-    private AssessmentQuestionDomainService assessmentQuestionDomainService;
+    private AssessmentQuestionRepository assessmentQuestionRepository;
     @Mock
     private AssessmentJudgementDomainService assessmentJudgementDomainService;
     @Mock
@@ -95,7 +95,7 @@ class AlgorithmJudgeWorkerTest {
     @DisplayName("正式提交 AC 用例：应保存但不向考生展示")
     void consume_formalAccepted_shouldHideAcceptedCasesFromCandidate() {
         when(algorithmJudgeJobRepository.findById(JOB_ID)).thenReturn(Optional.of(createFormalJob()));
-        when(assessmentQuestionDomainService.getQuestionById(QUESTION_ID)).thenReturn(createQuestion());
+        when(assessmentQuestionRepository.findById(QUESTION_ID)).thenReturn(Optional.of(createQuestion()));
         when(sandboxExecutor.execute(any(SandboxExecutionRequest.class)))
                 .thenReturn(
                         SandboxExecutionResult.builder()
@@ -105,7 +105,7 @@ class AlgorithmJudgeWorkerTest {
 
         worker.consume(JOB_ID.toString());
 
-        ArgumentCaptor<List<AlgorithmJudgeCaseResultVO>> casesCaptor = ArgumentCaptor.forClass(List.class);
+        ArgumentCaptor<List<AlgorithmJudgeCaseResult>> casesCaptor = ArgumentCaptor.forClass(List.class);
         verify(algorithmJudgeCaseResultRepository).saveAll(casesCaptor.capture());
         assertFalse(casesCaptor.getValue().getFirst().getVisibleToCandidate());
     }
@@ -113,9 +113,9 @@ class AlgorithmJudgeWorkerTest {
     @Test
     @DisplayName("沙盒基础设施异常：应保持任务可重试且不写 judgement")
     void consume_infrastructureFailure_shouldRetryWithoutJudgement() {
-        AlgorithmJudgeJobVO job = createFormalJob();
+        AlgorithmJudgeJob job = createFormalJob();
         when(algorithmJudgeJobRepository.findById(JOB_ID)).thenReturn(Optional.of(job));
-        when(assessmentQuestionDomainService.getQuestionById(QUESTION_ID)).thenReturn(createQuestion());
+        when(assessmentQuestionRepository.findById(QUESTION_ID)).thenReturn(Optional.of(createQuestion()));
         when(sandboxExecutor.execute(any(SandboxExecutionRequest.class)))
                 .thenReturn(
                         SandboxExecutionResult.builder()
@@ -126,7 +126,7 @@ class AlgorithmJudgeWorkerTest {
 
         worker.consume(JOB_ID.toString());
 
-        ArgumentCaptor<AlgorithmJudgeJobVO> jobCaptor = ArgumentCaptor.forClass(AlgorithmJudgeJobVO.class);
+        ArgumentCaptor<AlgorithmJudgeJob> jobCaptor = ArgumentCaptor.forClass(AlgorithmJudgeJob.class);
         verify(algorithmJudgeJobRepository, org.mockito.Mockito.times(2)).update(jobCaptor.capture());
         assertEquals(JudgeJobStatus.RETRYING, jobCaptor.getAllValues().getLast().getStatus());
         verify(algorithmJudgeCaseResultRepository, never()).saveAll(any());
@@ -138,7 +138,7 @@ class AlgorithmJudgeWorkerTest {
             ObjectiveResultCode expectedCode,
             BigDecimal expectedScore) {
         when(algorithmJudgeJobRepository.findById(JOB_ID)).thenReturn(Optional.of(createFormalJob()));
-        when(assessmentQuestionDomainService.getQuestionById(QUESTION_ID)).thenReturn(createQuestion());
+        when(assessmentQuestionRepository.findById(QUESTION_ID)).thenReturn(Optional.of(createQuestion()));
         when(sandboxExecutor.execute(any(SandboxExecutionRequest.class)))
                 .thenReturn(
                         SandboxExecutionResult.builder()
@@ -155,23 +155,28 @@ class AlgorithmJudgeWorkerTest {
         verify(algorithmJudgeCaseResultRepository).saveAll(any());
     }
 
-    private AlgorithmJudgeJobVO createFormalJob() {
-        return AlgorithmJudgeJobVO.builder()
-                .id(JOB_ID)
-                .answerId(ANSWER_ID)
-                .questionId(QUESTION_ID)
-                .assessmentTimeId(ASSESSMENT_TIME_ID)
-                .userId(USER_ID)
-                .language(ProgrammingLanguage.PYTHON)
-                .sourceCode("print(input())")
-                .testcaseType(AlgorithmTestcaseType.FORMAL)
-                .status(JudgeJobStatus.PENDING)
-                .retryCount(0)
-                .maxRetryCount(3)
-                .build();
+    private AlgorithmJudgeJob createFormalJob() {
+        return AlgorithmJudgeJob.reconstruct(
+                JOB_ID,
+                ANSWER_ID,
+                QUESTION_ID,
+                ASSESSMENT_TIME_ID,
+                USER_ID,
+                ProgrammingLanguage.PYTHON,
+                "print(input())",
+                AlgorithmTestcaseType.FORMAL,
+                null,
+                JudgeJobStatus.PENDING,
+                0,
+                3,
+                null,
+                null,
+                null,
+                null,
+                null);
     }
 
-    private AssessmentQuestionVO createQuestion() {
+    private AssessmentQuestion createQuestion() {
         AlgorithmContent content = new AlgorithmContent();
         AlgorithmContent.TestCase testcase = new AlgorithmContent.TestCase();
         testcase.setInput("1 2");
@@ -179,13 +184,15 @@ class AlgorithmJudgeWorkerTest {
         content.setTestCases(List.of(testcase));
         content.setTimeLimit(1000);
         content.setMemoryLimit(262144);
-        return AssessmentQuestionVO.builder()
-                .id(QUESTION_ID)
-                .assessmentTimeId(ASSESSMENT_TIME_ID)
-                .questionType(QuestionType.ALGORITHM)
-                .content(content)
-                .score(BigDecimal.TEN)
-                .build();
+        return AssessmentQuestion.reconstruct(
+                QUESTION_ID,
+                ASSESSMENT_TIME_ID,
+                1,
+                QuestionType.ALGORITHM,
+                "算法题",
+                content,
+                null,
+                BigDecimal.TEN);
     }
 
     private SandboxCaseResult createCaseResult(JudgeCaseStatus status) {

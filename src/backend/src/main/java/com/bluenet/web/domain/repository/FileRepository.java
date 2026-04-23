@@ -7,7 +7,6 @@ import org.springframework.core.io.Resource;
 
 import com.bluenet.web.domain.model.entity.File;
 import com.bluenet.web.domain.model.enumerate.FileType;
-import com.bluenet.web.domain.model.vo.FileVO;
 
 public interface FileRepository {
     /**
@@ -17,7 +16,7 @@ public interface FileRepository {
      *            业务记录主键。
      * @return 查询到的文件 结果；不存在时为空。
      */
-    Optional<FileVO> findById(Long id);
+    Optional<File> findById(Long id);
 
     /**
      * 处理文件 仓储职责中的业务数据访问逻辑。
@@ -25,10 +24,10 @@ public interface FileRepository {
      * @param inputStream
      *            待保存文件的输入流。
      * @param file
-     *            文件领域对象或文件视图对象。
-     * @return 查询或处理得到的文件 结果。
+     *            文件领域对象。
+     * @return 保存后的文件领域对象。
      */
-    FileVO saveFile(InputStream inputStream, File file);
+    File saveFile(InputStream inputStream, File file);
 
     /**
      * 处理文件 仓储职责中的业务数据访问逻辑。
@@ -36,10 +35,10 @@ public interface FileRepository {
      * @param resource
      *            文件下载资源句柄。
      * @param file
-     *            文件领域对象或文件视图对象。
-     * @return 查询或处理得到的文件 结果。
+     *            文件领域对象。
+     * @return 保存后的文件领域对象。
      */
-    default FileVO saveFile(Resource resource, File file) {
+    default File saveFile(Resource resource, File file) {
         try (InputStream inputStream = resource.getInputStream()) {
             return saveFile(inputStream, file);
         } catch (Exception e) {
@@ -62,7 +61,7 @@ public interface FileRepository {
      * 从对象存储加载指定文件资源。
      *
      * @param file
-     *            文件领域对象或文件视图对象。
+     *            文件领域对象。
      * @return 查询或处理得到的文件 结果。
      */
     default Resource loadFile(File file) {
@@ -83,7 +82,7 @@ public interface FileRepository {
      * 按文件名和类型删除文件元数据和对象存储内容。
      *
      * @param file
-     *            文件领域对象或文件视图对象。
+     *            文件领域对象。
      */
     default void deleteFile(File file) {
         deleteFile(file.getName(), file.getType());

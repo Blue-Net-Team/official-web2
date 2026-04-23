@@ -1,14 +1,11 @@
 package com.bluenet.web.infrastructure.repository.impl;
 
-import com.bluenet.web.infrastructure.repository.support.RepositoryObjectConverter;
-
-import com.bluenet.web.infrastructure.repository.dataobject.FileDO;
-
 import com.bluenet.web.domain.exception.DataNotFound;
 import com.bluenet.web.domain.model.entity.File;
 import com.bluenet.web.domain.model.enumerate.FileType;
-import com.bluenet.web.domain.model.vo.FileVO;
 import com.bluenet.web.domain.repository.FileRepository;
+import com.bluenet.web.infrastructure.repository.converter.FileRepositoryConverter;
+import com.bluenet.web.infrastructure.repository.dataobject.FileDO;
 import com.bluenet.web.infrastructure.repository.mapper.FileMapper;
 import com.bluenet.web.infrastructure.storage.ObjectStorage;
 import lombok.RequiredArgsConstructor;
@@ -35,6 +32,7 @@ public class FileRepositoryImpl implements FileRepository {
 
     private final ObjectStorage objectStorage;
     private final FileMapper fileMapper;
+    private final FileRepositoryConverter converter;
 
     /**
      * 按主键查询文件 记录。
@@ -44,12 +42,9 @@ public class FileRepositoryImpl implements FileRepository {
      * @return 查询到的文件 结果；不存在时为空。
      */
     @Override
-    public Optional<FileVO> findById(Long id) {
-        File file = RepositoryObjectConverter.toDomain(fileMapper.selectById(id), File.class);
-        if (file == null) {
-            return Optional.empty();
-        }
-        return Optional.of(convertToVO(file));
+    public Optional<File> findById(Long id) {
+        FileDO dataObject = fileMapper.selectById(id);
+        return Optional.ofNullable(converter.toEntity(dataObject));
     }
 
     /**
@@ -58,23 +53,21 @@ public class FileRepositoryImpl implements FileRepository {
      * @param inputStream
      *            待保存文件的输入流。
      * @param file
-     *            文件领域对象或文件视图对象。
-     * @return 查询或处理得到的文件 结果。
+     *            文件领域对象。
+     * @return 保存后的文件领域对象。
      */
     @Override
     @Transactional
-    public FileVO saveFile(InputStream inputStream, File file) {
+    public File saveFile(InputStream inputStream, File file) {
         validateParameters(file.getName(), inputStream, file.getType());
 
-        RepositoryObjectConverter.insert(fileMapper, file, FileDO.class);
+        FileDO dataObject = converter.toDataObject(file);
+        fileMapper.insert(dataObject);
+        file.setId(dataObject.getId());
         objectStorage.put(file.getType(), file.getName(), inputStream);
         log.debug("File metadata and object saved successfully: id={}, type={}", file.getId(), file.getType());
 
-        return FileVO.builder()
-                .id(file.getId())
-                .name(file.getName())
-                .type(file.getType())
-                .build();
+        return file;
     }
 
     /**
@@ -105,7 +98,7 @@ public class FileRepositoryImpl implements FileRepository {
     public void deleteFile(String filename, FileType fileType) {
         // 查找对应的文件元数据，避免只删除对象后留下孤立数据库记录。
         Optional<File> fileOp = Optional.ofNullable(
-                RepositoryObjectConverter.toDomain(fileMapper.selectByNameAndType(filename, fileType), File.class));
+                converter.toEntity(fileMapper.selectByNameAndType(filename, fileType)));
         if (fileOp.isEmpty()) {
             log.warn("File not found in database for deletion: {} ({})", filename, fileType);
             throw new DataNotFound("File not found for deletion: " + filename);
@@ -129,7 +122,7 @@ public class FileRepositoryImpl implements FileRepository {
     @Transactional
     public void deleteFileById(Long id) {
         // 查找对应的文件元数据，拿到对象存储删除所需的文件类型和文件名。
-        File file = RepositoryObjectConverter.toDomain(fileMapper.selectById(id), File.class);
+        File file = converter.toEntity(fileMapper.selectById(id));
         if (file == null) {
             log.warn("File not found in database for deletion: id={}", id);
             throw new DataNotFound("File not found for deletion, id: " + id);
@@ -175,22 +168,6 @@ public class FileRepositoryImpl implements FileRepository {
         if (fileType == null) {
             throw new IllegalArgumentException("FileType cannot be null");
         }
-    }
-
-    /**
-     * 在文件 的持久层对象、领域对象和视图对象之间转换。
-     *
-     * @param file
-     *            文件领域对象或文件视图对象。
-     * @return 转换后的目标模型对象。
-     */
-    private FileVO convertToVO(File file) {
-        return FileVO.builder()
-                .id(file.getId())
-                .name(file.getName())
-                .type(file.getType())
-                .url(file.getUrl())
-                .build();
     }
 
 }

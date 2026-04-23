@@ -71,21 +71,13 @@ class VenueControllerIntegrationTest extends BaseIntegrationTest {
         RepositoryTestObjects.insert(fileMapper, file, FileDO.class);
 
         // 创建测试场地1
-        Venue venue1 = new Venue();
-        venue1.setName(TEST_NAME + "1");
-        venue1.setSubtitle(TEST_SUBTITLE + "1");
-        venue1.setDescription(TEST_DESCRIPTION);
-        venue1.setImageFileId(TEST_FILE_ID);
-        venue1.setSortOrder(10);
+        Venue venue1 = Venue
+                .reconstruct(null, TEST_NAME + "1", TEST_SUBTITLE + "1", TEST_DESCRIPTION, TEST_FILE_ID, 10);
         RepositoryTestObjects.insert(venueMapper, venue1, VenueDO.class);
 
         // 创建测试场地2
-        Venue venue2 = new Venue();
-        venue2.setName(TEST_NAME + "2");
-        venue2.setSubtitle(TEST_SUBTITLE + "2");
-        venue2.setDescription(TEST_DESCRIPTION);
-        venue2.setImageFileId(TEST_FILE_ID);
-        venue2.setSortOrder(20);
+        Venue venue2 = Venue
+                .reconstruct(null, TEST_NAME + "2", TEST_SUBTITLE + "2", TEST_DESCRIPTION, TEST_FILE_ID, 20);
         RepositoryTestObjects.insert(venueMapper, venue2, VenueDO.class);
     }
 

@@ -4,8 +4,7 @@ import com.bluenet.web.domain.model.enumerate.JudgementSource;
 import com.bluenet.web.domain.model.enumerate.JudgementStatus;
 import com.bluenet.web.domain.model.enumerate.ObjectiveResultCode;
 import com.bluenet.web.domain.model.enumerate.ReviewerType;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
+import lombok.AccessLevel;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -16,9 +15,7 @@ import java.time.LocalDateTime;
  * Persists the latest judgement outcome for a submitted assessment answer.
  */
 @Data
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class AssessmentJudgement {
     /**
      * 当前对象在系统中的唯一标识。
@@ -85,10 +82,139 @@ public class AssessmentJudgement {
      */
     private LocalDateTime updatedAt;
 
+    private AssessmentJudgement(Long id, Long answerId, Long questionId, Long assessmentTimeId, Long userId,
+            BigDecimal score, BigDecimal maxScore, JudgementStatus status, ObjectiveResultCode resultCode,
+            JudgementSource source, Long reviewerId, ReviewerType reviewerType, String comment,
+            LocalDateTime judgedAt, LocalDateTime createdAt, LocalDateTime updatedAt) {
+        this.id = id;
+        this.answerId = answerId;
+        this.questionId = questionId;
+        this.assessmentTimeId = assessmentTimeId;
+        this.userId = userId;
+        this.score = score;
+        this.maxScore = maxScore;
+        this.status = status;
+        this.resultCode = resultCode;
+        this.source = source;
+        this.reviewerId = reviewerId;
+        this.reviewerType = reviewerType;
+        this.comment = comment;
+        this.judgedAt = judgedAt;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+    }
+
+    /**
+     * 构造新评判记录 —— 带领域校验
+     *
+     * @param answerId
+     *            作答ID
+     * @param questionId
+     *            题目ID
+     * @param assessmentTimeId
+     *            考核时间ID
+     * @param userId
+     *            用户ID
+     * @param score
+     *            得分
+     * @param maxScore
+     *            满分
+     * @param status
+     *            状态
+     * @param resultCode
+     *            结果码
+     * @param source
+     *            来源
+     * @param reviewerId
+     *            评审人ID
+     * @param reviewerType
+     *            评审人类型
+     * @param comment
+     *            评论
+     * @param judgedAt
+     *            评审时间
+     * @return 新的评判实体
+     */
+    public static AssessmentJudgement create(Long answerId, Long questionId, Long assessmentTimeId, Long userId,
+            BigDecimal score, BigDecimal maxScore, JudgementStatus status, ObjectiveResultCode resultCode,
+            JudgementSource source, Long reviewerId, ReviewerType reviewerType, String comment,
+            LocalDateTime judgedAt) {
+        return new AssessmentJudgement(null, answerId, questionId, assessmentTimeId, userId, score, maxScore, status,
+                resultCode, source, reviewerId, reviewerType, comment, judgedAt, null, null);
+    }
+
+    /**
+     * 从数据库重建 —— 跳过创建校验
+     *
+     * @param id
+     *            评判ID
+     * @param answerId
+     *            作答ID
+     * @param questionId
+     *            题目ID
+     * @param assessmentTimeId
+     *            考核时间ID
+     * @param userId
+     *            用户ID
+     * @param score
+     *            得分
+     * @param maxScore
+     *            满分
+     * @param status
+     *            状态
+     * @param resultCode
+     *            结果码
+     * @param source
+     *            来源
+     * @param reviewerId
+     *            评审人ID
+     * @param reviewerType
+     *            评审人类型
+     * @param comment
+     *            评论
+     * @param judgedAt
+     *            评审时间
+     * @param createdAt
+     *            创建时间
+     * @param updatedAt
+     *            更新时间
+     * @return 重建的评判实体
+     */
+    public static AssessmentJudgement reconstruct(Long id, Long answerId, Long questionId, Long assessmentTimeId,
+            Long userId, BigDecimal score, BigDecimal maxScore, JudgementStatus status, ObjectiveResultCode resultCode,
+            JudgementSource source, Long reviewerId, ReviewerType reviewerType, String comment,
+            LocalDateTime judgedAt, LocalDateTime createdAt, LocalDateTime updatedAt) {
+        return new AssessmentJudgement(id, answerId, questionId, assessmentTimeId, userId, score, maxScore, status,
+                resultCode, source, reviewerId, reviewerType, comment, judgedAt, createdAt, updatedAt);
+    }
+
+    /**
+     * 应用评判结果 —— 更新评分和状态字段
+     *
+     * @param newScore
+     *            新得分
+     * @param newMaxScore
+     *            新满分
+     * @param newStatus
+     *            新状态
+     * @param newResultCode
+     *            新结果码
+     * @param newSource
+     *            新来源
+     * @param newReviewerId
+     *            新评审人ID
+     * @param newReviewerType
+     *            新评审人类型
+     * @param newComment
+     *            新评论
+     * @param newJudgedAt
+     *            新评审时间
+     * @param newUpdatedAt
+     *            新更新时间
+     */
     public void applyJudgementResult(BigDecimal newScore, BigDecimal newMaxScore, JudgementStatus newStatus,
             ObjectiveResultCode newResultCode, JudgementSource newSource, Long newReviewerId,
-            ReviewerType newReviewerType,
-            String newComment, LocalDateTime newJudgedAt, LocalDateTime newUpdatedAt) {
+            ReviewerType newReviewerType, String newComment, LocalDateTime newJudgedAt, LocalDateTime newUpdatedAt) {
         this.score = newScore;
         this.maxScore = newMaxScore;
         this.status = newStatus;

@@ -1,9 +1,9 @@
 package com.bluenet.web.infrastructure.security.aspect;
 
 import com.bluenet.web.api.dto.ResponseMessage;
-import com.bluenet.web.application.service.AuditService;
+import com.bluenet.web.application.service.AuditAppService;
+import com.bluenet.web.application.command.audit.AuditCommands;
 import com.bluenet.web.domain.exception.GlobalException;
-import com.bluenet.web.domain.model.entity.Audit;
 import com.bluenet.web.infrastructure.security.audit.SensitiveFieldFilter;
 import com.bluenet.web.infrastructure.security.annotation.RequiresPermission;
 import com.bluenet.web.infrastructure.security.util.IpUtils;
@@ -51,7 +51,7 @@ import java.util.Set;
 @Slf4j
 public class AuditAspect {
 
-    private final AuditService auditService;
+    private final AuditAppService auditAppService;
 
     private static final int MAX_STACK_TRACE_LENGTH = 2000;
 
@@ -75,37 +75,55 @@ public class AuditAspect {
             return pjp.proceed();
         }
 
-        Audit audit = new Audit();
-        audit.setRequestMethod(request.getMethod());
-        audit.setRequestUri(request.getRequestURI());
+        String requestMethod = request.getMethod();
+        String requestUri = request.getRequestURI();
         String pattern = (String) request.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
-        audit.setRequestUriPattern(pattern != null ? pattern : request.getRequestURI());
-        audit.setIpAddress(IpUtils.getClientIp(request));
-        audit.setUserAgent(truncate(request.getHeader("User-Agent"), 500));
-        audit.setActionUserId(UserCTX.getCurrentUserId());
-        audit.setActionTime(LocalDateTime.now());
-        audit.setActionArg(serializeParameters(pjp));
+        String requestUriPattern = pattern != null ? pattern : request.getRequestURI();
+        String ipAddress = IpUtils.getClientIp(request);
+        String userAgent = truncate(request.getHeader("User-Agent"), 500);
+        Long actionUserId = UserCTX.getCurrentUserId();
+        String actionArg = serializeParameters(pjp);
+
+        Integer httpStatus = null;
+        String responseMessage = null;
+        String stackTrace = null;
+        Boolean successState = null;
 
         try {
             Object result = pjp.proceed();
-            extractResponseInfo(result, audit);
-            audit.setSuccessState(true);
+            httpStatus = extractHttpStatus(result);
+            responseMessage = extractResponseMessage(result);
+            successState = true;
             return result;
         } catch (GlobalException ex) {
-            audit.setHttpStatus(ex.getCode().value());
-            audit.setResponseMessage(ex.getMessage());
-            audit.setStackTrace(truncateStackTrace(ex));
-            audit.setSuccessState(false);
+            httpStatus = ex.getCode().value();
+            responseMessage = ex.getMessage();
+            stackTrace = truncateStackTrace(ex);
+            successState = false;
             throw ex;
         } catch (Throwable ex) {
-            audit.setHttpStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
-            audit.setResponseMessage(ex.getMessage());
-            audit.setStackTrace(truncateStackTrace(ex));
-            audit.setSuccessState(false);
+            httpStatus = HttpStatus.INTERNAL_SERVER_ERROR.value();
+            responseMessage = ex.getMessage();
+            stackTrace = truncateStackTrace(ex);
+            successState = false;
             throw ex;
         } finally {
-            audit.setDurationMs(System.currentTimeMillis() - startTime);
-            auditService.save(audit);
+            long durationMs = System.currentTimeMillis() - startTime;
+            AuditCommands.SaveAuditCommand command = new AuditCommands.SaveAuditCommand(
+                    requestMethod,
+                    requestUri,
+                    requestUriPattern,
+                    actionArg,
+                    actionUserId,
+                    LocalDateTime.now(),
+                    ipAddress,
+                    userAgent,
+                    httpStatus,
+                    responseMessage,
+                    stackTrace,
+                    durationMs,
+                    successState);
+            auditAppService.saveAudit(command);
         }
     }
 
@@ -115,21 +133,31 @@ public class AuditAspect {
     }
 
     /**
-     * 从成功响应中提取 HTTP 状态码和响应消息
+     * 从成功响应中提取 HTTP 状态码
      */
-    private void extractResponseInfo(Object result, Audit audit) {
+    private Integer extractHttpStatus(Object result) {
         if (result instanceof ResponseEntity<?> responseEntity) {
-            audit.setHttpStatus(responseEntity.getStatusCode().value());
+            return responseEntity.getStatusCode().value();
+        } else if (result instanceof ResponseMessage<?> rm) {
+            return rm.getCode();
+        } else {
+            return HttpStatus.OK.value();
+        }
+    }
+
+    /**
+     * 从成功响应中提取响应消息
+     */
+    private String extractResponseMessage(Object result) {
+        if (result instanceof ResponseEntity<?> responseEntity) {
             Object body = responseEntity.getBody();
             if (body instanceof ResponseMessage<?> rm) {
-                audit.setResponseMessage(rm.getMsg());
+                return rm.getMsg();
             }
         } else if (result instanceof ResponseMessage<?> rm) {
-            audit.setHttpStatus(rm.getCode());
-            audit.setResponseMessage(rm.getMsg());
-        } else {
-            audit.setHttpStatus(HttpStatus.OK.value());
+            return rm.getMsg();
         }
+        return null;
     }
 
     /**

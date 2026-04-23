@@ -1,11 +1,11 @@
 package com.bluenet.web.domain.service.impl;
 
 import com.bluenet.web.domain.exception.DataNotFound;
+import com.bluenet.web.domain.model.entity.AssessmentAnswer;
+import com.bluenet.web.domain.model.entity.AssessmentQuestion;
 import com.bluenet.web.domain.model.entity.File;
 import com.bluenet.web.domain.model.enumerate.FileType;
-import com.bluenet.web.domain.model.vo.AssessmentAnswerVO;
-import com.bluenet.web.domain.model.vo.AssessmentQuestionVO;
-import com.bluenet.web.domain.model.vo.AssessmentTimeVO;
+import com.bluenet.web.domain.model.entity.AssessmentTime;
 import com.bluenet.web.domain.model.vo.FileVO;
 import com.bluenet.web.domain.repository.AssessmentAnswerRepository;
 import com.bluenet.web.domain.repository.AssessmentQuestionRepository;
@@ -34,26 +34,27 @@ public class FileDomainServiceImpl implements FileDomainService {
 
     @Override
     public FileVO getFileById(Long fileId) {
-        return fileRepository.findById(fileId)
+        File file = fileRepository.findById(fileId)
                 .orElseThrow(() -> new DataNotFound("文件不存在，ID: " + fileId));
+        return convertToVO(file);
     }
 
     @Override
-    public AssessmentAnswerVO getAnswerByFileId(Long fileId) {
+    public AssessmentAnswer getAnswerByFileId(Long fileId) {
         // 作答关联查询回归考核作答仓储，文件仓储只保留文件边界。
         return assessmentAnswerRepository.findByFileId(fileId)
                 .orElseThrow(() -> new DataNotFound("答题不存在，文件ID: " + fileId));
     }
 
     @Override
-    public AssessmentQuestionVO getQuestionByAttachmentId(Long attachmentId) {
+    public AssessmentQuestion getQuestionByAttachmentId(Long attachmentId) {
         // 附件关联查询回归考核题目仓储，避免文件仓储依赖题目 mapper。
         return assessmentQuestionRepository.findByAttachmentId(attachmentId)
                 .orElseThrow(() -> new DataNotFound("题目不存在，附件ID: " + attachmentId));
     }
 
     @Override
-    public AssessmentTimeVO getAssessmentTimeById(Long id) {
+    public AssessmentTime getAssessmentTimeById(Long id) {
         return assessmentTimeRepository.findById(id)
                 .orElseThrow(() -> new DataNotFound("Assessment time not found, ID: " + id));
     }
@@ -87,9 +88,9 @@ public class FileDomainServiceImpl implements FileDomainService {
         // 构建File对象
         File file = File.builder().name(newFilename).type(fileType).url(generateFileUrl(fileType)).build();
         // 保存到文件表
-        fileRepository.saveFile(inputStream, file);
+        File savedFile = fileRepository.saveFile(inputStream, file);
 
-        return convertToVO(file);
+        return convertToVO(savedFile);
     }
 
     @Override
