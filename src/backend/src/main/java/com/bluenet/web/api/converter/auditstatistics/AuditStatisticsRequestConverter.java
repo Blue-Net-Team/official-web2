@@ -1,6 +1,7 @@
 package com.bluenet.web.api.converter.auditstatistics;
 
 import com.bluenet.web.application.command.auditstatistics.AuditStatisticsCommands;
+import com.bluenet.web.domain.model.enumerate.AuditStatisticsPeriod;
 import org.springframework.stereotype.Component;
 
 /**
@@ -12,16 +13,17 @@ import org.springframework.stereotype.Component;
 @Component
 public class AuditStatisticsRequestConverter {
 
-    public AuditStatisticsCommands.GetTrendsCommand toTrendsCommand(String period) {
+    public AuditStatisticsCommands.GetTrendsCommand toTrendsCommand(AuditStatisticsPeriod period) {
         return new AuditStatisticsCommands.GetTrendsCommand(period);
     }
 
-    public AuditStatisticsCommands.GetEndpointRankingCommand toEndpointRankingCommand(String period, int limit) {
+    public AuditStatisticsCommands.GetEndpointRankingCommand toEndpointRankingCommand(AuditStatisticsPeriod period,
+            int limit) {
         return new AuditStatisticsCommands.GetEndpointRankingCommand(period, limit);
     }
 
-    public AuditStatisticsCommands.GetEndpointLatencyRankingCommand toEndpointLatencyRankingCommand(String period,
-            int limit) {
+    public AuditStatisticsCommands.GetEndpointLatencyRankingCommand toEndpointLatencyRankingCommand(
+            AuditStatisticsPeriod period, int limit) {
         return new AuditStatisticsCommands.GetEndpointLatencyRankingCommand(period, limit);
     }
 }

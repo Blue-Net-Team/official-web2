@@ -58,7 +58,7 @@ class AuditStatisticsAppServiceImplTest {
                     .build();
             when(auditRepository.queryTrends(AuditStatisticsPeriod.D7)).thenReturn(List.of(point));
 
-            var result = service.getTrends(new AuditStatisticsCommands.GetTrendsCommand("D7"));
+            var result = service.getTrends(new AuditStatisticsCommands.GetTrendsCommand(AuditStatisticsPeriod.D7));
 
             assertEquals(1, result.size());
             assertEquals(42L, result.get(0).count());
@@ -70,7 +70,7 @@ class AuditStatisticsAppServiceImplTest {
         void noData_shouldReturnEmptyList() {
             when(auditRepository.queryTrends(AuditStatisticsPeriod.H24)).thenReturn(Collections.emptyList());
 
-            var result = service.getTrends(new AuditStatisticsCommands.GetTrendsCommand("H24"));
+            var result = service.getTrends(new AuditStatisticsCommands.GetTrendsCommand(AuditStatisticsPeriod.H24));
 
             assertTrue(result.isEmpty());
         }
@@ -78,13 +78,12 @@ class AuditStatisticsAppServiceImplTest {
         @ParameterizedTest
         @DisplayName("应正确传递不同的 period 参数")
         @ArgumentsSource(PeriodProvider.class)
-        void shouldPassPeriodToRepository(String period) {
-            AuditStatisticsPeriod domainPeriod = AuditStatisticsPeriod.valueOf(period);
-            when(auditRepository.queryTrends(domainPeriod)).thenReturn(Collections.emptyList());
+        void shouldPassPeriodToRepository(AuditStatisticsPeriod period) {
+            when(auditRepository.queryTrends(period)).thenReturn(Collections.emptyList());
 
             service.getTrends(new AuditStatisticsCommands.GetTrendsCommand(period));
 
-            verify(auditRepository).queryTrends(domainPeriod);
+            verify(auditRepository).queryTrends(period);
         }
     }
 
@@ -105,7 +104,8 @@ class AuditStatisticsAppServiceImplTest {
                     .build();
             when(auditRepository.queryEndpointRanking(AuditStatisticsPeriod.D7, 20)).thenReturn(List.of(vo));
 
-            var result = service.getEndpointRanking(new AuditStatisticsCommands.GetEndpointRankingCommand("D7", 20));
+            var result = service.getEndpointRanking(
+                    new AuditStatisticsCommands.GetEndpointRankingCommand(AuditStatisticsPeriod.D7, 20));
 
             assertEquals(1, result.size());
             assertEquals("/api/v1/file/download/{fileId}", result.get(0).pattern());
@@ -121,7 +121,8 @@ class AuditStatisticsAppServiceImplTest {
             when(auditRepository.queryEndpointRanking(AuditStatisticsPeriod.D30, 10))
                     .thenReturn(Collections.emptyList());
 
-            var result = service.getEndpointRanking(new AuditStatisticsCommands.GetEndpointRankingCommand("D30", 10));
+            var result = service.getEndpointRanking(
+                    new AuditStatisticsCommands.GetEndpointRankingCommand(AuditStatisticsPeriod.D30, 10));
 
             assertTrue(result.isEmpty());
         }
@@ -145,7 +146,8 @@ class AuditStatisticsAppServiceImplTest {
             when(auditRepository.queryEndpointLatencyRanking(AuditStatisticsPeriod.D7, 20)).thenReturn(List.of(vo));
 
             var result = service
-                    .getEndpointLatencyRanking(new AuditStatisticsCommands.GetEndpointLatencyRankingCommand("D7", 20));
+                    .getEndpointLatencyRanking(
+                            new AuditStatisticsCommands.GetEndpointLatencyRankingCommand(AuditStatisticsPeriod.D7, 20));
 
             assertEquals(1, result.size());
             assertEquals(320.8, result.get(0).avgDurationMs());
@@ -161,7 +163,8 @@ class AuditStatisticsAppServiceImplTest {
                     .thenReturn(Collections.emptyList());
 
             var result = service
-                    .getEndpointLatencyRanking(new AuditStatisticsCommands.GetEndpointLatencyRankingCommand("H24", 5));
+                    .getEndpointLatencyRanking(
+                            new AuditStatisticsCommands.GetEndpointLatencyRankingCommand(AuditStatisticsPeriod.H24, 5));
 
             assertTrue(result.isEmpty());
         }
@@ -171,9 +174,9 @@ class AuditStatisticsAppServiceImplTest {
         @Override
         public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
             return Stream.of(
-                    Arguments.of("H24"),
-                    Arguments.of("D7"),
-                    Arguments.of("D30"));
+                    Arguments.of(AuditStatisticsPeriod.H24),
+                    Arguments.of(AuditStatisticsPeriod.D7),
+                    Arguments.of(AuditStatisticsPeriod.D30));
         }
     }
 }

@@ -1,5 +1,7 @@
 package com.bluenet.web.application.command.auditstatistics;
 
+import com.bluenet.web.domain.model.enumerate.AuditStatisticsPeriod;
+
 /**
  * 审计统计聚合的命令对象集合。
  * <p>
@@ -20,7 +22,7 @@ public class AuditStatisticsCommands {
      */
     public record GetTrendsCommand(
             /** 周期 */
-            String period) {
+            AuditStatisticsPeriod period) {
     }
 
     /**
@@ -31,7 +33,7 @@ public class AuditStatisticsCommands {
      */
     public record GetEndpointRankingCommand(
             /** 周期 */
-            String period,
+            AuditStatisticsPeriod period,
             /** 限制数量 */
             int limit) {
     }
@@ -44,7 +46,7 @@ public class AuditStatisticsCommands {
      */
     public record GetEndpointLatencyRankingCommand(
             /** 周期 */
-            String period,
+            AuditStatisticsPeriod period,
             /** 限制数量 */
             int limit) {
     }

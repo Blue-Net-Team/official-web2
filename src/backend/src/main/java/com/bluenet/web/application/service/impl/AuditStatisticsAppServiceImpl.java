@@ -3,7 +3,6 @@ package com.bluenet.web.application.service.impl;
 import com.bluenet.web.application.AuditStatisticsResult;
 import com.bluenet.web.application.command.auditstatistics.AuditStatisticsCommands;
 import com.bluenet.web.application.service.AuditStatisticsAppService;
-import com.bluenet.web.domain.model.enumerate.AuditStatisticsPeriod;
 import com.bluenet.web.domain.model.vo.AuditEndpointLatencyVO;
 import com.bluenet.web.domain.model.vo.AuditEndpointRankingVO;
 import com.bluenet.web.domain.model.vo.AuditTrendPointVO;
@@ -36,8 +35,7 @@ public class AuditStatisticsAppServiceImpl implements AuditStatisticsAppService 
     @Override
     @Transactional(readOnly = true)
     public List<AuditStatisticsResult.TrendPoint> getTrends(AuditStatisticsCommands.GetTrendsCommand command) {
-        AuditStatisticsPeriod period = AuditStatisticsPeriod.valueOf(command.period().toUpperCase());
-        return auditRepository.queryTrends(period)
+        return auditRepository.queryTrends(command.period())
                 .stream()
                 .map(this::toTrendPoint)
                 .toList();
@@ -54,8 +52,7 @@ public class AuditStatisticsAppServiceImpl implements AuditStatisticsAppService 
     @Transactional(readOnly = true)
     public List<AuditStatisticsResult.EndpointRanking> getEndpointRanking(
             AuditStatisticsCommands.GetEndpointRankingCommand command) {
-        AuditStatisticsPeriod period = AuditStatisticsPeriod.valueOf(command.period().toUpperCase());
-        return auditRepository.queryEndpointRanking(period, command.limit())
+        return auditRepository.queryEndpointRanking(command.period(), command.limit())
                 .stream()
                 .map(this::toEndpointRanking)
                 .toList();
@@ -72,8 +69,7 @@ public class AuditStatisticsAppServiceImpl implements AuditStatisticsAppService 
     @Transactional(readOnly = true)
     public List<AuditStatisticsResult.EndpointLatency> getEndpointLatencyRanking(
             AuditStatisticsCommands.GetEndpointLatencyRankingCommand command) {
-        AuditStatisticsPeriod period = AuditStatisticsPeriod.valueOf(command.period().toUpperCase());
-        return auditRepository.queryEndpointLatencyRanking(period, command.limit())
+        return auditRepository.queryEndpointLatencyRanking(command.period(), command.limit())
                 .stream()
                 .map(this::toEndpointLatency)
                 .toList();

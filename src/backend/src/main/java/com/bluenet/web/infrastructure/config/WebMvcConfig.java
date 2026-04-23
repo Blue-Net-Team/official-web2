@@ -1,5 +1,6 @@
 package com.bluenet.web.infrastructure.config;
 
+import com.bluenet.web.infrastructure.config.converter.AuditStatisticsPeriodConverter;
 import com.bluenet.web.infrastructure.config.converter.EnumConverterFactory;
 import com.bluenet.web.infrastructure.interceptor.RequestLoggingInterceptor;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -22,6 +23,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
     @Override
     public void addFormatters(FormatterRegistry registry) {
         registry.addConverterFactory(new EnumConverterFactory());
+        registry.addConverter(new AuditStatisticsPeriodConverter());
     }
 
     @Bean

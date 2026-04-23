@@ -7,6 +7,7 @@ import com.bluenet.web.api.dto.audit.TrendPointDTO;
 import com.bluenet.web.api.converter.auditstatistics.AuditStatisticsRequestConverter;
 import com.bluenet.web.application.converter.AuditStatisticsAppConverter;
 import com.bluenet.web.application.service.AuditStatisticsAppService;
+import com.bluenet.web.domain.model.enumerate.AuditStatisticsPeriod;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
 import com.bluenet.web.infrastructure.security.annotation.RequiresPermission;
 import io.swagger.v3.oas.annotations.Operation;
@@ -48,7 +49,7 @@ public class AuditStatisticsController {
     @RequiresPermission(name = "查看请求量趋势", value = "audit:statistics:trends", access = AccessLevel.PROTECTED)
     @GetMapping("/trends")
     public ResponseMessage<List<TrendPointDTO>> getTrends(
-            @Parameter(description = "时间范围：24h、7d、30d，默认 7d") @RequestParam(defaultValue = "7d") String period) {
+            @Parameter(description = "时间范围：24h、7d、30d，默认 7d") @RequestParam(defaultValue = "7d") AuditStatisticsPeriod period) {
         return ResponseMessage.success(
                 appConverter.toTrendPointDTOList(
                         auditStatisticsAppService.getTrends(requestConverter.toTrendsCommand(period))));
@@ -63,7 +64,7 @@ public class AuditStatisticsController {
     @RequiresPermission(name = "查看接口访问排名", value = "audit:statistics:endpoints", access = AccessLevel.PROTECTED)
     @GetMapping("/endpoints")
     public ResponseMessage<List<EndpointRankingDTO>> getEndpointRanking(
-            @Parameter(description = "时间范围：24h、7d、30d，默认 7d") @RequestParam(defaultValue = "7d") String period,
+            @Parameter(description = "时间范围：24h、7d、30d，默认 7d") @RequestParam(defaultValue = "7d") AuditStatisticsPeriod period,
             @Parameter(description = "返回条数，默认 20") @RequestParam(defaultValue = "20") int limit) {
         return ResponseMessage.success(
                 appConverter.toEndpointRankingDTOList(
@@ -80,7 +81,7 @@ public class AuditStatisticsController {
     @RequiresPermission(name = "查看接口响应时间排名", value = "audit:statistics:latency", access = AccessLevel.PROTECTED)
     @GetMapping("/latency")
     public ResponseMessage<List<EndpointLatencyDTO>> getEndpointLatencyRanking(
-            @Parameter(description = "时间范围：24h、7d、30d，默认 7d") @RequestParam(defaultValue = "7d") String period,
+            @Parameter(description = "时间范围：24h、7d、30d，默认 7d") @RequestParam(defaultValue = "7d") AuditStatisticsPeriod period,
             @Parameter(description = "返回条数，默认 20") @RequestParam(defaultValue = "20") int limit) {
         return ResponseMessage.success(
                 appConverter.toEndpointLatencyDTOList(
