@@ -57,6 +57,7 @@ public class EnrollAppServiceImpl implements EnrollAppService {
     private final ReferralCodeGenerator referralCodeGenerator;
     private final PasswordEncoder passwordEncoder;
     private final MessageDispatcher messageDispatcher;
+    private final com.bluenet.web.application.message.template.EnrollmentApprovalCredentialTemplate enrollmentApprovalCredentialTemplate;
 
     private static final int ENROLL_PASSWORD_LENGTH = 10;
     private static final int APPROVAL_INITIAL_PASSWORD_LENGTH = 8;
@@ -372,34 +373,14 @@ public class EnrollAppServiceImpl implements EnrollAppService {
 
     private void sendApprovalCredentialMessage(Enroll enroll, String initialPassword) {
         try {
-            String htmlContent = buildApprovalCredentialEmailContent(enroll, initialPassword);
+            String htmlContent = enrollmentApprovalCredentialTemplate
+                    .buildHtml(enroll.getUsername(), enroll.getStudentId(), initialPassword);
             messageDispatcher.dispatchAsync(
                     MessageRequest.html(MessageChannel.EMAIL, enroll.getEmail(), APPROVAL_EMAIL_SUBJECT, htmlContent));
             log.info("审核通过初始凭据消息已触发异步分发 - enrollmentId={}, email={}", enroll.getId(), enroll.getEmail());
         } catch (Exception ex) {
             log.warn("审核通过初始凭据消息分发触发失败 - enrollmentId={}, email={}", enroll.getId(), enroll.getEmail(), ex);
         }
-    }
-
-    private String buildApprovalCredentialEmailContent(Enroll enroll, String initialPassword) {
-        return """
-                <div style="font-family:Arial,sans-serif;max-width:640px;margin:0 auto;padding:20px;color:#333;">
-                    <h2 style="color:#1f7ae0;text-align:center;">蓝网报名审核已通过</h2>
-                    <p>您好，%s 同学：</p>
-                    <p>您的报名申请（学号：<strong>%s</strong>）已审核通过，系统已为您创建账号。</p>
-                    <div style="background:#f6f8fb;border:1px solid #e6ebf2;border-radius:8px;padding:16px;margin:16px 0;">
-                        <p style="margin:0 0 8px 0;">初始登录密码：</p>
-                        <p style="margin:0;font-size:22px;font-weight:bold;color:#d4380d;letter-spacing:1px;">%s</p>
-                    </div>
-                    <p style="margin:0 0 8px 0;">安全提示：</p>
-                    <ul style="margin-top:0;padding-left:20px;">
-                        <li>请在首次登录后尽快修改密码。</li>
-                        <li>请勿将密码透露给他人。</li>
-                    </ul>
-                    <p style="color:#999;font-size:12px;">此邮件由系统自动发送，请勿直接回复。</p>
-                </div>
-                """
-                .formatted(enroll.getUsername(), enroll.getStudentId(), initialPassword);
     }
 
     private Object convertToConflictDTO(Enroll enroll) {

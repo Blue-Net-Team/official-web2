@@ -46,6 +46,7 @@ public class ResetPasswordAppServiceImpl implements ResetPasswordAppService {
     private final VerificationCodeDomainService verificationCodeDomainService;
     private final VerificationCodeRepository verificationCodeRepository;
     private final MessageDispatcher messageDispatcher;
+    private final com.bluenet.web.application.message.template.ResetPasswordVerificationCodeTemplate resetPasswordVerificationCodeTemplate;
     private final PasswordEncoder passwordEncoder;
     private final AuthTokenService authTokenService;
 
@@ -119,7 +120,7 @@ public class ResetPasswordAppServiceImpl implements ResetPasswordAppService {
         verificationCodeRepository.save(verifyCodeVO);
 
         String subject = "蓝网密码重置验证码";
-        String htmlContent = buildResetCodeEmail(verifyCodeVO.getCode());
+        String htmlContent = resetPasswordVerificationCodeTemplate.buildHtml(verifyCodeVO.getCode());
         messageDispatcher.dispatchAsync(MessageRequest.html(MessageChannel.EMAIL, email, subject, htmlContent));
 
         Map<String, String> updates = new HashMap<>();
@@ -208,15 +209,4 @@ public class ResetPasswordAppServiceImpl implements ResetPasswordAppService {
         }
     }
 
-    private String buildResetCodeEmail(String code) {
-        return """
-                <div style="max-width:400px;margin:0 auto;padding:20px;font-family:sans-serif;">
-                    <h2 style="color:#fa8c16;text-align:center;">蓝网密码重置验证码</h2>
-                    <p style="text-align:center;font-size:14px;color:#666;">您正在重置密码，验证码为：</p>
-                    <p style="text-align:center;font-size:32px;font-weight:bold;letter-spacing:8px;color:#fa8c16;">%s</p>
-                    <p style="text-align:center;font-size:12px;color:#999;">验证码5分钟内有效，如非本人操作请忽略此邮件</p>
-                </div>
-                """
-                .formatted(code);
-    }
 }

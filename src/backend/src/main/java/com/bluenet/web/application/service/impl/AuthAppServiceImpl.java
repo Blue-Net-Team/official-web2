@@ -55,6 +55,7 @@ public class AuthAppServiceImpl implements AuthAppService {
     private final VerificationCodeDomainService verificationCodeDomainService;
     private final VerificationCodeRepository verificationCodeRepository;
     private final MessageDispatcher messageDispatcher;
+    private final com.bluenet.web.application.message.template.LoginVerificationCodeTemplate loginVerificationCodeTemplate;
     private final AuthSessionIssuer authSessionIssuer;
     private final AuthProviderRegistry authProviderRegistry;
 
@@ -100,6 +101,7 @@ public class AuthAppServiceImpl implements AuthAppService {
             VerificationCodeDomainService verificationCodeDomainService,
             VerificationCodeRepository verificationCodeRepository,
             MessageDispatcher messageDispatcher,
+            com.bluenet.web.application.message.template.LoginVerificationCodeTemplate loginVerificationCodeTemplate,
             GitHubOAuthService gitHubOAuthService,
             UserRepository userRepository,
             StringRedisTemplate redisTemplate,
@@ -111,6 +113,7 @@ public class AuthAppServiceImpl implements AuthAppService {
         this.verificationCodeDomainService = verificationCodeDomainService;
         this.verificationCodeRepository = verificationCodeRepository;
         this.messageDispatcher = messageDispatcher;
+        this.loginVerificationCodeTemplate = loginVerificationCodeTemplate;
         this.authSessionIssuer = new AuthSessionIssuer(
                 jwtUtil,
                 authTokenService,
@@ -181,25 +184,10 @@ public class AuthAppServiceImpl implements AuthAppService {
         verificationCodeRepository.save(verifyCodeVO);
 
         String subject = "蓝网登录验证码";
-        String htmlContent = buildVerificationCodeEmail(verifyCodeVO.getCode());
+        String htmlContent = loginVerificationCodeTemplate.buildHtml(verifyCodeVO.getCode());
         messageDispatcher.dispatchAsync(MessageRequest.html(MessageChannel.EMAIL, email, subject, htmlContent));
 
         log.info("验证码已发送 - email={}, scene={}", email, scene);
-    }
-
-    /**
-     * 构建验证码邮件 HTML，发送仍复用现有 MessageDispatcher。
-     */
-    private String buildVerificationCodeEmail(String code) {
-        return """
-                <div style="max-width:400px;margin:0 auto;padding:20px;font-family:sans-serif;">
-                    <h2 style="color:#fa8c16;text-align:center;">蓝网登录验证码</h2>
-                    <p style="text-align:center;font-size:14px;color:#666;">您的验证码为：</p>
-                    <p style="text-align:center;font-size:32px;font-weight:bold;letter-spacing:8px;color:#fa8c16;">%s</p>
-                    <p style="text-align:center;font-size:12px;color:#999;">验证码5分钟内有效。</p>
-                </div>
-                """
-                .formatted(code);
     }
 
     /**

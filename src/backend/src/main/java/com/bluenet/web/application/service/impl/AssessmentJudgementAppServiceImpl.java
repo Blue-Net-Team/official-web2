@@ -11,7 +11,7 @@ import com.bluenet.web.application.AssessmentDecisionResult;
 import com.bluenet.web.application.AssessmentJudgementResult;
 import com.bluenet.web.application.command.assessment_judgement.AssessmentJudgementCommands;
 import com.bluenet.web.application.converter.AssessmentJudgementAppConverter;
-import com.bluenet.web.application.service.assessment.AssessmentDecisionNotificationTemplate;
+import com.bluenet.web.application.message.template.AssessmentDecisionNotificationTemplate;
 import com.bluenet.web.application.service.assessment.AssessmentJudgementAccessGuard;
 import com.bluenet.web.application.service.AssessmentJudgementAppService;
 import com.bluenet.web.domain.exception.BadRequest;

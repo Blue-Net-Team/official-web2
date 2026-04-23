@@ -52,6 +52,9 @@ class ResetPasswordAppServiceImplTest {
     private MessageDispatcher messageDispatcher;
 
     @Mock
+    private com.bluenet.web.application.message.template.ResetPasswordVerificationCodeTemplate resetPasswordVerificationCodeTemplate;
+
+    @Mock
     private PasswordEncoder passwordEncoder;
 
     @Mock

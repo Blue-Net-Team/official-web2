@@ -69,6 +69,9 @@ class AuthAppServiceImplTest {
     private MessageDispatcher messageDispatcher;
 
     @Mock
+    private com.bluenet.web.application.message.template.LoginVerificationCodeTemplate loginVerificationCodeTemplate;
+
+    @Mock
     private GitHubOAuthService gitHubOAuthService;
 
     @Mock

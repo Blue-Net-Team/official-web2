@@ -44,6 +44,7 @@ public class UserInfoAppServiceImpl implements UserInfoAppService {
     private final VerificationCodeDomainService verificationCodeDomainService;
     private final VerificationCodeRepository verificationCodeRepository;
     private final MessageDispatcher messageDispatcher;
+    private final com.bluenet.web.application.message.template.ChangeEmailVerificationCodeTemplate changeEmailVerificationCodeTemplate;
     private final PasswordEncoder passwordEncoder;
     private final ChangePasswordStateService changePasswordStateService;
     private final AuthTokenService authTokenService;
@@ -152,7 +153,7 @@ public class UserInfoAppServiceImpl implements UserInfoAppService {
         var verifyCodeVO = verificationCodeDomainService.generateCode(email, scene);
         verificationCodeRepository.save(verifyCodeVO);
         String subject = "change-email-original".equals(scene) ? "蓝网修改邮箱 - 验证原邮箱" : "蓝网修改邮箱 - 验证新邮箱";
-        String htmlContent = buildChangeEmailVerificationCodeHtml(verifyCodeVO.getCode(), scene);
+        String htmlContent = changeEmailVerificationCodeTemplate.buildHtml(verifyCodeVO.getCode(), scene);
         messageDispatcher.dispatchAsync(MessageRequest.html(MessageChannel.EMAIL, email, subject, htmlContent));
         log.info("修改邮箱验证码已发送 - email={}, scene={}", email, scene);
     }
@@ -291,16 +292,4 @@ public class UserInfoAppServiceImpl implements UserInfoAppService {
         }
     }
 
-    private String buildChangeEmailVerificationCodeHtml(String code, String scene) {
-        String action = "change-email-original".equals(scene) ? "验证原邮箱" : "验证新邮箱";
-        return """
-                <div style="max-width:400px;margin:0 auto;padding:20px;font-family:sans-serif;">
-                    <h2 style="color:#fa8c16;text-align:center;">蓝网修改邮箱 - %s</h2>
-                    <p style="text-align:center;font-size:14px;color:#666;">您的验证码为：</p>
-                    <p style="text-align:center;font-size:32px;font-weight:bold;letter-spacing:8px;color:#fa8c16;">%s</p>
-                    <p style="text-align:center;font-size:12px;color:#999;">验证码5分钟内有效，请勿泄露给他人。</p>
-                </div>
-                """
-                .formatted(action, code);
-    }
 }
