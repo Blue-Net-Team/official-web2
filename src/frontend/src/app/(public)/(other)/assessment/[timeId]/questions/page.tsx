@@ -14,7 +14,7 @@ import { Spin, Table, Tag } from 'antd'
 import type { TableColumnsType } from 'antd'
 import { assessmentQuestionService } from '@/apis/services/assessment-question.service'
 import { assessmentTimeService } from '@/apis/services/assessment-time.service'
-import authStore from '@/stores/authStore'
+import { useAuth } from '@/hooks'
 import type {
   AssessmentQuestionDTO,
   AssessmentTimeDTO,
@@ -73,7 +73,7 @@ export default function QuestionsPage() {
   const [questions, setQuestions] = useState<AssessmentQuestionDTO[]>([])
   const [totalElements, setTotalElements] = useState(0)
   const [loading, setLoading] = useState(true)
-  const { isAuthenticated, checkAuthStatus } = authStore()
+  const { isAuthenticated, checkAuthStatus } = useAuth()
 
   // 认证检查
   useEffect(() => {

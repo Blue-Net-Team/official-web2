@@ -12,7 +12,7 @@ import type {
 import { Direction, DIRECTION_LABELS } from '@/apis/schema/enumerate'
 import { adminAssessmentTimeService } from '@/apis/services/admin-assessment-time.service'
 import { adminAssessmentQuestionService } from '@/apis/services/admin-assessment-question.service'
-import authStore from '@/stores/authStore'
+import { useAuth } from '@/hooks'
 import { getRoleLevel } from '@/utils/RoleUtils'
 import QuestionDrawer, { QUESTION_TYPE_LABELS, type DrawerMode } from './QuestionDrawer'
 
@@ -31,7 +31,7 @@ export default function AssessmentQuestionManagementPage() {
   const screens = useBreakpoint()
   const isMobile = !screens.md
 
-  const userInfo = authStore((state) => state.userInfo)
+  const { userInfo } = useAuth()
   const isSuperAdmin = getRoleLevel(userInfo?.roleName || '') >= 3
   const roleLevel = getRoleLevel(userInfo?.roleName || '')
   const userDirection = userInfo?.direction

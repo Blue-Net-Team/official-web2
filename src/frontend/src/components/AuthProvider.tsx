@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, ReactNode } from 'react'
-import authStore from '@/stores/authStore'
+import { useAuth } from '@/hooks'
 
 interface AuthProviderProps {
   children: ReactNode
@@ -12,7 +12,7 @@ interface AuthProviderProps {
  * 在应用启动时后台检查登录状态，不阻塞渲染
  */
 export default function AuthProvider({ children }: AuthProviderProps) {
-  const checkAuthStatus = authStore((state) => state.checkAuthStatus)
+  const { checkAuthStatus } = useAuth()
 
   useEffect(() => {
     // 后台检查登录状态，不阻塞渲染

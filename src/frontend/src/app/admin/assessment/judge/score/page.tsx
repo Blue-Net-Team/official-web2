@@ -40,7 +40,7 @@ import { Direction, DIRECTION_LABELS } from '@/apis/schema/enumerate'
 import { adminAssessmentJudgementService } from '@/apis/services/admin-assessment-judgement.service'
 import { adminAssessmentTimeService } from '@/apis/services/admin-assessment-time.service'
 import { fileService } from '@/apis/services/file.service'
-import authStore from '@/stores/authStore'
+import { useAuth } from '@/hooks'
 import { getRoleLevel } from '@/utils/RoleUtils'
 import {
   QUESTION_TYPE_LABELS,
@@ -56,7 +56,7 @@ export default function AssessmentJudgementManagementPage() {
   const screens = Grid.useBreakpoint()
   const [form] = Form.useForm<{ score: number; comment?: string }>()
 
-  const userInfo = authStore((state) => state.userInfo)
+  const { userInfo } = useAuth()
   const isSuperAdmin = getRoleLevel(userInfo?.roleName || '') >= 3
   const isDecisionMaker = getRoleLevel(userInfo?.roleName || '') >= 2
   const userDirection = userInfo?.direction

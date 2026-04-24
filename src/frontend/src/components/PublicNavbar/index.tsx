@@ -7,7 +7,7 @@ import { Layout, Menu, Button } from 'antd'
 import { MenuOutlined } from '@ant-design/icons'
 import Image from 'next/image'
 import logoImage from '@/assets/logo.png'
-import authStore from '@/stores/authStore'
+import { useAuth } from '@/hooks'
 import { getRoleLevel } from '@/utils/RoleUtils'
 import { DEFAULT_USER_INFO } from './constants'
 import { getMenuItems } from './useMenuItems'
@@ -21,9 +21,8 @@ const { Header } = Layout
 const NavBar = () => {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
-  const isAuthenticated = authStore((state) => state.isAuthenticated)
-  const userInfo = authStore((state) => state.userInfo) || DEFAULT_USER_INFO
-  const logout = authStore((state) => state.logout)
+  const { isAuthenticated, userInfo: rawUserInfo, logout } = useAuth()
+  const userInfo = rawUserInfo || DEFAULT_USER_INFO
   const router = useRouter()
 
   useEffect(() => {

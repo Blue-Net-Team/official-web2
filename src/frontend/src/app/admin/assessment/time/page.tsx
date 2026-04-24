@@ -26,7 +26,7 @@ import type {
 } from '@/apis/schema/assessment.dto'
 import { Direction, DIRECTION_LABELS } from '@/apis/schema/enumerate'
 import { adminAssessmentTimeService } from '@/apis/services/admin-assessment-time.service'
-import authStore from '@/stores/authStore'
+import { useAuth } from '@/hooks'
 import { getRoleLevel } from '@/utils/RoleUtils'
 import AssessmentTimeDrawer, { type DrawerMode } from './AssessmentTimeDrawer'
 
@@ -48,7 +48,7 @@ export default function AssessmentTimeManagementPage() {
   const screens = useBreakpoint()
   const isMobile = !screens.md
 
-  const userInfo = authStore((state) => state.userInfo)
+  const { userInfo } = useAuth()
   const isSuperAdmin = getRoleLevel(userInfo?.roleName || '') >= 3
   const userDirection = userInfo?.direction
 

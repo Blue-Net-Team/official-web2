@@ -1,6 +1,7 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
+import { useApi } from '@/hooks'
 import { App, Button, Grid, Spin, Table, Tag } from 'antd'
 import { EditOutlined } from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
@@ -16,29 +17,11 @@ export default function MessageTemplateManagementPage() {
   const isMobile = !screens.md
 
   // Data state
-  const [loading, setLoading] = useState(false)
-  const [data, setData] = useState<MessageTemplateInfoDTO[]>([])
+  const { data, loading, execute: fetchData } = useApi(adminMessageTemplateService.getList)
 
   // Drawer state
   const [drawerVisible, setDrawerVisible] = useState(false)
   const [editingRecord, setEditingRecord] = useState<MessageTemplateInfoDTO | null>(null)
-
-  const fetchData = useCallback(async () => {
-    try {
-      setLoading(true)
-      const response = await adminMessageTemplateService.getList()
-      if (response.code === 200) {
-        setData(response.data || [])
-      } else {
-        messageApi.error(`获取数据失败: ${response.msg}`)
-      }
-    } catch (error) {
-      console.error('获取模板列表失败:', error)
-      messageApi.error('获取模板列表失败')
-    } finally {
-      setLoading(false)
-    }
-  }, [messageApi])
 
   useEffect(() => {
     fetchData()
@@ -117,7 +100,7 @@ export default function MessageTemplateManagementPage() {
       <Spin spinning={loading}>
         <Table
           columns={columns}
-          dataSource={data}
+          dataSource={data || []}
           rowKey="code"
           pagination={false}
           scroll={{ x: isMobile ? 800 : undefined }}

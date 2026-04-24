@@ -13,7 +13,7 @@ import { useRouter } from 'next/navigation'
 import { AxiosError } from 'axios'
 import { userService } from '@/apis/services/user.service'
 import { hashPassword } from '@/utils/passwordHash'
-import authStore from '@/stores/authStore'
+import { useAuth } from '@/hooks'
 import { ResponseMessage } from '@/apis/schema/type'
 
 /** 从 AxiosError 中提取后端返回的错误消息 */
@@ -80,6 +80,7 @@ export default function ChangePasswordPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const router = useRouter()
   const { message: messageApi } = App.useApp()
+  const { logout } = useAuth()
 
   // Form values
   const [currentPassword, setCurrentPassword] = useState('')
@@ -127,7 +128,7 @@ export default function ChangePasswordPage() {
       const hashedConfirm = await hashPassword(confirmPassword)
       await userService.changePassword(token, hashedNew, hashedConfirm)
       // 后端已吊销所有 JWT Token，清除前端认证状态
-      await authStore.getState().logout()
+      await logout()
       messageApi.success('密码修改成功，即将跳转到登录页')
       setTimeout(() => router.push('/login'), 2000)
     } catch (error: unknown) {

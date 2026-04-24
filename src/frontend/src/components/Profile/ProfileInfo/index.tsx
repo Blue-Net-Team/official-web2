@@ -24,7 +24,7 @@ import {
 import { EditOutlined, SaveOutlined, CloseOutlined } from '@ant-design/icons'
 import { Form, Input, Button, message, Select, Tag } from 'antd'
 import { userService } from '@/apis/services/user.service'
-import authStore from '@/stores/authStore'
+import { useAuth } from '@/hooks'
 import GitHubBinding from './GitHubBinding'
 import ChangeEmailModal from './ChangeEmailModal'
 import EmailSettings from './EmailSettings'
@@ -48,7 +48,7 @@ export default function ProfileInfo({ profile, onUpdate }: ProfileInfoProps) {
   const [form] = Form.useForm()
 
   // 判断当前用户是否可以修改扩展字段
-  const currentUser = authStore((state) => state.userInfo)
+  const { userInfo: currentUser } = useAuth()
   const canEditExtendedFields = isMemberOrAbove(currentUser?.roleName)
 
   const handleEdit = () => {

@@ -8,11 +8,11 @@ import { ERROR_CONFIGS } from '@/components/ErrorPage/configs'
 import { Layout } from 'antd'
 import { Content } from 'antd/es/layout/layout'
 import { ReactNode } from 'react'
-import authStore from '@/stores/authStore'
+import { useAuth } from '@/hooks'
 import { getRoleLevel } from '@/utils/RoleUtils'
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
-  const userInfo = authStore((state) => state.userInfo)
+  const { userInfo } = useAuth()
   const roleLevel = getRoleLevel(userInfo?.roleName || '')
 
   if (roleLevel < 1) {

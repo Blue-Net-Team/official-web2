@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { Spin } from 'antd'
 import { CalendarOutlined } from '@ant-design/icons'
 import { useRouter } from 'next/navigation'
-import authStore from '@/stores/authStore'
+import { useAuth } from '@/hooks'
 import { assessmentTimeService } from '@/apis/services/assessment-time.service'
 import { AssessmentCard } from '@/components/Assessment'
 import type { AssessmentTimeDTO } from '@/apis/schema/assessment.dto'
@@ -14,7 +14,7 @@ export default function AssessmentPage() {
   const router = useRouter()
   const [assessmentTimes, setAssessmentTimes] = useState<AssessmentTimeDTO[]>([])
   const [loading, setLoading] = useState(true)
-  const { userInfo, isAuthenticated, checkAuthStatus } = authStore()
+  const { userInfo, isAuthenticated, checkAuthStatus } = useAuth()
 
   useEffect(() => {
     const checkAuth = async () => {

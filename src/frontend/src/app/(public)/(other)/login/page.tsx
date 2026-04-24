@@ -8,7 +8,7 @@ import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import logo from '@/assets/logo.png'
 import loginBg from '@/assets/Login/bg.png'
-import authStore from '@/stores/authStore'
+import { useAuth } from '@/hooks'
 import { authService } from '@/apis/services/auth.service'
 
 const primaryColor = '#fa8c16'
@@ -76,7 +76,7 @@ function LoginPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { message: messageApi } = App.useApp()
-  const { isLoading, login, loginWithEmail, sendVerificationCode, checkAuthStatus } = authStore()
+  const { isLoading, login, loginWithEmail, sendVerificationCode, checkAuthStatus } = useAuth()
 
   useEffect(() => {
     const githubStatus = searchParams.get('github')

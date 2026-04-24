@@ -20,7 +20,7 @@ import { assessmentSessionService } from '@/apis/services/assessment-session.ser
 import { algorithmJudgeService } from '@/apis/services/algorithm-judge.service'
 import { assessmentStatisticsService } from '@/apis/services/assessment-statistics.service'
 import { fileService } from '@/apis/services/file.service'
-import authStore from '@/stores/authStore'
+import { useAuth } from '@/hooks'
 import type {
   AssessmentQuestionDTO,
   AssessmentAnswerDTO,
@@ -76,7 +76,7 @@ export default function QuestionDetailPage() {
   const [pollingJobId, setPollingJobId] = useState<number | null>(null)
   const [pollingFormalJob, setPollingFormalJob] = useState(false)
   const autoSubmitRef = useRef(false)
-  const { isAuthenticated, checkAuthStatus } = authStore()
+  const { isAuthenticated, checkAuthStatus } = useAuth()
 
   // 认证检查
   useEffect(() => {

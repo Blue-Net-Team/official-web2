@@ -17,7 +17,7 @@ import { SaveOutlined, InfoCircleOutlined } from '@ant-design/icons'
 import PermissionTree from '@/components/Admin/PermissionTree'
 import { adminPermissionService } from '@/apis/services/admin-permission.service'
 import { getRoleLevel } from '@/utils/RoleUtils'
-import authStore from '@/stores/authStore'
+import { useAuth } from '@/hooks'
 import type { PermissionDTO, PermissionTreeDTO } from '@/apis/schema/type'
 
 const { Title, Text } = Typography
@@ -69,7 +69,7 @@ function getAlwaysEnabledIds(nodes: PermissionTreeDTO[]): Set<number> {
 
 export default function RolePermissionPage() {
   const { message } = App.useApp()
-  const userInfo = authStore((state) => state.userInfo)
+  const { userInfo } = useAuth()
   const roleLevel = getRoleLevel(userInfo?.roleName || '')
 
   const [selectedRole, setSelectedRole] = useState<string>('MEMBER')

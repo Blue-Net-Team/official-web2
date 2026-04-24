@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo, createContext, useContext } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
-import authStore from '@/stores/authStore'
+import { useAuth } from '@/hooks'
 import { getRoleLevel } from '@/utils/RoleUtils'
 import {
   HomeOutlined,
@@ -217,7 +217,7 @@ const AdminNav = ({ children }: { children: React.ReactNode }) => {
   const [collapsed, setCollapsed] = useState(false)
   const router = useRouter()
   const pathname = usePathname()
-  const userInfo = authStore((state) => state.userInfo)
+  const { userInfo } = useAuth()
 
   const roleLevel = useMemo(() => getRoleLevel(userInfo?.roleName || ''), [userInfo?.roleName])
 
