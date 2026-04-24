@@ -1,20 +1,27 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useEffect } from 'react'
 import { Spin } from 'antd'
 import { CalendarOutlined } from '@ant-design/icons'
 import { useRouter } from 'next/navigation'
-import { useAuth } from '@/hooks'
+import { useAuth, useApi } from '@/hooks'
 import { assessmentTimeService } from '@/apis/services/assessment-time.service'
 import { AssessmentCard } from '@/components/Assessment'
-import type { AssessmentTimeDTO } from '@/apis/schema/assessment.dto'
 import { DIRECTION_LABELS as DirectionLabels } from '@/apis/schema/enumerate'
 
 export default function AssessmentPage() {
   const router = useRouter()
-  const [assessmentTimes, setAssessmentTimes] = useState<AssessmentTimeDTO[]>([])
-  const [loading, setLoading] = useState(true)
   const { userInfo, isAuthenticated, checkAuthStatus } = useAuth()
+
+  const {
+    data: pageData,
+    loading,
+    execute: fetchAssessmentTimes,
+  } = useApi(() => assessmentTimeService.getAssessmentTimes(0, 50))
+
+  const assessmentTimes = pageData?.content
+    ? [...pageData.content].sort((a, b) => a.epoch - b.epoch)
+    : []
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -25,23 +32,6 @@ export default function AssessmentPage() {
     }
     checkAuth()
   }, [checkAuthStatus, router])
-
-  const fetchAssessmentTimes = useCallback(async () => {
-    try {
-      const response = await assessmentTimeService.getAssessmentTimes(0, 50)
-      if (response.code === 200 && response.data) {
-        const sorted = [...response.data.content].sort((a, b) => a.epoch - b.epoch)
-        setAssessmentTimes(sorted)
-      } else {
-        setAssessmentTimes([])
-      }
-    } catch (error) {
-      console.error('Failed to fetch assessment times:', error)
-      setAssessmentTimes([])
-    } finally {
-      setLoading(false)
-    }
-  }, [])
 
   useEffect(() => {
     if (isAuthenticated) {

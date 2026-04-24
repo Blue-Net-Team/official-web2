@@ -15,6 +15,7 @@ import {
 import type { CompetitionResponseDTO, CompetitionLevel } from '@/apis/schema/type'
 import { COMPETITION_LEVEL_LABELS, COMPETITION_LEVEL_COLORS } from '@/types/competition'
 import { adminCompetitionService } from '@/apis/services/admin-competition.service'
+import { usePagination } from '@/hooks'
 import CompetitionDrawer, { type DrawerMode } from './CompetitionDrawer'
 
 const PAGE_SIZE = 20
@@ -48,10 +49,16 @@ export default function CompetitionManagementPage() {
   const isMobile = !screens.md
 
   // Data state
-  const [list, setList] = useState<CompetitionResponseDTO[]>([])
-  const [totalElements, setTotalElements] = useState(0)
-  const [loading, setLoading] = useState(true)
-  const [page, setPage] = useState(1)
+  const { data, total, totalPages, loading, currentPage, setCurrentPage, refresh } = usePagination(
+    adminCompetitionService.getList.bind(adminCompetitionService),
+    { pageSize: PAGE_SIZE }
+  )
+
+  // Optimistic list for drag-and-drop
+  const [displayList, setDisplayList] = useState<CompetitionResponseDTO[]>([])
+  useEffect(() => {
+    setDisplayList(data)
+  }, [data])
 
   // Drawer state
   const [drawerOpen, setDrawerOpen] = useState(false)
@@ -72,24 +79,6 @@ export default function CompetitionManagementPage() {
       activationConstraint: { distance: 5 },
     })
   )
-
-  // Fetch list
-  const fetchList = useCallback(async () => {
-    setLoading(true)
-    try {
-      const res = await adminCompetitionService.getList(page - 1, PAGE_SIZE)
-      if (res.data) {
-        setList(res.data.content)
-        setTotalElements(res.data.totalElements)
-      }
-    } finally {
-      setLoading(false)
-    }
-  }, [page])
-
-  useEffect(() => {
-    fetchList()
-  }, [fetchList])
 
   // Open drawer for viewing
   const handleRowClick = (record: CompetitionResponseDTO) => {
@@ -118,7 +107,7 @@ export default function CompetitionManagementPage() {
       messageApi.success('删除成功')
       setDeleteModalOpen(false)
       setDrawerOpen(false)
-      fetchList()
+      refresh()
     } catch {
       messageApi.error('删除失败')
     }
@@ -127,7 +116,7 @@ export default function CompetitionManagementPage() {
   // Drawer success callback
   const handleDrawerSuccess = () => {
     setDrawerOpen(false)
-    fetchList()
+    refresh()
   }
 
   // Drag end handler - batch update current page sort orders
@@ -135,16 +124,16 @@ export default function CompetitionManagementPage() {
     const { active, over } = event
     if (!over || active.id === over.id) return
 
-    const oldIndex = list.findIndex((item) => String(item.id) === active.id)
-    const newIndex = list.findIndex((item) => String(item.id) === over.id)
+    const oldIndex = displayList.findIndex((item) => String(item.id) === active.id)
+    const newIndex = displayList.findIndex((item) => String(item.id) === over.id)
     if (oldIndex === -1 || newIndex === -1) return
 
     // Optimistically reorder
-    const newList = arrayMove(list, oldIndex, newIndex)
-    setList(newList)
+    const newList = arrayMove(displayList, oldIndex, newIndex)
+    setDisplayList(newList)
 
     // Recalculate sortOrder for all items on current page
-    const baseSortOrder = (page - 1) * PAGE_SIZE
+    const baseSortOrder = currentPage * PAGE_SIZE
     const sortItems = newList.map((item, index) => ({
       id: item.id,
       sortOrder: baseSortOrder + index + 1,
@@ -154,7 +143,7 @@ export default function CompetitionManagementPage() {
       await adminCompetitionService.batchUpdateSortOrder({ items: sortItems })
     } catch {
       // Revert on failure
-      setList(list)
+      setDisplayList(data)
       messageApi.error('排序更新失败')
     }
   }
@@ -163,7 +152,7 @@ export default function CompetitionManagementPage() {
   const handleMove = async (id: number, direction: 'UP' | 'DOWN') => {
     try {
       await adminCompetitionService.moveCompetition(id, { direction })
-      fetchList()
+      refresh()
     } catch {
       messageApi.error(direction === 'UP' ? '上移失败' : '下移失败')
     }
@@ -171,10 +160,9 @@ export default function CompetitionManagementPage() {
 
   // Table columns
   const columns: ColumnsType<CompetitionResponseDTO> = useMemo(() => {
-    const isFirst = (index: number) => page === 1 && index === 0
+    const isFirst = (index: number) => currentPage === 0 && index === 0
     const isLast = (index: number) => {
-      const totalPages = Math.ceil(totalElements / PAGE_SIZE)
-      return page >= totalPages && index === list.length - 1
+      return currentPage + 1 >= totalPages && index === displayList.length - 1
     }
 
     const cols: ColumnsType<CompetitionResponseDTO> = [
@@ -252,7 +240,7 @@ export default function CompetitionManagementPage() {
             disabled={isFirst(index)}
             onClick={(e) => {
               e.stopPropagation()
-              handleMove(list[index].id, 'UP')
+              handleMove(displayList[index].id, 'UP')
             }}
           />
           <Button
@@ -262,7 +250,7 @@ export default function CompetitionManagementPage() {
             disabled={isLast(index)}
             onClick={(e) => {
               e.stopPropagation()
-              handleMove(list[index].id, 'DOWN')
+              handleMove(displayList[index].id, 'DOWN')
             }}
           />
         </div>
@@ -270,7 +258,7 @@ export default function CompetitionManagementPage() {
     })
 
     return cols
-  }, [isMobile, page, totalElements, list])
+  }, [isMobile, currentPage, totalPages, displayList])
 
   return (
     <div className="flex flex-col gap-4">
@@ -286,11 +274,11 @@ export default function CompetitionManagementPage() {
       <Spin spinning={loading}>
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
           <SortableContext
-            items={list.map((item) => String(item.id))}
+            items={displayList.map((item) => String(item.id))}
             strategy={verticalListSortingStrategy}
           >
             <Table
-              dataSource={list}
+              dataSource={displayList}
               columns={columns}
               rowKey={(record) => String(record.id)}
               size="small"
@@ -309,14 +297,14 @@ export default function CompetitionManagementPage() {
       </Spin>
 
       {/* Pagination */}
-      {totalElements > PAGE_SIZE && (
+      {total > PAGE_SIZE && (
         <div className="flex justify-center">
           <Pagination
-            current={page}
-            total={totalElements}
+            current={currentPage + 1}
+            total={total}
             pageSize={PAGE_SIZE}
             showSizeChanger={false}
-            onChange={(p) => setPage(p)}
+            onChange={(p) => setCurrentPage(p - 1)}
           />
         </div>
       )}

@@ -18,6 +18,8 @@ const eslintConfig = [
       '@typescript-eslint/no-unused-vars': 'warn',
       // React Hooks 规则 - 禁用 exhaustive-deps 规则
       'react-hooks/exhaustive-deps': 'off',
+      // React 19 在 useEffect 中 setState 的限制过于严格，许多合法模式（如派生状态计算）也被拦截
+      'react-hooks/set-state-in-effect': 'off',
       // Next.js 规则 - 禁用 img 元素检查
       '@next/next/no-img-element': 'off',
     }

@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useState } from 'react'
 import { App, Button, Grid, InputNumber, Modal, Pagination, Select, Spin, Table, Tag } from 'antd'
 import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
@@ -8,6 +8,7 @@ import type { AchievementDTO, AchievementType, AwardLevel } from '@/apis/schema/
 import { adminAchievementService } from '@/apis/services/admin-achievement.service'
 import { AchievementService } from '@/apis/services/achievement.service'
 import AchievementDrawer, { type DrawerMode } from './AchievementDrawer'
+import { usePagination } from '@/hooks'
 
 const PAGE_SIZE = 20
 
@@ -36,12 +37,6 @@ export default function AchievementManagementPage() {
   const screens = useBreakpoint()
   const isMobile = !screens.md
 
-  // Data state
-  const [loading, setLoading] = useState(false)
-  const [data, setData] = useState<AchievementDTO[]>([])
-  const [total, setTotal] = useState(0)
-  const [currentPage, setCurrentPage] = useState(1)
-
   // Drawer state
   const [drawerVisible, setDrawerVisible] = useState(false)
   const [drawerMode, setDrawerMode] = useState<DrawerMode>('create')
@@ -52,37 +47,22 @@ export default function AchievementManagementPage() {
   const [filterAwardLevel, setFilterAwardLevel] = useState<string | undefined>()
   const [filterYear, setFilterYear] = useState<number | undefined>()
 
-  const fetchData = useCallback(
-    async (page: number = 1) => {
-      try {
-        setLoading(true)
-        const response = await AchievementService.getAchievements({
-          page: page - 1,
-          size: PAGE_SIZE,
-          type: filterType,
-          awardLevel: filterAwardLevel,
-          year: filterYear,
-        })
-        if (response.code === 200) {
-          setData(response.data?.content || [])
-          setTotal(response.data?.totalElements || 0)
-          setCurrentPage(page)
-        } else {
-          messageApi.error(`获取数据失败: ${response.msg}`)
-        }
-      } catch (error) {
-        console.error('获取成就列表失败:', error)
-        messageApi.error('获取成就列表失败')
-      } finally {
-        setLoading(false)
-      }
-    },
-    [filterType, filterAwardLevel, filterYear, messageApi]
+  const apiFn = useCallback(
+    (page: number, pageSize: number) =>
+      AchievementService.getAchievements({
+        page,
+        size: pageSize,
+        type: filterType,
+        awardLevel: filterAwardLevel,
+        year: filterYear,
+      }),
+    [filterType, filterAwardLevel, filterYear]
   )
 
-  useEffect(() => {
-    fetchData(1)
-  }, [fetchData])
+  const { data, total, loading, currentPage, setCurrentPage, refresh, reset } = usePagination(
+    apiFn,
+    { pageSize: PAGE_SIZE }
+  )
 
   const handleCreate = () => {
     setDrawerMode('create')
@@ -108,7 +88,7 @@ export default function AchievementManagementPage() {
           const response = await adminAchievementService.delete(record.id)
           if (response.code === 200) {
             messageApi.success('删除成功')
-            fetchData(currentPage)
+            refresh()
           } else {
             messageApi.error(`删除失败: ${response.msg}`)
           }
@@ -122,7 +102,7 @@ export default function AchievementManagementPage() {
 
   const handleDrawerSuccess = () => {
     setDrawerVisible(false)
-    fetchData(currentPage)
+    refresh()
   }
 
   const handleDrawerCancel = () => {
@@ -215,7 +195,10 @@ export default function AchievementManagementPage() {
       <div className="mb-4 flex gap-2 flex-wrap">
         <Select
           value={filterType}
-          onChange={(value) => setFilterType(value)}
+          onChange={(value) => {
+            setFilterType(value)
+            reset()
+          }}
           placeholder="全部类型"
           allowClear
           className="w-[120px]"
@@ -227,7 +210,10 @@ export default function AchievementManagementPage() {
         />
         <Select
           value={filterAwardLevel}
-          onChange={(value) => setFilterAwardLevel(value)}
+          onChange={(value) => {
+            setFilterAwardLevel(value)
+            reset()
+          }}
           placeholder="全部级别"
           allowClear
           className="w-[120px]"
@@ -240,12 +226,15 @@ export default function AchievementManagementPage() {
         <InputNumber
           placeholder="年份"
           value={filterYear}
-          onChange={(value) => setFilterYear(value ?? undefined)}
+          onChange={(value) => {
+            setFilterYear(value ?? undefined)
+            reset()
+          }}
           className="w-[100px]"
           min={1900}
           max={2100}
         />
-        <Button onClick={() => fetchData(1)}>筛选</Button>
+        <Button onClick={() => reset()}>筛选</Button>
       </div>
 
       <Spin spinning={loading}>
@@ -260,10 +249,10 @@ export default function AchievementManagementPage() {
 
       <div className="mt-4 flex justify-center">
         <Pagination
-          current={currentPage}
+          current={currentPage + 1}
           pageSize={PAGE_SIZE}
           total={total}
-          onChange={fetchData}
+          onChange={(p) => setCurrentPage(p - 1)}
           showSizeChanger={false}
         />
       </div>

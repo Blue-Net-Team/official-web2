@@ -1,13 +1,17 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useRef } from 'react'
 import { Spin, Empty, Pagination } from 'antd'
 import { competitionService } from '@/apis/services/competition.service'
 import { CompetitionResponseDTO } from '@/apis/schema/type'
 import CompetitionCard from '@/components/CompetitionCard'
 import BackgroundDecorations from './BackgroundDecorations'
+import { usePagination } from '@/hooks'
 
 const PAGE_SIZE = 10
+
+const fetchCompetitionsPage = (page: number, pageSize: number) =>
+  competitionService.getCompetitionsPage(page, pageSize)
 
 function EmptyState() {
   return (
@@ -24,7 +28,7 @@ function CompetitionsContent({ competitions }: { competitions: CompetitionRespon
 
   return (
     <div className="flex flex-col gap-5 max-sm:gap-4 relative z-1">
-      {competitions.map((competition, index) => (
+      {competitions.map((competition) => (
         <CompetitionCard key={competition.id} competition={competition} />
       ))}
     </div>
@@ -32,39 +36,14 @@ function CompetitionsContent({ competitions }: { competitions: CompetitionRespon
 }
 
 export default function CompetitionsPage() {
-  const [competitions, setCompetitions] = useState<CompetitionResponseDTO[]>([])
-  const [currentPage, setCurrentPage] = useState(0)
-  const [totalPages, setTotalPages] = useState(0)
-  const [totalElements, setTotalElements] = useState(0)
-  const [loading, setLoading] = useState(true)
-
-  const fetchCompetitions = useCallback(async () => {
-    setLoading(true)
-    try {
-      const response = await competitionService.getCompetitionsPage(currentPage, PAGE_SIZE)
-
-      if (response.code === 200 && response.data) {
-        setCompetitions(response.data.content)
-        setTotalPages(response.data.totalPages)
-        setTotalElements(response.data.totalElements)
-      } else {
-        setCompetitions([])
-        setTotalPages(0)
-        setTotalElements(0)
-      }
-    } catch (error) {
-      console.error('Failed to fetch competitions:', error)
-      setCompetitions([])
-      setTotalPages(0)
-      setTotalElements(0)
-    } finally {
-      setLoading(false)
-    }
-  }, [currentPage])
-
-  useEffect(() => {
-    fetchCompetitions()
-  }, [fetchCompetitions])
+  const {
+    data: competitions,
+    total: totalElements,
+    totalPages,
+    loading,
+    currentPage,
+    setCurrentPage,
+  } = usePagination(fetchCompetitionsPage, { pageSize: PAGE_SIZE })
 
   const headerRef = useRef<HTMLElement>(null)
 

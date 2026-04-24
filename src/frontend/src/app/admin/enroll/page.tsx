@@ -10,6 +10,7 @@ import {
 } from '@/components/Admin/EnrollManagement'
 import type { FilterValues } from '@/components/Admin/EnrollManagement'
 import { adminEnrollService } from '@/apis/services/admin-enroll.service'
+import { usePagination } from '@/hooks'
 import type {
   EnrollmentBriefDTO,
   EnrollmentDetailDTO,
@@ -21,19 +22,35 @@ const PAGE_SIZE = 12
 export default function EnrollManagementPage() {
   const { message: messageApi } = App.useApp()
 
-  // Data state
-  const [list, setList] = useState<EnrollmentBriefDTO[]>([])
+  // Statistics state
   const [statistics, setStatistics] = useState<EnrollmentStatisticsDTO | null>(null)
-  const [totalElements, setTotalElements] = useState(0)
-  const [loading, setLoading] = useState(true)
 
   // Pagination & filters
-  const [page, setPage] = useState(1)
   const [filters, setFilters] = useState<FilterValues>({
     keyword: '',
     status: undefined,
     direction: undefined,
   })
+
+  const fetchPage = useCallback(
+    (page: number, pageSize: number) => {
+      const params: Record<string, unknown> = {
+        page,
+        size: pageSize,
+      }
+      if (filters.keyword) params.keyword = filters.keyword
+      if (filters.status) params.status = filters.status
+      if (filters.direction) params.direction = filters.direction
+
+      return adminEnrollService.getList(params as Parameters<typeof adminEnrollService.getList>[0])
+    },
+    [filters]
+  )
+
+  const { data, total, totalPages, loading, currentPage, setCurrentPage, refresh } = usePagination(
+    fetchPage,
+    { pageSize: PAGE_SIZE }
+  )
 
   // Drawer
   const [drawerOpen, setDrawerOpen] = useState(false)
@@ -45,33 +62,6 @@ export default function EnrollManagementPage() {
   const [rejectingId, setRejectingId] = useState<number | null>(null)
   const [rejectReason, setRejectReason] = useState('')
 
-  // Fetch list
-  const fetchList = useCallback(async () => {
-    setLoading(true)
-    try {
-      const params: Record<string, unknown> = {
-        page: page - 1,
-        size: PAGE_SIZE,
-      }
-      if (filters.keyword) params.keyword = filters.keyword
-      if (filters.status) params.status = filters.status
-      if (filters.direction) params.direction = filters.direction
-
-      const res = await adminEnrollService.getList(
-        params as Parameters<typeof adminEnrollService.getList>[0]
-      )
-      const data = res.data
-      if (data) {
-        setList(data.content)
-        setTotalElements(data.totalElements)
-      }
-    } catch {
-      messageApi.error('获取报名列表失败，请稍后重试')
-    } finally {
-      setLoading(false)
-    }
-  }, [page, filters, messageApi])
-
   // Fetch statistics
   const fetchStatistics = useCallback(async () => {
     try {
@@ -82,15 +72,15 @@ export default function EnrollManagementPage() {
     }
   }, [messageApi])
 
-  // Initial load & refetch on filter/page change
+  // Initial load statistics
   useEffect(() => {
-    Promise.all([fetchList(), fetchStatistics()])
-  }, [fetchList, fetchStatistics])
+    fetchStatistics()
+  }, [fetchStatistics])
 
   // Filter change handler
   const handleFilterChange = (next: FilterValues) => {
     setFilters(next)
-    setPage(1)
+    setCurrentPage(0)
   }
 
   // Open drawer
@@ -116,7 +106,8 @@ export default function EnrollManagementPage() {
       if (res.data) {
         messageApi.success('已通过')
         setDrawerOpen(false)
-        await Promise.all([fetchList(), fetchStatistics()])
+        refresh()
+        await fetchStatistics()
       }
     } catch {
       messageApi.error('审核通过失败，请稍后重试')
@@ -141,7 +132,8 @@ export default function EnrollManagementPage() {
         setRejectModalOpen(false)
         setDrawerOpen(false)
         setRejectingId(null)
-        await Promise.all([fetchList(), fetchStatistics()])
+        refresh()
+        await fetchStatistics()
       }
     } catch {
       messageApi.error('拒绝报名失败，请稍后重试')
@@ -159,7 +151,7 @@ export default function EnrollManagementPage() {
       {/* Card grid */}
       <Spin spinning={loading}>
         <Row gutter={[16, 16]}>
-          {list.map((enrollment) => (
+          {data.map((enrollment) => (
             <Col xs={24} md={12} lg={8} key={enrollment.id}>
               <EnrollmentCard
                 enrollment={enrollment}
@@ -169,7 +161,7 @@ export default function EnrollManagementPage() {
               />
             </Col>
           ))}
-          {!loading && list.length === 0 && (
+          {!loading && data.length === 0 && (
             <Col span={24}>
               <div className="text-center py-20 text-white/50">暂无报名数据</div>
             </Col>
@@ -178,14 +170,14 @@ export default function EnrollManagementPage() {
       </Spin>
 
       {/* Pagination */}
-      {totalElements > PAGE_SIZE && (
+      {total > PAGE_SIZE && (
         <div className="flex justify-center">
           <Pagination
-            current={page}
-            total={totalElements}
+            current={currentPage + 1}
+            total={total}
             pageSize={PAGE_SIZE}
             showSizeChanger={false}
-            onChange={(p) => setPage(p)}
+            onChange={(p) => setCurrentPage(p - 1)}
           />
         </div>
       )}

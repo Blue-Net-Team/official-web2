@@ -1,27 +1,40 @@
 'use client'
 
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
+import React, { useState, useEffect, useMemo, useRef } from 'react'
 import { Pagination } from 'antd'
 import { MemberCard } from './MemberCard'
 import { MembersProps, FilterTab } from './Members.types'
 import { Direction, DIRECTION_LABELS } from '@/apis/schema/enumerate'
 import { memberService } from '@/apis/services/member.service'
-import { MemberBriefDTO } from '@/apis/schema/type'
+import type { MemberBriefDTO } from '@/apis/schema/type'
+import { usePagination } from '@/hooks'
 
 const PAGE_SIZE = 16
 
 export const Members: React.FC<MembersProps> = ({ initialPage = 0 }) => {
   const [activeFilter, setActiveFilter] = useState<Direction | 'ALL'>('ALL')
-  const [currentPage, setCurrentPage] = useState(initialPage)
-  const [members, setMembers] = useState<MemberBriefDTO[]>([])
-  const [totalElements, setTotalElements] = useState(0)
-  const [totalPages, setTotalPages] = useState(0)
-  const [loading, setLoading] = useState(true)
   const [directionCounts, setDirectionCounts] = useState<Record<Direction, number>>({
     COMPUTER_VISION: 0,
     STRUCTURAL_DESIGN: 0,
     EMBEDDED: 0,
   })
+
+  const {
+    data: members,
+    total: totalElements,
+    totalPages,
+    loading,
+    currentPage,
+    setCurrentPage,
+  } = usePagination(
+    (page, size) =>
+      memberService.getMemberList({
+        page,
+        size,
+        direction: activeFilter === 'ALL' ? undefined : activeFilter,
+      }),
+    { pageSize: PAGE_SIZE, initialPage }
+  )
 
   useEffect(() => {
     const fetchCounts = async () => {
@@ -47,35 +60,6 @@ export const Members: React.FC<MembersProps> = ({ initialPage = 0 }) => {
     }
     fetchCounts()
   }, [])
-
-  const fetchMembers = useCallback(async () => {
-    setLoading(true)
-    try {
-      const params = {
-        page: currentPage,
-        size: PAGE_SIZE,
-        direction: activeFilter === 'ALL' ? undefined : activeFilter,
-      }
-      const response = await memberService.getMemberList(params)
-      if (response.code === 200 && response.data) {
-        setMembers(response.data.content)
-        setTotalElements(response.data.totalElements)
-        setTotalPages(response.data.totalPages)
-      } else {
-        setMembers([])
-        setTotalElements(0)
-        setTotalPages(0)
-      }
-    } catch (error) {
-      console.error('Failed to fetch members:', error)
-    } finally {
-      setLoading(false)
-    }
-  }, [currentPage, activeFilter])
-
-  useEffect(() => {
-    fetchMembers()
-  }, [fetchMembers])
 
   const filterTabs: FilterTab[] = useMemo(() => {
     const allCount = Object.values(directionCounts).reduce((sum, count) => sum + count, 0)

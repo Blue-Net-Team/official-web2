@@ -7,27 +7,45 @@ import AchievementStats from '@/components/Achievements/AchievementStats'
 import AchievementFilter from '@/components/Achievements/AchievementFilter'
 import { AchievementService } from '@/apis/services/achievement.service'
 import { AchievementDTO, AchievementStatsDTO } from '@/apis/schema/type'
+import { usePagination } from '@/hooks'
 
 const PAGE_SIZE = 12
 const YEARS = [2024, 2023, 2022, 2021, 2020]
 
 export default function AchievementsPage() {
-  const [achievements, setAchievements] = useState<AchievementDTO[]>([])
   const [stats, setStats] = useState<AchievementStatsDTO>({
     totalAchievements: 0,
     nationalCount: 0,
     provincialCount: 0,
     schoolCount: 0,
   })
-  const [currentPage, setCurrentPage] = useState(0)
-  const [totalPages, setTotalPages] = useState(0)
-  const [totalElements, setTotalElements] = useState(0)
-  const [loading, setLoading] = useState(true)
 
   // 筛选条件
   const [type, setType] = useState<string | undefined>()
   const [awardLevel, setAwardLevel] = useState<string | undefined>()
   const [year, setYear] = useState<number | undefined>()
+
+  const apiFn = useCallback(
+    (page: number, pageSize: number) =>
+      AchievementService.getAchievements({
+        type,
+        awardLevel,
+        year,
+        page,
+        size: pageSize,
+      }),
+    [type, awardLevel, year]
+  )
+
+  const {
+    data: achievements,
+    total: totalElements,
+    totalPages,
+    loading,
+    currentPage,
+    setCurrentPage,
+    reset,
+  } = usePagination(apiFn, { pageSize: PAGE_SIZE })
 
   // 获取统计数据
   useEffect(() => {
@@ -44,46 +62,12 @@ export default function AchievementsPage() {
     fetchStats()
   }, [])
 
-  const fetchAchievements = useCallback(async () => {
-    setLoading(true)
-    try {
-      const response = await AchievementService.getAchievements({
-        type,
-        awardLevel,
-        year,
-        page: currentPage,
-        size: PAGE_SIZE,
-      })
-
-      if (response.code === 200 && response.data) {
-        setAchievements(response.data.content)
-        setTotalPages(response.data.totalPages)
-        setTotalElements(response.data.totalElements)
-      } else {
-        setAchievements([])
-        setTotalPages(0)
-        setTotalElements(0)
-      }
-    } catch (error) {
-      console.error('Failed to fetch achievements:', error)
-      setAchievements([])
-      setTotalPages(0)
-      setTotalElements(0)
-    } finally {
-      setLoading(false)
-    }
-  }, [type, awardLevel, year, currentPage])
-
-  useEffect(() => {
-    fetchAchievements()
-  }, [fetchAchievements])
-
   // 处理筛选条件变化
   const handleFilterChange = (newType?: string, newAwardLevel?: string, newYear?: number) => {
     setType(newType)
     setAwardLevel(newAwardLevel)
     setYear(newYear)
-    setCurrentPage(0) // 筛选条件变化时重置页码
+    reset()
   }
 
   const sectionRef = useRef<HTMLElement>(null)

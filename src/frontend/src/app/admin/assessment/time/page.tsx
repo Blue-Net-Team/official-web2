@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import {
   App,
   Button,
@@ -26,7 +26,7 @@ import type {
 } from '@/apis/schema/assessment.dto'
 import { Direction, DIRECTION_LABELS } from '@/apis/schema/enumerate'
 import { adminAssessmentTimeService } from '@/apis/services/admin-assessment-time.service'
-import { useAuth } from '@/hooks'
+import { useAuth, usePagination } from '@/hooks'
 import { getRoleLevel } from '@/utils/RoleUtils'
 import AssessmentTimeDrawer, { type DrawerMode } from './AssessmentTimeDrawer'
 
@@ -53,10 +53,10 @@ export default function AssessmentTimeManagementPage() {
   const userDirection = userInfo?.direction
 
   // Data state
-  const [list, setList] = useState<AssessmentTimeDTO[]>([])
-  const [totalElements, setTotalElements] = useState(0)
-  const [loading, setLoading] = useState(true)
-  const [page, setPage] = useState(1)
+  const { data, total, totalPages, loading, currentPage, setCurrentPage, refresh } = usePagination(
+    adminAssessmentTimeService.getList.bind(adminAssessmentTimeService),
+    { pageSize: PAGE_SIZE }
+  )
 
   // Filter state
   const [filterDirection, setFilterDirection] = useState<Direction | undefined>(undefined)
@@ -71,38 +71,20 @@ export default function AssessmentTimeManagementPage() {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false)
   const [deletingItem, setDeletingItem] = useState<AssessmentTimeDTO | null>(null)
 
-  // Fetch list
-  const fetchList = useCallback(async () => {
-    setLoading(true)
-    try {
-      const res = await adminAssessmentTimeService.getList(page - 1, PAGE_SIZE)
-      if (res.data) {
-        setList(res.data.content)
-        setTotalElements(res.data.totalElements)
-      }
-    } finally {
-      setLoading(false)
-    }
-  }, [page])
-
-  useEffect(() => {
-    fetchList()
-  }, [fetchList])
-
   // Client-side filtering
   const filteredList = useMemo(() => {
-    return list.filter((item) => {
+    return data.filter((item) => {
       if (filterDirection && item.direction !== filterDirection) return false
       if (filterGrade !== undefined && item.grade !== filterGrade) return false
       return true
     })
-  }, [list, filterDirection, filterGrade])
+  }, [data, filterDirection, filterGrade])
 
   // Unique grades from current data for filter dropdown
   const gradeOptions = useMemo(() => {
-    const grades = [...new Set(list.map((item) => item.grade))].sort((a, b) => b - a)
+    const grades = [...new Set(data.map((item) => item.grade))].sort((a, b) => b - a)
     return grades.map((g) => ({ label: `${g}级`, value: g }))
-  }, [list])
+  }, [data])
 
   // Check if current user can operate on a given direction
   const canOperate = useCallback(
@@ -143,7 +125,7 @@ export default function AssessmentTimeManagementPage() {
       messageApi.success('删除成功')
       setDeleteModalOpen(false)
       setDrawerOpen(false)
-      fetchList()
+      refresh()
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { msg?: string } } })?.response?.data?.msg
       messageApi.error(msg || '删除失败')
@@ -152,17 +134,17 @@ export default function AssessmentTimeManagementPage() {
 
   const handleDrawerSuccess = () => {
     setDrawerOpen(false)
-    fetchList()
+    refresh()
   }
 
   const handleFilterDirectionChange = (value: Direction | undefined) => {
     setFilterDirection(value)
-    setPage(1)
+    setCurrentPage(0)
   }
 
   const handleFilterGradeChange = (value: number | undefined) => {
     setFilterGrade(value)
-    setPage(1)
+    setCurrentPage(0)
   }
 
   // Table columns
@@ -313,14 +295,14 @@ export default function AssessmentTimeManagementPage() {
       </Spin>
 
       {/* Pagination */}
-      {totalElements > PAGE_SIZE && (
+      {total > PAGE_SIZE && (
         <div className="flex justify-center">
           <Pagination
-            current={page}
-            total={totalElements}
+            current={currentPage + 1}
+            total={total}
             pageSize={PAGE_SIZE}
             showSizeChanger={false}
-            onChange={(p) => setPage(p)}
+            onChange={(p) => setCurrentPage(p - 1)}
           />
         </div>
       )}

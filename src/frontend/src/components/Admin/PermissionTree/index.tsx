@@ -1,11 +1,12 @@
 'use client'
 
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { Tree, Input, Spin, Empty, Badge, Tag } from 'antd'
 import { SearchOutlined } from '@ant-design/icons'
 import type { TreeProps } from 'antd'
 import type { PermissionTreeDTO } from '@/apis/schema/type'
 import { adminPermissionService } from '@/apis/services/admin-permission.service'
+import { useApi } from '@/hooks'
 
 type PermissionTreeMode = 'checkable' | 'selectable'
 
@@ -195,8 +196,9 @@ const PermissionTree = ({
   onSelect,
   mode = 'checkable',
 }: PermissionTreeProps) => {
-  const [treeData, setTreeData] = useState<PermissionTreeDTO[]>([])
-  const [loading, setLoading] = useState(false)
+  const fetchTreeRef = useRef(adminPermissionService.getPermissionTree.bind(adminPermissionService))
+  const { data: treeDataRaw, loading, execute: fetchTree } = useApi(fetchTreeRef.current)
+  const treeData = treeDataRaw ?? []
   const [searchKeyword, setSearchKeyword] = useState('')
   const [checkedKeys, setCheckedKeys] = useState<{ checked: string[]; halfChecked: string[] }>({
     checked: [],
@@ -205,19 +207,8 @@ const PermissionTree = ({
   const [selectedKey, setSelectedKey] = useState<string | null>(null)
 
   useEffect(() => {
-    const fetchTree = async () => {
-      setLoading(true)
-      try {
-        const res = await adminPermissionService.getPermissionTree()
-        if (res.code === 200 && res.data) {
-          setTreeData(res.data)
-        }
-      } finally {
-        setLoading(false)
-      }
-    }
     fetchTree()
-  }, [])
+  }, [fetchTree])
 
   const assignedSet = useMemo(() => new Set(assignedPermissions), [assignedPermissions])
 

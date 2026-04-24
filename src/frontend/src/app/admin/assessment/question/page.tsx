@@ -15,6 +15,8 @@ import { adminAssessmentQuestionService } from '@/apis/services/admin-assessment
 import { useAuth } from '@/hooks'
 import { getRoleLevel } from '@/utils/RoleUtils'
 import QuestionDrawer, { QUESTION_TYPE_LABELS, type DrawerMode } from './QuestionDrawer'
+import { usePagination } from '@/hooks'
+import { ResponseMessage, PageDTO } from '@/apis/schema/type'
 
 const PAGE_SIZE = 20
 const { useBreakpoint } = Grid
@@ -44,12 +46,6 @@ export default function AssessmentQuestionManagementPage() {
 
   // Assessment times for the selected direction
   const [assessmentTimes, setAssessmentTimes] = useState<AssessmentTimeDTO[]>([])
-
-  // Questions data
-  const [questions, setQuestions] = useState<AssessmentQuestionDTO[]>([])
-  const [totalElements, setTotalElements] = useState(0)
-  const [loading, setLoading] = useState(false)
-  const [page, setPage] = useState(1)
 
   // Drawer state
   const [drawerOpen, setDrawerOpen] = useState(false)
@@ -108,39 +104,45 @@ export default function AssessmentQuestionManagementPage() {
     return assessmentTimes.find((t) => t.id === filterTimeId) ?? null
   }, [assessmentTimes, filterTimeId])
 
-  // 按当前考核时间分页加载考题。
-  const fetchQuestions = useCallback(async () => {
-    if (!filterTimeId) {
-      setQuestions([])
-      setTotalElements(0)
-      return
-    }
-    setLoading(true)
-    try {
-      const res = await adminAssessmentQuestionService.getList(filterTimeId, page - 1, PAGE_SIZE)
-      if (res.data) {
-        setQuestions(res.data.content)
-        setTotalElements(res.data.totalElements)
+  const apiFn = useCallback(
+    (page: number, pageSize: number): Promise<ResponseMessage<PageDTO<AssessmentQuestionDTO>>> => {
+      if (!filterTimeId) {
+        return Promise.resolve({
+          code: 200,
+          data: {
+            content: [],
+            totalElements: 0,
+            totalPages: 0,
+            number: page,
+            size: pageSize,
+          },
+          msg: 'success',
+        } as unknown as ResponseMessage<PageDTO<AssessmentQuestionDTO>>)
       }
-    } finally {
-      setLoading(false)
-    }
-  }, [filterTimeId, page])
+      return adminAssessmentQuestionService.getList(filterTimeId, page, pageSize)
+    },
+    [filterTimeId]
+  )
 
-  useEffect(() => {
-    fetchQuestions()
-  }, [fetchQuestions])
+  const {
+    data: questions,
+    total: totalElements,
+    loading,
+    currentPage,
+    setCurrentPage,
+    refresh,
+    reset,
+  } = usePagination(apiFn, { pageSize: PAGE_SIZE })
 
   // 切换方向筛选并重置分页。
   const handleDirectionChange = (value: Direction | undefined) => {
     setFilterDirection(value)
-    setPage(1)
   }
 
   // 切换考核时间筛选并重置分页。
   const handleTimeChange = (value: number | undefined) => {
     setFilterTimeId(value)
-    setPage(1)
+    reset()
   }
 
   // 打开新增考题抽屉。
@@ -178,7 +180,7 @@ export default function AssessmentQuestionManagementPage() {
       messageApi.success('删除成功')
       setDeleteModalOpen(false)
       setDrawerOpen(false)
-      fetchQuestions()
+      refresh()
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { msg?: string } } })?.response?.data?.msg
       messageApi.error(msg || '删除失败')
@@ -188,7 +190,7 @@ export default function AssessmentQuestionManagementPage() {
   // 抽屉保存成功后关闭抽屉并刷新列表。
   const handleDrawerSuccess = () => {
     setDrawerOpen(false)
-    fetchQuestions()
+    refresh()
   }
 
   // 考题表格列定义。
@@ -328,11 +330,11 @@ export default function AssessmentQuestionManagementPage() {
       {totalElements > PAGE_SIZE && (
         <div className="flex justify-center">
           <Pagination
-            current={page}
+            current={currentPage + 1}
             total={totalElements}
             pageSize={PAGE_SIZE}
             showSizeChanger={false}
-            onChange={(p) => setPage(p)}
+            onChange={(p) => setCurrentPage(p - 1)}
           />
         </div>
       )}
