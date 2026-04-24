@@ -1,14 +1,17 @@
 package com.bluenet.web.application.message.template;
 
 import com.bluenet.web.application.message.MessageTemplateRegistry;
+import com.bluenet.web.infrastructure.repository.mapper.MessageTemplateMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.mock;
 
 class EmailVerificationCodeTemplateTest {
 
-    private final MessageTemplateRegistry registry = new MessageTemplateRegistry();
+    private final MessageTemplateMapper mockMapper = mock(MessageTemplateMapper.class);
+    private final MessageTemplateRegistry registry = new MessageTemplateRegistry(mockMapper);
     private final EmailVerificationCodeTemplate template = new EmailVerificationCodeTemplate(registry);
 
     @Test

@@ -1,7 +1,11 @@
 package com.bluenet.web.application.message;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.bluenet.web.infrastructure.email.TemplateVariableSubstitutor;
+import com.bluenet.web.infrastructure.repository.dataobject.MessageTemplateDO;
+import com.bluenet.web.infrastructure.repository.mapper.MessageTemplateMapper;
 import jakarta.annotation.PostConstruct;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
@@ -9,17 +13,29 @@ import java.util.*;
 /**
  * 消息模板注册表。
  * <p>
- * 维护系统中所有消息模板的元数据、内容覆盖和启禁用状态。 当前版本为内存实现，后续可迁移至数据库。
+ * 维护系统中所有消息模板的元数据、内容覆盖和主题覆盖。 模板元数据（编码、名称、描述、变量列表、默认内容）在内存中硬编码注册；运行时覆盖的 content
+ * 和 subject 持久化到数据库，启动时自动加载。
  * </p>
  */
 @Component
 public class MessageTemplateRegistry {
 
+    private final MessageTemplateMapper mapper;
     private final Map<String, TemplateEntry> templates = new LinkedHashMap<>();
     private final Map<String, String> contentOverrides = new HashMap<>();
-    private final Set<String> disabledCodes = new HashSet<>();
+    private final Map<String, String> subjectOverrides = new HashMap<>();
 
+    @Autowired
+    public MessageTemplateRegistry(MessageTemplateMapper mapper) {
+        this.mapper = mapper;
+        init();
+    }
+
+    /**
+     * 无参构造，供不依赖数据库的单元测试使用。
+     */
     public MessageTemplateRegistry() {
+        this.mapper = null;
         init();
     }
 
@@ -103,6 +119,23 @@ public class MessageTemplateRegistry {
                           <p style="color: #999; font-size: 12px;">此邮件由系统自动发送，请勿回复。</p>
                         </div>
                         """);
+
+        if (mapper != null) {
+            loadFromDatabase();
+        }
+    }
+
+    private void loadFromDatabase() {
+        List<MessageTemplateDO> records = mapper.selectList(null);
+        for (MessageTemplateDO record : records) {
+            String code = record.getCode();
+            if (record.getContent() != null) {
+                contentOverrides.put(code, record.getContent());
+            }
+            if (record.getSubject() != null) {
+                subjectOverrides.put(code, record.getSubject());
+            }
+        }
     }
 
     private void register(String code, String name, String subject, String description,
@@ -126,14 +159,16 @@ public class MessageTemplateRegistry {
         TemplateEntry entry = getEntryOrThrow(code);
         validateVariables(newContent, entry.variables);
         contentOverrides.put(code, newContent);
+        if (mapper != null) {
+            upsertToDb(code, entry, newContent, null);
+        }
     }
 
-    public void setEnabled(String code, boolean enabled) {
-        getEntryOrThrow(code);
-        if (enabled) {
-            disabledCodes.remove(code);
-        } else {
-            disabledCodes.add(code);
+    public void updateSubject(String code, String newSubject) {
+        TemplateEntry entry = getEntryOrThrow(code);
+        subjectOverrides.put(code, newSubject);
+        if (mapper != null) {
+            upsertToDb(code, entry, null, newSubject);
         }
     }
 
@@ -154,8 +189,16 @@ public class MessageTemplateRegistry {
         return contentOverrides.getOrDefault(code, entry.defaultContent);
     }
 
-    public boolean isEnabled(String code) {
-        return !disabledCodes.contains(code);
+    /**
+     * 获取指定模板的当前主题（优先使用数据库覆盖值）。
+     *
+     * @param code
+     *            模板编码
+     * @return 邮件主题字符串
+     */
+    public String getTemplateSubject(String code) {
+        TemplateEntry entry = getEntryOrThrow(code);
+        return subjectOverrides.getOrDefault(code, entry.subject);
     }
 
     private TemplateEntry getEntryOrThrow(String code) {
@@ -178,12 +221,36 @@ public class MessageTemplateRegistry {
         }
     }
 
+    private void upsertToDb(String code, TemplateEntry entry, String content, String subject) {
+        MessageTemplateDO existing = mapper.selectOne(
+                new QueryWrapper<MessageTemplateDO>().eq("code", code));
+
+        if (existing != null) {
+            if (content != null) {
+                existing.setContent(content);
+            }
+            if (subject != null) {
+                existing.setSubject(subject);
+            }
+            mapper.updateById(existing);
+        } else {
+            MessageTemplateDO record = new MessageTemplateDO();
+            record.setCode(code);
+            record.setName(entry.name);
+            record.setSubject(subject != null ? subject : entry.subject);
+            record.setContent(content);
+            record.setDescription(entry.description);
+            record.setEnabled(true);
+            mapper.insert(record);
+        }
+    }
+
     private MessageTemplateInfo toInfo(TemplateEntry entry) {
         String content = contentOverrides.getOrDefault(entry.code, entry.defaultContent);
-        boolean enabled = !disabledCodes.contains(entry.code);
+        String subject = subjectOverrides.getOrDefault(entry.code, entry.subject);
         return new MessageTemplateInfo(
-                entry.code, entry.name, entry.subject, entry.description,
-                entry.variables, content, entry.defaultContent, enabled);
+                entry.code, entry.name, subject, entry.description,
+                entry.variables, content, entry.defaultContent, true);
     }
 
     private record TemplateEntry(

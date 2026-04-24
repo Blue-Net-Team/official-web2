@@ -80,6 +80,12 @@ export default function MessageTemplateDrawer({
           case 'nickname':
             testVariables[v] = '张三'
             break
+          case 'studentId':
+            testVariables[v] = '2024001001'
+            break
+          case 'initialPassword':
+            testVariables[v] = 'Abcd1234!'
+            break
           case 'title':
             testVariables[v] = '登录'
             break
@@ -92,11 +98,14 @@ export default function MessageTemplateDrawer({
           case 'rejectReason':
             testVariables[v] = '人数已满，请下次再报名。'
             break
-          case 'direction':
+          case 'directionLabel':
             testVariables[v] = '计算机视觉'
             break
           case 'epoch':
             testVariables[v] = '1'
+            break
+          case 'color':
+            testVariables[v] = '#52c41a'
             break
           case 'resultText':
             testVariables[v] = '通过'
@@ -151,10 +160,6 @@ export default function MessageTemplateDrawer({
       {record && (
         <>
           <div style={{ marginBottom: 16 }}>
-            <div style={{ color: '#666', fontSize: 14, marginBottom: 8 }}>
-              <strong>模板编码：</strong>
-              <Tag>{record.code}</Tag>
-            </div>
             <div style={{ color: '#666', fontSize: 14, marginBottom: 8 }}>
               <strong>描述：</strong>
               {record.description || '-'}

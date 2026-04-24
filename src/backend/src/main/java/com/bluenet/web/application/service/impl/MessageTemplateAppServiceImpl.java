@@ -35,12 +35,14 @@ public class MessageTemplateAppServiceImpl implements MessageTemplateAppService 
         if (content != null && !content.isBlank()) {
             templateRegistry.updateContent(code, content);
         }
-        // subject 暂存，当前内存实现中主题与模板元数据绑定，后续可扩展
+        if (subject != null && !subject.isBlank()) {
+            templateRegistry.updateSubject(code, subject);
+        }
     }
 
     @Override
     public void toggleTemplate(String code, boolean enabled) {
-        templateRegistry.setEnabled(code, enabled);
+        // 禁用功能已移除，此方法保留以兼容前端接口，不做任何操作
     }
 
     @Override

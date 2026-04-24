@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { App, Button, Grid, Spin, Switch, Table, Tag } from 'antd'
+import { App, Button, Grid, Spin, Table, Tag } from 'antd'
 import { EditOutlined } from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
 import type { MessageTemplateInfoDTO } from '@/apis/schema/type'
@@ -49,22 +49,6 @@ export default function MessageTemplateManagementPage() {
     setDrawerVisible(true)
   }
 
-  const handleToggle = async (record: MessageTemplateInfoDTO) => {
-    try {
-      const newEnabled = !record.enabled
-      const response = await adminMessageTemplateService.toggle(record.code, newEnabled)
-      if (response.code === 200) {
-        messageApi.success(newEnabled ? '已启用' : '已禁用')
-        fetchData()
-      } else {
-        messageApi.error(`操作失败: ${response.msg}`)
-      }
-    } catch (error) {
-      console.error('切换模板状态失败:', error)
-      messageApi.error('操作失败')
-    }
-  }
-
   const handleDrawerSuccess = () => {
     setDrawerVisible(false)
     fetchData()
@@ -75,14 +59,6 @@ export default function MessageTemplateManagementPage() {
   }
 
   const columns: ColumnsType<MessageTemplateInfoDTO> = [
-    {
-      title: '模板编码',
-      dataIndex: 'code',
-      key: 'code',
-      width: 180,
-      responsive: ['md'],
-      render: (code: string) => <Tag>{code}</Tag>,
-    },
     {
       title: '模板名称',
       dataIndex: 'name',
@@ -118,34 +94,16 @@ export default function MessageTemplateManagementPage() {
       ),
     },
     {
-      title: '状态',
-      dataIndex: 'enabled',
-      key: 'enabled',
-      width: 100,
-      render: (enabled: boolean) => (
-        <Tag color={enabled ? 'green' : 'red'}>{enabled ? '启用' : '禁用'}</Tag>
-      ),
-    },
-    {
       title: '操作',
       key: 'action',
-      width: 160,
+      width: 100,
       render: (_, record) => (
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-          <Button
-            type="text"
-            icon={<EditOutlined />}
-            onClick={() => handleEdit(record)}
-            size="small"
-          />
-          <Switch
-            checked={record.enabled}
-            onChange={() => handleToggle(record)}
-            checkedChildren="启"
-            unCheckedChildren="禁"
-            size="small"
-          />
-        </div>
+        <Button
+          type="text"
+          icon={<EditOutlined />}
+          onClick={() => handleEdit(record)}
+          size="small"
+        />
       ),
     },
   ]
