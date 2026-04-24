@@ -169,7 +169,7 @@ export default function ChangePasswordPage() {
           >
             {/* Title */}
             <h2 className="text-2xl font-semibold text-white m-0">修改密码</h2>
-            <p className="text-sm mt-2 mb-0" style={{ color: 'rgba(255,255,255,0.4)' }}>
+            <p className="text-sm mt-2 mb-0 text-white/40">
               {currentStep === 0 ? '请验证当前密码以继续' : '请设置您的新密码'}
             </p>
 
@@ -191,7 +191,7 @@ export default function ChangePasswordPage() {
                     <Input
                       type={showCurrentPassword ? 'text' : 'password'}
                       placeholder="请输入当前密码"
-                      prefix={<LockOutlined style={{ color: 'rgba(255,255,255,0.4)' }} />}
+                      prefix={<LockOutlined className="text-white/40" />}
                       value={currentPassword}
                       onChange={(e) => setCurrentPassword(e.target.value)}
                       disabled={loading}
@@ -225,7 +225,7 @@ export default function ChangePasswordPage() {
                     <Input
                       type={showNewPassword ? 'text' : 'password'}
                       placeholder="请输入新密码（6位+）"
-                      prefix={<LockOutlined style={{ color: 'rgba(255,255,255,0.4)' }} />}
+                      prefix={<LockOutlined className="text-white/40" />}
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
                       disabled={loading}
@@ -245,7 +245,7 @@ export default function ChangePasswordPage() {
                     <Input
                       type={showConfirmPassword ? 'text' : 'password'}
                       placeholder="请再次输入新密码"
-                      prefix={<LockOutlined style={{ color: 'rgba(255,255,255,0.4)' }} />}
+                      prefix={<LockOutlined className="text-white/40" />}
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       disabled={loading}
@@ -274,23 +274,18 @@ export default function ChangePasswordPage() {
             </div>
 
             {/* Footer hint */}
-            <div
-              className="flex items-center justify-center gap-1.5 mt-4 pt-4"
-              style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}
-            >
+            <div className="flex items-center justify-center gap-1.5 mt-4 pt-4 border-t border-white/[0.08]">
               {currentStep === 0 ? (
                 <>
-                  <InfoCircleOutlined style={{ color: 'rgba(255,255,255,0.4)', fontSize: 13 }} />
-                  <span className="text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                  <InfoCircleOutlined className="text-white/40 text-[13px]" />
+                  <span className="text-xs text-white/40">
                     忘记密码？请退出登录后在登录页点击「忘记密码」
                   </span>
                 </>
               ) : (
                 <>
-                  <SafetyCertificateOutlined
-                    style={{ color: 'rgba(255,255,255,0.4)', fontSize: 13 }}
-                  />
-                  <span className="text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                  <SafetyCertificateOutlined className="text-white/40 text-[13px]" />
+                  <span className="text-xs text-white/40">
                     密码修改成功后将自动退出，需重新登录
                   </span>
                 </>

@@ -18,7 +18,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   if (roleLevel < 1) {
     return (
       <AdminNav>
-        <Layout style={{ minHeight: '100vh' }}>
+        <Layout className="min-h-screen">
           <AdminHeadBar />
           <ErrorPage config={ERROR_CONFIGS[403]} />
         </Layout>
@@ -28,11 +28,11 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
 
   return (
     <AdminNav>
-      <Layout style={{ height: '100vh', overflow: 'hidden' }}>
+      <Layout className="h-screen overflow-hidden">
         <AdminHeadBar />
-        <Layout style={{ flex: 1, overflow: 'hidden' }}>
+        <Layout className="flex-1 overflow-hidden">
           <AdminSideBar />
-          <Content style={{ padding: 24, flex: 1, overflow: 'auto' }}>{children}</Content>
+          <Content className="p-6 flex-1 overflow-auto">{children}</Content>
         </Layout>
       </Layout>
     </AdminNav>

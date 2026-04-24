@@ -128,7 +128,7 @@ const EnrollForm: React.FC<EnrollFormProps> = ({
                     value: opt.value,
                     label: opt.label,
                   }))}
-                  style={{ width: '100%' }}
+                  className="w-full"
                 />
               </Form.Item>
             </div>
@@ -168,7 +168,7 @@ const EnrollForm: React.FC<EnrollFormProps> = ({
                   value: college.id,
                   label: college.name,
                 }))}
-                style={{ width: '100%' }}
+                className="w-full"
               />
             </Form.Item>
           </div>

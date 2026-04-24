@@ -29,7 +29,7 @@ const Competitions = ({ competitions }: { competitions: CompetitionResponseDTO[]
             <h2 className="font-[Microsoft_YaHei] text-[20px] sm:text-[24px] md:text-[30px] font-bold leading-[1.4] sm:leading-[40px] md:leading-[40px] text-white m-0">
               {competitionTitle}
             </h2>
-            <Row justify="space-evenly" gutter={[15, 15]} style={{ marginInline: '0' }}>
+            <Row justify="space-evenly" gutter={[15, 15]} className="mx-0">
               {competitionsToShow.map((competition, index) => (
                 <Col xs={24} md={12} lg={8} key={index}>
                   <CompetitionCard competition={competition} />

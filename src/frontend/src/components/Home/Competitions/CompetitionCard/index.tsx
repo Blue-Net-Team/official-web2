@@ -23,7 +23,7 @@ const CompetitionCard = ({ competition }: { competition: CompetitionResponseDTO 
           {logoImageUrl ? (
             <CompetitionLogo src={logoImageUrl} alt={competition.name} />
           ) : (
-            <FireOutlined style={{ fontSize: 28, color: 'white' }} />
+            <FireOutlined className="text-[28px] text-white" />
           )}
         </div>
         <Flex vertical className="gap-2.5 flex-1">

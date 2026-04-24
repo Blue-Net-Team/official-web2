@@ -631,26 +631,19 @@ export default function QuestionDetailPage() {
                 {question.score} 分
               </span>
               {isAnswered && (
-                <Tag color="success" style={{ margin: 0 }}>
+                <Tag color="success" className="!m-0">
                   <CheckCircleOutlined /> 已答
                 </Tag>
               )}
             </div>
             <div className="flex items-center gap-4 flex-wrap">
               {timeInfo && (
-                <Tag color="blue" style={{ margin: 0 }}>
+                <Tag color="blue" className="!m-0">
                   {DirectionLabels[timeInfo.direction]}
                 </Tag>
               )}
               {timeInfo && (
-                <Tag
-                  style={{
-                    margin: 0,
-                    background: '#ffffff08',
-                    border: '1px solid #ffffff0a',
-                    color: 'rgba(255,255,255,0.45)',
-                  }}
-                >
+                <Tag className="!m-0 bg-[#ffffff08] border border-[#ffffff0a] text-white/45">
                   {timeInfo.grade ? `${timeInfo.grade}级` : ''}
                 </Tag>
               )}

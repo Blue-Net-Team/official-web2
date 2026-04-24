@@ -416,7 +416,7 @@ export default function QuestionDrawer({
                     <InputNumber
                       min={1}
                       placeholder="默认 1"
-                      style={{ width: '100%' }}
+                      className="w-full"
                       disabled={isViewMode}
                     />
                   </Form.Item>
@@ -458,14 +458,14 @@ export default function QuestionDrawer({
                     )}
                   </div>
                   {fields.map((field, index) => (
-                    <Space key={field.key} align="baseline" style={{ marginBottom: 8 }}>
+                    <Space key={field.key} align="baseline" className="mb-2">
                       <span className="text-white/40 shrink-0">
                         {String.fromCharCode(65 + index)}
                       </span>
                       <Form.Item
                         {...field}
                         rules={[{ required: true, message: '请输入选项内容' }]}
-                        style={{ flex: 1, marginBottom: 0 }}
+                        className="flex-1 mb-0"
                       >
                         <Input
                           placeholder={`选项 ${String.fromCharCode(65 + index)}`}
@@ -521,14 +521,14 @@ export default function QuestionDrawer({
                     )}
                   </div>
                   {fields.map((field, index) => (
-                    <Space key={field.key} align="baseline" style={{ marginBottom: 8 }}>
+                    <Space key={field.key} align="baseline" className="mb-2">
                       <span className="text-white/40 shrink-0">
                         {String.fromCharCode(65 + index)}
                       </span>
                       <Form.Item
                         {...field}
                         rules={[{ required: true, message: '请输入选项内容' }]}
-                        style={{ flex: 1, marginBottom: 0 }}
+                        className="flex-1 mb-0"
                       >
                         <Input
                           placeholder={`选项 ${String.fromCharCode(65 + index)}`}
@@ -581,7 +581,7 @@ export default function QuestionDrawer({
                 <InputNumber
                   min={1}
                   placeholder="如 1000"
-                  style={{ width: '100%' }}
+                  className="w-full"
                   disabled={isViewMode}
                 />
               </Form.Item>
@@ -589,7 +589,7 @@ export default function QuestionDrawer({
                 <InputNumber
                   min={1}
                   placeholder="如 256"
-                  style={{ width: '100%' }}
+                  className="w-full"
                   disabled={isViewMode}
                 />
               </Form.Item>
@@ -707,7 +707,7 @@ export default function QuestionDrawer({
           label="题号"
           rules={[{ required: true, message: '请输入题号' }]}
         >
-          <InputNumber min={1} placeholder="题号" style={{ width: '100%' }} />
+          <InputNumber min={1} placeholder="题号" className="w-full" />
         </Form.Item>
 
         <Form.Item
@@ -723,7 +723,7 @@ export default function QuestionDrawer({
         </Form.Item>
 
         <Form.Item name="score" label="分值" rules={[{ required: true, message: '请输入分值' }]}>
-          <InputNumber min={0} precision={1} placeholder="分值" style={{ width: '100%' }} />
+          <InputNumber min={0} precision={1} placeholder="分值" className="w-full" />
         </Form.Item>
 
         <Form.Item name="attachmentId" label="附件">

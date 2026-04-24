@@ -26,7 +26,7 @@ const AdminHeadBar = () => {
           onClick={openDrawer}
           className="flex items-center justify-center w-12 h-12 cursor-pointer"
         >
-          <MenuOutlined style={{ color: '#fff', fontSize: 18 }} />
+          <MenuOutlined className="text-white text-lg" />
         </div>
       )}
     </Header>

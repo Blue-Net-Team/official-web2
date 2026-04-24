@@ -81,7 +81,7 @@ export default function MessageTemplateManagementPage() {
       width: 200,
       responsive: ['lg'],
       render: (variables: string[]) => (
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+        <div className="flex flex-wrap gap-1">
           {variables.map((v) => (
             <Tag key={v} color="blue">
               {'{{'}
@@ -89,7 +89,7 @@ export default function MessageTemplateManagementPage() {
               {'}}'}
             </Tag>
           ))}
-          {variables.length === 0 && <span style={{ color: '#999' }}>无</span>}
+          {variables.length === 0 && <span className="text-[#999]">无</span>}
         </div>
       ),
     },
@@ -110,15 +110,8 @@ export default function MessageTemplateManagementPage() {
 
   return (
     <div>
-      <div
-        style={{
-          marginBottom: 16,
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-        }}
-      >
-        <h2 style={{ margin: 0 }}>消息模板管理</h2>
+      <div className="mb-4 flex justify-between items-center">
+        <h2 className="m-0">消息模板管理</h2>
       </div>
 
       <Spin spinning={loading}>

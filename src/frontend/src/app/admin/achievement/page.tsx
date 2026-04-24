@@ -183,7 +183,7 @@ export default function AchievementManagementPage() {
       key: 'action',
       width: 120,
       render: (_, record) => (
-        <div style={{ display: 'flex', gap: 8 }}>
+        <div className="flex gap-2">
           <Button
             type="text"
             icon={<EditOutlined />}
@@ -204,28 +204,21 @@ export default function AchievementManagementPage() {
 
   return (
     <div>
-      <div
-        style={{
-          marginBottom: 16,
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-        }}
-      >
-        <h2 style={{ margin: 0 }}>成就管理</h2>
+      <div className="mb-4 flex justify-between items-center">
+        <h2 className="m-0">成就管理</h2>
         <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>
           新建成就
         </Button>
       </div>
 
       {/* 简单的过滤栏，可根据需要扩展 */}
-      <div style={{ marginBottom: 16, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+      <div className="mb-4 flex gap-2 flex-wrap">
         <Select
           value={filterType}
           onChange={(value) => setFilterType(value)}
           placeholder="全部类型"
           allowClear
-          style={{ width: 120 }}
+          className="w-[120px]"
           options={[
             { value: 'PAPER', label: '论文' },
             { value: 'PATENT', label: '专利' },
@@ -237,7 +230,7 @@ export default function AchievementManagementPage() {
           onChange={(value) => setFilterAwardLevel(value)}
           placeholder="全部级别"
           allowClear
-          style={{ width: 120 }}
+          className="w-[120px]"
           options={[
             { value: 'NATIONAL', label: '国家级' },
             { value: 'PROVINCIAL', label: '省级' },
@@ -248,7 +241,7 @@ export default function AchievementManagementPage() {
           placeholder="年份"
           value={filterYear}
           onChange={(value) => setFilterYear(value ?? undefined)}
-          style={{ width: 100 }}
+          className="w-[100px]"
           min={1900}
           max={2100}
         />
@@ -265,7 +258,7 @@ export default function AchievementManagementPage() {
         />
       </Spin>
 
-      <div style={{ marginTop: 16, display: 'flex', justifyContent: 'center' }}>
+      <div className="mt-4 flex justify-center">
         <Pagination
           current={currentPage}
           pageSize={PAGE_SIZE}

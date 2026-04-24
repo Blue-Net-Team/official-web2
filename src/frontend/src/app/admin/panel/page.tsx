@@ -123,7 +123,7 @@ export default function MonitoringDashboard() {
           gap: isMobile ? 12 : 0,
         }}
       >
-        <Title level={4} style={{ margin: 0 }}>
+        <Title level={4} className="!m-0">
           API 监控仪表盘
         </Title>
         <Segmented
@@ -153,7 +153,7 @@ export default function MonitoringDashboard() {
                 height={300}
               />
             ) : (
-              <div style={{ textAlign: 'center', padding: '60px 0', color: '#999' }}>暂无数据</div>
+              <div className="text-center py-[60px] text-[#999]">暂无数据</div>
             )}
           </Card>
 

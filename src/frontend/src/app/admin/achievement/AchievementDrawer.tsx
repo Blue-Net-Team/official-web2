@@ -159,7 +159,7 @@ export default function AchievementDrawer({
       width={600}
       onClose={onCancel}
       footer={
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+        <div className="flex justify-end gap-2">
           <Button onClick={onCancel}>取消</Button>
           <Button type="primary" onClick={handleSave} loading={saving}>
             保存
@@ -204,7 +204,7 @@ export default function AchievementDrawer({
           name="achieveAt"
           rules={[{ required: true, message: '请选择获奖日期' }]}
         >
-          <DatePicker style={{ width: '100%' }} placeholder="请选择日期" format="YYYY-MM-DD" />
+          <DatePicker className="w-full" placeholder="请选择日期" format="YYYY-MM-DD" />
         </Form.Item>
 
         {selectedType === 'COMPETITION' && (
@@ -235,12 +235,12 @@ export default function AchievementDrawer({
 
         <Form.Item label="成就图片" extra="支持 JPG/PNG 格式，建议尺寸 800x600">
           <Spin spinning={fileUploading}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div className="flex flex-col gap-2">
               {fileId && (
                 <Image
                   src={`${API_BASE_URL}/file/download/${fileId}`}
                   alt="成就图片"
-                  style={{ maxWidth: '100%', height: 'auto', borderRadius: 8 }}
+                  className="max-w-full h-auto rounded-lg"
                 />
               )}
               <Upload

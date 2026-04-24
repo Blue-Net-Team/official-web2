@@ -170,16 +170,11 @@ export default function AssessmentTimeDrawer({
         </Form.Item>
 
         <Form.Item name="epoch" label="轮次" rules={[{ required: true, message: '请输入轮次' }]}>
-          <InputNumber min={1} placeholder="第几轮" style={{ width: '100%' }} />
+          <InputNumber min={1} placeholder="第几轮" className="w-full" />
         </Form.Item>
 
         <Form.Item name="grade" label="年级" rules={[{ required: true, message: '请输入年级' }]}>
-          <InputNumber
-            min={2000}
-            max={2100}
-            placeholder="入学年份（如 2025）"
-            style={{ width: '100%' }}
-          />
+          <InputNumber min={2000} max={2100} placeholder="入学年份（如 2025）" className="w-full" />
         </Form.Item>
 
         <Form.Item
@@ -190,7 +185,7 @@ export default function AssessmentTimeDrawer({
           <DatePicker.RangePicker
             showTime={{ format: 'HH:mm' }}
             format="YYYY-MM-DD HH:mm"
-            style={{ width: '100%' }}
+            className="w-full"
             placeholder={['开始时间', '结束时间']}
           />
         </Form.Item>
@@ -205,7 +200,7 @@ export default function AssessmentTimeDrawer({
             label="限时分钟数"
             rules={[{ required: true, message: '请输入限时分钟数' }]}
           >
-            <InputNumber min={1} placeholder="限时分钟数" style={{ width: '100%' }} suffix="分钟" />
+            <InputNumber min={1} placeholder="限时分钟数" className="w-full" suffix="分钟" />
           </Form.Item>
         )}
       </Form>

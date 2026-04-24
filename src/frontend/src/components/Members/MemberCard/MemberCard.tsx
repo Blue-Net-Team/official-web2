@@ -39,7 +39,7 @@ export const MemberCard: React.FC<MemberCardProps> = ({ member, index }) => {
                   src={avatarImageUrl}
                   alt={member.nickname}
                   fill
-                  style={{ objectFit: 'cover' }}
+                  className="object-cover"
                   onError={() => setAvatarError(true)}
                 />
               ) : (

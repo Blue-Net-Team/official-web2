@@ -194,15 +194,15 @@ export default function RolePermissionPage() {
   const isSuperAdmin = selectedRole === 'SUPER_ADMIN'
 
   return (
-    <div style={{ padding: 24 }}>
-      <Title level={4} style={{ marginBottom: 24 }}>
+    <div className="p-6">
+      <Title level={4} className="!mb-6">
         角色权限管理
       </Title>
 
-      <div style={{ display: 'flex', gap: 24 }}>
+      <div className="flex gap-6">
         <Card
           title={`权限列表 - ${ROLES.find((r) => r.value === selectedRole)?.label || selectedRole}`}
-          style={{ flex: 1 }}
+          className="flex-1"
           styles={{ body: { padding: 16 } }}
         >
           <PermissionTree
@@ -215,7 +215,7 @@ export default function RolePermissionPage() {
 
         <Card
           title="角色权限分配"
-          style={{ width: 360, flexShrink: 0 }}
+          className="w-[360px] shrink-0"
           styles={{ body: { padding: 16 } }}
           extra={
             <Button
@@ -236,28 +236,28 @@ export default function RolePermissionPage() {
               type="info"
               icon={<InfoCircleOutlined />}
               showIcon
-              style={{ marginBottom: 16 }}
+              className="mb-4"
             />
           )}
 
-          <Text strong style={{ display: 'block', marginBottom: 12 }}>
+          <Text strong className="block mb-3">
             选择角色
           </Text>
           <Radio.Group
             value={selectedRole}
             onChange={(e) => handleRoleChange(e.target.value)}
-            style={{ width: '100%' }}
+            className="w-full"
           >
-            <Space direction="vertical" style={{ width: '100%' }}>
+            <Space direction="vertical" className="w-full">
               {ROLES.filter((r) => {
                 if (r.value === 'SUPER_ADMIN') return roleLevel >= 4
                 return true
               }).map((role) => (
-                <Radio key={role.value} value={role.value} style={{ width: '100%' }}>
+                <Radio key={role.value} value={role.value} className="w-full">
                   <div>
                     <Text strong>{role.label}</Text>
                     <br />
-                    <Text type="secondary" style={{ fontSize: 12 }}>
+                    <Text type="secondary" className="text-xs">
                       {role.value}
                     </Text>
                   </div>
@@ -268,7 +268,7 @@ export default function RolePermissionPage() {
 
           <Divider />
 
-          <div style={{ fontSize: 12, color: '#999' }}>
+          <div className="text-xs text-[#999]">
             <Text type="secondary">已分配权限数：{assignedPermissions.length}</Text>
           </div>
 

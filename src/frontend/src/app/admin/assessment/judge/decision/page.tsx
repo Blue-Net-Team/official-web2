@@ -199,7 +199,7 @@ export default function AssessmentJudgementManagementPage() {
     <div className="flex flex-wrap items-center gap-3">
       <Select
         placeholder="考核方向"
-        style={{ width: 160 }}
+        className="w-[160px]"
         value={direction}
         onChange={setDirection}
         options={directionOptions.map(([value, label]) => ({ value, label }))}
@@ -208,7 +208,7 @@ export default function AssessmentJudgementManagementPage() {
         placeholder="考核时间"
         loading={loadingTimes}
         disabled={!direction}
-        style={{ width: 240 }}
+        className="w-[240px]"
         value={assessmentTimeId}
         onChange={setAssessmentTimeId}
         options={timeOptions}
@@ -259,7 +259,7 @@ export default function AssessmentJudgementManagementPage() {
             <Select
               allowClear
               placeholder="决策状态"
-              style={{ width: 150 }}
+              className="w-[150px]"
               value={decisionStatus}
               onChange={setDecisionStatus}
               options={[

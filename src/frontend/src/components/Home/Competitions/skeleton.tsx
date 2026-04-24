@@ -7,10 +7,10 @@ function CompetitionCardSkeleton() {
   return (
     <div className="min-h-[175px] p-[30px_35px] rounded-[16px] sm:rounded-[24px] md:rounded-[24px]">
       <Flex align="start" gap={10}>
-        <div style={{ width: 40, height: 40, flexShrink: 0 }}>
+        <div className="w-10 h-10 shrink-0">
           <Skeleton active avatar={{ size: 40, shape: 'square' }} paragraph={false} title={false} />
         </div>
-        <Flex vertical style={{ flex: 1, gap: 10 }}>
+        <Flex vertical className="flex-1 gap-2.5">
           <Skeleton active title={{ width: '80%', style: { margin: 0 } }} paragraph={false} />
           <Skeleton active title={{ width: '60%', style: { margin: 0 } }} paragraph={false} />
         </Flex>

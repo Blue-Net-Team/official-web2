@@ -114,7 +114,7 @@ const AchievementAndResources = () => {
                     </p>
                   </div>
                   <div className="relative flex-1 min-h-[250px] md:min-h-0 rounded-[20px] md:rounded-[20px_0_0_20px] overflow-hidden min-w-0">
-                    <Image src={item.image} alt={item.title} fill style={{ objectFit: 'cover' }} />
+                    <Image src={item.image} alt={item.title} fill className="object-cover" />
                   </div>
                 </div>
               </div>

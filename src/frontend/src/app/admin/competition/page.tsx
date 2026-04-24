@@ -206,7 +206,7 @@ export default function CompetitionManagementPage() {
           key: 'level',
           width: 80,
           render: (level: CompetitionLevel) => (
-            <Tag color={COMPETITION_LEVEL_COLORS[level]} style={{ background: 'transparent' }}>
+            <Tag color={COMPETITION_LEVEL_COLORS[level]} className="bg-transparent">
               {COMPETITION_LEVEL_LABELS[level]}
             </Tag>
           ),

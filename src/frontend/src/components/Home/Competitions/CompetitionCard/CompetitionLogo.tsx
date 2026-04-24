@@ -13,7 +13,7 @@ const CompetitionLogo = ({ src, alt }: CompetitionLogoProps) => {
   const [error, setError] = useState(false)
 
   if (error) {
-    return <FireOutlined style={{ fontSize: 28, color: 'white' }} />
+    return <FireOutlined className="text-[28px] text-white" />
   }
 
   return (

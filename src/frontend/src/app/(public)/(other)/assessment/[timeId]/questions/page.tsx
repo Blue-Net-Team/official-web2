@@ -148,12 +148,7 @@ export default function QuestionsPage() {
         render: (type: QuestionType) => (
           <Tag
             color={getQuestionTypeColor(type)}
-            style={{
-              padding: '2px 10px',
-              borderRadius: '4px',
-              fontSize: '12px',
-              fontWeight: 500,
-            }}
+            className="px-2.5 py-0.5 rounded text-xs font-medium"
           >
             {QuestionTypeLabels[type] || type}
           </Tag>
@@ -305,7 +300,7 @@ export default function QuestionsPage() {
               scroll={{ x: 500 }}
               onRow={(record) => ({
                 onClick: () => handleRowClick(record),
-                style: { cursor: 'pointer' },
+                className: 'cursor-pointer',
               })}
               pagination={{
                 current: currentPage + 1,

@@ -3,7 +3,7 @@ import { ReactNode } from 'react'
 
 export default function OtherLayout({ children }: { children: ReactNode }) {
   return (
-    <div style={{ flex: 1, display: 'flex' }}>
+    <div className="flex-1 flex">
       <Content>{children}</Content>
     </div>
   )

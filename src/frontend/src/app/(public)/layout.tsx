@@ -4,7 +4,7 @@ import { ReactNode } from 'react'
 
 export default function PublicLayout({ children }: { children: ReactNode }) {
   return (
-    <Layout style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <Layout className="min-h-screen flex flex-col">
       <NavBar />
       {children}
     </Layout>

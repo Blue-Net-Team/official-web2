@@ -90,9 +90,7 @@ export default function GitHubBinding({ initialGithubUsername }: GitHubBindingPr
           {githubUsername ? (
             <span className="text-sm text-white">{githubUsername}</span>
           ) : (
-            <span className="text-sm text-white" style={{ opacity: 0.5 }}>
-              未绑定
-            </span>
+            <span className="text-sm text-white opacity-50">未绑定</span>
           )}
         </div>
         <div className="flex items-center gap-3">

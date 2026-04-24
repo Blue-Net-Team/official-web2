@@ -36,7 +36,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({ value, onChange }) => {
         placeholder="搜索姓名或学号..."
         allowClear
         onSearch={(val) => onChange({ ...value, keyword: val })}
-        style={{ width: '100%', maxWidth: 280 }}
+        className="w-full max-w-[280px]"
       />
       <Select
         placeholder="全部状态"
@@ -44,7 +44,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({ value, onChange }) => {
         options={statusOptions}
         value={value.status}
         onChange={(val) => onChange({ ...value, status: val })}
-        style={{ width: '100%', maxWidth: 140 }}
+        className="w-full max-w-[140px]"
       />
       <Select
         placeholder="全部方向"
@@ -52,7 +52,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({ value, onChange }) => {
         options={directionOptions}
         value={value.direction}
         onChange={(val) => onChange({ ...value, direction: val })}
-        style={{ width: '100%', maxWidth: 160 }}
+        className="w-full max-w-[160px]"
       />
     </div>
   )

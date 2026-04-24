@@ -278,7 +278,7 @@ export default function AssessmentTimeManagementPage() {
         <Select
           placeholder="筛选方向"
           allowClear
-          style={{ width: 140 }}
+          className="w-[140px]"
           value={filterDirection}
           onChange={handleFilterDirectionChange}
           options={Object.entries(DIRECTION_LABELS).map(([value, label]) => ({
@@ -289,7 +289,7 @@ export default function AssessmentTimeManagementPage() {
         <Select
           placeholder="筛选年级"
           allowClear
-          style={{ width: 120 }}
+          className="w-[120px]"
           value={filterGrade}
           onChange={handleFilterGradeChange}
           options={gradeOptions}

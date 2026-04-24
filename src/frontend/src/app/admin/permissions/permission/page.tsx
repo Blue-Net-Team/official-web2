@@ -134,19 +134,19 @@ export default function PermissionRolePage() {
   }
 
   return (
-    <div style={{ padding: 24 }}>
-      <Title level={4} style={{ marginBottom: 24 }}>
+    <div className="p-6">
+      <Title level={4} className="!mb-6">
         权限角色管理
       </Title>
 
-      <div style={{ display: 'flex', gap: 24 }}>
-        <Card title="选择权限" style={{ flex: 1 }} styles={{ body: { padding: 16 } }}>
+      <div className="flex gap-6">
+        <Card title="选择权限" className="flex-1" styles={{ body: { padding: 16 } }}>
           <PermissionTree assignedPermissions={[]} onSelect={handleSelect} mode="selectable" />
         </Card>
 
         <Card
           title="角色分配"
-          style={{ width: 360, flexShrink: 0 }}
+          className="w-[360px] shrink-0"
           styles={{ body: { padding: 16 } }}
           extra={
             <Button
@@ -160,13 +160,13 @@ export default function PermissionRolePage() {
             </Button>
           }
         >
-          {loading && <Spin style={{ display: 'block', margin: '20px auto' }} />}
+          {loading && <Spin className="block mx-auto my-5" />}
 
           {!loading && !selectedPermissionId && <Empty description="请在左侧点击选择一个权限" />}
 
           {!loading && selectedPermissionId && permissionDetail && (
             <>
-              <Descriptions column={1} size="small" bordered style={{ marginBottom: 16 }}>
+              <Descriptions column={1} size="small" bordered className="mb-4">
                 <Descriptions.Item label="权限标识">{permissionDetail.value}</Descriptions.Item>
                 <Descriptions.Item label="权限名称">{permissionDetail.name}</Descriptions.Item>
                 <Descriptions.Item label="访问级别">
@@ -185,18 +185,18 @@ export default function PermissionRolePage() {
                 </Descriptions.Item>
               </Descriptions>
 
-              <Text strong style={{ display: 'block', marginBottom: 12 }}>
+              <Text strong className="block mb-3">
                 拥有此权限的角色：
               </Text>
 
               {isAlwaysEnabled && (
-                <Text type="secondary" style={{ display: 'block', marginBottom: 8, fontSize: 12 }}>
+                <Text type="secondary" className="block mb-2 text-xs">
                   该权限为{permissionDetail.accessLevel === 'PUBLIC' ? '公开' : '登录'}
                   访问，所有角色自动拥有，无需分配。
                 </Text>
               )}
 
-              <Space direction="vertical" style={{ width: '100%' }}>
+              <Space direction="vertical" className="w-full">
                 {AVAILABLE_ROLES.map((role) => (
                   <Checkbox
                     key={role.value}
@@ -207,7 +207,7 @@ export default function PermissionRolePage() {
                     <div>
                       <Text strong>{role.label}</Text>
                       <br />
-                      <Text type="secondary" style={{ fontSize: 12 }}>
+                      <Text type="secondary" className="text-xs">
                         {role.value}
                       </Text>
                     </div>

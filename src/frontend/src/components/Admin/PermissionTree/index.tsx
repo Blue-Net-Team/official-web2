@@ -62,7 +62,7 @@ function treeToAntdNodes(
         node.leaf && node.accessLevel ? (
           <Tag
             color={ACCESS_LEVEL_CONFIG[node.accessLevel]?.color || 'default'}
-            style={{ marginLeft: 4, fontSize: 11, lineHeight: '18px', padding: '0 4px' }}
+            className="ml-1 text-[11px] leading-[18px] px-1"
           >
             {ACCESS_LEVEL_CONFIG[node.accessLevel]?.label || node.accessLevel}
           </Tag>
@@ -71,12 +71,12 @@ function treeToAntdNodes(
       return {
         key: node.key,
         title: (
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+          <span className="inline-flex items-center gap-1.5">
             {node.title}
             {accessTag}
-            {isAssigned && <Badge status="success" style={{ marginLeft: 4 }} />}
+            {isAssigned && <Badge status="success" className="ml-1" />}
             {!node.leaf && node.permissionCount > 0 && (
-              <span style={{ color: '#999', fontSize: 12 }}>({node.permissionCount})</span>
+              <span className="text-[#999] text-xs">({node.permissionCount})</span>
             )}
           </span>
         ),
@@ -291,7 +291,7 @@ const PermissionTree = ({
 
   if (loading) {
     return (
-      <div style={{ textAlign: 'center', padding: 40 }}>
+      <div className="text-center p-10">
         <Spin tip="加载权限树..." />
       </div>
     )
@@ -305,7 +305,7 @@ const PermissionTree = ({
         value={searchKeyword}
         onChange={(e) => setSearchKeyword(e.target.value)}
         allowClear
-        style={{ marginBottom: 12 }}
+        className="mb-3"
       />
       {antdTreeData && antdTreeData.length > 0 ? (
         <Tree

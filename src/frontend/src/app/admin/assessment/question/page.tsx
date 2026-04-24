@@ -292,7 +292,7 @@ export default function AssessmentQuestionManagementPage() {
         <Select
           placeholder="筛选方向"
           allowClear
-          style={{ width: 140 }}
+          className="w-[140px]"
           value={filterDirection}
           onChange={handleDirectionChange}
           options={directionOptions.map(([value, label]) => ({ value, label }))}
@@ -300,7 +300,7 @@ export default function AssessmentQuestionManagementPage() {
         <Select
           placeholder="选择考核时间"
           allowClear
-          style={{ width: 200 }}
+          className="w-[200px]"
           value={filterTimeId}
           onChange={handleTimeChange}
           options={timeOptions}

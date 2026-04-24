@@ -145,7 +145,7 @@ export default function MessageTemplateDrawer({
       width={800}
       onClose={onCancel}
       footer={
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+        <div className="flex justify-end gap-2">
           <Button onClick={onCancel}>取消</Button>
           <Button onClick={handleResetToDefault}>恢复默认</Button>
           <Button icon={<EyeOutlined />} onClick={handlePreview} loading={previewing}>
@@ -159,12 +159,12 @@ export default function MessageTemplateDrawer({
     >
       {record && (
         <>
-          <div style={{ marginBottom: 16 }}>
-            <div style={{ color: '#666', fontSize: 14, marginBottom: 8 }}>
+          <div className="mb-4">
+            <div className="text-[#666] text-sm mb-2">
               <strong>描述：</strong>
               {record.description || '-'}
             </div>
-            <div style={{ color: '#666', fontSize: 14, marginBottom: 8 }}>
+            <div className="text-[#666] text-sm mb-2">
               <strong>可用变量：</strong>
               {record.variables.map((v) => (
                 <Tag key={v} color="blue">
@@ -173,7 +173,7 @@ export default function MessageTemplateDrawer({
                   {'}}'}
                 </Tag>
               ))}
-              {record.variables.length === 0 && <span style={{ color: '#999' }}>无</span>}
+              {record.variables.length === 0 && <span className="text-[#999]">无</span>}
             </div>
           </div>
 
@@ -203,7 +203,7 @@ export default function MessageTemplateDrawer({
                       <Input.TextArea
                         placeholder="请输入 HTML 模板内容"
                         rows={20}
-                        style={{ fontFamily: 'monospace' }}
+                        className="font-mono"
                       />
                     </Form.Item>
                   </Form>
@@ -215,30 +215,15 @@ export default function MessageTemplateDrawer({
                 children: (
                   <Spin spinning={previewing}>
                     {previewHtml ? (
-                      <div
-                        style={{
-                          border: '1px solid #d9d9d9',
-                          borderRadius: 8,
-                          padding: 16,
-                          background: '#fff',
-                        }}
-                      >
+                      <div className="border border-[#d9d9d9] rounded-lg p-4 bg-white">
                         <iframe
                           srcDoc={previewHtml}
-                          style={{ width: '100%', height: 500, border: 'none' }}
+                          className="w-full h-[500px] border-none"
                           title="模板预览"
                         />
                       </div>
                     ) : (
-                      <div
-                        style={{
-                          textAlign: 'center',
-                          padding: 48,
-                          color: '#999',
-                          border: '1px dashed #d9d9d9',
-                          borderRadius: 8,
-                        }}
-                      >
+                      <div className="text-center p-12 text-[#999] border border-dashed border-[#d9d9d9] rounded-lg">
                         点击「预览」按钮查看渲染效果
                       </div>
                     )}

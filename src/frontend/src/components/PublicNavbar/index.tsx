@@ -163,7 +163,7 @@ const NavBar = () => {
         <Button
           type="text"
           className="text-white text-xl flex items-center justify-center hover:text-[#ff6f3c] hover:bg-transparent"
-          icon={<MenuOutlined style={{ color: 'white' }} />}
+          icon={<MenuOutlined className="text-white" />}
           onClick={toggleDrawer}
         />
       )}

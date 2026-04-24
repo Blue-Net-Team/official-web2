@@ -106,7 +106,7 @@ export const EnrollmentDrawer: React.FC<EnrollmentDrawerProps> = ({
             {statusCfg && <Tag color={statusCfg.color}>{statusCfg.label}</Tag>}
           </div>
 
-          <Divider style={{ margin: 0 }} />
+          <Divider className="!m-0" />
 
           {/* Info fields */}
           <div className="px-6 py-5">
@@ -129,7 +129,7 @@ export const EnrollmentDrawer: React.FC<EnrollmentDrawerProps> = ({
                   value={effectiveAssessmentGradeYear}
                   disabled={detail.status !== 'PENDING'}
                   onChange={(value) => setAssessmentGradeYear(value ?? undefined)}
-                  style={{ width: 120 }}
+                  className="w-[120px]"
                 />
               </Descriptions.Item>
               <Descriptions.Item label="方向">
@@ -141,7 +141,7 @@ export const EnrollmentDrawer: React.FC<EnrollmentDrawerProps> = ({
             </Descriptions>
           </div>
 
-          <Divider style={{ margin: 0 }} />
+          <Divider className="!m-0" />
 
           {/* Introduction */}
           <div className="px-6 py-5">
@@ -154,7 +154,7 @@ export const EnrollmentDrawer: React.FC<EnrollmentDrawerProps> = ({
           {/* Actions */}
           {detail.status === 'PENDING' && (
             <>
-              <Divider style={{ margin: 0 }} />
+              <Divider className="!m-0" />
               <div className="flex gap-3 justify-center py-5 px-6">
                 <Button
                   type="primary"

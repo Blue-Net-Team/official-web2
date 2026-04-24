@@ -111,7 +111,7 @@ export default function ExperienceCard({ experience, actions }: ExperienceCardPr
         <div className="flex gap-4 mb-3 text-[13px] text-[#8c8c8d]">
           {experience.date && (
             <div className="flex items-center gap-1.5">
-              <FileTextOutlined style={{ fontSize: '14px' }} />
+              <FileTextOutlined className="text-sm" />
               <span>{experience.date}</span>
             </div>
           )}

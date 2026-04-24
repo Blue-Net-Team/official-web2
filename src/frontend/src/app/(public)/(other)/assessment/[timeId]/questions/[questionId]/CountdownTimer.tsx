@@ -126,38 +126,14 @@ export default function CountdownTimer({ deadline, startedAt, onTimeUp }: Countd
         />
       </svg>
       {/* 中心文字 */}
-      <div
-        style={{
-          position: 'absolute',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: 2,
-        }}
-      >
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-0.5">
         <span
-          style={{
-            fontSize: 28,
-            fontWeight: 700,
-            fontFamily: 'Inter, monospace',
-            color: '#ffffff',
-            letterSpacing: 1,
-            lineHeight: 1,
-            transition: 'color 0.5s ease',
-          }}
+          className="text-[28px] font-bold font-['Inter,monospace'] text-white tracking-[1px] leading-none"
+          style={{ transition: 'color 0.5s ease' }}
         >
           {formatTime(remainingSeconds)}
         </span>
-        <span
-          style={{
-            fontSize: 12,
-            color: 'rgba(255, 255, 255, 0.3)',
-            fontFamily: 'Inter, monospace',
-          }}
-        >
+        <span className="text-xs text-white/30 font-['Inter,monospace']">
           {formatTotal(totalSeconds)}
         </span>
       </div>
