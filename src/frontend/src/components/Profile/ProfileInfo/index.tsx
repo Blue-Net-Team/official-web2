@@ -13,7 +13,7 @@
 'use client'
 
 import { useState } from 'react'
-import type { UserInfo } from '@/types/profile'
+import type { UserInfo } from '@/apis/schema/type'
 import type { UpdateProfileRequestDTO } from '@/apis/schema/profile.dto'
 import {
   DIRECTION_LABELS,

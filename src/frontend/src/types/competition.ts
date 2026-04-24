@@ -3,9 +3,8 @@
  *
  * 后端 DTO 类型请使用 @/apis/schema/type 中的 CompetitionResponseDTO
  */
-import type { CompetitionLevel } from '@/apis/schema/type'
 
-export type { CompetitionLevel }
+import type { CompetitionLevel } from '@/apis/schema/type'
 
 export const COMPETITION_LEVEL_LABELS: Record<CompetitionLevel, string> = {
   national: '国家级',

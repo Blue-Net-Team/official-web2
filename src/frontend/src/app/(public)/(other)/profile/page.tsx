@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import type { TabName, TabCounts } from '@/types/profile'
+import type { TabName } from '@/types/profile'
+import type { TabCounts } from '@/apis/schema/type'
 import type { ExperienceType } from '@/apis/schema/enumerate'
 import { useProfileData, useExperienceActions } from '@/hooks'
 import {

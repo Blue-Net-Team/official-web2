@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react'
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { Pagination } from 'antd'
 import { MemberCard } from './MemberCard'
 import { MembersProps, FilterTab } from './Members.types'
@@ -26,6 +26,7 @@ export const Members: React.FC<MembersProps> = ({ initialPage = 0 }) => {
   useEffect(() => {
     const fetchCounts = async () => {
       try {
+        // TODO: 当前通过获取所有成员来统计方向人数，建议后端提供 /members/statistics 接口以优化性能
         const response = await memberService.getMemberList({ size: 1000 })
         if (response.code !== 200 || !response.data) return
         const allMembers = response.data
@@ -96,12 +97,11 @@ export const Members: React.FC<MembersProps> = ({ initialPage = 0 }) => {
     setCurrentPage(0)
   }
 
+  const sectionRef = useRef<HTMLElement>(null)
+
   const handlePageChange = (page: number) => {
     setCurrentPage(page - 1)
-    const membersSection = document.querySelector('[data-members-section]')
-    if (membersSection) {
-      membersSection.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    }
+    sectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 
   return (
@@ -132,6 +132,7 @@ export const Members: React.FC<MembersProps> = ({ initialPage = 0 }) => {
       </section>
 
       <section
+        ref={sectionRef}
         className="w-full px-16 pb-20 max-md:px-5 max-md:pb-10 max-[1024px]:px-10 max-[1024px]:pb-15"
         data-members-section
       >

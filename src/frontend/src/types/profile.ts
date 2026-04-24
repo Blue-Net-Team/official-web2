@@ -1,11 +1,12 @@
 /**
  * 个人主页前端独有类型
  *
- * 后端 DTO 类型已迁移至 @/apis/schema/ 目录
+ * 后端 DTO 类型请使用 @/apis/schema/ 目录
  */
-import type { UserInfo, TabCounts } from '@/apis/schema/type'
 
-export type { UserInfo, TabCounts }
+import type { AssessmentStatus } from '@/apis/schema/assessment.dto'
+
+export type { AssessmentStatus }
 
 export interface UserStats {
   assessmentCount: number
@@ -13,12 +14,10 @@ export interface UserStats {
   averageScore: number
 }
 
-export interface UserProfileWithStats extends UserInfo {
+export interface UserProfileWithStats {
   stats: UserStats
-  tabCounts: TabCounts
+  tabCounts: import('@/apis/schema/type').TabCounts
 }
-
-export type AssessmentStatus = 'NOT_STARTED' | 'IN_PROGRESS' | 'ENDED'
 
 export interface Assessment {
   id: string

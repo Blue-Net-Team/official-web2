@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { Spin, Empty, Pagination } from 'antd'
 import { competitionService } from '@/apis/services/competition.service'
 import { CompetitionResponseDTO } from '@/apis/schema/type'
@@ -66,18 +66,20 @@ export default function CompetitionsPage() {
     fetchCompetitions()
   }, [fetchCompetitions])
 
+  const headerRef = useRef<HTMLElement>(null)
+
   const handlePageChange = (page: number) => {
     setCurrentPage(page - 1)
-    const header = document.querySelector('.competitions-header')
-    if (header) {
-      header.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    }
+    headerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 
   return (
     <div className="min-h-screen bg-black px-[147px] max-md:px-12 max-sm:px-6 py-20 max-md:py-[60px] max-sm:py-10 flex flex-col gap-12 max-sm:gap-8 relative overflow-hidden">
       <BackgroundDecorations />
-      <header className="competitions-header flex flex-col gap-4 max-sm:gap-3 relative z-1">
+      <header
+        ref={headerRef}
+        className="competitions-header flex flex-col gap-4 max-sm:gap-3 relative z-1"
+      >
         <h1 className="text-5xl max-md:text-4xl max-sm:text-[28px] font-bold text-white m-0 font-['Inter']">
           团队参加的竞赛
         </h1>

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { Masonry, Spin, Empty, Pagination } from 'antd'
 import AchievementCard from '@/components/Achievements/AchievementCard'
 import AchievementStats from '@/components/Achievements/AchievementStats'
@@ -86,13 +86,12 @@ export default function AchievementsPage() {
     setCurrentPage(0) // 筛选条件变化时重置页码
   }
 
+  const sectionRef = useRef<HTMLElement>(null)
+
   // 处理页码变化
   const handlePageChange = (page: number) => {
     setCurrentPage(page - 1)
-    const achievementsSection = document.querySelector('.achievements-section')
-    if (achievementsSection) {
-      achievementsSection.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    }
+    sectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 
   return (
@@ -118,7 +117,7 @@ export default function AchievementsPage() {
             onFilterChange={handleFilterChange}
           />
         </section>
-        <section className="w-full mt-4 achievements-section">
+        <section ref={sectionRef} className="w-full mt-4 achievements-section">
           {loading ? (
             <div className="flex justify-center items-center min-h-[300px] w-full">
               <Spin size="large" />
