@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useRef, useMemo } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 import {
   Card,
   Radio,
@@ -17,7 +17,7 @@ import { SaveOutlined, InfoCircleOutlined } from '@ant-design/icons'
 import PermissionTree from '@/components/Admin/PermissionTree'
 import { adminPermissionService } from '@/apis/services/admin-permission.service'
 import { getRoleLevel } from '@/utils/RoleUtils'
-import { useAuth } from '@/hooks'
+import { useAuth, useApi } from '@/hooks'
 import type { PermissionDTO, PermissionTreeDTO } from '@/apis/schema/type'
 
 const { Title, Text } = Typography
@@ -72,14 +72,32 @@ export default function RolePermissionPage() {
   const { userInfo } = useAuth()
   const roleLevel = getRoleLevel(userInfo?.roleName || '')
 
+  const {
+    data: rolePermsData,
+    loading: rolePermsLoading,
+    execute: fetchRolePerms,
+  } = useApi(adminPermissionService.getRolePermissions.bind(adminPermissionService))
+  const {
+    data: treeDataRaw,
+    loading: treeLoading,
+    execute: fetchTree,
+  } = useApi(adminPermissionService.getPermissionTree.bind(adminPermissionService))
+  const {
+    data: previewPermission,
+    loading: previewLoading,
+    execute: fetchPreview,
+    reset: resetPreview,
+  } = useApi(adminPermissionService.getPermissionDetail.bind(adminPermissionService))
+
+  const treeData = treeDataRaw ?? []
+
   const [selectedRole, setSelectedRole] = useState<string>('MEMBER')
   const [assignedPermissions, setAssignedPermissions] = useState<string[]>([])
   const [selectedPermissionIds, setSelectedPermissionIds] = useState<number[]>([])
   const [initialPermissionIds, setInitialPermissionIds] = useState<number[]>([])
-  const [loading, setLoading] = useState(false)
-  const [previewPermission, setPreviewPermission] = useState<PermissionDTO | null>(null)
+  const [saving, setSaving] = useState(false)
 
-  const treeDataRef = useRef<PermissionTreeDTO[]>([])
+  const loading = rolePermsLoading || treeLoading || saving
 
   const hasChanges = useMemo(() => {
     const current = new Set(selectedPermissionIds)
@@ -94,52 +112,42 @@ export default function RolePermissionPage() {
   const handleRoleChange = useCallback(
     async (roleName: string) => {
       setSelectedRole(roleName)
-      setPreviewPermission(null)
+      resetPreview()
       setSelectedPermissionIds([])
       setInitialPermissionIds([])
-      setLoading(true)
       try {
-        const [permRes, treeRes] = await Promise.all([
-          adminPermissionService.getRolePermissions(roleName),
-          adminPermissionService.getPermissionTree(),
-        ])
+        const [permRes, treeRes] = await Promise.all([fetchRolePerms(roleName), fetchTree()])
 
-        if (treeRes.code === 200 && treeRes.data) {
-          treeDataRef.current = treeRes.data
-        }
-
-        if (permRes.code === 200 && permRes.data) {
-          setAssignedPermissions(permRes.data)
-          const ids = mapValuesToIds(treeDataRef.current, new Set(permRes.data))
+        if (permRes) {
+          setAssignedPermissions(permRes)
+          const ids = mapValuesToIds(treeRes ?? treeData, new Set(permRes))
           setInitialPermissionIds(ids)
           setSelectedPermissionIds(ids)
         }
       } catch {
         message.error('加载角色权限失败')
-      } finally {
-        setLoading(false)
       }
     },
-    [message]
+    [fetchRolePerms, fetchTree, resetPreview, message, treeData]
   )
 
   const handleSelectionChange = useCallback((ids: number[]) => {
     setSelectedPermissionIds(ids)
   }, [])
 
-  const handlePermissionSelect = useCallback(async (permissionId: number) => {
-    try {
-      const res = await adminPermissionService.getPermissionDetail(permissionId)
-      if (res.code === 200 && res.data) {
-        setPreviewPermission(res.data)
+  const handlePermissionSelect = useCallback(
+    async (permissionId: number) => {
+      try {
+        await fetchPreview(permissionId)
+      } catch {
+        // silently ignore
       }
-    } catch {
-      // silently ignore
-    }
-  }, [])
+    },
+    [fetchPreview]
+  )
 
   const handleSave = async () => {
-    const alwaysEnabled = getAlwaysEnabledIds(treeDataRef.current)
+    const alwaysEnabled = getAlwaysEnabledIds(treeData)
 
     const toAdd = selectedPermissionIds.filter(
       (id) => !initialPermissionIds.includes(id) && !alwaysEnabled.has(id)
@@ -153,7 +161,7 @@ export default function RolePermissionPage() {
       return
     }
 
-    setLoading(true)
+    setSaving(true)
     try {
       if (toAdd.length > 0) {
         const res = await adminPermissionService.assignPermissionsToRole(selectedRole, {
@@ -177,17 +185,17 @@ export default function RolePermissionPage() {
       message.success('权限已更新')
 
       // Reload fresh state
-      const permRes = await adminPermissionService.getRolePermissions(selectedRole)
-      if (permRes.code === 200 && permRes.data) {
-        setAssignedPermissions(permRes.data)
-        const ids = mapValuesToIds(treeDataRef.current, new Set(permRes.data))
+      const permRes = await fetchRolePerms(selectedRole)
+      if (permRes) {
+        setAssignedPermissions(permRes)
+        const ids = mapValuesToIds(treeData, new Set(permRes))
         setInitialPermissionIds(ids)
         setSelectedPermissionIds(ids)
       }
     } catch {
       message.error('操作失败')
     } finally {
-      setLoading(false)
+      setSaving(false)
     }
   }
 

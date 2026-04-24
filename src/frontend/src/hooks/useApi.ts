@@ -26,39 +26,38 @@ export function useApi<T, Args extends unknown[] = unknown[]>(
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<Error | null>(null)
   const isMounted = useRef(true)
+  const apiFnRef = useRef(apiFn)
+  apiFnRef.current = apiFn
 
-  const execute = useCallback(
-    async (...args: Args): Promise<T | null> => {
-      setLoading(true)
-      setError(null)
-      try {
-        const response = await apiFn(...args)
-        if (response.code === 200 && response.data !== undefined) {
-          if (isMounted.current) {
-            setData(response.data)
-          }
-          return response.data
-        } else {
-          const err = new Error(response.msg || '请求失败')
-          if (isMounted.current) {
-            setError(err)
-          }
-          throw err
-        }
-      } catch (err) {
-        const error = err instanceof Error ? err : new Error(String(err))
+  const execute = useCallback(async (...args: Args): Promise<T | null> => {
+    setLoading(true)
+    setError(null)
+    try {
+      const response = await apiFnRef.current(...args)
+      if (response.code === 200 && response.data !== undefined) {
         if (isMounted.current) {
-          setError(error)
+          setData(response.data)
         }
-        throw error
-      } finally {
+        return response.data
+      } else {
+        const err = new Error(response.msg || '请求失败')
         if (isMounted.current) {
-          setLoading(false)
+          setError(err)
         }
+        throw err
       }
-    },
-    [apiFn]
-  )
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error(String(err))
+      if (isMounted.current) {
+        setError(error)
+      }
+      throw error
+    } finally {
+      if (isMounted.current) {
+        setLoading(false)
+      }
+    }
+  }, [])
 
   const reset = useCallback(() => {
     setData(null)

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useMemo } from 'react'
+import { useState, useCallback, useMemo, useEffect } from 'react'
 import {
   Card,
   Checkbox,
@@ -16,6 +16,7 @@ import {
 import { SaveOutlined } from '@ant-design/icons'
 import PermissionTree from '@/components/Admin/PermissionTree'
 import { adminPermissionService } from '@/apis/services/admin-permission.service'
+import { useApi } from '@/hooks'
 import type { PermissionDTO } from '@/apis/schema/type'
 
 const { Title, Text } = Typography
@@ -35,37 +36,42 @@ const AVAILABLE_ROLES = [
 export default function PermissionRolePage() {
   const { message } = App.useApp()
 
+  const {
+    data: permissionDetail,
+    loading: detailLoading,
+    execute: fetchDetail,
+  } = useApi(adminPermissionService.getPermissionDetail.bind(adminPermissionService))
+  const {
+    data: rolesData,
+    loading: rolesLoading,
+    execute: fetchRoles,
+  } = useApi(adminPermissionService.getPermissionRoles.bind(adminPermissionService))
+
   const [selectedPermissionId, setSelectedPermissionId] = useState<number | null>(null)
-  const [permissionDetail, setPermissionDetail] = useState<PermissionDTO | null>(null)
   const [assignedRoles, setAssignedRoles] = useState<string[]>([])
   const [checkedRoles, setCheckedRoles] = useState<string[]>([])
-  const [loading, setLoading] = useState(false)
+  const [saving, setSaving] = useState(false)
+
+  const loading = detailLoading || rolesLoading || saving
 
   const handleSelect = useCallback(
     async (permissionId: number) => {
       setSelectedPermissionId(permissionId)
-      setLoading(true)
       try {
-        const [detailRes, rolesRes] = await Promise.all([
-          adminPermissionService.getPermissionDetail(permissionId),
-          adminPermissionService.getPermissionRoles(permissionId),
-        ])
-
-        if (detailRes.code === 200 && detailRes.data) {
-          setPermissionDetail(detailRes.data)
-        }
-        if (rolesRes.code === 200 && rolesRes.data) {
-          setAssignedRoles(rolesRes.data)
-          setCheckedRoles(rolesRes.data)
-        }
+        await Promise.all([fetchDetail(permissionId), fetchRoles(permissionId)])
       } catch {
         message.error('加载权限详情失败')
-      } finally {
-        setLoading(false)
       }
     },
-    [message]
+    [fetchDetail, fetchRoles, message]
   )
+
+  useEffect(() => {
+    if (rolesData) {
+      setAssignedRoles(rolesData)
+      setCheckedRoles(rolesData)
+    }
+  }, [rolesData])
 
   const isAlwaysEnabled = permissionDetail
     ? permissionDetail.accessLevel === 'PUBLIC' || permissionDetail.accessLevel === 'AUTHENTICATED'
@@ -100,7 +106,7 @@ export default function PermissionRolePage() {
       return
     }
 
-    setLoading(true)
+    setSaving(true)
     try {
       if (toAdd.length > 0) {
         const res = await adminPermissionService.assignRolesToPermission(selectedPermissionId, {
@@ -121,15 +127,11 @@ export default function PermissionRolePage() {
         }
       }
       message.success('角色分配已更新')
-      const rolesRes = await adminPermissionService.getPermissionRoles(selectedPermissionId)
-      if (rolesRes.code === 200 && rolesRes.data) {
-        setAssignedRoles(rolesRes.data)
-        setCheckedRoles(rolesRes.data)
-      }
+      await fetchRoles(selectedPermissionId)
     } catch {
       message.error('操作失败')
     } finally {
-      setLoading(false)
+      setSaving(false)
     }
   }
 

@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { UserInfo, StudentIdLoginRequestDTO, UserAuthResponseDTO } from '@/apis/schema/type'
 import { authService } from '@/apis/services/auth.service'
+import { hashPassword } from '@/utils/passwordHash'
 import { AxiosError } from 'axios'
 
 interface AuthState {
@@ -40,7 +41,7 @@ const authStore = create<AuthState>()(
         try {
           const response = await authService.login({
             studentId: credentials.studentId,
-            password: credentials.password,
+            password: hashPassword(credentials.password),
           })
 
           if (response.code === 200 && response.data) {

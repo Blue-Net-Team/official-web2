@@ -196,8 +196,11 @@ const PermissionTree = ({
   onSelect,
   mode = 'checkable',
 }: PermissionTreeProps) => {
-  const fetchTreeRef = useRef(adminPermissionService.getPermissionTree.bind(adminPermissionService))
-  const { data: treeDataRaw, loading, execute: fetchTree } = useApi(fetchTreeRef.current)
+  const {
+    data: treeDataRaw,
+    loading,
+    execute: fetchTree,
+  } = useApi(adminPermissionService.getPermissionTree.bind(adminPermissionService))
   const treeData = treeDataRaw ?? []
   const [searchKeyword, setSearchKeyword] = useState('')
   const [checkedKeys, setCheckedKeys] = useState<{ checked: string[]; halfChecked: string[] }>({

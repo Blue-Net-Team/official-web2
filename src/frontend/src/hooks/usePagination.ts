@@ -25,23 +25,26 @@ export interface UsePaginationReturn<T> {
  */
 export function usePagination<T>(
   apiFn: (page: number, pageSize: number) => Promise<ResponseMessage<PageDTO<T>>>,
-  options: { pageSize?: number; immediate?: boolean; initialPage?: number } = {}
+  options: { pageSize?: number; initialPage?: number } = {}
 ): UsePaginationReturn<T> {
-  const { pageSize = 10, immediate = true, initialPage = 0 } = options
+  const { pageSize = 10, initialPage = 0 } = options
   const [data, setData] = useState<T[]>([])
   const [total, setTotal] = useState(0)
   const [totalPages, setTotalPages] = useState(0)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<Error | null>(null)
-  const [currentPage, setCurrentPage] = useState(initialPage)
+  const [currentPageState, setCurrentPageState] = useState(initialPage)
+  const [fetchKey, setFetchKey] = useState(0)
   const isMounted = useRef(true)
+  const apiFnRef = useRef(apiFn)
+  apiFnRef.current = apiFn
 
   const fetchData = useCallback(
     async (page: number) => {
       setLoading(true)
       setError(null)
       try {
-        const response = await apiFn(page, pageSize)
+        const response = await apiFnRef.current(page, pageSize)
         if (response.code === 200 && response.data) {
           if (isMounted.current) {
             setData(response.data.content)
@@ -65,18 +68,22 @@ export function usePagination<T>(
         }
       }
     },
-    [apiFn, pageSize]
+    [pageSize]
   )
 
+  // Auto-fetch when currentPage changes
   useEffect(() => {
-    if (immediate) {
-      fetchData(currentPage)
-    }
-  }, [fetchData, immediate, currentPage])
+    fetchData(currentPageState)
+  }, [currentPageState, fetchData, fetchKey])
+
+  const setCurrentPage = useCallback((page: number) => {
+    setCurrentPageState(page)
+    setFetchKey((k) => k + 1)
+  }, [])
 
   const refresh = useCallback(() => {
-    fetchData(currentPage)
-  }, [fetchData, currentPage])
+    setFetchKey((k) => k + 1)
+  }, [])
 
   const reset = useCallback(() => {
     setData([])
@@ -84,7 +91,8 @@ export function usePagination<T>(
     setTotalPages(0)
     setLoading(false)
     setError(null)
-    setCurrentPage(0)
+    setCurrentPageState(0)
+    setFetchKey((k) => k + 1)
   }, [])
 
   return {
@@ -93,7 +101,7 @@ export function usePagination<T>(
     totalPages,
     loading,
     error,
-    currentPage,
+    currentPage: currentPageState,
     setCurrentPage,
     refresh,
     reset,

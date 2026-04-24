@@ -279,10 +279,10 @@ function LoginPageContent() {
   return (
     <ConfigProvider theme={loginTheme}>
       <div
-        className="relative w-full h-full flex overflow-hidden bg-[length:100%_120%] bg-[center_bottom]"
+        className="relative w-full min-h-screen flex overflow-hidden bg-[length:100%_120%] bg-[center_bottom]"
         style={{ backgroundImage: `url(${loginBg.src})` } as React.CSSProperties}
       >
-        <div className="w-1/2 min-w-[500px] h-full flex flex-col justify-center items-center relative z-2 bg-[rgba(20,20,25,0.65)] backdrop-blur-[20px] border-r border-white/[0.08] shadow-[0_8px_32px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.05)] max-lg:w-full max-lg:min-w-0 max-lg:p-10 max-lg:border-r-0 max-lg:bg-[rgba(20,20,25,0.75)] max-lg:px-6">
+        <div className="w-1/2 min-w-[500px] min-h-screen flex flex-col justify-center items-center relative z-2 bg-[rgba(20,20,25,0.65)] backdrop-blur-[20px] border-r border-white/[0.08] shadow-[0_8px_32px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.05)] max-lg:w-full max-lg:min-w-0 max-lg:p-10 max-lg:border-r-0 max-lg:bg-[rgba(20,20,25,0.75)] max-lg:px-6">
           <div className="w-full max-w-[400px] animate-[fadeIn_0.6s_ease-out]">
             <div className="flex flex-col items-center mb-12">
               <div className="flex flex-row items-center gap-3 mb-3">
