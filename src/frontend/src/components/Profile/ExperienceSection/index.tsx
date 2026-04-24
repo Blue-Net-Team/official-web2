@@ -108,16 +108,16 @@ export default function ExperienceSection({
             <Form.Item name="role" label="担任角色" rules={[{ required: true }]}>
               <Input placeholder="如：项目负责人、核心开发" />
             </Form.Item>
-            <div style={{ display: 'flex', gap: 16 }}>
+            <div className="flex gap-4">
               <Form.Item
                 name="startDate"
                 label="开始时间"
                 rules={[{ required: true }]}
-                style={{ flex: 1 }}
+                className="flex-1"
               >
                 <Input placeholder="如：2024.09" />
               </Form.Item>
-              <Form.Item name="endDate" label="结束时间" style={{ flex: 1 }}>
+              <Form.Item name="endDate" label="结束时间" className="flex-1">
                 <Input placeholder="如：2025.01（进行中可不填）" />
               </Form.Item>
             </div>
@@ -141,11 +141,11 @@ export default function ExperienceSection({
             <Form.Item name="role" label="担任角色" rules={[{ required: true }]}>
               <Input placeholder="如：团队负责人、技术负责人" />
             </Form.Item>
-            <div style={{ display: 'flex', gap: 16 }}>
-              <Form.Item name="startDate" label="开始时间" style={{ flex: 1 }}>
+            <div className="flex gap-4">
+              <Form.Item name="startDate" label="开始时间" className="flex-1">
                 <Input placeholder="如：2024.08" />
               </Form.Item>
-              <Form.Item name="endDate" label="结束时间" style={{ flex: 1 }}>
+              <Form.Item name="endDate" label="结束时间" className="flex-1">
                 <Input placeholder="如：2024.08" />
               </Form.Item>
             </div>
@@ -195,16 +195,16 @@ export default function ExperienceSection({
             <Form.Item name="position" label="职位" rules={[{ required: true }]}>
               <Input placeholder="如：算法实习生" />
             </Form.Item>
-            <div style={{ display: 'flex', gap: 16 }}>
+            <div className="flex gap-4">
               <Form.Item
                 name="startDate"
                 label="开始时间"
                 rules={[{ required: true }]}
-                style={{ flex: 1 }}
+                className="flex-1"
               >
                 <Input placeholder="如：2024.06" />
               </Form.Item>
-              <Form.Item name="endDate" label="结束时间" style={{ flex: 1 }}>
+              <Form.Item name="endDate" label="结束时间" className="flex-1">
                 <Input placeholder="如：2024.09（在职可不填）" />
               </Form.Item>
             </div>
@@ -297,10 +297,10 @@ export default function ExperienceSection({
           footer={null}
           width={600}
         >
-          <Form form={form} layout="vertical" onFinish={handleSubmit} style={{ marginTop: 24 }}>
+          <Form form={form} layout="vertical" onFinish={handleSubmit} className="mt-6">
             {renderFormItems()}
-            <Form.Item style={{ marginBottom: 0, marginTop: 24 }}>
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12 }}>
+            <Form.Item className="mb-0 mt-6">
+              <div className="flex justify-end gap-3">
                 <Button onClick={handleCloseModal}>取消</Button>
                 <Button type="primary" htmlType="submit" loading={isSubmitting}>
                   {editingItem ? '保存' : '添加'}

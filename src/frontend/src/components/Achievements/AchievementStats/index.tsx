@@ -11,25 +11,25 @@ const AchievementStats = ({ stats }: AchievementStatsProps) => {
     {
       title: '总成就',
       value: stats.totalAchievements,
-      icon: <TrophyOutlined style={{ fontSize: 24, color: '#1890ff' }} />,
+      icon: <TrophyOutlined className="text-2xl text-[#1890ff]" />,
       color: '#1890ff',
     },
     {
       title: '国家级',
       value: stats.nationalCount,
-      icon: <CrownOutlined style={{ fontSize: 24, color: '#FFD700' }} />,
+      icon: <CrownOutlined className="text-2xl text-[#FFD700]" />,
       color: '#FFD700',
     },
     {
       title: '省级',
       value: stats.provincialCount,
-      icon: <StarOutlined style={{ fontSize: 24, color: '#C0C0C0' }} />,
+      icon: <StarOutlined className="text-2xl text-[#C0C0C0]" />,
       color: '#C0C0C0',
     },
     {
       title: '校级',
       value: stats.schoolCount,
-      icon: <FlagOutlined style={{ fontSize: 24, color: '#CD7F32' }} />,
+      icon: <FlagOutlined className="text-2xl text-[#CD7F32]" />,
       color: '#CD7F32',
     },
   ]

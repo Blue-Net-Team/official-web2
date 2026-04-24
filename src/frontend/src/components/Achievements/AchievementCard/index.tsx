@@ -28,11 +28,11 @@ const AchievementCard = ({ achievement }: AchievementCardProps) => {
 
   const typeIcon =
     achievement.type === 'PAPER' ? (
-      <FileTextOutlined style={{ fontSize: 24, color: '#fff' }} />
+      <FileTextOutlined className="text-2xl text-white" />
     ) : achievement.type === 'PATENT' ? (
-      <BulbOutlined style={{ fontSize: 24, color: '#fff' }} />
+      <BulbOutlined className="text-2xl text-white" />
     ) : (
-      <TrophyOutlined style={{ fontSize: 24, color: '#fff' }} />
+      <TrophyOutlined className="text-2xl text-white" />
     )
 
   const typeLabel =

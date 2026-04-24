@@ -87,7 +87,7 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
             />
           ) : (
             <div className="flex flex-col items-center justify-center gap-1 z-1">
-              <PlusOutlined style={{ fontSize: '28px', color: 'rgba(102, 119, 255, 0.6)' }} />
+              <PlusOutlined className="text-[28px] text-[#6677ff]/60" />
               <span className="text-[11px] text-white/40">点击上传</span>
             </div>
           )}

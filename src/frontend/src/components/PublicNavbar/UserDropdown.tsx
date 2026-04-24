@@ -26,7 +26,7 @@ export const UserInfoDisplay = ({ userInfo }: UserInfoDisplayProps) => {
           height={40}
         />
       ) : (
-        <UserOutlined style={{ fontSize: 24, color: '#fff' }} />
+        <UserOutlined className="text-2xl text-white" />
       )}
       {/* 用户名 */}
       <span className="darkText inline-block leading-normal select-none">{userInfo?.username}</span>
@@ -76,7 +76,7 @@ export const UserDropdown = ({ userInfo, onMenuClick }: UserDropdownProps) => {
             height={40}
           />
         ) : (
-          <UserOutlined style={{ fontSize: 24, color: '#fff' }} />
+          <UserOutlined className="text-2xl text-white" />
         )}
         {/* 用户名 */}
         <span className="darkText inline-block leading-normal select-none">
