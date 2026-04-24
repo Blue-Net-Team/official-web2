@@ -4,6 +4,8 @@ import com.bluenet.web.application.ResetPasswordResult;
 import com.bluenet.web.application.command.resetpassword.ResetPasswordCommands;
 import com.bluenet.web.application.message.MessageDispatcher;
 import com.bluenet.web.application.message.MessageRequest;
+import com.bluenet.web.application.message.template.EmailVerificationCodeTemplate;
+import com.bluenet.web.application.message.template.VerificationCodeScene;
 import com.bluenet.web.application.service.ResetPasswordAppService;
 import com.bluenet.web.domain.exception.BadRequest;
 import com.bluenet.web.domain.model.entity.User;
@@ -46,7 +48,7 @@ public class ResetPasswordAppServiceImpl implements ResetPasswordAppService {
     private final VerificationCodeDomainService verificationCodeDomainService;
     private final VerificationCodeRepository verificationCodeRepository;
     private final MessageDispatcher messageDispatcher;
-    private final com.bluenet.web.application.message.template.ResetPasswordVerificationCodeTemplate resetPasswordVerificationCodeTemplate;
+    private final EmailVerificationCodeTemplate emailVerificationCodeTemplate;
     private final PasswordEncoder passwordEncoder;
     private final AuthTokenService authTokenService;
 
@@ -120,7 +122,8 @@ public class ResetPasswordAppServiceImpl implements ResetPasswordAppService {
         verificationCodeRepository.save(verifyCodeVO);
 
         String subject = "蓝网密码重置验证码";
-        String htmlContent = resetPasswordVerificationCodeTemplate.buildHtml(verifyCodeVO.getCode());
+        String htmlContent = emailVerificationCodeTemplate
+                .buildHtml(VerificationCodeScene.RESET_PASSWORD, verifyCodeVO.getCode());
         messageDispatcher.dispatchAsync(MessageRequest.html(MessageChannel.EMAIL, email, subject, htmlContent));
 
         Map<String, String> updates = new HashMap<>();

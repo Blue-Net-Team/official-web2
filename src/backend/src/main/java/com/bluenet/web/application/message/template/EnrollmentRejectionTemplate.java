@@ -7,42 +7,38 @@ import org.springframework.stereotype.Component;
 import java.util.Map;
 
 /**
- * 报名审核通过初始凭据邮件模板。
+ * 报名审核拒绝通知邮件模板。
  * <p>
  * 模板内容从 {@link MessageTemplateRegistry} 读取，支持管理后台动态覆盖。
  * </p>
  */
 @Component
-public class EnrollmentApprovalCredentialTemplate {
+public class EnrollmentRejectionTemplate {
 
-    private static final String CODE = "ENROLL_APPROVAL_CREDENTIAL";
+    private static final String CODE = "ENROLL_REJECTION";
 
     private final MessageTemplateRegistry registry;
 
-    public EnrollmentApprovalCredentialTemplate(MessageTemplateRegistry registry) {
+    public EnrollmentRejectionTemplate(MessageTemplateRegistry registry) {
         this.registry = registry;
     }
 
     /**
-     * 构建报名审核通过 HTML 邮件内容。
+     * 构建拒绝通知 HTML 邮件内容。
      *
      * @param username
-     *            学生姓名。
-     * @param studentId
-     *            学号。
-     * @param initialPassword
-     *            初始登录密码。
+     *            用户名。
+     * @param rejectReason
+     *            拒绝原因。
      * @return HTML 邮件内容。
      */
-    public String buildHtml(String username, String studentId, String initialPassword) {
+    public String buildHtml(String username, String rejectReason) {
         String template = registry.getTemplateContent(CODE);
         Map<String, String> variables = Map.of(
                 "username",
                 username != null ? username : "",
-                "studentId",
-                studentId != null ? studentId : "",
-                "initialPassword",
-                initialPassword != null ? initialPassword : "");
+                "rejectReason",
+                rejectReason != null ? rejectReason : "");
         return TemplateVariableSubstitutor.substitute(template, variables);
     }
 }

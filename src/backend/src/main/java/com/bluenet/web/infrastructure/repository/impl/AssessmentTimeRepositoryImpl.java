@@ -101,4 +101,10 @@ public class AssessmentTimeRepositoryImpl implements AssessmentTimeRepository {
         List<AssessmentTime> content = converter.toEntityList(result.getRecords());
         return new PageImpl<>(content, pageable, result.getTotal());
     }
+
+    @Override
+    public Optional<Integer> findMaxEpochByDirectionAndGrade(Direction direction, Integer grade) {
+        Integer maxEpoch = assessmentTimeMapper.selectMaxEpochByDirectionAndGrade(direction, grade);
+        return Optional.ofNullable(maxEpoch);
+    }
 }

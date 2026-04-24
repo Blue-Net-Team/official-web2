@@ -5,6 +5,8 @@ import com.bluenet.web.application.command.auth.AuthCommands;
 import com.bluenet.web.application.converter.UserAppConverter;
 import com.bluenet.web.application.message.MessageRequest;
 import com.bluenet.web.application.message.MessageDispatcher;
+import com.bluenet.web.application.message.template.EmailVerificationCodeTemplate;
+import com.bluenet.web.application.message.template.VerificationCodeScene;
 import com.bluenet.web.application.service.AuthAppService;
 import com.bluenet.web.application.service.auth.credential.GitHubCallbackCredential;
 import com.bluenet.web.application.service.auth.provider.EmailCodeLoginProvider;
@@ -55,7 +57,7 @@ public class AuthAppServiceImpl implements AuthAppService {
     private final VerificationCodeDomainService verificationCodeDomainService;
     private final VerificationCodeRepository verificationCodeRepository;
     private final MessageDispatcher messageDispatcher;
-    private final com.bluenet.web.application.message.template.LoginVerificationCodeTemplate loginVerificationCodeTemplate;
+    private final EmailVerificationCodeTemplate emailVerificationCodeTemplate;
     private final AuthSessionIssuer authSessionIssuer;
     private final AuthProviderRegistry authProviderRegistry;
 
@@ -101,7 +103,7 @@ public class AuthAppServiceImpl implements AuthAppService {
             VerificationCodeDomainService verificationCodeDomainService,
             VerificationCodeRepository verificationCodeRepository,
             MessageDispatcher messageDispatcher,
-            com.bluenet.web.application.message.template.LoginVerificationCodeTemplate loginVerificationCodeTemplate,
+            EmailVerificationCodeTemplate emailVerificationCodeTemplate,
             GitHubOAuthService gitHubOAuthService,
             UserRepository userRepository,
             StringRedisTemplate redisTemplate,
@@ -113,7 +115,7 @@ public class AuthAppServiceImpl implements AuthAppService {
         this.verificationCodeDomainService = verificationCodeDomainService;
         this.verificationCodeRepository = verificationCodeRepository;
         this.messageDispatcher = messageDispatcher;
-        this.loginVerificationCodeTemplate = loginVerificationCodeTemplate;
+        this.emailVerificationCodeTemplate = emailVerificationCodeTemplate;
         this.authSessionIssuer = new AuthSessionIssuer(
                 jwtUtil,
                 authTokenService,
@@ -184,7 +186,8 @@ public class AuthAppServiceImpl implements AuthAppService {
         verificationCodeRepository.save(verifyCodeVO);
 
         String subject = "蓝网登录验证码";
-        String htmlContent = loginVerificationCodeTemplate.buildHtml(verifyCodeVO.getCode());
+        String htmlContent = emailVerificationCodeTemplate
+                .buildHtml(VerificationCodeScene.LOGIN, verifyCodeVO.getCode());
         messageDispatcher.dispatchAsync(MessageRequest.html(MessageChannel.EMAIL, email, subject, htmlContent));
 
         log.info("验证码已发送 - email={}, scene={}", email, scene);

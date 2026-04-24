@@ -95,6 +95,9 @@ class AssessmentJudgementAppServiceImplTest {
     @Mock
     private MessageDispatcher messageDispatcher;
 
+    @Mock
+    private com.bluenet.web.application.message.MessageTemplateRegistry messageTemplateRegistry;
+
     @Spy
     private AssessmentJudgementAppConverter assessmentJudgementAppConverter = new AssessmentJudgementAppConverter();
 

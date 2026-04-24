@@ -14,6 +14,7 @@ import com.bluenet.web.domain.service.GitHubOAuthService;
 import com.bluenet.web.domain.service.VerificationCodeDomainService;
 import com.bluenet.web.application.converter.UserAppConverter;
 import com.bluenet.web.application.message.MessageDispatcher;
+import com.bluenet.web.application.message.template.EmailVerificationCodeTemplate;
 import com.bluenet.web.infrastructure.config.GitHubOAuthProperties;
 import com.bluenet.web.infrastructure.security.auth.AuthTokenService;
 import com.bluenet.web.infrastructure.security.cookie.CookieService;
@@ -69,7 +70,7 @@ class AuthAppServiceImplTest {
     private MessageDispatcher messageDispatcher;
 
     @Mock
-    private com.bluenet.web.application.message.template.LoginVerificationCodeTemplate loginVerificationCodeTemplate;
+    private EmailVerificationCodeTemplate emailVerificationCodeTemplate;
 
     @Mock
     private GitHubOAuthService gitHubOAuthService;

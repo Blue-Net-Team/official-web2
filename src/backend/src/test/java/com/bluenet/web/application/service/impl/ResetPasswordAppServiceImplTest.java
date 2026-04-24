@@ -19,6 +19,7 @@ import com.bluenet.web.domain.model.enumerate.MessageChannel;
 import com.bluenet.web.domain.model.enumerate.MessageContentType;
 import com.bluenet.web.application.message.MessageDispatcher;
 import com.bluenet.web.application.message.MessageRequest;
+import com.bluenet.web.application.message.template.EmailVerificationCodeTemplate;
 import com.bluenet.web.infrastructure.security.auth.AuthTokenService;
 import com.bluenet.web.infrastructure.security.reset.ResetPasswordStateService;
 
@@ -52,7 +53,7 @@ class ResetPasswordAppServiceImplTest {
     private MessageDispatcher messageDispatcher;
 
     @Mock
-    private com.bluenet.web.application.message.template.ResetPasswordVerificationCodeTemplate resetPasswordVerificationCodeTemplate;
+    private EmailVerificationCodeTemplate emailVerificationCodeTemplate;
 
     @Mock
     private PasswordEncoder passwordEncoder;

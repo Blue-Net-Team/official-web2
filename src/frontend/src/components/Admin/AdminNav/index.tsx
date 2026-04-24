@@ -17,6 +17,7 @@ import {
   SafetyOutlined,
   TeamOutlined,
   KeyOutlined,
+  MailOutlined,
 } from '@ant-design/icons'
 import type { MenuProps } from 'antd'
 
@@ -71,6 +72,13 @@ export const menuConfig: MenuItemConfig[] = [
     label: '成就管理',
     path: '/admin/achievement',
     icon: <StarOutlined />,
+    minLevel: 3,
+  },
+  {
+    key: 'messageTemplate',
+    label: '消息模板',
+    path: '/admin/message-template',
+    icon: <MailOutlined />,
     minLevel: 3,
   },
   {

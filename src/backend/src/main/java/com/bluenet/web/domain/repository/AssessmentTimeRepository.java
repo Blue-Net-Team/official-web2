@@ -122,4 +122,15 @@ public interface AssessmentTimeRepository {
      */
     Page<AssessmentTime> findByUserParticipation(Long userId, Direction direction, Integer enrollmentYear,
             Pageable pageable);
+
+    /**
+     * 查询指定方向和年级的最大考核轮次。
+     *
+     * @param direction
+     *            技术方向过滤条件。
+     * @param grade
+     *            考核年级。
+     * @return 最大轮次；不存在时返回 Optional.empty()。
+     */
+    Optional<Integer> findMaxEpochByDirectionAndGrade(Direction direction, Integer grade);
 }

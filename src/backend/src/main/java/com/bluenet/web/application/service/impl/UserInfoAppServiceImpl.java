@@ -19,6 +19,8 @@ import com.bluenet.web.domain.service.VerificationCodeDomainService;
 import com.bluenet.web.domain.util.GradeCalculator;
 import com.bluenet.web.application.message.MessageDispatcher;
 import com.bluenet.web.application.message.MessageRequest;
+import com.bluenet.web.application.message.template.EmailVerificationCodeTemplate;
+import com.bluenet.web.application.message.template.VerificationCodeScene;
 import com.bluenet.web.infrastructure.security.auth.AuthTokenService;
 import com.bluenet.web.infrastructure.security.change.ChangePasswordStateService;
 import com.bluenet.web.infrastructure.security.util.UserCTX;
@@ -44,7 +46,7 @@ public class UserInfoAppServiceImpl implements UserInfoAppService {
     private final VerificationCodeDomainService verificationCodeDomainService;
     private final VerificationCodeRepository verificationCodeRepository;
     private final MessageDispatcher messageDispatcher;
-    private final com.bluenet.web.application.message.template.ChangeEmailVerificationCodeTemplate changeEmailVerificationCodeTemplate;
+    private final EmailVerificationCodeTemplate emailVerificationCodeTemplate;
     private final PasswordEncoder passwordEncoder;
     private final ChangePasswordStateService changePasswordStateService;
     private final AuthTokenService authTokenService;
@@ -153,7 +155,10 @@ public class UserInfoAppServiceImpl implements UserInfoAppService {
         var verifyCodeVO = verificationCodeDomainService.generateCode(email, scene);
         verificationCodeRepository.save(verifyCodeVO);
         String subject = "change-email-original".equals(scene) ? "蓝网修改邮箱 - 验证原邮箱" : "蓝网修改邮箱 - 验证新邮箱";
-        String htmlContent = changeEmailVerificationCodeTemplate.buildHtml(verifyCodeVO.getCode(), scene);
+        VerificationCodeScene codeScene = "change-email-original".equals(scene)
+                ? VerificationCodeScene.CHANGE_EMAIL_ORIGINAL
+                : VerificationCodeScene.CHANGE_EMAIL_NEW;
+        String htmlContent = emailVerificationCodeTemplate.buildHtml(codeScene, verifyCodeVO.getCode());
         messageDispatcher.dispatchAsync(MessageRequest.html(MessageChannel.EMAIL, email, subject, htmlContent));
         log.info("修改邮箱验证码已发送 - email={}, scene={}", email, scene);
     }

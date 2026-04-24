@@ -77,4 +77,15 @@ public interface AssessmentTimeMapper extends BaseMapper<AssessmentTimeDO> {
      */
     IPage<AssessmentTimeDO> selectPageByUserParticipation(IPage<AssessmentTimeDO> page, @Param("userId") Long userId,
             @Param("direction") Direction direction, @Param("enrollmentYear") Integer enrollmentYear);
+
+    /**
+     * 查询指定方向和年级的最大考核轮次。
+     *
+     * @param direction
+     *            技术方向过滤条件。
+     * @param grade
+     *            考核年级。
+     * @return 最大轮次；不存在时返回 null。
+     */
+    Integer selectMaxEpochByDirectionAndGrade(@Param("direction") Direction direction, @Param("grade") Integer grade);
 }

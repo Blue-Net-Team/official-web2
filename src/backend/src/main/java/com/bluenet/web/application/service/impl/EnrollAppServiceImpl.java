@@ -58,10 +58,12 @@ public class EnrollAppServiceImpl implements EnrollAppService {
     private final PasswordEncoder passwordEncoder;
     private final MessageDispatcher messageDispatcher;
     private final com.bluenet.web.application.message.template.EnrollmentApprovalCredentialTemplate enrollmentApprovalCredentialTemplate;
+    private final com.bluenet.web.application.message.template.EnrollmentRejectionTemplate enrollmentRejectionTemplate;
 
     private static final int ENROLL_PASSWORD_LENGTH = 10;
     private static final int APPROVAL_INITIAL_PASSWORD_LENGTH = 8;
     private static final String APPROVAL_EMAIL_SUBJECT = "蓝网报名审核通过通知";
+    private static final String REJECTION_EMAIL_SUBJECT = "蓝网报名审核未通过通知";
 
     /**
      * 创建报名。
@@ -278,6 +280,8 @@ public class EnrollAppServiceImpl implements EnrollAppService {
         enroll.reject();
         enrollRepository.update(enroll);
 
+        sendRejectionMessage(enroll, command.reason());
+
         log.info("报名 {} 已拒绝，原因: {}", id, command.reason());
         return new EnrollResult.Approval(id, EnrollStatus.REJECTED, null);
     }
@@ -380,6 +384,22 @@ public class EnrollAppServiceImpl implements EnrollAppService {
             log.info("审核通过初始凭据消息已触发异步分发 - enrollmentId={}, email={}", enroll.getId(), enroll.getEmail());
         } catch (Exception ex) {
             log.warn("审核通过初始凭据消息分发触发失败 - enrollmentId={}, email={}", enroll.getId(), enroll.getEmail(), ex);
+        }
+    }
+
+    private void sendRejectionMessage(Enroll enroll, String reason) {
+        if (enroll.getEmail() == null || enroll.getEmail().isBlank()) {
+            log.warn("报名 {} 无邮箱地址，跳过发送拒绝通知", enroll.getId());
+            return;
+        }
+        try {
+            String htmlContent = enrollmentRejectionTemplate
+                    .buildHtml(enroll.getUsername(), reason);
+            messageDispatcher.dispatchAsync(
+                    MessageRequest.html(MessageChannel.EMAIL, enroll.getEmail(), REJECTION_EMAIL_SUBJECT, htmlContent));
+            log.info("审核拒绝通知消息已触发异步分发 - enrollmentId={}, email={}", enroll.getId(), enroll.getEmail());
+        } catch (Exception ex) {
+            log.warn("审核拒绝通知消息分发触发失败 - enrollmentId={}, email={}", enroll.getId(), enroll.getEmail(), ex);
         }
     }
 

@@ -49,6 +49,13 @@
         ORDER BY id DESC
     </select>
 
+    <select id="selectMaxEpochByDirectionAndGrade" resultType="java.lang.Integer">
+        SELECT MAX(epoch)
+        FROM tb_assessment_time
+        WHERE direction = #{direction}
+          AND grade = #{grade}
+    </select>
+
     <select id="selectPageByUserParticipation" resultMap="BaseResultMap">
         SELECT *
         FROM tb_assessment_time t

@@ -688,3 +688,35 @@ export interface PermissionRoleResponseDTO {
   successCount: number
   currentRoles: string[]
 }
+
+/**
+ * 消息模板信息
+ * 对应后端 MessageTemplateInfo.java
+ */
+export interface MessageTemplateInfoDTO {
+  /** 模板唯一编码 */
+  code: string
+  /** 模板名称 */
+  name: string
+  /** 邮件主题 */
+  subject: string
+  /** 模板描述 */
+  description: string
+  /** 可用变量列表 */
+  variables: string[]
+  /** 当前模板内容（可能被覆盖） */
+  content: string
+  /** 默认模板内容 */
+  defaultContent: string
+  /** 是否启用 */
+  enabled: boolean
+}
+
+/**
+ * 更新消息模板请求
+ * 对应后端 UpdateTemplateRequest.java
+ */
+export interface UpdateMessageTemplateRequestDTO {
+  subject: string
+  content: string
+}

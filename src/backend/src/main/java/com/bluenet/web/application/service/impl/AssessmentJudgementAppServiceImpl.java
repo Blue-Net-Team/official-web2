@@ -11,6 +11,7 @@ import com.bluenet.web.application.AssessmentDecisionResult;
 import com.bluenet.web.application.AssessmentJudgementResult;
 import com.bluenet.web.application.command.assessment_judgement.AssessmentJudgementCommands;
 import com.bluenet.web.application.converter.AssessmentJudgementAppConverter;
+import com.bluenet.web.application.message.MessageTemplateRegistry;
 import com.bluenet.web.application.message.template.AssessmentDecisionNotificationTemplate;
 import com.bluenet.web.application.service.assessment.AssessmentJudgementAccessGuard;
 import com.bluenet.web.application.service.AssessmentJudgementAppService;
@@ -98,6 +99,8 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
      *            用户领域服务
      * @param messageDispatcher
      *            消息分发器
+     * @param messageTemplateRegistry
+     *            消息模板注册表
      * @param assessmentJudgementAppConverter
      *            考核评判应用转换器
      */
@@ -111,6 +114,7 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
             AssessmentDecisionRepository assessmentDecisionRepository,
             UserDomainService userDomainService,
             MessageDispatcher messageDispatcher,
+            MessageTemplateRegistry messageTemplateRegistry,
             AssessmentJudgementAppConverter assessmentJudgementAppConverter) {
         this.assessmentJudgementDomainService = assessmentJudgementDomainService;
         this.assessmentDecisionDomainService = assessmentDecisionDomainService;
@@ -122,7 +126,7 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
         this.userDomainService = userDomainService;
         this.messageDispatcher = messageDispatcher;
         this.accessGuard = new AssessmentJudgementAccessGuard(assessmentTimeRepository);
-        this.notificationTemplate = new AssessmentDecisionNotificationTemplate();
+        this.notificationTemplate = new AssessmentDecisionNotificationTemplate(messageTemplateRegistry);
         this.assessmentJudgementAppConverter = assessmentJudgementAppConverter;
     }
 
@@ -363,7 +367,22 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
                     ? assessmentTime.getDirection().getDescription()
                     : "";
             int epoch = assessmentTime.getEpoch() != null ? assessmentTime.getEpoch() : 0;
-            String resultText = Boolean.TRUE.equals(decision.getPassed()) ? "通过" : "未通过";
+
+            boolean isFinalRound = false;
+            if (assessmentTime.getDirection() != null && assessmentTime.getGrade() != null) {
+                Integer maxEpoch = assessmentTimeRepository.findMaxEpochByDirectionAndGrade(
+                        assessmentTime.getDirection(),
+                        assessmentTime.getGrade()).orElse(null);
+                isFinalRound = maxEpoch != null && maxEpoch.equals(assessmentTime.getEpoch());
+            }
+
+            String resultText;
+            if (isFinalRound) {
+                resultText = Boolean.TRUE.equals(decision.getPassed()) ? "录取" : "淘汰";
+            } else {
+                resultText = Boolean.TRUE.equals(decision.getPassed()) ? "通过" : "未通过";
+            }
+
             String nickname = user.getNickname() != null ? user.getNickname() : user.getUsername();
             String htmlContent = notificationTemplate.buildHtml(nickname, directionLabel, epoch, resultText);
             try {
