@@ -17,12 +17,14 @@ export interface MemberListParams {
 
 export type { ExperienceType } from '../schema/enumerate'
 
-export const MemberService = {
+export const memberService = {
   /**
    * 获取团队成员列表
    * 公开接口，无需认证
    */
-  getMemberList: async (params: MemberListParams = {}): Promise<PageDTO<MemberBriefDTO>> => {
+  getMemberList: async (
+    params: MemberListParams = {}
+  ): Promise<ResponseMessage<PageDTO<MemberBriefDTO>>> => {
     const response = await publicClient.get<ResponseMessage<PageDTO<MemberBriefDTO>>>('/members', {
       params: {
         page: params.page,
@@ -30,7 +32,7 @@ export const MemberService = {
         direction: params.direction,
       },
     })
-    return response.data.data!
+    return response.data
   },
 
   /**
@@ -38,9 +40,9 @@ export const MemberService = {
    * 公开接口，无需认证
    * @param id 成员ID
    */
-  getMemberById: async (id: number): Promise<MemberDetailDTO> => {
+  getMemberById: async (id: number): Promise<ResponseMessage<MemberDetailDTO>> => {
     const response = await publicClient.get<ResponseMessage<MemberDetailDTO>>(`/members/${id}`)
-    return response.data.data!
+    return response.data
   },
 
   /**
@@ -52,14 +54,14 @@ export const MemberService = {
   getMemberExperiences: async (
     memberId: number,
     type?: ExperienceType
-  ): Promise<UserExperience[]> => {
+  ): Promise<ResponseMessage<UserExperience[]>> => {
     const response = await publicClient.get<ResponseMessage<UserExperience[]>>(
       `/members/${memberId}/experiences`,
       {
         params: type ? { type } : undefined,
       }
     )
-    return response.data.data || []
+    return response.data
   },
 
   /**
@@ -69,7 +71,8 @@ export const MemberService = {
    * @param memberId 成员ID
    */
   getMemberTabCounts: async (memberId: number): Promise<TabCounts> => {
-    const experiences = await MemberService.getMemberExperiences(memberId)
+    const response = await memberService.getMemberExperiences(memberId)
+    const experiences = response.data || []
     return {
       projects: experiences.filter((e) => e.type === 'PROJECT').length,
       competitions: experiences.filter((e) => e.type === 'COMPETITION').length,
@@ -82,8 +85,8 @@ export const MemberService = {
    * 公开接口，无需认证
    * @param memberId 成员ID
    */
-  getMemberProjects: async (memberId: number): Promise<UserExperience[]> => {
-    return MemberService.getMemberExperiences(memberId, 'PROJECT')
+  getMemberProjects: async (memberId: number): Promise<ResponseMessage<UserExperience[]>> => {
+    return memberService.getMemberExperiences(memberId, 'PROJECT')
   },
 
   /**
@@ -91,8 +94,8 @@ export const MemberService = {
    * 公开接口，无需认证
    * @param memberId 成员ID
    */
-  getMemberCompetitions: async (memberId: number): Promise<UserExperience[]> => {
-    return MemberService.getMemberExperiences(memberId, 'COMPETITION')
+  getMemberCompetitions: async (memberId: number): Promise<ResponseMessage<UserExperience[]>> => {
+    return memberService.getMemberExperiences(memberId, 'COMPETITION')
   },
 
   /**
@@ -100,7 +103,7 @@ export const MemberService = {
    * 公开接口，无需认证
    * @param memberId 成员ID
    */
-  getMemberInternships: async (memberId: number): Promise<UserExperience[]> => {
-    return MemberService.getMemberExperiences(memberId, 'INTERNSHIP')
+  getMemberInternships: async (memberId: number): Promise<ResponseMessage<UserExperience[]>> => {
+    return memberService.getMemberExperiences(memberId, 'INTERNSHIP')
   },
 }

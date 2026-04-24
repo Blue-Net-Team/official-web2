@@ -1,12 +1,19 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { MemberService } from '@/apis/services/member.service'
-import { MemberDetailDTO, TabCounts } from '@/apis/schema/type'
-import { ProfileSidebar } from '@/components/Profile'
+import { memberService } from '@/apis/services/member.service'
+import { MemberDetailDTO, TabCounts, UserExperience } from '@/apis/schema/type'
+import type { ExperienceType } from '@/apis/schema/enumerate'
+import {
+  ProfileSidebar,
+  ProfileInfoDisplay,
+  ProfileTabs,
+  ExperienceSection,
+} from '@/components/Profile'
 import type { SidebarProfile } from '@/components/Profile/ProfileSidebar'
-import { MemberProfileContent } from '@/components/MemberProfile'
+import type { ProfileDisplayData } from '@/components/Profile/ProfileInfoDisplay'
+import { UserOutlined, FolderOutlined, TrophyOutlined, SolutionOutlined } from '@ant-design/icons'
 import { ArrowLeftOutlined } from '@ant-design/icons'
 import { Spin } from 'antd'
 
@@ -25,6 +32,58 @@ function adaptToSidebarProfile(member: MemberDetailDTO): SidebarProfile {
   }
 }
 
+/** 将 MemberDetailDTO 适配为 ProfileDisplayData */
+function adaptToDisplayData(member: MemberDetailDTO): ProfileDisplayData {
+  return {
+    username: member.username,
+    nickname: member.nickname,
+    grade: member.grade,
+    college: member.college,
+    major: member.major,
+    direction: member.direction,
+    gender: member.gender,
+    roleName: member.role,
+    bio: member.bio,
+  }
+}
+
+const TAB_CONFIG = [
+  { key: 'profile', label: '个人信息', icon: <UserOutlined /> },
+  {
+    key: 'projects',
+    label: '项目经历',
+    icon: <FolderOutlined />,
+    showCount: true,
+    countKey: 'projects' as const,
+  },
+  {
+    key: 'competitions',
+    label: '竞赛经历',
+    icon: <TrophyOutlined />,
+    showCount: true,
+    countKey: 'competitions' as const,
+  },
+  {
+    key: 'internships',
+    label: '实习经历',
+    icon: <SolutionOutlined />,
+    showCount: true,
+    countKey: 'internships' as const,
+  },
+]
+
+type ExperienceCache = {
+  projects: UserExperience[] | null
+  competitions: UserExperience[] | null
+  internships: UserExperience[] | null
+}
+
+type LoadingState = {
+  projects: boolean
+  competitions: boolean
+  internships: boolean
+}
+
 export default function MemberProfilePage() {
   const params = useParams()
   const router = useRouter()
@@ -40,6 +99,17 @@ export default function MemberProfilePage() {
   const [error, setError] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState('profile')
 
+  const [experienceCache, setExperienceCache] = useState<ExperienceCache>({
+    projects: null,
+    competitions: null,
+    internships: null,
+  })
+  const [expLoading, setExpLoading] = useState<LoadingState>({
+    projects: false,
+    competitions: false,
+    internships: false,
+  })
+
   useEffect(() => {
     const fetchMember = async () => {
       if (!memberId || isNaN(memberId)) {
@@ -51,10 +121,14 @@ export default function MemberProfilePage() {
       try {
         setLoading(true)
         const [memberData, countsData] = await Promise.all([
-          MemberService.getMemberById(memberId),
-          MemberService.getMemberTabCounts(memberId),
+          memberService.getMemberById(memberId),
+          memberService.getMemberTabCounts(memberId),
         ])
-        setMember(memberData)
+        if (memberData.code === 200 && memberData.data) {
+          setMember(memberData.data)
+        } else {
+          throw new Error(memberData.msg || '获取成员信息失败')
+        }
         setTabCounts(countsData)
         setError(null)
       } catch (err) {
@@ -67,6 +141,68 @@ export default function MemberProfilePage() {
 
     fetchMember()
   }, [memberId])
+
+  const fetchExperience = useCallback(
+    async (type: 'projects' | 'competitions' | 'internships') => {
+      if (experienceCache[type] !== null || expLoading[type] || !member) {
+        return
+      }
+
+      setExpLoading((prev) => ({ ...prev, [type]: true }))
+
+      try {
+        let data: UserExperience[]
+        switch (type) {
+          case 'projects': {
+            const res = await memberService.getMemberProjects(member.id)
+            data = res.data || []
+            break
+          }
+          case 'competitions': {
+            const res = await memberService.getMemberCompetitions(member.id)
+            data = res.data || []
+            break
+          }
+          case 'internships': {
+            const res = await memberService.getMemberInternships(member.id)
+            data = res.data || []
+            break
+          }
+        }
+        setExperienceCache((prev) => ({ ...prev, [type]: data }))
+      } catch (error) {
+        console.error(`Failed to fetch ${type}:`, error)
+        setExperienceCache((prev) => ({ ...prev, [type]: [] }))
+      } finally {
+        setExpLoading((prev) => ({ ...prev, [type]: false }))
+      }
+    },
+    [member, experienceCache, expLoading]
+  )
+
+  useEffect(() => {
+    if (activeTab === 'projects' || activeTab === 'competitions' || activeTab === 'internships') {
+      fetchExperience(activeTab)
+    }
+  }, [activeTab, fetchExperience])
+
+  const getExperiencesByType = (type: ExperienceType): UserExperience[] => {
+    const keyMap: Record<ExperienceType, keyof ExperienceCache> = {
+      PROJECT: 'projects',
+      COMPETITION: 'competitions',
+      INTERNSHIP: 'internships',
+    }
+    return experienceCache[keyMap[type]] || []
+  }
+
+  const isExpLoading = (type: ExperienceType): boolean => {
+    const keyMap: Record<ExperienceType, keyof LoadingState> = {
+      PROJECT: 'projects',
+      COMPETITION: 'competitions',
+      INTERNSHIP: 'internships',
+    }
+    return expLoading[keyMap[type]]
+  }
 
   if (loading) {
     return (
@@ -118,6 +254,20 @@ export default function MemberProfilePage() {
   }
 
   const sidebarProfile = adaptToSidebarProfile(member)
+  const displayData = adaptToDisplayData(member)
+
+  const renderExperience = (type: ExperienceType, title: string) => {
+    if (isExpLoading(type)) {
+      return (
+        <div className="flex items-center justify-center min-h-[400px]">
+          <Spin size="large" />
+        </div>
+      )
+    }
+    return (
+      <ExperienceSection type={type} title={title} data={getExperiencesByType(type)} readOnly />
+    )
+  }
 
   return (
     <div className="w-full min-h-screen relative overflow-x-hidden">
@@ -136,12 +286,18 @@ export default function MemberProfilePage() {
           activeTab={activeTab}
           onTabChange={setActiveTab}
         />
-        <MemberProfileContent
-          member={member}
-          activeTab={activeTab}
-          onTabChange={setActiveTab}
-          tabCounts={tabCounts}
-        />
+        <div className="flex-1 min-w-0">
+          <ProfileTabs
+            activeTab={activeTab}
+            tabs={TAB_CONFIG}
+            tabCounts={tabCounts}
+            onTabChange={setActiveTab}
+          />
+          {activeTab === 'profile' && <ProfileInfoDisplay profile={displayData} />}
+          {activeTab === 'projects' && renderExperience('PROJECT', '项目经历')}
+          {activeTab === 'competitions' && renderExperience('COMPETITION', '竞赛经历')}
+          {activeTab === 'internships' && renderExperience('INTERNSHIP', '实习经历')}
+        </div>
       </main>
     </div>
   )

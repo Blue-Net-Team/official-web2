@@ -18,9 +18,11 @@ interface ExperienceSectionProps {
   type: ExperienceType
   title: string
   data: UserExperience[]
-  onAdd: (data: Omit<UserExperience, 'id'>) => Promise<void>
-  onUpdate: (id: string, data: Partial<UserExperience>) => Promise<void>
-  onDelete: (id: string) => Promise<void>
+  onAdd?: (data: Omit<UserExperience, 'id'>) => Promise<void>
+  onUpdate?: (id: string, data: Partial<UserExperience>) => Promise<void>
+  onDelete?: (id: string) => Promise<void>
+  /** 只读模式：隐藏添加/编辑/删除操作 */
+  readOnly?: boolean
 }
 
 export default function ExperienceSection({
@@ -30,6 +32,7 @@ export default function ExperienceSection({
   onAdd,
   onUpdate,
   onDelete,
+  readOnly = false,
 }: ExperienceSectionProps) {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingItem, setEditingItem] = useState<UserExperience | null>(null)
@@ -54,14 +57,15 @@ export default function ExperienceSection({
   }
 
   const handleSubmit = async (values: Record<string, unknown>) => {
+    if (readOnly) return
     setIsSubmitting(true)
     try {
       const submitData = { ...values, type } as Omit<UserExperience, 'id'>
       if (editingItem) {
-        await onUpdate(editingItem.id, values as Partial<UserExperience>)
+        await onUpdate?.(editingItem.id, values as Partial<UserExperience>)
         message.success('更新成功')
       } else {
-        await onAdd(submitData)
+        await onAdd?.(submitData)
         message.success('添加成功')
       }
       handleCloseModal()
@@ -73,8 +77,9 @@ export default function ExperienceSection({
   }
 
   const handleDelete = async (id: string) => {
+    if (readOnly) return
     try {
-      await onDelete(id)
+      await onDelete?.(id)
       message.success('删除成功')
     } catch {
       message.error('删除失败')
@@ -223,40 +228,45 @@ export default function ExperienceSection({
     }
   }
 
-  const renderCardActions = (item: UserExperience) => (
-    <div className="flex gap-2">
-      <button
-        className="w-8 h-8 rounded-lg bg-transparent border border-[rgba(255,255,255,0.1)] flex items-center justify-center cursor-pointer transition-all duration-300 hover:bg-[rgba(102,119,255,0.1)] hover:border-[#6677ff] [&>svg]:w-4 [&>svg]:h-4 [&>svg]:text-[#6677ff]"
-        onClick={() => handleOpenModal(item)}
-      >
-        <EditOutlined />
-      </button>
-      <Popconfirm
-        title="确认删除"
-        description="确定要删除这条记录吗？"
-        onConfirm={() => handleDelete(item.id)}
-        okText="确定"
-        cancelText="取消"
-      >
-        <button className="w-8 h-8 rounded-lg bg-transparent border border-[rgba(255,255,255,0.1)] flex items-center justify-center cursor-pointer transition-all duration-300 hover:bg-[rgba(255,107,53,0.1)] hover:border-[#ff6b35] [&>svg]:w-4 [&>svg]:h-4 [&>svg]:text-[#ff6b35]">
-          <DeleteOutlined />
+  const renderCardActions = (item: UserExperience) => {
+    if (readOnly) return undefined
+    return (
+      <div className="flex gap-2">
+        <button
+          className="w-8 h-8 rounded-lg bg-transparent border border-[rgba(255,255,255,0.1)] flex items-center justify-center cursor-pointer transition-all duration-300 hover:bg-[rgba(102,119,255,0.1)] hover:border-[#6677ff] [&>svg]:w-4 [&>svg]:h-4 [&>svg]:text-[#6677ff]"
+          onClick={() => handleOpenModal(item)}
+        >
+          <EditOutlined />
         </button>
-      </Popconfirm>
-    </div>
-  )
+        <Popconfirm
+          title="确认删除"
+          description="确定要删除这条记录吗？"
+          onConfirm={() => handleDelete(item.id)}
+          okText="确定"
+          cancelText="取消"
+        >
+          <button className="w-8 h-8 rounded-lg bg-transparent border border-[rgba(255,255,255,0.1)] flex items-center justify-center cursor-pointer transition-all duration-300 hover:bg-[rgba(255,107,53,0.1)] hover:border-[#ff6b35] [&>svg]:w-4 [&>svg]:h-4 [&>svg]:text-[#ff6b35]">
+            <DeleteOutlined />
+          </button>
+        </Popconfirm>
+      </div>
+    )
+  }
 
   return (
     <div className="bg-white/[0.03] backdrop-blur-[20px] border border-white/[0.05] rounded-2xl p-6 max-[640px]:p-4">
       <div className="flex items-center justify-between mb-5 pb-4 border-b border-white/[0.05] max-[640px]:flex-col max-[640px]:gap-3 max-[640px]:items-start">
         <h3 className="text-lg font-semibold text-white m-0">{title}</h3>
-        <Button
-          type="primary"
-          className="!px-6 !py-3 !rounded-[10px] !text-sm !font-medium cursor-pointer transition-all duration-300 !border-none !bg-[linear-gradient(135deg,#6677ff_0%,#2f27b0_100%)] text-white shadow-[0_4px_16px_rgba(102,119,255,0.3)] hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(102,119,255,0.4)] flex items-center gap-2"
-          icon={<PlusOutlined />}
-          onClick={() => handleOpenModal()}
-        >
-          添加{type === 'PROJECT' ? '项目' : type === 'COMPETITION' ? '竞赛' : '实习'}
-        </Button>
+        {!readOnly && (
+          <Button
+            type="primary"
+            className="!px-6 !py-3 !rounded-[10px] !text-sm !font-medium cursor-pointer transition-all duration-300 !border-none !bg-[linear-gradient(135deg,#6677ff_0%,#2f27b0_100%)] text-white shadow-[0_4px_16px_rgba(102,119,255,0.3)] hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(102,119,255,0.4)] flex items-center gap-2"
+            icon={<PlusOutlined />}
+            onClick={() => handleOpenModal()}
+          >
+            添加{type === 'PROJECT' ? '项目' : type === 'COMPETITION' ? '竞赛' : '实习'}
+          </Button>
+        )}
       </div>
 
       {data.length > 0 ? (
@@ -273,29 +283,33 @@ export default function ExperienceSection({
           <h3 className="text-lg font-semibold text-white mb-2 m-0">
             暂无{type === 'PROJECT' ? '项目' : type === 'COMPETITION' ? '竞赛' : '实习'}经历
           </h3>
-          <p className="text-sm text-[rgba(140,140,141,1)] m-0">点击上方按钮添加你的经历</p>
+          {!readOnly && (
+            <p className="text-sm text-[rgba(140,140,141,1)] m-0">点击上方按钮添加你的经历</p>
+          )}
         </div>
       )}
 
-      <Modal
-        title={editingItem ? '编辑' : '添加'}
-        open={isModalOpen}
-        onCancel={handleCloseModal}
-        footer={null}
-        width={600}
-      >
-        <Form form={form} layout="vertical" onFinish={handleSubmit} style={{ marginTop: 24 }}>
-          {renderFormItems()}
-          <Form.Item style={{ marginBottom: 0, marginTop: 24 }}>
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12 }}>
-              <Button onClick={handleCloseModal}>取消</Button>
-              <Button type="primary" htmlType="submit" loading={isSubmitting}>
-                {editingItem ? '保存' : '添加'}
-              </Button>
-            </div>
-          </Form.Item>
-        </Form>
-      </Modal>
+      {!readOnly && (
+        <Modal
+          title={editingItem ? '编辑' : '添加'}
+          open={isModalOpen}
+          onCancel={handleCloseModal}
+          footer={null}
+          width={600}
+        >
+          <Form form={form} layout="vertical" onFinish={handleSubmit} style={{ marginTop: 24 }}>
+            {renderFormItems()}
+            <Form.Item style={{ marginBottom: 0, marginTop: 24 }}>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12 }}>
+                <Button onClick={handleCloseModal}>取消</Button>
+                <Button type="primary" htmlType="submit" loading={isSubmitting}>
+                  {editingItem ? '保存' : '添加'}
+                </Button>
+              </div>
+            </Form.Item>
+          </Form>
+        </Modal>
+      )}
     </div>
   )
 }

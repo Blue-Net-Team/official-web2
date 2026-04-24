@@ -5,7 +5,7 @@ import { Pagination } from 'antd'
 import { MemberCard } from './MemberCard'
 import { MembersProps, FilterTab } from './Members.types'
 import { Direction, DIRECTION_LABELS } from '@/apis/schema/enumerate'
-import { MemberService } from '@/apis/services/member.service'
+import { memberService } from '@/apis/services/member.service'
 import { MemberBriefDTO } from '@/apis/schema/type'
 
 const PAGE_SIZE = 16
@@ -26,7 +26,9 @@ export const Members: React.FC<MembersProps> = ({ initialPage = 0 }) => {
   useEffect(() => {
     const fetchCounts = async () => {
       try {
-        const allMembers = await MemberService.getMemberList({ size: 1000 })
+        const response = await memberService.getMemberList({ size: 1000 })
+        if (response.code !== 200 || !response.data) return
+        const allMembers = response.data
         const counts: Record<Direction, number> = {
           COMPUTER_VISION: 0,
           STRUCTURAL_DESIGN: 0,
@@ -53,10 +55,16 @@ export const Members: React.FC<MembersProps> = ({ initialPage = 0 }) => {
         size: PAGE_SIZE,
         direction: activeFilter === 'ALL' ? undefined : activeFilter,
       }
-      const response = await MemberService.getMemberList(params)
-      setMembers(response.content)
-      setTotalElements(response.totalElements)
-      setTotalPages(response.totalPages)
+      const response = await memberService.getMemberList(params)
+      if (response.code === 200 && response.data) {
+        setMembers(response.data.content)
+        setTotalElements(response.data.totalElements)
+        setTotalPages(response.data.totalPages)
+      } else {
+        setMembers([])
+        setTotalElements(0)
+        setTotalPages(0)
+      }
     } catch (error) {
       console.error('Failed to fetch members:', error)
     } finally {

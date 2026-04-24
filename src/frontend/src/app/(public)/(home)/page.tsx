@@ -2,27 +2,22 @@ import bg1 from '@/assets/bg1.png'
 import bg2 from '@/assets/bg2.png'
 import { Flex } from 'antd'
 import TopContent from '@/components/Home/TopContent'
-import { CompetitionService } from '@/apis/services/competition.service'
+import { competitionService } from '@/apis/services/competition.service'
 import AchievementAndResources from '@/components/Home/AchievementAndResources'
 import FeaturedEquipment from '@/components/Home/FeaturedEquipment'
 import TeamVibe from '@/components/Home/TeamVibe'
 import { Suspense } from 'react'
 import CompetitionsSkeleton from '@/components/Home/Competitions/skeleton'
 import Competitions from '@/components/Home/Competitions'
-import Wrapper from '@/components/Wrapper'
 import DirectionIntroduce from '@/components/Home/DirectionIntroduce'
 import RecruitmentProcess from '@/components/Home/RecruitmentProcess'
 
 export const revalidate = 3600
 
 async function CompetitionsTable() {
-  const competitionsBrief = await CompetitionService.getAllCompetitions()
+  const competitionsBrief = await competitionService.getAllCompetitions()
 
-  return (
-    <Wrapper apiResponse={competitionsBrief}>
-      <Competitions competitions={competitionsBrief.data || []} />
-    </Wrapper>
-  )
+  return <Competitions competitions={competitionsBrief.data || []} />
 }
 
 export default function Home() {

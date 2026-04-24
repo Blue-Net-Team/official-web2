@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { Spin, Empty, Pagination } from 'antd'
-import { CompetitionService } from '@/apis/services/competition.service'
+import { competitionService } from '@/apis/services/competition.service'
 import { CompetitionResponseDTO } from '@/apis/schema/type'
 import CompetitionCard from '@/components/CompetitionCard'
 import BackgroundDecorations from './BackgroundDecorations'
@@ -41,7 +41,7 @@ export default function CompetitionsPage() {
   const fetchCompetitions = useCallback(async () => {
     setLoading(true)
     try {
-      const response = await CompetitionService.getCompetitionsPage(currentPage, PAGE_SIZE)
+      const response = await competitionService.getCompetitionsPage(currentPage, PAGE_SIZE)
 
       if (response.code === 200 && response.data) {
         setCompetitions(response.data.content)

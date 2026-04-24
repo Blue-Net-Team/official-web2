@@ -1,92 +1,48 @@
 /**
- * Tab导航组件 - 客户端组件
+ * Tab导航组件 - 通用 Tab 导航
  *
  * 功能：
- * - 渲染5个Tab按钮（个人信息、考核、项目、竞赛、实习）
+ * - 支持自定义 Tab 配置
  * - 显示各Tab对应的数据数量Badge
  * - 支持客户端Tab切换
- *
- * @param activeTab - 当前激活的Tab
- * @param tabCounts - 各Tab的数据计数
- * @param onTabChange - Tab切换回调
  *
  * @author BlueNet Team
  */
 'use client'
 
-import type { TabName, TabCounts } from '@/types/profile'
-import {
-  UserOutlined,
-  FileTextOutlined,
-  FolderOutlined,
-  TrophyOutlined,
-  SolutionOutlined,
-} from '@ant-design/icons'
+import React from 'react'
+import type { TabCounts } from '@/apis/schema/type'
 
-interface ProfileTabsProps {
-  activeTab: TabName
-  tabCounts: TabCounts
-  roleName?: string
-  onTabChange?: (tab: TabName) => void
-}
-
-interface TabItem {
-  key: TabName
+export interface TabConfig {
+  key: string
   label: string
   icon: React.ReactNode
   showCount?: boolean
   countKey?: keyof TabCounts
-  requireMember?: boolean
 }
 
-const allTabs: TabItem[] = [
-  { key: 'profile', label: '个人信息', icon: <UserOutlined /> },
-  { key: 'assessment', label: '我的考核', icon: <FileTextOutlined />, showCount: false },
-  {
-    key: 'projects',
-    label: '项目经历',
-    icon: <FolderOutlined />,
-    showCount: true,
-    countKey: 'projects',
-    requireMember: true,
-  },
-  {
-    key: 'competitions',
-    label: '竞赛经历',
-    icon: <TrophyOutlined />,
-    showCount: true,
-    countKey: 'competitions',
-    requireMember: true,
-  },
-  {
-    key: 'internships',
-    label: '实习经历',
-    icon: <SolutionOutlined />,
-    showCount: true,
-    countKey: 'internships',
-    requireMember: true,
-  },
-]
+interface ProfileTabsProps {
+  activeTab: string
+  tabs: TabConfig[]
+  tabCounts?: TabCounts
+  onTabChange?: (tab: string) => void
+}
 
 export default function ProfileTabs({
   activeTab,
-  tabCounts,
-  roleName,
+  tabs,
+  tabCounts = { projects: 0, competitions: 0, internships: 0 },
   onTabChange,
 }: ProfileTabsProps) {
-  const isMemberOrAbove = roleName !== 'CANDIDATE'
-  const tabs = allTabs.filter((tab) => !tab.requireMember || isMemberOrAbove)
-  const getCount = (tab: TabItem): number => {
+  const getCount = (tab: TabConfig): number => {
     if (tab.countKey) {
       return tabCounts[tab.countKey] || 0
     }
     return 0
   }
 
-  const handleClick = (tab: TabName) => {
-    if (onTabChange) {
-      onTabChange(tab)
-    }
+  const handleClick = (tab: string) => {
+    onTabChange?.(tab)
   }
 
   return (

@@ -2,8 +2,6 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { UserInfo, StudentIdLoginRequestDTO, UserAuthResponseDTO } from '@/apis/schema/type'
 import { authService } from '@/apis/services/auth.service'
-import { hashPassword } from '@/utils/passwordHash'
-import { setCsrfToken } from '@/apis/client'
 import { AxiosError } from 'axios'
 
 interface AuthState {
@@ -31,7 +29,7 @@ interface AuthState {
 
 const authStore = create<AuthState>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       csrfToken: null,
       userInfo: null,
       isAuthenticated: false,
@@ -40,14 +38,12 @@ const authStore = create<AuthState>()(
       login: async (credentials: StudentIdLoginRequestDTO) => {
         set({ isLoading: true })
         try {
-          const hashedPassword = await hashPassword(credentials.password)
           const response = await authService.login({
             studentId: credentials.studentId,
-            password: hashedPassword,
+            password: credentials.password,
           })
 
           if (response.code === 200 && response.data) {
-            setCsrfToken(response.data.csrfToken)
             set({
               csrfToken: response.data.csrfToken,
               userInfo: response.data.userInfo,
@@ -74,7 +70,6 @@ const authStore = create<AuthState>()(
           })
 
           if (response.code === 200 && response.data) {
-            setCsrfToken(response.data.csrfToken)
             set({
               csrfToken: response.data.csrfToken,
               userInfo: response.data.userInfo,
@@ -112,7 +107,6 @@ const authStore = create<AuthState>()(
         } catch {
           // 即使 API 调用失败，也清除本地状态
         } finally {
-          setCsrfToken(null)
           set({
             csrfToken: null,
             userInfo: null,
@@ -122,16 +116,10 @@ const authStore = create<AuthState>()(
       },
 
       checkAuthStatus: async () => {
-        const { userInfo, csrfToken } = get()
-        if (userInfo && csrfToken) {
-          return true
-        }
-
         try {
           const response = await authService.getAuthMe()
 
           if (response.code === 200 && response.data?.authenticated) {
-            setCsrfToken(response.data.csrfToken)
             set({
               csrfToken: response.data.csrfToken,
               userInfo: response.data.userInfo,
@@ -139,7 +127,6 @@ const authStore = create<AuthState>()(
             })
             return true
           } else {
-            setCsrfToken(null)
             set({
               csrfToken: null,
               userInfo: null,
@@ -148,7 +135,6 @@ const authStore = create<AuthState>()(
             return false
           }
         } catch {
-          setCsrfToken(null)
           set({
             csrfToken: null,
             userInfo: null,
