@@ -54,8 +54,8 @@ export default function ProfilePage() {
   const { profile, tabCounts, assessments, experiences, loading, refresh } = useProfileData()
   const { addExperience, updateExperience, deleteExperience } = useExperienceActions(refresh)
 
-  const handleTabChange = (tab: TabName) => {
-    setCurrentTab(tab)
+  const handleTabChange = (tab: string) => {
+    setCurrentTab(tab as TabName)
   }
 
   const getExperiencesByType = (type: string) => {

@@ -31,9 +31,11 @@ interface ProfileInfoDisplayProps {
 
 export const ProfileInfoDisplay: React.FC<ProfileInfoDisplayProps> = ({ profile }) => {
   const directionLabel = profile.direction
-    ? DIRECTION_LABELS[profile.direction] || profile.direction
+    ? (DIRECTION_LABELS as Record<string, string>)[profile.direction] || profile.direction
     : '未知'
-  const genderLabel = profile.gender ? GENDER_LABELS[profile.gender] || '未知' : '未知'
+  const genderLabel = profile.gender
+    ? (GENDER_LABELS as Record<string, string>)[profile.gender] || '未知'
+    : '未知'
 
   const fields = [
     { label: '用户名', value: profile.username },
