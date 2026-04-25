@@ -10,7 +10,7 @@ public class AlgorithmJudgeQueueConfig {
 
     @Bean
     public Queue algorithmJudgeQueue() {
-        // 判题任务需要持久化队列承接，Worker 独立消费这条队列。
+        // 主应用当前只负责把判题任务持久化入队，后续由独立消费者处理。
         return new Queue(ALGORITHM_JUDGE_QUEUE, true);
     }
 }

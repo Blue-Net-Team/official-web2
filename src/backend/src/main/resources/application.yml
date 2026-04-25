@@ -54,11 +54,6 @@ spring:
     port: ${RABBITMQ_PORT:5672}
     username: ${RABBITMQ_USERNAME:admin}
     password: ${RABBITMQ_PASSWORD:bluenet123}
-
-bluenet:
-  algorithm-judge:
-    worker-enabled: ${ALGORITHM_JUDGE_WORKER_ENABLED:true}
-
 mybatis-plus:
   mapper-locations: classpath:infrastructure/repository/mapper/*.xml
   type-aliases-package: com.bluenet.web.domain.model.entity

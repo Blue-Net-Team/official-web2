@@ -33,7 +33,7 @@ public class AlgorithmJudgeController {
     private final AlgorithmJudgeRequestConverter algorithmJudgeRequestConverter;
     private final AlgorithmJudgeAppConverter algorithmJudgeAppConverter;
 
-    @Operation(summary = "运行算法题代码", description = "创建不计分运行任务，可使用默认运行用例或自定义输入。")
+    @Operation(summary = "运行算法题代码", description = "创建不计分运行任务并投递判题消息，可使用默认运行用例或自定义输入。")
     @RequiresPermission(name = "运行算法题", value = "algorithm-judge:run", access = AccessLevel.AUTHENTICATED)
     @PostMapping("/run")
     public ResponseMessage<AlgorithmSubmitResponseDTO> run(@Valid @RequestBody AlgorithmRunRequestDTO request) {
@@ -51,10 +51,11 @@ public class AlgorithmJudgeController {
         return ResponseMessage.success(algorithmJudgeAppConverter.toSubmitDTO(result));
     }
 
-    @Operation(summary = "轮询算法判题任务", description = "查询当前用户自己的运行或正式提交任务状态。")
+    @Operation(summary = "轮询算法判题任务", description = "查询当前用户自己的运行或正式提交任务状态。任务入队后会等待后续独立消费者处理。")
     @RequiresPermission(name = "轮询算法判题任务", value = "algorithm-judge:poll", access = AccessLevel.AUTHENTICATED)
     @GetMapping("/jobs/{jobId}")
     public ResponseMessage<JudgeJobPollingResponseDTO> getJob(@PathVariable Long jobId) {
+        // 轮询接口保持只读语义，当前主应用不会主动推进判题状态。
         AlgorithmJudgeResult.PollResult result = algorithmJudgeAppService.getJob(jobId);
         return ResponseMessage.success(algorithmJudgeAppConverter.toPollingDTO(result));
     }
