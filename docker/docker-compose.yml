@@ -6,8 +6,8 @@ x-backend-env: &backend-env
   DATABASE_PASSWORD: ${DB_PASSWORD:-hyfzhl999}
   RABBITMQ_HOST: rabbitmq
   RABBITMQ_PORT: 5672
-  RABBITMQ_USERNAME: admin
-  RABBITMQ_PASSWORD: bluenet123
+  RABBITMQ_USERNAME: ${RABBITMQ_USERNAME:-admin}
+  RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-bluenet123}
   MAIL_USERNAME: ${MAIL_USERNAME:-gdou_bluenet@163.com}
   MAIL_PASSWORD: ${MAIL_PASSWORD:-WUxwy9YxyMW3DzA6}
   STORAGE_PROVIDER: ${STORAGE_PROVIDER:-minio}
@@ -105,7 +105,7 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: ${DB_PASSWORD:-dg24Nihng@49*}
     volumes:
-      - bluenet_database_${ENV:-dev}_data:/var/lib/postgresql/data
+      - bluenet_database_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d db_blue_net"]
       interval: 5s
@@ -126,10 +126,10 @@ services:
       - "5672:5672"
       - "15672:15672"
     environment:
-      RABBITMQ_DEFAULT_USER: admin
-      RABBITMQ_DEFAULT_PASS: bluenet123
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USERNAME:-admin}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-bluenet123}
     volumes:
-      - bluenet_rabbitmq_${ENV:-dev}_data:/var/lib/rabbitmq
+      - bluenet_rabbitmq_data:/var/lib/rabbitmq
     healthcheck:
       test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
       interval: 10s
@@ -148,9 +148,16 @@ services:
     container_name: bluenet-redis
     ports:
       - "6739:6379"
-    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-}
+    command: >
+      sh -c '
+        if [ -n "$${REDIS_PASSWORD}" ]; then
+          redis-server --appendonly yes --requirepass "$$REDIS_PASSWORD"
+        else
+          redis-server --appendonly yes
+        fi
+      '
     volumes:
-      - bluenet_redis_${ENV:-dev}_data:/data
+      - bluenet_redis_data:/data
     healthcheck:
       test: ["CMD", "sh", "-c", "redis-cli -a \"${REDIS_PASSWORD:-}\" ping | grep -q PONG"]
       interval: 5s
@@ -175,7 +182,7 @@ services:
       MINIO_ROOT_PASSWORD: ${MINIO_PASSWORD:-g05q80*EH04}
     command: server /data --console-address ":9001"
     volumes:
-      - bluenet_minio_${ENV:-dev}_data:/data
+      - bluenet_minio_data:/data
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
       interval: 10s
@@ -194,7 +201,11 @@ networks:
     driver: bridge
 
 volumes:
-  bluenet_database_dev_data:
-  bluenet_rabbitmq_dev_data:
-  bluenet_redis_dev_data:
-  bluenet_minio_dev_data:
+  bluenet_database_data:
+    name: bluenet-database-${ENV:-dev}-data
+  bluenet_rabbitmq_data:
+    name: bluenet-rabbitmq-${ENV:-dev}-data
+  bluenet_redis_data:
+    name: bluenet-redis-${ENV:-dev}-data
+  bluenet_minio_data:
+    name: bluenet-minio-${ENV:-dev}-data
