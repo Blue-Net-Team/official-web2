@@ -131,6 +131,7 @@ public class AssessmentQuestionAppConverter {
         return UserQuestionListResponse.builder()
                 .questions(PageDTO.from(result.questions().map(this::convertToDTOForUser)))
                 .deadline(result.deadline())
+                .ended(result.ended())
                 .build();
     }
 }

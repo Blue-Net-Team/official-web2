@@ -93,6 +93,7 @@ public class AssessmentAnswerAppServiceImpl implements AssessmentAnswerAppServic
         AssessmentQuestion question = assessmentQuestionRepository.findById(command.questionId())
                 .orElseThrow(() -> new DataNotFound("题目不存在，ID: " + command.questionId()));
         AssessmentTime timeVO = validateDirectionMatch(currentUser, question);
+        validateTimeNotEnded(timeVO);
         validateFileId(command.fileId());
 
         if (Boolean.TRUE.equals(timeVO.getTimeLimit())) {
@@ -152,6 +153,7 @@ public class AssessmentAnswerAppServiceImpl implements AssessmentAnswerAppServic
         AssessmentQuestion question = assessmentQuestionRepository.findById(command.questionId())
                 .orElseThrow(() -> new DataNotFound("题目不存在，ID: " + command.questionId()));
         AssessmentTime timeVO = validateDirectionMatch(currentUser, question);
+        validateTimeNotEnded(timeVO);
         validateFileId(command.fileId());
 
         if (Boolean.TRUE.equals(timeVO.getTimeLimit())) {
@@ -233,6 +235,12 @@ public class AssessmentAnswerAppServiceImpl implements AssessmentAnswerAppServic
             throw new Forbidden("方向不匹配");
         }
         return time;
+    }
+
+    private void validateTimeNotEnded(AssessmentTime time) {
+        if (time.getEndTime() != null && LocalDateTime.now().isAfter(time.getEndTime())) {
+            throw new BadRequest("考核时间已结束，无法提交答案");
+        }
     }
 
     private void validateFileId(Long fileId) {

@@ -10,7 +10,7 @@ import {
   FileTextOutlined,
   TrophyOutlined,
 } from '@ant-design/icons'
-import { Spin, Table, Tag } from 'antd'
+import { Spin, Table, Tag, message } from 'antd'
 import type { TableColumnsType } from 'antd'
 import { assessmentQuestionService } from '@/apis/services/assessment-question.service'
 import { assessmentTimeService } from '@/apis/services/assessment-time.service'
@@ -72,6 +72,7 @@ export default function QuestionsPage() {
   const [timeInfo, setTimeInfo] = useState<AssessmentTimeDTO | null>(null)
   const [questions, setQuestions] = useState<AssessmentQuestionDTO[]>([])
   const [totalElements, setTotalElements] = useState(0)
+  const [ended, setEnded] = useState(false)
   const [loading, setLoading] = useState(true)
   const { isAuthenticated, checkAuthStatus } = useAuth()
 
@@ -106,6 +107,7 @@ export default function QuestionsPage() {
       if (response.code === 200 && response.data) {
         setQuestions(response.data.questions.content ?? [])
         setTotalElements(response.data.questions.totalElements ?? 0)
+        setEnded(response.data.ended ?? false)
       } else {
         setQuestions([])
       }
@@ -202,6 +204,10 @@ export default function QuestionsPage() {
   }
 
   const handleRowClick = (record: AssessmentQuestionDTO) => {
+    if (ended) {
+      message.warning('考核已结束，无法进入答题')
+      return
+    }
     router.push(`/assessment/${timeId}/questions/${record.id}`)
   }
 

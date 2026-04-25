@@ -95,6 +95,9 @@ export default function QuestionDetailPage() {
         const found = response.data.content.find((t: AssessmentTimeDTO) => t.id === timeId)
         if (found) {
           setTimeInfo(found)
+          if (found.endTime && new Date(found.endTime).getTime() <= Date.now()) {
+            setIsExpired(true)
+          }
           return found
         }
       }

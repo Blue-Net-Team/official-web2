@@ -18,4 +18,7 @@ public class UserQuestionListResponse {
 
     @Schema(description = "限时考核截止时间（ISO格式），非限时考核为null")
     private String deadline;
+
+    @Schema(description = "考核是否已结束")
+    private Boolean ended;
 }

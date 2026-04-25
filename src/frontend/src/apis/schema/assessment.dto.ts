@@ -588,4 +588,6 @@ export interface UserQuestionListResponseDTO {
   questions: import('./type').PageDTO<AssessmentQuestionDTO>
   /** 限时考核截止时间（ISO格式），非限时考核为null */
   deadline: string | null
+  /** 考核是否已结束 */
+  ended: boolean
 }

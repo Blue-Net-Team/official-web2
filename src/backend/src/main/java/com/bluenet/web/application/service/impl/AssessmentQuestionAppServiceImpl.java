@@ -31,6 +31,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -265,7 +266,8 @@ public class AssessmentQuestionAppServiceImpl implements AssessmentQuestionAppSe
             }
         }
 
-        return new UserQuestionListResult(resultPage, deadline);
+        boolean ended = time.getEndTime() != null && LocalDateTime.now().isAfter(time.getEndTime());
+        return new UserQuestionListResult(resultPage, deadline, ended);
     }
 
     /**

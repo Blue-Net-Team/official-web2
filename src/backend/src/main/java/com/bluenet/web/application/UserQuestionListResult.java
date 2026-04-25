@@ -12,5 +12,7 @@ public record UserQuestionListResult(
         /** 题目列表 */
         Page<AssessmentQuestionResult> questions,
         /** 截止时间 */
-        String deadline) {
+        String deadline,
+        /** 考核是否已结束 */
+        Boolean ended) {
 }
