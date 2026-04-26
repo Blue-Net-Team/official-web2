@@ -18,6 +18,7 @@ import {
   TeamOutlined,
   KeyOutlined,
   MailOutlined,
+  UserOutlined,
 } from '@ant-design/icons'
 import type { MenuProps } from 'antd'
 
@@ -102,6 +103,13 @@ export const menuConfig: MenuItemConfig[] = [
         minLevel: 3,
       },
     ],
+  },
+  {
+    key: 'userManagement',
+    label: '用户管理',
+    path: '/admin/users',
+    icon: <UserOutlined />,
+    minLevel: 4,
   },
   {
     key: 'assessment',

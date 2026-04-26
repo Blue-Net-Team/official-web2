@@ -720,3 +720,76 @@ export interface UpdateMessageTemplateRequestDTO {
   subject: string
   content: string
 }
+
+// ========== Admin User Management ==========
+
+export interface AdminUserListQueryDTO {
+  page?: number
+  size?: number
+  roleId?: number
+  direction?: string
+  collegeId?: number
+  keyword?: string
+}
+
+export interface AdminUserListItemDTO {
+  id: number
+  studentId: string
+  username: string
+  nickname: string | null
+  email: string | null
+  roleId: number | null
+  roleName: string | null
+  direction: string | null
+  college: string | null
+  major: string | null
+  gender: string | null
+  job: string | null
+  disable: boolean
+  avatarFileId: number | null
+}
+
+export interface AdminUserDetailDTO {
+  id: number
+  studentId: string
+  username: string
+  nickname: string | null
+  email: string | null
+  roleId: number | null
+  roleName: string | null
+  direction: string | null
+  college: string | null
+  major: string | null
+  gender: string | null
+  job: string | null
+  disable: boolean
+  avatarFileId: number | null
+  githubUsername: string | null
+  bio: string | null
+  assessmentGradeYear: number | null
+  experienceCount: number
+  achievementCount: number
+  answerCount: number
+  commentCount: number
+}
+
+export interface AdminUserUpdateRequestDTO {
+  roleId?: number
+  direction?: string
+  disable?: boolean
+  job?: string
+}
+
+export interface AdminUserResetPasswordRequestDTO {
+  newPassword: string
+  confirmPassword: string
+}
+
+export interface AdminUserBatchOperateRequestDTO {
+  userIds: number[]
+}
+
+export interface AdminUserBatchUpdateRoleRequestDTO {
+  userIds: number[]
+  roleId: number
+}
