@@ -537,6 +537,54 @@ export interface EquipmentDTO {
 }
 
 /**
+ * 创建场地请求
+ * 对应后端 CreateVenueRequestDTO.java
+ */
+export interface CreateVenueRequestDTO {
+  name: string
+  subtitle?: string
+  description?: string
+  imageFileId?: number | null
+  sortOrder?: number
+}
+
+/**
+ * 更新场地请求
+ * 对应后端 UpdateVenueRequestDTO.java
+ */
+export interface UpdateVenueRequestDTO {
+  name?: string
+  subtitle?: string
+  description?: string
+  imageFileId?: number | null
+  sortOrder?: number
+}
+
+/**
+ * 创建设备请求
+ * 对应后端 CreateEquipmentRequestDTO.java
+ */
+export interface CreateEquipmentRequestDTO {
+  name: string
+  brand?: string
+  description?: string
+  imageFileId?: number | null
+  sortOrder?: number
+}
+
+/**
+ * 更新设备请求
+ * 对应后端 UpdateEquipmentRequestDTO.java
+ */
+export interface UpdateEquipmentRequestDTO {
+  name?: string
+  brand?: string
+  description?: string
+  imageFileId?: number | null
+  sortOrder?: number
+}
+
+/**
  * 审计统计 - 请求量趋势数据点
  * 对应后端 TrendPointDTO.java
  */

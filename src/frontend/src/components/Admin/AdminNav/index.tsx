@@ -19,6 +19,8 @@ import {
   KeyOutlined,
   MailOutlined,
   UserOutlined,
+  BankOutlined,
+  ToolOutlined,
 } from '@ant-design/icons'
 import type { MenuProps } from 'antd'
 
@@ -80,6 +82,20 @@ export const menuConfig: MenuItemConfig[] = [
     label: '成就管理',
     path: '/admin/achievement',
     icon: <StarOutlined />,
+    minLevel: 3,
+  },
+  {
+    key: 'venue',
+    label: '场地管理',
+    path: '/admin/venue',
+    icon: <BankOutlined />,
+    minLevel: 3,
+  },
+  {
+    key: 'equipment',
+    label: '设备管理',
+    path: '/admin/equipment',
+    icon: <ToolOutlined />,
     minLevel: 3,
   },
   {
