@@ -8,6 +8,10 @@ import com.bluenet.web.domain.model.vo.QrcodeVO;
 import com.bluenet.web.domain.model.vo.TabCountsVO;
 import com.bluenet.web.domain.model.vo.UserVO;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
+import java.util.List;
 import java.util.Optional;
 
 public interface UserRepository {
@@ -163,4 +167,100 @@ public interface UserRepository {
      * @return 满足条件时返回 true，否则返回 false。
      */
     boolean existsByInternalReferralCode(String code);
+
+    // ========== Admin User Management ==========
+
+    /**
+     * 分页查询用户列表（支持筛选和搜索）
+     *
+     * @param pageable
+     *            分页参数
+     * @param roleId
+     *            角色ID筛选
+     * @param direction
+     *            方向筛选
+     * @param collegeId
+     *            学院ID筛选
+     * @param keyword
+     *            学号/姓名关键词搜索
+     * @return 分页用户实体列表
+     */
+    Page<User> findPage(Pageable pageable, Long roleId, Direction direction, Long collegeId, String keyword);
+
+    /**
+     * 按主键查询用户实体（管理员用）
+     *
+     * @param id
+     *            用户ID
+     * @return 用户实体
+     */
+    Optional<User> findEntityById(Long id);
+
+    /**
+     * 更新用户管理员可修改字段
+     *
+     * @param userId
+     *            用户主键
+     * @param roleId
+     *            角色ID
+     * @param direction
+     *            方向
+     * @param disable
+     *            禁用状态
+     * @param job
+     *            岗位
+     * @return 受影响行数
+     */
+    int updateAdminFields(Long userId, Long roleId, Direction direction, Boolean disable, String job);
+
+    /**
+     * 级联删除用户及关联数据
+     *
+     * @param userId
+     *            用户ID
+     */
+    void deleteByIdWithCascade(Long userId);
+
+    /**
+     * 批量删除用户及关联数据
+     *
+     * @param userIds
+     *            用户ID列表
+     */
+    void batchDeleteByIds(List<Long> userIds);
+
+    /**
+     * 批量更新禁用状态
+     *
+     * @param userIds
+     *            用户ID列表
+     * @param disable
+     *            禁用状态
+     */
+    void batchUpdateDisable(List<Long> userIds, Boolean disable);
+
+    /**
+     * 批量更新角色
+     *
+     * @param userIds
+     *            用户ID列表
+     * @param roleId
+     *            角色ID
+     */
+    void batchUpdateRole(List<Long> userIds, Long roleId);
+
+    /**
+     * 统计用户关联数据数量
+     *
+     * @param userId
+     *            用户ID
+     * @return 关联数据统计
+     */
+    UserStatistics getStatistics(Long userId);
+
+    /**
+     * 用户关联数据统计
+     */
+    record UserStatistics(long experienceCount, long achievementCount, long answerCount, long commentCount) {
+    }
 }

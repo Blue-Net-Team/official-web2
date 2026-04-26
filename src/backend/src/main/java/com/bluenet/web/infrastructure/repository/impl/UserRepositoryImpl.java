@@ -14,11 +14,18 @@ import com.bluenet.web.domain.model.enumerate.Gender;
 import com.bluenet.web.domain.model.vo.FileVO;
 import com.bluenet.web.domain.model.vo.QrcodeVO;
 import com.bluenet.web.domain.model.vo.TabCountsVO;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.bluenet.web.infrastructure.repository.dataobject.*;
 import com.bluenet.web.infrastructure.repository.mapper.*;
 import com.bluenet.web.infrastructure.security.cache.PermissionCache;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.bluenet.web.domain.model.vo.UserVO;
+import com.bluenet.web.domain.repository.FileRepository;
 import com.bluenet.web.domain.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -35,11 +42,16 @@ public class UserRepositoryImpl implements UserRepository {
     private final PermissionCache permissionCache;
     private final RoleMapper roleMapper;
     private final UserExperienceMapper userExperienceMapper;
+    private final UserAchievementMapper userAchievementMapper;
+    private final AssessmentAnswerMapper assessmentAnswerMapper;
+    private final AssessmentSessionMapper assessmentSessionMapper;
+    private final CommentMapper commentMapper;
     private final UserRepositoryConverter userConverter;
     private final CollegeRepositoryConverter collegeConverter;
     private final QrcodeRepositoryConverter qrcodeConverter;
     private final FileRepositoryConverter fileConverter;
     private final RoleRepositoryConverter roleConverter;
+    private final FileRepository fileRepository;
 
     /**
      * 保存新的用户 记录。
@@ -292,6 +304,147 @@ public class UserRepositoryImpl implements UserRepository {
     @Override
     public boolean existsByInternalReferralCode(String code) {
         return userMapper.selectByInternalReferralCode(code) != null;
+    }
+
+    // ========== Admin User Management ==========
+
+    @Override
+    public Page<User> findPage(Pageable pageable, Long roleId, Direction direction, Long collegeId, String keyword) {
+        QueryWrapper<UserDO> wrapper = new QueryWrapper<>();
+        if (roleId != null) {
+            wrapper.eq("role_id", roleId);
+        }
+        if (direction != null) {
+            wrapper.eq("direction", direction.name().toLowerCase());
+        }
+        if (collegeId != null) {
+            wrapper.eq("college_id", collegeId);
+        }
+        if (keyword != null && !keyword.isBlank()) {
+            wrapper.and(w -> w.like("student_id", keyword).or().like("username", keyword));
+        }
+        wrapper.orderByDesc("id");
+
+        com.baomidou.mybatisplus.extension.plugins.pagination.Page<UserDO> mpPage = new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>(
+                pageable.getPageNumber() + 1, pageable.getPageSize());
+        mpPage = userMapper.selectPage(mpPage, wrapper);
+
+        List<User> users = mpPage.getRecords()
+                .stream()
+                .map(userConverter::toEntity)
+                .toList();
+        return new PageImpl<>(users, pageable, mpPage.getTotal());
+    }
+
+    @Override
+    public Optional<User> findEntityById(Long id) {
+        UserDO userDO = userMapper.selectById(id);
+        if (userDO == null) {
+            return Optional.empty();
+        }
+        return Optional.ofNullable(userConverter.toEntity(userDO));
+    }
+
+    @Override
+    public int updateAdminFields(Long userId, Long roleId, Direction direction, Boolean disable, String job) {
+        UserDO userDO = new UserDO();
+        userDO.setId(userId);
+        if (roleId != null) {
+            userDO.setRoleId(roleId);
+        }
+        if (direction != null) {
+            userDO.setDirection(direction);
+        }
+        if (disable != null) {
+            userDO.setDisable(disable);
+        }
+        if (job != null) {
+            userDO.setJob(job);
+        }
+        return userMapper.updateById(userDO);
+    }
+
+    @Override
+    @Transactional
+    public void deleteByIdWithCascade(Long userId) {
+        // 0. 获取用户，提取头像文件ID
+        UserDO userDO = userMapper.selectById(userId);
+        Long avatarId = userDO != null ? userDO.getAvatarId() : null;
+
+        // 1. 删除用户经历
+        userExperienceMapper.delete(new QueryWrapper<UserExperienceDO>().eq("user_id", userId));
+        // 2. 删除用户成就关联
+        userAchievementMapper.delete(new QueryWrapper<UserAchievementDO>().eq("user_id", userId));
+        // 3. 删除考核答案
+        assessmentAnswerMapper.delete(new QueryWrapper<AssessmentAnswerDO>().eq("user_id", userId));
+        // 4. 删除考核会话
+        assessmentSessionMapper.delete(new QueryWrapper<AssessmentSessionDO>().eq("user_id", userId));
+        // 5. 删除评论
+        commentMapper.delete(new QueryWrapper<CommentDO>().eq("user_id", userId));
+        // 6. 删除用户
+        userMapper.deleteById(userId);
+        // 7. 删除头像文件
+        if (avatarId != null) {
+            try {
+                fileRepository.deleteFileById(avatarId);
+                log.info("Deleted avatar file {} for user {}", avatarId, userId);
+            } catch (Exception e) {
+                log.warn("Failed to delete avatar file {} for user {}: {}", avatarId, userId, e.getMessage());
+            }
+        }
+        log.info("Cascade deleted user {}", userId);
+    }
+
+    @Override
+    @Transactional
+    public void batchDeleteByIds(List<Long> userIds) {
+        if (userIds == null || userIds.isEmpty()) {
+            return;
+        }
+        for (Long userId : userIds) {
+            deleteByIdWithCascade(userId);
+        }
+        log.info("Batch deleted {} users", userIds.size());
+    }
+
+    @Override
+    @Transactional
+    public void batchUpdateDisable(List<Long> userIds, Boolean disable) {
+        if (userIds == null || userIds.isEmpty()) {
+            return;
+        }
+        for (Long userId : userIds) {
+            UserDO userDO = new UserDO();
+            userDO.setId(userId);
+            userDO.setDisable(disable);
+            userMapper.updateById(userDO);
+        }
+        log.info("Batch updated disable={} for {} users", disable, userIds.size());
+    }
+
+    @Override
+    @Transactional
+    public void batchUpdateRole(List<Long> userIds, Long roleId) {
+        if (userIds == null || userIds.isEmpty()) {
+            return;
+        }
+        for (Long userId : userIds) {
+            UserDO userDO = new UserDO();
+            userDO.setId(userId);
+            userDO.setRoleId(roleId);
+            userMapper.updateById(userDO);
+        }
+        log.info("Batch updated roleId={} for {} users", roleId, userIds.size());
+    }
+
+    @Override
+    public UserStatistics getStatistics(Long userId) {
+        long expCount = userExperienceMapper.selectCount(new QueryWrapper<UserExperienceDO>().eq("user_id", userId));
+        long achCount = userAchievementMapper.selectCount(new QueryWrapper<UserAchievementDO>().eq("user_id", userId));
+        long ansCount = assessmentAnswerMapper
+                .selectCount(new QueryWrapper<AssessmentAnswerDO>().eq("user_id", userId));
+        long cmtCount = commentMapper.selectCount(new QueryWrapper<CommentDO>().eq("user_id", userId));
+        return new UserStatistics(expCount, achCount, ansCount, cmtCount);
     }
 
     /**

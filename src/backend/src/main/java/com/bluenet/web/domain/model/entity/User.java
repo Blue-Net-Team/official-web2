@@ -101,6 +101,51 @@ public class User {
     }
 
     /**
+     * 管理员重置用户密码（需二次确认）
+     *
+     * @param newPassword
+     *            新密码
+     * @param confirmPassword
+     *            确认密码
+     */
+    public void resetPassword(String newPassword, String confirmPassword) {
+        if (newPassword == null || newPassword.isBlank()) {
+            throw new IllegalArgumentException("密码不能为空");
+        }
+        if (!newPassword.equals(confirmPassword)) {
+            throw new IllegalArgumentException("两次输入的密码不一致");
+        }
+        this.password = newPassword;
+    }
+
+    /**
+     * 管理员更新用户字段（仅更新非 null 的字段）
+     *
+     * @param roleId
+     *            角色标识
+     * @param direction
+     *            技术方向
+     * @param disable
+     *            禁用状态
+     * @param job
+     *            岗位职责
+     */
+    public void updateAdminFields(Long roleId, Direction direction, Boolean disable, String job) {
+        if (roleId != null) {
+            this.roleId = roleId;
+        }
+        if (direction != null) {
+            this.direction = direction;
+        }
+        if (disable != null) {
+            this.disable = disable;
+        }
+        if (job != null) {
+            this.job = job;
+        }
+    }
+
+    /**
      * 构造新用户聚合根
      *
      * @param studentId

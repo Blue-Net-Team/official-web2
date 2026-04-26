@@ -55,6 +55,54 @@ The system SHALL record user achievements including papers, patents, and competi
 - **WHEN** linking achievement to user
 - **THEN** the UserAchievement association SHALL store user_id and achievement_id
 
+### Requirement: Admin user management
+The system SHALL provide administrator user management capabilities accessible only to SUPER_ADMIN role.
+
+#### Scenario: List users with pagination and filtering
+- **WHEN** GET /api/v1/admin/users is called by SUPER_ADMIN
+- **THEN** response SHALL return paginated user list
+- **AND** support filtering by role_id, direction, college_id
+- **AND** support searching by student_id or username (fuzzy match)
+- **AND** support sorting by id, student_id, created_at
+
+#### Scenario: Get user detail with statistics
+- **WHEN** GET /api/v1/admin/users/{id} is called by SUPER_ADMIN
+- **THEN** response SHALL return full user profile
+- **AND** include count of experiences, achievements, assessment answers
+
+#### Scenario: Update user information
+- **WHEN** PUT /api/v1/admin/users/{id} is called by SUPER_ADMIN
+- **THEN** user fields (role_id, direction, disable, job, etc.) SHALL be updated
+- **AND** audit log SHALL record the action with operator and target user
+
+#### Scenario: Reset user password
+- **WHEN** PUT /api/v1/admin/users/{id}/password is called by SUPER_ADMIN with confirmed new password
+- **THEN** user password SHALL be updated with BCrypt hash
+- **AND** existing sessions MAY remain valid
+- **AND** audit log SHALL record the password reset action
+
+#### Scenario: Delete user with cascade
+- **WHEN** DELETE /api/v1/admin/users/{id} is called by SUPER_ADMIN
+- **THEN** user SHALL be physically deleted
+- **AND** associated records SHALL be cascade deleted: experiences, achievements, assessment answers, assessment sessions, comments
+- **AND** associated avatar file SHALL be deleted from storage
+- **AND** audit log SHALL record the deletion action
+
+#### Scenario: Batch disable users
+- **WHEN** POST /api/v1/admin/users/batch-disable is called by SUPER_ADMIN with user IDs
+- **THEN** all specified users' disable flag SHALL be set to true
+- **AND** audit log SHALL record the batch action with target count
+
+#### Scenario: Batch delete users
+- **WHEN** POST /api/v1/admin/users/batch-delete is called by SUPER_ADMIN with user IDs
+- **THEN** all specified users SHALL be physically deleted with cascade
+- **AND** audit log SHALL record the batch action with target count
+
+#### Scenario: Batch update user roles
+- **WHEN** POST /api/v1/admin/users/batch-role is called by SUPER_ADMIN with user IDs and role_id
+- **THEN** all specified users' role_id SHALL be updated
+- **AND** audit log SHALL record the batch action
+
 ### Requirement: Enum value mapping
 All enumeration values SHALL be stored in database as lowercase snake_case strings.
 
