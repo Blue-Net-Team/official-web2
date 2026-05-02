@@ -133,7 +133,7 @@ public class AdminUserController {
             @ApiResponse(responseCode = "200", description = "删除成功"),
             @ApiResponse(responseCode = "400", description = "参数错误或包含超级管理员", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseMessage.class)))
     })
-    @RequiresPermission(name = "批量删除用户", value = "user:manage:batch-operate", access = AccessLevel.PROTECTED)
+    @RequiresPermission(name = "批量删除用户", value = "user:manage:batch-delete", access = AccessLevel.PROTECTED)
     @PostMapping("/batch-delete")
     public ResponseMessage<Void> batchDelete(
             @Valid @RequestBody AdminUserBatchOperateRequestDTO request) {
@@ -150,7 +150,7 @@ public class AdminUserController {
             @ApiResponse(responseCode = "200", description = "操作成功"),
             @ApiResponse(responseCode = "400", description = "参数错误或包含超级管理员", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseMessage.class)))
     })
-    @RequiresPermission(name = "批量禁用用户", value = "user:manage:batch-operate", access = AccessLevel.PROTECTED)
+    @RequiresPermission(name = "批量禁用用户", value = "user:manage:batch-disable", access = AccessLevel.PROTECTED)
     @PostMapping("/batch-disable")
     public ResponseMessage<Void> batchDisable(
             @Valid @RequestBody AdminUserBatchOperateRequestDTO request) {
@@ -167,7 +167,7 @@ public class AdminUserController {
             @ApiResponse(responseCode = "200", description = "操作成功"),
             @ApiResponse(responseCode = "400", description = "参数错误", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseMessage.class)))
     })
-    @RequiresPermission(name = "批量启用用户", value = "user:manage:batch-operate", access = AccessLevel.PROTECTED)
+    @RequiresPermission(name = "批量启用用户", value = "user:manage:batch-enable", access = AccessLevel.PROTECTED)
     @PostMapping("/batch-enable")
     public ResponseMessage<Void> batchEnable(
             @Valid @RequestBody AdminUserBatchOperateRequestDTO request) {
@@ -184,7 +184,7 @@ public class AdminUserController {
             @ApiResponse(responseCode = "200", description = "操作成功"),
             @ApiResponse(responseCode = "400", description = "参数错误", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseMessage.class)))
     })
-    @RequiresPermission(name = "批量更新用户角色", value = "user:manage:batch-operate", access = AccessLevel.PROTECTED)
+    @RequiresPermission(name = "批量更新用户角色", value = "user:manage:batch-update-role", access = AccessLevel.PROTECTED)
     @PostMapping("/batch-role")
     public ResponseMessage<Void> batchUpdateRole(
             @Valid @RequestBody AdminUserBatchUpdateRoleRequestDTO request) {

@@ -55,6 +55,13 @@ export const menuConfig: MenuItemConfig[] = [
     minLevel: 1,
   },
   {
+    key: 'achievement',
+    label: '用户管理',
+    path: '/admin/users',
+    icon: <UserOutlined />,
+    minLevel: 3,
+  },
+  {
     key: 'enroll',
     label: '报名管理',
     path: '/admin/enroll',

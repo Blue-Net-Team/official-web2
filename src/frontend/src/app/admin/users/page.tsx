@@ -346,8 +346,12 @@ export default function AdminUserManagementPage() {
     },
     {
       title: '角色',
+      key: 'roleId',
       dataIndex: 'roleName',
       width: 110,
+      filters: ROLE_OPTIONS.map((opt) => ({ text: opt.label, value: opt.value })),
+      filterMultiple: false,
+      filteredValue: filters.roleId !== undefined ? [filters.roleId] : undefined,
       render: (v: string | null) =>
         v ? (
           <Tag color={getRoleTagColor(v)} bordered={false}>
@@ -359,16 +363,24 @@ export default function AdminUserManagementPage() {
     },
     {
       title: '方向',
+      key: 'direction',
       dataIndex: 'direction',
       width: 120,
+      filters: DIRECTION_OPTIONS.map((opt) => ({ text: opt.label, value: opt.value })),
+      filterMultiple: false,
+      filteredValue: filters.direction ? [filters.direction] : undefined,
       render: (v: string | null) =>
         v ? DIRECTION_LABELS[v as keyof typeof DIRECTION_LABELS] || v : '-',
     },
     {
       title: '学院',
+      key: 'collegeId',
       dataIndex: 'college',
       width: 160,
       ellipsis: true,
+      filters: collegeOptions.map((opt) => ({ text: opt.label, value: opt.value })),
+      filterMultiple: false,
+      filteredValue: filters.collegeId !== undefined ? [filters.collegeId] : undefined,
       render: (v: string | null) => v || '-',
     },
     {
@@ -438,30 +450,6 @@ export default function AdminUserManagementPage() {
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
-        <Select
-          allowClear
-          placeholder="角色"
-          className="w-[140px]"
-          value={filters.roleId}
-          onChange={(v) => handleFilterChange({ roleId: v ?? undefined })}
-          options={ROLE_OPTIONS}
-        />
-        <Select
-          allowClear
-          placeholder="方向"
-          className="w-[150px]"
-          value={filters.direction}
-          onChange={(v) => handleFilterChange({ direction: v ?? undefined })}
-          options={DIRECTION_OPTIONS}
-        />
-        <Select
-          allowClear
-          placeholder="学院"
-          className="w-[180px]"
-          value={filters.collegeId}
-          onChange={(v) => handleFilterChange({ collegeId: v ?? undefined })}
-          options={collegeOptions}
-        />
         <Input.Search
           allowClear
           placeholder="搜索学号 / 姓名"
@@ -521,8 +509,17 @@ export default function AdminUserManagementPage() {
           rowKey="id"
           size="small"
           pagination={false}
-          scroll={{ x: 1000 }}
+          scroll={{ x: 'max-content' }}
           locale={{ emptyText: '暂无用户数据' }}
+          onChange={(_, tableFilters) => {
+            setFilters((prev) => ({
+              ...prev,
+              roleId: tableFilters.roleId?.[0] as number | undefined,
+              direction: tableFilters.direction?.[0] as string | undefined,
+              collegeId: tableFilters.collegeId?.[0] as number | undefined,
+            }))
+            setCurrentPage(0)
+          }}
         />
       </Spin>
 
