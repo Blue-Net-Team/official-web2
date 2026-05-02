@@ -7,6 +7,7 @@ import com.bluenet.judge.application.service.SandboxCodeRunner;
 import com.bluenet.judge.infrastructure.repository.JudgeMetadataRepository;
 import com.bluenet.judge.infrastructure.repository.dataobject.GeneratedTestCaseWrite;
 import com.bluenet.judge.infrastructure.repository.dataobject.JudgeStandardSolutionRecord;
+import com.bluenet.judge.infrastructure.repository.dataobject.JudgeTestCaseRecord;
 import com.bluenet.judge.infrastructure.storage.JudgeAssetStorage;
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.extern.slf4j.Slf4j;
@@ -54,6 +55,8 @@ public class TestDataGenerationWorkflow {
      */
     public void handle(Long configId) {
         try {
+            List<JudgeTestCaseRecord> oldTestCases = judgeMetadataRepository.findTestCasesByConfigId(configId);
+
             JudgeManifestBundle bundle = judgeManifestLoader.load(configId);
             List<GeneratedTestCaseWrite> generatedTestCases = generateTestCases(bundle);
 
@@ -61,6 +64,8 @@ public class TestDataGenerationWorkflow {
             txTemplate.executeWithoutResult(status -> {
                 judgeMetadataRepository.replaceGeneratedTestCases(configId, generatedTestCases);
             });
+
+            deleteOldTestcaseAssets(oldTestCases);
 
             log.info(
                     "测试数据生成完成，配置编号={}，标准解语言={}，测试用例数量={}",
@@ -72,6 +77,35 @@ public class TestDataGenerationWorkflow {
         } catch (RuntimeException ex) {
             judgeMetadataRepository.markConfigStatus(configId, "FAILED");
             throw ex;
+        }
+    }
+
+    /**
+     * 删除旧的测试用例 OSS 资产，失败仅记录日志不影响主流程。
+     *
+     * @param oldTestCases
+     *            已生成的旧测试用例记录列表。
+     */
+    private void deleteOldTestcaseAssets(List<JudgeTestCaseRecord> oldTestCases) {
+        if (oldTestCases == null || oldTestCases.isEmpty()) {
+            return;
+        }
+        for (JudgeTestCaseRecord testcase : oldTestCases) {
+            try {
+                if (testcase.getInputObjectKey() != null) {
+                    judgeAssetStorage.delete(testcase.getInputObjectKey());
+                }
+                if (testcase.getOutputObjectKey() != null) {
+                    judgeAssetStorage.delete(testcase.getOutputObjectKey());
+                }
+            } catch (Exception ex) {
+                log.warn(
+                        "删除旧测试用例 OSS 对象失败，caseNo={}，inputKey={}，outputKey={}",
+                        testcase.getCaseNo(),
+                        testcase.getInputObjectKey(),
+                        testcase.getOutputObjectKey(),
+                        ex);
+            }
         }
     }
 

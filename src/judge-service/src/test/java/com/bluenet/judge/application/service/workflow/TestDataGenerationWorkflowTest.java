@@ -7,6 +7,7 @@ import com.bluenet.judge.application.service.SandboxCodeRunner;
 import com.bluenet.judge.infrastructure.repository.JudgeMetadataRepository;
 import com.bluenet.judge.infrastructure.repository.dataobject.JudgeProblemConfigRecord;
 import com.bluenet.judge.infrastructure.repository.dataobject.JudgeStandardSolutionRecord;
+import com.bluenet.judge.infrastructure.repository.dataobject.JudgeTestCaseRecord;
 import com.bluenet.judge.infrastructure.storage.JudgeAssetStorage;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -71,6 +72,7 @@ class TestDataGenerationWorkflowTest {
     @DisplayName("生成测试数据成功：应上传 in/out 文件并持久化记录")
     void handle_success_shouldUploadAndPersist() throws Exception {
         stubManifestAndLoader();
+        when(judgeMetadataRepository.findTestCasesByConfigId(CONFIG_ID)).thenReturn(List.of());
         when(sandboxCodeRunner.run(eq("python"), any(), any()))
                 .thenReturn(createResult(0, "1 2 3", false))
                 .thenReturn(createResult(0, "6", false));
@@ -80,8 +82,31 @@ class TestDataGenerationWorkflowTest {
         workflow.handle(CONFIG_ID);
 
         verify(judgeAssetStorage, org.mockito.Mockito.times(2)).put(any(), any(), eq("text/plain; charset=utf-8"));
+        verify(judgeAssetStorage, never()).delete(any());
         verify(judgeMetadataRepository).markConfigStatus(CONFIG_ID, "GENERATED");
         verify(benchmarkWorkflow).handle(CONFIG_ID);
+    }
+
+    @Test
+    @DisplayName("存在旧测试用例：生成成功后应删除旧 OSS 对象")
+    void handle_withOldTestCases_shouldDeleteOldAssets() throws Exception {
+        stubManifestAndLoader();
+
+        JudgeTestCaseRecord oldCase = new JudgeTestCaseRecord();
+        oldCase.setCaseNo(1);
+        oldCase.setInputObjectKey("questions/10/current/testcases/0001-old.in");
+        oldCase.setOutputObjectKey("questions/10/current/testcases/0001-old.out");
+        when(judgeMetadataRepository.findTestCasesByConfigId(CONFIG_ID)).thenReturn(List.of(oldCase));
+
+        when(sandboxCodeRunner.run(eq("python"), any(), any()))
+                .thenReturn(createResult(0, "1 2 3", false))
+                .thenReturn(createResult(0, "6", false));
+        when(transactionManager.getTransaction(any())).thenReturn(mock(TransactionStatus.class));
+
+        workflow.handle(CONFIG_ID);
+
+        verify(judgeAssetStorage).delete("questions/10/current/testcases/0001-old.in");
+        verify(judgeAssetStorage).delete("questions/10/current/testcases/0001-old.out");
     }
 
     @Test
@@ -129,6 +154,8 @@ class TestDataGenerationWorkflowTest {
     }
 
     private void stubManifestAndLoader() throws Exception {
+        when(judgeMetadataRepository.findTestCasesByConfigId(CONFIG_ID)).thenReturn(List.of());
+
         ObjectMapper objectMapper = new ObjectMapper();
         String manifestJson = """
                 {
