@@ -212,6 +212,8 @@ export interface JudgeStandardSolutionDTO {
   language: ProgrammingLanguage
   /** 标准解 OSS 对象键 */
   objectKey: string | null
+  /** 标准解源码（从 OSS 拉取后回填） */
+  source: string | null
   /** 标准解 SHA-256 哈希 */
   objectHash: string | null
   /** 是否为生成标准输出的主标准解 */
@@ -258,6 +260,8 @@ export interface JudgeProblemConfigDTO {
   generatorLanguage: ProgrammingLanguage
   /** generator OSS 对象键 */
   generatorObjectKey: string | null
+  /** generator 源码（从 OSS 拉取后回填） */
+  generatorSource: string | null
   /** manifest OSS 对象键 */
   manifestObjectKey: string | null
   /** 主标准解语言 */
