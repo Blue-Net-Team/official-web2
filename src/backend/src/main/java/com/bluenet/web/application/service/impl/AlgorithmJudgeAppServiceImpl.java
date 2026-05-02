@@ -28,6 +28,7 @@ import com.bluenet.web.domain.service.AssessmentJudgementDomainService;
 import com.bluenet.web.domain.repository.AssessmentQuestionRepository;
 import com.bluenet.web.domain.repository.AssessmentTimeRepository;
 import com.bluenet.web.infrastructure.judge.AlgorithmJudgeJobPublisher;
+import com.bluenet.web.infrastructure.repository.mapper.JudgeLanguageLimitMapper;
 import com.bluenet.web.infrastructure.security.util.UserCTX;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -58,6 +59,7 @@ public class AlgorithmJudgeAppServiceImpl implements AlgorithmJudgeAppService {
     private final AlgorithmJudgeJobRepository algorithmJudgeJobRepository;
     private final AlgorithmJudgeCaseResultRepository algorithmJudgeCaseResultRepository;
     private final AlgorithmJudgeJobPublisher algorithmJudgeJobPublisher;
+    private final JudgeLanguageLimitMapper judgeLanguageLimitMapper;
 
     /**
      * 执行算法运行。
@@ -83,8 +85,9 @@ public class AlgorithmJudgeAppServiceImpl implements AlgorithmJudgeAppService {
             throw new BadRequest("运行接口不能使用正式判题用例");
         }
         if (testcaseType == AlgorithmTestcaseType.DEFAULT_RUN
-                && (content.getRunTestCases() == null || content.getRunTestCases().isEmpty())) {
-            throw new BadRequest("题目未配置默认运行用例");
+                && (content.getRunTestCases() == null || content.getRunTestCases().isEmpty())
+                && (content.getExamples() == null || content.getExamples().isEmpty())) {
+            throw new BadRequest("题目未配置默认运行用例或题面样例");
         }
 
         AlgorithmJudgeJob job = AlgorithmJudgeJob.create(
@@ -117,6 +120,7 @@ public class AlgorithmJudgeAppServiceImpl implements AlgorithmJudgeAppService {
         AlgorithmContent content = validateAlgorithmQuestion(question);
         validateCandidateCanUseQuestion(currentUser, question);
         validateLanguage(content, command.language());
+        validateFormalLanguageLimit(question.getId(), command.language());
         if (command.content() == null || command.content().isBlank()) {
             throw new BadRequest("源代码不能为空");
         }
@@ -215,6 +219,13 @@ public class AlgorithmJudgeAppServiceImpl implements AlgorithmJudgeAppService {
         String languageKey = language.getValue();
         if (starterCode == null || !starterCode.containsKey(languageKey)) {
             throw new BadRequest("该题不支持提交语言：" + languageKey);
+        }
+    }
+
+    private void validateFormalLanguageLimit(Long questionId, ProgrammingLanguage language) {
+        int count = judgeLanguageLimitMapper.countConfirmedByQuestionIdAndLanguage(questionId, language.getValue());
+        if (count == 0) {
+            throw new BadRequest("该题当前语言尚未确认正式判题资源限制：" + language.getValue());
         }
     }
 

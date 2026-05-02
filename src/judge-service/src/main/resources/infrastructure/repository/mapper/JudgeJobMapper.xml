@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bluenet.judge.infrastructure.repository.mapper.JudgeJobMapper">
+    <resultMap id="BaseResultMap" type="com.bluenet.judge.infrastructure.repository.dataobject.JudgeJobRecord">
+        <id column="id" property="id"/>
+        <result column="answer_id" property="answerId"/>
+        <result column="question_id" property="questionId"/>
+        <result column="assessment_time_id" property="assessmentTimeId"/>
+        <result column="user_id" property="userId"/>
+        <result column="language" property="language"/>
+        <result column="source_code" property="sourceCode"/>
+        <result column="testcase_type" property="testcaseType"/>
+        <result column="status" property="status"/>
+        <result column="retry_count" property="retryCount"/>
+        <result column="max_retry_count" property="maxRetryCount"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="question_max_score" property="questionMaxScore"/>
+    </resultMap>
+
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT job.id, job.answer_id, job.question_id, job.assessment_time_id, job.user_id,
+               job.language, job.source_code, job.testcase_type, job.custom_input, job.status,
+               job.retry_count, job.max_retry_count, job.created_at,
+               question.score AS question_max_score
+        FROM tb_algorithm_judge_job job
+        JOIN tb_assessment_question question ON question.id = job.question_id
+        WHERE job.id = #{jobId}
+    </select>
+
+    <select id="selectFormalJob" resultMap="BaseResultMap">
+        SELECT job.id, job.answer_id, job.question_id, job.assessment_time_id, job.user_id,
+               job.language, job.source_code, job.testcase_type, job.custom_input, job.status,
+               job.retry_count, job.max_retry_count, job.created_at,
+               question.score AS question_max_score
+        FROM tb_algorithm_judge_job job
+        JOIN tb_assessment_question question ON question.id = job.question_id
+        WHERE job.id = #{jobId}
+          AND job.testcase_type = 'FORMAL'
+    </select>
+
+    <update id="markRunning">
+        UPDATE tb_algorithm_judge_job
+        SET status = 'RUNNING',
+            status_message = '正在判题',
+            started_at = CURRENT_TIMESTAMP,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{jobId}
+    </update>
+
+    <update id="markSucceeded">
+        UPDATE tb_algorithm_judge_job
+        SET status = 'SUCCEEDED',
+            status_message = '判题完成',
+            finished_at = CURRENT_TIMESTAMP,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{jobId}
+    </update>
+
+    <update id="markReviewRequired">
+        UPDATE tb_algorithm_judge_job
+        SET status = 'FAILED_REVIEW_REQUIRED',
+            status_message = #{message},
+            finished_at = CURRENT_TIMESTAMP,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{jobId}
+    </update>
+</mapper>

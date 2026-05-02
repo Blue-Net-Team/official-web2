@@ -12,10 +12,13 @@ import com.bluenet.web.domain.model.vo.evaluation.AlgorithmContent;
 import com.bluenet.web.domain.repository.AssessmentAnswerRepository;
 import com.bluenet.web.domain.repository.AssessmentQuestionRepository;
 import com.bluenet.web.domain.repository.AssessmentTimeRepository;
+import com.bluenet.web.infrastructure.repository.dataobject.JudgeProblemConfigDO;
+import com.bluenet.web.infrastructure.repository.mapper.JudgeProblemConfigMapper;
+import com.bluenet.web.infrastructure.storage.JudgeAssetStorage;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
@@ -49,9 +52,24 @@ class AssessmentQuestionAppServiceImplTest {
 
     @Mock
     private AssessmentAnswerRepository assessmentAnswerRepository;
+    @Mock
+    private JudgeProblemConfigMapper judgeProblemConfigMapper;
+    @Mock
+    private JudgeAssetStorage judgeAssetStorage;
 
-    @InjectMocks
     private AssessmentQuestionAppServiceImpl assessmentQuestionAppService;
+
+    @BeforeEach
+    void setUp() {
+        assessmentQuestionAppService = new AssessmentQuestionAppServiceImpl(
+                assessmentQuestionRepository,
+                assessmentTimeRepository,
+                null,
+                assessmentAnswerRepository,
+                null,
+                judgeProblemConfigMapper,
+                judgeAssetStorage);
+    }
 
     private AssessmentTime createTime() {
         return AssessmentTime.reconstruct(
@@ -164,8 +182,8 @@ class AssessmentQuestionAppServiceImplTest {
     }
 
     @Test
-    @DisplayName("更新为算法题缺少正式用例：应拒绝")
-    void updateQuestion_algorithmWithoutFormalCases_shouldThrow() {
+    @DisplayName("更新为算法题缺少正式用例：应允许")
+    void updateQuestion_algorithmWithoutFormalCases_shouldUpdate() {
         AssessmentQuestion existing = createQuestionEntity(QuestionType.SINGLE_CHOICE, null);
         when(assessmentQuestionRepository.findById(QUESTION_ID))
                 .thenReturn(Optional.of(existing));
@@ -176,12 +194,10 @@ class AssessmentQuestionAppServiceImplTest {
         AssessmentQuestionCommands.UpdateAssessmentQuestionCommand command = new AssessmentQuestionCommands.UpdateAssessmentQuestionCommand(
                 QUESTION_ID, null, QuestionType.ALGORITHM, null, content, null, null);
 
-        IllegalArgumentException ex = assertThrows(
-                IllegalArgumentException.class,
-                () -> assessmentQuestionAppService.updateQuestion(command));
+        AssessmentQuestionResult result = assessmentQuestionAppService.updateQuestion(command);
 
-        assertEquals("算法题至少需要配置一个正式测试用例", ex.getMessage());
-        verify(assessmentQuestionRepository, never()).update(any());
+        assertEquals(QuestionType.ALGORITHM, result.questionType());
+        verify(assessmentQuestionRepository).update(any());
     }
 
     @Test
@@ -318,5 +334,41 @@ class AssessmentQuestionAppServiceImplTest {
                 (com.bluenet.web.domain.model.vo.evaluation.QuestionContent) content,
                 null,
                 BigDecimal.TEN);
+    }
+
+    @Test
+    @DisplayName("删除算法题：应级联删除判题配置和 OSS 资产")
+    void deleteQuestion_algorithm_shouldCascadeDeleteJudgeConfig() {
+        AssessmentQuestion existing = createQuestionEntity(QuestionType.ALGORITHM, createValidAlgorithmContent());
+        when(assessmentQuestionRepository.findById(QUESTION_ID))
+                .thenReturn(Optional.of(existing));
+
+        JudgeProblemConfigDO config = new JudgeProblemConfigDO();
+        config.setId(100L);
+        config.setQuestionId(QUESTION_ID);
+        when(judgeProblemConfigMapper.selectByQuestionId(QUESTION_ID)).thenReturn(config);
+
+        assessmentQuestionAppService.deleteQuestion(QUESTION_ID);
+
+        verify(judgeAssetStorage).deleteByPrefix("questions/" + QUESTION_ID + "/current/generator/");
+        verify(judgeAssetStorage).deleteByPrefix("questions/" + QUESTION_ID + "/current/manifest/");
+        verify(judgeAssetStorage).deleteByPrefix("questions/" + QUESTION_ID + "/current/standard/");
+        verify(judgeAssetStorage).deleteByPrefix("questions/" + QUESTION_ID + "/current/testcases/");
+        verify(judgeProblemConfigMapper).deleteByQuestionId(QUESTION_ID);
+        verify(assessmentQuestionRepository).deleteById(QUESTION_ID);
+    }
+
+    @Test
+    @DisplayName("删除非算法题：不应尝试删除判题配置")
+    void deleteQuestion_nonAlgorithm_shouldNotDeleteJudgeConfig() {
+        AssessmentQuestion existing = createQuestionEntity(QuestionType.SINGLE_CHOICE, null);
+        when(assessmentQuestionRepository.findById(QUESTION_ID))
+                .thenReturn(Optional.of(existing));
+
+        assessmentQuestionAppService.deleteQuestion(QUESTION_ID);
+
+        verify(judgeProblemConfigMapper, never()).selectByQuestionId(any());
+        verify(judgeAssetStorage, never()).deleteByPrefix(any());
+        verify(assessmentQuestionRepository).deleteById(QUESTION_ID);
     }
 }

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bluenet.judge.infrastructure.repository.mapper.JudgeResultMapper">
+    <delete id="deleteCaseResults">
+        DELETE FROM tb_algorithm_judge_case_result
+        WHERE judge_job_id = #{jobId}
+    </delete>
+
+    <insert id="insertCaseResult">
+        INSERT INTO tb_algorithm_judge_case_result (
+            judge_job_id, case_no, testcase_type, status, input, expected_output, actual_output,
+            stdout, stderr, time_used_ms, memory_used_kb, message, visible_to_candidate
+        )
+        VALUES (
+            #{result.judgeJobId}, #{result.caseNo}, #{result.testcaseType}, #{result.status},
+            #{result.input}, #{result.expectedOutput}, #{result.actualOutput}, #{result.stdout},
+            #{result.stderr}, #{result.timeUsedMs}, #{result.memoryUsedKb}, #{result.message},
+            #{result.visibleToCandidate}
+        )
+    </insert>
+
+    <insert id="insertAssessmentJudgement">
+        INSERT INTO tb_assessment_judgement (
+            answer_id, question_id, assessment_time_id, user_id,
+            score, max_score, status, result_code, source, reviewer_type,
+            comment, judged_at, created_at, updated_at
+        )
+        VALUES (
+            #{judgement.answerId}, #{judgement.questionId}, #{judgement.assessmentTimeId}, #{judgement.userId},
+            #{judgement.score}, #{judgement.maxScore}, #{judgement.status}, #{judgement.resultCode},
+            #{judgement.source}, #{judgement.reviewerType}, #{judgement.comment},
+            CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+        )
+    </insert>
+</mapper>

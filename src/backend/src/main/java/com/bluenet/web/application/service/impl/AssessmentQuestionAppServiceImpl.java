@@ -23,6 +23,9 @@ import com.bluenet.web.domain.repository.AssessmentQuestionRepository;
 import com.bluenet.web.domain.repository.AssessmentTimeRepository;
 import com.bluenet.web.domain.repository.FileRepository;
 import com.bluenet.web.domain.util.GradeCalculator;
+import com.bluenet.web.infrastructure.repository.mapper.JudgeProblemConfigMapper;
+import com.bluenet.web.infrastructure.repository.dataobject.JudgeProblemConfigDO;
+import com.bluenet.web.infrastructure.storage.JudgeAssetStorage;
 import com.bluenet.web.infrastructure.security.util.UserCTX;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -55,6 +58,8 @@ public class AssessmentQuestionAppServiceImpl implements AssessmentQuestionAppSe
     private final AssessmentSessionAppService assessmentSessionAppService;
     private final AssessmentAnswerRepository assessmentAnswerRepository;
     private final FileRepository fileRepository;
+    private final JudgeProblemConfigMapper judgeProblemConfigMapper;
+    private final JudgeAssetStorage judgeAssetStorage;
 
     /**
      * 创建考题。
@@ -159,8 +164,46 @@ public class AssessmentQuestionAppServiceImpl implements AssessmentQuestionAppSe
     public void deleteQuestion(Long id) {
         AssessmentQuestion existing = assessmentQuestionRepository.findById(id)
                 .orElseThrow(() -> new DataNotFound("考题不存在，ID: " + id));
+
+        if (existing.getQuestionType() == QuestionType.ALGORITHM) {
+            JudgeProblemConfigDO config = judgeProblemConfigMapper.selectByQuestionId(id);
+            if (config != null) {
+                deleteJudgeAssets(config);
+                judgeProblemConfigMapper.deleteByQuestionId(id);
+                log.info("delete judge problem config for questionId={}", id);
+            }
+        }
+
         assessmentQuestionRepository.deleteById(id);
         log.info("delete question success id {}", id);
+    }
+
+    private void deleteJudgeAssets(JudgeProblemConfigDO config) {
+        Long questionId = config.getQuestionId();
+
+        try {
+            judgeAssetStorage.deleteByPrefix("questions/" + questionId + "/current/generator/");
+        } catch (Exception ex) {
+            log.warn("删除 generator OSS 对象失败，questionId={}", questionId, ex);
+        }
+
+        try {
+            judgeAssetStorage.deleteByPrefix("questions/" + questionId + "/current/manifest/");
+        } catch (Exception ex) {
+            log.warn("删除 manifest OSS 对象失败，questionId={}", questionId, ex);
+        }
+
+        try {
+            judgeAssetStorage.deleteByPrefix("questions/" + questionId + "/current/standard/");
+        } catch (Exception ex) {
+            log.warn("删除标准解 OSS 对象失败，questionId={}", questionId, ex);
+        }
+
+        try {
+            judgeAssetStorage.deleteByPrefix("questions/" + questionId + "/current/testcases/");
+        } catch (Exception ex) {
+            log.warn("删除测试数据 OSS 对象失败，questionId={}", questionId, ex);
+        }
     }
 
     /**
@@ -353,7 +396,8 @@ public class AssessmentQuestionAppServiceImpl implements AssessmentQuestionAppSe
             throw new IllegalArgumentException("算法题内容不能为空");
         }
         validateStarterCode(algorithmContent.getStarterCode());
-        validateTestCases(algorithmContent.getTestCases(), true, "正式测试用例");
+        // 正式测试用例已迁移到独立判题配置，由 generator 生成并保存在判题 OSS 中。
+        validateTestCases(algorithmContent.getTestCases(), false, "正式测试用例");
         validateTestCases(algorithmContent.getRunTestCases(), false, "默认运行测试用例");
     }
 

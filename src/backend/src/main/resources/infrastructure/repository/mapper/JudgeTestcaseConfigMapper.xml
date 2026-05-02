@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bluenet.web.infrastructure.repository.mapper.JudgeTestcaseConfigMapper">
+    <resultMap id="BaseResultMap" type="com.bluenet.web.infrastructure.repository.dataobject.JudgeTestcaseConfigDO">
+        <id column="id" property="id"/>
+        <result column="config_id" property="configId"/>
+        <result column="case_no" property="caseNo"/>
+        <result column="category" property="category"/>
+        <result column="generator_args" property="generatorArgs"/>
+        <result column="weight" property="weight"/>
+        <result column="hidden" property="hidden"/>
+        <result column="sample" property="sample"/>
+        <result column="description" property="description"/>
+    </resultMap>
+
+    <delete id="deleteByConfigId">
+        DELETE FROM tb_judge_testcase_config
+        WHERE config_id = #{configId}
+    </delete>
+
+    <insert id="insertConfig">
+        INSERT INTO tb_judge_testcase_config (
+            config_id, case_no, category, generator_args, weight, hidden, sample, description
+        )
+        VALUES (
+            #{config.configId},
+            #{config.caseNo},
+            #{config.category},
+            CAST(#{config.generatorArgs} AS jsonb),
+            #{config.weight},
+            #{config.hidden},
+            #{config.sample},
+            #{config.description}
+        )
+    </insert>
+
+    <select id="selectByConfigId" resultMap="BaseResultMap">
+        SELECT * FROM tb_judge_testcase_config
+        WHERE config_id = #{configId}
+        ORDER BY case_no
+    </select>
+</mapper>

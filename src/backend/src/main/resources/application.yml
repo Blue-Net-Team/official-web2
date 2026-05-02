@@ -77,6 +77,11 @@ storage:
     accessKeyId: ${ALIYUN_OSS_AK:}
     accessKeySecret: ${ALIYUN_OSS_SK:}
 
+# Judge assets use an isolated bucket and must not be exposed through candidate file APIs.
+judge:
+  storage:
+    bucket: ${JUDGE_STORAGE_BUCKET:bluenet-judge}
+
 # springdoc-openapi
 springdoc:
   api-docs:

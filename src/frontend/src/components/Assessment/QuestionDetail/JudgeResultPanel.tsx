@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { RESULT_LABELS, RESULT_COLOR_CLASSES } from './constants'
 import type { JudgeResultPanelProps } from './types'
 import type { JudgeCaseResultDTO } from '@/apis/schema/assessment.dto'
@@ -17,15 +18,39 @@ function renderResultBadge(resultCode?: string | null) {
   )
 }
 
-function renderTextCell(label: string, value?: string | null, emptyText = '空') {
+function TextCell({
+  label,
+  value,
+  emptyText = '空',
+}: {
+  label: string
+  value?: string | null
+  emptyText?: string
+}) {
+  const [expanded, setExpanded] = useState(false)
+  const text = value || emptyText
+  const shouldCollapse = text.length > 300 || text.split('\n').length > 8
+
   return (
     <div className="min-w-0">
       <div className="px-3 py-2 text-[11px] font-semibold text-white/45 bg-white/[0.04] border border-white/[0.08] rounded-t-md">
         {label}
       </div>
-      <pre className="m-0 min-h-16 whitespace-pre-wrap break-words rounded-b-md bg-black/30 border-x border-b border-white/[0.08] p-3 text-xs text-white/65">
-        {value || emptyText}
+      <pre
+        className={`m-0 whitespace-pre-wrap break-words bg-black/30 border-x border-white/[0.08] p-3 text-xs text-white/65 ${
+          shouldCollapse && !expanded ? 'max-h-40 overflow-hidden' : 'min-h-16'
+        } ${!shouldCollapse || expanded ? 'rounded-b-md border-b' : ''}`}
+      >
+        {text}
       </pre>
+      {shouldCollapse && (
+        <button
+          onClick={() => setExpanded(!expanded)}
+          className="w-full text-center text-[11px] text-[#6677ff] hover:text-[#9aa6ff] py-1 bg-white/[0.02] cursor-pointer border-x border-b border-white/[0.08] rounded-b-md"
+        >
+          {expanded ? '收起' : '展开'}
+        </button>
+      )}
     </div>
   )
 }
@@ -44,18 +69,27 @@ function renderJudgeCase(caseResult: JudgeCaseResultDTO) {
         换行会按原样保留显示；判题会忽略首尾空白，但中间换行和内容顺序需要一致。
       </p>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        {renderTextCell('输入 stdin', caseResult.input, '无输入')}
-        {caseResult.expectedOutput !== null
-          ? renderTextCell('期望输出 target', caseResult.expectedOutput, '空输出')
-          : renderTextCell(
-              '标准输出 stdout',
-              caseResult.stdout || caseResult.actualOutput,
-              '无输出'
-            )}
-        {caseResult.expectedOutput !== null &&
-          renderTextCell('实际输出 stdout', caseResult.actualOutput || caseResult.stdout, '无输出')}
+        <TextCell label="输入 stdin" value={caseResult.input} emptyText="无输入" />
+        {caseResult.expectedOutput !== null ? (
+          <TextCell label="期望输出 target" value={caseResult.expectedOutput} emptyText="空输出" />
+        ) : (
+          <TextCell
+            label="标准输出 stdout"
+            value={caseResult.stdout || caseResult.actualOutput}
+            emptyText="无输出"
+          />
+        )}
+        {caseResult.expectedOutput !== null && (
+          <TextCell
+            label="实际输出 stdout"
+            value={caseResult.actualOutput || caseResult.stdout}
+            emptyText="无输出"
+          />
+        )}
       </div>
-      {caseResult.stderr && renderTextCell('标准错误 stderr', caseResult.stderr, '无错误输出')}
+      {caseResult.stderr && (
+        <TextCell label="标准错误 stderr" value={caseResult.stderr} emptyText="无错误输出" />
+      )}
     </div>
   )
 }

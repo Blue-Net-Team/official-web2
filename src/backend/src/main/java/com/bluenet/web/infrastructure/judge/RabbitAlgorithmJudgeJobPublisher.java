@@ -22,8 +22,13 @@ public class RabbitAlgorithmJudgeJobPublisher implements AlgorithmJudgeJobPublis
             return;
         }
 
+        String routingKey = testcaseType == AlgorithmTestcaseType.FORMAL
+                ? AlgorithmJudgeQueueConfig.FORMAL_JUDGE_ROUTING_KEY
+                : AlgorithmJudgeQueueConfig.RUN_JUDGE_ROUTING_KEY;
+
         rabbitTemplate.convertAndSend(
-                AlgorithmJudgeQueueConfig.ALGORITHM_JUDGE_QUEUE,
+                AlgorithmJudgeQueueConfig.ALGORITHM_JUDGE_EXCHANGE,
+                routingKey,
                 // 队列消息只传任务 ID，便于后续独立消费者按相同协议接入。
                 judgeJobId.toString());
     }

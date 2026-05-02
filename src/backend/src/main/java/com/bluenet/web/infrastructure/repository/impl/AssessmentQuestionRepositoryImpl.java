@@ -31,7 +31,9 @@ public class AssessmentQuestionRepositoryImpl implements AssessmentQuestionRepos
     @Override
     public void save(AssessmentQuestion assessmentQuestion) {
         log.info("save assessment question {}", assessmentQuestion);
-        assessmentQuestionMapper.insert(assessmentQuestionRepositoryConverter.toDataObject(assessmentQuestion));
+        AssessmentQuestionDO dataObject = assessmentQuestionRepositoryConverter.toDataObject(assessmentQuestion);
+        assessmentQuestionMapper.insert(dataObject);
+        assessmentQuestion.setId(dataObject.getId());
     }
 
     /**

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bluenet.web.infrastructure.repository.mapper.JudgeLanguageLimitMapper">
+    <select id="countConfirmedByQuestionIdAndLanguage" resultType="int">
+        SELECT COUNT(*)
+        FROM tb_judge_language_limit
+        WHERE question_id = #{questionId}
+          AND language = #{language}
+          AND confirmed = TRUE
+    </select>
+
+    <insert id="upsertConfirmedLimit">
+        INSERT INTO tb_judge_language_limit (
+            question_id, language, time_limit_ms, memory_limit_kb, output_limit_kb,
+            confirmed, confirmed_at, source_config_id
+        )
+        VALUES (
+            #{questionId}, #{language}, #{timeLimitMs}, #{memoryLimitKb}, #{outputLimitKb},
+            TRUE, CURRENT_TIMESTAMP, #{sourceConfigId}
+        )
+        ON CONFLICT (question_id, language) DO UPDATE SET
+            time_limit_ms = EXCLUDED.time_limit_ms,
+            memory_limit_kb = EXCLUDED.memory_limit_kb,
+            output_limit_kb = EXCLUDED.output_limit_kb,
+            confirmed = TRUE,
+            confirmed_at = CURRENT_TIMESTAMP,
+            source_config_id = EXCLUDED.source_config_id
+    </insert>
+</mapper>

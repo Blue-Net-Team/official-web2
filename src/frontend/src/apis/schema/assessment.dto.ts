@@ -193,14 +193,149 @@ export interface AlgorithmContent extends BaseQuestionContent {
   examples?: AlgorithmExample[]
   /** 默认运行测试用例 */
   runTestCases?: AlgorithmTestCase[]
-  /** 正式判题测试用例（仅管理端返回） */
-  testCases?: AlgorithmTestCase[]
   /** 各语言初始代码模板，key 同时决定允许提交语言 */
   starterCode?: Record<string, string>
-  /** 时间限制（毫秒） */
-  timeLimit?: number
-  /** 内存限制（KB） */
-  memoryLimit?: number
+}
+
+/** 判题配置状态 */
+export type JudgeProblemConfigStatus =
+  | 'DRAFT'
+  | 'GENERATING'
+  | 'GENERATED'
+  | 'BENCHMARKING'
+  | 'READY'
+  | 'FAILED'
+
+/** 判题标准解配置和 benchmark 结果 */
+export interface JudgeStandardSolutionDTO {
+  /** 标准解语言 */
+  language: ProgrammingLanguage
+  /** 标准解 OSS 对象键 */
+  objectKey: string | null
+  /** 标准解 SHA-256 哈希 */
+  objectHash: string | null
+  /** 是否为生成标准输出的主标准解 */
+  primarySolution: boolean
+  /** benchmark 状态 */
+  benchmarkStatus: string | null
+  /** benchmark p95 耗时毫秒 */
+  p95TimeMs: number | null
+  /** benchmark 最大耗时毫秒 */
+  maxTimeMs: number | null
+  /** benchmark 峰值内存 KB */
+  peakMemoryKb: number | null
+  /** 建议正式限时毫秒 */
+  suggestedTimeLimitMs: number | null
+  /** benchmark 说明 */
+  benchmarkMessage: string | null
+}
+
+/** 测试用例生成配置 */
+export interface JudgeTestcaseConfigDTO {
+  /** 测试用例序号 */
+  caseNo: number
+  /** 测试用例分类 */
+  category: string
+  /** 传给 generator 的结构化 JSON 参数 */
+  generatorArgs: unknown
+  /** 测试用例权重 */
+  weight: number
+  /** 是否隐藏用例详情 */
+  hidden: boolean
+  /** 是否作为题面样例 */
+  sample: boolean
+  /** 用例说明 */
+  description: string | null
+}
+
+/** 算法题当前判题配置 */
+export interface JudgeProblemConfigDTO {
+  /** 判题配置ID */
+  id: number
+  /** 题目ID */
+  questionId: number
+  /** generator 源码语言 */
+  generatorLanguage: ProgrammingLanguage
+  /** generator OSS 对象键 */
+  generatorObjectKey: string | null
+  /** manifest OSS 对象键 */
+  manifestObjectKey: string | null
+  /** 主标准解语言 */
+  primaryStandardLanguage: ProgrammingLanguage
+  /** 配置状态 */
+  status: JudgeProblemConfigStatus
+  /** benchmark 重复运行次数 */
+  benchmarkRepeatTimes: number
+  /** 建议限时倍率 */
+  marginMultiplier: number
+  /** 建议限时最小额外毫秒 */
+  minExtraMs: number
+  /** 建议限时向上取整粒度 */
+  roundToMs: number
+  /** 标准解列表 */
+  standardSolutions: JudgeStandardSolutionDTO[]
+  /** 测试用例生成配置列表 */
+  testcases: JudgeTestcaseConfigDTO[]
+}
+
+/** 保存标准解源码请求 */
+export interface UpsertJudgeStandardSolutionRequestDTO {
+  /** 标准解语言 */
+  language: ProgrammingLanguage
+  /** 标准解源码 */
+  source: string
+  /** 是否为主标准解 */
+  primarySolution?: boolean
+}
+
+/** 保存测试用例生成配置请求 */
+export interface UpsertJudgeTestcaseConfigRequestDTO {
+  /** 测试用例序号 */
+  caseNo: number
+  /** 测试用例分类 */
+  category: string
+  /** generator 参数 */
+  generatorArgs?: unknown
+  /** 测试用例权重 */
+  weight: number
+  /** 是否隐藏用例详情 */
+  hidden?: boolean
+  /** 是否作为题面样例 */
+  sample?: boolean
+  /** 用例说明 */
+  description?: string | null
+}
+
+/** 保存算法题判题配置请求 */
+export interface UpsertJudgeProblemConfigRequestDTO {
+  /** generator 源码语言 */
+  generatorLanguage: ProgrammingLanguage
+  /** generator 源码 */
+  generatorSource: string
+  /** 主标准解语言 */
+  primaryStandardLanguage: ProgrammingLanguage
+  /** benchmark 重复运行次数 */
+  benchmarkRepeatTimes: number
+  /** 建议限时倍率 */
+  marginMultiplier: number
+  /** 建议限时最小额外毫秒 */
+  minExtraMs: number
+  /** 建议限时向上取整粒度 */
+  roundToMs: number
+  /** 标准解源码列表 */
+  standardSolutions: UpsertJudgeStandardSolutionRequestDTO[]
+  /** 测试用例生成配置列表 */
+  testcases: UpsertJudgeTestcaseConfigRequestDTO[]
+}
+
+/** 管理员确认语言资源限制请求 */
+export interface ConfirmJudgeLanguageLimitRequestDTO {
+  /** 正式判题限时毫秒 */
+  timeLimitMs: number
+  /** 正式判题内存限制 KB */
+  memoryLimitKb: number
+  /** 正式判题输出限制 KB */
+  outputLimitKb: number
 }
 
 /** 考题内容联合类型 */

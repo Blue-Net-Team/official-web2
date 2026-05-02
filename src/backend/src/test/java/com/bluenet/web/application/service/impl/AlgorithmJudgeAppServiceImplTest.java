@@ -29,12 +29,13 @@ import com.bluenet.web.domain.service.AssessmentJudgementDomainService;
 import com.bluenet.web.domain.repository.AssessmentQuestionRepository;
 import com.bluenet.web.domain.repository.AssessmentTimeRepository;
 import com.bluenet.web.infrastructure.judge.AlgorithmJudgeJobPublisher;
+import com.bluenet.web.infrastructure.repository.mapper.JudgeLanguageLimitMapper;
 import com.bluenet.web.infrastructure.security.util.UserCTX;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -82,9 +83,24 @@ class AlgorithmJudgeAppServiceImplTest {
     private AlgorithmJudgeCaseResultRepository algorithmJudgeCaseResultRepository;
     @Mock
     private AlgorithmJudgeJobPublisher algorithmJudgeJobPublisher;
+    @Mock
+    private JudgeLanguageLimitMapper judgeLanguageLimitMapper;
 
-    @InjectMocks
     private AlgorithmJudgeAppServiceImpl algorithmJudgeAppService;
+
+    @BeforeEach
+    void setUp() {
+        algorithmJudgeAppService = new AlgorithmJudgeAppServiceImpl(
+                assessmentQuestionRepository,
+                assessmentTimeRepository,
+                assessmentJudgementDomainService,
+                assessmentAnswerRepository,
+                assessmentSessionRepository,
+                algorithmJudgeJobRepository,
+                algorithmJudgeCaseResultRepository,
+                algorithmJudgeJobPublisher,
+                judgeLanguageLimitMapper);
+    }
 
     @Test
     @DisplayName("默认运行：应创建 DEFAULT_RUN 任务并投递队列")
@@ -162,6 +178,10 @@ class AlgorithmJudgeAppServiceImplTest {
             stubQuestionAndTime(createAlgorithmQuestion());
             when(assessmentAnswerRepository.findByUserIdAndQuestionId(USER_ID, QUESTION_ID))
                     .thenReturn(Optional.empty());
+            when(
+                    judgeLanguageLimitMapper
+                            .countConfirmedByQuestionIdAndLanguage(QUESTION_ID, ProgrammingLanguage.PYTHON.getValue()))
+                                    .thenReturn(1);
             doAnswer(invocation -> {
                 AssessmentAnswer entity = invocation.getArgument(0);
                 entity.setId(ANSWER_ID);

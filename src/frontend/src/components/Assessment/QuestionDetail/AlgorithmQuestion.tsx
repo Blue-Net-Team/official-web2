@@ -56,10 +56,7 @@ export default function AlgorithmQuestion({
           <ExperimentOutlined className="text-xl text-[#6677ff]" />
           <h2 className="text-base font-semibold text-white m-0">算法题</h2>
         </div>
-        <div className="flex items-center gap-2 text-xs text-white/45">
-          {algorithmContent?.timeLimit && <span>{algorithmContent.timeLimit} ms</span>}
-          {algorithmContent?.memoryLimit && <span>{algorithmContent.memoryLimit} KB</span>}
-        </div>
+        <div className="text-xs text-white/45">正式资源限制由判题配置决定</div>
       </div>
       <hr className="w-full h-px bg-white/[0.04] border-none m-0" />
       <MarkdownRenderer content={algorithmContent?.content} emptyText="暂无题目描述" />

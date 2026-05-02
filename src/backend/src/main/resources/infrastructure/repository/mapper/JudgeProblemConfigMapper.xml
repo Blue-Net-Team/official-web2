@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bluenet.web.infrastructure.repository.mapper.JudgeProblemConfigMapper">
+    <resultMap id="BaseResultMap" type="com.bluenet.web.infrastructure.repository.dataobject.JudgeProblemConfigDO">
+        <id column="id" property="id"/>
+        <result column="question_id" property="questionId"/>
+        <result column="generator_language" property="generatorLanguage"/>
+        <result column="generator_object_key" property="generatorObjectKey"/>
+        <result column="generator_object_hash" property="generatorObjectHash"/>
+        <result column="manifest_object_key" property="manifestObjectKey"/>
+        <result column="manifest_object_hash" property="manifestObjectHash"/>
+        <result column="primary_standard_language" property="primaryStandardLanguage"/>
+        <result column="status" property="status"/>
+        <result column="benchmark_repeat_times" property="benchmarkRepeatTimes"/>
+        <result column="margin_multiplier" property="marginMultiplier"/>
+        <result column="min_extra_ms" property="minExtraMs"/>
+        <result column="round_to_ms" property="roundToMs"/>
+    </resultMap>
+
+    <select id="upsertCurrentConfig" resultType="long">
+        INSERT INTO tb_judge_problem_config (
+            question_id, generator_language, generator_object_key, generator_object_hash,
+            primary_standard_language, status, benchmark_repeat_times, margin_multiplier,
+            min_extra_ms, round_to_ms
+        )
+        VALUES (
+            #{config.questionId}, #{config.generatorLanguage}, #{config.generatorObjectKey}, #{config.generatorObjectHash},
+            #{config.primaryStandardLanguage}, 'DRAFT', #{config.benchmarkRepeatTimes}, #{config.marginMultiplier},
+            #{config.minExtraMs}, #{config.roundToMs}
+        )
+        ON CONFLICT (question_id) DO UPDATE SET
+            generator_language = EXCLUDED.generator_language,
+            generator_object_key = EXCLUDED.generator_object_key,
+            generator_object_hash = EXCLUDED.generator_object_hash,
+            primary_standard_language = EXCLUDED.primary_standard_language,
+            status = 'DRAFT',
+            benchmark_repeat_times = EXCLUDED.benchmark_repeat_times,
+            margin_multiplier = EXCLUDED.margin_multiplier,
+            min_extra_ms = EXCLUDED.min_extra_ms,
+            round_to_ms = EXCLUDED.round_to_ms
+        RETURNING id
+    </select>
+
+    <select id="selectByQuestionId" resultMap="BaseResultMap">
+        SELECT * FROM tb_judge_problem_config
+        WHERE question_id = #{questionId}
+    </select>
+
+    <select id="selectIdByQuestionId" resultType="long">
+        SELECT id FROM tb_judge_problem_config
+        WHERE question_id = #{questionId}
+    </select>
+
+    <update id="updateManifest">
+        UPDATE tb_judge_problem_config
+        SET manifest_object_key = #{manifestObjectKey},
+            manifest_object_hash = #{manifestObjectHash}
+        WHERE id = #{configId}
+    </update>
+
+    <update id="markGenerating">
+        UPDATE tb_judge_problem_config
+        SET status = 'GENERATING'
+        WHERE id = #{configId}
+    </update>
+
+    <update id="markReadyIfGenerated">
+        UPDATE tb_judge_problem_config
+        SET status = 'READY'
+        WHERE id = #{configId}
+          AND status = 'GENERATED'
+    </update>
+
+    <delete id="deleteByQuestionId">
+        DELETE FROM tb_judge_problem_config
+        WHERE question_id = #{questionId}
+    </delete>
+</mapper>

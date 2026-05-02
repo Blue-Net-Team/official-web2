@@ -5,15 +5,30 @@ import AdminHeadBar from '@/components/Admin/AdminNav/AdminHeadBar'
 import AdminSideBar from '@/components/Admin/AdminNav/AdminSideBar'
 import ErrorPage from '@/components/ErrorPage'
 import { ERROR_CONFIGS } from '@/components/ErrorPage/configs'
-import { Layout } from 'antd'
+import { Layout, Spin } from 'antd'
 import { Content } from 'antd/es/layout/layout'
-import { ReactNode } from 'react'
+import { ReactNode, useEffect, useState } from 'react'
 import { useAuth } from '@/hooks'
 import { getRoleLevel } from '@/utils/RoleUtils'
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
   const { userInfo } = useAuth()
+  const [hydrated, setHydrated] = useState(false)
   const roleLevel = getRoleLevel(userInfo?.roleName || '')
+
+  useEffect(() => {
+    setHydrated(true)
+  }, [])
+
+  if (!hydrated) {
+    return (
+      <AdminNav>
+        <Layout className="min-h-screen flex items-center justify-center">
+          <Spin size="large" />
+        </Layout>
+      </AdminNav>
+    )
+  }
 
   if (roleLevel < 1) {
     return (
