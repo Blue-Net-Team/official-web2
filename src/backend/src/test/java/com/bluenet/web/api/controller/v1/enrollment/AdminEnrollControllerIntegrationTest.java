@@ -36,6 +36,11 @@ import com.bluenet.web.infrastructure.security.WithUserVO;
 import com.bluenet.web.infrastructure.security.util.UserCTX;
 import com.bluenet.web.testcontainers.TestcontainersConfiguration;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.security.crypto.password.PasswordEncoder;
+
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 
 /**
  * AdminEnrollController 集成测试
@@ -67,6 +72,9 @@ class AdminEnrollControllerIntegrationTest extends BaseIntegrationTest {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     private Long testCollegeId;
     private Long memberRoleId;
@@ -367,6 +375,28 @@ class AdminEnrollControllerIntegrationTest extends BaseIntegrationTest {
                             .contentType(MediaType.APPLICATION_JSON))
                     .andExpect(status().isForbidden());
         }
+
+        @Test
+        @DisplayName("审核通过时应使用报名密码作为用户初始密码")
+        @WithUserVO(userId = 1L, studentId = "admin001", username = "管理员", roleName = "SUPER_ADMIN", permissions = {
+                "enrollment:approve" })
+        void approveEnrollment_shouldUseEnrollPasswordAsInitialPassword() throws Exception {
+            Enroll enroll = createTestEnroll(EnrollStatus.PENDING);
+            String enrollPassword = enroll.getPassword();
+
+            mockMvc.perform(
+                    put("/api/v1/admin/enrollments/" + enroll.getId() + "/approve")
+                            .contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isOk());
+
+            // 验证用户密码是报名密码经 SHA256+BCrypt 后的结果
+            User createdUser = RepositoryTestObjects
+                    .toDomain(userMapper.selectByStudentId(enroll.getStudentId()), User.class);
+            assert createdUser != null : "用户应该被创建";
+            String expectedHashed = sha256Hash(enrollPassword);
+            assert passwordEncoder.matches(expectedHashed, createdUser.getPassword())
+                    : "用户密码应该由报名密码经 SHA256+BCrypt 生成";
+        }
     }
 
     // ==================== 拒绝报名测试 ====================
@@ -511,6 +541,24 @@ class AdminEnrollControllerIntegrationTest extends BaseIntegrationTest {
                     get("/api/v1/admin/enrollments/statistics")
                             .contentType(MediaType.APPLICATION_JSON))
                     .andExpect(status().isForbidden());
+        }
+    }
+
+    private String sha256Hash(String input) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(input.getBytes(StandardCharsets.UTF_8));
+            StringBuilder hexString = new StringBuilder();
+            for (byte b : hash) {
+                String hex = Integer.toHexString(0xff & b);
+                if (hex.length() == 1) {
+                    hexString.append('0');
+                }
+                hexString.append(hex);
+            }
+            return hexString.toString();
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException("SHA-256 algorithm not available", e);
         }
     }
 }

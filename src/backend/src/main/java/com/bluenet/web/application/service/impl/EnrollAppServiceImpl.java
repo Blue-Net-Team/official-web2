@@ -321,7 +321,7 @@ public class EnrollAppServiceImpl implements EnrollAppService {
         RoleVO candidateRole = roleRepository.findByName(RoleType.CANDIDATE.getName())
                 .orElseThrow(() -> new GlobalException("CANDIDATE 角色不存在，请先初始化角色数据"));
 
-        String initialPassword = generateRandomPassword(APPROVAL_INITIAL_PASSWORD_LENGTH);
+        String initialPassword = enroll.getPassword();
         String hashedPassword = sha256Hash(initialPassword);
         String encodedPassword = passwordEncoder.encode(hashedPassword);
         String referralCode = referralCodeGenerator.generate();
