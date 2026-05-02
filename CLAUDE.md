@@ -416,6 +416,20 @@ infrastructure/security/util/
   - `/api/v1/enrollments` - 公开报名
   - `/api/v1/file/upload` - 统一文件上传（报名时使用）
 
+### 密码加密流程
+
+系统采用**前端 SHA256 + 后端 BCrypt** 的两层加密策略，后端不接触密码明文：
+
+1. **前端哈希**：用户输入的明文密码先经前端 `js-sha256` 库做 SHA256 哈希（`hashPassword(password)`）
+2. **传输**：前端仅将 SHA256 哈希值传给后端，网络层不传输明文密码
+3. **后端加密**：后端接收哈希值后，使用 `PasswordEncoder`（BCrypt）再次加密，然后将 BCrypt 密文存入数据库
+4. **校验**：登录时后端用 `PasswordEncoder.matches()` 比较数据库中的 BCrypt 密文与前端传来的 SHA256 哈希值
+
+**重要约束**：
+- 所有涉及密码的接口（登录、重置密码、创建用户等）统一遵循此流程
+- 前端负责 SHA256，后端负责 BCrypt，不得颠倒或省略步骤
+- 后端 `User.resetPassword()`、`AdminUserAppServiceImpl.createUser()` 等逻辑中，**不得**对密码再做额外哈希，直接 `passwordEncoder.encode(前端传来的哈希值)` 即可
+
 ### 认证流程
 
 1. **登录**：`POST /api/v1/auth/login/student-id`
