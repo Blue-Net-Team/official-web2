@@ -57,6 +57,11 @@ lerna-debug.log*
 .vscode/*
 !.vscode/launch.json
 
+### IntelliJ IDEA ###
+.idea/*
+!.idea/runConfigurations/
+!.idea/.gitignore
+
 ### Others ###
 *.suo
 *.ntvs*

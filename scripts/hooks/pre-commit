@@ -25,27 +25,24 @@ if [ -n "$JAVA_FILES" ]; then
   echo ""
   echo "☕ 正在检查后端 Java 代码格式..."
   
-  CURRENT_DIR=$(pwd)
-  cd src/backend
-  
-  if command -v mvnw.cmd >/dev/null 2>&1; then
-    mvnw.cmd spotless:check -q 2>/dev/null
-  elif [ -f "./mvnw" ]; then
-    ./mvnw spotless:check -q 2>/dev/null
+  if [ -f "src/backend/mvnw.cmd" ]; then
+    src/backend/mvnw.cmd -f src/backend/pom.xml spotless:check -q 2>/dev/null
+  elif [ -f "src/backend/mvnw" ]; then
+    src/backend/mvnw -f src/backend/pom.xml spotless:check -q 2>/dev/null
   else
-    mvn spotless:check -q 2>/dev/null
+    (cd src/backend && mvn spotless:check -q 2>/dev/null)
   fi
   
   if [ $? -ne 0 ]; then
     echo ""
     echo "⚠️  后端代码格式检查未通过，正在自动修复..."
     
-    if command -v mvnw.cmd >/dev/null 2>&1; then
-      mvnw.cmd spotless:apply -q
-    elif [ -f "./mvnw" ]; then
-      ./mvnw spotless:apply -q
+    if [ -f "src/backend/mvnw.cmd" ]; then
+      src/backend/mvnw.cmd -f src/backend/pom.xml spotless:apply -q
+    elif [ -f "src/backend/mvnw" ]; then
+      src/backend/mvnw -f src/backend/pom.xml spotless:apply -q
     else
-      mvn spotless:apply -q
+      (cd src/backend && mvn spotless:apply -q 2>/dev/null)
     fi
     
     if [ $? -eq 0 ]; then
@@ -53,14 +50,11 @@ if [ -n "$JAVA_FILES" ]; then
       NEED_RESTAGE=true
     else
       echo "❌ 后端代码格式修复失败，请手动检查"
-      cd "$CURRENT_DIR"
       exit 1
     fi
   else
     echo "✅ 后端代码格式检查通过"
   fi
-  
-  cd "$CURRENT_DIR"
 fi
 
 # ============================================
