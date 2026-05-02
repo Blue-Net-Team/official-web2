@@ -793,3 +793,25 @@ export interface AdminUserBatchUpdateRoleRequestDTO {
   userIds: number[]
   roleId: number
 }
+
+export interface AdminUserCreateRequestDTO {
+  studentId: string
+  email: string
+  username: string
+  password: string
+  nickname?: string
+  roleId: number
+  collegeId?: number
+  major?: string
+  direction?: string
+  gender?: string
+  job?: string
+  assessmentGradeYear?: number
+}
+
+export interface AdminUserCreateResponseDTO {
+  id: number
+  studentId: string
+  username: string
+  roleId: number
+}

@@ -1,6 +1,7 @@
 package com.bluenet.web.application.converter;
 
 import com.bluenet.web.api.dto.PageDTO;
+import com.bluenet.web.api.dto.adminuser.AdminUserCreateResponseDTO;
 import com.bluenet.web.api.dto.adminuser.AdminUserDetailResponseDTO;
 import com.bluenet.web.api.dto.adminuser.AdminUserListItemResponseDTO;
 import com.bluenet.web.application.AdminUserResult;
@@ -30,6 +31,15 @@ public class AdminUserAppConverter {
                 .job(item.job())
                 .disable(item.disable())
                 .avatarFileId(item.avatarFileId())
+                .build();
+    }
+
+    public AdminUserCreateResponseDTO toCreateResponseDTO(AdminUserResult.Created created) {
+        return AdminUserCreateResponseDTO.builder()
+                .id(created.id())
+                .studentId(created.studentId())
+                .username(created.username())
+                .roleId(created.roleId())
                 .build();
     }
 

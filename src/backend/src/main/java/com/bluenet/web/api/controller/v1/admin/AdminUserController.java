@@ -195,4 +195,21 @@ public class AdminUserController {
             return ResponseMessage.error(400, e.getMessage());
         }
     }
+
+    @Operation(summary = "创建用户", description = "管理员手动创建用户账号，返回初始密码")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "创建成功"),
+            @ApiResponse(responseCode = "400", description = "参数错误或学号已存在", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseMessage.class)))
+    })
+    @RequiresPermission(name = "创建用户", value = "user:manage:create", access = AccessLevel.PROTECTED)
+    @PostMapping
+    public ResponseMessage<AdminUserCreateResponseDTO> createUser(
+            @Valid @RequestBody AdminUserCreateRequestDTO request) {
+        try {
+            AdminUserResult.Created created = adminUserAppService.createUser(requestConverter.toCommand(request));
+            return ResponseMessage.success(appConverter.toCreateResponseDTO(created));
+        } catch (BadRequest e) {
+            return ResponseMessage.error(400, e.getMessage());
+        }
+    }
 }

@@ -9,6 +9,8 @@ import type {
   AdminUserResetPasswordRequestDTO,
   AdminUserBatchOperateRequestDTO,
   AdminUserBatchUpdateRoleRequestDTO,
+  AdminUserCreateRequestDTO,
+  AdminUserCreateResponseDTO,
 } from '../schema/type'
 
 export const adminUserService = {
@@ -62,6 +64,16 @@ export const adminUserService = {
 
   async batchUpdateRole(data: AdminUserBatchUpdateRoleRequestDTO): Promise<ResponseMessage<void>> {
     const response = await apiClient.post<ResponseMessage<void>>('/admin/users/batch-role', data)
+    return response.data
+  },
+
+  async create(
+    data: AdminUserCreateRequestDTO
+  ): Promise<ResponseMessage<AdminUserCreateResponseDTO>> {
+    const response = await apiClient.post<ResponseMessage<AdminUserCreateResponseDTO>>(
+      '/admin/users',
+      data
+    )
     return response.data
   },
 }

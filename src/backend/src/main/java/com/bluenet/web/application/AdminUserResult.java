@@ -32,6 +32,16 @@ public class AdminUserResult {
     }
 
     /**
+     * 创建用户结果
+     */
+    public record Created(
+            Long id,
+            String studentId,
+            String username,
+            Long roleId) {
+    }
+
+    /**
      * 用户详情
      */
     public record Detail(

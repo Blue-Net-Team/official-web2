@@ -48,4 +48,9 @@ public interface AdminUserAppService {
      * 批量更新用户角色
      */
     void batchUpdateRole(AdminUserCommands.BatchUpdateRoleCommand command);
+
+    /**
+     * 创建用户
+     */
+    AdminUserResult.Created createUser(AdminUserCommands.CreateUserCommand command);
 }

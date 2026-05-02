@@ -1,6 +1,7 @@
 package com.bluenet.web.application.command.adminuser;
 
 import com.bluenet.web.domain.model.enumerate.Direction;
+import com.bluenet.web.domain.model.enumerate.Gender;
 
 import java.util.List;
 
@@ -57,5 +58,23 @@ public class AdminUserCommands {
     public record BatchUpdateRoleCommand(
             List<Long> userIds,
             Long roleId) {
+    }
+
+    /**
+     * 创建用户命令
+     */
+    public record CreateUserCommand(
+            String studentId,
+            String email,
+            String username,
+            String password,
+            String nickname,
+            Long roleId,
+            Long collegeId,
+            String major,
+            Direction direction,
+            Gender gender,
+            String job,
+            Integer assessmentGradeYear) {
     }
 }

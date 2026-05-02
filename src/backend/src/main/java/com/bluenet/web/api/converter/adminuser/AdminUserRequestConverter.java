@@ -30,4 +30,20 @@ public class AdminUserRequestConverter {
     public AdminUserCommands.BatchUpdateRoleCommand toCommand(AdminUserBatchUpdateRoleRequestDTO dto) {
         return new AdminUserCommands.BatchUpdateRoleCommand(dto.getUserIds(), dto.getRoleId());
     }
+
+    public AdminUserCommands.CreateUserCommand toCommand(AdminUserCreateRequestDTO dto) {
+        return new AdminUserCommands.CreateUserCommand(
+                dto.getStudentId(),
+                dto.getEmail(),
+                dto.getUsername(),
+                dto.getPassword(),
+                dto.getNickname(),
+                dto.getRoleId(),
+                dto.getCollegeId(),
+                dto.getMajor(),
+                dto.getDirection(),
+                dto.getGender(),
+                dto.getJob(),
+                dto.getAssessmentGradeYear());
+    }
 }

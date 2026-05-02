@@ -25,8 +25,10 @@ import {
   StopOutlined,
   CheckCircleOutlined,
   TeamOutlined,
+  PlusOutlined,
 } from '@ant-design/icons'
 import { usePagination, useApi } from '@/hooks'
+import { hashPassword } from '@/utils/passwordHash'
 import { adminUserService } from '@/apis/services/admin-user.service'
 import { collegeService } from '@/apis/services/college.service'
 import {
@@ -95,6 +97,11 @@ export default function AdminUserManagementPage() {
   const [batchRoleModalOpen, setBatchRoleModalOpen] = useState(false)
   const [batchRoleId, setBatchRoleId] = useState<number | undefined>()
   const [batchSubmitting, setBatchSubmitting] = useState(false)
+
+  // Create user modal
+  const [createModalOpen, setCreateModalOpen] = useState(false)
+  const [createForm] = Form.useForm()
+  const [createSubmitting, setCreateSubmitting] = useState(false)
 
   // Fetch colleges
   useEffect(() => {
@@ -191,8 +198,8 @@ export default function AdminUserManagementPage() {
     setResetSubmitting(true)
     try {
       const res = await adminUserService.resetPassword(resettingUser.id, {
-        newPassword: values.newPassword,
-        confirmPassword: values.confirmPassword,
+        newPassword: hashPassword(values.newPassword),
+        confirmPassword: hashPassword(values.confirmPassword),
       })
       if (res.code === 200) {
         messageApi.success('密码已重置')
@@ -314,6 +321,45 @@ export default function AdminUserManagementPage() {
       messageApi.error('操作失败')
     } finally {
       setBatchSubmitting(false)
+    }
+  }
+
+  // Create user
+  const handleCreateOpen = () => {
+    createForm.resetFields()
+    setCreateModalOpen(true)
+  }
+
+  const handleCreateSubmit = async () => {
+    const values = await createForm.validateFields()
+    setCreateSubmitting(true)
+    try {
+      const hashedPassword = hashPassword(values.password)
+      const res = await adminUserService.create({
+        studentId: values.studentId,
+        email: values.email,
+        username: values.username,
+        password: hashedPassword,
+        nickname: values.nickname,
+        roleId: values.roleId,
+        collegeId: values.collegeId,
+        major: values.major,
+        direction: values.direction,
+        gender: values.gender,
+        job: values.job,
+        assessmentGradeYear: values.assessmentGradeYear,
+      })
+      if (res.code === 200) {
+        messageApi.success('用户创建成功')
+        setCreateModalOpen(false)
+        refresh()
+      } else {
+        messageApi.error(res.msg || '创建失败')
+      }
+    } catch {
+      messageApi.error('创建失败')
+    } finally {
+      setCreateSubmitting(false)
     }
   }
 
@@ -494,6 +540,10 @@ export default function AdminUserManagementPage() {
           onClick={handleBatchRole}
         >
           批量改角色{hasSelected ? ` (${selectedRowKeys.length})` : ''}
+        </Button>
+        <div className="flex-1" />
+        <Button type="primary" icon={<PlusOutlined />} onClick={handleCreateOpen}>
+          添加用户
         </Button>
       </div>
 
@@ -697,6 +747,124 @@ export default function AdminUserManagementPage() {
             options={ROLE_OPTIONS}
           />
         </div>
+      </Modal>
+
+      {/* Create User Modal */}
+      <Modal
+        title="添加用户"
+        open={createModalOpen}
+        onOk={handleCreateSubmit}
+        onCancel={() => setCreateModalOpen(false)}
+        okText="创建"
+        cancelText="取消"
+        confirmLoading={createSubmitting}
+        width={520}
+      >
+        <Form form={createForm} layout="vertical" className="mt-4">
+          <div className="grid grid-cols-2 gap-4">
+            <Form.Item
+              name="studentId"
+              label="学号"
+              rules={[
+                { required: true, message: '请输入学号' },
+                { pattern: /^\d{12,13}$/, message: '学号必须为12-13位数字' },
+              ]}
+            >
+              <Input placeholder="学号" />
+            </Form.Item>
+            <Form.Item
+              name="username"
+              label="姓名"
+              rules={[{ required: true, message: '请输入姓名' }]}
+            >
+              <Input placeholder="姓名" />
+            </Form.Item>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <Form.Item
+              name="password"
+              label="密码"
+              rules={[
+                { required: true, message: '请输入密码' },
+                { min: 6, message: '密码至少6位' },
+              ]}
+            >
+              <Input.Password placeholder="初始密码" />
+            </Form.Item>
+            <Form.Item
+              name="confirmPassword"
+              label="确认密码"
+              rules={[
+                { required: true, message: '请再次输入密码' },
+                ({ getFieldValue }) => ({
+                  validator(_, value) {
+                    if (!value || getFieldValue('password') === value) {
+                      return Promise.resolve()
+                    }
+                    return Promise.reject(new Error('两次输入的密码不一致'))
+                  },
+                }),
+              ]}
+            >
+              <Input.Password placeholder="再次输入密码" />
+            </Form.Item>
+          </div>
+          <Form.Item
+            name="email"
+            label="邮箱"
+            rules={[
+              { required: true, message: '请输入邮箱' },
+              { type: 'email', message: '邮箱格式不正确' },
+            ]}
+          >
+            <Input placeholder="邮箱地址" />
+          </Form.Item>
+          <div className="grid grid-cols-2 gap-4">
+            <Form.Item name="nickname" label="昵称">
+              <Input placeholder="昵称（可选）" />
+            </Form.Item>
+            <Form.Item
+              name="roleId"
+              label="角色"
+              rules={[{ required: true, message: '请选择角色' }]}
+              initialValue={4}
+            >
+              <Select placeholder="选择角色" options={ROLE_OPTIONS} />
+            </Form.Item>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <Form.Item name="collegeId" label="学院">
+              <Select allowClear placeholder="选择学院" options={collegeOptions} />
+            </Form.Item>
+            <Form.Item name="major" label="专业">
+              <Input placeholder="专业（可选）" />
+            </Form.Item>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <Form.Item name="direction" label="方向">
+              <Select allowClear placeholder="选择方向" options={DIRECTION_OPTIONS} />
+            </Form.Item>
+            <Form.Item name="gender" label="性别">
+              <Select
+                allowClear
+                placeholder="选择性别"
+                options={[
+                  { value: 'MALE', label: GENDER_LABELS.MALE },
+                  { value: 'FEMALE', label: GENDER_LABELS.FEMALE },
+                  { value: 'UNKNOWN', label: GENDER_LABELS.UNKNOWN },
+                ]}
+              />
+            </Form.Item>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <Form.Item name="job" label="岗位">
+              <Input placeholder="岗位（可选）" />
+            </Form.Item>
+            <Form.Item name="assessmentGradeYear" label="考核年级">
+              <Input type="number" placeholder="考核年级年份（可选）" />
+            </Form.Item>
+          </div>
+        </Form>
       </Modal>
     </div>
   )
