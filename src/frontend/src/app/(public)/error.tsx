@@ -24,12 +24,7 @@ export default function Error({
         title="出错了"
         subTitle={error.message || '页面加载时发生错误，请稍后重试'}
         extra={[
-          <Button
-            key="retry"
-            type="primary"
-            onClick={reset}
-            className="!bg-gradient-to-br !from-[#6677ff] !to-[#2f27b0]"
-          >
+          <Button key="retry" type="primary" onClick={reset}>
             重试
           </Button>,
           <Button key="home" onClick={() => router.push('/')}>
