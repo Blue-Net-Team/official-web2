@@ -17,6 +17,9 @@ interface contentType {
 
 const AchievementAndResources = () => {
   const [isMobile, setIsMobile] = useState(false)
+  const sectionRef = useRef<HTMLDivElement>(null)
+  const carouselRef = useRef<CarouselRef>(null)
+  const [currentSlide, setCurrentSlide] = useState(0)
 
   useEffect(() => {
     const checkMobile = () => {
@@ -53,19 +56,96 @@ const AchievementAndResources = () => {
     },
   ]
 
-  const carouselRef = useRef<CarouselRef>(null)
-  const [currentSlide, setCurrentSlide] = useState(0)
   const totalSlides = content.length
+  const currentSlideRef = useRef(currentSlide)
+  const wheelDeltaRef = useRef(0)
+  const wheelLockTimeoutRef = useRef<number | null>(null)
 
   const thumbSizePercent = 100 / totalSlides
   const thumbPositionPercent = currentSlide * thumbSizePercent
+
+  useEffect(() => {
+    currentSlideRef.current = currentSlide
+  }, [currentSlide])
+
+  useEffect(() => {
+    const handleWheel = (event: WheelEvent) => {
+      const section = sectionRef.current
+      const carousel = carouselRef.current
+
+      if (isMobile || !section || !carousel || event.deltaY === 0) {
+        return
+      }
+
+      const rect = section.getBoundingClientRect()
+      const viewportHeight = window.innerHeight || document.documentElement.clientHeight
+      const direction = event.deltaY > 0 ? 1 : -1
+      // 按滚动方向分别判断接管区间，避免从上下边缘刚露出一点时就劫持页面滚动。
+      const isSectionPinned =
+        direction > 0
+          ? rect.top <= viewportHeight * 0.25 && rect.bottom >= viewportHeight * 0.65
+          : rect.top <= viewportHeight * 0.1 && rect.bottom >= viewportHeight * 0.85
+
+      if (!isSectionPinned) {
+        wheelDeltaRef.current = 0
+        return
+      }
+
+      const slide = currentSlideRef.current
+      const canTurnNext = direction > 0 && slide < totalSlides - 1
+      const canTurnPrev = direction < 0 && slide > 0
+
+      if (!canTurnNext && !canTurnPrev) {
+        wheelDeltaRef.current = 0
+        return
+      }
+
+      event.preventDefault()
+
+      if (wheelLockTimeoutRef.current) {
+        return
+      }
+
+      // 将连续滚轮输入聚合为一次 Carousel 翻页，避免触控板一次滑动跳过多页。
+      wheelDeltaRef.current += event.deltaY
+
+      if (Math.abs(wheelDeltaRef.current) < 80) {
+        return
+      }
+
+      wheelDeltaRef.current = 0
+
+      if (direction > 0) {
+        carousel.next()
+      } else {
+        carousel.prev()
+      }
+
+      wheelLockTimeoutRef.current = window.setTimeout(() => {
+        wheelLockTimeoutRef.current = null
+      }, 650)
+    }
+
+    window.addEventListener('wheel', handleWheel, { passive: false })
+
+    return () => {
+      window.removeEventListener('wheel', handleWheel)
+
+      if (wheelLockTimeoutRef.current) {
+        window.clearTimeout(wheelLockTimeoutRef.current)
+      }
+    }
+  }, [isMobile, totalSlides])
 
   const handleSlideChange = (from: number, to: number) => {
     setCurrentSlide(to)
   }
 
   return (
-    <div className="flex flex-col gap-[28px] md:gap-[44px] h-fit md:h-[110vh] w-full box-border pl-5 pr-5 pt-5 pb-[30px] md:pl-[93px] md:pr-0 md:pt-[42px] md:pb-[80px]">
+    <div
+      ref={sectionRef}
+      className="flex flex-col gap-[28px] md:gap-[44px] h-fit md:h-[110vh] w-full box-border pl-5 pr-5 pt-5 pb-[30px] md:pl-[93px] md:pr-0 md:pt-[42px] md:pb-[80px]"
+    >
       <h1 className="text-white text-[20px] md:text-[43px]">
         累计获奖超
         <span className="text-[#ff9a3c] text-[36px] md:text-[79px]">300</span>项
