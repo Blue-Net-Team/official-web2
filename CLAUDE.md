@@ -124,6 +124,7 @@ pnpm lint
 ### 关键约束
 
 - **权限控制**：所有接口必须使用 `@RequiresPermission` 注解，指定 `value`（权限标识）、`name`（显示名称）、`access`（访问级别）
+- **权限标识唯一性**：`@RequiresPermission` 的 `value`（权限标识）在整个系统中必须全局唯一。`PermissionScanner` 在启动时会扫描所有注解并校验唯一性，若发现重复的权限标识将导致应用启动失败。此时**不允许修改 `PermissionScanner` 的逻辑**，开发者应自行检查并确保所有权限标识的唯一性
 - **访问级别**：使用 `AccessLevel` 枚举指定接口访问级别
   - `PUBLIC` - 公开访问，无需认证
   - `AUTHENTICATED` - 需要登录，无需特定权限
