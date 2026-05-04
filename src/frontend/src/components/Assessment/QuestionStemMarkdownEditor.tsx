@@ -24,6 +24,8 @@ export default function QuestionStemMarkdownEditor({
   const isDesktop = Boolean(screens.lg)
   const content = value ?? ''
 
+  const editorHeight = rows * 24 + 24
+
   const editor = (
     <Input.TextArea
       value={content}
@@ -32,11 +34,15 @@ export default function QuestionStemMarkdownEditor({
       disabled={disabled}
       rows={rows}
       className="font-mono text-sm"
+      style={{ resize: 'none', height: editorHeight }}
     />
   )
 
   const preview = (
-    <div className="min-h-[280px] rounded-lg border border-white/[0.08] bg-white/[0.03] p-4">
+    <div
+      className="rounded-lg border border-white/[0.08] bg-white/[0.03] p-4 overflow-y-auto"
+      style={{ height: editorHeight }}
+    >
       <MarkdownRenderer content={content} />
     </div>
   )
