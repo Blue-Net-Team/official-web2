@@ -96,6 +96,7 @@ export default function AssessmentJudgementManagementPage() {
   const [questions, setQuestions] = useState<AssessmentQuestionScoreboardDTO[]>([])
   const [selectedQuestionId, setSelectedQuestionId] = useState<number | undefined>()
   const [submissions, setSubmissions] = useState<AssessmentQuestionSubmissionDTO[]>([])
+  const [selectedSubmissionIds, setSelectedSubmissionIds] = useState<number[]>([])
   const [candidateScores, setCandidateScores] = useState<AssessmentCandidateScoreboardDTO[]>([])
 
   const [decisionKeyword, setDecisionKeyword] = useState('')
@@ -278,6 +279,10 @@ export default function AssessmentJudgementManagementPage() {
   }, [direction, fetchAssessmentTimes])
 
   useEffect(() => {
+    setSelectedSubmissionIds([])
+  }, [selectedQuestionId])
+
+  useEffect(() => {
     if (activeTab === 'score') {
       fetchQuestionScoreboard()
     }
@@ -379,6 +384,47 @@ export default function AssessmentJudgementManagementPage() {
       messageApi.success(`已发送 ${res.data} 封通知邮件`)
     } catch {
       messageApi.error('发布失败，请稍后重试')
+    }
+  }
+
+  /** 批量下载选中考生答案为 ZIP。 */
+  const handleBatchDownload = async () => {
+    if (!selectedQuestion || !currentAssessmentTime || selectedSubmissionIds.length === 0) return
+
+    const selectedSubmissions = submissions.filter((item) =>
+      selectedSubmissionIds.includes(item.answerId)
+    )
+    if (selectedSubmissions.length === 0) return
+
+    const nameCount = new Map<string, number>()
+    const entries = selectedSubmissions.map((sub) => {
+      const baseName = buildWorkFilename({
+        direction: currentAssessmentTime.direction,
+        epoch: currentAssessmentTime.epoch,
+        grade: currentAssessmentTime.grade,
+        username: sub.username,
+        questionNo: sub.questionNo,
+      })
+      let filename = baseName ?? sub.username
+      const count = nameCount.get(filename) ?? 0
+      nameCount.set(filename, count + 1)
+      if (count > 0) {
+        filename = `${filename}_${count}`
+      }
+      return { fileId: sub.fileId!, filename }
+    })
+
+    const directionLabel =
+      DIRECTION_LABELS[currentAssessmentTime.direction] ?? currentAssessmentTime.direction
+    const zipName = sanitizeFilenameSegment(
+      `${directionLabel}-第${currentAssessmentTime.epoch}轮-${currentAssessmentTime.grade}级-第${selectedQuestion.questionNo}题-考生答案.zip`
+    )
+
+    try {
+      await fileService.downloadBatch(entries, zipName)
+      setSelectedSubmissionIds([])
+    } catch {
+      messageApi.error('批量下载失败')
     }
   }
 
@@ -785,6 +831,13 @@ export default function AssessmentJudgementManagementPage() {
             ? `#${selectedQuestion.questionNo} ${selectedQuestion.title}`
             : '题目提交'
         }
+        extra={
+          selectedQuestion?.questionType === 'FILE_UPLOAD' && selectedSubmissionIds.length > 0 ? (
+            <Button size="small" icon={<DownloadOutlined />} onClick={handleBatchDownload}>
+              批量下载 ({selectedSubmissionIds.length})
+            </Button>
+          ) : null
+        }
         styles={{ body: { padding: 0 } }}
       >
         <Spin spinning={loadingSubmissions}>
@@ -795,6 +848,16 @@ export default function AssessmentJudgementManagementPage() {
               pagination={false}
               columns={submissionColumns}
               dataSource={submissions}
+              rowSelection={
+                selectedQuestion?.questionType === 'FILE_UPLOAD'
+                  ? {
+                      type: 'checkbox',
+                      selectedRowKeys: selectedSubmissionIds,
+                      onChange: (keys) => setSelectedSubmissionIds(keys as number[]),
+                      getCheckboxProps: (record) => ({ disabled: !record.fileId }),
+                    }
+                  : undefined
+              }
               scroll={{ y: 'calc(100vh - 360px)' }}
               onRow={(record) => ({
                 onClick: () => setReviewing(record),

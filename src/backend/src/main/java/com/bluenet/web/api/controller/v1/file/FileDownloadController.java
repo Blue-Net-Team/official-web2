@@ -21,10 +21,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -71,6 +68,37 @@ public class FileDownloadController {
 
         return ResponseEntity.ok()
                 .contentType(mediaType)
+                .header(
+                        HttpHeaders.CONTENT_DISPOSITION,
+                        "attachment; filename=\"" + encodedFilename + "\"; filename*=UTF-8''" + encodedFilename)
+                .header(HttpHeaders.CACHE_CONTROL, "max-age=3600")
+                .body(resource);
+    }
+
+    @Operation(summary = "批量下载文件", description = "按文件 ID 列表批量下载并打包为 ZIP")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "批量下载成功", content = @Content(schema = @Schema(type = "string", format = "binary"))),
+            @ApiResponse(responseCode = "403", description = "权限不足", content = @Content(mediaType = "application/json", schema = @Schema(implementation = com.bluenet.web.api.dto.ResponseMessage.class), examples = {
+                    @ExampleObject(value = "{\"code\":403,\"msg\":\"权限不足\",\"data\":null}") })),
+            @ApiResponse(responseCode = "404", description = "文件不存在", content = @Content(mediaType = "application/json", schema = @Schema(implementation = com.bluenet.web.api.dto.ResponseMessage.class), examples = {
+                    @ExampleObject(value = "{\"code\":404,\"msg\":\"文件不存在\",\"data\":null}") })) })
+    @RequiresPermission(value = "file:download", name = "批量下载文件", access = AccessLevel.PUBLIC)
+    @PostMapping("/batch")
+    @SecurityRequirement(name = "bearer-jwt")
+    public ResponseEntity<?> downloadBatch(
+            @Parameter(description = "批量下载命令", required = true) @RequestBody FileCommands.BatchDownloadCommand command) {
+        FileDownloadResult result = fileAppService.downloadBatch(command);
+
+        Resource resource = result.resource();
+        String filename = result.filename();
+        if (filename == null) {
+            filename = "download.zip";
+        }
+
+        String encodedFilename = URLEncoder.encode(filename, StandardCharsets.UTF_8).replaceAll("\\+", "%20");
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType("application/zip"))
                 .header(
                         HttpHeaders.CONTENT_DISPOSITION,
                         "attachment; filename=\"" + encodedFilename + "\"; filename*=UTF-8''" + encodedFilename)

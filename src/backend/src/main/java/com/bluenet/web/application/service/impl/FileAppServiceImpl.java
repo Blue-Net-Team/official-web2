@@ -24,7 +24,13 @@ import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import org.springframework.core.io.ByteArrayResource;
+
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 /**
  * 文件应用服务实现。
@@ -82,6 +88,66 @@ public class FileAppServiceImpl implements FileAppService {
                 fileVO.getType(),
                 fileVO.getName());
         return new FileDownloadResult(resource, resource.getFilename());
+    }
+
+    /**
+     * 批量下载文件并打包为 ZIP。
+     *
+     * @param command
+     *            批量下载命令
+     * @return 文件下载结果（resource 为 ZIP 字节流，filename 为 ZIP 包名）
+     */
+    @Override
+    public FileDownloadResult downloadBatch(FileCommands.BatchDownloadCommand command) {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        try (ZipOutputStream zos = new ZipOutputStream(baos)) {
+            for (FileCommands.BatchDownloadEntry entry : command.entries()) {
+                FileVO fileVO = fileDomainService.getFileById(entry.fileId());
+                checkDownloadPermission(fileVO);
+
+                Resource resource = fileRepository.loadFile(fileVO.getName(), fileVO.getType());
+                if (resource == null || !resource.exists()) {
+                    log.warn("File resource not found for batch download: {}", fileVO.getName());
+                    throw new DataNotFound("文件资源不存在: " + fileVO.getName());
+                }
+
+                String entryName = entry.filename();
+                if (entryName == null || entryName.isBlank()) {
+                    entryName = fileVO.getName();
+                } else if (!entryName.contains(".")) {
+                    String originalName = fileVO.getName();
+                    int lastDot = originalName.lastIndexOf('.');
+                    if (lastDot > 0) {
+                        entryName = entryName + originalName.substring(lastDot);
+                    }
+                }
+
+                ZipEntry zipEntry = new ZipEntry(entryName);
+                zos.putNextEntry(zipEntry);
+                try (InputStream is = resource.getInputStream()) {
+                    is.transferTo(zos);
+                }
+                zos.closeEntry();
+
+                log.info(
+                        "Batch download added entry: fileId={}, entryName={}",
+                        entry.fileId(),
+                        entryName);
+            }
+        } catch (IOException e) {
+            log.error("Failed to create batch download zip", e);
+            throw new RuntimeException("批量下载打包失败", e);
+        }
+
+        String zipName = command.zipName();
+        if (zipName == null || zipName.isBlank()) {
+            zipName = "download.zip";
+        }
+        if (!zipName.endsWith(".zip")) {
+            zipName = zipName + ".zip";
+        }
+
+        return new FileDownloadResult(new ByteArrayResource(baos.toByteArray()), zipName);
     }
 
     @NotNull

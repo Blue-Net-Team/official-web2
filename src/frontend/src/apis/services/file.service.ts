@@ -85,4 +85,34 @@ export const fileService = {
     document.body.removeChild(link)
     window.URL.revokeObjectURL(url)
   },
+
+  async downloadBatch(
+    entries: { fileId: number; filename: string }[],
+    zipName: string
+  ): Promise<void> {
+    const response = await apiClient.post(
+      '/file/download/batch',
+      {
+        entries,
+        zipName,
+      },
+      {
+        responseType: 'blob',
+      }
+    )
+
+    const blob = response.data as Blob
+    const headers = response.headers as Record<string, string>
+    const originalFilename = extractFilenameFromHeaders(headers)
+    const filename = originalFilename || zipName
+
+    const url = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = filename
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    window.URL.revokeObjectURL(url)
+  },
 }

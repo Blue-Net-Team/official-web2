@@ -28,4 +28,13 @@ public interface FileAppService {
      * @return 文件下载结果
      */
     FileDownloadResult downloadFile(FileCommands.DownloadFileCommand command);
+
+    /**
+     * 批量下载文件并打包为 ZIP。
+     *
+     * @param command
+     *            批量下载命令
+     * @return 文件下载结果（resource 为 ZIP 字节流，filename 为 ZIP 包名）
+     */
+    FileDownloadResult downloadBatch(FileCommands.BatchDownloadCommand command);
 }

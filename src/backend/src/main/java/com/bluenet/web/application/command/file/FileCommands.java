@@ -3,6 +3,8 @@ package com.bluenet.web.application.command.file;
 import com.bluenet.web.domain.model.enumerate.FileType;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
+
 /**
  * 文件聚合的命令对象集合。
  * <p>
@@ -37,5 +39,31 @@ public class FileCommands {
     public record DownloadFileCommand(
             /** 文件ID */
             Long fileId) {
+    }
+
+    /**
+     * 批量下载文件条目。
+     * <p>
+     * 用于指定单个文件在批量下载中的自定义名称。
+     * </p>
+     */
+    public record BatchDownloadEntry(
+            /** 文件ID */
+            Long fileId,
+            /** 自定义文件名（可不含扩展名，后端自动补全） */
+            String filename) {
+    }
+
+    /**
+     * 批量下载文件命令。
+     * <p>
+     * 用于将多个文件打包为 ZIP 下载。
+     * </p>
+     */
+    public record BatchDownloadCommand(
+            /** 文件条目列表 */
+            List<BatchDownloadEntry> entries,
+            /** ZIP 包名称 */
+            String zipName) {
     }
 }
