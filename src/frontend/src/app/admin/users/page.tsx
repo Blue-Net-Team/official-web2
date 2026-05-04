@@ -62,7 +62,7 @@ interface FilterValues {
 }
 
 export default function AdminUserManagementPage() {
-  const { message: messageApi } = App.useApp()
+  const { message: messageApi, modal } = App.useApp()
 
   // Filters
   const [filters, setFilters] = useState<FilterValues>({
@@ -244,7 +244,7 @@ export default function AdminUserManagementPage() {
   const handleBatchDelete = async () => {
     const ids = selectedRowKeys.map(Number)
     if (ids.length === 0) return
-    Modal.confirm({
+    modal.confirm({
       title: `确认批量删除 ${ids.length} 个用户？`,
       content: '此操作将物理删除用户及其所有关联数据，不可撤销。',
       okText: '确认删除',

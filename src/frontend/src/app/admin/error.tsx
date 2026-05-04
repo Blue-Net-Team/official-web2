@@ -18,7 +18,7 @@ export default function AdminError({
   }, [error])
 
   return (
-    <div className="min-h-screen bg-[#f5f5f5] flex items-center justify-center">
+    <div className="min-h-screen flex items-center justify-center">
       <Result
         status="error"
         title="管理后台出错"
