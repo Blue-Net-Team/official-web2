@@ -51,6 +51,27 @@ import {
   getDecisionTag,
 } from '../shared'
 
+const sanitizeFilenameSegment = (value: string) => value.replace(/[\\/:*?"<>|]/g, '_').trim()
+
+/**
+ * 拼接管理端下载考生作品时使用的文件名（不含扩展名）。
+ * 任一关键字段缺失时返回 undefined，让 fileService 回落到响应头里的原始文件名。
+ */
+const buildWorkFilename = (params: {
+  direction?: Direction
+  epoch?: number
+  grade?: number
+  username?: string
+  questionNo?: number
+}): string | undefined => {
+  const { direction, epoch, grade, username, questionNo } = params
+  if (!direction || !epoch || !grade || !username || !questionNo) return undefined
+  const directionLabel = DIRECTION_LABELS[direction] ?? direction
+  return sanitizeFilenameSegment(
+    `${directionLabel}-第${epoch}轮-${grade}级-${username}-第${questionNo}题`
+  )
+}
+
 export default function AssessmentJudgementManagementPage() {
   const { message: messageApi } = App.useApp()
   const screens = Grid.useBreakpoint()
@@ -118,6 +139,12 @@ export default function AssessmentJudgementManagementPage() {
         label: `${DIRECTION_LABELS[item.direction]} · 第 ${item.epoch} 轮 · ${item.grade}级`,
       })),
     [assessmentTimes]
+  )
+
+  /** 当前选中的考核时间，用于拼接下载文件名等业务上下文。 */
+  const currentAssessmentTime = useMemo(
+    () => assessmentTimes.find((item) => item.id === assessmentTimeId) ?? null,
+    [assessmentTimes, assessmentTimeId]
   )
 
   const selectedQuestion = useMemo(
@@ -421,6 +448,32 @@ export default function AssessmentJudgementManagementPage() {
       render: (_, record) =>
         record.latestJudgement ? <Tag color="green">已评分</Tag> : <Tag color="orange">待评分</Tag>,
     },
+    {
+      title: '操作',
+      width: 100,
+      render: (_, record) =>
+        record.fileId ? (
+          <Button
+            size="small"
+            icon={<DownloadOutlined />}
+            onClick={(e) => {
+              e.stopPropagation()
+              fileService.downloadFile(
+                record.fileId!,
+                buildWorkFilename({
+                  direction: currentAssessmentTime?.direction,
+                  epoch: currentAssessmentTime?.epoch,
+                  grade: currentAssessmentTime?.grade,
+                  username: record.username,
+                  questionNo: record.questionNo,
+                })
+              )
+            }}
+          >
+            下载
+          </Button>
+        ) : null,
+    },
   ]
 
   /** 渲染单个考生在当前题目下的完整提交评判历史。 */
@@ -563,6 +616,26 @@ export default function AssessmentJudgementManagementPage() {
             )}
           </Descriptions.Item>
         </Descriptions>
+        {detail.fileId && (
+          <Button
+            size="small"
+            icon={<DownloadOutlined />}
+            onClick={() =>
+              fileService.downloadFile(
+                detail.fileId!,
+                buildWorkFilename({
+                  direction: currentAssessmentTime?.direction,
+                  epoch: currentAssessmentTime?.epoch,
+                  grade: currentAssessmentTime?.grade,
+                  username: detail.username,
+                  questionNo: detail.questionNo,
+                })
+              )
+            }
+          >
+            下载答案文件
+          </Button>
+        )}
         {detail.content && (
           <Card size="small" title="答案内容">
             <pre className="m-0 max-h-40 overflow-auto whitespace-pre-wrap text-white/70">
@@ -998,7 +1071,18 @@ export default function AssessmentJudgementManagementPage() {
           reviewing?.fileId ? (
             <Button
               icon={<DownloadOutlined />}
-              onClick={() => fileService.downloadFile(reviewing.fileId!)}
+              onClick={() =>
+                fileService.downloadFile(
+                  reviewing.fileId!,
+                  buildWorkFilename({
+                    direction: currentAssessmentTime?.direction,
+                    epoch: currentAssessmentTime?.epoch,
+                    grade: currentAssessmentTime?.grade,
+                    username: reviewing.username,
+                    questionNo: reviewing.questionNo,
+                  })
+                )
+              }
             >
               下载作品
             </Button>

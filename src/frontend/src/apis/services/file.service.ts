@@ -59,14 +59,22 @@ export const fileService = {
     return response.data
   },
 
-  async downloadFile(fileId: number): Promise<void> {
+  async downloadFile(fileId: number, customFilename?: string): Promise<void> {
     const response = await apiClient.get(`/file/download/${fileId}`, {
       responseType: 'blob',
     })
 
     const blob = response.data as Blob
     const headers = response.headers as Record<string, string>
-    const filename = extractFilenameFromHeaders(headers)
+    const originalFilename = extractFilenameFromHeaders(headers)
+
+    let filename = customFilename ?? originalFilename
+    if (customFilename && originalFilename.includes('.')) {
+      const ext = originalFilename.split('.').pop()
+      if (ext) {
+        filename = `${customFilename}.${ext}`
+      }
+    }
 
     const url = window.URL.createObjectURL(blob)
     const link = document.createElement('a')
