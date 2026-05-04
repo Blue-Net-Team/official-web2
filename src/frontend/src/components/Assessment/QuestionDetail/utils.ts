@@ -31,8 +31,8 @@ export function getUploadPhase(
   isResubmitting: boolean,
   hasUploadedFile: boolean
 ): UploadPhase {
-  if (isExpired) return 'expired'
   if (isAnswered && !isResubmitting) return 'answered'
+  if (isExpired) return 'expired'
   if (isAnswered && isResubmitting && !hasUploadedFile) return 'resubmitting'
   if (isAnswered && isResubmitting && hasUploadedFile) return 'resubmit_uploaded'
   if (hasUploadedFile) return 'uploaded'

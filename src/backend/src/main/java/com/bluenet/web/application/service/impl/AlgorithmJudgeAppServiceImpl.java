@@ -199,7 +199,11 @@ public class AlgorithmJudgeAppServiceImpl implements AlgorithmJudgeAppService {
         if (user.getDirection() != null && !user.getDirection().equals(time.getDirection())) {
             throw new Forbidden("方向不匹配");
         }
-        // 限时考核复用答题提交的截止时间判断，避免运行/提交绕过考试时间。
+        // 全局截止时间兜底校验，限时与非限时考核均适用
+        if (time.getEndTime() != null && LocalDateTime.now().isAfter(time.getEndTime())) {
+            throw new BadRequest("考核时间已结束，无法提交算法题");
+        }
+        // 限时考核额外校验个人会话截止时间
         if (Boolean.TRUE.equals(time.getTimeLimit())) {
             assessmentSessionRepository
                     .findByUserIdAndAssessmentTimeId(user.getId(), question.getAssessmentTimeId())

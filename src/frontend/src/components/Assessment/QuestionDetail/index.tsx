@@ -116,10 +116,11 @@ export default function QuestionDetailPage() {
         if (new Date(response.data.deadline).getTime() <= Date.now()) setIsExpired(true)
       } else {
         setSession(null)
-        setIsExpired(false)
+        // 不重置 isExpired，由 fetchTimeInfo 中已做的 endTime 判断决定
       }
     } catch {
-      // 没有会话（非限时考核或未开始），忽略
+      // 网络错误等异常情况，不重置 isExpired，保留 fetchTimeInfo 中已计算好的值
+      setSession(null)
     }
   }, [timeId])
 
@@ -177,7 +178,7 @@ export default function QuestionDetailPage() {
         fetchTimeInfo().then((found) => {
           if (found?.timeLimit) return fetchSession()
           setSession(null)
-          setIsExpired(false)
+          // 不重置 isExpired，由 fetchTimeInfo 内部已做的 endTime 判断决定
           return undefined
         }),
       ]).finally(() => setLoading(false))
@@ -191,6 +192,19 @@ export default function QuestionDetailPage() {
     fetchTimeInfo,
     fetchSession,
   ])
+
+  // 非限时考核：endTime 到达时自动标记过期
+  useEffect(() => {
+    if (!timeInfo || timeInfo.timeLimit || !timeInfo.endTime) return
+    const end = new Date(timeInfo.endTime).getTime()
+    const now = Date.now()
+    if (end <= now) {
+      setIsExpired(true)
+      return
+    }
+    const timer = window.setTimeout(() => setIsExpired(true), end - now)
+    return () => window.clearTimeout(timer)
+  }, [timeInfo])
 
   // 同步已有答案到选项状态
   useEffect(() => {
@@ -252,6 +266,10 @@ export default function QuestionDetailPage() {
 
   // 提交答案（文件上传）
   const handleSubmit = async () => {
+    if (isExpired) {
+      message.warning('考核已结束，无法提交')
+      return
+    }
     if (!uploadedFile) {
       message.warning('请先上传文件')
       return
@@ -279,6 +297,10 @@ export default function QuestionDetailPage() {
   }
 
   const handleResubmit = async () => {
+    if (isExpired) {
+      message.warning('考核已结束，无法提交')
+      return
+    }
     if (!uploadedFile) {
       message.warning('请先上传新文件')
       return
@@ -307,6 +329,10 @@ export default function QuestionDetailPage() {
 
   // 提交选择题答案
   const handleSubmitChoice = async () => {
+    if (isExpired) {
+      message.warning('考核已结束，无法提交')
+      return
+    }
     if (question?.questionType === 'SINGLE_CHOICE' && !selectedOption) {
       message.warning('请选择一个选项')
       return
@@ -339,6 +365,10 @@ export default function QuestionDetailPage() {
   }
 
   const handleAlgorithmRun = async () => {
+    if (isExpired) {
+      message.warning('考核已结束，无法提交')
+      return
+    }
     if (!algorithmLanguage) {
       message.warning('请选择提交语言')
       return
@@ -380,6 +410,10 @@ export default function QuestionDetailPage() {
   }
 
   const handleAlgorithmSubmit = async () => {
+    if (isExpired) {
+      message.warning('考核已结束，无法提交')
+      return
+    }
     if (!algorithmLanguage) {
       message.warning('请选择提交语言')
       return

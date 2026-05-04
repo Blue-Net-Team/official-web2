@@ -282,6 +282,13 @@ public class AssessmentQuestionAppServiceImpl implements AssessmentQuestionAppSe
                 if (userEnrollmentYear != null && !userEnrollmentYear.equals(time.getGrade())) {
                     throw new SecurityException("无权查看该考核的题目");
                 }
+                LocalDateTime now = LocalDateTime.now();
+                if (time.getStartTime() != null && now.isBefore(time.getStartTime())) {
+                    throw new SecurityException("考核尚未开始");
+                }
+                if (time.getEndTime() != null && now.isAfter(time.getEndTime())) {
+                    throw new SecurityException("考核已结束");
+                }
             }
         }
 
@@ -347,6 +354,13 @@ public class AssessmentQuestionAppServiceImpl implements AssessmentQuestionAppSe
                         currentUser.getAssessmentGradeYear());
                 if (userEnrollmentYear != null && !userEnrollmentYear.equals(time.getGrade())) {
                     throw new SecurityException("无权查看该题目");
+                }
+                LocalDateTime now = LocalDateTime.now();
+                if (time.getStartTime() != null && now.isBefore(time.getStartTime())) {
+                    throw new SecurityException("考核尚未开始");
+                }
+                if (time.getEndTime() != null && now.isAfter(time.getEndTime())) {
+                    throw new SecurityException("考核已结束");
                 }
             }
         }
