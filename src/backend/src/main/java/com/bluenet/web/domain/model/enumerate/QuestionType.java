@@ -16,4 +16,8 @@ public enum QuestionType implements ValueEnum {
         this.value = value;
         this.description = description;
     }
+
+    public boolean isChoiceQuestion() {
+        return this == SINGLE_CHOICE || this == MULTIPLE_CHOICE;
+    }
 }

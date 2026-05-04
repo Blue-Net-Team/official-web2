@@ -127,7 +127,11 @@ public class AssessmentAnswerAppServiceImpl implements AssessmentAnswerAppServic
                 entity.getId());
 
         AssessmentJudgementVO judgement = judgeObjectiveAnswerIfNeeded(entity, question);
-        return toResult(entity, judgement);
+        AssessmentAnswerResult result = toResult(entity, judgement);
+        if (question.getQuestionType().isChoiceQuestion()) {
+            return result.withJudgementErased();
+        }
+        return result;
     }
 
     /**
@@ -199,7 +203,11 @@ public class AssessmentAnswerAppServiceImpl implements AssessmentAnswerAppServic
         log.info("update answer success for answer {}", updated.getId());
 
         AssessmentJudgementVO judgement = judgeObjectiveAnswerIfNeeded(updated, question);
-        return toResult(updated, judgement);
+        AssessmentAnswerResult result = toResult(updated, judgement);
+        if (question.getQuestionType().isChoiceQuestion()) {
+            return result.withJudgementErased();
+        }
+        return result;
     }
 
     /**
@@ -224,8 +232,19 @@ public class AssessmentAnswerAppServiceImpl implements AssessmentAnswerAppServic
     public AssessmentAnswerResult getMyAnswer(Long userId, Long questionId) {
         Optional<AssessmentAnswer> answerOpt = assessmentAnswerRepository
                 .findByUserIdAndQuestionId(userId, questionId);
+        if (answerOpt.isEmpty()) {
+            return null;
+        }
+        AssessmentAnswer answer = answerOpt.get();
+        AssessmentJudgementVO judgement = findLatestJudgement(answer);
+        AssessmentAnswerResult result = toResult(answer, judgement);
 
-        return answerOpt.map(answer -> toResult(answer, findLatestJudgement(answer))).orElse(null);
+        AssessmentQuestion question = assessmentQuestionRepository.findById(questionId)
+                .orElse(null);
+        if (question != null && question.getQuestionType().isChoiceQuestion()) {
+            return result.withJudgementErased();
+        }
+        return result;
     }
 
     private AssessmentTime validateDirectionMatch(UserVO user, AssessmentQuestion question) {

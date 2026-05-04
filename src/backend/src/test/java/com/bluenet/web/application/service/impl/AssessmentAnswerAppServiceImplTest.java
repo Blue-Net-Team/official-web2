@@ -105,7 +105,15 @@ class AssessmentAnswerAppServiceImplTest {
 
     private AssessmentQuestion createTestQuestion() {
         return AssessmentQuestion
-                .reconstruct(TEST_QUESTION_ID, TEST_ASSESSMENT_TIME_ID, 1, null, null, null, null, null);
+                .reconstruct(
+                        TEST_QUESTION_ID,
+                        TEST_ASSESSMENT_TIME_ID,
+                        1,
+                        QuestionType.ALGORITHM,
+                        null,
+                        null,
+                        null,
+                        null);
     }
 
     private AssessmentQuestion createSingleChoiceQuestion(String correctAnswer) {
@@ -277,8 +285,8 @@ class AssessmentAnswerAppServiceImplTest {
         }
 
         @Test
-        @DisplayName("单选题回答正确：应同步写入AC评判并返回结果")
-        void createAnswer_singleChoiceCorrect_shouldCreateAcceptedJudgement() {
+        @DisplayName("单选题回答正确：应同步写入AC评判但返回结果中擦除")
+        void createAnswer_singleChoiceCorrect_shouldCreateAcceptedJudgementButErased() {
             UserVO user = createTestUser();
             when(userDomainService.getUser(TEST_USER_ID)).thenReturn(Optional.of(user));
             AssessmentAnswerCommands.CreateAssessmentAnswerCommand command = new AssessmentAnswerCommands.CreateAssessmentAnswerCommand(
@@ -299,13 +307,12 @@ class AssessmentAnswerAppServiceImplTest {
                     .thenReturn(createJudgementVO(ObjectiveResultCode.AC));
 
             AssessmentAnswerResult result = assessmentAnswerAppService.createAnswer(command);
-            assertNotNull(result.judgement());
-            assertEquals(ObjectiveResultCode.AC, result.judgement().getResultCode());
+            assertNull(result.judgement());
         }
 
         @Test
-        @DisplayName("单选题回答错误：应同步写入WA评判")
-        void createAnswer_singleChoiceWrong_shouldCreateWrongAnswerJudgement() {
+        @DisplayName("单选题回答错误：应同步写入WA评判但返回结果中擦除")
+        void createAnswer_singleChoiceWrong_shouldCreateWrongAnswerJudgementButErased() {
             UserVO user = createTestUser();
             when(userDomainService.getUser(TEST_USER_ID)).thenReturn(Optional.of(user));
             AssessmentAnswerCommands.CreateAssessmentAnswerCommand command = new AssessmentAnswerCommands.CreateAssessmentAnswerCommand(
@@ -326,8 +333,7 @@ class AssessmentAnswerAppServiceImplTest {
                     .thenReturn(createJudgementVO(ObjectiveResultCode.WA));
 
             AssessmentAnswerResult result = assessmentAnswerAppService.createAnswer(command);
-            assertNotNull(result.judgement());
-            assertEquals(ObjectiveResultCode.WA, result.judgement().getResultCode());
+            assertNull(result.judgement());
         }
     }
 
@@ -360,8 +366,8 @@ class AssessmentAnswerAppServiceImplTest {
         }
 
         @Test
-        @DisplayName("多选题回答顺序不同但集合一致：应同步写入AC评判")
-        void updateAnswer_multipleChoiceSameSet_shouldCreateAcceptedJudgement() {
+        @DisplayName("多选题回答顺序不同但集合一致：应同步写入AC评判但返回结果中擦除")
+        void updateAnswer_multipleChoiceSameSet_shouldCreateAcceptedJudgementButErased() {
             UserVO user = createTestUser();
             when(userDomainService.getUser(TEST_USER_ID)).thenReturn(Optional.of(user));
             AssessmentAnswerCommands.UpdateAssessmentAnswerCommand command = new AssessmentAnswerCommands.UpdateAssessmentAnswerCommand(
@@ -386,8 +392,7 @@ class AssessmentAnswerAppServiceImplTest {
                     .thenReturn(createJudgementVO(ObjectiveResultCode.AC));
 
             AssessmentAnswerResult result = assessmentAnswerAppService.updateAnswer(command);
-            assertNotNull(result.judgement());
-            assertEquals(ObjectiveResultCode.AC, result.judgement().getResultCode());
+            assertNull(result.judgement());
         }
 
         @Test
@@ -527,17 +532,36 @@ class AssessmentAnswerAppServiceImplTest {
         }
 
         @Test
-        @DisplayName("答案存在且已有评判：应返回最新评判结果")
-        void getMyAnswer_withJudgement_shouldReturnLatestJudgement() {
+        @DisplayName("非选择题答案存在且已有评判：应返回最新评判结果")
+        void getMyAnswer_nonChoiceQuestionWithJudgement_shouldReturnLatestJudgement() {
             AssessmentAnswer answer = createTestAnswer();
+            AssessmentQuestion question = createTestQuestion();
             when(assessmentAnswerRepository.findByUserIdAndQuestionId(TEST_USER_ID, TEST_QUESTION_ID))
                     .thenReturn(Optional.of(answer));
+            when(assessmentQuestionRepository.findById(TEST_QUESTION_ID))
+                    .thenReturn(Optional.of(question));
             when(assessmentJudgementDomainService.getLatestByAnswerId(TEST_ANSWER_ID))
                     .thenReturn(createJudgementVO(ObjectiveResultCode.AC));
             AssessmentAnswerResult result = assessmentAnswerAppService.getMyAnswer(TEST_USER_ID, TEST_QUESTION_ID);
             assertNotNull(result);
             assertNotNull(result.judgement());
             assertEquals(ObjectiveResultCode.AC, result.judgement().getResultCode());
+        }
+
+        @Test
+        @DisplayName("单选题答案存在且已有评判：应擦除评判结果")
+        void getMyAnswer_singleChoiceWithJudgement_shouldEraseJudgement() {
+            AssessmentAnswer answer = createTestAnswer();
+            AssessmentQuestion question = createSingleChoiceQuestion("B");
+            when(assessmentAnswerRepository.findByUserIdAndQuestionId(TEST_USER_ID, TEST_QUESTION_ID))
+                    .thenReturn(Optional.of(answer));
+            when(assessmentQuestionRepository.findById(TEST_QUESTION_ID))
+                    .thenReturn(Optional.of(question));
+            when(assessmentJudgementDomainService.getLatestByAnswerId(TEST_ANSWER_ID))
+                    .thenReturn(createJudgementVO(ObjectiveResultCode.AC));
+            AssessmentAnswerResult result = assessmentAnswerAppService.getMyAnswer(TEST_USER_ID, TEST_QUESTION_ID);
+            assertNotNull(result);
+            assertNull(result.judgement());
         }
 
         @Test

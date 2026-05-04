@@ -26,4 +26,14 @@ public record AssessmentAnswerResult(
         LocalDateTime submitTime,
         /** 评测结果 */
         AssessmentJudgementDTO judgement) {
+
+    /**
+     * 通过已有的对象创建一个新实例，将评测结果设为 null。
+     *
+     * @return 新的评测答案结果对象
+     */
+    public AssessmentAnswerResult withJudgementErased() {
+        return new AssessmentAnswerResult(
+                id, questionId, fileId, content, language, submitTime, null);
+    }
 }

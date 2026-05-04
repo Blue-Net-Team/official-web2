@@ -159,7 +159,7 @@ export default function QuestionSidebar({
               提交语言：{LANGUAGE_LABELS[answer.language] ?? answer.language}
             </div>
           )}
-          {answer?.judgement?.resultCode && (
+          {answer?.judgement?.resultCode && !isChoiceQuestion && (
             <div className="flex items-center justify-between gap-3">
               <span className="text-[13px] text-white/45">评判结果</span>
               <span
