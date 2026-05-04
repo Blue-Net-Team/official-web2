@@ -154,6 +154,39 @@ const JUDGE_STATUS_LABELS: Record<string, { text: string; color: string }> = {
   FAILED: { text: '失败', color: 'error' },
 }
 
+const DEFAULT_FORM_VALUES: FormValues = {
+  questionNo: 0,
+  questionType: 'FILE_UPLOAD',
+  title: '',
+  score: 0,
+  attachmentId: null,
+  fileContent: '',
+  choiceContent: '',
+  options: [''],
+  correctAnswer: -1,
+  correctAnswers: [],
+  algorithmContent: '',
+  inputDescription: '',
+  outputDescription: '',
+  constraints: '',
+  examples: [],
+  runTestCases: [],
+  starterCodeTemplates: [],
+  generatorLanguage: 'python',
+  generatorSource: '',
+  primaryStandardLanguage: 'python',
+  benchmarkRepeatTimes: 5,
+  marginMultiplier: 1.2,
+  minExtraMs: 50,
+  roundToMs: 50,
+  standardSolutions: [],
+  testcases: [],
+  confirmLanguage: 'python',
+  confirmTimeLimitMs: null,
+  confirmMemoryLimitKb: null,
+  confirmOutputLimitKb: 1024,
+}
+
 const DEFAULT_GENERATOR_ARGS = '{\n  "n": 10\n}'
 
 /** 表单用数组编辑语言模板，提交给后端时需要合并为 starterCode map。 */
@@ -375,13 +408,14 @@ export default function QuestionDrawer({
   // Populate form on open.
   useEffect(() => {
     if (!open) return
+    setJudgeConfig(null)
 
     if (isCreateMode) {
-      setJudgeConfig(null)
-      form.resetFields()
+      form.setFieldsValue(DEFAULT_FORM_VALUES)
     } else if (question) {
       const contentFields = parseContentToForm(question.content, question.questionType)
       form.setFieldsValue({
+        ...DEFAULT_FORM_VALUES,
         questionNo: question.questionNo,
         questionType: question.questionType,
         title: question.title,
@@ -390,7 +424,7 @@ export default function QuestionDrawer({
         ...contentFields,
       })
     }
-  }, [open, mode, question, form, isCreateMode])
+  }, [open, question, form, isCreateMode])
 
   // Load algorithm judge config after the base question has been loaded.
   useEffect(() => {

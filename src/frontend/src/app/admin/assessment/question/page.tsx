@@ -153,24 +153,24 @@ export default function AssessmentQuestionManagementPage() {
   }
 
   // 点击表格行时以只读模式查看考题。
-  const handleRowClick = (record: AssessmentQuestionDTO) => {
+  const handleRowClick = useCallback((record: AssessmentQuestionDTO) => {
     setSelectedQuestion(record)
     setDrawerMode('view')
     setDrawerOpen(true)
-  }
+  }, [])
 
   // 打开编辑考题抽屉。
-  const handleEdit = (record: AssessmentQuestionDTO) => {
+  const handleEdit = useCallback((record: AssessmentQuestionDTO) => {
     setSelectedQuestion(record)
     setDrawerMode('edit')
     setDrawerOpen(true)
-  }
+  }, [])
 
   // 打开删除确认弹窗。
-  const handleDeleteClick = (item: AssessmentQuestionDTO) => {
+  const handleDeleteClick = useCallback((item: AssessmentQuestionDTO) => {
     setDeletingItem(item)
     setDeleteModalOpen(true)
-  }
+  }, [])
 
   // 确认删除考题后刷新列表。
   const handleDeleteConfirm = async () => {
@@ -268,7 +268,7 @@ export default function AssessmentQuestionManagementPage() {
     }
 
     return cols
-  }, [isMobile, canOperate])
+  }, [isMobile, canOperate, handleEdit, handleDeleteClick, handleRowClick])
 
   // 空状态文案随方向和考核时间筛选状态变化。
   const emptyText = !filterDirection
@@ -341,6 +341,7 @@ export default function AssessmentQuestionManagementPage() {
 
       {/* Drawer */}
       <QuestionDrawer
+        key={selectedQuestion?.id ?? 'create'}
         open={drawerOpen}
         question={selectedQuestion}
         assessmentTimeId={filterTimeId ?? null}
