@@ -1,0 +1,95 @@
+package com.bluenet.web.domain.model.entity;
+
+import com.bluenet.web.domain.model.enumerate.BugReportStatus;
+import lombok.AccessLevel;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Bug 报告聚合根
+ * <p>
+ * 承载 Bug 报告相关的业务规则和行为
+ * </p>
+ */
+@Data
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
+public class BugReport {
+
+    private static final int MAX_DESCRIPTION_LENGTH = 2000;
+    private static final int MAX_IMAGES = 3;
+
+    private Long id;
+    private String description;
+    private String pageUrl;
+    private String environmentJson;
+    private String reporterEmail;
+    private BugReportStatus status;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+    private List<BugReportImage> images = new ArrayList<>();
+
+    private BugReport(Long id, String description, String pageUrl, String environmentJson,
+            String reporterEmail, BugReportStatus status,
+            LocalDateTime createdAt, LocalDateTime updatedAt, List<BugReportImage> images) {
+        this.id = id;
+        this.description = description;
+        this.pageUrl = pageUrl;
+        this.environmentJson = environmentJson;
+        this.reporterEmail = reporterEmail;
+        this.status = status;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+        this.images = images != null ? images : new ArrayList<>();
+    }
+
+    /**
+     * 构造新 Bug 报告 —— 带领域校验
+     */
+    public static BugReport create(String description, String pageUrl,
+            String environmentJson, String reporterEmail, List<Long> fileIds) {
+        if (description == null || description.isBlank()) {
+            throw new IllegalArgumentException("Bug 描述不能为空");
+        }
+        if (description.length() > MAX_DESCRIPTION_LENGTH) {
+            throw new IllegalArgumentException("Bug 描述最多 " + MAX_DESCRIPTION_LENGTH + " 字符");
+        }
+        if (fileIds != null && fileIds.size() > MAX_IMAGES) {
+            throw new IllegalArgumentException("最多上传 " + MAX_IMAGES + " 张截图");
+        }
+
+        List<BugReportImage> imageList = new ArrayList<>();
+        if (fileIds != null) {
+            for (Long fileId : fileIds) {
+                imageList.add(BugReportImage.create(null, fileId));
+            }
+        }
+
+        return new BugReport(null, description.trim(), pageUrl,
+                environmentJson, reporterEmail, BugReportStatus.PENDING,
+                null, null, imageList);
+    }
+
+    /**
+     * 从数据库重建 —— 跳过创建校验
+     */
+    public static BugReport reconstruct(Long id, String description, String pageUrl,
+            String environmentJson, String reporterEmail, BugReportStatus status,
+            LocalDateTime createdAt, LocalDateTime updatedAt, List<BugReportImage> images) {
+        return new BugReport(id, description, pageUrl, environmentJson,
+                reporterEmail, status, createdAt, updatedAt, images);
+    }
+
+    /**
+     * 更新状态
+     */
+    public void updateStatus(BugReportStatus newStatus) {
+        if (newStatus == null) {
+            throw new IllegalArgumentException("状态不能为空");
+        }
+        this.status = newStatus;
+    }
+}

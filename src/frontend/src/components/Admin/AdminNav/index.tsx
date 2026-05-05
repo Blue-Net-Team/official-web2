@@ -21,6 +21,7 @@ import {
   UserOutlined,
   BankOutlined,
   ToolOutlined,
+  BugOutlined,
 } from '@ant-design/icons'
 import type { MenuProps } from 'antd'
 
@@ -169,6 +170,13 @@ export const menuConfig: MenuItemConfig[] = [
         minLevel: 2,
       },
     ],
+  },
+  {
+    key: 'bugReport',
+    label: 'Bug 报告',
+    path: '/admin/bug-report',
+    icon: <BugOutlined />,
+    minLevel: 1,
   },
   {
     key: 'qa',

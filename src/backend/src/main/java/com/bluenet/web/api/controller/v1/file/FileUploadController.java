@@ -56,8 +56,8 @@ public class FileUploadController {
     public ResponseMessage<FileInfo> uploadFile(
             @RequestParam("file") MultipartFile file,
             @RequestParam("type") FileType type) {
-        // 非 AVATAR 类型需要登录
-        if (type != FileType.AVATAR && UserCTX.getCurrentUserId() == null) {
+        // AVATAR 和 NORMAL_IMG 类型允许未登录上传（报名、Bug 报告场景），其他类型需要登录
+        if (type != FileType.AVATAR && type != FileType.NORMAL_IMG && UserCTX.getCurrentUserId() == null) {
             throw new Unauthorized("该文件类型需要登录");
         }
 

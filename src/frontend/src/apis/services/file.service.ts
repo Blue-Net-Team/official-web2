@@ -32,7 +32,7 @@ export const fileService = {
     formData.append('file', file)
     formData.append('type', type)
 
-    const client = type === 'AVATAR' ? publicClient : apiClient
+    const client = type === 'AVATAR' || type === 'NORMAL_IMG' ? publicClient : apiClient
 
     const response = await client.post<ResponseMessage<FileInfo>>('/file/upload', formData, {
       headers: {
