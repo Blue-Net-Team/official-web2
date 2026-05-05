@@ -4,7 +4,7 @@
 
 - [x] 1.1 新增管理员获取咨询群二维码列表接口 `GET /api/v1/admin/qrcodes/consultation`
 - [x] 1.2 新增管理员更新咨询群二维码接口 `PUT /api/v1/admin/qrcodes/consultation/{id}`
-- [ ] 1.3 编写单元测试
+- [x] 1.3 编写单元测试
 
 ### 2. 考核群二维码管理接口实现
 
@@ -20,7 +20,7 @@
   - `POST /api/v1/admin/qrcodes/assessment` - 创建
   - `PUT /api/v1/admin/qrcodes/assessment/{id}` - 更新
   - `DELETE /api/v1/admin/qrcodes/assessment/{id}` - 删除
-- [ ] 2.9 编写单元测试
+- [x] 2.9 编写单元测试
 
 ## 前端任务
 
@@ -59,8 +59,8 @@
 
 ## 测试任务
 
-- [ ] 7.1 后端接口集成测试
-- [ ] 7.2 前端页面功能测试
-- [ ] 7.3 验证咨询群二维码管理流程
-- [ ] 7.4 验证考核群二维码管理流程
-- [ ] 7.5 验证筛选功能
+- [x] 7.1 后端接口集成测试
+- [x] 7.2 前端页面功能测试
+- [x] 7.3 验证咨询群二维码管理流程
+- [x] 7.4 验证考核群二维码管理流程
+- [x] 7.5 验证筛选功能
