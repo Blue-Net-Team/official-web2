@@ -9,7 +9,7 @@
         <relativePath>../../pom.xml</relativePath>
     </parent>
     <groupId>blenet</groupId>
-    <artifactId>web</artifactId>
+    <artifactId>api-service</artifactId>
     <version>0.1.0-SNAPSHOT</version>
     <name>bluenet_backend</name>
     <description>bluenet_backend</description>

@@ -3,7 +3,7 @@
     <option name="ALTERNATIVE_JRE_PATH" value="21" />
     <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="true" />
     <option name="ENABLE_LAUNCH_OPTIMIZATION" value="false" />
-    <module name="web" />
+    <module name="api-service" />
     <option name="SPRING_BOOT_MAIN_CLASS" value="com.bluenet.web.BluenetBackendApplication" />
     <extension name="net.ashald.envfile">
       <option name="IS_ENABLED" value="true" />
