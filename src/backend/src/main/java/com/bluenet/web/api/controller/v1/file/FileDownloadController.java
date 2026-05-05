@@ -82,7 +82,7 @@ public class FileDownloadController {
                     @ExampleObject(value = "{\"code\":403,\"msg\":\"权限不足\",\"data\":null}") })),
             @ApiResponse(responseCode = "404", description = "文件不存在", content = @Content(mediaType = "application/json", schema = @Schema(implementation = com.bluenet.web.api.dto.ResponseMessage.class), examples = {
                     @ExampleObject(value = "{\"code\":404,\"msg\":\"文件不存在\",\"data\":null}") })) })
-    @RequiresPermission(value = "file:download", name = "批量下载文件", access = AccessLevel.PUBLIC)
+    @RequiresPermission(value = "file:download:batch", name = "批量下载文件", access = AccessLevel.PUBLIC)
     @PostMapping("/batch")
     @SecurityRequirement(name = "bearer-jwt")
     public ResponseEntity<?> downloadBatch(
