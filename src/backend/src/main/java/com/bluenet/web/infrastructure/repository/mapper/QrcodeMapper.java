@@ -27,4 +27,16 @@ public interface QrcodeMapper extends BaseMapper<QrcodeDO> {
      * @return 满足条件的二维码 结果集合。
      */
     List<QrcodeDO> selectByType(@Param("type") QrcodeType type);
+
+    /**
+     * 按条件查询考核群二维码 数据行。
+     *
+     * @param direction
+     *            方向（可选）。
+     * @param epoch
+     *            考核轮次（可选）。
+     * @return 满足条件的二维码 结果集合。
+     */
+    List<QrcodeDO> selectAssessmentQrcodes(@Param("direction") String direction,
+            @Param("epoch") Integer epoch);
 }

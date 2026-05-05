@@ -5,6 +5,9 @@
         <id column="id" property="id"/>
         <result column="file_id" property="fileId"/>
         <result column="type" property="type" typeHandler="com.bluenet.web.infrastructure.repository.handler.ValueEnumTypeHandler"/>
+        <result column="epoch" property="epoch"/>
+        <result column="direction" property="direction"/>
+        <result column="is_shared" property="isShared"/>
     </resultMap>
     <select id="selectByFileId" resultMap="BaseResultMap">
         SELECT * FROM tb_qrcode
@@ -16,5 +19,18 @@
         FROM tb_qrcode
         WHERE type = #{type.value}
         ORDER BY id ASC
+    </select>
+
+    <select id="selectAssessmentQrcodes" resultMap="BaseResultMap">
+        SELECT *
+        FROM tb_qrcode
+        WHERE type = 'ASSESSMENT'
+        <if test="direction != null">
+            AND (direction = #{direction} OR is_shared = true)
+        </if>
+        <if test="epoch != null">
+            AND epoch = #{epoch}
+        </if>
+        ORDER BY epoch DESC, direction ASC, id ASC
     </select>
 </mapper>

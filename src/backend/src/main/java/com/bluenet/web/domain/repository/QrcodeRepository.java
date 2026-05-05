@@ -47,6 +47,17 @@ public interface QrcodeRepository {
     List<Qrcode> findByType(QrcodeType type);
 
     /**
+     * 查询考核群二维码记录（支持筛选）。
+     *
+     * @param direction
+     *            方向（可选）。
+     * @param epoch
+     *            考核轮次（可选）。
+     * @return 满足条件的二维码结果集合。
+     */
+    List<Qrcode> findAssessmentQrcodes(String direction, Integer epoch);
+
+    /**
      * 删除指定二维码 记录。
      *
      * @param id

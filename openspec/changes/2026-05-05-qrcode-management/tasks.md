@@ -2,20 +2,20 @@
 
 ### 1. 咨询群二维码管理接口扩展
 
-- [ ] 1.1 新增管理员获取咨询群二维码列表接口 `GET /api/v1/admin/qrcodes/consultation`
-- [ ] 1.2 新增管理员更新咨询群二维码接口 `PUT /api/v1/admin/qrcodes/consultation/{id}`
+- [x] 1.1 新增管理员获取咨询群二维码列表接口 `GET /api/v1/admin/qrcodes/consultation`
+- [x] 1.2 新增管理员更新咨询群二维码接口 `PUT /api/v1/admin/qrcodes/consultation/{id}`
 - [ ] 1.3 编写单元测试
 
 ### 2. 考核群二维码管理接口实现
 
-- [ ] 2.1 创建 `AssessmentQrcodeDTO` 数据传输对象
-- [ ] 2.2 创建 `CreateAssessmentQrcodeRequestDTO` 请求对象
-- [ ] 2.3 创建 `UpdateAssessmentQrcodeRequestDTO` 请求对象
-- [ ] 2.4 扩展 `QrcodeResult` 支持考核群字段（direction、epoch、isShared）
-- [ ] 2.5 扩展 `QrcodeAppService` 添加考核群二维码操作方法
-- [ ] 2.6 扩展 `QrcodeDomainService` 添加考核群二维码领域逻辑
-- [ ] 2.7 扩展 `QrcodeRepository` 添加按方向、轮次查询方法
-- [ ] 2.8 在 `AdminQrcodeController` 添加考核群二维码 CRUD 接口
+- [x] 2.1 创建 `AssessmentQrcodeDTO` 数据传输对象
+- [x] 2.2 创建 `CreateAssessmentQrcodeRequestDTO` 请求对象
+- [x] 2.3 创建 `UpdateAssessmentQrcodeRequestDTO` 请求对象
+- [x] 2.4 扩展 `QrcodeResult` 支持考核群字段（direction、epoch、isShared）
+- [x] 2.5 扩展 `QrcodeAppService` 添加考核群二维码操作方法
+- [x] 2.6 扩展 `QrcodeDomainService` 添加考核群二维码领域逻辑
+- [x] 2.7 扩展 `QrcodeRepository` 添加按方向、轮次查询方法
+- [x] 2.8 创建 `AdminAssessmentQrcodeController` 添加考核群二维码 CRUD 接口
   - `GET /api/v1/admin/qrcodes/assessment` - 列表（支持筛选）
   - `POST /api/v1/admin/qrcodes/assessment` - 创建
   - `PUT /api/v1/admin/qrcodes/assessment/{id}` - 更新
