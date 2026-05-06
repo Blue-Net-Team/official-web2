@@ -44,4 +44,16 @@ public class MockQrcodeRepository implements QrcodeRepository {
     public void deleteById(Long id) {
         log.debug("Mock deleting QRCode by id: {}", id);
     }
+
+    @Override
+    public List<Qrcode> findAssessmentQrcodes(String direction, Integer epoch) {
+        log.debug("Mock finding assessment QRCodes by direction: {}, epoch: {}", direction, epoch);
+        return List.of();
+    }
+
+    @Override
+    public List<Qrcode> findAssessmentByEpoch(Integer epoch) {
+        log.debug("Mock finding assessment QRCodes by epoch: {}", epoch);
+        return List.of();
+    }
 }
