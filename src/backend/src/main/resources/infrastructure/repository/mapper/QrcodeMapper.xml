@@ -24,7 +24,7 @@
     <select id="selectAssessmentQrcodes" resultMap="BaseResultMap">
         SELECT *
         FROM tb_qrcode
-        WHERE type = 'ASSESSMENT'
+        WHERE type = 'assessment'
         <if test="direction != null">
             AND (direction = #{direction} OR is_shared = true)
         </if>
@@ -37,6 +37,6 @@
     <select id="findAssessmentByEpoch" resultMap="BaseResultMap">
         SELECT *
         FROM tb_qrcode
-        WHERE type = 'ASSESSMENT' AND epoch = #{epoch}
+        WHERE type = 'assessment' AND epoch = #{epoch}
     </select>
 </mapper>
