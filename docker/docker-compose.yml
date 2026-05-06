@@ -1,5 +1,5 @@
 x-backend-env: &backend-env
-  DATABASE_HOST: ${DATABASE_HOST:-localhost}
+  DATABASE_HOST: ${DATABASE_HOST:-database}
   DATABASE_PORT: ${DATABASE_PORT:-5432}
   DATABASE_NAME: db_blue_net
   DATABASE_USERNAME: postgres
@@ -20,7 +20,7 @@ x-backend-env: &backend-env
   ALIYUN_OSS_ENDPOINT: ${ALIYUN_OSS_ENDPOINT:-}
   ALIYUN_OSS_AK: ${ALIYUN_OSS_AK:-}
   ALIYUN_OSS_SK: ${ALIYUN_OSS_SK:-}
-  REDIS_HOST: ${REDIS_HOST:-localhost}
+  REDIS_HOST: ${REDIS_HOST:-redis}
   REDIS_PORT: ${REDIS_PORT:-6379}
   REDIS_PASSWORD: ${REDIS_PASSWORD:-}
   JWT_SECRET: ${JWT_SECRET:-zB88N23VOdV3bCXCWBrUHFrB6ifAxK5lFX6F}
@@ -91,6 +91,65 @@ services:
     networks:
       - bluenet-network
 
+  judge-service:
+    image: ${JUDGE_IMAGE:-bluenet-judge-service:latest}
+    build:
+      context: ..
+      dockerfile: docker/judge-service.Dockerfile
+    container_name: bluenet-judge-service
+    ports:
+      - "8090:8090"
+    environment:
+      DATABASE_HOST: ${DATABASE_HOST:-database}
+      DATABASE_PORT: ${DATABASE_PORT:-5432}
+      DATABASE_NAME: db_blue_net
+      DATABASE_USERNAME: postgres
+      DATABASE_PASSWORD: ${DB_PASSWORD:-hyfzhl999}
+      RABBITMQ_HOST: ${RABBITMQ_HOST:-rabbitmq}
+      RABBITMQ_PORT: ${RABBITMQ_PORT:-5672}
+      RABBITMQ_USERNAME: ${RABBITMQ_USERNAME:-admin}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-bluenet123}
+      STORAGE_PROVIDER: ${STORAGE_PROVIDER:-minio}
+      MINIO_ENDPOINT: ${MINIO_ENDPOINT:-oss}
+      MINIO_PORT: ${MINIO_PORT:-9000}
+      MINIO_AK: ${MINIO_AK:-admin}
+      MINIO_SK: ${MINIO_PASSWORD:-admin123}
+      MINIO_USE_SSL: ${MINIO_USE_SSL:-false}
+      JUDGE_STORAGE_BUCKET: bluenet-judge
+      JUDGE_SANDBOX_ENGINE: isolate
+      JUDGE_WORK_ROOT: /var/lib/bluenet-judge/work
+      LANG: C.UTF-8
+    profiles:
+      - full
+      - judge
+    restart: ${RESTART_POLICY:-no}
+    networks:
+      - bluenet-network
+
+  database:
+    image: postgres:17
+    container_name: bluenet-pgsql
+    ports:
+      - "15432:5432"
+    environment:
+      POSTGRES_DB: db_blue_net
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-dg24Nihng@49*}
+    volumes:
+      - bluenet_database_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d db_blue_net"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    profiles:
+      - full
+      - infra
+    restart: ${RESTART_POLICY:-no}
+    networks:
+      - bluenet-network
+
   rabbitmq:
     image: rabbitmq:3-management
     container_name: bluenet-rabbitmq
@@ -108,6 +167,34 @@ services:
       timeout: 5s
       retries: 5
       start_period: 20s
+    profiles:
+      - full
+      - infra
+    restart: ${RESTART_POLICY:-no}
+    networks:
+      - bluenet-network
+
+  redis:
+    image: redis:7
+    container_name: bluenet-redis
+    ports:
+      - "6739:6379"
+    command: >
+      sh -c '
+        if [ -n "$${REDIS_PASSWORD}" ]; then
+          redis-server --appendonly yes --requirepass "$$REDIS_PASSWORD"
+        else
+          redis-server --appendonly yes
+        fi
+      '
+    volumes:
+      - bluenet_redis_data:/data
+    healthcheck:
+      test: ["CMD", "sh", "-c", "redis-cli -a \"${REDIS_PASSWORD:-}\" ping | grep -q PONG"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
     profiles:
       - full
       - infra
@@ -145,7 +232,11 @@ networks:
     driver: bridge
 
 volumes:
+  bluenet_database_data:
+    name: bluenet-database-${ENV:-dev}-data
   bluenet_rabbitmq_data:
     name: bluenet-rabbitmq-${ENV:-dev}-data
+  bluenet_redis_data:
+    name: bluenet-redis-${ENV:-dev}-data
   bluenet_minio_data:
     name: bluenet-minio-${ENV:-dev}-data

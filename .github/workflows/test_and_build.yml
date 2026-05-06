@@ -447,14 +447,14 @@ jobs:
         name: judge-service-image
         path: ./images
 
-    - name: Sync judge compose file to judge server
+    - name: Sync compose file to judge server
       uses: appleboy/scp-action@v0.1.7
       with:
         host: ${{ steps.vars.outputs.deploy_host }}
         username: ${{ secrets.JUDGE_DEPLOY_USER }}
         key: ${{ secrets.JUDGE_DEPLOY_KEY }}
         port: ${{ secrets.JUDGE_DEPLOY_PORT || 22 }}
-        source: "docker/docker-compose.judge.yml"
+        source: "docker/docker-compose.yml"
         target: ${{ steps.vars.outputs.deploy_path }}
         strip_components: 1
 
@@ -504,7 +504,7 @@ jobs:
           rm -f /tmp/bluenet-deploy/images/judge-service-image.tar.gz
 
           echo "Starting judge-service..."
-          docker compose -f docker-compose.judge.yml up -d --remove-orphans
+          docker compose --profile judge up -d --remove-orphans
 
           echo "Judge-service deployment completed!"
       env:
