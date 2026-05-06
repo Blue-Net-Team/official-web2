@@ -1,4 +1,4 @@
-import { adminClient, publicClient } from '../client'
+import { apiClient, publicClient } from '../client'
 import { ResponseMessage } from '../schema/type'
 
 /**
@@ -80,7 +80,7 @@ export const qrcodeService = {
    */
   async getConsultationQrcodesAdmin(): Promise<ResponseMessage<ConsultationQrcodeDTO[]>> {
     const response =
-      await adminClient.get<ResponseMessage<ConsultationQrcodeDTO[]>>('/qrcodes/consultation')
+      await apiClient.get<ResponseMessage<ConsultationQrcodeDTO[]>>('/qrcodes/consultation')
     return response.data
   },
 
@@ -90,7 +90,7 @@ export const qrcodeService = {
    */
   async createConsultationQrcode(fileId: number): Promise<ResponseMessage<void>> {
     const response =
-      await adminClient.post<ResponseMessage<void>>(`/qrcodes/consultation?fileId=${fileId}`)
+      await apiClient.post<ResponseMessage<void>>(`/qrcodes/consultation?fileId=${fileId}`)
     return response.data
   },
 
@@ -103,7 +103,7 @@ export const qrcodeService = {
     data: UpdateConsultationQrcodeRequestDTO
   ): Promise<ResponseMessage<void>> {
     const response =
-      await adminClient.put<ResponseMessage<void>>(`/qrcodes/consultation/${id}`, data)
+      await apiClient.put<ResponseMessage<void>>(`/qrcodes/consultation/${id}`, data)
     return response.data
   },
 
@@ -113,7 +113,7 @@ export const qrcodeService = {
    */
   async deleteConsultationQrcode(id: number): Promise<ResponseMessage<void>> {
     const response =
-      await adminClient.delete<ResponseMessage<void>>(`/qrcodes/consultation/${id}`)
+      await apiClient.delete<ResponseMessage<void>>(`/qrcodes/consultation/${id}`)
     return response.data
   },
 
@@ -130,7 +130,7 @@ export const qrcodeService = {
     if (epoch) params.append('epoch', epoch.toString())
 
     const response =
-      await adminClient.get<ResponseMessage<AssessmentQrcodeDTO[]>>(`/qrcodes/assessment${params.toString() ? '?' + params.toString() : ''}`)
+      await apiClient.get<ResponseMessage<AssessmentQrcodeDTO[]>>(`/qrcodes/assessment${params.toString() ? '?' + params.toString() : ''}`)
     return response.data
   },
 
@@ -142,7 +142,7 @@ export const qrcodeService = {
     data: CreateAssessmentQrcodeRequestDTO
   ): Promise<ResponseMessage<void>> {
     const response =
-      await adminClient.post<ResponseMessage<void>>('/qrcodes/assessment', data)
+      await apiClient.post<ResponseMessage<void>>('/qrcodes/assessment', data)
     return response.data
   },
 
@@ -155,7 +155,7 @@ export const qrcodeService = {
     data: UpdateAssessmentQrcodeRequestDTO
   ): Promise<ResponseMessage<void>> {
     const response =
-      await adminClient.put<ResponseMessage<void>>(`/qrcodes/assessment/${id}`, data)
+      await apiClient.put<ResponseMessage<void>>(`/qrcodes/assessment/${id}`, data)
     return response.data
   },
 
@@ -165,7 +165,7 @@ export const qrcodeService = {
    */
   async deleteAssessmentQrcode(id: number): Promise<ResponseMessage<void>> {
     const response =
-      await adminClient.delete<ResponseMessage<void>>(`/qrcodes/assessment/${id}`)
+      await apiClient.delete<ResponseMessage<void>>(`/qrcodes/assessment/${id}`)
     return response.data
   },
 }
