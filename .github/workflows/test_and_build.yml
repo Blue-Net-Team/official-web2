@@ -330,11 +330,15 @@ jobs:
           echo "deploy_host=${{ secrets.DEPLOY_HOST_PROD }}" >> $GITHUB_OUTPUT
           echo "image_tag=latest" >> $GITHUB_OUTPUT
           echo "env_name=production" >> $GITHUB_OUTPUT
+          echo "database_host=${{ secrets.DATABASE_HOST_PROD }}" >> $GITHUB_OUTPUT
+          echo "redis_host=${{ secrets.REDIS_HOST_PROD }}" >> $GITHUB_OUTPUT
         else
           echo "deploy_path=${{ secrets.DEPLOY_PATH_DEV }}" >> $GITHUB_OUTPUT
           echo "deploy_host=${{ secrets.DEPLOY_HOST_DEV }}" >> $GITHUB_OUTPUT
           echo "image_tag=develop" >> $GITHUB_OUTPUT
           echo "env_name=development" >> $GITHUB_OUTPUT
+          echo "database_host=${{ secrets.DATABASE_HOST_DEV }}" >> $GITHUB_OUTPUT
+          echo "redis_host=${{ secrets.REDIS_HOST_DEV }}" >> $GITHUB_OUTPUT
         fi
 
     - name: Download backend image artifact
@@ -371,11 +375,27 @@ jobs:
         username: ${{ secrets.DEPLOY_USER }}
         key: ${{ secrets.DEPLOY_KEY }}
         port: ${{ secrets.DEPLOY_PORT || 22 }}
-        envs: BACKEND_IMAGE, DEPLOY_PATH
+        envs: BACKEND_IMAGE, DEPLOY_PATH, DATABASE_HOST, REDIS_HOST
         script: |
           cd $DEPLOY_PATH
 
           echo "=== Deploying backend to ${{ steps.vars.outputs.env_name }} environment ==="
+
+          echo "Updating deployment-specific configuration in .env..."
+          touch .env
+          update_env() {
+            local key="$1" value="$2"
+            if grep -q "^${key}=" .env 2>/dev/null; then
+              sed -i "s|^${key}=.*|${key}=${value}|" .env
+            else
+              echo "${key}=${value}" >> .env
+            fi
+          }
+          update_env "DATABASE_HOST" "${DATABASE_HOST}"
+          update_env "REDIS_HOST" "${REDIS_HOST}"
+          update_env "BACKEND_IMAGE" "${BACKEND_IMAGE}"
+          update_env "ENV" "${{ steps.vars.outputs.image_tag == 'latest' && 'prod' || 'dev' }}"
+          update_env "RESTART_POLICY" "unless-stopped"
 
           echo "Loading backend image from tar..."
           gunzip -c /tmp/bluenet-deploy/images/backend-image.tar.gz | docker load
@@ -389,6 +409,8 @@ jobs:
       env:
         BACKEND_IMAGE: bluenet-backend:${{ steps.vars.outputs.image_tag }}
         DEPLOY_PATH: ${{ steps.vars.outputs.deploy_path }}
+        DATABASE_HOST: ${{ steps.vars.outputs.database_host }}
+        REDIS_HOST: ${{ steps.vars.outputs.redis_host }}
 
   # ==================== 部署判题服务阶段 ====================
 
@@ -404,13 +426,17 @@ jobs:
       id: vars
       run: |
         if [ "${{ github.ref }}" = "refs/heads/master" ]; then
-          echo "deploy_path=${{ secrets.DEPLOY_PATH_PROD }}" >> $GITHUB_OUTPUT
-          echo "deploy_host=${{ secrets.DEPLOY_HOST_PROD }}" >> $GITHUB_OUTPUT
+          echo "deploy_path=${{ secrets.JUDGE_DEPLOY_PATH_PROD }}" >> $GITHUB_OUTPUT
+          echo "deploy_host=${{ secrets.JUDGE_DEPLOY_HOST_PROD }}" >> $GITHUB_OUTPUT
+          echo "main_host=${{ secrets.DEPLOY_HOST_PROD }}" >> $GITHUB_OUTPUT
+          echo "database_host=${{ secrets.DATABASE_HOST_PROD }}" >> $GITHUB_OUTPUT
           echo "image_tag=latest" >> $GITHUB_OUTPUT
           echo "env_name=production" >> $GITHUB_OUTPUT
         else
-          echo "deploy_path=${{ secrets.DEPLOY_PATH_DEV }}" >> $GITHUB_OUTPUT
-          echo "deploy_host=${{ secrets.DEPLOY_HOST_DEV }}" >> $GITHUB_OUTPUT
+          echo "deploy_path=${{ secrets.JUDGE_DEPLOY_PATH_DEV }}" >> $GITHUB_OUTPUT
+          echo "deploy_host=${{ secrets.JUDGE_DEPLOY_HOST_DEV }}" >> $GITHUB_OUTPUT
+          echo "main_host=${{ secrets.DEPLOY_HOST_DEV }}" >> $GITHUB_OUTPUT
+          echo "database_host=${{ secrets.DATABASE_HOST_DEV }}" >> $GITHUB_OUTPUT
           echo "image_tag=develop" >> $GITHUB_OUTPUT
           echo "env_name=development" >> $GITHUB_OUTPUT
         fi
@@ -421,24 +447,24 @@ jobs:
         name: judge-service-image
         path: ./images
 
-    - name: Sync compose file to server
+    - name: Sync judge compose file to judge server
       uses: appleboy/scp-action@v0.1.7
       with:
         host: ${{ steps.vars.outputs.deploy_host }}
-        username: ${{ secrets.DEPLOY_USER }}
-        key: ${{ secrets.DEPLOY_KEY }}
-        port: ${{ secrets.DEPLOY_PORT || 22 }}
-        source: "docker/docker-compose.yml"
+        username: ${{ secrets.JUDGE_DEPLOY_USER }}
+        key: ${{ secrets.JUDGE_DEPLOY_KEY }}
+        port: ${{ secrets.JUDGE_DEPLOY_PORT || 22 }}
+        source: "docker/docker-compose.judge.yml"
         target: ${{ steps.vars.outputs.deploy_path }}
         strip_components: 1
 
-    - name: Transfer image to server
+    - name: Transfer image to judge server
       uses: appleboy/scp-action@v0.1.7
       with:
         host: ${{ steps.vars.outputs.deploy_host }}
-        username: ${{ secrets.DEPLOY_USER }}
-        key: ${{ secrets.DEPLOY_KEY }}
-        port: ${{ secrets.DEPLOY_PORT || 22 }}
+        username: ${{ secrets.JUDGE_DEPLOY_USER }}
+        key: ${{ secrets.JUDGE_DEPLOY_KEY }}
+        port: ${{ secrets.JUDGE_DEPLOY_PORT || 22 }}
         source: "images/judge-service-image.tar.gz"
         target: /tmp/bluenet-deploy
 
@@ -446,14 +472,31 @@ jobs:
       uses: appleboy/ssh-action@v1.0.3
       with:
         host: ${{ steps.vars.outputs.deploy_host }}
-        username: ${{ secrets.DEPLOY_USER }}
-        key: ${{ secrets.DEPLOY_KEY }}
-        port: ${{ secrets.DEPLOY_PORT || 22 }}
-        envs: JUDGE_IMAGE, DEPLOY_PATH
+        username: ${{ secrets.JUDGE_DEPLOY_USER }}
+        key: ${{ secrets.JUDGE_DEPLOY_KEY }}
+        port: ${{ secrets.JUDGE_DEPLOY_PORT || 22 }}
+        envs: JUDGE_IMAGE, DEPLOY_PATH, DATABASE_HOST, RABBITMQ_HOST, MINIO_ENDPOINT
         script: |
           cd $DEPLOY_PATH
 
           echo "=== Deploying judge-service to ${{ steps.vars.outputs.env_name }} environment ==="
+
+          echo "Updating deployment-specific configuration in .env..."
+          touch .env
+          update_env() {
+            local key="$1" value="$2"
+            if grep -q "^${key}=" .env 2>/dev/null; then
+              sed -i "s|^${key}=.*|${key}=${value}|" .env
+            else
+              echo "${key}=${value}" >> .env
+            fi
+          }
+          update_env "JUDGE_IMAGE" "${JUDGE_IMAGE}"
+          update_env "DATABASE_HOST" "${DATABASE_HOST}"
+          update_env "RABBITMQ_HOST" "${RABBITMQ_HOST}"
+          update_env "MINIO_ENDPOINT" "${MINIO_ENDPOINT}"
+          update_env "ENV" "${{ steps.vars.outputs.image_tag == 'latest' && 'prod' || 'dev' }}"
+          update_env "RESTART_POLICY" "unless-stopped"
 
           echo "Loading judge-service image from tar..."
           gunzip -c /tmp/bluenet-deploy/images/judge-service-image.tar.gz | docker load
@@ -461,12 +504,15 @@ jobs:
           rm -f /tmp/bluenet-deploy/images/judge-service-image.tar.gz
 
           echo "Starting judge-service..."
-          docker compose up -d judge-service --remove-orphans
+          docker compose -f docker-compose.judge.yml up -d --remove-orphans
 
           echo "Judge-service deployment completed!"
       env:
         JUDGE_IMAGE: bluenet-judge-service:${{ steps.vars.outputs.image_tag }}
         DEPLOY_PATH: ${{ steps.vars.outputs.deploy_path }}
+        DATABASE_HOST: ${{ steps.vars.outputs.database_host }}
+        RABBITMQ_HOST: ${{ steps.vars.outputs.main_host }}
+        MINIO_ENDPOINT: ${{ steps.vars.outputs.main_host }}
 
   # ==================== 健康检查阶段 ====================
 
