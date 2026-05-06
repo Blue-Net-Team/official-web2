@@ -65,6 +65,9 @@ public class Qrcode {
         if (epoch == null) {
             throw new IllegalArgumentException("考核轮次不能为空");
         }
+        if (epoch <= 0) {
+            throw new IllegalArgumentException("考核轮次必须为正整数");
+        }
         if (isShared != null && isShared) {
             if (direction != null) {
                 throw new IllegalArgumentException("共用二维码时方向必须为空");

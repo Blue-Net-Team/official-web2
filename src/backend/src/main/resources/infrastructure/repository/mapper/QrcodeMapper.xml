@@ -33,4 +33,10 @@
         </if>
         ORDER BY epoch DESC, direction ASC, id ASC
     </select>
+
+    <select id="findAssessmentByEpoch" resultMap="BaseResultMap">
+        SELECT *
+        FROM tb_qrcode
+        WHERE type = 'ASSESSMENT' AND epoch = #{epoch}
+    </select>
 </mapper>

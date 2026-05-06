@@ -25,6 +25,32 @@ public class QrcodeDomainServiceImpl implements QrcodeDomainService {
     private final QrcodeRepository qrcodeRepository;
     private final FileRepository fileRepository;
 
+    /**
+     * 检查考核群二维码 epoch/direction 组合是否冲突。
+     *
+     * @param epoch      考核轮次
+     * @param direction  方向
+     * @param isShared   是否共用
+     * @param excludeId  排除的记录 ID（更新时排除自身）
+     */
+    private void checkAssessmentConflict(Integer epoch, String direction, Boolean isShared, Long excludeId) {
+        if (epoch == null) {
+            return;
+        }
+        List<Qrcode> existing = qrcodeRepository.findAssessmentByEpoch(epoch);
+        for (Qrcode qr : existing) {
+            if (excludeId != null && excludeId.equals(qr.getId())) {
+                continue;
+            }
+            if (Boolean.TRUE.equals(isShared) || Boolean.TRUE.equals(qr.getIsShared())) {
+                throw new IllegalArgumentException("该轮次已存在二维码");
+            }
+            if (direction != null && direction.equals(qr.getDirection())) {
+                throw new IllegalArgumentException("该轮次和方向组合已存在二维码");
+            }
+        }
+    }
+
     @Override
     public void saveQrcode(FileVO fileVO, QrcodeType type) {
         if (type == null) {
@@ -114,6 +140,13 @@ public class QrcodeDomainServiceImpl implements QrcodeDomainService {
     @Override
     @Transactional
     public void saveAssessmentQrcode(Qrcode qrcode) {
+        // 校验 epoch 为正整数
+        if (qrcode.getEpoch() != null && qrcode.getEpoch() <= 0) {
+            throw new IllegalArgumentException("考核轮次必须为正整数");
+        }
+        // 检查重复
+        checkAssessmentConflict(qrcode.getEpoch(), qrcode.getDirection(), qrcode.getIsShared(), null);
+
         qrcodeRepository.save(qrcode);
         log.info("考核群二维码保存成功，id={}, fileId={}", qrcode.getId(),
                 qrcode.getFileId());
@@ -132,10 +165,21 @@ public class QrcodeDomainServiceImpl implements QrcodeDomainService {
             throw new IllegalArgumentException("只能更新考核群二维码");
         }
 
-        // 3. 保存旧的文件ID用于删除
+        // 3. epoch 校验
+        if (epoch != null && epoch <= 0) {
+            throw new IllegalArgumentException("考核轮次必须为正整数");
+        }
+
+        // 4. 保存旧的文件ID用于删除
         Long oldFileId = qrcode.getFileId();
 
-        // 4. 更新二维码记录
+        // 5. 确定用于重复检查的新值
+        Integer checkEpoch = epoch != null ? epoch : qrcode.getEpoch();
+        String checkDirection = direction != null ? direction : qrcode.getDirection();
+        Boolean checkIsShared = isShared != null ? isShared : qrcode.getIsShared();
+        checkAssessmentConflict(checkEpoch, checkDirection, checkIsShared, id);
+
+        // 6. 更新二维码记录
         if (fileVO != null) {
             qrcode.setFileId(fileVO.getId());
         }
@@ -166,7 +210,7 @@ public class QrcodeDomainServiceImpl implements QrcodeDomainService {
 
         qrcodeRepository.save(qrcode);
 
-        // 5. 删除旧的关联文件
+        // 7. 删除旧的关联文件
         if (fileVO != null && oldFileId != null && !oldFileId.equals(fileVO.getId())) {
             try {
                 fileRepository.deleteFileById(oldFileId);

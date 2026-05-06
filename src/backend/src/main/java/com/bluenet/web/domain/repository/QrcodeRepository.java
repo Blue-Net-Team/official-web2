@@ -64,4 +64,13 @@ public interface QrcodeRepository {
      *            业务记录主键。
      */
     void deleteById(Long id);
+
+    /**
+     * 按考核轮次查询考核群二维码记录。
+     *
+     * @param epoch
+     *            考核轮次。
+     * @return 满足条件的二维码结果集合。
+     */
+    List<Qrcode> findAssessmentByEpoch(Integer epoch);
 }

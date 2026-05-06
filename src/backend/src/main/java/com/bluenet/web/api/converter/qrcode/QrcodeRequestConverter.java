@@ -42,7 +42,8 @@ public class QrcodeRequestConverter {
     public QrcodeCommands.CreateAssessmentQrcodeCommand toCreateAssessmentCommand(
             CreateAssessmentQrcodeRequestDTO request) {
         return new QrcodeCommands.CreateAssessmentQrcodeCommand(request.getFileId(),
-                request.getDirection(), request.getEpoch(), request.getIsShared());
+                request.getDirection() != null ? request.getDirection().name() : null,
+                request.getEpoch(), request.getIsShared());
     }
 
     /**
@@ -51,7 +52,8 @@ public class QrcodeRequestConverter {
     public QrcodeCommands.UpdateAssessmentQrcodeCommand toUpdateAssessmentCommand(Long id,
             UpdateAssessmentQrcodeRequestDTO request) {
         return new QrcodeCommands.UpdateAssessmentQrcodeCommand(id, request.getFileId(),
-                request.getDirection(), request.getEpoch(), request.getIsShared());
+                request.getDirection() != null ? request.getDirection().name() : null,
+                request.getEpoch(), request.getIsShared());
     }
 
     /**

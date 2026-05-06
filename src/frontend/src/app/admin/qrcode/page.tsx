@@ -287,10 +287,7 @@ export default function QrcodeManagementPage() {
             <div className="flex gap-2 flex-wrap">
               <Select
                 value={filterDirection}
-                onChange={(value) => {
-                  setFilterDirection(value)
-                  loadAssessmentData()
-                }}
+                onChange={(value) => setFilterDirection(value)}
                 placeholder="全部方向"
                 allowClear
                 className="w-[150px]"
@@ -303,10 +300,7 @@ export default function QrcodeManagementPage() {
               <InputNumber
                 placeholder="轮次"
                 value={filterEpoch}
-                onChange={(value) => {
-                  setFilterEpoch(value ?? undefined)
-                  loadAssessmentData()
-                }}
+                onChange={(value) => setFilterEpoch(value ?? undefined)}
                 className="w-[100px]"
                 min={1}
               />
@@ -314,7 +308,6 @@ export default function QrcodeManagementPage() {
                 onClick={() => {
                   setFilterDirection(undefined)
                   setFilterEpoch(undefined)
-                  loadAssessmentData()
                 }}
               >
                 重置

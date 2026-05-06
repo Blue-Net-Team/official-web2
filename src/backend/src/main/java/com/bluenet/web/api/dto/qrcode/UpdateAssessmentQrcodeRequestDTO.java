@@ -1,5 +1,6 @@
 package com.bluenet.web.api.dto.qrcode;
 
+import com.bluenet.web.domain.model.enumerate.Direction;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -20,7 +21,7 @@ public class UpdateAssessmentQrcodeRequestDTO {
     private Long fileId;
 
     @Schema(description = "方向")
-    private String direction;
+    private Direction direction;
 
     @Schema(description = "考核轮次")
     private Integer epoch;

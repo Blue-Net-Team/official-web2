@@ -1,5 +1,6 @@
 package com.bluenet.web.api.dto.qrcode;
 
+import com.bluenet.web.domain.model.enumerate.Direction;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -22,7 +23,7 @@ public class CreateAssessmentQrcodeRequestDTO {
     private Long fileId;
 
     @Schema(description = "方向")
-    private String direction;
+    private Direction direction;
 
     @Schema(description = "考核轮次", required = true)
     @NotNull(message = "考核轮次不能为空")
