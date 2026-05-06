@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { App, Button, Modal, Spin, Table } from 'antd'
+import { App, Button, Grid, Modal, Spin, Table } from 'antd'
 import { PlusOutlined } from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
 import type { CollegeDTO } from '@/apis/schema/type'
@@ -11,6 +11,8 @@ import CollegeDrawer, { type DrawerMode } from './CollegeDrawer'
 
 export default function CollegeManagementPage() {
   const { message: messageApi } = App.useApp()
+  const screens = Grid.useBreakpoint()
+  const isMobile = !screens.md
 
   const [colleges, setColleges] = useState<CollegeDTO[]>([])
   const [loading, setLoading] = useState(false)
@@ -27,6 +29,8 @@ export default function CollegeManagementPage() {
       if (res.code === 200 && res.data) {
         setColleges(res.data)
       }
+    } catch {
+      messageApi.error('获取学院列表失败')
     } finally {
       setLoading(false)
     }
@@ -61,8 +65,8 @@ export default function CollegeManagementPage() {
       setDeleteModalOpen(false)
       setDrawerOpen(false)
       fetchColleges()
-    } catch (err: any) {
-      messageApi.error(err?.response?.data?.msg || '删除失败')
+    } catch {
+      messageApi.error('删除失败')
     }
   }
 
@@ -73,7 +77,7 @@ export default function CollegeManagementPage() {
   }
 
   const columns: ColumnsType<CollegeDTO> = [
-    { title: 'ID', dataIndex: 'id', key: 'id', width: 80 },
+    { title: 'ID', dataIndex: 'id', key: 'id', width: 80, responsive: ['md'] },
     { title: '学院名称', dataIndex: 'name', key: 'name', ellipsis: true },
   ]
 
@@ -93,7 +97,10 @@ export default function CollegeManagementPage() {
           rowKey={(record) => String(record.id)}
           size="small"
           pagination={false}
-          onRow={(record) => ({ onClick: () => handleRowClick(record), className: 'cursor-pointer' })}
+          onRow={(record) => ({
+            onClick: () => handleRowClick(record),
+            className: 'cursor-pointer',
+          })}
           locale={{ emptyText: '暂无学院数据' }}
         />
       </Spin>

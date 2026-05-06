@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Button, Descriptions, Drawer, Form, Input } from 'antd'
+import { App, Button, Descriptions, Drawer, Form, Input } from 'antd'
 import { DeleteOutlined, EditOutlined } from '@ant-design/icons'
 import type { CollegeDTO, CreateCollegeRequestDTO } from '@/apis/schema/type'
 import { adminCollegeService } from '@/apis/services/admin-college.service'
@@ -28,6 +28,7 @@ export default function CollegeDrawer({
   onEdit,
 }: CollegeDrawerProps) {
   const [form] = Form.useForm<CreateCollegeRequestDTO>()
+  const { message: messageApi } = App.useApp()
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
@@ -50,17 +51,15 @@ export default function CollegeDrawer({
         await adminCollegeService.update(college.id, values)
       }
       onSuccess()
+    } catch {
+      messageApi.error('保存失败')
     } finally {
       setSaving(false)
     }
   }
 
   const title =
-    mode === 'create'
-      ? '新增学院'
-      : mode === 'edit'
-      ? '编辑学院'
-      : college?.name || '学院详情'
+    mode === 'create' ? '新增学院' : mode === 'edit' ? '编辑学院' : college?.name || '学院详情'
 
   return (
     <Drawer
@@ -115,7 +114,10 @@ function FormView({ form }: { form: ReturnType<typeof Form.useForm<CreateCollege
         <Form.Item
           name="name"
           label="学院名称"
-          rules={[{ required: true, message: '请输入学院名称' }, { max: 100, message: '学院名称最多100个字符' }]}
+          rules={[
+            { required: true, message: '请输入学院名称' },
+            { max: 100, message: '学院名称最多100个字符' },
+          ]}
         >
           <Input placeholder="请输入学院名称" maxLength={100} />
         </Form.Item>
