@@ -3,7 +3,7 @@ package com.bluenet.web.api.controller.v1.learningpath;
 import com.bluenet.web.api.dto.ResponseMessage;
 import com.bluenet.web.api.dto.learningpath.DirectionLearningPathDTO;
 import com.bluenet.web.application.LearningPathResult;
-import com.bluenet.web.application.converter.LearningPathAppConverter;
+import com.bluenet.web.api.converter.learningpath.LearningPathResponseConverter;
 import com.bluenet.web.application.service.LearningPathAppService;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
 import com.bluenet.web.infrastructure.security.annotation.RequiresPermission;
@@ -35,7 +35,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class LearningPathController {
     private final LearningPathAppService learningPathAppService;
-    private final LearningPathAppConverter learningPathAppConverter;
+    private final LearningPathResponseConverter learningPathResponseConverter;
 
     @Operation(summary = "获取方向学习路径", description = "获取指定方向的学习路径步骤列表，公开访问无需认证")
     @ApiResponses({
@@ -48,7 +48,7 @@ public class LearningPathController {
             @Parameter(description = "方向标识（cv/embed/struct）", required = true, example = "cv") @PathVariable String slug) {
         try {
             List<LearningPathResult> results = learningPathAppService.getLearningPath(slug);
-            return ResponseMessage.success(learningPathAppConverter.toDirectionLearningPathDTO(slug, results));
+            return ResponseMessage.success(learningPathResponseConverter.toDirectionLearningPathDTO(slug, results));
         } catch (IllegalArgumentException e) {
             return ResponseMessage.error(404, e.getMessage());
         }

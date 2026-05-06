@@ -7,7 +7,7 @@ import com.bluenet.web.api.dto.equipment.UpdateEquipmentRequestDTO;
 import com.bluenet.web.api.converter.equipment.EquipmentRequestConverter;
 import com.bluenet.web.application.EquipmentResult;
 import com.bluenet.web.application.command.equipment.EquipmentCommands;
-import com.bluenet.web.application.converter.EquipmentAppConverter;
+import com.bluenet.web.api.converter.equipment.EquipmentResponseConverter;
 import com.bluenet.web.application.service.EquipmentAppService;
 import com.bluenet.web.domain.exception.DataNotFound;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
@@ -34,7 +34,7 @@ import org.springframework.web.bind.annotation.*;
 public class AdminEquipmentController {
     private final EquipmentAppService equipmentAppService;
     private final EquipmentRequestConverter equipmentRequestConverter;
-    private final EquipmentAppConverter equipmentAppConverter;
+    private final EquipmentResponseConverter equipmentResponseConverter;
 
     @Operation(summary = "创建设备", description = "创建新的设备")
     @RequiresPermission(name = "创建设备", value = "equipment:create", access = AccessLevel.PROTECTED)
@@ -43,7 +43,7 @@ public class AdminEquipmentController {
         try {
             EquipmentCommands.CreateEquipmentCommand command = equipmentRequestConverter.toCommand(request);
             EquipmentResult result = equipmentAppService.createEquipment(command);
-            return ResponseMessage.success(equipmentAppConverter.toDTO(result));
+            return ResponseMessage.success(equipmentResponseConverter.toDTO(result));
         } catch (IllegalArgumentException e) {
             return ResponseMessage.error(400, e.getMessage());
         }
@@ -58,7 +58,7 @@ public class AdminEquipmentController {
         try {
             EquipmentCommands.UpdateEquipmentCommand command = equipmentRequestConverter.toCommand(id, request);
             EquipmentResult result = equipmentAppService.updateEquipment(command);
-            return ResponseMessage.success(equipmentAppConverter.toDTO(result));
+            return ResponseMessage.success(equipmentResponseConverter.toDTO(result));
         } catch (DataNotFound e) {
             return ResponseMessage.error(404, e.getMessage());
         } catch (IllegalArgumentException e) {

@@ -3,7 +3,7 @@ package com.bluenet.web.api.controller.v1;
 import com.bluenet.web.api.dto.ResponseMessage;
 import com.bluenet.web.api.dto.assessment_statistics.QuestionStatisticsDTO;
 import com.bluenet.web.application.AssessmentStatisticsResult;
-import com.bluenet.web.application.converter.AssessmentStatisticsAppConverter;
+import com.bluenet.web.api.converter.assessment_statistics.AssessmentStatisticsResponseConverter;
 import com.bluenet.web.application.service.AssessmentStatisticsAppService;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
 import com.bluenet.web.infrastructure.security.annotation.RequiresPermission;
@@ -23,13 +23,13 @@ import org.springframework.web.bind.annotation.RestController;
 @SecurityRequirement(name = "bearer-jwt")
 public class AssessmentStatisticsController {
     private final AssessmentStatisticsAppService assessmentStatisticsAppService;
-    private final AssessmentStatisticsAppConverter assessmentStatisticsAppConverter;
+    private final AssessmentStatisticsResponseConverter responseConverter;
 
     @Operation(summary = "查询考生端题目统计", description = "配置开启后，考生可在有权查看的题目详情页看到聚合通过率。")
     @RequiresPermission(name = "查询考生端题目统计", value = "assessment-statistics:candidate-query", access = AccessLevel.AUTHENTICATED)
     @GetMapping("/questions/{questionId}")
     public ResponseMessage<QuestionStatisticsDTO> getCandidateQuestionStatistics(@PathVariable Long questionId) {
         AssessmentStatisticsResult result = assessmentStatisticsAppService.getCandidateQuestionStatistics(questionId);
-        return ResponseMessage.success(assessmentStatisticsAppConverter.toDTO(result));
+        return ResponseMessage.success(responseConverter.toDTO(result));
     }
 }

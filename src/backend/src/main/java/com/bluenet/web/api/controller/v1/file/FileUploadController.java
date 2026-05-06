@@ -4,7 +4,7 @@ import com.bluenet.web.api.dto.ResponseMessage;
 import com.bluenet.web.api.dto.file.FileInfo;
 import com.bluenet.web.api.converter.file.FileRequestConverter;
 import com.bluenet.web.application.FileResult;
-import com.bluenet.web.application.converter.FileAppConverter;
+import com.bluenet.web.api.converter.file.FileResponseConverter;
 import com.bluenet.web.application.service.FileAppService;
 import com.bluenet.web.domain.exception.Unauthorized;
 import com.bluenet.web.domain.model.enumerate.FileType;
@@ -43,7 +43,7 @@ public class FileUploadController {
 
     private final FileAppService fileAppService;
     private final FileRequestConverter fileRequestConverter;
-    private final FileAppConverter fileAppConverter;
+    private final FileResponseConverter fileResponseConverter;
 
     @Operation(summary = "统一文件上传", description = "上传文件到指定类型的存储桶。AVATAR 类型无需登录（报名场景），其他类型需要登录。")
     @PostMapping
@@ -63,6 +63,6 @@ public class FileUploadController {
 
         FileResult result = fileAppService.uploadFile(fileRequestConverter.toCommand(file, type));
         log.info("文件上传成功，文件id: {}, 类型: {}", result.id(), type);
-        return ResponseMessage.success(fileAppConverter.toDTO(result));
+        return ResponseMessage.success(fileResponseConverter.toDTO(result));
     }
 }

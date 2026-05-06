@@ -2,7 +2,6 @@ package com.bluenet.web.api.controller.v1.file;
 
 import com.bluenet.web.application.FileDownloadResult;
 import com.bluenet.web.application.command.file.FileCommands;
-import com.bluenet.web.application.converter.FileAppConverter;
 import com.bluenet.web.application.service.FileAppService;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
 import com.bluenet.web.infrastructure.security.annotation.RequiresPermission;
@@ -40,7 +39,6 @@ import java.nio.charset.StandardCharsets;
 public class FileDownloadController {
 
     private final FileAppService fileAppService;
-    private final FileAppConverter fileAppConverter;
 
     @Operation(summary = "下载文件", description = "根据文件 ID 下载文件并支持格式内联")
     @ApiResponses({
@@ -64,7 +62,7 @@ public class FileDownloadController {
         }
 
         String encodedFilename = URLEncoder.encode(filename, StandardCharsets.UTF_8).replaceAll("\\+", "%20");
-        MediaType mediaType = fileAppConverter.determineMediaType(filename);
+        MediaType mediaType = determineMediaType(filename);
 
         return ResponseEntity.ok()
                 .contentType(mediaType)
@@ -104,5 +102,45 @@ public class FileDownloadController {
                         "attachment; filename=\"" + encodedFilename + "\"; filename*=UTF-8''" + encodedFilename)
                 .header(HttpHeaders.CACHE_CONTROL, "max-age=3600")
                 .body(resource);
+    }
+
+    private MediaType determineMediaType(String filename) {
+        String lowerFilename = filename.toLowerCase();
+
+        if (lowerFilename.endsWith(".jpg") || lowerFilename.endsWith(".jpeg")) {
+            return MediaType.IMAGE_JPEG;
+        } else if (lowerFilename.endsWith(".png")) {
+            return MediaType.IMAGE_PNG;
+        } else if (lowerFilename.endsWith(".gif")) {
+            return MediaType.IMAGE_GIF;
+        } else if (lowerFilename.endsWith(".webp")) {
+            return MediaType.parseMediaType("image/webp");
+        } else if (lowerFilename.endsWith(".svg")) {
+            return MediaType.parseMediaType("image/svg+xml");
+        } else if (lowerFilename.endsWith(".pdf")) {
+            return MediaType.APPLICATION_PDF;
+        } else if (lowerFilename.endsWith(".doc") || lowerFilename.endsWith(".docx")) {
+            return MediaType.parseMediaType("application/msword");
+        } else if (lowerFilename.endsWith(".xls") || lowerFilename.endsWith(".xlsx")) {
+            return MediaType.parseMediaType("application/vnd.ms-excel");
+        } else if (lowerFilename.endsWith(".ppt") || lowerFilename.endsWith(".pptx")) {
+            return MediaType.parseMediaType("application/vnd.ms-powerpoint");
+        } else if (lowerFilename.endsWith(".txt")) {
+            return MediaType.TEXT_PLAIN;
+        } else if (lowerFilename.endsWith(".zip")) {
+            return MediaType.parseMediaType("application/zip");
+        } else if (lowerFilename.endsWith(".rar")) {
+            return MediaType.parseMediaType("application/vnd.rar");
+        } else if (lowerFilename.endsWith(".7z")) {
+            return MediaType.parseMediaType("application/x-7z-compressed");
+        } else if (lowerFilename.endsWith(".mp4")) {
+            return MediaType.parseMediaType("video/mp4");
+        } else if (lowerFilename.endsWith(".mp3")) {
+            return MediaType.parseMediaType("audio/mpeg");
+        } else if (lowerFilename.endsWith(".wav")) {
+            return MediaType.parseMediaType("audio/wav");
+        } else {
+            return MediaType.APPLICATION_OCTET_STREAM;
+        }
     }
 }

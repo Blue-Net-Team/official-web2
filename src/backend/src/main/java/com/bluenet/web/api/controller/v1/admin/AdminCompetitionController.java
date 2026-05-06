@@ -4,6 +4,7 @@ import com.bluenet.web.api.dto.ResponseMessage;
 import com.bluenet.web.api.dto.competition.*;
 import com.bluenet.web.api.converter.competition.CompetitionRequestConverter;
 import com.bluenet.web.application.CompetitionResult;
+import com.bluenet.web.application.command.competition.CompetitionCommands;
 import com.bluenet.web.application.service.CompetitionAppService;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
 import com.bluenet.web.infrastructure.security.annotation.RequiresPermission;
@@ -89,7 +90,12 @@ public class AdminCompetitionController {
     public ResponseMessage<Void> batchUpdateSortOrder(
             @Valid @RequestBody BatchSortRequestDTO request) {
         try {
-            competitionAppService.batchUpdateSortOrder(request);
+            CompetitionCommands.BatchUpdateSortOrderCommand command = new CompetitionCommands.BatchUpdateSortOrderCommand(
+                    request.getItems()
+                            .stream()
+                            .map(item -> new CompetitionCommands.SortItemCommand(item.getId(), item.getSortOrder()))
+                            .toList());
+            competitionAppService.batchUpdateSortOrder(command);
             return ResponseMessage.success(null);
         } catch (IllegalArgumentException e) {
             return ResponseMessage.error(404, e.getMessage());

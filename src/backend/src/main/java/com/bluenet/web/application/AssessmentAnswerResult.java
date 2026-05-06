@@ -1,6 +1,5 @@
 package com.bluenet.web.application;
 
-import com.bluenet.web.api.dto.assessment_judgement.AssessmentJudgementDTO;
 import com.bluenet.web.domain.model.enumerate.ProgrammingLanguage;
 
 import java.time.LocalDateTime;
@@ -25,7 +24,7 @@ public record AssessmentAnswerResult(
         /** 提交时间 */
         LocalDateTime submitTime,
         /** 评测结果 */
-        AssessmentJudgementDTO judgement) {
+        AssessmentJudgementResult judgement) {
 
     /**
      * 通过已有的对象创建一个新实例，将评测结果设为 null。

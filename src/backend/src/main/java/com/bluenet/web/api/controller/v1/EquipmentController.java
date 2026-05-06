@@ -3,7 +3,7 @@ package com.bluenet.web.api.controller.v1;
 import com.bluenet.web.api.dto.ResponseMessage;
 import com.bluenet.web.api.dto.equipment.EquipmentDTO;
 import com.bluenet.web.application.EquipmentResult;
-import com.bluenet.web.application.converter.EquipmentAppConverter;
+import com.bluenet.web.api.converter.equipment.EquipmentResponseConverter;
 import com.bluenet.web.application.service.EquipmentAppService;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
 import com.bluenet.web.infrastructure.security.annotation.RequiresPermission;
@@ -29,14 +29,14 @@ import java.util.List;
 @RequiredArgsConstructor
 public class EquipmentController {
     private final EquipmentAppService equipmentAppService;
-    private final EquipmentAppConverter equipmentAppConverter;
+    private final EquipmentResponseConverter equipmentResponseConverter;
 
     @Operation(summary = "获取设备列表", description = "获取所有设备列表，按排序权重降序排列")
     @RequiresPermission(name = "获取设备列表", value = "equipment:list", access = AccessLevel.PUBLIC)
     @GetMapping
     public ResponseMessage<List<EquipmentDTO>> getEquipmentList() {
         List<EquipmentResult> results = equipmentAppService.getAllEquipments();
-        return ResponseMessage.success(equipmentAppConverter.toDTOList(results));
+        return ResponseMessage.success(equipmentResponseConverter.toDTOList(results));
     }
 
     @Operation(summary = "获取设备详情", description = "根据ID获取设备详情")
@@ -44,6 +44,6 @@ public class EquipmentController {
     @GetMapping("/{id}")
     public ResponseMessage<EquipmentDTO> getEquipmentById(@PathVariable Long id) {
         EquipmentResult result = equipmentAppService.getEquipmentDetail(id);
-        return ResponseMessage.success(equipmentAppConverter.toDTO(result));
+        return ResponseMessage.success(equipmentResponseConverter.toDTO(result));
     }
 }

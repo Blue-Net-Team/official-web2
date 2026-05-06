@@ -14,12 +14,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.bluenet.web.api.dto.PageDTO;
-import com.bluenet.web.api.dto.competition.CompetitionRequestDTO;
-import com.bluenet.web.api.dto.competition.CompetitionResponseDTO;
 import com.bluenet.web.application.CompetitionResult;
 import com.bluenet.web.application.command.competition.CompetitionCommands;
-import com.bluenet.web.application.converter.CompetitionAppConverter;
 import com.bluenet.web.domain.exception.DataNotFound;
 import com.bluenet.web.domain.model.entity.Competition;
 import com.bluenet.web.domain.model.enumerate.AwardLevel;
@@ -36,9 +32,6 @@ class CompetitionAppServiceImplTest {
 
     @Mock
     private CompetitionRepository competitionRepository;
-
-    @Mock
-    private CompetitionAppConverter competitionAppConverter;
 
     @Mock
     private FileDomainService fileDomainService;
@@ -60,46 +53,35 @@ class CompetitionAppServiceImplTest {
                 .build();
     }
 
-    private CompetitionRequestDTO createTestRequest() {
-        return CompetitionRequestDTO.builder()
-                .name(TEST_NAME)
-                .shortName(TEST_SHORT_NAME)
-                .logoFileId(null)
-                .coverFileId(null)
-                .summary(TEST_SUMMARY)
-                .level("national")
-                .month("4月")
-                .organizer("工信部")
-                .build();
+    private CompetitionCommands.CreateCompetitionCommand createTestCreateCommand() {
+        return new CompetitionCommands.CreateCompetitionCommand(
+                TEST_NAME, TEST_SHORT_NAME, null, null, TEST_SUMMARY,
+                AwardLevel.NATIONAL, "4月", "工信部");
+    }
+
+    private CompetitionCommands.UpdateCompetitionCommand createTestUpdateCommand() {
+        return new CompetitionCommands.UpdateCompetitionCommand(
+                TEST_ID, TEST_NAME, TEST_SHORT_NAME, null, null, TEST_SUMMARY,
+                AwardLevel.NATIONAL, "4月", "工信部");
     }
 
     // ==================== getCompetitionResponseList ====================
 
     @Test
-    @DisplayName("获取竞赛响应列表：应返回响应DTO列表")
-    void getCompetitionResponseList_shouldReturnResponseDTOs() {
+    @DisplayName("获取竞赛响应列表：应返回VO列表")
+    void getCompetitionResponseList_shouldReturnVOList() {
         int limit = 10;
         List<CompetitionVO> voList = new ArrayList<>();
         voList.add(createTestCompetitionBriefVO());
 
-        List<CompetitionResponseDTO> expectedDTOs = new ArrayList<>();
-        expectedDTOs.add(
-                CompetitionResponseDTO.builder()
-                        .id(TEST_ID)
-                        .name(TEST_NAME)
-                        .summary(TEST_SUMMARY)
-                        .build());
-
         when(competitionRepository.findCompetitionsWithLimit(limit)).thenReturn(voList);
-        when(competitionAppConverter.convertToResponseDTOList(voList)).thenReturn(expectedDTOs);
 
-        List<CompetitionResponseDTO> result = competitionAppService.getCompetitionResponseList(limit);
+        List<CompetitionVO> result = competitionAppService.getCompetitionResponseList(limit);
 
         assertNotNull(result);
         assertEquals(1, result.size());
         assertEquals(TEST_ID, result.get(0).getId());
         verify(competitionRepository).findCompetitionsWithLimit(limit);
-        verify(competitionAppConverter).convertToResponseDTOList(voList);
     }
 
     @Test
@@ -107,12 +89,10 @@ class CompetitionAppServiceImplTest {
     void getCompetitionResponseList_limitLessThanOne_shouldUseOne() {
         int limit = 0;
         List<CompetitionVO> voList = new ArrayList<>();
-        List<CompetitionResponseDTO> expectedDTOs = new ArrayList<>();
 
         when(competitionRepository.findCompetitionsWithLimit(1)).thenReturn(voList);
-        when(competitionAppConverter.convertToResponseDTOList(voList)).thenReturn(expectedDTOs);
 
-        List<CompetitionResponseDTO> result = competitionAppService.getCompetitionResponseList(limit);
+        List<CompetitionVO> result = competitionAppService.getCompetitionResponseList(limit);
 
         assertNotNull(result);
         verify(competitionRepository).findCompetitionsWithLimit(1);
@@ -123,12 +103,10 @@ class CompetitionAppServiceImplTest {
     void getCompetitionResponseList_emptyList_shouldReturnEmptyList() {
         int limit = 10;
         List<CompetitionVO> voList = new ArrayList<>();
-        List<CompetitionResponseDTO> expectedDTOs = new ArrayList<>();
 
         when(competitionRepository.findCompetitionsWithLimit(limit)).thenReturn(voList);
-        when(competitionAppConverter.convertToResponseDTOList(voList)).thenReturn(expectedDTOs);
 
-        List<CompetitionResponseDTO> result = competitionAppService.getCompetitionResponseList(limit);
+        List<CompetitionVO> result = competitionAppService.getCompetitionResponseList(limit);
 
         assertNotNull(result);
         assertTrue(result.isEmpty());
@@ -139,10 +117,7 @@ class CompetitionAppServiceImplTest {
     @Test
     @DisplayName("创建竞赛：应成功创建并返回结果")
     void createCompetition_shouldCreateAndReturnResult() {
-        CompetitionRequestDTO request = createTestRequest();
-        CompetitionCommands.CreateCompetitionCommand command = new CompetitionCommands.CreateCompetitionCommand(
-                request.getName(), request.getShortName(), request.getLogoFileId(), request.getCoverFileId(),
-                request.getSummary(), AwardLevel.NATIONAL, request.getMonth(), request.getOrganizer());
+        CompetitionCommands.CreateCompetitionCommand command = createTestCreateCommand();
 
         when(competitionRepository.findMaxSortOrder()).thenReturn(0);
 
@@ -159,10 +134,7 @@ class CompetitionAppServiceImplTest {
     @Test
     @DisplayName("更新竞赛：应成功更新并返回结果")
     void updateCompetition_shouldUpdateAndReturnResult() {
-        CompetitionRequestDTO request = createTestRequest();
-        CompetitionCommands.UpdateCompetitionCommand command = new CompetitionCommands.UpdateCompetitionCommand(
-                TEST_ID, request.getName(), request.getShortName(), request.getLogoFileId(), request.getCoverFileId(),
-                request.getSummary(), AwardLevel.NATIONAL, request.getMonth(), request.getOrganizer());
+        CompetitionCommands.UpdateCompetitionCommand command = createTestUpdateCommand();
 
         Competition existing = Competition.reconstruct(
                 TEST_ID,
@@ -188,10 +160,7 @@ class CompetitionAppServiceImplTest {
     @Test
     @DisplayName("更新竞赛：竞赛不存在应抛出异常")
     void updateCompetition_notFound_shouldThrowException() {
-        CompetitionRequestDTO request = createTestRequest();
-        CompetitionCommands.UpdateCompetitionCommand command = new CompetitionCommands.UpdateCompetitionCommand(
-                TEST_ID, request.getName(), request.getShortName(), request.getLogoFileId(), request.getCoverFileId(),
-                request.getSummary(), AwardLevel.NATIONAL, request.getMonth(), request.getOrganizer());
+        CompetitionCommands.UpdateCompetitionCommand command = createTestUpdateCommand();
 
         when(competitionRepository.findById(TEST_ID)).thenReturn(Optional.empty());
 
@@ -245,15 +214,9 @@ class CompetitionAppServiceImplTest {
         voList.add(createTestCompetitionBriefVO());
         Page<CompetitionVO> voPage = new PageImpl<>(voList, PageRequest.of(0, 10), 1);
 
-        List<CompetitionResponseDTO> dtoList = new ArrayList<>();
-        dtoList.add(
-                CompetitionResponseDTO.builder().id(TEST_ID).name(TEST_NAME).summary(TEST_SUMMARY).build());
-        Page<CompetitionResponseDTO> dtoPage = new PageImpl<>(dtoList, PageRequest.of(0, 10), 1);
-
         when(competitionRepository.findCompetitionsPage(PageRequest.of(0, 10))).thenReturn(voPage);
-        when(competitionAppConverter.convertToDTOPage(voPage)).thenReturn(dtoPage);
 
-        PageDTO<CompetitionResponseDTO> result = competitionAppService.getCompetitionPage(null, null);
+        Page<CompetitionVO> result = competitionAppService.getCompetitionPage(null, null);
 
         assertNotNull(result);
         assertEquals(1, result.getTotalElements());

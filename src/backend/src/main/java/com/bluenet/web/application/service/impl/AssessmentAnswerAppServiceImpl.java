@@ -1,9 +1,8 @@
 package com.bluenet.web.application.service.impl;
 
-import com.bluenet.web.api.dto.assessment_judgement.AssessmentJudgementDTO;
 import com.bluenet.web.application.AssessmentAnswerResult;
+import com.bluenet.web.application.AssessmentJudgementResult;
 import com.bluenet.web.application.command.assessment_answer.AssessmentAnswerCommands;
-import com.bluenet.web.application.converter.AssessmentJudgementAppConverter;
 import com.bluenet.web.application.service.AssessmentAnswerAppService;
 import com.bluenet.web.domain.exception.BadRequest;
 import com.bluenet.web.domain.exception.DataConflict;
@@ -67,7 +66,6 @@ public class AssessmentAnswerAppServiceImpl implements AssessmentAnswerAppServic
     private final AssessmentAnswerRepository assessmentAnswerRepository;
     private final AssessmentSessionRepository assessmentSessionRepository;
     private final ObjectMapper objectMapper;
-    private final AssessmentJudgementAppConverter assessmentJudgementAppConverter;
     private final UserDomainService userDomainService;
 
     /**
@@ -364,7 +362,6 @@ public class AssessmentAnswerAppServiceImpl implements AssessmentAnswerAppServic
     }
 
     private AssessmentAnswerResult toResult(AssessmentAnswer answer, AssessmentJudgementVO judgement) {
-        AssessmentJudgementDTO judgementDTO = assessmentJudgementAppConverter.convertToDTO(judgement);
         return new AssessmentAnswerResult(
                 answer.getId(),
                 answer.getQuestionId(),
@@ -372,6 +369,27 @@ public class AssessmentAnswerAppServiceImpl implements AssessmentAnswerAppServic
                 answer.getContent(),
                 answer.getLanguage(),
                 answer.getSubmitTime(),
-                judgementDTO);
+                toJudgementResult(judgement));
+    }
+
+    private AssessmentJudgementResult toJudgementResult(AssessmentJudgementVO judgement) {
+        if (judgement == null) {
+            return null;
+        }
+        return new AssessmentJudgementResult(
+                judgement.getId(),
+                judgement.getAnswerId(),
+                judgement.getQuestionId(),
+                judgement.getAssessmentTimeId(),
+                judgement.getUserId(),
+                judgement.getScore(),
+                judgement.getMaxScore(),
+                judgement.getStatus(),
+                judgement.getResultCode(),
+                judgement.getSource(),
+                judgement.getReviewerId(),
+                judgement.getReviewerType(),
+                judgement.getComment(),
+                judgement.getJudgedAt());
     }
 }

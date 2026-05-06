@@ -5,7 +5,7 @@ import com.bluenet.web.api.dto.ResponseMessage;
 import com.bluenet.web.api.dto.assessment_answer.AssessmentAnswerDTO;
 import com.bluenet.web.api.dto.assessment_answer.CreateAnswerRequestDTO;
 import com.bluenet.web.application.AssessmentAnswerResult;
-import com.bluenet.web.application.converter.AssessmentAnswerAppConverter;
+import com.bluenet.web.api.converter.assessment_answer.AssessmentAnswerResponseConverter;
 import com.bluenet.web.application.service.AssessmentAnswerAppService;
 import com.bluenet.web.domain.model.vo.UserVO;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
@@ -32,7 +32,7 @@ public class AssessmentAnswerController {
 
     private final AssessmentAnswerAppService assessmentAnswerAppService;
     private final AssessmentAnswerRequestConverter requestConverter;
-    private final AssessmentAnswerAppConverter appConverter;
+    private final AssessmentAnswerResponseConverter responseConverter;
 
     @Operation(summary = "提交答案", description = "提交指定题目的答案。支持文件上传题（传fileId）和内容题（传content）。")
     @ApiResponses({
@@ -50,7 +50,7 @@ public class AssessmentAnswerController {
         }
         AssessmentAnswerResult result = assessmentAnswerAppService.createAnswer(
                 requestConverter.toCreateCommand(currentUser.getId(), request));
-        return ResponseMessage.success(appConverter.toDTO(result));
+        return ResponseMessage.success(responseConverter.toDTO(result));
     }
 
     @Operation(summary = "更新答案", description = "重新提交指定题目的答案。支持文件上传题（传fileId）和内容题（传content）。")
@@ -68,7 +68,7 @@ public class AssessmentAnswerController {
         }
         AssessmentAnswerResult result = assessmentAnswerAppService.updateAnswer(
                 requestConverter.toUpdateCommand(currentUser.getId(), request));
-        return ResponseMessage.success(appConverter.toDTO(result));
+        return ResponseMessage.success(responseConverter.toDTO(result));
     }
 
     @Operation(summary = "查询我的答案", description = "查询当前用户对指定题目的答案")
@@ -88,6 +88,6 @@ public class AssessmentAnswerController {
         if (result == null) {
             return ResponseMessage.error(404, "未找到答案");
         }
-        return ResponseMessage.success(appConverter.toDTO(result));
+        return ResponseMessage.success(responseConverter.toDTO(result));
     }
 }

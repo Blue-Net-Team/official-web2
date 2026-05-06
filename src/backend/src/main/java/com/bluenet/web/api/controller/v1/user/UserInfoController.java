@@ -3,7 +3,7 @@ package com.bluenet.web.api.controller.v1.user;
 import com.bluenet.web.api.dto.ResponseMessage;
 import com.bluenet.web.api.dto.user.ResponseMessageUserInfo;
 import com.bluenet.web.api.dto.user.UserInfo;
-import com.bluenet.web.application.converter.UserInfoAppConverter;
+import com.bluenet.web.api.converter.userinfo.UserInfoResponseConverter;
 import com.bluenet.web.application.service.UserInfoAppService;
 import com.bluenet.web.domain.exception.Unauthorized;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
@@ -28,7 +28,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 class UserInfoController {
     private final UserInfoAppService userInfoAppService;
-    private final UserInfoAppConverter userInfoAppConverter;
+    private final UserInfoResponseConverter userInfoResponseConverter;
 
     @Operation(summary = "获取当前用户信息", description = "返回当前登录用户的基本信息。请求头必须携带 Authorization: Bearer <token>。")
     @ApiResponses({
@@ -41,7 +41,7 @@ class UserInfoController {
     public ResponseMessage<UserInfo> getMyInfo() {
         // 调用应用层
         try {
-            return ResponseMessage.success(userInfoAppConverter.toDTO(userInfoAppService.getMyInfo()));
+            return ResponseMessage.success(userInfoResponseConverter.toDTO(userInfoAppService.getMyInfo()));
         } catch (Unauthorized unauthorized) {
             return ResponseMessage.error(unauthorized);
         }

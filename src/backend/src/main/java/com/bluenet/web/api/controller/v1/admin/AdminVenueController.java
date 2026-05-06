@@ -7,7 +7,7 @@ import com.bluenet.web.api.dto.venue.VenueDTO;
 import com.bluenet.web.api.converter.venue.VenueRequestConverter;
 import com.bluenet.web.application.VenueResult;
 import com.bluenet.web.application.command.venue.VenueCommands;
-import com.bluenet.web.application.converter.VenueAppConverter;
+import com.bluenet.web.api.converter.venue.VenueResponseConverter;
 import com.bluenet.web.application.service.VenueAppService;
 import com.bluenet.web.domain.exception.DataNotFound;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
@@ -34,7 +34,7 @@ import org.springframework.web.bind.annotation.*;
 public class AdminVenueController {
     private final VenueAppService venueAppService;
     private final VenueRequestConverter venueRequestConverter;
-    private final VenueAppConverter venueAppConverter;
+    private final VenueResponseConverter venueResponseConverter;
 
     @Operation(summary = "创建场地", description = "创建新的场地")
     @RequiresPermission(name = "创建场地", value = "venue:create", access = AccessLevel.PROTECTED)
@@ -43,7 +43,7 @@ public class AdminVenueController {
         try {
             VenueCommands.CreateVenueCommand command = venueRequestConverter.toCommand(request);
             VenueResult result = venueAppService.createVenue(command);
-            return ResponseMessage.success(venueAppConverter.toDTO(result));
+            return ResponseMessage.success(venueResponseConverter.toDTO(result));
         } catch (IllegalArgumentException e) {
             return ResponseMessage.error(400, e.getMessage());
         }
@@ -58,7 +58,7 @@ public class AdminVenueController {
         try {
             VenueCommands.UpdateVenueCommand command = venueRequestConverter.toCommand(id, request);
             VenueResult result = venueAppService.updateVenue(command);
-            return ResponseMessage.success(venueAppConverter.toDTO(result));
+            return ResponseMessage.success(venueResponseConverter.toDTO(result));
         } catch (DataNotFound e) {
             return ResponseMessage.error(404, e.getMessage());
         } catch (IllegalArgumentException e) {

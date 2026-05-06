@@ -7,7 +7,7 @@ import com.bluenet.web.api.converter.permission.PermissionRequestConverter;
 import com.bluenet.web.api.converter.rolepermission.RolePermissionManageRequestConverter;
 import com.bluenet.web.application.PermissionResult;
 import com.bluenet.web.application.RolePermissionManageResult;
-import com.bluenet.web.application.converter.PermissionAppConverter;
+import com.bluenet.web.api.converter.permission.PermissionResponseConverter;
 import com.bluenet.web.application.service.PermissionAppService;
 import com.bluenet.web.application.service.RolePermissionManageAppService;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
@@ -38,7 +38,7 @@ public class PermissionAdminController {
     private final RolePermissionManageAppService rolePermissionManageAppService;
     private final PermissionRequestConverter permissionRequestConverter;
     private final RolePermissionManageRequestConverter rolePermissionManageRequestConverter;
-    private final PermissionAppConverter permissionAppConverter;
+    private final PermissionResponseConverter permissionResponseConverter;
 
     @Operation(summary = "分页查询权限列表", description = "分页查询权限列表，支持关键词搜索和格式筛选")
     @ApiResponses({
@@ -51,7 +51,7 @@ public class PermissionAdminController {
                 .getPermissions(permissionRequestConverter.toCommand(query));
         List<PermissionDTO> dtoList = resultPage.getContent()
                 .stream()
-                .map(permissionAppConverter::toDTO)
+                .map(permissionResponseConverter::toDTO)
                 .toList();
         Page<PermissionDTO> dtoPage = new PageImpl<>(dtoList, resultPage.getPageable(), resultPage.getTotalElements());
         return ResponseMessage.success(PageDTO.from(dtoPage));
@@ -67,7 +67,7 @@ public class PermissionAdminController {
     public ResponseMessage<PermissionDTO> getPermissionDetail(
             @Parameter(description = "权限ID", required = true) @PathVariable Long id) {
         PermissionResult result = permissionAppService.getPermissionDetail(id);
-        return ResponseMessage.success(permissionAppConverter.toDTO(result));
+        return ResponseMessage.success(permissionResponseConverter.toDTO(result));
     }
 
     @Operation(summary = "获取权限树", description = "获取权限的树形结构，用于前端展示")
@@ -78,7 +78,7 @@ public class PermissionAdminController {
     @GetMapping("/tree")
     public ResponseMessage<List<PermissionTreeDTO>> getPermissionTree() {
         List<PermissionResult> results = permissionAppService.getPermissionTree();
-        return ResponseMessage.success(permissionAppConverter.buildPermissionTree(results));
+        return ResponseMessage.success(permissionResponseConverter.buildPermissionTree(results));
     }
 
     @Operation(summary = "获取权限对应的角色列表", description = "获取拥有指定权限的所有角色名称列表")

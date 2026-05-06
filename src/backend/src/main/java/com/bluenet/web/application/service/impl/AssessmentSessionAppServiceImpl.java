@@ -1,6 +1,6 @@
 package com.bluenet.web.application.service.impl;
 
-import com.bluenet.web.api.dto.assessment_session.AssessmentSessionDTO;
+import com.bluenet.web.application.AssessmentSessionResult;
 import com.bluenet.web.application.command.assessment_session.AssessmentSessionCommands;
 import com.bluenet.web.application.service.AssessmentSessionAppService;
 import com.bluenet.web.domain.model.entity.AssessmentSession;
@@ -33,11 +33,11 @@ public class AssessmentSessionAppServiceImpl implements AssessmentSessionAppServ
      *
      * @param command
      *            获取或创建会话命令
-     * @return 考核会话DTO
+     * @return 考核会话结果
      */
     @Override
     @Transactional
-    public AssessmentSessionDTO getOrCreateSession(AssessmentSessionCommands.GetOrCreateSessionCommand command) {
+    public AssessmentSessionResult getOrCreateSession(AssessmentSessionCommands.GetOrCreateSessionCommand command) {
         Long userId = command.userId();
         Long assessmentTimeId = command.assessmentTimeId();
 
@@ -60,13 +60,12 @@ public class AssessmentSessionAppServiceImpl implements AssessmentSessionAppServ
         if (existing.isPresent()) {
             log.debug("session already exists for userId: {}, assessmentTimeId: {}", userId, assessmentTimeId);
             AssessmentSession session = existing.get();
-            return AssessmentSessionDTO.builder()
-                    .id(session.getId())
-                    .userId(session.getUserId())
-                    .assessmentTimeId(session.getAssessmentTimeId())
-                    .startTime(session.getStartTime())
-                    .deadline(session.getDeadline())
-                    .build();
+            return new AssessmentSessionResult(
+                    session.getId(),
+                    session.getUserId(),
+                    session.getAssessmentTimeId(),
+                    session.getStartTime(),
+                    session.getDeadline());
         }
 
         LocalDateTime startTime = LocalDateTime.now();
@@ -84,12 +83,11 @@ public class AssessmentSessionAppServiceImpl implements AssessmentSessionAppServ
                 assessmentTimeId,
                 deadline);
 
-        return AssessmentSessionDTO.builder()
-                .id(entity.getId())
-                .userId(entity.getUserId())
-                .assessmentTimeId(entity.getAssessmentTimeId())
-                .startTime(entity.getStartTime())
-                .deadline(entity.getDeadline())
-                .build();
+        return new AssessmentSessionResult(
+                entity.getId(),
+                entity.getUserId(),
+                entity.getAssessmentTimeId(),
+                entity.getStartTime(),
+                entity.getDeadline());
     }
 }

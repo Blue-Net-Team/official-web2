@@ -15,7 +15,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.bluenet.web.application.AchievementResult;
 import com.bluenet.web.application.command.achievement.AchievementCommands;
-import com.bluenet.web.application.converter.AchievementAppConverter;
 import com.bluenet.web.domain.exception.DataNotFound;
 import com.bluenet.web.domain.model.entity.Achievement;
 import com.bluenet.web.domain.model.enumerate.AchievementType;
@@ -31,9 +30,6 @@ class AchievementAppServiceImplTest {
 
     @Mock
     private FileDomainService fileDomainService;
-
-    @Mock
-    private AchievementAppConverter achievementAppConverter;
 
     @Mock
     private AchievementRepository achievementRepository;

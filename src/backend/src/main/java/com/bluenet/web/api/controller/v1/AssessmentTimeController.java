@@ -5,7 +5,10 @@ import com.bluenet.web.api.dto.ResponseMessage;
 import com.bluenet.web.api.dto.assessment_time.AssessmentProgressDTO;
 import com.bluenet.web.api.dto.assessment_time.AssessmentTimeDTO;
 import com.bluenet.web.api.dto.assessment_time.ResponseMessageAssessmentTimeList;
+import com.bluenet.web.api.converter.assessment_time.AssessmentTimeResponseConverter;
+import com.bluenet.web.application.AssessmentTimeResult;
 import com.bluenet.web.application.service.AssessmentTimeAppService;
+import org.springframework.data.domain.Page;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
 import com.bluenet.web.infrastructure.security.annotation.RequiresPermission;
 import io.swagger.v3.oas.annotations.Operation;
@@ -32,6 +35,7 @@ import org.springframework.web.bind.annotation.*;
 @SecurityRequirement(name = "bearer-jwt")
 public class AssessmentTimeController {
     private final AssessmentTimeAppService assessmentTimeAppService;
+    private final AssessmentTimeResponseConverter responseConverter;
 
     @Operation(summary = "查询考核时间列表", description = "分页查询当前用户可见的考核时间。考生只能看到自己方向和年级的考核时间，成员可以看到自己方向的全部考核时间，方向管理员及以上可以查看所有考核时间。")
     @ApiResponses({
@@ -42,8 +46,8 @@ public class AssessmentTimeController {
     public ResponseMessage<PageDTO<AssessmentTimeDTO>> listAssessmentTimes(
             @Parameter(description = "页码（从0开始，默认0）") @RequestParam(required = false, defaultValue = "0") Integer page,
             @Parameter(description = "每页大小（默认5）") @RequestParam(required = false, defaultValue = "5") Integer size) {
-        PageDTO<AssessmentTimeDTO> result = assessmentTimeAppService.listAssessmentTimesForUser(page, size);
-        return ResponseMessage.success(result);
+        Page<AssessmentTimeResult> result = assessmentTimeAppService.listAssessmentTimesForUser(page, size);
+        return ResponseMessage.success(PageDTO.from(result.map(responseConverter::toDTO)));
     }
 
     @Operation(summary = "查询考核进度", description = "查询指定考核时间的答题进度，包括题目总数和已完成题目数")
@@ -51,7 +55,6 @@ public class AssessmentTimeController {
     @GetMapping("/{id}/progress")
     public ResponseMessage<AssessmentProgressDTO> getAssessmentProgress(
             @Parameter(description = "考核时间ID") @PathVariable Long id) {
-        AssessmentProgressDTO progress = assessmentTimeAppService.getAssessmentProgress(id);
-        return ResponseMessage.success(progress);
+        return ResponseMessage.success(responseConverter.toDTO(assessmentTimeAppService.getAssessmentProgress(id)));
     }
 }

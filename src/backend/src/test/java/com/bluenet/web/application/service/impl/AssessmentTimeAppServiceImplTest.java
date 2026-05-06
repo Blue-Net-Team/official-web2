@@ -1,11 +1,7 @@
 package com.bluenet.web.application.service.impl;
 
-import com.bluenet.web.api.dto.PageDTO;
-import com.bluenet.web.api.dto.assessment_time.AssessmentProgressDTO;
-import com.bluenet.web.api.dto.assessment_time.AssessmentTimeDTO;
 import com.bluenet.web.application.AssessmentTimeResult;
 import com.bluenet.web.application.command.assessment_time.AssessmentTimeCommands;
-import com.bluenet.web.application.converter.AssessmentTimeAppConverter;
 import com.bluenet.web.domain.exception.DataConflict;
 import com.bluenet.web.domain.exception.DataNotFound;
 import com.bluenet.web.domain.exception.Forbidden;
@@ -53,9 +49,6 @@ class AssessmentTimeAppServiceImplTest {
     @Mock
     private AssessmentAnswerRepository assessmentAnswerRepository;
 
-    @Mock
-    private AssessmentTimeAppConverter assessmentTimeAppConverter;
-
     @InjectMocks
     private AssessmentTimeAppServiceImpl assessmentTimeAppService;
 
@@ -73,19 +66,6 @@ class AssessmentTimeAppServiceImplTest {
                 futureEnd,
                 true,
                 120);
-    }
-
-    private AssessmentTimeDTO createTestDTO() {
-        return AssessmentTimeDTO.builder()
-                .id(TEST_ID)
-                .direction(Direction.COMPUTER_VISION)
-                .epoch(1)
-                .grade(2024)
-                .startTime(futureStart)
-                .endTime(futureEnd)
-                .timeLimit(true)
-                .timeLimitMinutes(120)
-                .build();
     }
 
     // ==================== createAssessmentTime 测试 ====================
@@ -424,9 +404,8 @@ class AssessmentTimeAppServiceImplTest {
                 Page<AssessmentTime> entityPage = new PageImpl<>(entityList);
                 when(assessmentTimeRepository.findByFilters(isNull(), isNull(), any()))
                         .thenReturn(entityPage);
-                when(assessmentTimeAppConverter.convertToDTO(any())).thenReturn(createTestDTO());
 
-                PageDTO<AssessmentTimeDTO> result = assessmentTimeAppService.listAssessmentTimes(0, 5);
+                Page<AssessmentTimeResult> result = assessmentTimeAppService.listAssessmentTimes(0, 5);
 
                 assertNotNull(result);
                 assertEquals(1, result.getContent().size());
@@ -449,9 +428,8 @@ class AssessmentTimeAppServiceImplTest {
                 Page<AssessmentTime> entityPage = new PageImpl<>(entityList);
                 when(assessmentTimeRepository.findByFilters(eq(Direction.COMPUTER_VISION), isNull(), any()))
                         .thenReturn(entityPage);
-                when(assessmentTimeAppConverter.convertToDTO(any())).thenReturn(createTestDTO());
 
-                PageDTO<AssessmentTimeDTO> result = assessmentTimeAppService.listAssessmentTimes(0, 5);
+                Page<AssessmentTimeResult> result = assessmentTimeAppService.listAssessmentTimes(0, 5);
 
                 assertNotNull(result);
                 verify(assessmentTimeRepository).findByFilters(eq(Direction.COMPUTER_VISION), isNull(), any());
@@ -474,9 +452,8 @@ class AssessmentTimeAppServiceImplTest {
                 Page<AssessmentTime> entityPage = new PageImpl<>(entityList);
                 when(assessmentTimeRepository.findByFilters(eq(Direction.COMPUTER_VISION), eq(2024), any()))
                         .thenReturn(entityPage);
-                when(assessmentTimeAppConverter.convertToDTO(any())).thenReturn(createTestDTO());
 
-                PageDTO<AssessmentTimeDTO> result = assessmentTimeAppService.listAssessmentTimes(0, 5);
+                Page<AssessmentTimeResult> result = assessmentTimeAppService.listAssessmentTimes(0, 5);
 
                 assertNotNull(result);
                 verify(assessmentTimeRepository)
@@ -494,7 +471,7 @@ class AssessmentTimeAppServiceImplTest {
                 when(assessmentTimeRepository.findByFilters(isNull(), isNull(), any()))
                         .thenReturn(entityPage);
 
-                PageDTO<AssessmentTimeDTO> result = assessmentTimeAppService.listAssessmentTimes(0, 5);
+                Page<AssessmentTimeResult> result = assessmentTimeAppService.listAssessmentTimes(0, 5);
 
                 assertNotNull(result);
                 assertTrue(result.getContent().isEmpty());
@@ -531,17 +508,15 @@ class AssessmentTimeAppServiceImplTest {
                                 any()))
                                         .thenReturn(entityPage);
 
-                AssessmentTimeDTO dto = createTestDTO();
-                when(assessmentTimeAppConverter.convertToDTO(any())).thenReturn(dto);
                 when(assessmentQuestionRepository.countByAssessmentTimeId(TEST_ID)).thenReturn(8);
                 when(assessmentAnswerRepository.countByUserIdAndAssessmentTimeId(1L, TEST_ID)).thenReturn(5);
 
-                PageDTO<AssessmentTimeDTO> result = assessmentTimeAppService.listAssessmentTimesForUser(0, 5);
+                Page<AssessmentTimeResult> result = assessmentTimeAppService.listAssessmentTimesForUser(0, 5);
 
                 assertNotNull(result);
                 assertEquals(1, result.getContent().size());
-                assertEquals(8, result.getContent().get(0).getTotalQuestions());
-                assertEquals(5, result.getContent().get(0).getCompletedQuestions());
+                assertEquals(8, result.getContent().get(0).totalQuestions());
+                assertEquals(5, result.getContent().get(0).completedQuestions());
                 verify(assessmentTimeRepository).findByUserParticipation(
                         eq(1L),
                         eq(Direction.COMPUTER_VISION),
@@ -556,7 +531,7 @@ class AssessmentTimeAppServiceImplTest {
             try (MockedStatic<UserCTX> mockedUserCTX = mockStatic(UserCTX.class)) {
                 mockedUserCTX.when(UserCTX::getCurrentUser).thenReturn(null);
 
-                PageDTO<AssessmentTimeDTO> result = assessmentTimeAppService.listAssessmentTimesForUser(0, 5);
+                Page<AssessmentTimeResult> result = assessmentTimeAppService.listAssessmentTimesForUser(0, 5);
 
                 assertNotNull(result);
                 assertTrue(result.getContent().isEmpty());
@@ -587,12 +562,13 @@ class AssessmentTimeAppServiceImplTest {
                 when(assessmentQuestionRepository.countByAssessmentTimeId(TEST_ID)).thenReturn(8);
                 when(assessmentAnswerRepository.countByUserIdAndAssessmentTimeId(1L, TEST_ID)).thenReturn(5);
 
-                AssessmentProgressDTO result = assessmentTimeAppService.getAssessmentProgress(TEST_ID);
+                com.bluenet.web.application.AssessmentProgressResult result = assessmentTimeAppService
+                        .getAssessmentProgress(TEST_ID);
 
                 assertNotNull(result);
-                assertEquals(TEST_ID, result.getAssessmentTimeId());
-                assertEquals(8, result.getTotalQuestions());
-                assertEquals(5, result.getCompletedQuestions());
+                assertEquals(TEST_ID, result.assessmentTimeId());
+                assertEquals(8, result.totalQuestions());
+                assertEquals(5, result.completedQuestions());
             }
         }
 
@@ -616,10 +592,11 @@ class AssessmentTimeAppServiceImplTest {
                 when(assessmentTimeRepository.findById(TEST_ID)).thenReturn(Optional.of(createTestEntity()));
                 when(assessmentQuestionRepository.countByAssessmentTimeId(TEST_ID)).thenReturn(10);
 
-                AssessmentProgressDTO result = assessmentTimeAppService.getAssessmentProgress(TEST_ID);
+                com.bluenet.web.application.AssessmentProgressResult result = assessmentTimeAppService
+                        .getAssessmentProgress(TEST_ID);
 
-                assertEquals(10, result.getTotalQuestions());
-                assertEquals(0, result.getCompletedQuestions());
+                assertEquals(10, result.totalQuestions());
+                assertEquals(0, result.completedQuestions());
                 verifyNoInteractions(assessmentAnswerRepository);
             }
         }

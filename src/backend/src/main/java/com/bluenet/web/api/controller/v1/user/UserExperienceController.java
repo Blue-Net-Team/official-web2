@@ -5,7 +5,7 @@ import com.bluenet.web.api.dto.experience.CreateExperienceRequestDTO;
 import com.bluenet.web.api.dto.experience.ExperienceDTO;
 import com.bluenet.web.api.dto.experience.UpdateExperienceRequestDTO;
 import com.bluenet.web.api.converter.userexperience.UserExperienceRequestConverter;
-import com.bluenet.web.application.converter.UserExperienceAppConverter;
+import com.bluenet.web.api.converter.userexperience.UserExperienceResponseConverter;
 import com.bluenet.web.application.service.UserExperienceAppService;
 import com.bluenet.web.domain.exception.GlobalException;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
@@ -34,7 +34,7 @@ import java.util.List;
 class UserExperienceController {
     private final UserExperienceAppService userExperienceAppService;
     private final UserExperienceRequestConverter requestConverter;
-    private final UserExperienceAppConverter appConverter;
+    private final UserExperienceResponseConverter responseConverter;
 
     @Operation(summary = "获取经历列表", description = "返回当前登录用户的经历列表，可通过type参数过滤")
     @ApiResponses({
@@ -47,7 +47,7 @@ class UserExperienceController {
     public ResponseMessage<List<ExperienceDTO>> getExperiences(
             @Parameter(description = "经历类型：PROJECT/COMPETITION/INTERNSHIP") @RequestParam(required = false) String type) {
         try {
-            return ResponseMessage.success(appConverter.toDTOList(userExperienceAppService.getExperiences(type)));
+            return ResponseMessage.success(responseConverter.toDTOList(userExperienceAppService.getExperiences(type)));
         } catch (GlobalException e) {
             return ResponseMessage.error(e);
         }
@@ -66,7 +66,7 @@ class UserExperienceController {
     public ResponseMessage<ExperienceDTO> createExperience(@RequestBody CreateExperienceRequestDTO request) {
         try {
             return ResponseMessage.success(
-                    appConverter.toDTO(
+                    responseConverter.toDTO(
                             userExperienceAppService.createExperience(requestConverter.toCommand(request))));
         } catch (GlobalException e) {
             return ResponseMessage.error(e);
@@ -90,7 +90,7 @@ class UserExperienceController {
             @RequestBody UpdateExperienceRequestDTO request) {
         try {
             return ResponseMessage.success(
-                    appConverter.toDTO(
+                    responseConverter.toDTO(
                             userExperienceAppService.updateExperience(requestConverter.toCommand(id, request))));
         } catch (GlobalException e) {
             return ResponseMessage.error(e);

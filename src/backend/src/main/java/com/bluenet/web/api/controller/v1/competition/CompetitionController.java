@@ -4,7 +4,9 @@ import com.bluenet.web.api.dto.PageDTO;
 import com.bluenet.web.api.dto.ResponseMessage;
 import com.bluenet.web.api.dto.competition.CompetitionResponseDTO;
 import com.bluenet.web.api.dto.competition.ResponseMessageCompetitionList;
+import com.bluenet.web.api.converter.competition.CompetitionResponseConverter;
 import com.bluenet.web.application.service.CompetitionAppService;
+import com.bluenet.web.domain.model.vo.CompetitionVO;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
 import com.bluenet.web.infrastructure.security.annotation.RequiresPermission;
 import io.swagger.v3.oas.annotations.Operation;
@@ -25,6 +27,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class CompetitionController {
     private final CompetitionAppService competitionAppService;
+    private final CompetitionResponseConverter responseConverter;
 
     @Operation(summary = "获取竞赛列表", description = "获取启用的竞赛简要信息列表，按排序权重降序排列")
     @ApiResponses({
@@ -33,8 +36,8 @@ public class CompetitionController {
     @GetMapping
     public ResponseMessage<List<CompetitionResponseDTO>> getCompetitionList(
             @Parameter(description = "返回数量限制，默认10，最大50", example = "10") @RequestParam(defaultValue = "10") int limit) {
-        List<CompetitionResponseDTO> competitions = competitionAppService.getCompetitionResponseList(limit);
-        return ResponseMessage.success(competitions);
+        List<CompetitionVO> competitions = competitionAppService.getCompetitionResponseList(limit);
+        return ResponseMessage.success(responseConverter.toDTOList(competitions));
     }
 
     @Operation(summary = "分页获取竞赛列表", description = "分页查询竞赛列表，按排序权重降序排列")
@@ -43,7 +46,8 @@ public class CompetitionController {
     public ResponseMessage<PageDTO<CompetitionResponseDTO>> getCompetitionPage(
             @Parameter(description = "页码，从0开始，默认0", example = "0") @RequestParam(required = false) Integer page,
             @Parameter(description = "每页数量，默认10，最大50", example = "10") @RequestParam(required = false) Integer size) {
-        PageDTO<CompetitionResponseDTO> result = competitionAppService.getCompetitionPage(page, size);
-        return ResponseMessage.success(result);
+        org.springframework.data.domain.Page<CompetitionVO> result = competitionAppService
+                .getCompetitionPage(page, size);
+        return ResponseMessage.success(responseConverter.toPageDTO(result));
     }
 }

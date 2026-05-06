@@ -1,7 +1,6 @@
 package com.bluenet.web.application.service.impl;
 
-import com.bluenet.web.api.dto.judge.ConfirmJudgeLanguageLimitRequestDTO;
-import com.bluenet.web.api.dto.judge.UpsertJudgeProblemConfigRequestDTO;
+import com.bluenet.web.application.command.judge.JudgeProblemConfigCommands;
 import com.bluenet.web.infrastructure.judge.JudgeTestDataGenerationPublisher;
 import com.bluenet.web.infrastructure.repository.dataobject.JudgeProblemConfigDO;
 import com.bluenet.web.infrastructure.repository.dataobject.JudgeStandardSolutionDO;
@@ -75,8 +74,8 @@ class JudgeProblemConfigAdminServiceImplTest {
     @Test
     @DisplayName("保存配置：主标准解语言不在列表中应拒绝")
     void upsert_primaryLanguageNotInSolutions_shouldThrow() {
-        UpsertJudgeProblemConfigRequestDTO request = createValidRequest();
-        UpsertJudgeProblemConfigRequestDTO invalidRequest = new UpsertJudgeProblemConfigRequestDTO(
+        JudgeProblemConfigCommands.UpsertCommand request = createValidCommand();
+        JudgeProblemConfigCommands.UpsertCommand invalidRequest = new JudgeProblemConfigCommands.UpsertCommand(
                 request.generatorLanguage(),
                 request.generatorSource(),
                 "java",
@@ -97,11 +96,11 @@ class JudgeProblemConfigAdminServiceImplTest {
     @Test
     @DisplayName("保存配置：应上传 generator 和标准解到 OSS 并持久化配置")
     void upsert_validRequest_shouldUploadAssetsAndPersist() {
-        UpsertJudgeProblemConfigRequestDTO request = createValidRequest();
+        JudgeProblemConfigCommands.UpsertCommand command = createValidCommand();
         when(judgeProblemConfigMapper.upsertCurrentConfig(any())).thenReturn(CONFIG_ID);
         when(judgeProblemConfigMapper.selectByQuestionId(QUESTION_ID)).thenReturn(createConfigDO());
 
-        service.upsert(QUESTION_ID, request);
+        service.upsert(QUESTION_ID, command);
 
         ArgumentCaptor<String> keyCaptor = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<byte[]> contentCaptor = ArgumentCaptor.forClass(byte[].class);
@@ -119,11 +118,11 @@ class JudgeProblemConfigAdminServiceImplTest {
     @Test
     @DisplayName("保存配置：生成的 manifest 应包含题目 ID 和 benchmark 配置")
     void upsert_shouldGenerateManifestWithCorrectStructure() throws Exception {
-        UpsertJudgeProblemConfigRequestDTO request = createValidRequest();
+        JudgeProblemConfigCommands.UpsertCommand command = createValidCommand();
         when(judgeProblemConfigMapper.upsertCurrentConfig(any())).thenReturn(CONFIG_ID);
         when(judgeProblemConfigMapper.selectByQuestionId(QUESTION_ID)).thenReturn(createConfigDO());
 
-        service.upsert(QUESTION_ID, request);
+        service.upsert(QUESTION_ID, command);
 
         ArgumentCaptor<String> manifestKeyCaptor = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<byte[]> manifestContentCaptor = ArgumentCaptor.forClass(byte[].class);
@@ -147,9 +146,10 @@ class JudgeProblemConfigAdminServiceImplTest {
     void confirmLanguageLimit_configNotFound_shouldThrow() {
         when(judgeProblemConfigMapper.selectIdByQuestionId(QUESTION_ID)).thenReturn(null);
 
-        ConfirmJudgeLanguageLimitRequestDTO request = new ConfirmJudgeLanguageLimitRequestDTO(1000, 256 * 1024, 1024);
+        JudgeProblemConfigCommands.ConfirmLanguageLimitCommand command = new JudgeProblemConfigCommands.ConfirmLanguageLimitCommand(
+                1000, 256 * 1024, 1024);
 
-        assertThatThrownBy(() -> service.confirmLanguageLimit(QUESTION_ID, "python", request))
+        assertThatThrownBy(() -> service.confirmLanguageLimit(QUESTION_ID, "python", command))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("判题配置不存在");
 
@@ -161,8 +161,9 @@ class JudgeProblemConfigAdminServiceImplTest {
     void confirmLanguageLimit_valid_shouldPersistAndMarkReady() {
         when(judgeProblemConfigMapper.selectIdByQuestionId(QUESTION_ID)).thenReturn(CONFIG_ID);
 
-        ConfirmJudgeLanguageLimitRequestDTO request = new ConfirmJudgeLanguageLimitRequestDTO(1000, 256 * 1024, 1024);
-        service.confirmLanguageLimit(QUESTION_ID, "python", request);
+        JudgeProblemConfigCommands.ConfirmLanguageLimitCommand command = new JudgeProblemConfigCommands.ConfirmLanguageLimitCommand(
+                1000, 256 * 1024, 1024);
+        service.confirmLanguageLimit(QUESTION_ID, "python", command);
 
         verify(judgeLanguageLimitMapper).upsertConfirmedLimit(
                 QUESTION_ID,
@@ -197,8 +198,8 @@ class JudgeProblemConfigAdminServiceImplTest {
         verify(testDataGenerationPublisher).publish(CONFIG_ID);
     }
 
-    private UpsertJudgeProblemConfigRequestDTO createValidRequest() {
-        return new UpsertJudgeProblemConfigRequestDTO(
+    private JudgeProblemConfigCommands.UpsertCommand createValidCommand() {
+        return new JudgeProblemConfigCommands.UpsertCommand(
                 "python",
                 "print('hello')",
                 "python",
@@ -207,10 +208,10 @@ class JudgeProblemConfigAdminServiceImplTest {
                 50,
                 50,
                 List.of(
-                        new UpsertJudgeProblemConfigRequestDTO.StandardSolutionRequest("python", "print(input())",
+                        new JudgeProblemConfigCommands.StandardSolutionCommand("python", "print(input())",
                                 true)),
                 List.of(
-                        new UpsertJudgeProblemConfigRequestDTO.TestcaseConfigRequest(
+                        new JudgeProblemConfigCommands.TestcaseConfigCommand(
                                 1, "NORMAL", null, BigDecimal.ONE, true, false, "普通用例")));
     }
 

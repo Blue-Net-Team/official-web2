@@ -1,13 +1,8 @@
 package com.bluenet.web.application.service.impl;
 
-import com.bluenet.web.api.dto.assessment_judgement.AssessmentCandidateScoreboardDTO;
-import com.bluenet.web.api.dto.assessment_judgement.AssessmentDecisionWorkspaceDTO;
-import com.bluenet.web.api.dto.assessment_judgement.AssessmentQuestionScoreboardDTO;
-import com.bluenet.web.api.dto.assessment_judgement.AssessmentQuestionSubmissionDTO;
 import com.bluenet.web.application.AssessmentDecisionResult;
 import com.bluenet.web.application.AssessmentJudgementResult;
 import com.bluenet.web.application.command.assessment_judgement.AssessmentJudgementCommands;
-import com.bluenet.web.application.converter.AssessmentJudgementAppConverter;
 import com.bluenet.web.domain.exception.BadRequest;
 import com.bluenet.web.domain.exception.Forbidden;
 import com.bluenet.web.domain.model.enumerate.JudgementSource;
@@ -17,7 +12,9 @@ import com.bluenet.web.domain.model.enumerate.ReviewerType;
 import com.bluenet.web.domain.model.enumerate.RoleType;
 import com.bluenet.web.domain.model.entity.AssessmentAnswer;
 import com.bluenet.web.domain.model.vo.AssessmentCandidateScoreRowVO;
+import com.bluenet.web.domain.model.vo.AssessmentCandidateScoreboardVO;
 import com.bluenet.web.domain.model.vo.AssessmentDecisionVO;
+import com.bluenet.web.domain.model.vo.AssessmentDecisionWorkspaceVO;
 import com.bluenet.web.domain.model.vo.AssessmentJudgementVO;
 import com.bluenet.web.domain.model.vo.AssessmentQuestionScoreboardVO;
 import com.bluenet.web.domain.model.vo.AssessmentQuestionSubmissionHistoryVO;
@@ -45,7 +42,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
-import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
@@ -97,9 +93,6 @@ class AssessmentJudgementAppServiceImplTest {
 
     @Mock
     private com.bluenet.web.application.message.MessageTemplateRegistry messageTemplateRegistry;
-
-    @Spy
-    private AssessmentJudgementAppConverter assessmentJudgementAppConverter = new AssessmentJudgementAppConverter();
 
     @InjectMocks
     private AssessmentJudgementAppServiceImpl assessmentJudgementAppService;
@@ -301,7 +294,7 @@ class AssessmentJudgementAppServiceImplTest {
                                                             .pendingCount(1L)
                                                             .build()));
 
-            List<AssessmentQuestionScoreboardDTO> result = assessmentJudgementAppService
+            List<AssessmentQuestionScoreboardVO> result = assessmentJudgementAppService
                     .listQuestionScoreboard(ASSESSMENT_TIME_ID, QuestionType.FILE_UPLOAD, " 简历 ");
 
             assertEquals(1, result.size());
@@ -325,13 +318,13 @@ class AssessmentJudgementAppServiceImplTest {
             when(assessmentJudgementRepository.findQuestionSubmissionHistories(QUESTION_ID, List.of(CANDIDATE_ID)))
                     .thenReturn(List.of(createSubmissionHistoryVO(100L, BigDecimal.TEN, true)));
 
-            List<AssessmentQuestionSubmissionDTO> result = assessmentJudgementAppService
+            List<AssessmentQuestionSubmissionVO> result = assessmentJudgementAppService
                     .listQuestionSubmissions(QUESTION_ID, null, "judged");
 
             assertEquals(1, result.size());
             assertEquals(CANDIDATE_ID, result.get(0).getCandidateUserId());
-            assertNotNull(result.get(0).getLatestJudgement());
-            assertEquals(BigDecimal.TEN, result.get(0).getLatestJudgement().getScore());
+            assertNotNull(result.get(0).getJudgementScore());
+            assertEquals(BigDecimal.TEN, result.get(0).getJudgementScore());
             assertEquals(1, result.get(0).getHistories().size());
             assertTrue(result.get(0).getHistories().get(0).getSelectedBest());
         }
@@ -352,7 +345,7 @@ class AssessmentJudgementAppServiceImplTest {
                                     createCandidateScoreRowVO(QUESTION_ID, 1, true, true),
                                     createCandidateScoreRowVO(21L, 2, true, false)));
 
-            List<AssessmentCandidateScoreboardDTO> result = assessmentJudgementAppService
+            List<AssessmentCandidateScoreboardVO> result = assessmentJudgementAppService
                     .listCandidateScoreboard(ASSESSMENT_TIME_ID, null);
 
             assertEquals(1, result.size());
@@ -386,7 +379,7 @@ class AssessmentJudgementAppServiceImplTest {
             when(assessmentDecisionRepository.findByAssessmentTimeId(ASSESSMENT_TIME_ID))
                     .thenReturn(List.of(createDecisionVOForUser(40L, true), createDecisionVOForUser(41L, false)));
 
-            AssessmentDecisionWorkspaceDTO result = assessmentJudgementAppService
+            AssessmentDecisionWorkspaceVO result = assessmentJudgementAppService
                     .getDecisionWorkspace(ASSESSMENT_TIME_ID, null, null);
 
             assertEquals(3L, result.getStatistics().getCandidates());

@@ -1,10 +1,9 @@
 package com.bluenet.web.application.service;
 
-import com.bluenet.web.api.dto.PageDTO;
-import com.bluenet.web.api.dto.assessment_time.AssessmentProgressDTO;
-import com.bluenet.web.api.dto.assessment_time.AssessmentTimeDTO;
+import com.bluenet.web.application.AssessmentProgressResult;
 import com.bluenet.web.application.AssessmentTimeResult;
 import com.bluenet.web.application.command.assessment_time.AssessmentTimeCommands;
+import org.springframework.data.domain.Page;
 
 /**
  * 考核时间应用服务接口。
@@ -46,9 +45,9 @@ public interface AssessmentTimeAppService {
      *            页码（从0开始）
      * @param size
      *            每页大小
-     * @return 分页考核时间DTO
+     * @return 分页考核时间结果
      */
-    PageDTO<AssessmentTimeDTO> listAssessmentTimes(Integer page, Integer size);
+    Page<AssessmentTimeResult> listAssessmentTimes(Integer page, Integer size);
 
     /**
      * 用户端查询考核时间（根据当前用户角色过滤）
@@ -57,9 +56,9 @@ public interface AssessmentTimeAppService {
      *            页码（从0开始）
      * @param size
      *            每页大小
-     * @return 分页考核时间DTO
+     * @return 分页考核时间结果
      */
-    PageDTO<AssessmentTimeDTO> listAssessmentTimesForUser(Integer page, Integer size);
+    Page<AssessmentTimeResult> listAssessmentTimesForUser(Integer page, Integer size);
 
     /**
      * 查询指定考核时间的答题进度
@@ -68,5 +67,5 @@ public interface AssessmentTimeAppService {
      *            考核时间ID
      * @return 进度信息
      */
-    AssessmentProgressDTO getAssessmentProgress(Long assessmentTimeId);
+    AssessmentProgressResult getAssessmentProgress(Long assessmentTimeId);
 }
