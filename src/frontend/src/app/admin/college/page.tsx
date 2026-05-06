@@ -1,8 +1,8 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { App, Button, Grid, Modal, Spin, Table } from 'antd'
-import { PlusOutlined } from '@ant-design/icons'
+import { App, Button, Modal, Space, Spin, Table } from 'antd'
+import { DeleteOutlined, EditOutlined, PlusOutlined } from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
 import type { CollegeDTO } from '@/apis/schema/type'
 import { collegeService } from '@/apis/services/college.service'
@@ -11,13 +11,11 @@ import CollegeDrawer, { type DrawerMode } from './CollegeDrawer'
 
 export default function CollegeManagementPage() {
   const { message: messageApi } = App.useApp()
-  const screens = Grid.useBreakpoint()
-  const isMobile = !screens.md
 
   const [colleges, setColleges] = useState<CollegeDTO[]>([])
   const [loading, setLoading] = useState(false)
   const [drawerOpen, setDrawerOpen] = useState(false)
-  const [drawerMode, setDrawerMode] = useState<DrawerMode>('view')
+  const [drawerMode, setDrawerMode] = useState<DrawerMode>('create')
   const [selectedCollege, setSelectedCollege] = useState<CollegeDTO | null>(null)
   const [deleteModalOpen, setDeleteModalOpen] = useState(false)
   const [deletingCollege, setDeletingCollege] = useState<CollegeDTO | null>(null)
@@ -34,21 +32,21 @@ export default function CollegeManagementPage() {
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [messageApi])
 
   useEffect(() => {
     fetchColleges()
   }, [fetchColleges])
 
-  const handleRowClick = (record: CollegeDTO) => {
-    setSelectedCollege(record)
-    setDrawerMode('view')
-    setDrawerOpen(true)
-  }
-
   const handleCreate = () => {
     setSelectedCollege(null)
     setDrawerMode('create')
+    setDrawerOpen(true)
+  }
+
+  const handleEdit = (college: CollegeDTO) => {
+    setSelectedCollege(college)
+    setDrawerMode('edit')
     setDrawerOpen(true)
   }
 
@@ -63,7 +61,6 @@ export default function CollegeManagementPage() {
       await adminCollegeService.delete(deletingCollege.id)
       messageApi.success('删除成功')
       setDeleteModalOpen(false)
-      setDrawerOpen(false)
       fetchColleges()
     } catch {
       messageApi.error('删除失败')
@@ -79,6 +76,33 @@ export default function CollegeManagementPage() {
   const columns: ColumnsType<CollegeDTO> = [
     { title: 'ID', dataIndex: 'id', key: 'id', width: 80, responsive: ['md'] },
     { title: '学院名称', dataIndex: 'name', key: 'name', ellipsis: true },
+    {
+      title: '操作',
+      key: 'action',
+      width: 140,
+      fixed: 'right',
+      render: (_: unknown, record: CollegeDTO) => (
+        <Space size="small">
+          <Button
+            type="text"
+            size="small"
+            icon={<EditOutlined />}
+            onClick={() => handleEdit(record)}
+          >
+            编辑
+          </Button>
+          <Button
+            type="text"
+            size="small"
+            danger
+            icon={<DeleteOutlined />}
+            onClick={() => handleDeleteClick(record)}
+          >
+            删除
+          </Button>
+        </Space>
+      ),
+    },
   ]
 
   return (
@@ -97,10 +121,7 @@ export default function CollegeManagementPage() {
           rowKey={(record) => String(record.id)}
           size="small"
           pagination={false}
-          onRow={(record) => ({
-            onClick: () => handleRowClick(record),
-            className: 'cursor-pointer',
-          })}
+          scroll={{ x: 'max-content' }}
           locale={{ emptyText: '暂无学院数据' }}
         />
       </Spin>
@@ -111,8 +132,6 @@ export default function CollegeManagementPage() {
         mode={drawerMode}
         onClose={() => setDrawerOpen(false)}
         onSuccess={handleDrawerSuccess}
-        onDelete={handleDeleteClick}
-        onEdit={() => setDrawerMode('edit')}
       />
 
       <Modal
