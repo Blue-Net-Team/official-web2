@@ -17,7 +17,7 @@ public class Qrcode {
      */
     private Long id;
 
-    private Long fileId; // 外键连接到File表
+    private Long fileId; // 关联文件ID，应用层维护关系
     private QrcodeType type; // 二维码类型
 
     // 以下字段仅 ASSESSMENT 类型使用
@@ -41,6 +41,45 @@ public class Qrcode {
             throw new IllegalArgumentException("二维码类型不能为空");
         }
         return new Qrcode(null, fileId, type, null, null, null);
+    }
+
+    /**
+     * 构造考核群二维码聚合根 —— 带领域校验
+     *
+     * @param fileId
+     *            关联文件ID
+     * @param epoch
+     *            考核轮次
+     * @param direction
+     *            方向（可为空，当isShared=true时）
+     * @param isShared
+     *            是否三方向共用
+     * @return 新的二维码实体
+     * @throws IllegalArgumentException
+     *             如果参数校验失败
+     */
+    public static Qrcode forAssessment(Long fileId, Integer epoch, String direction, Boolean isShared) {
+        if (fileId == null) {
+            throw new IllegalArgumentException("文件ID不能为空");
+        }
+        if (epoch == null) {
+            throw new IllegalArgumentException("考核轮次不能为空");
+        }
+        if (epoch <= 0) {
+            throw new IllegalArgumentException("考核轮次必须为正整数");
+        }
+        if (isShared != null && isShared) {
+            if (direction != null) {
+                throw new IllegalArgumentException("共用二维码时方向必须为空");
+            }
+        } else {
+            if (direction == null) {
+                throw new IllegalArgumentException("非共用二维码时方向不能为空");
+            }
+        }
+        Qrcode qrcode = new Qrcode(null, fileId, QrcodeType.ASSESSMENT, epoch, direction,
+                isShared != null ? isShared : false);
+        return qrcode;
     }
 
     /**

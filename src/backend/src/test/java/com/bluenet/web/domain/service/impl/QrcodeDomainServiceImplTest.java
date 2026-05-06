@@ -218,4 +218,160 @@ class QrcodeDomainServiceImplTest {
 
         verify(qrcodeRepository, never()).deleteById(any());
     }
+
+    // ==================== updateConsultationQrcode 测试 ====================
+
+    @Test
+    @DisplayName("更新咨询群二维码 - 正常更新应成功")
+    void updateConsultationQrcode_normalCase_shouldSucceed() {
+        // Given
+        Qrcode oldQrcode = Qrcode.forConsultation(1L);
+        oldQrcode.setId(1L);
+
+        FileVO newFileVO = FileVO.builder()
+                .id(2L)
+                .name("new-qrcode.png")
+                .type(FileType.QRCODE)
+                .build();
+
+        when(qrcodeRepository.findById(1L)).thenReturn(Optional.of(oldQrcode));
+        doNothing().when(fileRepository).deleteFileById(1L);
+
+        // When
+        qrcodeDomainService.updateConsultationQrcode(1L, newFileVO);
+
+        // Then
+        verify(qrcodeRepository).save(any(Qrcode.class));
+        verify(fileRepository).deleteFileById(1L);
+    }
+
+    @Test
+    @DisplayName("更新咨询群二维码 - 二维码不存在应抛出DataNotFound")
+    void updateConsultationQrcode_notFound_shouldThrowDataNotFound() {
+        // Given
+        FileVO fileVO = FileVO.builder().id(1L).type(FileType.QRCODE).build();
+        when(qrcodeRepository.findById(999L)).thenReturn(Optional.empty());
+
+        // When & Then
+        assertThrows(DataNotFound.class, () -> {
+            qrcodeDomainService.updateConsultationQrcode(999L, fileVO);
+        });
+    }
+
+    // ==================== getAssessmentQrcodes 测试 ====================
+
+    @Test
+    @DisplayName("获取考核群二维码 - 无筛选条件应返回所有")
+    void getAssessmentQrcodes_noFilter_shouldReturnAll() {
+        // Given
+        Qrcode qrcode1 = Qrcode.forAssessment(1L, 1, "COMPUTER_VISION", false);
+        qrcode1.setId(1L);
+
+        Qrcode qrcode2 = Qrcode.forAssessment(2L, 1, null, true);
+        qrcode2.setId(2L);
+
+        when(qrcodeRepository.findAssessmentQrcodes(null, null)).thenReturn(Arrays.asList(qrcode1, qrcode2));
+
+        // When
+        List<Qrcode> result = qrcodeDomainService.getAssessmentQrcodes(null, null);
+
+        // Then
+        assertEquals(2, result.size());
+        verify(qrcodeRepository).findAssessmentQrcodes(null, null);
+    }
+
+    @Test
+    @DisplayName("获取考核群二维码 - 按方向筛选应成功")
+    void getAssessmentQrcodes_byDirection_shouldSucceed() {
+        // Given
+        String direction = "COMPUTER_VISION";
+        Qrcode qrcode = Qrcode.forAssessment(1L, 1, direction, false);
+        qrcode.setId(1L);
+
+        when(qrcodeRepository.findAssessmentQrcodes(direction, null)).thenReturn(List.of(qrcode));
+
+        // When
+        List<Qrcode> result = qrcodeDomainService.getAssessmentQrcodes(direction, null);
+
+        // Then
+        assertEquals(1, result.size());
+        assertEquals(direction, result.get(0).getDirection());
+    }
+
+    // ==================== saveAssessmentQrcode 测试 ====================
+
+    @Test
+    @DisplayName("保存考核群二维码 - 正常保存应成功")
+    void saveAssessmentQrcode_normalCase_shouldSucceed() {
+        // Given
+        Qrcode qrcode = Qrcode.forAssessment(1L, 1, "COMPUTER_VISION", false);
+
+        // When
+        qrcodeDomainService.saveAssessmentQrcode(qrcode);
+
+        // Then
+        verify(qrcodeRepository).save(qrcode);
+    }
+
+    // ==================== updateAssessmentQrcode 测试 ====================
+
+    @Test
+    @DisplayName("更新考核群二维码 - 正常更新应成功")
+    void updateAssessmentQrcode_normalCase_shouldSucceed() {
+        // Given
+        Qrcode oldQrcode = Qrcode.forAssessment(1L, 1, "COMPUTER_VISION", false);
+        oldQrcode.setId(1L);
+
+        FileVO newFileVO = FileVO.builder().id(2L).type(FileType.QRCODE).build();
+        String newDirection = "STRUCTURAL_DESIGN";
+        Integer newEpoch = 2;
+        Boolean newIsShared = false;
+
+        when(qrcodeRepository.findById(1L)).thenReturn(Optional.of(oldQrcode));
+        doNothing().when(fileRepository).deleteFileById(1L);
+
+        // When
+        qrcodeDomainService.updateAssessmentQrcode(1L, newFileVO, newDirection, newEpoch, newIsShared);
+
+        // Then
+        verify(qrcodeRepository).save(any(Qrcode.class));
+        verify(fileRepository).deleteFileById(1L);
+    }
+
+    @Test
+    @DisplayName("更新考核群二维码 - 设置为共用时应清空方向")
+    void updateAssessmentQrcode_setToShared_shouldClearDirection() {
+        // Given
+        Qrcode oldQrcode = Qrcode.forAssessment(1L, 1, "COMPUTER_VISION", false);
+        oldQrcode.setId(1L);
+
+        when(qrcodeRepository.findById(1L)).thenReturn(Optional.of(oldQrcode));
+
+        // When
+        qrcodeDomainService.updateAssessmentQrcode(1L, null, null, null, true);
+
+        // Then
+        verify(qrcodeRepository).save(argThat(qrcode -> qrcode.getIsShared() && qrcode.getDirection() == null));
+    }
+
+    // ==================== deleteAssessmentQrcode 测试 ====================
+
+    @Test
+    @DisplayName("删除考核群二维码 - 正常删除应成功")
+    void deleteAssessmentQrcode_normalCase_shouldSucceed() {
+        // Given
+        Qrcode qrcode = Qrcode.forAssessment(1L, 1, "COMPUTER_VISION", false);
+        qrcode.setId(1L);
+
+        when(qrcodeRepository.findById(1L)).thenReturn(Optional.of(qrcode));
+        doNothing().when(qrcodeRepository).deleteById(1L);
+        doNothing().when(fileRepository).deleteFileById(1L);
+
+        // When
+        qrcodeDomainService.deleteAssessmentQrcode(1L);
+
+        // Then
+        verify(qrcodeRepository).deleteById(1L);
+        verify(fileRepository).deleteFileById(1L);
+    }
 }

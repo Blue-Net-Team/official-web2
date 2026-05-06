@@ -18,10 +18,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 /**
- * 二维码应用服务实现。
+ * 二维码应用服务实现
  * <p>
- * 实现二维码聚合在应用层的业务逻辑编排。
- * </p>
+ * 实现二维码聚合在应用层的业务逻辑编排
  */
 @Service
 @Slf4j
@@ -32,7 +31,7 @@ public class QrcodeAppServiceImpl implements QrcodeAppService {
     private final FileDomainService fileDomainService;
 
     /**
-     * 查询咨询二维码列表。
+     * 查询咨询群二维码列表
      *
      * @return 二维码结果列表
      */
@@ -45,10 +44,10 @@ public class QrcodeAppServiceImpl implements QrcodeAppService {
     }
 
     /**
-     * 创建咨询二维码。
+     * 创建咨询群二维码
      *
      * @param command
-     *            创建咨询二维码命令
+     *            创建咨询群二维码命令
      */
     @Override
     @Transactional
@@ -66,15 +65,124 @@ public class QrcodeAppServiceImpl implements QrcodeAppService {
     }
 
     /**
-     * 删除咨询二维码。
+     * 更新咨询群二维码
      *
      * @param command
-     *            删除咨询二维码命令
+     *            更新咨询群二维码命令
+     */
+    @Override
+    @Transactional
+    public void updateConsultationQrcode(QrcodeCommands.UpdateConsultationQrcodeCommand command) {
+        FileVO fileVO = fileDomainService.getFileById(command.fileId());
+        if (fileVO == null) {
+            throw new DataNotFound("文件不存在");
+        }
+        if (fileVO.getType() != FileType.QRCODE) {
+            throw new BadRequest("文件类型不匹配，期望 QRCODE");
+        }
+
+        qrcodeDomainService.updateConsultationQrcode(command.id(), fileVO);
+        log.info("二维码更新成功，id={}, fileId={}", command.id(), command.fileId());
+    }
+
+    /**
+     * 删除咨询群二维码
+     *
+     * @param command
+     *            删除咨询群二维码命令
      */
     @Override
     @Transactional
     public void deleteConsultationQrcode(QrcodeCommands.DeleteConsultationQrcodeCommand command) {
         qrcodeDomainService.deleteConsultationQrcode(command.id());
         log.info("咨询群二维码删除成功，id={}", command.id());
+    }
+
+    /**
+     * 查询考核群二维码列表
+     *
+     * @param direction
+     *            方向
+     * @param epoch
+     *            考核轮次
+     * @return 二维码结果列表
+     */
+    @Override
+    public List<QrcodeResult> getAssessmentQrcodes(String direction, Integer epoch) {
+        List<Qrcode> qrcodes = qrcodeDomainService.getAssessmentQrcodes(direction, epoch);
+        return qrcodes.stream()
+                .map(
+                        qrcode -> new QrcodeResult(qrcode.getId(), qrcode.getFileId(),
+                                qrcode.getDirection(), qrcode.getEpoch(), qrcode.getIsShared()))
+                .toList();
+    }
+
+    /**
+     * 创建考核群二维码
+     *
+     * @param command
+     *            创建考核群二维码命令
+     */
+    @Override
+    @Transactional
+    public void createAssessmentQrcode(QrcodeCommands.CreateAssessmentQrcodeCommand command) {
+        FileVO fileVO = fileDomainService.getFileById(command.fileId());
+        if (fileVO == null) {
+            throw new DataNotFound("文件不存在");
+        }
+        if (fileVO.getType() != FileType.QRCODE) {
+            throw new BadRequest("文件类型不匹配，期望 QRCODE");
+        }
+
+        // 构建二维码实体
+        Qrcode qrcode = Qrcode.forAssessment(
+                command.fileId(),
+                command.epoch(),
+                command.direction(),
+                command.isShared());
+        qrcodeDomainService.saveAssessmentQrcode(qrcode);
+        log.info("考核群二维码创建成功，id={}, fileId={}", qrcode.getId(), command.fileId());
+    }
+
+    /**
+     * 更新考核群二维码
+     *
+     * @param command
+     *            更新考核群二维码命令
+     */
+    @Override
+    @Transactional
+    public void updateAssessmentQrcode(QrcodeCommands.UpdateAssessmentQrcodeCommand command) {
+        FileVO fileVO = null;
+        if (command.fileId() != null) {
+            fileVO = fileDomainService.getFileById(command.fileId());
+            if (fileVO == null) {
+                throw new DataNotFound("文件不存在");
+            }
+            if (fileVO.getType() != FileType.QRCODE) {
+                throw new BadRequest("文件类型不匹配，期望 QRCODE");
+            }
+        }
+
+        qrcodeDomainService.updateAssessmentQrcode(
+                command.id(),
+                fileVO,
+                command.direction(),
+                command.epoch(),
+                command.isShared());
+        log.info("考核群二维码更新成功，id={}", command.id());
+    }
+
+    /**
+     * 删除考核群二维码
+     *
+     * @param command
+     *            删除考核群二维码命令
+     */
+    @Override
+    @Transactional
+    public void deleteAssessmentQrcode(QrcodeCommands.DeleteAssessmentQrcodeCommand command) {
+        qrcodeDomainService.deleteAssessmentQrcode(command.id());
+        log.info("考核群二维码删除成功，id={}", command.id());
     }
 }

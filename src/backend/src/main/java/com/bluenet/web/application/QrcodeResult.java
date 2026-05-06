@@ -10,5 +10,18 @@ public record QrcodeResult(
         /** 唯一标识 */
         Long id,
         /** 文件ID */
-        Long fileId) {
+        Long fileId,
+        /** 方向（仅考核群） */
+        String direction,
+        /** 考核轮次（仅考核群） */
+        Integer epoch,
+        /** 是否三方向共用（仅考核群） */
+        Boolean isShared) {
+
+    /**
+     * 简化构造（仅咨询群）
+     */
+    public QrcodeResult(Long id, Long fileId) {
+        this(id, fileId, null, null, null);
+    }
 }
