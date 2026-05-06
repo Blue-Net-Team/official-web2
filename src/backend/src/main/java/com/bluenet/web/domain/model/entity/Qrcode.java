@@ -17,7 +17,7 @@ public class Qrcode {
      */
     private Long id;
 
-    private Long fileId; // 外键连接到File表
+    private Long fileId; // 关联文件ID，应用层维护关系
     private QrcodeType type; // 二维码类型
 
     // 以下字段仅 ASSESSMENT 类型使用
