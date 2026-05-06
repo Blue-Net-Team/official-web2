@@ -279,6 +279,22 @@ export interface CollegeDTO {
 }
 
 /**
+ * 创建学院请求
+ * 对应后端 CreateCollegeRequestDTO.java
+ */
+export interface CreateCollegeRequestDTO {
+  name: string
+}
+
+/**
+ * 更新学院请求
+ * 对应后端 UpdateCollegeRequestDTO.java
+ */
+export interface UpdateCollegeRequestDTO {
+  name: string
+}
+
+/**
  * 文件信息
  * 对应后端 FileInfo.java
  */

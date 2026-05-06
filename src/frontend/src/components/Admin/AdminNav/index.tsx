@@ -108,6 +108,13 @@ export const menuConfig: MenuItemConfig[] = [
     minLevel: 3,
   },
   {
+    key: 'college',
+    label: '学院管理',
+    path: '/admin/college',
+    icon: <BankOutlined />,
+    minLevel: 3,
+  },
+  {
     key: 'messageTemplate',
     label: '消息模板',
     path: '/admin/message-template',
