@@ -114,4 +114,16 @@ public class QrcodeRepositoryImpl implements QrcodeRepository {
         log.info("删除二维码: id={}", id);
     }
 
+    /**
+     * 按考核轮次查询考核群二维码记录。
+     *
+     * @param epoch
+     *            考核轮次。
+     * @return 满足条件的二维码结果集合。
+     */
+    @Override
+    public List<Qrcode> findAssessmentByEpoch(Integer epoch) {
+        return converter.toEntityList(qrcodeMapper.findAssessmentByEpoch(epoch));
+    }
+
 }
