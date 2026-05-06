@@ -1,7 +1,19 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { App, Button, Drawer, Form, Input, InputNumber, Select, Switch, Upload, Spin, Image } from 'antd'
+import { useEffect, useMemo, useState } from 'react'
+import {
+  App,
+  Button,
+  Drawer,
+  Form,
+  Input,
+  InputNumber,
+  Select,
+  Switch,
+  Upload,
+  Spin,
+  Image,
+} from 'antd'
 import { UploadOutlined } from '@ant-design/icons'
 import type {
   ConsultationQrcodeDTO,
@@ -13,6 +25,9 @@ import type {
 import { API_BASE_URL } from '@/apis/config'
 import { fileService } from '@/apis/services/file.service'
 import { qrcodeService } from '@/apis/services/qrcode.service'
+import { adminAssessmentTimeService } from '@/apis/services/admin-assessment-time.service'
+import type { AssessmentTimeDTO } from '@/apis/schema/assessment.dto'
+import { type Direction, DIRECTION_LABELS } from '@/apis/schema/enumerate'
 
 export type DrawerMode = 'create' | 'edit'
 export type QrcodeType = 'consultation' | 'assessment'
@@ -61,6 +76,35 @@ export default function QrcodeDrawer({
   const [fileUploading, setFileUploading] = useState(false)
   const [fileId, setFileId] = useState<number | null>(null)
   const [isShared, setIsShared] = useState(false)
+  const [assessmentTimes, setAssessmentTimes] = useState<AssessmentTimeDTO[]>([])
+  const [loadingTimes, setLoadingTimes] = useState(false)
+
+  const epochOptions = useMemo(() => {
+    const epochs = [...new Set(assessmentTimes.map((t) => t.epoch))]
+    return epochs.map((epoch) => ({ value: epoch, label: `第 ${epoch} 轮` }))
+  }, [assessmentTimes])
+
+  const fetchAssessmentTimes = async (dir: Direction) => {
+    setLoadingTimes(true)
+    try {
+      const response = await adminAssessmentTimeService.getList(0, 100)
+      const times = response.data?.content.filter((item) => item.direction === dir) ?? []
+      setAssessmentTimes(times)
+    } catch {
+      messageApi.error('加载考核时间失败')
+    } finally {
+      setLoadingTimes(false)
+    }
+  }
+
+  const handleDirectionChange = (value: Direction) => {
+    form.setFieldValue('epoch', undefined)
+    if (value) {
+      fetchAssessmentTimes(value)
+    } else {
+      setAssessmentTimes([])
+    }
+  }
 
   // 当打开或数据/模式变化时重置表单
   useEffect(() => {
@@ -86,6 +130,9 @@ export default function QrcodeDrawer({
           })
           setFileId(assessmentRecord.fileId)
           setIsShared(assessmentRecord.isShared || false)
+          if (assessmentRecord.direction) {
+            fetchAssessmentTimes(assessmentRecord.direction as Direction)
+          }
         }
       }
     }
@@ -166,9 +213,9 @@ export default function QrcodeDrawer({
 
   const handleIsSharedChange = (checked: boolean) => {
     setIsShared(checked)
-    if (checked) {
-      form.setFieldValue('direction', undefined)
-    }
+    setAssessmentTimes([])
+    form.setFieldValue('direction', undefined)
+    form.setFieldValue('epoch', undefined)
   }
 
   const title =
@@ -198,19 +245,6 @@ export default function QrcodeDrawer({
       <Form form={form} layout="vertical">
         {type === 'assessment' && (
           <>
-            <Form.Item
-              label="考核轮次"
-              name="epoch"
-              rules={[{ required: true, message: '请输入考核轮次' }]}
-            >
-              <InputNumber
-                placeholder="例如：1"
-                min={1}
-                step={1}
-                style={{ width: '100%' }}
-              />
-            </Form.Item>
-
             <Form.Item label="三方向共用" name="isShared" valuePropName="checked">
               <Switch
                 checked={isShared}
@@ -226,15 +260,30 @@ export default function QrcodeDrawer({
                 name="direction"
                 rules={[{ required: !isShared, message: '请选择方向' }]}
               >
-                <Select placeholder="请选择方向">
-                  {DIRECTION_OPTIONS.map((option) => (
-                    <Option key={option.value} value={option.value}>
-                      {option.label}
-                    </Option>
-                  ))}
-                </Select>
+                <Select
+                  placeholder="请选择方向"
+                  onChange={handleDirectionChange}
+                  options={DIRECTION_OPTIONS}
+                />
               </Form.Item>
             )}
+
+            <Form.Item
+              label="考核轮次"
+              name="epoch"
+              rules={[{ required: true, message: '请选择考核轮次' }]}
+            >
+              {isShared ? (
+                <InputNumber placeholder="例如：1" min={1} step={1} style={{ width: '100%' }} />
+              ) : (
+                <Select
+                  placeholder={loadingTimes ? '加载中...' : '请先选择方向'}
+                  loading={loadingTimes}
+                  disabled={!form.getFieldValue('direction') || loadingTimes}
+                  options={epochOptions}
+                />
+              )}
+            </Form.Item>
           </>
         )}
 
