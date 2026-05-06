@@ -28,10 +28,14 @@ public class QrcodeDomainServiceImpl implements QrcodeDomainService {
     /**
      * 检查考核群二维码 epoch/direction 组合是否冲突。
      *
-     * @param epoch      考核轮次
-     * @param direction  方向
-     * @param isShared   是否共用
-     * @param excludeId  排除的记录 ID（更新时排除自身）
+     * @param epoch
+     *            考核轮次
+     * @param direction
+     *            方向
+     * @param isShared
+     *            是否共用
+     * @param excludeId
+     *            排除的记录 ID（更新时排除自身）
      */
     private void checkAssessmentConflict(Integer epoch, String direction, Boolean isShared, Long excludeId) {
         if (epoch == null) {
@@ -92,10 +96,15 @@ public class QrcodeDomainServiceImpl implements QrcodeDomainService {
         if (oldFileId != null && !oldFileId.equals(fileVO.getId())) {
             try {
                 fileRepository.deleteFileById(oldFileId);
-                log.info("更新咨询群二维码成功，id={}, oldFileId={}, newFileId={}", id,
-                        oldFileId, fileVO.getId());
+                log.info(
+                        "更新咨询群二维码成功，id={}, oldFileId={}, newFileId={}",
+                        id,
+                        oldFileId,
+                        fileVO.getId());
             } catch (Exception e) {
-                log.warn("删除旧关联文件失败: oldFileId={}, error={}", oldFileId,
+                log.warn(
+                        "删除旧关联文件失败: oldFileId={}, error={}",
+                        oldFileId,
                         e.getMessage());
                 // 不抛出异常，因为二维码记录已成功更新
             }
@@ -148,7 +157,9 @@ public class QrcodeDomainServiceImpl implements QrcodeDomainService {
         checkAssessmentConflict(qrcode.getEpoch(), qrcode.getDirection(), qrcode.getIsShared(), null);
 
         qrcodeRepository.save(qrcode);
-        log.info("考核群二维码保存成功，id={}, fileId={}", qrcode.getId(),
+        log.info(
+                "考核群二维码保存成功，id={}, fileId={}",
+                qrcode.getId(),
                 qrcode.getFileId());
     }
 
@@ -214,10 +225,15 @@ public class QrcodeDomainServiceImpl implements QrcodeDomainService {
         if (fileVO != null && oldFileId != null && !oldFileId.equals(fileVO.getId())) {
             try {
                 fileRepository.deleteFileById(oldFileId);
-                log.info("更新考核群二维码成功，id={}, oldFileId={}, newFileId={}", id,
-                        oldFileId, fileVO.getId());
+                log.info(
+                        "更新考核群二维码成功，id={}, oldFileId={}, newFileId={}",
+                        id,
+                        oldFileId,
+                        fileVO.getId());
             } catch (Exception e) {
-                log.warn("删除旧关联文件失败: oldFileId={}, error={}", oldFileId,
+                log.warn(
+                        "删除旧关联文件失败: oldFileId={}, error={}",
+                        oldFileId,
                         e.getMessage());
             }
         }

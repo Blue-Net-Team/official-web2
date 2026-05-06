@@ -83,7 +83,8 @@ public class AdminQrcodeController {
     public ResponseMessage<Void> updateConsultationQrcode(@PathVariable Long id,
             @Valid @RequestBody UpdateConsultationQrcodeRequestDTO request) {
         try {
-            QrcodeCommands.UpdateConsultationQrcodeCommand command = qrcodeRequestConverter.toUpdateCommand(id,
+            QrcodeCommands.UpdateConsultationQrcodeCommand command = qrcodeRequestConverter.toUpdateCommand(
+                    id,
                     request);
             qrcodeAppService.updateConsultationQrcode(command);
             return ResponseMessage.success();

@@ -111,8 +111,9 @@ public class QrcodeAppServiceImpl implements QrcodeAppService {
     public List<QrcodeResult> getAssessmentQrcodes(String direction, Integer epoch) {
         List<Qrcode> qrcodes = qrcodeDomainService.getAssessmentQrcodes(direction, epoch);
         return qrcodes.stream()
-                .map(qrcode -> new QrcodeResult(qrcode.getId(), qrcode.getFileId(),
-                        qrcode.getDirection(), qrcode.getEpoch(), qrcode.getIsShared()))
+                .map(
+                        qrcode -> new QrcodeResult(qrcode.getId(), qrcode.getFileId(),
+                                qrcode.getDirection(), qrcode.getEpoch(), qrcode.getIsShared()))
                 .toList();
     }
 
@@ -134,8 +135,11 @@ public class QrcodeAppServiceImpl implements QrcodeAppService {
         }
 
         // 构建二维码实体
-        Qrcode qrcode = Qrcode.forAssessment(command.fileId(), command.epoch(),
-                command.direction(), command.isShared());
+        Qrcode qrcode = Qrcode.forAssessment(
+                command.fileId(),
+                command.epoch(),
+                command.direction(),
+                command.isShared());
         qrcodeDomainService.saveAssessmentQrcode(qrcode);
         log.info("考核群二维码创建成功，id={}, fileId={}", qrcode.getId(), command.fileId());
     }
@@ -160,8 +164,12 @@ public class QrcodeAppServiceImpl implements QrcodeAppService {
             }
         }
 
-        qrcodeDomainService.updateAssessmentQrcode(command.id(), fileVO,
-                command.direction(), command.epoch(), command.isShared());
+        qrcodeDomainService.updateAssessmentQrcode(
+                command.id(),
+                fileVO,
+                command.direction(),
+                command.epoch(),
+                command.isShared());
         log.info("考核群二维码更新成功，id={}", command.id());
     }
 

@@ -26,7 +26,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * 考核群二维码管理接口
@@ -69,7 +68,8 @@ public class AdminAssessmentQrcodeController {
     public ResponseMessage<Void> createAssessmentQrcode(
             @Valid @RequestBody CreateAssessmentQrcodeRequestDTO request) {
         try {
-            QrcodeCommands.CreateAssessmentQrcodeCommand command = qrcodeRequestConverter.toCreateAssessmentCommand(request);
+            QrcodeCommands.CreateAssessmentQrcodeCommand command = qrcodeRequestConverter
+                    .toCreateAssessmentCommand(request);
             qrcodeAppService.createAssessmentQrcode(command);
             return ResponseMessage.success();
         } catch (GlobalException e) {
@@ -85,7 +85,8 @@ public class AdminAssessmentQrcodeController {
             @PathVariable Long id,
             @Valid @RequestBody UpdateAssessmentQrcodeRequestDTO request) {
         try {
-            QrcodeCommands.UpdateAssessmentQrcodeCommand command = qrcodeRequestConverter.toUpdateAssessmentCommand(id, request);
+            QrcodeCommands.UpdateAssessmentQrcodeCommand command = qrcodeRequestConverter
+                    .toUpdateAssessmentCommand(id, request);
             qrcodeAppService.updateAssessmentQrcode(command);
             return ResponseMessage.success();
         } catch (GlobalException e) {
