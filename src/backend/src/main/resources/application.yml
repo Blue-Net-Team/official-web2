@@ -128,6 +128,12 @@ github:
     client-secret: ${GITHUB_CLIENT_SECRET:}
     callback-base-url: ${GITHUB_CALLBACK_BASE_URL:http://localhost:8080}
     frontend-base-url: ${GITHUB_FRONTEND_BASE_URL:http://localhost:3000}
+  app:    # github app 用于自动同步bug issue
+    app-id: ${GITHUB_APP_ID:}
+    private-key-path: ${GITHUB_APP_PRIVATE_KEY_PATH:}
+    owner: ${GITHUB_APP_OWNER:}
+    repo: ${GITHUB_APP_REPO:}
+    app-base-url: ${GITHUB_APP_APP_BASE_URL:http://localhost:8080}
 
 # CORS 配置
 cors:

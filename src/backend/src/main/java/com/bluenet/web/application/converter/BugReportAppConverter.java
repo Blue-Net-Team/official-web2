@@ -22,6 +22,7 @@ public class BugReportAppConverter {
         return BugReportCreatedDTO.builder()
                 .id(result.id())
                 .status(result.status())
+                .githubIssueUrl(result.githubIssueUrl())
                 .build();
     }
 
@@ -33,8 +34,8 @@ public class BugReportAppConverter {
                 .environmentJson(result.environmentJson())
                 .reporterEmail(result.reporterEmail())
                 .status(result.status())
-                .createdAt(result.createdAt())
-                .updatedAt(result.updatedAt())
+                .githubIssueUrl(result.githubIssueUrl())
+                .githubIssueNumber(result.githubIssueNumber())
                 .fileIds(result.fileIds())
                 .build();
     }
@@ -46,8 +47,8 @@ public class BugReportAppConverter {
                 .pageUrl(result.pageUrl())
                 .reporterEmail(result.reporterEmail())
                 .status(result.status())
-                .createdAt(result.createdAt())
                 .imageCount(result.imageCount())
+                .githubIssueUrl(result.githubIssueUrl())
                 .build();
     }
 

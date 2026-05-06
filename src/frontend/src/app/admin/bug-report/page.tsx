@@ -1,10 +1,9 @@
 'use client'
 
 import { useCallback, useMemo, useState } from 'react'
-import { App, Button, Drawer, Image, Pagination, Select, Spin, Table, Tag } from 'antd'
-import { EyeOutlined } from '@ant-design/icons'
+import { App, Button, Drawer, Image, Pagination, Select, Spin, Table, Tag, Tooltip } from 'antd'
+import { EyeOutlined, GithubOutlined } from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
-import dayjs from 'dayjs'
 import { usePagination, useApi } from '@/hooks'
 import { adminBugReportService } from '@/apis/services/bug-report.service'
 import { API_BASE_URL } from '@/apis/config'
@@ -146,10 +145,24 @@ export default function BugReportManagementPage() {
       ),
     },
     {
-      title: '提交时间',
-      dataIndex: 'createdAt',
-      width: 150,
-      render: (v: string) => dayjs(v).format('YYYY-MM-DD HH:mm'),
+      title: 'GitHub',
+      key: 'github',
+      width: 80,
+      align: 'center',
+      render: (_, record: BugReportListItemDTO) =>
+        record.githubIssueUrl ? (
+          <a
+            href={record.githubIssueUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            title="查看 GitHub Issue"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <GithubOutlined className="text-white/70 hover:text-blue-400 text-base" />
+          </a>
+        ) : (
+          <span className="text-white/20">-</span>
+        ),
     },
     {
       title: '操作',
@@ -230,12 +243,27 @@ export default function BugReportManagementPage() {
         <Spin spinning={detailLoading}>
           {detailData && (
             <div className="flex flex-col gap-6">
-              {/* Status */}
-              <div>
-                <div className="text-sm text-white/50 mb-1">当前状态</div>
-                <Tag color={BUG_REPORT_STATUS_COLORS[detailData.status]} className="text-sm">
-                  {BUG_REPORT_STATUS_LABELS[detailData.status]}
-                </Tag>
+              {/* Status & GitHub Link */}
+              <div className="flex items-center gap-4">
+                <div>
+                  <div className="text-sm text-white/50 mb-1">当前状态</div>
+                  <Tag color={BUG_REPORT_STATUS_COLORS[detailData.status]} className="text-sm">
+                    {BUG_REPORT_STATUS_LABELS[detailData.status]}
+                  </Tag>
+                </div>
+                {detailData.githubIssueUrl && (
+                  <div>
+                    <div className="text-sm text-white/50 mb-1">GitHub Issue</div>
+                    <a
+                      href={detailData.githubIssueUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-sm text-blue-400 hover:text-blue-300"
+                    >
+                      <GithubOutlined />#{detailData.githubIssueNumber}
+                    </a>
+                  </div>
+                )}
               </div>
 
               {/* Description */}
@@ -298,14 +326,6 @@ export default function BugReportManagementPage() {
                   <div className="text-sm">{detailData.reporterEmail}</div>
                 </div>
               )}
-
-              {/* Created At */}
-              <div>
-                <div className="text-sm text-white/50 mb-1">提交时间</div>
-                <div className="text-sm">
-                  {dayjs(detailData.createdAt).format('YYYY-MM-DD HH:mm:ss')}
-                </div>
-              </div>
             </div>
           )}
         </Spin>

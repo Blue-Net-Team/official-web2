@@ -142,6 +142,26 @@
               <option name="name" value="GITHUB_FRONTEND_BASE_URL" />
               <option name="value" value="http://localhost:3000" />
             </DockerEnvVarImpl>
+            <DockerEnvVarImpl>
+              <option name="name" value="GITHUB_APP_ID" />
+              <option name="value" value="3615796" />
+            </DockerEnvVarImpl>
+            <DockerEnvVarImpl>
+              <option name="name" value="GITHUB_APP_PRIVATE_KEY_PATH" />
+              <option name="value" value="/app/github-private-key.pem" />
+            </DockerEnvVarImpl>
+            <DockerEnvVarImpl>
+              <option name="name" value="GITHUB_APP_OWNER" />
+              <option name="value" value="Blue-Net-Team" />
+            </DockerEnvVarImpl>
+            <DockerEnvVarImpl>
+              <option name="name" value="GITHUB_APP_REPO" />
+              <option name="value" value="official-web2" />
+            </DockerEnvVarImpl>
+            <DockerEnvVarImpl>
+              <option name="name" value="GITHUB_APP_APP_BASE_URL" />
+              <option name="value" value="http://localhost:8080" />
+            </DockerEnvVarImpl>
           </list>
         </option>
         <option name="portBindings">

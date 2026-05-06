@@ -33,6 +33,15 @@ x-backend-env: &backend-env
   COOKIE_MAX_AGE: ${COOKIE_MAX_AGE:-43200}
   CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-*}
 
+  # GitHub App 配置（Bug 报告同步到 GitHub Issue）
+  # 不配置或留空时，同步功能自动禁用
+  GITHUB_APP_ID: ${GITHUB_APP_ID:-}
+  # 注意：容器内路径固定为 /app/github-private-key.pem，通过 volumes 挂载注入
+  GITHUB_APP_PRIVATE_KEY_PATH: /app/github-private-key.pem
+  GITHUB_APP_OWNER: ${GITHUB_APP_OWNER:-}
+  GITHUB_APP_REPO: ${GITHUB_APP_REPO:-}
+  GITHUB_APP_APP_BASE_URL: ${GITHUB_APP_APP_BASE_URL:-http://localhost:8080}
+
 x-frontend-env: &frontend-env
   BACKEND_HOST: backend
   BACKEND_PORT: 8080
@@ -54,6 +63,9 @@ services:
       - "8080:8080"
       - "18088:8088"
     environment: *backend-env
+    # 启用 Bug 报告同步到 GitHub Issue 时，确保宿主机 .env 中 GITHUB_APP_PRIVATE_KEY_PATH 指向私钥文件
+    volumes:
+      - ${GITHUB_APP_PRIVATE_KEY_PATH}:/app/github-private-key.pem:ro
     depends_on:
       database:
         condition: service_healthy

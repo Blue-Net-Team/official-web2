@@ -5,7 +5,6 @@ import lombok.AccessLevel;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,21 +27,21 @@ public class BugReport {
     private String environmentJson;
     private String reporterEmail;
     private BugReportStatus status;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    private String githubIssueUrl;
+    private Integer githubIssueNumber;
     private List<BugReportImage> images = new ArrayList<>();
 
     private BugReport(Long id, String description, String pageUrl, String environmentJson,
             String reporterEmail, BugReportStatus status,
-            LocalDateTime createdAt, LocalDateTime updatedAt, List<BugReportImage> images) {
+            String githubIssueUrl, Integer githubIssueNumber, List<BugReportImage> images) {
         this.id = id;
         this.description = description;
         this.pageUrl = pageUrl;
         this.environmentJson = environmentJson;
         this.reporterEmail = reporterEmail;
         this.status = status;
-        this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
+        this.githubIssueUrl = githubIssueUrl;
+        this.githubIssueNumber = githubIssueNumber;
         this.images = images != null ? images : new ArrayList<>();
     }
 
@@ -78,9 +77,9 @@ public class BugReport {
      */
     public static BugReport reconstruct(Long id, String description, String pageUrl,
             String environmentJson, String reporterEmail, BugReportStatus status,
-            LocalDateTime createdAt, LocalDateTime updatedAt, List<BugReportImage> images) {
+            String githubIssueUrl, Integer githubIssueNumber, List<BugReportImage> images) {
         return new BugReport(id, description, pageUrl, environmentJson,
-                reporterEmail, status, createdAt, updatedAt, images);
+                reporterEmail, status, githubIssueUrl, githubIssueNumber, images);
     }
 
     /**
@@ -91,5 +90,19 @@ public class BugReport {
             throw new IllegalArgumentException("状态不能为空");
         }
         this.status = newStatus;
+    }
+
+    /**
+     * 更新 GitHub Issue 同步结果
+     */
+    public void updateGithubIssueInfo(String url, Integer number) {
+        if (url == null || url.isBlank()) {
+            throw new IllegalArgumentException("GitHub Issue URL 不能为空");
+        }
+        if (number == null || number <= 0) {
+            throw new IllegalArgumentException("GitHub Issue 编号必须大于 0");
+        }
+        this.githubIssueUrl = url;
+        this.githubIssueNumber = number;
     }
 }

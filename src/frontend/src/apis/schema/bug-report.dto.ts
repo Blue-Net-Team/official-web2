@@ -29,6 +29,7 @@ export const BUG_REPORT_STATUS_COLORS: Record<BugReportStatus, string> = {
 export interface BugReportCreatedDTO {
   id: number
   status: BugReportStatus
+  githubIssueUrl: string | null
 }
 
 /**
@@ -58,7 +59,7 @@ export interface BugReportListItemDTO {
   status: BugReportStatus
   pageUrl: string
   reporterEmail: string | null
-  createdAt: string
+  githubIssueUrl: string | null
 }
 
 /**
@@ -72,7 +73,8 @@ export interface BugReportDetailDTO {
   pageUrl: string
   reporterEmail: string | null
   environmentJson: string
-  createdAt: string
+  githubIssueUrl: string | null
+  githubIssueNumber: number | null
   fileIds: number[]
 }
 

@@ -2,7 +2,6 @@ package com.bluenet.web.application;
 
 import com.bluenet.web.domain.model.enumerate.BugReportStatus;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -24,7 +23,9 @@ public final class BugReportResult {
             /** 唯一标识 */
             Long id,
             /** 状态 */
-            BugReportStatus status) {
+            BugReportStatus status,
+            /** GitHub Issue URL（异步同步完成后可通过详情接口获取） */
+            String githubIssueUrl) {
     }
 
     /**
@@ -43,10 +44,10 @@ public final class BugReportResult {
             String reporterEmail,
             /** 状态 */
             BugReportStatus status,
-            /** 创建时间 */
-            LocalDateTime createdAt,
-            /** 更新时间 */
-            LocalDateTime updatedAt,
+            /** GitHub Issue URL */
+            String githubIssueUrl,
+            /** GitHub Issue 编号 */
+            Integer githubIssueNumber,
             /** 关联图片文件 ID 列表 */
             List<Long> fileIds) {
     }
@@ -65,9 +66,9 @@ public final class BugReportResult {
             String reporterEmail,
             /** 状态 */
             BugReportStatus status,
-            /** 创建时间 */
-            LocalDateTime createdAt,
             /** 关联图片数量 */
-            int imageCount) {
+            int imageCount,
+            /** GitHub Issue URL */
+            String githubIssueUrl) {
     }
 }
