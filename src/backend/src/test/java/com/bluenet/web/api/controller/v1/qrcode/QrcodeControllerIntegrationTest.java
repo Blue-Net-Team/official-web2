@@ -8,6 +8,7 @@ import com.bluenet.web.testsupport.RepositoryTestObjects;
 import com.bluenet.web.BaseIntegrationTest;
 import com.bluenet.web.api.dto.qrcode.CreateAssessmentQrcodeRequestDTO;
 import com.bluenet.web.api.dto.qrcode.UpdateAssessmentQrcodeRequestDTO;
+import com.bluenet.web.domain.model.enumerate.Direction;
 import com.bluenet.web.api.dto.qrcode.UpdateConsultationQrcodeRequestDTO;
 import com.bluenet.web.domain.model.entity.File;
 import com.bluenet.web.domain.model.entity.Qrcode;
@@ -348,7 +349,7 @@ class QrcodeControllerIntegrationTest extends BaseIntegrationTest {
 
         CreateAssessmentQrcodeRequestDTO request = CreateAssessmentQrcodeRequestDTO.builder()
                 .fileId(file.getId())
-                .direction("COMPUTER_VISION")
+                .direction(Direction.COMPUTER_VISION)
                 .epoch(1)
                 .isShared(false)
                 .build();
@@ -395,7 +396,7 @@ class QrcodeControllerIntegrationTest extends BaseIntegrationTest {
 
         UpdateAssessmentQrcodeRequestDTO request = UpdateAssessmentQrcodeRequestDTO.builder()
                 .fileId(newFile.getId())
-                .direction("STRUCTURAL_DESIGN")
+                .direction(Direction.STRUCTURAL_DESIGN)
                 .epoch(2)
                 .isShared(false)
                 .build();
