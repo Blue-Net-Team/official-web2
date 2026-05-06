@@ -22,6 +22,7 @@ import {
   BankOutlined,
   ToolOutlined,
   BugOutlined,
+  QrcodeOutlined,
 } from '@ant-design/icons'
 import type { MenuProps } from 'antd'
 
@@ -63,6 +64,13 @@ export const menuConfig: MenuItemConfig[] = [
     path: '/admin/users',
     icon: <UserOutlined />,
     minLevel: 3,
+  },
+  {
+    key: 'qrcode',
+    label: '二维码管理',
+    path: '/admin/qrcode',
+    icon: <QrcodeOutlined />,
+    minLevel: 2,
   },
   {
     key: 'enroll',

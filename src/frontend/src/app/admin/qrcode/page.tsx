@@ -31,7 +31,9 @@ export default function QrcodeManagementPage() {
   // Drawer state
   const [drawerVisible, setDrawerVisible] = useState(false)
   const [drawerMode, setDrawerMode] = useState<DrawerMode>('create')
-  const [editingRecord, setEditingRecord] = useState<ConsultationQrcodeDTO | AssessmentQrcodeDTO | null>(null)
+  const [editingRecord, setEditingRecord] = useState<
+    ConsultationQrcodeDTO | AssessmentQrcodeDTO | null
+  >(null)
 
   // Filter state for assessment
   const [filterDirection, setFilterDirection] = useState<string | undefined>()
@@ -338,11 +340,7 @@ export default function QrcodeManagementPage() {
         <h2 className="m-0">二维码管理</h2>
       </div>
 
-      <Tabs
-        activeKey={activeTab}
-        onChange={handleTabChange}
-        items={tabItems}
-      />
+      <Tabs activeKey={activeTab} onChange={handleTabChange} items={tabItems} />
 
       <QrcodeDrawer
         open={drawerVisible}

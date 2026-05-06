@@ -79,8 +79,9 @@ export const qrcodeService = {
    * 对应后端 GET /api/v1/admin/qrcodes/consultation
    */
   async getConsultationQrcodesAdmin(): Promise<ResponseMessage<ConsultationQrcodeDTO[]>> {
-    const response =
-      await apiClient.get<ResponseMessage<ConsultationQrcodeDTO[]>>('/qrcodes/consultation')
+    const response = await apiClient.get<ResponseMessage<ConsultationQrcodeDTO[]>>(
+      '/admin/qrcodes/consultation'
+    )
     return response.data
   },
 
@@ -89,8 +90,9 @@ export const qrcodeService = {
    * 对应后端 POST /api/v1/admin/qrcodes/consultation
    */
   async createConsultationQrcode(fileId: number): Promise<ResponseMessage<void>> {
-    const response =
-      await apiClient.post<ResponseMessage<void>>(`/qrcodes/consultation?fileId=${fileId}`)
+    const response = await apiClient.post<ResponseMessage<void>>(
+      `/admin/qrcodes/consultation?fileId=${fileId}`
+    )
     return response.data
   },
 
@@ -102,8 +104,10 @@ export const qrcodeService = {
     id: number,
     data: UpdateConsultationQrcodeRequestDTO
   ): Promise<ResponseMessage<void>> {
-    const response =
-      await apiClient.put<ResponseMessage<void>>(`/qrcodes/consultation/${id}`, data)
+    const response = await apiClient.put<ResponseMessage<void>>(
+      `/admin/qrcodes/consultation/${id}`,
+      data
+    )
     return response.data
   },
 
@@ -112,8 +116,9 @@ export const qrcodeService = {
    * 对应后端 DELETE /api/v1/admin/qrcodes/consultation/{id}
    */
   async deleteConsultationQrcode(id: number): Promise<ResponseMessage<void>> {
-    const response =
-      await apiClient.delete<ResponseMessage<void>>(`/qrcodes/consultation/${id}`)
+    const response = await apiClient.delete<ResponseMessage<void>>(
+      `/admin/qrcodes/consultation/${id}`
+    )
     return response.data
   },
 
@@ -129,8 +134,9 @@ export const qrcodeService = {
     if (direction) params.append('direction', direction)
     if (epoch) params.append('epoch', epoch.toString())
 
-    const response =
-      await apiClient.get<ResponseMessage<AssessmentQrcodeDTO[]>>(`/qrcodes/assessment${params.toString() ? '?' + params.toString() : ''}`)
+    const response = await apiClient.get<ResponseMessage<AssessmentQrcodeDTO[]>>(
+      `/admin/qrcodes/assessment${params.toString() ? '?' + params.toString() : ''}`
+    )
     return response.data
   },
 
@@ -141,8 +147,7 @@ export const qrcodeService = {
   async createAssessmentQrcode(
     data: CreateAssessmentQrcodeRequestDTO
   ): Promise<ResponseMessage<void>> {
-    const response =
-      await apiClient.post<ResponseMessage<void>>('/qrcodes/assessment', data)
+    const response = await apiClient.post<ResponseMessage<void>>('/admin/qrcodes/assessment', data)
     return response.data
   },
 
@@ -154,8 +159,10 @@ export const qrcodeService = {
     id: number,
     data: UpdateAssessmentQrcodeRequestDTO
   ): Promise<ResponseMessage<void>> {
-    const response =
-      await apiClient.put<ResponseMessage<void>>(`/qrcodes/assessment/${id}`, data)
+    const response = await apiClient.put<ResponseMessage<void>>(
+      `/admin/qrcodes/assessment/${id}`,
+      data
+    )
     return response.data
   },
 
@@ -164,8 +171,9 @@ export const qrcodeService = {
    * 对应后端 DELETE /api/v1/admin/qrcodes/assessment/{id}
    */
   async deleteAssessmentQrcode(id: number): Promise<ResponseMessage<void>> {
-    const response =
-      await apiClient.delete<ResponseMessage<void>>(`/qrcodes/assessment/${id}`)
+    const response = await apiClient.delete<ResponseMessage<void>>(
+      `/admin/qrcodes/assessment/${id}`
+    )
     return response.data
   },
 }
