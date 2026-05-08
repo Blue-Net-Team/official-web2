@@ -113,6 +113,31 @@ public class FileRepositoryImpl implements FileRepository {
     }
 
     /**
+     * 仅保存文件元数据，不操作对象存储。
+     *
+     * @param file
+     *            文件领域对象
+     * @return 保存后的文件领域对象
+     */
+    @Override
+    @Transactional
+    public File saveFileMetadata(File file) {
+        FileDO dataObject = converter.toDataObject(file);
+        fileMapper.insert(dataObject);
+        file.setId(dataObject.getId());
+        log.debug("File metadata saved successfully: id={}, type={}", file.getId(), file.getType());
+        return file;
+    }
+
+    @Override
+    @Transactional
+    public void updateFileMetadata(File file) {
+        FileDO dataObject = converter.toDataObject(file);
+        fileMapper.updateById(dataObject);
+        log.debug("File metadata updated successfully: id={}, status={}", file.getId(), file.getStatus());
+    }
+
+    /**
      * 按文件主键删除文件元数据和对象存储内容。
      *
      * @param id

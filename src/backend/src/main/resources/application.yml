@@ -24,7 +24,8 @@ spring:
     driver-class-name: org.postgresql.Driver
   servlet:
     multipart:
-      max-file-size: 5MB
+      max-file-size: 500MB
+      max-request-size: 500MB
 
   mail:
     host: smtp.163.com
@@ -72,10 +73,12 @@ storage:
     accessKey: ${MINIO_AK:admin}
     secretKey: ${MINIO_SK:admin1234}
     useSSL: ${MINIO_USE_SSL:false}
+    publicUrl: ${MINIO_PUBLIC_URL:}
   aliyun-oss:
     endpoint: ${ALIYUN_OSS_ENDPOINT:}
     accessKeyId: ${ALIYUN_OSS_AK:}
     accessKeySecret: ${ALIYUN_OSS_SK:}
+    publicEndpoint: ${ALIYUN_OSS_PUBLIC_ENDPOINT:}
 
 # Judge assets use an isolated bucket and must not be exposed through candidate file APIs.
 judge:
@@ -126,7 +129,6 @@ github:
   oauth:
     client-id: ${GITHUB_CLIENT_ID:}
     client-secret: ${GITHUB_CLIENT_SECRET:}
-    callback-base-url: ${GITHUB_CALLBACK_BASE_URL:http://localhost:8080}
     frontend-base-url: ${GITHUB_FRONTEND_BASE_URL:http://localhost:3000}
   app:    # github app 用于自动同步bug issue
     app-id: ${GITHUB_APP_ID:}

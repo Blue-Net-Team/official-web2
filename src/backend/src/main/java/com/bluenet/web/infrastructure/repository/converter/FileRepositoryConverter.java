@@ -27,6 +27,7 @@ public class FileRepositoryConverter {
                 .name(entity.getName())
                 .type(entity.getType())
                 .url(entity.getUrl())
+                .status(entity.getStatus())
                 .build();
     }
 
@@ -37,7 +38,12 @@ public class FileRepositoryConverter {
         if (dataObject == null) {
             return null;
         }
-        return File.reconstruct(dataObject.getId(), dataObject.getName(), dataObject.getType(), dataObject.getUrl());
+        return File.reconstruct(
+                dataObject.getId(),
+                dataObject.getName(),
+                dataObject.getType(),
+                dataObject.getUrl(),
+                dataObject.getStatus());
     }
 
     /**

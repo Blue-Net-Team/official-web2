@@ -1,5 +1,6 @@
 package com.bluenet.web.api.dto.file;
 
+import com.bluenet.web.domain.model.enumerate.FileStatus;
 import com.bluenet.web.domain.model.enumerate.FileType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
@@ -19,4 +20,6 @@ public class FileInfo {
     private FileType type;
     @Schema(description = "已废弃，文件下载请使用 /api/v1/file/download/{id} 接口", deprecated = true)
     private String url;
+    @Schema(description = "文件状态")
+    private FileStatus status;
 }

@@ -17,6 +17,7 @@ x-backend-env: &backend-env
   MINIO_AK: admin
   MINIO_SK: ${MINIO_PASSWORD:-admin123}
   MINIO_USE_SSL: false
+  MINIO_PUBLIC_URL: ${MINIO_PUBLIC_URL:-http://host.docker.internal:7000}
   ALIYUN_OSS_ENDPOINT: ${ALIYUN_OSS_ENDPOINT:-}
   ALIYUN_OSS_AK: ${ALIYUN_OSS_AK:-}
   ALIYUN_OSS_SK: ${ALIYUN_OSS_SK:-}
@@ -65,7 +66,7 @@ services:
     environment: *backend-env
     # 启用 Bug 报告同步到 GitHub Issue 时，确保宿主机 .env 中 GITHUB_APP_PRIVATE_KEY_PATH 指向私钥文件
     volumes:
-      - ${GITHUB_APP_PRIVATE_KEY_PATH}:/app/github-private-key.pem:ro
+      - ${GITHUB_APP_PRIVATE_KEY_PATH:-docker/null.pem}:/app/github-private-key.pem:ro
     depends_on:
       database:
         condition: service_healthy
@@ -86,7 +87,7 @@ services:
       - app
     restart: ${RESTART_POLICY:-no}
     networks:
-      - bluenet-network
+      - network
 
   frontend:
     image: ${FRONTEND_IMAGE:-bluenet-frontend:latest}
@@ -105,7 +106,7 @@ services:
       - app
     restart: ${RESTART_POLICY:-no}
     networks:
-      - bluenet-network
+      - network
 
   judge-service:
     image: ${JUDGE_IMAGE:-bluenet-judge-service:latest}
@@ -120,7 +121,7 @@ services:
       DATABASE_PORT: 5432
       DATABASE_NAME: db_blue_net
       DATABASE_USERNAME: postgres
-      DATABASE_PASSWORD: ${DB_PASSWORD:-hyfzhl999}
+      DATABASE_PASSWORD: ${DB_PASSWORD:-000000}
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_PORT: 5672
       RABBITMQ_USERNAME: ${RABBITMQ_USERNAME:-admin}
@@ -147,7 +148,7 @@ services:
       - app
     restart: ${RESTART_POLICY:-no}
     networks:
-      - bluenet-network
+      - network
 
   database:
     image: postgres:17
@@ -171,7 +172,7 @@ services:
       - infra
     restart: ${RESTART_POLICY:-no}
     networks:
-      - bluenet-network
+      - network
 
   rabbitmq:
     image: rabbitmq:3-management
@@ -195,7 +196,7 @@ services:
       - infra
     restart: ${RESTART_POLICY:-no}
     networks:
-      - bluenet-network
+      - network
 
   redis:
     image: redis:7
@@ -223,7 +224,7 @@ services:
       - infra
     restart: ${RESTART_POLICY:-no}
     networks:
-      - bluenet-network
+      - network
 
   oss:
     image: minio/minio:RELEASE.2025-09-07T16-13-09Z
@@ -248,10 +249,10 @@ services:
       - infra
     restart: ${RESTART_POLICY:-no}
     networks:
-      - bluenet-network
+      - network
 
 networks:
-  bluenet-network:
+  network:
     driver: bridge
 
 volumes:

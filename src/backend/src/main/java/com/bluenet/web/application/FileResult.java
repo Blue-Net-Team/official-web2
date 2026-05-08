@@ -1,5 +1,6 @@
 package com.bluenet.web.application;
 
+import com.bluenet.web.domain.model.enumerate.FileStatus;
 import com.bluenet.web.domain.model.enumerate.FileType;
 
 /**
@@ -16,5 +17,7 @@ public record FileResult(
         /** 类型 */
         FileType type,
         /** URL地址 */
-        String url) {
+        String url,
+        /** 文件状态 */
+        FileStatus status) {
 }

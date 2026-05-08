@@ -1,14 +1,16 @@
 package com.bluenet.web.infrastructure.storage;
 
 import com.aliyun.oss.ClientException;
+import com.aliyun.oss.HttpMethod;
 import com.aliyun.oss.OSS;
 import com.aliyun.oss.OSSException;
+import com.aliyun.oss.model.GeneratePresignedUrlRequest;
 import com.aliyun.oss.model.OSSObject;
 import com.bluenet.web.domain.exception.DataNotFound;
 import com.bluenet.web.domain.model.enumerate.FileType;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.core.io.ByteArrayResource;
@@ -16,6 +18,9 @@ import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Component;
 
 import java.io.InputStream;
+import java.net.URL;
+import java.time.Duration;
+import java.util.Date;
 
 /**
  * 阿里云 OSS 对象存储适配器。
@@ -25,13 +30,22 @@ import java.io.InputStream;
  */
 @Slf4j
 @Component
-@RequiredArgsConstructor
 @ConditionalOnExpression("'${storage.enabled:true}' == 'true' && '${storage.provider:minio}' == 'aliyun-oss'")
 @ConditionalOnBean(OSS.class)
 public class AliyunOssObjectStorage implements ObjectStorage {
 
     private final OSS ossClient;
+    private final OSS publicOssClient;
     private final ObjectLocationResolver objectLocationResolver;
+
+    public AliyunOssObjectStorage(
+            OSS ossClient,
+            @Qualifier("publicOssClient") OSS publicOssClient,
+            ObjectLocationResolver objectLocationResolver) {
+        this.ossClient = ossClient;
+        this.publicOssClient = publicOssClient;
+        this.objectLocationResolver = objectLocationResolver;
+    }
 
     @Override
     public String providerName() {
@@ -126,6 +140,96 @@ public class AliyunOssObjectStorage implements ObjectStorage {
         }
     }
 
+    @Override
+    public String getPresignedUploadUrl(FileType fileType, String filename, String contentType, long size,
+            Duration expiry) {
+        ObjectLocation location = objectLocationResolver.resolve(fileType, filename);
+        try {
+            Date expiration = new Date(System.currentTimeMillis() + expiry.toMillis());
+            GeneratePresignedUrlRequest request = new GeneratePresignedUrlRequest(location.bucket(),
+                    location.objectKey(), HttpMethod.PUT);
+            request.setExpiration(expiration);
+            if (contentType != null && !contentType.isBlank()) {
+                request.setContentType(contentType);
+            }
+            URL url = publicOssClient.generatePresignedUrl(request);
+            return url.toString();
+        } catch (OSSException | ClientException e) {
+            log.error(
+                    "Error generating presigned upload URL from Aliyun OSS: {}/{}",
+                    location.bucket(),
+                    location.objectKey(),
+                    e);
+            throw new RuntimeException("Failed to generate presigned upload URL: " + filename, e);
+        }
+    }
+
+    @Override
+    public String getPresignedDownloadUrl(FileType fileType, String filename, Duration expiry) {
+        ObjectLocation location = objectLocationResolver.resolve(fileType, filename);
+        try {
+            Date expiration = new Date(System.currentTimeMillis() + expiry.toMillis());
+            URL url = publicOssClient
+                    .generatePresignedUrl(location.bucket(), location.objectKey(), expiration, HttpMethod.GET);
+            return url.toString();
+        } catch (OSSException | ClientException e) {
+            log.error(
+                    "Error generating presigned download URL from Aliyun OSS: {}/{}",
+                    location.bucket(),
+                    location.objectKey(),
+                    e);
+            throw new RuntimeException("Failed to generate presigned download URL: " + filename, e);
+        }
+    }
+
+    @Override
+    public byte[] getObjectHeader(FileType fileType, String filename, int bytes) {
+        ObjectLocation location = objectLocationResolver.resolve(fileType, filename);
+        try {
+            com.aliyun.oss.model.GetObjectRequest request = new com.aliyun.oss.model.GetObjectRequest(location.bucket(),
+                    location.objectKey());
+            request.setRange(0, bytes - 1);
+            OSSObject object = ossClient.getObject(request);
+            try (InputStream is = object.getObjectContent()) {
+                return is.readNBytes(bytes);
+            }
+        } catch (OSSException e) {
+            if ("NoSuchKey".equals(e.getErrorCode()) || "NoSuchBucket".equals(e.getErrorCode())) {
+                throw new DataNotFound("File not found: " + filename);
+            }
+            throw new RuntimeException("Failed to get object header from Aliyun OSS: " + filename, e);
+        } catch (ClientException e) {
+            throw new RuntimeException("Failed to get object header: " + filename, e);
+        } catch (java.io.IOException e) {
+            throw new RuntimeException("Failed to read object header: " + filename, e);
+        }
+    }
+
+    @Override
+    public StorageObjectMetadata headObject(FileType fileType, String filename) {
+        ObjectLocation location = objectLocationResolver.resolve(fileType, filename);
+        try {
+            com.aliyun.oss.model.ObjectMetadata metadata = ossClient
+                    .headObject(location.bucket(), location.objectKey());
+            return new StorageObjectMetadata(metadata.getETag(), metadata.getContentType(),
+                    metadata.getContentLength());
+        } catch (OSSException e) {
+            if ("NoSuchKey".equals(e.getErrorCode()) || "NoSuchBucket".equals(e.getErrorCode())) {
+                log.warn("File not found in Aliyun OSS: {}/{}", location.bucket(), location.objectKey());
+                throw new DataNotFound("File not found: " + filename);
+            }
+            log.error("Aliyun OSS error while getting metadata: {}/{}", location.bucket(), location.objectKey(), e);
+            throw new RuntimeException("Failed to get object metadata from Aliyun OSS: " + filename, e);
+        } catch (ClientException e) {
+            log.error(
+                    "Error getting object metadata from Aliyun OSS: {}/{}",
+                    location.bucket(),
+                    location.objectKey(),
+                    e);
+            throw new RuntimeException("Failed to get object metadata: " + filename, e);
+        }
+    }
+
     private Resource resource(String filename, byte[] data) {
         return new ByteArrayResource(data) {
             @Override
@@ -134,4 +238,5 @@ public class AliyunOssObjectStorage implements ObjectStorage {
             }
         };
     }
+
 }

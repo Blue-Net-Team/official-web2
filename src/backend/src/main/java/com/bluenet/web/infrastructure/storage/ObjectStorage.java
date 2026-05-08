@@ -4,6 +4,7 @@ import com.bluenet.web.domain.model.enumerate.FileType;
 import org.springframework.core.io.Resource;
 
 import java.io.InputStream;
+import java.time.Duration;
 
 /**
  * 对象存储统一接口。
@@ -60,4 +61,58 @@ public interface ObjectStorage {
      * 检查对象存储连接和 bucket 可访问性。
      */
     void checkHealth();
+
+    /**
+     * 生成预签名上传 URL。
+     *
+     * @param fileType
+     *            文件业务类型
+     * @param filename
+     *            文件名
+     * @param contentType
+     *            文件 Content-Type
+     * @param size
+     *            文件大小（字节）
+     * @param expiry
+     *            URL 过期时间
+     * @return 预签名 PUT URL
+     */
+    String getPresignedUploadUrl(FileType fileType, String filename, String contentType, long size, Duration expiry);
+
+    /**
+     * 生成预签名下载 URL。
+     *
+     * @param fileType
+     *            文件业务类型
+     * @param filename
+     *            文件名
+     * @param expiry
+     *            URL 过期时间
+     * @return 预签名 GET URL
+     */
+    String getPresignedDownloadUrl(FileType fileType, String filename, Duration expiry);
+
+    /**
+     * 获取对象元数据（HEAD 请求）。
+     *
+     * @param fileType
+     *            文件业务类型
+     * @param filename
+     *            文件名
+     * @return 对象元数据
+     */
+    StorageObjectMetadata headObject(FileType fileType, String filename);
+
+    /**
+     * 读取对象前 N 个字节。
+     *
+     * @param fileType
+     *            文件业务类型
+     * @param filename
+     *            文件名
+     * @param bytes
+     *            要读取的字节数
+     * @return 文件头字节数组
+     */
+    byte[] getObjectHeader(FileType fileType, String filename, int bytes);
 }

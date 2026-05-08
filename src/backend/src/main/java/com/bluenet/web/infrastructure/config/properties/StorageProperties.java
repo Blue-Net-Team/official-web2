@@ -6,6 +6,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
+import java.time.Duration;
+
 /**
  * 对象存储配置属性。
  * <p>
@@ -26,6 +28,8 @@ public class StorageProperties {
     private String bucket = "bluenet";
     private Minio minio = new Minio();
     private AliyunOss aliyunOss = new AliyunOss();
+    private Duration presignedUploadExpiry = Duration.ofMinutes(15);
+    private Duration presignedDownloadExpiry = Duration.ofMinutes(10);
 
     /**
      * 校验跨 provider 共享配置。
@@ -98,6 +102,11 @@ public class StorageProperties {
         private String accessKey = "admin";
         private String secretKey = "admin1234";
         private Boolean useSSL = false;
+        /**
+         * 对外可访问的公共 URL，用于替换预签名 URL 中的内部地址。 例如：https://minio.example.com 或
+         * http://localhost:9000
+         */
+        private String publicUrl;
     }
 
     /**
@@ -108,5 +117,9 @@ public class StorageProperties {
         private String endpoint = "";
         private String accessKeyId = "";
         private String accessKeySecret = "";
+        /**
+         * 对外可访问的公共 endpoint，用于替换预签名 URL 中的内部地址。 例如：https://oss-cn-hangzhou.aliyuncs.com
+         */
+        private String publicEndpoint;
     }
 }

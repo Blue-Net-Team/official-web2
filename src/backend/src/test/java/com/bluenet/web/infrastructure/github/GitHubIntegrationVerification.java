@@ -1,6 +1,7 @@
 package com.bluenet.web.infrastructure.github;
 
 import com.bluenet.web.infrastructure.config.GitHubAppProperties;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -13,6 +14,7 @@ import static org.junit.jupiter.api.Assertions.*;
  *
  * 验证完成后请删除创建的测试 Issue。
  */
+@Slf4j
 class GitHubIntegrationVerification {
 
     @Test
@@ -25,7 +27,7 @@ class GitHubIntegrationVerification {
 
         assertNotNull(token);
         assertTrue(token.startsWith("ghs_"));
-        System.out.println("Installation Access Token: " + token);
+        log.info("Installation Access Token: {}", token);
     }
 
     @Test
@@ -43,7 +45,7 @@ class GitHubIntegrationVerification {
         assertNotNull(result);
         assertNotNull(result.number());
         assertNotNull(result.htmlUrl());
-        System.out.println("Created Issue: #" + result.number() + " -> " + result.htmlUrl());
+        log.info("Created Issue: #{} -> {}", result.number(), result.htmlUrl());
     }
 
     private GitHubAppProperties createProperties() {

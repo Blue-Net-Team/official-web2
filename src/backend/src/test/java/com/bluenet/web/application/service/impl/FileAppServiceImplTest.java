@@ -22,8 +22,10 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.bluenet.web.application.FileResult;
 import com.bluenet.web.application.command.file.FileCommands;
+import com.bluenet.web.domain.model.enumerate.FileStatus;
 import com.bluenet.web.domain.model.enumerate.FileType;
 import com.bluenet.web.domain.model.vo.FileVO;
+import com.bluenet.web.domain.repository.FileRepository;
 import com.bluenet.web.domain.service.FileDomainService;
 
 /**
@@ -38,6 +40,9 @@ class FileAppServiceImplTest {
 
     @Mock
     private FileDomainService fileDomainService;
+
+    @Mock
+    private FileRepository fileRepository;
 
     @InjectMocks
     private FileAppServiceImpl fileAppService;
@@ -60,6 +65,7 @@ class FileAppServiceImplTest {
                 .name(TEST_FILE_NAME)
                 .url(TEST_FILE_URL)
                 .type(FileType.NORMAL_IMG)
+                .status(FileStatus.ACTIVE)
                 .build();
     }
 
@@ -82,6 +88,7 @@ class FileAppServiceImplTest {
                     .name(TEST_FILE_NAME)
                     .url(TEST_FILE_URL)
                     .type(fileType)
+                    .status(FileStatus.ACTIVE)
                     .build();
 
             when(fileDomainService.generateFilename(eq(fileType), any())).thenReturn(TEST_FILE_NAME);
@@ -96,6 +103,7 @@ class FileAppServiceImplTest {
             assertEquals(TEST_FILE_NAME, result.name());
             assertEquals(fileType, result.type());
             assertEquals(TEST_FILE_URL, result.url());
+            assertEquals(FileStatus.ACTIVE, result.status());
 
             verify(fileDomainService).generateFilename(eq(fileType), any());
             verify(fileDomainService).saveFile(eq(fileType), any(), any());
@@ -136,20 +144,24 @@ class FileAppServiceImplTest {
             var fields = FileAppServiceImpl.class.getDeclaredFields();
             long serviceCount = 0;
             for (var field : fields) {
-                if (field.getName().equals("fileDomainService")) {
+                if (field.getName().equals("fileDomainService") || field.getName().equals("fileRepository")) {
                     serviceCount++;
                 }
             }
-            // 确保只有一个依赖（fileDomainService）
-            assertEquals(1, serviceCount, "FileAppServiceImpl 应只有一个 fileDomainService 依赖");
+            // 确保有两个依赖（fileDomainService 和 fileRepository）
+            assertEquals(2, serviceCount, "FileAppServiceImpl 应有 fileDomainService 和 fileRepository 两个依赖");
 
-            // 确保不包含业务领域服务的依赖
+            // 确保包含必要的依赖
             assertDoesNotThrow(() -> {
                 var field = FileAppServiceImpl.class.getDeclaredField("fileDomainService");
                 assertNotNull(field);
             });
+            assertDoesNotThrow(() -> {
+                var field = FileAppServiceImpl.class.getDeclaredField("fileRepository");
+                assertNotNull(field);
+            });
 
-            // 确保不存在 UserDomainService、AssessmentQuestionDomainService 等依赖
+            // 确保不存在其他业务领域服务的依赖
             assertThrows(
                     NoSuchFieldException.class,
                     () -> FileAppServiceImpl.class.getDeclaredField("userDomainService"));

@@ -3,6 +3,7 @@ package com.bluenet.web.infrastructure.repository.dataobject;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.bluenet.web.domain.model.enumerate.FileStatus;
 import com.bluenet.web.domain.model.enumerate.FileType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -37,4 +38,9 @@ public class FileDO {
      */
     @Deprecated
     private String url;
+
+    /**
+     * 文件状态。
+     */
+    private FileStatus status;
 }

@@ -1,8 +1,11 @@
 package com.bluenet.web.application.service;
 
+import com.bluenet.web.application.ConfirmUploadResult;
 import com.bluenet.web.application.FileDownloadResult;
 import com.bluenet.web.application.FileResult;
+import com.bluenet.web.application.PresignedUploadResult;
 import com.bluenet.web.application.command.file.FileCommands;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 /**
  * 文件应用服务接口。
@@ -30,11 +33,38 @@ public interface FileAppService {
     FileDownloadResult downloadFile(FileCommands.DownloadFileCommand command);
 
     /**
-     * 批量下载文件并打包为 ZIP。
+     * 预签名上传准备。
+     *
+     * @param command
+     *            准备命令
+     * @return 准备结果
+     */
+    PresignedUploadResult prepareUpload(FileCommands.PrepareUploadCommand command);
+
+    /**
+     * 预签名上传确认。
+     *
+     * @param command
+     *            确认命令
+     * @return 确认结果
+     */
+    ConfirmUploadResult confirmUpload(FileCommands.ConfirmUploadCommand command);
+
+    /**
+     * 获取预签名下载 URL。
+     *
+     * @param command
+     *            下载命令
+     * @return 预签名 GET URL
+     */
+    String getPresignedDownloadUrl(FileCommands.DownloadFileCommand command);
+
+    /**
+     * 批量下载文件并流式输出。
      *
      * @param command
      *            批量下载命令
-     * @return 文件下载结果（resource 为 ZIP 字节流，filename 为 ZIP 包名）
+     * @return 流式响应体
      */
-    FileDownloadResult downloadBatch(FileCommands.BatchDownloadCommand command);
+    StreamingResponseBody downloadBatchStream(FileCommands.BatchDownloadCommand command);
 }
