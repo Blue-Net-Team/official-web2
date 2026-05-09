@@ -598,6 +598,7 @@ jobs:
         build-args: |
           BUILD_BACKEND_HOST=${{ secrets.BACKEND_HOST }}
           BUILD_BACKEND_PORT=${{ secrets.BACKEND_PORT }}
+          BUILD_SSL_ENABLED=${{ secrets.SSL_ENABLED }}
           NEXT_PUBLIC_BACKEND_HOST=${{ secrets.BACKEND_HOST }}
           NEXT_PUBLIC_BACKEND_PORT=${{ secrets.BACKEND_PORT }}
           NEXT_PUBLIC_SSL_ENABLED=${{ secrets.SSL_ENABLED }}

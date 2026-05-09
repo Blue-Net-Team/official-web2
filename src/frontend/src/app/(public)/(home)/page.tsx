@@ -15,9 +15,12 @@ import RecruitmentProcess from '@/components/Home/RecruitmentProcess'
 export const revalidate = 3600
 
 async function CompetitionsTable() {
-  const competitionsBrief = await competitionService.getAllCompetitions()
-
-  return <Competitions competitions={competitionsBrief.data || []} />
+  try {
+    const competitionsBrief = await competitionService.getAllCompetitions()
+    return <Competitions competitions={competitionsBrief.data || []} />
+  } catch {
+    return <Competitions competitions={[]} />
+  }
 }
 
 export default function Home() {
