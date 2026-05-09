@@ -76,9 +76,6 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-      oss:
-        condition: service_healthy
-        required: false
       rabbitmq:
         condition: service_healthy
     healthcheck:
@@ -132,9 +129,6 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
-      oss:
-        condition: service_healthy
-        required: false
     profiles:
       - full
       - app
