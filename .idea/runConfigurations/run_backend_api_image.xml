@@ -4,9 +4,7 @@
       <settings>
         <option name="imageTag" value="bluenet-api-service:latest" />
         <option name="containerName" value="backend-api-dev" />
-        <option name="envVars">
-          <list />
-        </option>
+        <option name="contextFolderPath" value="." />
         <option name="portBindings">
           <list>
             <DockerPortBindingImpl>
@@ -16,8 +14,7 @@
           </list>
         </option>
         <option name="commandLineOptions" value="--env-file docker/.env --network bluenet_network" />
-        <option name="contextFolderPath" value="." />
-        <option name="sourceFilePath" value="docker/backend.Dockerfile" />
+        <option name="sourceFilePath" value="docker/api-service.Dockerfile" />
       </settings>
     </deployment>
     <method v="2">
