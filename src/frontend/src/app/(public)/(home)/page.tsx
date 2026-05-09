@@ -3,6 +3,7 @@ import bg2 from '@/assets/bg2.png'
 import { Flex } from 'antd'
 import TopContent from '@/components/Home/TopContent'
 import { competitionService } from '@/apis/services/competition.service'
+import { CompetitionResponseDTO } from '@/apis/schema/type'
 import AchievementAndResources from '@/components/Home/AchievementAndResources'
 import FeaturedEquipment from '@/components/Home/FeaturedEquipment'
 import TeamVibe from '@/components/Home/TeamVibe'
@@ -15,12 +16,14 @@ import RecruitmentProcess from '@/components/Home/RecruitmentProcess'
 export const revalidate = 3600
 
 async function CompetitionsTable() {
+  let competitions: CompetitionResponseDTO[] = []
   try {
     const competitionsBrief = await competitionService.getAllCompetitions()
-    return <Competitions competitions={competitionsBrief.data || []} />
+    competitions = competitionsBrief.data || []
   } catch {
-    return <Competitions competitions={[]} />
+    // 构建时 API 不可用，使用空数组
   }
+  return <Competitions competitions={competitions} />
 }
 
 export default function Home() {

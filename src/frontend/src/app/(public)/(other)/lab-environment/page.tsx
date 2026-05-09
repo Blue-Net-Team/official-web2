@@ -92,47 +92,51 @@ function EquipmentCard({ equipment }: { equipment: EquipmentDTO }) {
 }
 
 async function VenuesSection() {
+  let venues: VenueDTO[] = []
   try {
     const response = await VenueService.getAllVenues()
-
-    if (response.code !== 200 || !response.data || response.data.length === 0) {
-      return <EmptyState message="暂无场地数据" />
+    if (response.code === 200 && response.data) {
+      venues = response.data
     }
-
-    const venues: VenueDTO[] = response.data
-
-    return (
-      <div className="grid grid-cols-2 max-sm:grid-cols-1 gap-6 max-sm:gap-4 w-full">
-        {venues.map((venue) => (
-          <VenueCard key={venue.id} venue={venue} />
-        ))}
-      </div>
-    )
   } catch {
+    // 构建时 API 不可用，使用空数组
+  }
+
+  if (venues.length === 0) {
     return <EmptyState message="暂无场地数据" />
   }
+
+  return (
+    <div className="grid grid-cols-2 max-sm:grid-cols-1 gap-6 max-sm:gap-4 w-full">
+      {venues.map((venue) => (
+        <VenueCard key={venue.id} venue={venue} />
+      ))}
+    </div>
+  )
 }
 
 async function EquipmentsSection() {
+  let equipments: EquipmentDTO[] = []
   try {
     const response = await EquipmentService.getAllEquipments()
-
-    if (response.code !== 200 || !response.data || response.data.length === 0) {
-      return <EmptyState message="暂无设备数据" />
+    if (response.code === 200 && response.data) {
+      equipments = response.data
     }
-
-    const equipments: EquipmentDTO[] = response.data
-
-    return (
-      <div className="grid grid-cols-3 max-sm:grid-cols-1 gap-6 max-sm:gap-4 w-full">
-        {equipments.map((equipment) => (
-          <EquipmentCard key={equipment.id} equipment={equipment} />
-        ))}
-      </div>
-    )
   } catch {
+    // 构建时 API 不可用，使用空数组
+  }
+
+  if (equipments.length === 0) {
     return <EmptyState message="暂无设备数据" />
   }
+
+  return (
+    <div className="grid grid-cols-3 max-sm:grid-cols-1 gap-6 max-sm:gap-4 w-full">
+      {equipments.map((equipment) => (
+        <EquipmentCard key={equipment.id} equipment={equipment} />
+      ))}
+    </div>
+  )
 }
 
 export const metadata = {
