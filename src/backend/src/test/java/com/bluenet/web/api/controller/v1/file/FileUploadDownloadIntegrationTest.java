@@ -40,6 +40,7 @@ import java.nio.charset.StandardCharsets;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -213,7 +214,9 @@ class FileUploadDownloadIntegrationTest extends BaseIntegrationTest {
         answer.setFileId(workFileVO.getId());
         RepositoryTestObjects.updateById(assessmentAnswerMapper, answer, AssessmentAnswerDO.class);
 
-        mockMvc.perform(get("/api/v1/file/download/" + workFileVO.getId())).andExpect(status().isOk());
+        mockMvc.perform(get("/api/v1/file/download/" + workFileVO.getId()))
+                .andExpect(status().isFound())
+                .andExpect(header().string("Location", org.hamcrest.Matchers.notNullValue()));
     }
 
     @Test
@@ -303,7 +306,9 @@ class FileUploadDownloadIntegrationTest extends BaseIntegrationTest {
         answer.setFileId(workFileVO.getId());
         RepositoryTestObjects.updateById(assessmentAnswerMapper, answer, AssessmentAnswerDO.class);
 
-        mockMvc.perform(get("/api/v1/file/download/" + workFileVO.getId())).andExpect(status().isOk());
+        mockMvc.perform(get("/api/v1/file/download/" + workFileVO.getId()))
+                .andExpect(status().isFound())
+                .andExpect(header().string("Location", org.hamcrest.Matchers.notNullValue()));
     }
 
     @Test
@@ -345,7 +350,9 @@ class FileUploadDownloadIntegrationTest extends BaseIntegrationTest {
         question.setAttachmentId(attachmentFileVO.getId());
         RepositoryTestObjects.updateById(assessmentQuestionMapper, question, AssessmentQuestionDO.class);
 
-        mockMvc.perform(get("/api/v1/file/download/" + attachmentFileVO.getId())).andExpect(status().isOk());
+        mockMvc.perform(get("/api/v1/file/download/" + attachmentFileVO.getId()))
+                .andExpect(status().isFound())
+                .andExpect(header().string("Location", org.hamcrest.Matchers.notNullValue()));
     }
 
     @Test
@@ -395,7 +402,9 @@ class FileUploadDownloadIntegrationTest extends BaseIntegrationTest {
     void downloadAvatar_asPublic_shouldReturn200() throws Exception {
         FileVO avatarFileVO = createFileInMinio("avatar.png", FileType.AVATAR);
 
-        mockMvc.perform(get("/api/v1/file/download/" + avatarFileVO.getId())).andExpect(status().isOk());
+        mockMvc.perform(get("/api/v1/file/download/" + avatarFileVO.getId()))
+                .andExpect(status().isFound())
+                .andExpect(header().string("Location", org.hamcrest.Matchers.notNullValue()));
     }
 
     @Test
@@ -403,7 +412,9 @@ class FileUploadDownloadIntegrationTest extends BaseIntegrationTest {
     void downloadNormalImg_asPublic_shouldReturn200() throws Exception {
         FileVO normalImgFileVO = createFileInMinio("image.jpg", FileType.NORMAL_IMG);
 
-        mockMvc.perform(get("/api/v1/file/download/" + normalImgFileVO.getId())).andExpect(status().isOk());
+        mockMvc.perform(get("/api/v1/file/download/" + normalImgFileVO.getId()))
+                .andExpect(status().isFound())
+                .andExpect(header().string("Location", org.hamcrest.Matchers.notNullValue()));
     }
 
     @Test
@@ -411,7 +422,9 @@ class FileUploadDownloadIntegrationTest extends BaseIntegrationTest {
     void downloadQrcode_asPublic_shouldReturn200() throws Exception {
         FileVO qrcodeFileVO = createFileInMinio("qrcode.png", FileType.QRCODE);
 
-        mockMvc.perform(get("/api/v1/file/download/" + qrcodeFileVO.getId())).andExpect(status().isOk());
+        mockMvc.perform(get("/api/v1/file/download/" + qrcodeFileVO.getId()))
+                .andExpect(status().isFound())
+                .andExpect(header().string("Location", org.hamcrest.Matchers.notNullValue()));
     }
 
     @Test
