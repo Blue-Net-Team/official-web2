@@ -310,6 +310,38 @@ export interface FileInfo {
 }
 
 /**
+ * 预签名上传准备响应
+ * 对应后端 PrepareUploadResponse.java
+ */
+export interface PrepareUploadResponse {
+  /** 文件ID */
+  fileId: number
+  /** 预签名上传 URL */
+  uploadUrl: string
+  /** 回调令牌 */
+  callbackToken: string
+  /** 生成的文件名 */
+  filename: string
+  /** 文件类型 */
+  type: FileType
+}
+
+/**
+ * 预签名上传确认响应
+ * 对应后端 ConfirmUploadResponse.java
+ */
+export interface ConfirmUploadResponse {
+  /** 文件ID */
+  fileId: number
+  /** 文件名 */
+  filename: string
+  /** 文件类型 */
+  type: FileType
+  /** 文件状态 */
+  status: 'PENDING' | 'ACTIVE' | 'REJECTED'
+}
+
+/**
  * 成员经历类型
  * 对应后端 ExperienceDTO.java
  */

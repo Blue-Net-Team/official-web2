@@ -21,6 +21,7 @@ import { algorithmJudgeService } from '@/apis/services/algorithm-judge.service'
 import { assessmentStatisticsService } from '@/apis/services/assessment-statistics.service'
 import { fileService } from '@/apis/services/file.service'
 import { useAuth } from '@/hooks'
+import { usePresignedUpload } from '@/hooks/usePresignedUpload'
 import type {
   AssessmentQuestionDTO,
   AssessmentAnswerDTO,
@@ -61,8 +62,8 @@ export default function QuestionDetailPage() {
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [isResubmitting, setIsResubmitting] = useState(false)
-  const [uploadProgress, setUploadProgress] = useState(0)
   const [uploadedFile, setUploadedFile] = useState<UploadedFileInfo | null>(null)
+  const { phase: presignedPhase, progress: uploadProgress, upload } = usePresignedUpload()
   const [isExpired, setIsExpired] = useState(false)
   const [selectedOption, setSelectedOption] = useState<string | null>(null)
   const [selectedOptions, setSelectedOptions] = useState<string[]>([])
@@ -594,27 +595,21 @@ export default function QuestionDetailPage() {
     accept: fileContent?.allowedExtensions?.map((ext) => `.${ext}`).join(',') || undefined,
     customRequest: async ({ file, onSuccess, onError }) => {
       try {
-        setUploadProgress(0)
-        const response = await fileService.upload(file as File, 'WORK', (progress) => {
-          setUploadProgress(progress)
-        })
-        if (response.code === 200 && response.data) {
+        const fileId = await upload(file as File, 'WORK')
+        if (fileId != null) {
           setUploadedFile({
-            id: response.data.id,
+            id: fileId,
             name: (file as File).name,
             size: (file as File).size,
           })
           message.success('文件上传成功')
-          onSuccess?.(response.data)
+          onSuccess?.({ id: fileId })
         } else {
-          message.error(response.msg || '上传失败')
-          onError?.(new Error(response.msg || '上传失败'))
+          onError?.(new Error('上传失败'))
         }
       } catch (error) {
         message.error('上传失败，请重试')
         onError?.(error as Error)
-      } finally {
-        setUploadProgress(0)
       }
     },
     beforeUpload: (file) => {
@@ -757,6 +752,7 @@ export default function QuestionDetailPage() {
                     uploadPhase={uploadPhase}
                     uploadedFile={uploadedFile}
                     uploadProgress={uploadProgress}
+                    presignedPhase={presignedPhase}
                     isExpired={isExpired}
                     answer={answer}
                     dropHintText={dropHintText}

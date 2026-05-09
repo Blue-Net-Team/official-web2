@@ -1,5 +1,6 @@
 package com.bluenet.web.domain.service.impl;
 
+import com.bluenet.web.domain.exception.BadRequest;
 import com.bluenet.web.domain.exception.DataNotFound;
 import com.bluenet.web.domain.exception.Forbidden;
 import com.bluenet.web.domain.model.entity.AssessmentAnswer;
@@ -157,9 +158,14 @@ public class FileDomainServiceImpl implements FileDomainService {
         File file = fileRepository.findById(fileId)
                 .orElseThrow(() -> new DataNotFound("文件不存在，ID: " + fileId));
 
+        if (file.getStatus() == FileStatus.ACTIVE) {
+            log.info("预签名上传确认幂等，文件已是 ACTIVE 状态: fileId={}", fileId);
+            return new ConfirmUploadVO(fileId, file.getName(), file.getType(), FileStatus.ACTIVE);
+        }
+
         if (file.getStatus() != FileStatus.PENDING) {
             log.warn("预签名上传确认失败，文件状态不是 PENDING: fileId={}, status={}", fileId, file.getStatus());
-            throw new Forbidden("文件状态无效");
+            throw new BadRequest("文件状态无效");
         }
 
         StorageObjectMetadata metadata;
@@ -172,7 +178,7 @@ public class FileDomainServiceImpl implements FileDomainService {
         }
 
         String actualEtag = sanitizeEtag(metadata.etag());
-        boolean md5Match = expectedMd5 == null || expectedMd5.isBlank() || expectedMd5.equals(actualEtag);
+        boolean md5Match = expectedMd5 == null || expectedMd5.isBlank() || expectedMd5.equalsIgnoreCase(actualEtag);
         boolean sizeMatch = expectedSize <= 0 || expectedSize == metadata.size();
 
         boolean magicMatch = true;

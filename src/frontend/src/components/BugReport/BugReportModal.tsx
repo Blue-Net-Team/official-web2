@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { App, Button, Form, Input, Modal, Upload } from 'antd'
 import { UploadOutlined, SendOutlined } from '@ant-design/icons'
 import type { UploadFile, UploadProps } from 'antd/es/upload'
-import { fileService } from '@/apis/services/file.service'
+import { usePresignedUpload } from '@/hooks/usePresignedUpload'
 import { bugReportService } from '@/apis/services/bug-report.service'
 
 interface BugReportModalProps {
@@ -25,14 +25,16 @@ export default function BugReportModal({ open, onClose }: BugReportModalProps) {
   const [fileList, setFileList] = useState<UploadFile[]>([])
   const [submitting, setSubmitting] = useState(false)
 
+  const { upload } = usePresignedUpload()
+
   const handleUpload: UploadProps['customRequest'] = async (options) => {
     const { file, onSuccess, onError } = options
     try {
-      const res = await fileService.upload(file as File, 'NORMAL_IMG')
-      if (res.code === 200 && res.data) {
-        onSuccess?.(res.data)
+      const fileId = await upload(file as File, 'NORMAL_IMG')
+      if (fileId != null) {
+        onSuccess?.({ id: fileId })
       } else {
-        onError?.(new Error(res.msg || '上传失败'))
+        onError?.(new Error('上传失败'))
       }
     } catch (err) {
       onError?.(err as Error)
