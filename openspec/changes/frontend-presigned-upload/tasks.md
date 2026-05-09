@@ -46,7 +46,7 @@
 - [x] 6.1 验证小文件上传（头像图片 < 5MB）：完整流程 4 阶段正常流转
 - [x] 6.2 验证大文件上传（考核作品 > 50MB）：MD5 计算不阻塞 UI，进度条正常走动
 - [x] 6.3 验证网络中断重试：代码审查确认 PUT 3 次重试、confirm 3 次指数退避重试、visibilitychange 自动重试均已实现
-- [ ] 6.4 验证 confirm 幂等：用 Charles/Fiddler 模拟 confirm 请求丢失后前端重试，不应报错
+- [x] 6.4 验证 confirm 幂等：Playwright 模拟第一次 confirm 请求 timeout 丢弃，前端自动重试后成功，后端幂等返回 ACTIVE
 - [x] 6.5 验证匿名上传限流：未登录用户连续触发 `prepareUpload`，第 1 次 200，后续均返回 429
 - [x] 6.6 验证取消功能：上传过程中点击取消，XHR 被 abort，UI 正确回退，无 orphaned 对象泄漏
 - [x] 6.7 验证所有 4 个调用点的上传成功后，业务逻辑（报名提交 / Bug 提交 / 考题保存 / 答案提交）正常衔接
