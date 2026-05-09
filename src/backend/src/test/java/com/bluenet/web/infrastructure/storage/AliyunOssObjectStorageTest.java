@@ -27,21 +27,19 @@ class AliyunOssObjectStorageTest {
     @Mock
     private OSS ossClient;
 
-    @Mock
-    private OSS publicOssClient;
-
     private AliyunOssObjectStorage objectStorage;
 
     @BeforeEach
     void setUp() {
-        objectStorage = new AliyunOssObjectStorage(ossClient, publicOssClient,
-                new ObjectLocationResolver(new StorageProperties()));
+        StorageProperties properties = new StorageProperties();
+        properties.setBucket("bluenet");
+        objectStorage = new AliyunOssObjectStorage(ossClient, new ObjectLocationResolver(properties), properties);
     }
 
     @Test
     @DisplayName("getPresignedUploadUrl returns URL from Aliyun OSS")
     void getPresignedUploadUrl_ShouldReturnUrl() throws Exception {
-        when(publicOssClient.generatePresignedUrl(any(GeneratePresignedUrlRequest.class)))
+        when(ossClient.generatePresignedUrl(any(GeneratePresignedUrlRequest.class)))
                 .thenReturn(new URL("https://oss.example.com/bluenet/normal-img/test.jpg?Expires=1234567890"));
 
         String url = objectStorage.getPresignedUploadUrl(
@@ -53,7 +51,7 @@ class AliyunOssObjectStorageTest {
 
         assertThat(url).isNotBlank().contains("bluenet").contains("normal-img/test.jpg");
         ArgumentCaptor<GeneratePresignedUrlRequest> captor = ArgumentCaptor.forClass(GeneratePresignedUrlRequest.class);
-        verify(publicOssClient).generatePresignedUrl(captor.capture());
+        verify(ossClient).generatePresignedUrl(captor.capture());
         assertThat(captor.getValue().getMethod().toString()).isEqualTo("PUT");
         assertThat(captor.getValue().getBucketName()).isEqualTo("bluenet");
         assertThat(captor.getValue().getKey()).isEqualTo("normal-img/test.jpg");
@@ -63,7 +61,7 @@ class AliyunOssObjectStorageTest {
     @Test
     @DisplayName("getPresignedDownloadUrl returns URL from Aliyun OSS")
     void getPresignedDownloadUrl_ShouldReturnUrl() throws Exception {
-        when(publicOssClient.generatePresignedUrl(anyString(), anyString(), any(), any()))
+        when(ossClient.generatePresignedUrl(anyString(), anyString(), any(), any()))
                 .thenReturn(new URL("https://oss.example.com/bluenet/work/test.zip?Expires=1234567890"));
 
         String url = objectStorage.getPresignedDownloadUrl(

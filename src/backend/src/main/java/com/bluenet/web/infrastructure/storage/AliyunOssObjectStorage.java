@@ -3,19 +3,21 @@ package com.bluenet.web.infrastructure.storage;
 import com.aliyun.oss.ClientException;
 import com.aliyun.oss.HttpMethod;
 import com.aliyun.oss.OSS;
+import com.aliyun.oss.OSSClientBuilder;
 import com.aliyun.oss.OSSException;
 import com.aliyun.oss.model.GeneratePresignedUrlRequest;
 import com.aliyun.oss.model.OSSObject;
 import com.bluenet.web.domain.exception.DataNotFound;
 import com.bluenet.web.domain.model.enumerate.FileType;
+import com.bluenet.web.infrastructure.config.properties.StorageProperties;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 import java.io.InputStream;
 import java.net.URL;
@@ -25,7 +27,8 @@ import java.util.Date;
 /**
  * 阿里云 OSS 对象存储适配器。
  * <p>
- * 负责将统一的 {@link ObjectStorage} 操作转换为阿里云 OSS SDK 调用。
+ * 负责将统一的 {@link ObjectStorage} 操作转换为阿里云 OSS SDK 调用。 公共端点客户端（用于生成预签名
+ * URL）在内部按需创建，不暴露为 Spring Bean， 与 {@link MinioObjectStorage} 保持风格一致。
  * </p>
  */
 @Slf4j
@@ -40,11 +43,30 @@ public class AliyunOssObjectStorage implements ObjectStorage {
 
     public AliyunOssObjectStorage(
             OSS ossClient,
-            @Qualifier("publicOssClient") OSS publicOssClient,
-            ObjectLocationResolver objectLocationResolver) {
+            ObjectLocationResolver objectLocationResolver,
+            StorageProperties storageProperties) {
         this.ossClient = ossClient;
-        this.publicOssClient = publicOssClient;
         this.objectLocationResolver = objectLocationResolver;
+        this.publicOssClient = createPublicClient(ossClient, storageProperties);
+    }
+
+    private static OSS createPublicClient(OSS internalClient, StorageProperties properties) {
+        StorageProperties.AliyunOss aliyunOss = properties.getAliyunOss();
+        if (aliyunOss == null) {
+            return internalClient;
+        }
+        String publicEndpoint = aliyunOss.getPublicEndpoint();
+        String endpoint = aliyunOss.getEndpoint();
+        if (!StringUtils.hasText(publicEndpoint) || publicEndpoint.equals(endpoint)) {
+            log.debug("Aliyun OSS publicEndpoint not configured or same as endpoint, reusing internal client");
+            return internalClient;
+        }
+        OSS client = new OSSClientBuilder().build(
+                publicEndpoint,
+                aliyunOss.getAccessKeyId(),
+                aliyunOss.getAccessKeySecret());
+        log.info("Aliyun OSS public client initialized: {}", publicEndpoint);
+        return client;
     }
 
     @Override
