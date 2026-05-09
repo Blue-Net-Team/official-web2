@@ -15,7 +15,7 @@ x-shared-env: &shared-env
   MINIO_SK: ${MINIO_PASSWORD:-admin123}
   MINIO_USE_SSL: false
 
-x-backend-env: &backend-env
+x-api-service-env: &api-service-env
   <<: *shared-env
   MAIL_USERNAME: ${MAIL_USERNAME:-gdou_bluenet@163.com}
   MAIL_PASSWORD: ${MAIL_PASSWORD:-WUxwy9YxyMW3DzA6}
@@ -58,15 +58,15 @@ x-frontend-env: &frontend-env
 
 services:
   api-service:
-    image: ${BACKEND_IMAGE:-bluenet-backend:latest}
+    image: ${API_SERVICE_IMAGE:-bluenet-api-service:latest}
     build:
       context: ..
-      dockerfile: backend.Dockerfile
+      dockerfile: api-service.Dockerfile
     container_name: bluenet-api-service
     ports:
       - "8080:8080"
       - "18088:8088"
-    environment: *backend-env
+    environment: *api-service-env
     # 启用 Bug 报告同步到 GitHub Issue 时，确保宿主机 .env 中 GITHUB_APP_PRIVATE_KEY_PATH 指向私钥文件
     volumes:
       - ${GITHUB_APP_PRIVATE_KEY_PATH:-docker/null.pem}:/app/github-private-key.pem:ro
