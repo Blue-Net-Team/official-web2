@@ -45,7 +45,7 @@ WORKDIR /app
 
 # 运行时环境变量
 # 注意：这里的 BACKEND_HOST 默认值会被 docker-compose.yml 中的环境变量覆盖
-# 在 Docker 网络内，应该使用容器名（如 'backend'）而不是 localhost 或公网地址
+# 在 Docker 网络内，应该使用容器名（如 'api-service'）而不是 localhost 或公网地址
 ENV NODE_ENV=production
 ENV BACKEND_HOST=localhost
 ENV BACKEND_PORT=8080

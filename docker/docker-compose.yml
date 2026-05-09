@@ -1,22 +1,25 @@
-x-backend-env: &backend-env
+x-shared-env: &shared-env
   DATABASE_HOST: database
   DATABASE_PORT: 5432
   DATABASE_NAME: db_blue_net
   DATABASE_USERNAME: postgres
-  DATABASE_PASSWORD: ${DB_PASSWORD:-hyfzhl999}
+  DATABASE_PASSWORD: ${DB_PASSWORD:-000000}
   RABBITMQ_HOST: rabbitmq
   RABBITMQ_PORT: 5672
   RABBITMQ_USERNAME: ${RABBITMQ_USERNAME:-admin}
   RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-bluenet123}
-  MAIL_USERNAME: ${MAIL_USERNAME:-gdou_bluenet@163.com}
-  MAIL_PASSWORD: ${MAIL_PASSWORD:-WUxwy9YxyMW3DzA6}
   STORAGE_PROVIDER: ${STORAGE_PROVIDER:-minio}
-  STORAGE_BUCKET: ${STORAGE_BUCKET:-bluenet}
   MINIO_ENDPOINT: oss
   MINIO_PORT: 9000
   MINIO_AK: admin
   MINIO_SK: ${MINIO_PASSWORD:-admin123}
   MINIO_USE_SSL: false
+
+x-backend-env: &backend-env
+  <<: *shared-env
+  MAIL_USERNAME: ${MAIL_USERNAME:-gdou_bluenet@163.com}
+  MAIL_PASSWORD: ${MAIL_PASSWORD:-WUxwy9YxyMW3DzA6}
+  STORAGE_BUCKET: ${STORAGE_BUCKET:-bluenet}
   MINIO_PUBLIC_URL: ${MINIO_PUBLIC_URL:-http://host.docker.internal:7000}
   ALIYUN_OSS_ENDPOINT: ${ALIYUN_OSS_ENDPOINT:-}
   ALIYUN_OSS_AK: ${ALIYUN_OSS_AK:-}
@@ -44,7 +47,7 @@ x-backend-env: &backend-env
   GITHUB_APP_APP_BASE_URL: ${GITHUB_APP_APP_BASE_URL:-http://localhost:8080}
 
 x-frontend-env: &frontend-env
-  BACKEND_HOST: backend
+  BACKEND_HOST: api-service
   BACKEND_PORT: 8080
   SSL_ENABLED: ${SSL_ENABLED:-false}
   API_PREFIX: ${API_PREFIX:-/api/v1}
@@ -54,12 +57,12 @@ x-frontend-env: &frontend-env
   NEXT_PUBLIC_API_PREFIX: ${NEXT_PUBLIC_API_PREFIX:-/api/v1}
 
 services:
-  backend:
+  api-service:
     image: ${BACKEND_IMAGE:-bluenet-backend:latest}
     build:
       context: ..
       dockerfile: backend.Dockerfile
-    container_name: bluenet-backend
+    container_name: bluenet-api-service
     ports:
       - "8080:8080"
       - "18088:8088"
@@ -74,6 +77,7 @@ services:
         condition: service_healthy
       oss:
         condition: service_healthy
+        required: false
       rabbitmq:
         condition: service_healthy
     healthcheck:
@@ -99,7 +103,7 @@ services:
       - "3000:3000"
     environment: *frontend-env
     depends_on:
-      backend:
+      api-service:
         condition: service_healthy
     profiles:
       - full
@@ -117,21 +121,7 @@ services:
     ports:
       - "8090:8090"
     environment:
-      DATABASE_HOST: database
-      DATABASE_PORT: 5432
-      DATABASE_NAME: db_blue_net
-      DATABASE_USERNAME: postgres
-      DATABASE_PASSWORD: ${DB_PASSWORD:-000000}
-      RABBITMQ_HOST: rabbitmq
-      RABBITMQ_PORT: 5672
-      RABBITMQ_USERNAME: ${RABBITMQ_USERNAME:-admin}
-      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-bluenet123}
-      STORAGE_PROVIDER: ${STORAGE_PROVIDER:-minio}
-      MINIO_ENDPOINT: oss
-      MINIO_PORT: 9000
-      MINIO_AK: admin
-      MINIO_SK: ${MINIO_PASSWORD:-admin123}
-      MINIO_USE_SSL: false
+      <<: *shared-env
       JUDGE_STORAGE_BUCKET: bluenet-judge
       JUDGE_SANDBOX_ENGINE: isolate
       JUDGE_WORK_ROOT: /var/lib/bluenet-judge/work
@@ -143,6 +133,7 @@ services:
         condition: service_healthy
       oss:
         condition: service_healthy
+        required: false
     profiles:
       - full
       - app
@@ -170,6 +161,7 @@ services:
     profiles:
       - full
       - infra
+      - infra-local
     restart: ${RESTART_POLICY:-no}
     networks:
       - network
@@ -194,6 +186,7 @@ services:
     profiles:
       - full
       - infra
+      - infra-local
     restart: ${RESTART_POLICY:-no}
     networks:
       - network
@@ -222,6 +215,7 @@ services:
     profiles:
       - full
       - infra
+      - infra-local
     restart: ${RESTART_POLICY:-no}
     networks:
       - network
@@ -246,7 +240,7 @@ services:
       start_period: 10s
     profiles:
       - full
-      - infra
+      - infra-local
     restart: ${RESTART_POLICY:-no}
     networks:
       - network

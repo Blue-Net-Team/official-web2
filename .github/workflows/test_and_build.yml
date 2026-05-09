@@ -375,17 +375,17 @@ jobs:
         script: |
           cd $DEPLOY_PATH
 
-          echo "=== Deploying backend to ${{ steps.vars.outputs.env_name }} environment ==="
+          echo "=== Deploying api-service to ${{ steps.vars.outputs.env_name }} environment ==="
 
-          echo "Loading backend image from tar..."
+          echo "Loading api-service image from tar..."
           gunzip -c /tmp/bluenet-deploy/images/backend-image.tar.gz | docker load
 
           rm -f /tmp/bluenet-deploy/images/backend-image.tar.gz
 
-          echo "Starting backend service..."
-          docker compose up -d backend --remove-orphans
+          echo "Starting api-service..."
+          docker compose up -d api-service --remove-orphans
 
-          echo "Backend deployment completed!"
+          echo "Api-service deployment completed!"
       env:
         BACKEND_IMAGE: bluenet-backend:${{ steps.vars.outputs.image_tag }}
         DEPLOY_PATH: ${{ steps.vars.outputs.deploy_path }}
