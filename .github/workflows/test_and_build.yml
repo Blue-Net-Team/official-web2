@@ -596,11 +596,11 @@ jobs:
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
         build-args: |
-          BUILD_BACKEND_HOST=${{ steps.vars.outputs.deploy_host }}
-          BUILD_BACKEND_PORT=8080
-          NEXT_PUBLIC_BACKEND_HOST=${{ steps.vars.outputs.deploy_host }}
-          NEXT_PUBLIC_BACKEND_PORT=8080
-          NEXT_PUBLIC_SSL_ENABLED=false
+          BUILD_BACKEND_HOST=${{ secrets.BACKEND_HOST }}
+          BUILD_BACKEND_PORT=${{ secrets.BACKEND_PORT }}
+          NEXT_PUBLIC_BACKEND_HOST=${{ secrets.BACKEND_HOST }}
+          NEXT_PUBLIC_BACKEND_PORT=${{ secrets.BACKEND_PORT }}
+          NEXT_PUBLIC_SSL_ENABLED=${{ secrets.SSL_ENABLED }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
 
