@@ -511,6 +511,14 @@ export default function QuestionDetailPage() {
     setUploadedFile(null)
   }
 
+  const handleDownloadFile = async (fileId: number) => {
+    try {
+      await fileService.downloadFile(fileId)
+    } catch {
+      message.error('文件不存在或无权访问')
+    }
+  }
+
   // 导航
   const currentIndex = questionsList.findIndex((q) => q.id === questionId)
   const hasPrev = currentIndex > 0
@@ -728,7 +736,7 @@ export default function QuestionDetailPage() {
                 </div>
                 <button
                   className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#6677ff]/[0.15] border-none text-[#6677ff] text-xs font-medium cursor-pointer transition-all duration-200 flex-shrink-0 hover:bg-[#6677ff]/[0.25]"
-                  onClick={() => fileService.downloadFile(question.attachmentId!)}
+                  onClick={() => handleDownloadFile(question.attachmentId!)}
                 >
                   <DownOutlined className="text-sm" />
                   下载附件
@@ -872,6 +880,7 @@ export default function QuestionDetailPage() {
               onAlgorithmRun={handleAlgorithmRun}
               onAlgorithmSubmit={handleAlgorithmSubmit}
               onRemoveFile={handleRemoveFile}
+              onDownloadFile={handleDownloadFile}
             />
           </aside>
         </div>

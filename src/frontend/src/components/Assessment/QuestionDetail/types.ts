@@ -117,6 +117,7 @@ export interface QuestionSidebarProps {
   onAlgorithmRun: () => void
   onAlgorithmSubmit: () => void
   onRemoveFile: () => void
+  onDownloadFile?: (fileId: number) => void
 }
 
 /* ---------- CountdownSection ---------- */

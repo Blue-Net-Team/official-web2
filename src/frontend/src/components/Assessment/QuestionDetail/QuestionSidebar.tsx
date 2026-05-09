@@ -48,6 +48,7 @@ export default function QuestionSidebar({
   onAlgorithmRun,
   onAlgorithmSubmit,
   onRemoveFile,
+  onDownloadFile,
 }: QuestionSidebarProps) {
   return (
     <div className="flex flex-col gap-6">
@@ -134,7 +135,7 @@ export default function QuestionSidebar({
           {answer?.fileId && (
             <button
               className="inline-flex items-center gap-1 px-4 py-2 rounded-lg bg-[#6677ff]/[0.15] border-none text-[#6677ff] text-[13px] font-medium cursor-pointer transition-all duration-200 w-fit hover:bg-[#6677ff]/[0.25]"
-              onClick={() => fileService.downloadFile(answer.fileId!)}
+              onClick={() => onDownloadFile?.(answer.fileId!)}
             >
               <DownloadOutlined className="text-sm" />
               下载已提交的答案
