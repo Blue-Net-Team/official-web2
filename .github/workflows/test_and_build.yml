@@ -1,6 +1,6 @@
 # CI/CD Pipeline 工作流
 # 支持多分支部署：master -> 生产环境，develop -> 开发环境
-# 分阶段部署：后端 -> 健康检查 -> 前端
+# 分阶段部署：基础设施 -> 后端/判题服务 -> 健康检查 -> 前端
 # 部署方式：构建镜像后 docker save -> SCP 传输到服务器 -> docker load 导入（避免国内服务器 pull ghcr.io 超时）
 
 name: CI/CD Pipeline
@@ -310,11 +310,67 @@ jobs:
         path: judge-service-image.tar.gz
         retention-days: 1
 
+  # ==================== 部署基础设施阶段 ====================
+
+  deploy-infra:
+    runs-on: ubuntu-latest
+    needs: [backend-test, frontend-test, judge-service-test]
+    if: github.event_name == 'push'
+    outputs:
+      deploy_host: ${{ steps.vars.outputs.deploy_host }}
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set deployment variables
+      id: vars
+      run: |
+        if [ "${{ github.ref }}" = "refs/heads/master" ]; then
+          echo "deploy_path=${{ secrets.DEPLOY_PATH_PROD }}" >> $GITHUB_OUTPUT
+          echo "deploy_host=${{ secrets.DEPLOY_HOST_PROD }}" >> $GITHUB_OUTPUT
+          echo "env_name=production" >> $GITHUB_OUTPUT
+        else
+          echo "deploy_path=${{ secrets.DEPLOY_PATH_DEV }}" >> $GITHUB_OUTPUT
+          echo "deploy_host=${{ secrets.DEPLOY_HOST_DEV }}" >> $GITHUB_OUTPUT
+          echo "env_name=development" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Sync compose file to server
+      uses: appleboy/scp-action@v0.1.7
+      with:
+        host: ${{ steps.vars.outputs.deploy_host }}
+        username: ${{ secrets.DEPLOY_USER }}
+        key: ${{ secrets.DEPLOY_KEY }}
+        port: ${{ secrets.DEPLOY_PORT || 22 }}
+        source: "docker/docker-compose.yml"
+        target: ${{ steps.vars.outputs.deploy_path }}
+        strip_components: 1
+
+    - name: Deploy infrastructure via SSH
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ steps.vars.outputs.deploy_host }}
+        username: ${{ secrets.DEPLOY_USER }}
+        key: ${{ secrets.DEPLOY_KEY }}
+        port: ${{ secrets.DEPLOY_PORT || 22 }}
+        envs: DEPLOY_PATH
+        script: |
+          cd $DEPLOY_PATH
+
+          echo "=== Deploying infrastructure to ${{ steps.vars.outputs.env_name }} environment ==="
+
+          echo "Starting infrastructure services (database, redis, rabbitmq)..."
+          docker compose --profile infra up -d --remove-orphans
+
+          echo "Infrastructure deployment completed!"
+      env:
+        DEPLOY_PATH: ${{ steps.vars.outputs.deploy_path }}
+
   # ==================== 部署后端阶段 ====================
 
   deploy-backend:
     runs-on: ubuntu-latest
-    needs: [build-backend]
+    needs: [build-backend, deploy-infra]
     if: github.event_name == 'push'
     outputs:
       deploy_host: ${{ steps.vars.outputs.deploy_host }}
@@ -342,17 +398,6 @@ jobs:
       with:
         name: backend-image
         path: ./images
-
-    - name: Sync compose file to server
-      uses: appleboy/scp-action@v0.1.7
-      with:
-        host: ${{ steps.vars.outputs.deploy_host }}
-        username: ${{ secrets.DEPLOY_USER }}
-        key: ${{ secrets.DEPLOY_KEY }}
-        port: ${{ secrets.DEPLOY_PORT || 22 }}
-        source: "docker/docker-compose.yml"
-        target: ${{ steps.vars.outputs.deploy_path }}
-        strip_components: 1
 
     - name: Transfer image to server
       uses: appleboy/scp-action@v0.1.7
@@ -394,7 +439,7 @@ jobs:
 
   deploy-judge-service:
     runs-on: ubuntu-latest
-    needs: [build-judge-service]
+    needs: [build-judge-service, deploy-infra]
     if: github.event_name == 'push'
 
     steps:
@@ -420,17 +465,6 @@ jobs:
       with:
         name: judge-service-image
         path: ./images
-
-    - name: Sync compose file to server
-      uses: appleboy/scp-action@v0.1.7
-      with:
-        host: ${{ steps.vars.outputs.deploy_host }}
-        username: ${{ secrets.DEPLOY_USER }}
-        key: ${{ secrets.DEPLOY_KEY }}
-        port: ${{ secrets.DEPLOY_PORT || 22 }}
-        source: "docker/docker-compose.yml"
-        target: ${{ steps.vars.outputs.deploy_path }}
-        strip_components: 1
 
     - name: Transfer image to server
       uses: appleboy/scp-action@v0.1.7
@@ -472,7 +506,7 @@ jobs:
 
   health-check:
     runs-on: ubuntu-latest
-    needs: [deploy-backend]
+    needs: [deploy-backend, deploy-judge-service]
     if: github.event_name == 'push'
     timeout-minutes: 5
 
