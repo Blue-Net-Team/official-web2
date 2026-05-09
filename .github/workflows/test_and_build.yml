@@ -118,7 +118,6 @@ jobs:
   build-api-service:
     runs-on: ubuntu-latest
     needs: [api-service-test]
-    if: github.event_name == 'push'
     permissions:
       contents: read
       packages: write
@@ -217,7 +216,6 @@ jobs:
   build-judge-service:
     runs-on: ubuntu-latest
     needs: [judge-service-test]
-    if: github.event_name == 'push'
     permissions:
       contents: read
       packages: write
@@ -315,7 +313,6 @@ jobs:
   deploy-infra:
     runs-on: ubuntu-latest
     needs: [api-service-test, frontend-test, judge-service-test]
-    if: github.event_name == 'push'
     outputs:
       deploy_host: ${{ steps.vars.outputs.deploy_host }}
 
@@ -371,7 +368,6 @@ jobs:
   deploy-api-service:
     runs-on: ubuntu-latest
     needs: [build-api-service, deploy-infra]
-    if: github.event_name == 'push'
     outputs:
       deploy_host: ${{ steps.vars.outputs.deploy_host }}
 
@@ -440,7 +436,6 @@ jobs:
   deploy-judge-service:
     runs-on: ubuntu-latest
     needs: [build-judge-service, deploy-infra]
-    if: github.event_name == 'push'
 
     steps:
     - uses: actions/checkout@v4
@@ -507,7 +502,6 @@ jobs:
   health-check:
     runs-on: ubuntu-latest
     needs: [deploy-api-service, deploy-judge-service]
-    if: github.event_name == 'push'
     timeout-minutes: 5
 
     steps:
@@ -556,7 +550,6 @@ jobs:
   build-frontend:
     runs-on: ubuntu-latest
     needs: [frontend-test, health-check]
-    if: github.event_name == 'push'
     permissions:
       contents: read
       packages: write
@@ -643,7 +636,6 @@ jobs:
   deploy-frontend:
     runs-on: ubuntu-latest
     needs: [build-frontend]
-    if: github.event_name == 'push'
 
     steps:
     - uses: actions/checkout@v4
