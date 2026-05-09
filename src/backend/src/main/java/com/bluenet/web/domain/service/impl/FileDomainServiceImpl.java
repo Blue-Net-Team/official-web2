@@ -1,6 +1,5 @@
 package com.bluenet.web.domain.service.impl;
 
-import com.bluenet.web.domain.exception.BadRequest;
 import com.bluenet.web.domain.exception.DataNotFound;
 import com.bluenet.web.domain.exception.Forbidden;
 import com.bluenet.web.domain.model.entity.AssessmentAnswer;
@@ -165,7 +164,7 @@ public class FileDomainServiceImpl implements FileDomainService {
 
         if (file.getStatus() != FileStatus.PENDING) {
             log.warn("预签名上传确认失败，文件状态不是 PENDING: fileId={}, status={}", fileId, file.getStatus());
-            throw new BadRequest("文件状态无效");
+            throw new Forbidden("文件状态无效");
         }
 
         StorageObjectMetadata metadata;
