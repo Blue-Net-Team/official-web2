@@ -520,13 +520,25 @@ jobs:
           echo "deploy_host=${{ secrets.DEPLOY_HOST_DEV }}" >> $GITHUB_OUTPUT
         fi
 
+    - name: Set health check URL
+      id: health
+      run: |
+        HOST="${{ secrets.BACKEND_HOST }}"
+        PORT="${{ secrets.BACKEND_PORT }}"
+        SSL="${{ secrets.SSL_ENABLED }}"
+        if [ "$SSL" = "true" ]; then
+          echo "url=https://$HOST:$PORT/api/v1/health" >> $GITHUB_OUTPUT
+        else
+          echo "url=http://$HOST:$PORT/api/v1/health" >> $GITHUB_OUTPUT
+        fi
+
     - name: Wait for api-service health check
       run: |
-        HOST="${{ steps.vars.outputs.deploy_host }}"
-        echo "Waiting for api-service at $HOST:8080 to be healthy..."
+        URL="${{ steps.health.outputs.url }}"
+        echo "Waiting for api-service at $URL to be healthy..."
 
         for i in {1..30}; do
-          RESPONSE=$(curl -sf http://$HOST:8080/api/v1/health 2>/dev/null || echo "")
+          RESPONSE=$(curl -sfL "$URL" 2>/dev/null || echo "")
           if echo "$RESPONSE" | grep -q '"code":200'; then
             echo "✅ Api-service is healthy!"
             echo "Response: $RESPONSE"
