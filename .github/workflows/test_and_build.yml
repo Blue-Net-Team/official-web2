@@ -601,6 +601,7 @@ jobs:
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
         build-args: |
+          CACHE_BUST=${{ github.sha }}_${{ github.run_id }}
           BUILD_BACKEND_HOST=${{ secrets.BACKEND_HOST }}
           BUILD_BACKEND_PORT=${{ secrets.BACKEND_PORT }}
           BUILD_SSL_ENABLED=${{ secrets.SSL_ENABLED }}

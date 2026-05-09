@@ -6,6 +6,7 @@ FROM node:20-alpine AS builder
 
 # 构建时参数：后端公网地址（用于 SSR 预渲染时访问后端 API）
 # 在 CI/CD 中构建时传入，例如：--build-arg BUILD_BACKEND_HOST=api.example.com
+ARG CACHE_BUST=default
 ARG BUILD_BACKEND_HOST=localhost
 ARG BUILD_BACKEND_PORT=8080
 ARG BUILD_SSL_ENABLED=false
