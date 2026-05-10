@@ -129,6 +129,7 @@ github:
   oauth:
     client-id: ${GITHUB_CLIENT_ID:}
     client-secret: ${GITHUB_CLIENT_SECRET:}
+    callback-base-url: ${GITHUB_OAUTH_CALLBACK_BASE_URL:http://localhost:8080}
     frontend-base-url: ${GITHUB_FRONTEND_BASE_URL:http://localhost:3000}
   app:    # github app 用于自动同步bug issue
     app-id: ${GITHUB_APP_ID:}
