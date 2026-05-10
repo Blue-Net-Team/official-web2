@@ -1,11 +1,7 @@
 package com.bluenet.web.application.service.impl;
 
-import com.bluenet.web.api.dto.PageDTO;
-import com.bluenet.web.api.dto.competition.BatchSortRequestDTO;
-import com.bluenet.web.api.dto.competition.CompetitionResponseDTO;
 import com.bluenet.web.application.CompetitionResult;
 import com.bluenet.web.application.command.competition.CompetitionCommands;
-import com.bluenet.web.application.converter.CompetitionAppConverter;
 import com.bluenet.web.application.service.CompetitionAppService;
 import com.bluenet.web.domain.exception.BadRequest;
 import com.bluenet.web.domain.exception.DataNotFound;
@@ -26,10 +22,6 @@ import java.util.List;
 
 /**
  * 竞赛应用服务实现。
- * <p>实现竞赛聚合在应用层的业务逻辑编排。</p>
- */
-/**
- * 竞赛应用服务实现。
  * <p>
  * 实现竞赛聚合在应用层的业务逻辑编排。
  * </p>
@@ -39,7 +31,6 @@ import java.util.List;
 @RequiredArgsConstructor
 public class CompetitionAppServiceImpl implements CompetitionAppService {
     private final CompetitionRepository competitionRepository;
-    private final CompetitionAppConverter competitionAppConverter;
     private final FileDomainService fileDomainService;
 
     /**
@@ -47,20 +38,12 @@ public class CompetitionAppServiceImpl implements CompetitionAppService {
      *
      * @param limit
      *            限制数量
-     * @return 竞赛响应列表
-     */
-    /**
-     * 查询竞赛响应列表。
-     *
-     * @param limit
-     *            限制数量
-     * @return 竞赛响应DTO列表
+     * @return 竞赛VO列表
      */
     @Override
-    public List<CompetitionResponseDTO> getCompetitionResponseList(int limit) {
+    public List<CompetitionVO> getCompetitionResponseList(int limit) {
         int validLimit = Math.min(Math.max(limit, 1), 50);
-        List<CompetitionVO> voList = competitionRepository.findCompetitionsWithLimit(validLimit);
-        return competitionAppConverter.convertToResponseDTOList(voList);
+        return competitionRepository.findCompetitionsWithLimit(validLimit);
     }
 
     /**
@@ -72,33 +55,15 @@ public class CompetitionAppServiceImpl implements CompetitionAppService {
      *            每页大小
      * @return 竞赛分页结果
      */
-    /**
-     * 分页查询竞赛。
-     *
-     * @param page
-     *            页码
-     * @param size
-     *            每页大小
-     * @return 竞赛分页结果
-     */
     @Override
-    public PageDTO<CompetitionResponseDTO> getCompetitionPage(Integer page, Integer size) {
+    public Page<CompetitionVO> getCompetitionPage(Integer page, Integer size) {
         int pageNum = page != null ? page : 0;
         int pageSize = size != null ? size : 10;
         pageSize = Math.min(Math.max(pageSize, 1), 50);
 
-        Page<CompetitionVO> voPage = competitionRepository.findCompetitionsPage(PageRequest.of(pageNum, pageSize));
-        Page<CompetitionResponseDTO> dtoPage = competitionAppConverter.convertToDTOPage(voPage);
-        return PageDTO.from(dtoPage);
+        return competitionRepository.findCompetitionsPage(PageRequest.of(pageNum, pageSize));
     }
 
-    /**
-     * 创建竞赛。
-     *
-     * @param command
-     *            创建竞赛命令
-     * @return 创建后的竞赛结果
-     */
     /**
      * 创建竞赛。
      *
@@ -137,13 +102,6 @@ public class CompetitionAppServiceImpl implements CompetitionAppService {
      *            更新竞赛命令
      * @return 更新后的竞赛结果
      */
-    /**
-     * 更新竞赛。
-     *
-     * @param command
-     *            更新竞赛命令
-     * @return 更新后的竞赛结果
-     */
     @Override
     @Transactional
     public CompetitionResult updateCompetition(CompetitionCommands.UpdateCompetitionCommand command) {
@@ -173,12 +131,6 @@ public class CompetitionAppServiceImpl implements CompetitionAppService {
      * @param id
      *            竞赛ID
      */
-    /**
-     * 删除竞赛。
-     *
-     * @param id
-     *            竞赛ID
-     */
     @Override
     @Transactional
     public void deleteCompetition(Long id) {
@@ -187,12 +139,6 @@ public class CompetitionAppServiceImpl implements CompetitionAppService {
         competitionRepository.deleteById(id);
     }
 
-    /**
-     * 更新竞赛排序。
-     *
-     * @param command
-     *            更新排序命令
-     */
     /**
      * 更新排序号。
      *
@@ -209,23 +155,17 @@ public class CompetitionAppServiceImpl implements CompetitionAppService {
     }
 
     /**
-     * 批量更新竞赛排序。
-     *
-     * @param request
-     *            批量排序请求
-     */
-    /**
      * 批量更新排序号。
      *
-     * @param request
-     *            批量排序请求
+     * @param command
+     *            批量排序命令
      */
     @Override
     @Transactional
-    public void batchUpdateSortOrder(BatchSortRequestDTO request) {
-        List<CompetitionRepository.SortItem> sortItems = request.getItems()
+    public void batchUpdateSortOrder(CompetitionCommands.BatchUpdateSortOrderCommand command) {
+        List<CompetitionRepository.SortItem> sortItems = command.items()
                 .stream()
-                .map(item -> new CompetitionRepository.SortItem(item.getId(), item.getSortOrder()))
+                .map(item -> new CompetitionRepository.SortItem(item.id(), item.sortOrder()))
                 .toList();
         sortItems.forEach(item -> {
             if (!competitionRepository.existsById(item.id())) {
@@ -235,12 +175,6 @@ public class CompetitionAppServiceImpl implements CompetitionAppService {
         competitionRepository.batchUpdateSortOrder(sortItems);
     }
 
-    /**
-     * 移动竞赛排序位置。
-     *
-     * @param command
-     *            移动竞赛命令
-     */
     /**
      * 移动竞赛位置。
      *

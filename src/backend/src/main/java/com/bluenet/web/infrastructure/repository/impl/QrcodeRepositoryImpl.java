@@ -89,6 +89,20 @@ public class QrcodeRepositoryImpl implements QrcodeRepository {
     }
 
     /**
+     * 查询考核群二维码记录（支持筛选）。
+     *
+     * @param direction
+     *            方向（可选）。
+     * @param epoch
+     *            考核轮次（可选）。
+     * @return 满足条件的二维码结果集合。
+     */
+    @Override
+    public List<Qrcode> findAssessmentQrcodes(String direction, Integer epoch) {
+        return converter.toEntityList(qrcodeMapper.selectAssessmentQrcodes(direction, epoch));
+    }
+
+    /**
      * 删除指定二维码 记录。
      *
      * @param id
@@ -98,6 +112,18 @@ public class QrcodeRepositoryImpl implements QrcodeRepository {
     public void deleteById(Long id) {
         qrcodeMapper.deleteById(id);
         log.info("删除二维码: id={}", id);
+    }
+
+    /**
+     * 按考核轮次查询考核群二维码记录。
+     *
+     * @param epoch
+     *            考核轮次。
+     * @return 满足条件的二维码结果集合。
+     */
+    @Override
+    public List<Qrcode> findAssessmentByEpoch(Integer epoch) {
+        return converter.toEntityList(qrcodeMapper.findAssessmentByEpoch(epoch));
     }
 
 }

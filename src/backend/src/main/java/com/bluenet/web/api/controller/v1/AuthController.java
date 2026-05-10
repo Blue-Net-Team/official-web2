@@ -8,7 +8,7 @@ import com.bluenet.web.api.dto.auth.ResponseMessageUserAuthResponseDTO;
 import com.bluenet.web.api.dto.auth.SendVerificationCodeRequestDTO;
 import com.bluenet.web.api.dto.auth.StudentIdLoginRequestDTO;
 import com.bluenet.web.application.AuthResult;
-import com.bluenet.web.application.converter.AuthAppConverter;
+import com.bluenet.web.api.converter.auth.AuthResponseConverter;
 import com.bluenet.web.application.service.AuthAppService;
 import com.bluenet.web.domain.exception.Unauthorized;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
@@ -44,7 +44,7 @@ public class AuthController {
 
     private final AuthAppService authAppService;
     private final AuthRequestConverter requestConverter;
-    private final AuthAppConverter authAppConverter;
+    private final AuthResponseConverter authResponseConverter;
 
     @Value("${github.oauth.callback-base-url:http://localhost:8080}")
     private String callbackBaseUrl;
@@ -60,7 +60,7 @@ public class AuthController {
             HttpServletResponse response) {
         try {
             AuthResult.Login result = authAppService.login(requestConverter.toCommand(requestDTO), response);
-            return ResponseEntity.ok(ResponseMessage.success(authAppConverter.toDTO(result)));
+            return ResponseEntity.ok(ResponseMessage.success(authResponseConverter.toDTO(result)));
         } catch (Unauthorized unauthorized) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseMessage.error(unauthorized));
         }
@@ -79,7 +79,7 @@ public class AuthController {
             AuthResult.Login result = authAppService.loginWithEmail(
                     requestConverter.toCommand(requestDTO),
                     response);
-            return ResponseEntity.ok(ResponseMessage.success(authAppConverter.toDTO(result)));
+            return ResponseEntity.ok(ResponseMessage.success(authResponseConverter.toDTO(result)));
         } catch (Unauthorized unauthorized) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseMessage.error(unauthorized));
         }
@@ -112,7 +112,7 @@ public class AuthController {
     @GetMapping("/me")
     public ResponseMessage<AuthMeResponseDTO> getAuthMe(HttpServletResponse response) {
         AuthResult.AuthMe result = authAppService.getAuthMe(response);
-        return ResponseMessage.success(authAppConverter.toDTO(result));
+        return ResponseMessage.success(authResponseConverter.toDTO(result));
     }
 
     // ==================== GitHub OAuth ====================

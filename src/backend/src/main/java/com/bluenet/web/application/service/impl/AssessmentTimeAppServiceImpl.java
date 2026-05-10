@@ -1,11 +1,8 @@
 package com.bluenet.web.application.service.impl;
 
-import com.bluenet.web.api.dto.PageDTO;
-import com.bluenet.web.api.dto.assessment_time.AssessmentProgressDTO;
-import com.bluenet.web.api.dto.assessment_time.AssessmentTimeDTO;
+import com.bluenet.web.application.AssessmentProgressResult;
 import com.bluenet.web.application.AssessmentTimeResult;
 import com.bluenet.web.application.command.assessment_time.AssessmentTimeCommands;
-import com.bluenet.web.application.converter.AssessmentTimeAppConverter;
 import com.bluenet.web.application.service.AssessmentTimeAppService;
 import com.bluenet.web.domain.exception.DataConflict;
 import com.bluenet.web.domain.exception.DataNotFound;
@@ -42,7 +39,6 @@ public class AssessmentTimeAppServiceImpl implements AssessmentTimeAppService {
     private final AssessmentTimeRepository assessmentTimeRepository;
     private final AssessmentQuestionRepository assessmentQuestionRepository;
     private final AssessmentAnswerRepository assessmentAnswerRepository;
-    private final AssessmentTimeAppConverter assessmentTimeAppConverter;
 
     /**
      * 创建考核时间。
@@ -177,7 +173,7 @@ public class AssessmentTimeAppServiceImpl implements AssessmentTimeAppService {
      * @return 考核时间分页结果
      */
     @Override
-    public PageDTO<AssessmentTimeDTO> listAssessmentTimes(Integer page, Integer size) {
+    public Page<AssessmentTimeResult> listAssessmentTimes(Integer page, Integer size) {
         int pageNum = page != null ? page : 0;
         int pageSize = size != null ? size : 5;
 
@@ -202,8 +198,7 @@ public class AssessmentTimeAppServiceImpl implements AssessmentTimeAppService {
                 direction,
                 grade,
                 PageRequest.of(pageNum, pageSize));
-        Page<AssessmentTimeDTO> dtoPage = entityPage.map(assessmentTimeAppConverter::convertToDTO);
-        return PageDTO.from(dtoPage);
+        return entityPage.map(entity -> toResult(entity, null, null));
     }
 
     /**
@@ -216,7 +211,7 @@ public class AssessmentTimeAppServiceImpl implements AssessmentTimeAppService {
      * @return 用户考核时间分页结果
      */
     @Override
-    public PageDTO<AssessmentTimeDTO> listAssessmentTimesForUser(Integer page, Integer size) {
+    public Page<AssessmentTimeResult> listAssessmentTimesForUser(Integer page, Integer size) {
         int pageNum = page != null ? page : 0;
         int pageSize = size != null ? size : 5;
 
@@ -224,7 +219,7 @@ public class AssessmentTimeAppServiceImpl implements AssessmentTimeAppService {
         if (currentUser == null) {
             Page<AssessmentTime> emptyPage = new PageImpl<>(
                     List.of(), PageRequest.of(pageNum, pageSize), 0);
-            return PageDTO.from(emptyPage.map(assessmentTimeAppConverter::convertToDTO));
+            return emptyPage.map(entity -> toResult(entity, null, null));
         }
 
         Integer enrollmentYear = GradeCalculator.resolveAssessmentYear(
@@ -238,17 +233,12 @@ public class AssessmentTimeAppServiceImpl implements AssessmentTimeAppService {
                 enrollmentYear,
                 PageRequest.of(pageNum, pageSize));
 
-        Page<AssessmentTimeDTO> dtoPage = entityPage.map(assessmentTimeAppConverter::convertToDTO);
-
-        for (AssessmentTimeDTO dto : dtoPage.getContent()) {
-            int totalQuestions = assessmentQuestionRepository.countByAssessmentTimeId(dto.getId());
+        return entityPage.map(entity -> {
+            int totalQuestions = assessmentQuestionRepository.countByAssessmentTimeId(entity.getId());
             int completedQuestions = assessmentAnswerRepository
-                    .countByUserIdAndAssessmentTimeId(currentUser.getId(), dto.getId());
-            dto.setTotalQuestions(totalQuestions);
-            dto.setCompletedQuestions(completedQuestions);
-        }
-
-        return PageDTO.from(dtoPage);
+                    .countByUserIdAndAssessmentTimeId(currentUser.getId(), entity.getId());
+            return toResult(entity, totalQuestions, completedQuestions);
+        });
     }
 
     /**
@@ -259,7 +249,7 @@ public class AssessmentTimeAppServiceImpl implements AssessmentTimeAppService {
      * @return 考核进度DTO
      */
     @Override
-    public AssessmentProgressDTO getAssessmentProgress(Long assessmentTimeId) {
+    public AssessmentProgressResult getAssessmentProgress(Long assessmentTimeId) {
         assessmentTimeRepository.findById(assessmentTimeId)
                 .orElseThrow(() -> new IllegalArgumentException("考核时间不存在"));
 
@@ -271,14 +261,14 @@ public class AssessmentTimeAppServiceImpl implements AssessmentTimeAppService {
                     .countByUserIdAndAssessmentTimeId(currentUser.getId(), assessmentTimeId);
         }
 
-        return AssessmentProgressDTO.builder()
-                .assessmentTimeId(assessmentTimeId)
-                .totalQuestions(totalQuestions)
-                .completedQuestions(completedQuestions)
-                .build();
+        return new AssessmentProgressResult(assessmentTimeId, totalQuestions, completedQuestions);
     }
 
     private AssessmentTimeResult toResult(AssessmentTime entity) {
+        return toResult(entity, null, null);
+    }
+
+    private AssessmentTimeResult toResult(AssessmentTime entity, Integer totalQuestions, Integer completedQuestions) {
         return new AssessmentTimeResult(
                 entity.getId(),
                 entity.getDirection(),
@@ -287,6 +277,8 @@ public class AssessmentTimeAppServiceImpl implements AssessmentTimeAppService {
                 entity.getStartTime(),
                 entity.getEndTime(),
                 entity.getTimeLimit(),
-                entity.getTimeLimitMinutes());
+                entity.getTimeLimitMinutes(),
+                totalQuestions,
+                completedQuestions);
     }
 }

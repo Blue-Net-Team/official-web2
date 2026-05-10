@@ -13,6 +13,7 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * Domain view of a flattened answer+question+user+judgement submission row.
@@ -126,4 +127,9 @@ public class AssessmentQuestionSubmissionVO {
      * 该提交是否被选为当前题目的最佳或最终采用提交。
      */
     private Boolean selectedBest;
+
+    /**
+     * 该提交的评判历史记录。
+     */
+    private List<AssessmentQuestionSubmissionHistoryVO> histories;
 }

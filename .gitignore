@@ -127,3 +127,6 @@ coverage/
 # Cache
 .cache/
 .parcel-cache/
+
+# secret
+*.pem

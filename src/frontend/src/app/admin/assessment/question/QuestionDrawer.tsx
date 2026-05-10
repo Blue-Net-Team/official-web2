@@ -37,7 +37,7 @@ import type {
 } from '@/apis/schema/assessment.dto'
 import { adminAssessmentQuestionService } from '@/apis/services/admin-assessment-question.service'
 import { adminJudgeProblemConfigService } from '@/apis/services/admin-judge-problem-config.service'
-import { fileService } from '@/apis/services/file.service'
+import { usePresignedUpload } from '@/hooks/usePresignedUpload'
 import { MarkdownRenderer, QuestionStemMarkdownEditor } from '@/components/Assessment'
 import { QUESTION_TYPE_LABELS } from '@/app/admin/assessment/judge/shared'
 
@@ -614,11 +614,13 @@ export default function QuestionDrawer({
     }
   }
 
+  const { upload } = usePresignedUpload()
+
   const handleUpload = async (file: File) => {
     try {
-      const res = await fileService.upload(file, 'ASSESSMENT_ATTACHMENT')
-      if (res.data) {
-        form.setFieldsValue({ attachmentId: res.data.id })
+      const fileId = await upload(file, 'ASSESSMENT_ATTACHMENT')
+      if (fileId != null) {
+        form.setFieldsValue({ attachmentId: fileId })
         messageApi.success('附件上传成功')
       }
     } catch {

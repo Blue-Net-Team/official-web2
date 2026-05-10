@@ -8,10 +8,11 @@ import com.bluenet.web.api.dto.assessment_time.ResponseMessageAssessmentTime;
 import com.bluenet.web.api.dto.assessment_time.ResponseMessageAssessmentTimeList;
 import com.bluenet.web.api.dto.assessment_time.UpdateAssessmentTimeRequestDTO;
 import com.bluenet.web.api.converter.assessment_time.AssessmentTimeRequestConverter;
+import com.bluenet.web.api.converter.assessment_time.AssessmentTimeResponseConverter;
 import com.bluenet.web.application.AssessmentTimeResult;
 import com.bluenet.web.application.command.assessment_time.AssessmentTimeCommands;
-import com.bluenet.web.application.converter.AssessmentTimeAppConverter;
 import com.bluenet.web.application.service.AssessmentTimeAppService;
+import org.springframework.data.domain.Page;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
 import com.bluenet.web.infrastructure.security.annotation.RequiresPermission;
 import io.swagger.v3.oas.annotations.Operation;
@@ -41,7 +42,7 @@ import org.springframework.web.bind.annotation.*;
 public class AdminAssessmentTimeController {
     private final AssessmentTimeAppService assessmentTimeAppService;
     private final AssessmentTimeRequestConverter assessmentTimeRequestConverter;
-    private final AssessmentTimeAppConverter assessmentTimeAppConverter;
+    private final AssessmentTimeResponseConverter responseConverter;
 
     @Operation(summary = "创建考核时间", description = "创建新的考核时间配置")
     @ApiResponses({
@@ -56,7 +57,7 @@ public class AdminAssessmentTimeController {
             AssessmentTimeCommands.CreateAssessmentTimeCommand command = assessmentTimeRequestConverter
                     .toCommand(request);
             AssessmentTimeResult result = assessmentTimeAppService.createAssessmentTime(command);
-            return ResponseMessage.success(convertResultToDTO(result));
+            return ResponseMessage.success(responseConverter.toDTO(result));
         } catch (IllegalArgumentException e) {
             return ResponseMessage.error(400, e.getMessage());
         }
@@ -77,7 +78,7 @@ public class AdminAssessmentTimeController {
             AssessmentTimeCommands.UpdateAssessmentTimeCommand command = assessmentTimeRequestConverter
                     .toCommand(id, request);
             AssessmentTimeResult result = assessmentTimeAppService.updateAssessmentTime(command);
-            return ResponseMessage.success(convertResultToDTO(result));
+            return ResponseMessage.success(responseConverter.toDTO(result));
         } catch (IllegalArgumentException e) {
             if (e.getMessage().contains("不存在")) {
                 return ResponseMessage.error(404, e.getMessage());
@@ -113,20 +114,7 @@ public class AdminAssessmentTimeController {
     public ResponseMessage<PageDTO<AssessmentTimeDTO>> listAssessmentTimes(
             @Parameter(description = "页码（从0开始，默认0）") @RequestParam(required = false, defaultValue = "0") Integer page,
             @Parameter(description = "每页大小（默认5）") @RequestParam(required = false, defaultValue = "5") Integer size) {
-        PageDTO<AssessmentTimeDTO> result = assessmentTimeAppService.listAssessmentTimes(page, size);
-        return ResponseMessage.success(result);
-    }
-
-    private AssessmentTimeDTO convertResultToDTO(AssessmentTimeResult result) {
-        return AssessmentTimeDTO.builder()
-                .id(result.id())
-                .direction(result.direction())
-                .epoch(result.epoch())
-                .grade(result.grade())
-                .startTime(result.startTime())
-                .endTime(result.endTime())
-                .timeLimit(result.timeLimit())
-                .timeLimitMinutes(result.timeLimitMinutes())
-                .build();
+        Page<AssessmentTimeResult> result = assessmentTimeAppService.listAssessmentTimes(page, size);
+        return ResponseMessage.success(PageDTO.from(result.map(responseConverter::toDTO)));
     }
 }

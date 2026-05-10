@@ -1,6 +1,6 @@
 package com.bluenet.web.application.service;
 
-import com.bluenet.web.api.dto.assessment_session.AssessmentSessionDTO;
+import com.bluenet.web.application.AssessmentSessionResult;
 import com.bluenet.web.application.command.assessment_session.AssessmentSessionCommands;
 
 /**
@@ -16,7 +16,7 @@ public interface AssessmentSessionAppService {
      *
      * @param command
      *            获取或创建会话命令
-     * @return 考核会话DTO
+     * @return 考核会话结果
      */
-    AssessmentSessionDTO getOrCreateSession(AssessmentSessionCommands.GetOrCreateSessionCommand command);
+    AssessmentSessionResult getOrCreateSession(AssessmentSessionCommands.GetOrCreateSessionCommand command);
 }

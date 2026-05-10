@@ -66,4 +66,32 @@ public class FileCommands {
             /** ZIP 包名称 */
             String zipName) {
     }
+
+    /**
+     * 预签名上传准备命令。
+     */
+    public record PrepareUploadCommand(
+            /** 原始文件名 */
+            String filename,
+            /** 文件类型 */
+            FileType type,
+            /** 文件大小（字节） */
+            long size,
+            /** 文件 Content-Type */
+            String contentType) {
+    }
+
+    /**
+     * 预签名上传确认命令。
+     */
+    public record ConfirmUploadCommand(
+            /** 文件 ID */
+            Long fileId,
+            /** 回调令牌 */
+            String callbackToken,
+            /** 文件 MD5 */
+            String md5,
+            /** 文件大小（字节） */
+            long size) {
+    }
 }

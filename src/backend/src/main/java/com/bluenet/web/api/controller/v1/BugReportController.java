@@ -5,7 +5,7 @@ import com.bluenet.web.api.dto.bugreport.BugReportCreatedDTO;
 import com.bluenet.web.api.dto.bugreport.CreateBugReportRequestDTO;
 import com.bluenet.web.api.converter.bugreport.BugReportRequestConverter;
 import com.bluenet.web.application.BugReportResult;
-import com.bluenet.web.application.converter.BugReportAppConverter;
+import com.bluenet.web.api.converter.bugreport.BugReportResponseConverter;
 import com.bluenet.web.application.service.BugReportAppService;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
 import com.bluenet.web.infrastructure.security.annotation.RequiresPermission;
@@ -34,7 +34,7 @@ public class BugReportController {
 
     private final BugReportAppService bugReportAppService;
     private final BugReportRequestConverter requestConverter;
-    private final BugReportAppConverter appConverter;
+    private final BugReportResponseConverter responseConverter;
 
     @Operation(summary = "提交 Bug 报告", description = "任何人可提交 Bug 报告，无需登录。支持上传最多 3 张截图。")
     @ApiResponses({
@@ -46,6 +46,6 @@ public class BugReportController {
     public ResponseMessage<BugReportCreatedDTO> submitBugReport(
             @Valid @RequestBody CreateBugReportRequestDTO requestDTO) {
         BugReportResult.Created result = bugReportAppService.submitBugReport(requestConverter.toCommand(requestDTO));
-        return ResponseMessage.success(appConverter.toCreatedDTO(result));
+        return ResponseMessage.success(responseConverter.toCreatedDTO(result));
     }
 }

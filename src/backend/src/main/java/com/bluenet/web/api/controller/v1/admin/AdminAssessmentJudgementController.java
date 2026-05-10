@@ -10,10 +10,10 @@ import com.bluenet.web.api.dto.assessment_judgement.AssessmentQuestionScoreboard
 import com.bluenet.web.api.dto.assessment_judgement.AssessmentQuestionSubmissionDTO;
 import com.bluenet.web.api.dto.assessment_judgement.ManualReviewRequestDTO;
 import com.bluenet.web.api.converter.assessment_judgement.AssessmentJudgementRequestConverter;
+import com.bluenet.web.api.converter.assessment_judgement.AssessmentJudgementResponseConverter;
 import com.bluenet.web.application.AssessmentDecisionResult;
 import com.bluenet.web.application.AssessmentJudgementResult;
 import com.bluenet.web.application.command.assessment_judgement.AssessmentJudgementCommands;
-import com.bluenet.web.application.converter.AssessmentJudgementAppConverter;
 import com.bluenet.web.application.service.AssessmentJudgementAppService;
 import com.bluenet.web.domain.model.enumerate.QuestionType;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
@@ -39,7 +39,7 @@ import java.util.List;
 public class AdminAssessmentJudgementController {
     private final AssessmentJudgementAppService assessmentJudgementAppService;
     private final AssessmentJudgementRequestConverter assessmentJudgementRequestConverter;
-    private final AssessmentJudgementAppConverter assessmentJudgementAppConverter;
+    private final AssessmentJudgementResponseConverter responseConverter;
 
     /**
      * 查询指定答案的最新评判结果。
@@ -54,7 +54,7 @@ public class AdminAssessmentJudgementController {
     public ResponseMessage<AssessmentJudgementDTO> getLatestByAnswerId(
             @Parameter(description = "答案ID", required = true) @PathVariable Long answerId) {
         AssessmentJudgementResult result = assessmentJudgementAppService.getLatestByAnswerId(answerId);
-        return ResponseMessage.success(assessmentJudgementAppConverter.toDTO(result));
+        return ResponseMessage.success(responseConverter.toDTO(result));
     }
 
     /**
@@ -72,7 +72,7 @@ public class AdminAssessmentJudgementController {
         List<AssessmentJudgementResult> results = assessmentJudgementAppService.listByQuestionId(questionId);
         return ResponseMessage.success(
                 results.stream()
-                        .map(assessmentJudgementAppConverter::toDTO)
+                        .map(responseConverter::toDTO)
                         .toList());
     }
 
@@ -91,7 +91,7 @@ public class AdminAssessmentJudgementController {
         AssessmentJudgementCommands.ManualReviewCommand command = assessmentJudgementRequestConverter
                 .toCommand(request);
         AssessmentJudgementResult result = assessmentJudgementAppService.reviewFileUploadAnswer(command);
-        return ResponseMessage.success(assessmentJudgementAppConverter.toDTO(result));
+        return ResponseMessage.success(responseConverter.toDTO(result));
     }
 
     /**
@@ -109,7 +109,7 @@ public class AdminAssessmentJudgementController {
         AssessmentJudgementCommands.DecideAssessmentCommand command = assessmentJudgementRequestConverter
                 .toCommand(request);
         AssessmentDecisionResult result = assessmentJudgementAppService.decideAssessment(command);
-        return ResponseMessage.success(assessmentJudgementAppConverter.toDTO(result));
+        return ResponseMessage.success(responseConverter.toDTO(result));
     }
 
     /**
@@ -132,7 +132,10 @@ public class AdminAssessmentJudgementController {
             @Parameter(description = "题目关键词") @RequestParam(required = false) String keyword) {
         return ResponseMessage.success(
                 assessmentJudgementAppService
-                        .listQuestionScoreboard(assessmentTimeId, questionType, keyword));
+                        .listQuestionScoreboard(assessmentTimeId, questionType, keyword)
+                        .stream()
+                        .map(responseConverter::convertScoreboardToDTO)
+                        .toList());
     }
 
     /**
@@ -155,7 +158,10 @@ public class AdminAssessmentJudgementController {
             @Parameter(description = "评分状态：JUDGED/PENDING") @RequestParam(required = false) String status) {
         return ResponseMessage.success(
                 assessmentJudgementAppService
-                        .listQuestionSubmissions(questionId, keyword, status));
+                        .listQuestionSubmissions(questionId, keyword, status)
+                        .stream()
+                        .map(responseConverter::convertSubmissionToDTO)
+                        .toList());
     }
 
     /**
@@ -175,7 +181,10 @@ public class AdminAssessmentJudgementController {
             @Parameter(description = "考生关键词") @RequestParam(required = false) String keyword) {
         return ResponseMessage.success(
                 assessmentJudgementAppService
-                        .listCandidateScoreboard(assessmentTimeId, keyword));
+                        .listCandidateScoreboard(assessmentTimeId, keyword)
+                        .stream()
+                        .map(responseConverter::convertCandidateScoreboardToDTO)
+                        .toList());
     }
 
     /**
@@ -197,8 +206,9 @@ public class AdminAssessmentJudgementController {
             @Parameter(description = "考生关键词") @RequestParam(required = false) String keyword,
             @Parameter(description = "决策状态：PENDING/PASSED/ELIMINATED") @RequestParam(required = false) String decisionStatus) {
         return ResponseMessage.success(
-                assessmentJudgementAppService
-                        .getDecisionWorkspace(assessmentTimeId, keyword, decisionStatus));
+                responseConverter.convertDecisionWorkspaceToDTO(
+                        assessmentJudgementAppService
+                                .getDecisionWorkspace(assessmentTimeId, keyword, decisionStatus)));
     }
 
     /**

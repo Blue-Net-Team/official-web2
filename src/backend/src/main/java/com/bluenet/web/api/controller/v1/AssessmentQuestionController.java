@@ -4,7 +4,7 @@ import com.bluenet.web.api.dto.ResponseMessage;
 import com.bluenet.web.api.dto.assessment_question.AssessmentQuestionDTO;
 import com.bluenet.web.api.dto.assessment_question.ResponseMessageUserQuestionList;
 import com.bluenet.web.api.dto.assessment_question.UserQuestionListResponse;
-import com.bluenet.web.application.converter.AssessmentQuestionAppConverter;
+import com.bluenet.web.api.converter.assessment_question.AssessmentQuestionResponseConverter;
 import com.bluenet.web.application.service.AssessmentQuestionAppService;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
 import com.bluenet.web.infrastructure.security.annotation.RequiresPermission;
@@ -32,7 +32,7 @@ import org.springframework.web.bind.annotation.*;
 @SecurityRequirement(name = "bearer-jwt")
 public class AssessmentQuestionController {
     private final AssessmentQuestionAppService assessmentQuestionAppService;
-    private final AssessmentQuestionAppConverter assessmentQuestionConverter;
+    private final AssessmentQuestionResponseConverter responseConverter;
 
     @Operation(summary = "查询考题目录", description = "分页查询指定考核时间下的考题目录。考生只能看到自己方向和年级的考题，不包含题目内容。限时考核会同时返回截止时间。")
     @ApiResponses({
@@ -46,8 +46,8 @@ public class AssessmentQuestionController {
             @Parameter(description = "页码（从0开始，默认0）") @RequestParam(required = false, defaultValue = "0") Integer page,
             @Parameter(description = "每页大小（默认10）") @RequestParam(required = false, defaultValue = "10") Integer size) {
         try {
-            UserQuestionListResponse result = assessmentQuestionConverter
-                    .convertToResponse(assessmentQuestionAppService.listQuestionsForUser(assessmentTimeId, page, size));
+            UserQuestionListResponse result = responseConverter
+                    .toResponse(assessmentQuestionAppService.listQuestionsForUser(assessmentTimeId, page, size));
             return ResponseMessage.success(result);
         } catch (IllegalArgumentException e) {
             return ResponseMessage.error(404, e.getMessage());
@@ -67,8 +67,8 @@ public class AssessmentQuestionController {
     public ResponseMessage<AssessmentQuestionDTO> getQuestionDetail(
             @Parameter(description = "题目ID", required = true) @PathVariable Long id) {
         try {
-            AssessmentQuestionDTO result = assessmentQuestionConverter
-                    .convertToDTO(assessmentQuestionAppService.getQuestionDetailForUser(id));
+            AssessmentQuestionDTO result = responseConverter
+                    .toDTOForUser(assessmentQuestionAppService.getQuestionDetailForUser(id));
             return ResponseMessage.success(result);
         } catch (IllegalArgumentException e) {
             return ResponseMessage.error(404, e.getMessage());

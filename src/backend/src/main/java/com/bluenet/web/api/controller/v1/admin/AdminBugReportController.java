@@ -8,7 +8,7 @@ import com.bluenet.web.api.dto.bugreport.BugReportListQueryDTO;
 import com.bluenet.web.api.dto.bugreport.UpdateBugReportStatusRequestDTO;
 import com.bluenet.web.api.converter.bugreport.BugReportRequestConverter;
 import com.bluenet.web.application.BugReportResult;
-import com.bluenet.web.application.converter.BugReportAppConverter;
+import com.bluenet.web.api.converter.bugreport.BugReportResponseConverter;
 import com.bluenet.web.application.service.BugReportAdminAppService;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
 import com.bluenet.web.infrastructure.security.annotation.RequiresPermission;
@@ -39,7 +39,7 @@ public class AdminBugReportController {
 
     private final BugReportAdminAppService bugReportAdminAppService;
     private final BugReportRequestConverter requestConverter;
-    private final BugReportAppConverter appConverter;
+    private final BugReportResponseConverter responseConverter;
 
     @Operation(summary = "分页查询 Bug 报告列表", description = "支持按状态筛选，按创建时间倒序")
     @ApiResponses({
@@ -52,7 +52,7 @@ public class AdminBugReportController {
             @Valid BugReportListQueryDTO query) {
         Page<BugReportResult.Brief> page = bugReportAdminAppService
                 .getBugReportList(requestConverter.toListCommand(query));
-        return ResponseMessage.success(PageDTO.from(appConverter.toBriefDTOPage(page)));
+        return ResponseMessage.success(PageDTO.from(responseConverter.toBriefDTOPage(page)));
     }
 
     @Operation(summary = "获取 Bug 报告详情", description = "获取指定 Bug 报告的完整信息，包括环境信息和图片")
@@ -66,7 +66,7 @@ public class AdminBugReportController {
     public ResponseMessage<BugReportDetailDTO> getBugReportDetail(
             @Parameter(description = "报告 ID", required = true) @PathVariable Long id) {
         BugReportResult.Detail detail = bugReportAdminAppService.getBugReportDetail(id);
-        return ResponseMessage.success(appConverter.toDetailDTO(detail));
+        return ResponseMessage.success(responseConverter.toDetailDTO(detail));
     }
 
     @Operation(summary = "更新 Bug 报告状态", description = "将指定 Bug 报告更新为新的处理状态")
@@ -82,6 +82,6 @@ public class AdminBugReportController {
             @Valid @RequestBody UpdateBugReportStatusRequestDTO requestDTO) {
         BugReportResult.Detail detail = bugReportAdminAppService.updateStatus(
                 requestConverter.toCommand(id, requestDTO));
-        return ResponseMessage.success(appConverter.toDetailDTO(detail));
+        return ResponseMessage.success(responseConverter.toDetailDTO(detail));
     }
 }

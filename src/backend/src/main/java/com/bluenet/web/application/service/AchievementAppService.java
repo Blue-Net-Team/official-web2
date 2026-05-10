@@ -1,8 +1,5 @@
 package com.bluenet.web.application.service;
 
-import com.bluenet.web.api.dto.PageDTO;
-import com.bluenet.web.api.dto.achievement.AchievementDTO;
-import com.bluenet.web.api.dto.achievement.AchievementStatsDTO;
 import com.bluenet.web.application.AchievementResult;
 import com.bluenet.web.application.command.achievement.AchievementCommands;
 
@@ -29,7 +26,7 @@ public interface AchievementAppService {
      *            年份
      * @return 分页成就结果
      */
-    PageDTO<AchievementDTO> getAchievements(Integer page, Integer size,
+    org.springframework.data.domain.Page<AchievementResult> getAchievements(Integer page, Integer size,
             com.bluenet.web.domain.model.enumerate.AchievementType type,
             com.bluenet.web.domain.model.enumerate.AwardLevel awardLevel, Integer year);
 
@@ -38,7 +35,7 @@ public interface AchievementAppService {
      *
      * @return 成就统计数据
      */
-    AchievementStatsDTO getAchievementStats();
+    com.bluenet.web.domain.model.vo.AchievementStatsVO getAchievementStats();
 
     /**
      * 创建成就

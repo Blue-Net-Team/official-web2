@@ -70,8 +70,8 @@ public class BugReportAdminAppServiceImpl implements BugReportAdminAppService {
                 bugReport.getPageUrl(),
                 bugReport.getReporterEmail(),
                 bugReport.getStatus(),
-                bugReport.getCreatedAt(),
-                imageCount);
+                imageCount,
+                bugReport.getGithubIssueUrl());
     }
 
     private BugReportResult.Detail toDetailResult(BugReport bugReport) {
@@ -86,8 +86,8 @@ public class BugReportAdminAppServiceImpl implements BugReportAdminAppService {
                 bugReport.getEnvironmentJson(),
                 bugReport.getReporterEmail(),
                 bugReport.getStatus(),
-                bugReport.getCreatedAt(),
-                bugReport.getUpdatedAt(),
+                bugReport.getGithubIssueUrl(),
+                bugReport.getGithubIssueNumber(),
                 fileIds);
     }
 }

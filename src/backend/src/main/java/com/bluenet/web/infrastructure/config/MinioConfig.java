@@ -41,4 +41,5 @@ public class MinioConfig {
         log.info("MinIO client initialized: {}:{}", minioProperties.getEndpoint(), minioProperties.getPort());
         return client;
     }
+
 }

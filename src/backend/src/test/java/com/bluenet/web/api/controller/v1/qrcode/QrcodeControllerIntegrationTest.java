@@ -1,10 +1,15 @@
 package com.bluenet.web.api.controller.v1.qrcode;
 
 import com.bluenet.web.infrastructure.repository.dataobject.*;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.bluenet.web.testsupport.RepositoryTestObjects;
 
 import com.bluenet.web.BaseIntegrationTest;
+import com.bluenet.web.api.dto.qrcode.CreateAssessmentQrcodeRequestDTO;
+import com.bluenet.web.api.dto.qrcode.UpdateAssessmentQrcodeRequestDTO;
+import com.bluenet.web.domain.model.enumerate.Direction;
+import com.bluenet.web.api.dto.qrcode.UpdateConsultationQrcodeRequestDTO;
 import com.bluenet.web.domain.model.entity.File;
 import com.bluenet.web.domain.model.entity.Qrcode;
 import com.bluenet.web.domain.model.enumerate.FileType;
@@ -46,6 +51,9 @@ class QrcodeControllerIntegrationTest extends BaseIntegrationTest {
 
     @Autowired
     private FileMapper fileMapper;
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @BeforeEach
     void setUp() {
@@ -270,5 +278,152 @@ class QrcodeControllerIntegrationTest extends BaseIntegrationTest {
         File file = File.reconstruct(null, filename, type, "test-url/" + filename);
         RepositoryTestObjects.insert(fileMapper, file, FileDO.class);
         return file;
+    }
+
+    // ==================== 管理端咨询群二维码测试 - 更新 ====================
+
+    @Test
+    @DisplayName("更新咨询群二维码 - 超管应成功")
+    @WithUserVO(userId = 7L, studentId = "2024001007", username = "管理员", roleName = "SUPER_ADMIN")
+    void updateConsultationQrcode_asAdmin_shouldSucceed() throws Exception {
+        // 创建原始文件和二维码
+        File oldFile = createTestFile("old-qrcode.png");
+        Qrcode qrcode = Qrcode.forConsultation(oldFile.getId());
+        RepositoryTestObjects.insert(qrcodeMapper, qrcode, QrcodeDO.class);
+
+        // 创建新文件
+        File newFile = createTestFile("new-qrcode.png");
+
+        // 构建请求体
+        UpdateConsultationQrcodeRequestDTO request = UpdateConsultationQrcodeRequestDTO.builder()
+                .fileId(newFile.getId())
+                .build();
+
+        mockMvc.perform(
+                put("/api/v1/admin/qrcodes/consultation/" + qrcode.getId())
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200));
+    }
+
+    @Test
+    @DisplayName("管理端获取咨询群二维码列表 - 超管应成功")
+    @WithUserVO(userId = 8L, studentId = "2024001008", username = "管理员", roleName = "SUPER_ADMIN")
+    void getConsultationQrcodesAdmin_asAdmin_shouldSucceed() throws Exception {
+        // 创建测试数据
+        File file = createTestFile("qrcode.png");
+        Qrcode qrcode = Qrcode.forConsultation(file.getId());
+        RepositoryTestObjects.insert(qrcodeMapper, qrcode, QrcodeDO.class);
+
+        mockMvc.perform(get("/api/v1/admin/qrcodes/consultation"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.data").isArray())
+                .andExpect(jsonPath("$.data.length()").value(1));
+    }
+
+    // ==================== 管理端考核群二维码测试 ====================
+
+    @Test
+    @DisplayName("获取考核群二维码列表 - 超管应成功")
+    @WithUserVO(userId = 9L, studentId = "2024001009", username = "管理员", roleName = "SUPER_ADMIN")
+    void getAssessmentQrcodes_asAdmin_shouldSucceed() throws Exception {
+        // 创建测试数据
+        File file = createTestFile("assessment-qrcode.png");
+        Qrcode qrcode = Qrcode.forAssessment(file.getId(), 1, "COMPUTER_VISION", false);
+        RepositoryTestObjects.insert(qrcodeMapper, qrcode, QrcodeDO.class);
+
+        mockMvc.perform(get("/api/v1/admin/qrcodes/assessment"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.data").isArray())
+                .andExpect(jsonPath("$.data.length()").value(1));
+    }
+
+    @Test
+    @DisplayName("创建考核群二维码 - 超管应成功")
+    @WithUserVO(userId = 10L, studentId = "2024001010", username = "管理员", roleName = "SUPER_ADMIN")
+    void createAssessmentQrcode_asAdmin_shouldSucceed() throws Exception {
+        File file = createTestFile("assessment-qrcode.png");
+
+        CreateAssessmentQrcodeRequestDTO request = CreateAssessmentQrcodeRequestDTO.builder()
+                .fileId(file.getId())
+                .direction(Direction.COMPUTER_VISION)
+                .epoch(1)
+                .isShared(false)
+                .build();
+
+        mockMvc.perform(
+                post("/api/v1/admin/qrcodes/assessment")
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200));
+    }
+
+    @Test
+    @DisplayName("创建共用考核群二维码 - 超管应成功")
+    @WithUserVO(userId = 11L, studentId = "2024001011", username = "管理员", roleName = "SUPER_ADMIN")
+    void createSharedAssessmentQrcode_asAdmin_shouldSucceed() throws Exception {
+        File file = createTestFile("shared-qrcode.png");
+
+        CreateAssessmentQrcodeRequestDTO request = CreateAssessmentQrcodeRequestDTO.builder()
+                .fileId(file.getId())
+                .epoch(1)
+                .isShared(true)
+                .build();
+
+        mockMvc.perform(
+                post("/api/v1/admin/qrcodes/assessment")
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200));
+    }
+
+    @Test
+    @DisplayName("更新考核群二维码 - 超管应成功")
+    @WithUserVO(userId = 12L, studentId = "2024001012", username = "管理员", roleName = "SUPER_ADMIN")
+    void updateAssessmentQrcode_asAdmin_shouldSucceed() throws Exception {
+        // 创建原始数据
+        File oldFile = createTestFile("old-assessment-qrcode.png");
+        Qrcode qrcode = Qrcode.forAssessment(oldFile.getId(), 1, "COMPUTER_VISION", false);
+        RepositoryTestObjects.insert(qrcodeMapper, qrcode, QrcodeDO.class);
+
+        // 创建新文件
+        File newFile = createTestFile("new-assessment-qrcode.png");
+
+        UpdateAssessmentQrcodeRequestDTO request = UpdateAssessmentQrcodeRequestDTO.builder()
+                .fileId(newFile.getId())
+                .direction(Direction.STRUCTURAL_DESIGN)
+                .epoch(2)
+                .isShared(false)
+                .build();
+
+        mockMvc.perform(
+                put("/api/v1/admin/qrcodes/assessment/" + qrcode.getId())
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200));
+    }
+
+    @Test
+    @DisplayName("删除考核群二维码 - 超管应成功")
+    @WithUserVO(userId = 13L, studentId = "2024001013", username = "管理员", roleName = "SUPER_ADMIN")
+    void deleteAssessmentQrcode_asAdmin_shouldSucceed() throws Exception {
+        // 创建测试数据
+        File file = createTestFile("assessment-qrcode.png");
+        Qrcode qrcode = Qrcode.forAssessment(file.getId(), 1, "COMPUTER_VISION", false);
+        RepositoryTestObjects.insert(qrcodeMapper, qrcode, QrcodeDO.class);
+
+        mockMvc.perform(delete("/api/v1/admin/qrcodes/assessment/" + qrcode.getId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200));
+
+        // 验证已删除
+        Qrcode deleted = RepositoryTestObjects.toDomain(qrcodeMapper.selectById(qrcode.getId()), Qrcode.class);
+        assertNull(deleted);
     }
 }

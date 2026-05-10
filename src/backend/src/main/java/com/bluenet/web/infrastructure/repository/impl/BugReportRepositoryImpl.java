@@ -17,7 +17,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -38,8 +37,6 @@ public class BugReportRepositoryImpl implements BugReportRepository {
     public void save(BugReport bugReport) {
         BugReportDO dataObject = converter.toDataObject(bugReport);
         if (bugReport.getId() == null) {
-            dataObject.setCreatedAt(LocalDateTime.now());
-            dataObject.setUpdatedAt(LocalDateTime.now());
             bugReportMapper.insert(dataObject);
             bugReport.setId(dataObject.getId());
 
@@ -51,7 +48,6 @@ public class BugReportRepositoryImpl implements BugReportRepository {
                 }
             }
         } else {
-            dataObject.setUpdatedAt(LocalDateTime.now());
             bugReportMapper.updateById(dataObject);
         }
         log.info("保存 Bug 报告: id={}", bugReport.getId());
@@ -74,8 +70,6 @@ public class BugReportRepositoryImpl implements BugReportRepository {
         if (status != null) {
             wrapper.eq("status", status);
         }
-        wrapper.orderByDesc("created_at");
-
         com.baomidou.mybatisplus.extension.plugins.pagination.Page<BugReportDO> mpPage = new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>(
                 pageable.getPageNumber() + 1, pageable.getPageSize());
         mpPage = bugReportMapper.selectPage(mpPage, wrapper);
@@ -97,9 +91,19 @@ public class BugReportRepositoryImpl implements BugReportRepository {
         BugReportDO dataObject = new BugReportDO();
         dataObject.setId(id);
         dataObject.setStatus(status);
-        dataObject.setUpdatedAt(LocalDateTime.now());
         int influence = bugReportMapper.updateById(dataObject);
         log.info("更新 Bug 报告状态: id={}, status={}, influence={}", id, status, influence);
+        return influence;
+    }
+
+    @Override
+    public int updateGithubIssueInfo(Long id, String githubIssueUrl, Integer githubIssueNumber) {
+        BugReportDO dataObject = new BugReportDO();
+        dataObject.setId(id);
+        dataObject.setGithubIssueUrl(githubIssueUrl);
+        dataObject.setGithubIssueNumber(githubIssueNumber);
+        int influence = bugReportMapper.updateById(dataObject);
+        log.info("更新 Bug 报告 GitHub Issue: id={}, issueNumber={}, influence={}", id, githubIssueNumber, influence);
         return influence;
     }
 }

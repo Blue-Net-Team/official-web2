@@ -3,7 +3,6 @@ package com.bluenet.web.api.controller.v1;
 import com.bluenet.web.api.dto.ResponseMessage;
 import com.bluenet.web.api.dto.auth.*;
 import com.bluenet.web.api.converter.resetpassword.ResetPasswordRequestConverter;
-import com.bluenet.web.application.converter.ResetPasswordAppConverter;
 import com.bluenet.web.application.ResetPasswordResult;
 import com.bluenet.web.application.service.ResetPasswordAppService;
 import com.bluenet.web.domain.exception.BadRequest;
@@ -34,7 +33,6 @@ public class ResetPasswordController {
 
     private final ResetPasswordAppService resetPasswordAppService;
     private final ResetPasswordRequestConverter resetPasswordRequestConverter;
-    private final ResetPasswordAppConverter resetPasswordAppConverter;
 
     @Operation(summary = "验证学号", description = "验证学号是否存在，返回 resetToken 用于后续步骤")
     @ApiResponses({
@@ -46,7 +44,7 @@ public class ResetPasswordController {
             @Valid @RequestBody VerifyStudentRequestDTO requestDTO) {
         ResetPasswordResult.VerifyStudent result = resetPasswordAppService
                 .verifyStudent(resetPasswordRequestConverter.toCommand(requestDTO));
-        return ResponseMessage.success(resetPasswordAppConverter.toDTO(result));
+        return ResponseMessage.success(result.resetToken());
     }
 
     @Operation(summary = "验证邮箱", description = "验证邮箱是否与学号关联")
@@ -59,7 +57,7 @@ public class ResetPasswordController {
             @Valid @RequestBody VerifyEmailRequestDTO requestDTO) {
         ResetPasswordResult.VerifyEmail result = resetPasswordAppService
                 .verifyEmail(resetPasswordRequestConverter.toCommand(requestDTO));
-        return ResponseMessage.success(resetPasswordAppConverter.toDTO(result));
+        return ResponseMessage.success(result.resetToken());
     }
 
     @Operation(summary = "发送验证码", description = "向已验证的邮箱发送6位验证码，有效期5分钟")

@@ -1,6 +1,6 @@
 package com.bluenet.web.api.controller.v1.competition;
 
-import com.bluenet.web.api.dto.competition.CompetitionResponseDTO;
+import com.bluenet.web.domain.model.vo.CompetitionVO;
 import com.bluenet.web.application.service.CompetitionAppService;
 import com.bluenet.web.testcontainers.TestcontainersConfiguration;
 import org.junit.jupiter.api.DisplayName;
@@ -46,8 +46,8 @@ class CompetitionControllerTest {
     private static final String TEST_SUMMARY = "全国软件和信息技术专业人才大赛";
     private static final Long TEST_COVER_FILE_ID = 100L;
 
-    private CompetitionResponseDTO createTestCompetitionResponseDTO() {
-        return CompetitionResponseDTO.builder()
+    private CompetitionVO createTestCompetitionVO() {
+        return CompetitionVO.builder()
                 .id(TEST_ID)
                 .name(TEST_NAME)
                 .level(TEST_LEVEL)
@@ -61,8 +61,8 @@ class CompetitionControllerTest {
     @Test
     @DisplayName("获取竞赛列表：应返回包含 level、month、organizer 字段的响应")
     void getCompetitionList_shouldReturnCompetitionsWithAllFields() throws Exception {
-        List<CompetitionResponseDTO> competitions = new ArrayList<>();
-        competitions.add(createTestCompetitionResponseDTO());
+        List<CompetitionVO> competitions = new ArrayList<>();
+        competitions.add(createTestCompetitionVO());
 
         when(competitionAppService.getCompetitionResponseList(anyInt())).thenReturn(competitions);
 
@@ -88,7 +88,7 @@ class CompetitionControllerTest {
     @Test
     @DisplayName("获取竞赛列表：无参数时应使用默认 limit=10")
     void getCompetitionList_withoutLimitParam_shouldUseDefaultLimit() throws Exception {
-        List<CompetitionResponseDTO> competitions = new ArrayList<>();
+        List<CompetitionVO> competitions = new ArrayList<>();
         when(competitionAppService.getCompetitionResponseList(anyInt())).thenReturn(competitions);
 
         mockMvc.perform(
@@ -120,10 +120,10 @@ class CompetitionControllerTest {
     @Test
     @DisplayName("获取竞赛列表：多个竞赛时应返回全部")
     void getCompetitionList_multipleCompetitions_shouldReturnAll() throws Exception {
-        List<CompetitionResponseDTO> competitions = Arrays.asList(
-                CompetitionResponseDTO.builder().id(1L).name("蓝桥杯").level("national").build(),
-                CompetitionResponseDTO.builder().id(2L).name("ACM").level("national").build(),
-                CompetitionResponseDTO.builder().id(3L).name("数学建模").level("provincial").build());
+        List<CompetitionVO> competitions = Arrays.asList(
+                CompetitionVO.builder().id(1L).name("蓝桥杯").level("national").build(),
+                CompetitionVO.builder().id(2L).name("ACM").level("national").build(),
+                CompetitionVO.builder().id(3L).name("数学建模").level("provincial").build());
 
         when(competitionAppService.getCompetitionResponseList(anyInt())).thenReturn(competitions);
 

@@ -1,5 +1,6 @@
 package com.bluenet.web.domain.model.vo;
 
+import com.bluenet.web.domain.model.enumerate.FileStatus;
 import com.bluenet.web.domain.model.enumerate.FileType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -26,4 +27,9 @@ public class FileVO {
      */
     @Deprecated
     private String url;
+
+    /**
+     * 文件状态。
+     */
+    private FileStatus status;
 }

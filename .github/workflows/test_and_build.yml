@@ -1,6 +1,6 @@
 # CI/CD Pipeline 工作流
 # 支持多分支部署：master -> 生产环境，develop -> 开发环境
-# 分阶段部署：后端 -> 健康检查 -> 前端
+# 分阶段部署：基础设施 -> API/判题服务 -> 健康检查 -> 前端
 # 部署方式：构建镜像后 docker save -> SCP 传输到服务器 -> docker load 导入（避免国内服务器 pull ghcr.io 超时）
 
 name: CI/CD Pipeline
@@ -16,9 +16,9 @@ env:
   REGISTRY: ghcr.io
 
 jobs:
-  # ==================== 测试阶段 ====================
+  # ==================== API 服务测试阶段 ====================
 
-  backend-test:
+  api-service-test:
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -45,10 +45,10 @@ jobs:
     - name: Make mvnw executable
       run: chmod +x ./mvnw
 
-    - name: Compile backend
+    - name: Compile api-service
       run: ./mvnw -B clean compile
 
-    - name: Run backend tests
+    - name: Run api-service tests
       run: ./mvnw -B test
 
   frontend-test:
@@ -81,7 +81,7 @@ jobs:
     - name: Lint check
       run: pnpm lint
 
-  # ==================== 测试判题服务阶段 ====================
+  # ==================== 判题服务测试阶段 ====================
 
   judge-service-test:
     runs-on: ubuntu-latest
@@ -113,12 +113,11 @@ jobs:
     - name: Run judge-service tests
       run: src/backend/mvnw -B test -f src/judge-service/pom.xml
 
-  # ==================== 构建后端阶段 ====================
+  # ==================== 构建 API 服务阶段 ====================
 
-  build-backend:
+  build-api-service:
     runs-on: ubuntu-latest
-    needs: [backend-test]
-    if: github.event_name == 'push'
+    needs: [api-service-test]
     permissions:
       contents: read
       packages: write
@@ -154,7 +153,7 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-maven-
 
-    - name: Build backend JAR
+    - name: Build api-service JAR
       working-directory: src/backend
       run: |
         chmod +x ./mvnw
@@ -174,42 +173,42 @@ jobs:
       id: meta
       uses: docker/metadata-action@v5
       with:
-        images: ${{ env.REGISTRY }}/${{ steps.image.outputs.name }}/bluenet-backend
+        images: ${{ env.REGISTRY }}/${{ steps.image.outputs.name }}/bluenet-api-service
         tags: |
           type=ref,event=branch
           type=sha,prefix=
           type=raw,value=latest,enable=${{ github.ref == 'refs/heads/master' }}
 
-    - name: Build backend image
+    - name: Build api-service image
       uses: docker/build-push-action@v5
       with:
         context: .
-        file: docker/backend.Dockerfile
+        file: docker/api-service.Dockerfile
         load: true
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
 
-    - name: Push backend image to ghcr.io
+    - name: Push api-service image to ghcr.io
       run: |
         echo '${{ steps.meta.outputs.tags }}' | while read -r tag; do
           [ -n "$tag" ] && docker push "$tag"
         done
 
-    - name: Save backend image as tar
+    - name: Save api-service image as tar
       run: |
         IMAGE_TAG="${{ steps.vars.outputs.image_tag }}"
-        GHCR_IMAGE="${{ env.REGISTRY }}/${{ steps.image.outputs.name }}/bluenet-backend:${IMAGE_TAG}"
-        LOCAL_TAG="bluenet-backend:${IMAGE_TAG}"
+        GHCR_IMAGE="${{ env.REGISTRY }}/${{ steps.image.outputs.name }}/bluenet-api-service:${IMAGE_TAG}"
+        LOCAL_TAG="bluenet-api-service:${IMAGE_TAG}"
         docker tag "$GHCR_IMAGE" "$LOCAL_TAG"
-        docker save "$LOCAL_TAG" | gzip > backend-image.tar.gz
+        docker save "$LOCAL_TAG" | gzip > api-service-image.tar.gz
 
-    - name: Upload backend image artifact
+    - name: Upload api-service image artifact
       uses: actions/upload-artifact@v4
       with:
-        name: backend-image
-        path: backend-image.tar.gz
+        name: api-service-image
+        path: api-service-image.tar.gz
         retention-days: 1
 
   # ==================== 构建判题服务阶段 ====================
@@ -217,7 +216,6 @@ jobs:
   build-judge-service:
     runs-on: ubuntu-latest
     needs: [judge-service-test]
-    if: github.event_name == 'push'
     permissions:
       contents: read
       packages: write
@@ -310,12 +308,66 @@ jobs:
         path: judge-service-image.tar.gz
         retention-days: 1
 
-  # ==================== 部署后端阶段 ====================
+  # ==================== 部署基础设施阶段 ====================
 
-  deploy-backend:
+  deploy-infra:
     runs-on: ubuntu-latest
-    needs: [build-backend]
-    if: github.event_name == 'push'
+    needs: [api-service-test, frontend-test, judge-service-test]
+    outputs:
+      deploy_host: ${{ steps.vars.outputs.deploy_host }}
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set deployment variables
+      id: vars
+      run: |
+        if [ "${{ github.ref }}" = "refs/heads/master" ]; then
+          echo "deploy_path=${{ secrets.DEPLOY_PATH_PROD }}" >> $GITHUB_OUTPUT
+          echo "deploy_host=${{ secrets.DEPLOY_HOST_PROD }}" >> $GITHUB_OUTPUT
+          echo "env_name=production" >> $GITHUB_OUTPUT
+        else
+          echo "deploy_path=${{ secrets.DEPLOY_PATH_DEV }}" >> $GITHUB_OUTPUT
+          echo "deploy_host=${{ secrets.DEPLOY_HOST_DEV }}" >> $GITHUB_OUTPUT
+          echo "env_name=development" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Sync compose file to server
+      uses: appleboy/scp-action@v0.1.7
+      with:
+        host: ${{ steps.vars.outputs.deploy_host }}
+        username: ${{ secrets.DEPLOY_USER }}
+        key: ${{ secrets.DEPLOY_KEY }}
+        port: ${{ secrets.DEPLOY_PORT || 22 }}
+        source: "docker/docker-compose.yml"
+        target: ${{ steps.vars.outputs.deploy_path }}
+        strip_components: 1
+
+    - name: Deploy infrastructure via SSH
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ steps.vars.outputs.deploy_host }}
+        username: ${{ secrets.DEPLOY_USER }}
+        key: ${{ secrets.DEPLOY_KEY }}
+        port: ${{ secrets.DEPLOY_PORT || 22 }}
+        envs: DEPLOY_PATH
+        script: |
+          cd $DEPLOY_PATH
+
+          echo "=== Deploying infrastructure to ${{ steps.vars.outputs.env_name }} environment ==="
+
+          echo "Starting infrastructure services (database, redis, rabbitmq)..."
+          docker compose --profile infra up -d --remove-orphans
+
+          echo "Infrastructure deployment completed!"
+      env:
+        DEPLOY_PATH: ${{ steps.vars.outputs.deploy_path }}
+
+  # ==================== 部署 API 服务阶段 ====================
+
+  deploy-api-service:
+    runs-on: ubuntu-latest
+    needs: [build-api-service, deploy-infra]
     outputs:
       deploy_host: ${{ steps.vars.outputs.deploy_host }}
 
@@ -341,22 +393,11 @@ jobs:
           echo "redis_host=${{ secrets.REDIS_HOST_DEV }}" >> $GITHUB_OUTPUT
         fi
 
-    - name: Download backend image artifact
+    - name: Download api-service image artifact
       uses: actions/download-artifact@v4
       with:
-        name: backend-image
+        name: api-service-image
         path: ./images
-
-    - name: Sync compose file to server
-      uses: appleboy/scp-action@v0.1.7
-      with:
-        host: ${{ steps.vars.outputs.deploy_host }}
-        username: ${{ secrets.DEPLOY_USER }}
-        key: ${{ secrets.DEPLOY_KEY }}
-        port: ${{ secrets.DEPLOY_PORT || 22 }}
-        source: "docker/docker-compose.yml"
-        target: ${{ steps.vars.outputs.deploy_path }}
-        strip_components: 1
 
     - name: Transfer image to server
       uses: appleboy/scp-action@v0.1.7
@@ -365,21 +406,21 @@ jobs:
         username: ${{ secrets.DEPLOY_USER }}
         key: ${{ secrets.DEPLOY_KEY }}
         port: ${{ secrets.DEPLOY_PORT || 22 }}
-        source: "images/backend-image.tar.gz"
+        source: "images/api-service-image.tar.gz"
         target: /tmp/bluenet-deploy
 
-    - name: Deploy backend via SSH
+    - name: Deploy api-service via SSH
       uses: appleboy/ssh-action@v1.0.3
       with:
         host: ${{ steps.vars.outputs.deploy_host }}
         username: ${{ secrets.DEPLOY_USER }}
         key: ${{ secrets.DEPLOY_KEY }}
         port: ${{ secrets.DEPLOY_PORT || 22 }}
-        envs: BACKEND_IMAGE, DEPLOY_PATH, DATABASE_HOST, REDIS_HOST
+        envs: API_SERVICE_IMAGE, DEPLOY_PATH, DATABASE_HOST, REDIS_HOST
         script: |
           cd $DEPLOY_PATH
 
-          echo "=== Deploying backend to ${{ steps.vars.outputs.env_name }} environment ==="
+          echo "=== Deploying api-service to ${{ steps.vars.outputs.env_name }} environment ==="
 
           echo "Updating deployment-specific configuration in .env..."
           touch .env
@@ -393,21 +434,21 @@ jobs:
           }
           update_env "DATABASE_HOST" "${DATABASE_HOST}"
           update_env "REDIS_HOST" "${REDIS_HOST}"
-          update_env "BACKEND_IMAGE" "${BACKEND_IMAGE}"
+          update_env "API_SERVICE_IMAGE" "${API_SERVICE_IMAGE}"
           update_env "ENV" "${{ steps.vars.outputs.image_tag == 'latest' && 'prod' || 'dev' }}"
           update_env "RESTART_POLICY" "unless-stopped"
 
-          echo "Loading backend image from tar..."
-          gunzip -c /tmp/bluenet-deploy/images/backend-image.tar.gz | docker load
+          echo "Loading api-service image from tar..."
+          gunzip -c /tmp/bluenet-deploy/images/api-service-image.tar.gz | docker load
 
-          rm -f /tmp/bluenet-deploy/images/backend-image.tar.gz
+          rm -f /tmp/bluenet-deploy/images/api-service-image.tar.gz
 
-          echo "Starting backend service..."
-          docker compose up -d backend --remove-orphans
+          echo "Starting api-service..."
+          docker compose up -d api-service --remove-orphans
 
-          echo "Backend deployment completed!"
+          echo "Api-service deployment completed!"
       env:
-        BACKEND_IMAGE: bluenet-backend:${{ steps.vars.outputs.image_tag }}
+        API_SERVICE_IMAGE: bluenet-api-service:${{ steps.vars.outputs.image_tag }}
         DEPLOY_PATH: ${{ steps.vars.outputs.deploy_path }}
         DATABASE_HOST: ${{ steps.vars.outputs.database_host }}
         REDIS_HOST: ${{ steps.vars.outputs.redis_host }}
@@ -416,8 +457,7 @@ jobs:
 
   deploy-judge-service:
     runs-on: ubuntu-latest
-    needs: [build-judge-service]
-    if: github.event_name == 'push'
+    needs: [build-judge-service, deploy-infra]
 
     steps:
     - uses: actions/checkout@v4
@@ -458,7 +498,7 @@ jobs:
         target: ${{ steps.vars.outputs.deploy_path }}
         strip_components: 1
 
-    - name: Transfer image to judge server
+    - name: Transfer image to server
       uses: appleboy/scp-action@v0.1.7
       with:
         host: ${{ steps.vars.outputs.deploy_host }}
@@ -518,8 +558,7 @@ jobs:
 
   health-check:
     runs-on: ubuntu-latest
-    needs: [deploy-backend]
-    if: github.event_name == 'push'
+    needs: [deploy-api-service, deploy-judge-service]
     timeout-minutes: 5
 
     steps:
@@ -532,23 +571,35 @@ jobs:
           echo "deploy_host=${{ secrets.DEPLOY_HOST_DEV }}" >> $GITHUB_OUTPUT
         fi
 
-    - name: Wait for backend health check
+    - name: Set health check URL
+      id: health
       run: |
-        HOST="${{ steps.vars.outputs.deploy_host }}"
-        echo "Waiting for backend at $HOST:8080 to be healthy..."
+        HOST="${{ vars.BACKEND_HOST }}"
+        PORT="${{ vars.BACKEND_PORT }}"
+        SSL="${{ vars.SSL_ENABLED }}"
+        if [ "$SSL" = "true" ]; then
+          echo "url=https://$HOST:$PORT/api/v1/health" >> $GITHUB_OUTPUT
+        else
+          echo "url=http://$HOST:$PORT/api/v1/health" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Wait for api-service health check
+      run: |
+        URL="${{ steps.health.outputs.url }}"
+        echo "Waiting for api-service at $URL to be healthy..."
 
         for i in {1..30}; do
-          RESPONSE=$(curl -sf http://$HOST:8080/api/v1/health 2>/dev/null || echo "")
+          RESPONSE=$(curl -sfL "$URL" 2>/dev/null || echo "")
           if echo "$RESPONSE" | grep -q '"code":200'; then
-            echo "✅ Backend is healthy!"
+            echo "✅ Api-service is healthy!"
             echo "Response: $RESPONSE"
             exit 0
           fi
-          echo "Waiting for backend... ($i/30)"
+          echo "Waiting for api-service... ($i/30)"
           sleep 10
         done
 
-        echo "❌ Backend health check failed after 5 minutes"
+        echo "❌ Api-service health check failed after 5 minutes"
         exit 1
 
   # ==================== 构建前端阶段 ====================
@@ -556,7 +607,6 @@ jobs:
   build-frontend:
     runs-on: ubuntu-latest
     needs: [frontend-test, health-check]
-    if: github.event_name == 'push'
     permissions:
       contents: read
       packages: write
@@ -599,6 +649,13 @@ jobs:
           type=sha,prefix=
           type=raw,value=latest,enable=${{ github.ref == 'refs/heads/master' }}
 
+    - name: Debug vars values
+      run: |
+        echo "=== 前端构建时变量 ==="
+        echo "BACKEND_HOST=${{ vars.BACKEND_HOST }}"
+        echo "BACKEND_PORT=${{ vars.BACKEND_PORT }}"
+        echo "SSL_ENABLED=${{ vars.SSL_ENABLED }}"
+
     - name: Build frontend image
       uses: docker/build-push-action@v5
       with:
@@ -608,11 +665,13 @@ jobs:
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
         build-args: |
-          BUILD_BACKEND_HOST=${{ steps.vars.outputs.deploy_host }}
-          BUILD_BACKEND_PORT=8080
-          NEXT_PUBLIC_BACKEND_HOST=${{ steps.vars.outputs.deploy_host }}
-          NEXT_PUBLIC_BACKEND_PORT=8080
-          NEXT_PUBLIC_SSL_ENABLED=false
+          CACHE_BUST=${{ github.sha }}_${{ github.run_id }}
+          BUILD_BACKEND_HOST=${{ vars.BACKEND_HOST }}
+          BUILD_BACKEND_PORT=${{ vars.BACKEND_PORT }}
+          BUILD_SSL_ENABLED=${{ vars.SSL_ENABLED }}
+          NEXT_PUBLIC_BACKEND_HOST=${{ vars.BACKEND_HOST }}
+          NEXT_PUBLIC_BACKEND_PORT=${{ vars.BACKEND_PORT }}
+          NEXT_PUBLIC_SSL_ENABLED=${{ vars.SSL_ENABLED }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
 
@@ -642,7 +701,6 @@ jobs:
   deploy-frontend:
     runs-on: ubuntu-latest
     needs: [build-frontend]
-    if: github.event_name == 'push'
 
     steps:
     - uses: actions/checkout@v4

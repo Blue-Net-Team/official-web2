@@ -6,7 +6,7 @@ import com.bluenet.web.application.command.assessment_question.AssessmentQuestio
 import com.bluenet.web.application.service.AssessmentQuestionAppService;
 import com.bluenet.web.application.service.AssessmentSessionAppService;
 import com.bluenet.web.application.command.assessment_session.AssessmentSessionCommands;
-import com.bluenet.web.api.dto.assessment_session.AssessmentSessionDTO;
+import com.bluenet.web.application.AssessmentSessionResult;
 import com.bluenet.web.domain.exception.BadRequest;
 import com.bluenet.web.domain.exception.DataConflict;
 import com.bluenet.web.domain.exception.DataNotFound;
@@ -307,12 +307,12 @@ public class AssessmentQuestionAppServiceImpl implements AssessmentQuestionAppSe
 
         String deadline = null;
         if (Boolean.TRUE.equals(time.getTimeLimit()) && currentUser != null) {
-            AssessmentSessionDTO session = assessmentSessionAppService
+            AssessmentSessionResult session = assessmentSessionAppService
                     .getOrCreateSession(
                             new AssessmentSessionCommands.GetOrCreateSessionCommand(currentUser.getId(),
                                     assessmentTimeId));
-            if (session != null && session.getDeadline() != null) {
-                deadline = session.getDeadline().toString();
+            if (session != null && session.deadline() != null) {
+                deadline = session.deadline().toString();
             }
         }
 

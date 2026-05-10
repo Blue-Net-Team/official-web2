@@ -4,6 +4,9 @@ import com.bluenet.web.api.dto.ResponseMessage;
 import com.bluenet.web.api.dto.judge.ConfirmJudgeLanguageLimitRequestDTO;
 import com.bluenet.web.api.dto.judge.JudgeProblemConfigDTO;
 import com.bluenet.web.api.dto.judge.UpsertJudgeProblemConfigRequestDTO;
+import com.bluenet.web.api.converter.judge.JudgeProblemConfigRequestConverter;
+import com.bluenet.web.api.converter.judge.JudgeProblemConfigResponseConverter;
+import com.bluenet.web.application.JudgeProblemConfigResult;
 import com.bluenet.web.application.service.JudgeProblemConfigAdminService;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
 import com.bluenet.web.infrastructure.security.annotation.RequiresPermission;
@@ -29,6 +32,10 @@ import org.springframework.web.bind.annotation.RestController;
 public class AdminJudgeProblemConfigController {
     /** 管理端判题配置应用服务。 */
     private final JudgeProblemConfigAdminService judgeProblemConfigAdminService;
+    /** 判题配置请求转换器。 */
+    private final JudgeProblemConfigRequestConverter judgeProblemConfigRequestConverter;
+    /** 判题配置响应转换器。 */
+    private final JudgeProblemConfigResponseConverter judgeProblemConfigResponseConverter;
 
     /**
      * 新增或替换指定算法题的当前判题配置。
@@ -45,7 +52,10 @@ public class AdminJudgeProblemConfigController {
             @PathVariable Long questionId,
             @Valid @RequestBody UpsertJudgeProblemConfigRequestDTO request) {
         // 管理端只提交配置和源码，manifest 由后端生成并保存到独立判题 bucket。
-        return ResponseMessage.success(judgeProblemConfigAdminService.upsert(questionId, request));
+        JudgeProblemConfigResult result = judgeProblemConfigAdminService.upsert(
+                questionId,
+                judgeProblemConfigRequestConverter.toUpsertCommand(request));
+        return ResponseMessage.success(judgeProblemConfigResponseConverter.toDTO(result));
     }
 
     /**
@@ -59,6 +69,7 @@ public class AdminJudgeProblemConfigController {
     @RequiresPermission(name = "查询算法判题配置", value = "judge-problem-config:read", access = AccessLevel.PROTECTED)
     public ResponseMessage<JudgeProblemConfigDTO> get(@PathVariable Long questionId) {
         return judgeProblemConfigAdminService.findByQuestionId(questionId)
+                .map(judgeProblemConfigResponseConverter::toDTO)
                 .map(ResponseMessage::success)
                 .orElseGet(() -> ResponseMessage.error(404, "判题配置不存在"));
     }
@@ -95,7 +106,10 @@ public class AdminJudgeProblemConfigController {
             @PathVariable String language,
             @Valid @RequestBody ConfirmJudgeLanguageLimitRequestDTO request) {
         // 管理员确认后，候选人的正式提交才允许使用该语言进入判题队列。
-        judgeProblemConfigAdminService.confirmLanguageLimit(questionId, language, request);
+        judgeProblemConfigAdminService.confirmLanguageLimit(
+                questionId,
+                language,
+                judgeProblemConfigRequestConverter.toConfirmLanguageLimitCommand(request));
         return ResponseMessage.success();
     }
 }

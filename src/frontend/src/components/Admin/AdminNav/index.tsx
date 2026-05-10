@@ -22,6 +22,7 @@ import {
   BankOutlined,
   ToolOutlined,
   BugOutlined,
+  QrcodeOutlined,
 } from '@ant-design/icons'
 import type { MenuProps } from 'antd'
 
@@ -65,6 +66,13 @@ export const menuConfig: MenuItemConfig[] = [
     minLevel: 3,
   },
   {
+    key: 'qrcode',
+    label: '二维码管理',
+    path: '/admin/qrcode',
+    icon: <QrcodeOutlined />,
+    minLevel: 2,
+  },
+  {
     key: 'enroll',
     label: '报名管理',
     path: '/admin/enroll',
@@ -97,6 +105,13 @@ export const menuConfig: MenuItemConfig[] = [
     label: '设备管理',
     path: '/admin/equipment',
     icon: <ToolOutlined />,
+    minLevel: 3,
+  },
+  {
+    key: 'college',
+    label: '学院管理',
+    path: '/admin/college',
+    icon: <BankOutlined />,
     minLevel: 3,
   },
   {

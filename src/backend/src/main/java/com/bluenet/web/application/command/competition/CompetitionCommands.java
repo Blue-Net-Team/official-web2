@@ -2,6 +2,8 @@ package com.bluenet.web.application.command.competition;
 
 import com.bluenet.web.domain.model.enumerate.AwardLevel;
 
+import java.util.List;
+
 /**
  * 竞赛聚合的命令对象集合。
  * <p>
@@ -103,5 +105,16 @@ public class CompetitionCommands {
             Long id,
             /** 排序顺序 */
             Integer sortOrder) {
+    }
+
+    /**
+     * 批量更新排序命令。
+     * <p>
+     * 用于批量更新竞赛排序。
+     * </p>
+     */
+    public record BatchUpdateSortOrderCommand(
+            /** 排序项列表 */
+            List<SortItemCommand> items) {
     }
 }

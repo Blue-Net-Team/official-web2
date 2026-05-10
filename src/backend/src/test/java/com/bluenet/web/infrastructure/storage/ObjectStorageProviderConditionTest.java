@@ -1,6 +1,8 @@
 package com.bluenet.web.infrastructure.storage;
 
 import com.aliyun.oss.OSS;
+import com.bluenet.web.infrastructure.config.MinioObjectStorageConfig;
+import com.bluenet.web.infrastructure.config.properties.StorageProperties;
 import io.minio.MinioClient;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -15,7 +17,12 @@ class ObjectStorageProviderConditionTest {
             .withBean(MinioClient.class, () -> mock(MinioClient.class))
             .withBean(OSS.class, () -> mock(OSS.class))
             .withBean(ObjectLocationResolver.class, () -> mock(ObjectLocationResolver.class))
-            .withUserConfiguration(MinioObjectStorage.class, AliyunOssObjectStorage.class);
+            .withBean(StorageProperties.class, () -> {
+                StorageProperties props = new StorageProperties();
+                props.setBucket("test-bucket");
+                return props;
+            })
+            .withUserConfiguration(MinioObjectStorageConfig.class, AliyunOssObjectStorage.class);
 
     @Test
     @DisplayName("minio provider selects MinioObjectStorage only")

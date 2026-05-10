@@ -2,7 +2,6 @@ package com.bluenet.web.application.service.impl;
 
 import com.bluenet.web.application.AssessmentAnswerResult;
 import com.bluenet.web.application.command.assessment_answer.AssessmentAnswerCommands;
-import com.bluenet.web.application.converter.AssessmentJudgementAppConverter;
 import com.bluenet.web.domain.exception.DataConflict;
 import com.bluenet.web.domain.exception.Forbidden;
 import com.bluenet.web.domain.model.enumerate.*;
@@ -59,8 +58,6 @@ class AssessmentAnswerAppServiceImplTest {
     private AssessmentSessionRepository assessmentSessionRepository;
     @Spy
     private ObjectMapper objectMapper = new ObjectMapper();
-    @Spy
-    private AssessmentJudgementAppConverter assessmentJudgementAppConverter = new AssessmentJudgementAppConverter();
     @Mock
     private UserDomainService userDomainService;
     @InjectMocks
@@ -545,7 +542,7 @@ class AssessmentAnswerAppServiceImplTest {
             AssessmentAnswerResult result = assessmentAnswerAppService.getMyAnswer(TEST_USER_ID, TEST_QUESTION_ID);
             assertNotNull(result);
             assertNotNull(result.judgement());
-            assertEquals(ObjectiveResultCode.AC, result.judgement().getResultCode());
+            assertEquals(ObjectiveResultCode.AC, result.judgement().resultCode());
         }
 
         @Test

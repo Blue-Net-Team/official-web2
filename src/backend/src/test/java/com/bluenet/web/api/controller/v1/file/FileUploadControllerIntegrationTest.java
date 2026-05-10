@@ -1,10 +1,12 @@
 package com.bluenet.web.api.controller.v1.file;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Map;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -16,6 +18,7 @@ import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -25,12 +28,14 @@ import com.bluenet.web.domain.model.enumerate.FileType;
 import com.bluenet.web.infrastructure.repository.mapper.FileMapper;
 import com.bluenet.web.infrastructure.security.WithUserVO;
 import com.bluenet.web.infrastructure.security.util.UserCTX;
+import com.bluenet.web.infrastructure.security.rate.AnonymousUploadRateLimiter;
 import com.bluenet.web.testcontainers.TestcontainersConfiguration;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * FileUploadController 集成测试
  * <p>
- * 测试统一文件上传接口 POST /api/v1/file/upload
+ * 测试统一文件上传接口 POST /api/v1/file/upload 和预签名上传接口
  * </p>
  */
 @AutoConfigureMockMvc
@@ -42,11 +47,23 @@ class FileUploadControllerIntegrationTest extends BaseIntegrationTest {
     private MockMvc mockMvc;
 
     @Autowired
+    private ObjectMapper objectMapper;
+
+    @Autowired
     private FileMapper fileMapper;
 
+    @Autowired
+    private AnonymousUploadRateLimiter rateLimiter;
+
     @BeforeEach
-    void setUp() {
+    void setUp() throws Exception {
         fileMapper.delete(null);
+        // 重置匿名上传限流器缓存，避免测试间互相影响
+        java.lang.reflect.Field field = AnonymousUploadRateLimiter.class.getDeclaredField("limiters");
+        field.setAccessible(true);
+        com.google.common.cache.LoadingCache<?, ?> cache = (com.google.common.cache.LoadingCache<?, ?>) field
+                .get(rateLimiter);
+        cache.invalidateAll();
     }
 
     @AfterEach
@@ -164,6 +181,142 @@ class FileUploadControllerIntegrationTest extends BaseIntegrationTest {
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.code").value(200))
                     .andExpect(jsonPath("$.data.type").value("AVATAR"));
+        }
+    }
+
+    // ==================== 预签名上传权限测试 ====================
+
+    @Nested
+    @DisplayName("预签名上传 prepare-upload 权限测试")
+    class PrepareUploadPermissionTests {
+
+        @Test
+        @DisplayName("匿名 prepare AVATAR 应成功")
+        void prepareUpload_avatarAnonymous_shouldReturn200() throws Exception {
+            Map<String, Object> request = Map.of(
+                    "filename",
+                    "avatar.jpg",
+                    "type",
+                    "AVATAR",
+                    "size",
+                    1024,
+                    "contentType",
+                    "image/jpeg");
+
+            mockMvc.perform(
+                    post("/api/v1/file/prepare-upload")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.code").value(200))
+                    .andExpect(jsonPath("$.data.fileId").isNumber())
+                    .andExpect(jsonPath("$.data.uploadUrl").isString())
+                    .andExpect(jsonPath("$.data.callbackToken").isString());
+        }
+
+        @Test
+        @DisplayName("匿名 prepare NORMAL_IMG 应成功")
+        void prepareUpload_normalImgAnonymous_shouldReturn200() throws Exception {
+            Map<String, Object> request = Map.of(
+                    "filename",
+                    "image.jpg",
+                    "type",
+                    "NORMAL_IMG",
+                    "size",
+                    1024,
+                    "contentType",
+                    "image/jpeg");
+
+            mockMvc.perform(
+                    post("/api/v1/file/prepare-upload")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.code").value(200))
+                    .andExpect(jsonPath("$.data.fileId").isNumber());
+        }
+
+        @Test
+        @DisplayName("匿名 prepare WORK 应返回401")
+        void prepareUpload_workAnonymous_shouldReturn401() throws Exception {
+            Map<String, Object> request = Map.of(
+                    "filename",
+                    "work.zip",
+                    "type",
+                    "WORK",
+                    "size",
+                    1024,
+                    "contentType",
+                    "application/zip");
+
+            mockMvc.perform(
+                    post("/api/v1/file/prepare-upload")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isUnauthorized());
+        }
+
+        @Test
+        @DisplayName("匿名 prepare ASSESSMENT_ATTACHMENT 应返回401")
+        void prepareUpload_assessmentAttachmentAnonymous_shouldReturn401() throws Exception {
+            Map<String, Object> request = Map.of(
+                    "filename",
+                    "attachment.pdf",
+                    "type",
+                    "ASSESSMENT_ATTACHMENT",
+                    "size",
+                    1024,
+                    "contentType",
+                    "application/pdf");
+
+            mockMvc.perform(
+                    post("/api/v1/file/prepare-upload")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isUnauthorized());
+        }
+
+        @Test
+        @DisplayName("匿名 prepare QRCODE 应返回401")
+        void prepareUpload_qrcodeAnonymous_shouldReturn401() throws Exception {
+            Map<String, Object> request = Map.of(
+                    "filename",
+                    "qrcode.png",
+                    "type",
+                    "QRCODE",
+                    "size",
+                    1024,
+                    "contentType",
+                    "image/png");
+
+            mockMvc.perform(
+                    post("/api/v1/file/prepare-upload")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isUnauthorized());
+        }
+
+        @Test
+        @DisplayName("已登录用户 prepare WORK 应成功")
+        @WithUserVO(userId = 3L, studentId = "2024001003", username = "已登录用户", roleName = "MEMBER")
+        void prepareUpload_workAuthenticated_shouldReturn200() throws Exception {
+            Map<String, Object> request = Map.of(
+                    "filename",
+                    "work.zip",
+                    "type",
+                    "WORK",
+                    "size",
+                    1024,
+                    "contentType",
+                    "application/zip");
+
+            mockMvc.perform(
+                    post("/api/v1/file/prepare-upload")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.code").value(200))
+                    .andExpect(jsonPath("$.data.fileId").isNumber());
         }
     }
 }

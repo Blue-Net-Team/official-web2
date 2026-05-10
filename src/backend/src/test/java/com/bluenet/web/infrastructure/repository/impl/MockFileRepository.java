@@ -49,4 +49,16 @@ public class MockFileRepository implements FileRepository {
     public void deleteFileById(Long id) {
         log.debug("Mock deleting file by id: {}", id);
     }
+
+    @Override
+    public File saveFileMetadata(File file) {
+        log.debug("Mock saving file metadata: {}", file.getName());
+        file.setId(idGenerator.getAndIncrement());
+        return file;
+    }
+
+    @Override
+    public void updateFileMetadata(File file) {
+        log.debug("Mock updating file metadata: {}", file.getId());
+    }
 }

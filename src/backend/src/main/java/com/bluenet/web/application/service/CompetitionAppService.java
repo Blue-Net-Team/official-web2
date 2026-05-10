@@ -1,10 +1,10 @@
 package com.bluenet.web.application.service;
 
-import com.bluenet.web.api.dto.PageDTO;
-import com.bluenet.web.api.dto.competition.BatchSortRequestDTO;
-import com.bluenet.web.api.dto.competition.CompetitionResponseDTO;
 import com.bluenet.web.application.CompetitionResult;
 import com.bluenet.web.application.command.competition.CompetitionCommands;
+import com.bluenet.web.domain.model.vo.CompetitionVO;
+
+import org.springframework.data.domain.Page;
 
 import java.util.List;
 
@@ -21,9 +21,9 @@ public interface CompetitionAppService {
      *
      * @param limit
      *            限制返回数量
-     * @return 竞赛响应DTO列表
+     * @return 竞赛VO列表
      */
-    List<CompetitionResponseDTO> getCompetitionResponseList(int limit);
+    List<CompetitionVO> getCompetitionResponseList(int limit);
 
     /**
      * 分页查询竞赛列表
@@ -32,9 +32,9 @@ public interface CompetitionAppService {
      *            页码
      * @param size
      *            每页数量
-     * @return 分页竞赛响应DTO
+     * @return 分页竞赛VO
      */
-    PageDTO<CompetitionResponseDTO> getCompetitionPage(Integer page, Integer size);
+    Page<CompetitionVO> getCompetitionPage(Integer page, Integer size);
 
     /**
      * 创建竞赛
@@ -73,10 +73,10 @@ public interface CompetitionAppService {
     /**
      * 批量更新竞赛排序号
      *
-     * @param request
-     *            批量排序请求DTO
+     * @param command
+     *            批量排序命令
      */
-    void batchUpdateSortOrder(BatchSortRequestDTO request);
+    void batchUpdateSortOrder(CompetitionCommands.BatchUpdateSortOrderCommand command);
 
     /**
      * 移动竞赛排序

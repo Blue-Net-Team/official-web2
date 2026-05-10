@@ -3,6 +3,8 @@ package com.bluenet.web.api.controller.v1;
 import com.bluenet.web.api.dto.ResponseMessage;
 import com.bluenet.web.api.dto.assessment_session.AssessmentSessionDTO;
 import com.bluenet.web.api.converter.assessment_session.AssessmentSessionRequestConverter;
+import com.bluenet.web.api.converter.assessment_session.AssessmentSessionResponseConverter;
+import com.bluenet.web.application.AssessmentSessionResult;
 import com.bluenet.web.application.command.assessment_session.AssessmentSessionCommands;
 import com.bluenet.web.application.service.AssessmentSessionAppService;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
@@ -34,6 +36,7 @@ public class AssessmentSessionController {
 
     private final AssessmentSessionAppService assessmentSessionAppService;
     private final AssessmentSessionRequestConverter assessmentSessionRequestConverter;
+    private final AssessmentSessionResponseConverter assessmentSessionResponseConverter;
 
     @Operation(summary = "获取考核会话", description = "获取或创建当前用户对指定考核时间的会话，返回截止时间等信息。限时考核首次调用会自动创建会话。")
     @ApiResponses({
@@ -51,8 +54,8 @@ public class AssessmentSessionController {
         try {
             AssessmentSessionCommands.GetOrCreateSessionCommand command = assessmentSessionRequestConverter
                     .toCommand(userId, assessmentTimeId);
-            AssessmentSessionDTO session = assessmentSessionAppService.getOrCreateSession(command);
-            return ResponseMessage.success(session);
+            AssessmentSessionResult result = assessmentSessionAppService.getOrCreateSession(command);
+            return ResponseMessage.success(assessmentSessionResponseConverter.toDTO(result));
         } catch (IllegalArgumentException e) {
             return ResponseMessage.error(404, e.getMessage());
         }

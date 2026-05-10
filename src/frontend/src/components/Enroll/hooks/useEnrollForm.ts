@@ -4,8 +4,8 @@ import { useState, useEffect, useCallback } from 'react'
 import { Form, App } from 'antd'
 import { useSearchParams } from 'next/navigation'
 import { enrollService } from '@/apis/services/enroll.service'
-import { fileService } from '@/apis/services/file.service'
 import { collegeService } from '@/apis/services/college.service'
+import { usePresignedUpload } from '@/hooks/usePresignedUpload'
 import { CreateEnrollmentRequestDTO, Direction } from '@/apis/schema/type'
 import type { CollegeDTO } from '@/apis/schema/type'
 import { DIRECTIONS } from '../constants'
@@ -19,10 +19,12 @@ export function useEnrollForm() {
   const [avatarId, setAvatarId] = useState<number | null>(null)
   const [introLength, setIntroLength] = useState(0)
   const [submitting, setSubmitting] = useState(false)
-  const [uploadingAvatar, setUploadingAvatar] = useState(false)
-  const [uploadProgress, setUploadProgress] = useState(0)
   const [colleges, setColleges] = useState<CollegeDTO[]>([])
   const [loadingColleges, setLoadingColleges] = useState(true)
+
+  const { phase, progress, upload } = usePresignedUpload()
+  const uploadingAvatar = phase === 'preparing' || phase === 'uploading' || phase === 'verifying'
+  const uploadProgress = progress
 
   useEffect(() => {
     const directionFromUrl = searchParams.get('direction') as Direction
@@ -61,27 +63,22 @@ export function useEnrollForm() {
       const previewUrl = URL.createObjectURL(file)
       setAvatarPreview(previewUrl)
       setAvatarId(null)
-      setUploadProgress(0)
 
-      setUploadingAvatar(true)
       try {
-        const response = await fileService.upload(file, 'AVATAR')
-        if (response.code === 200 && response.data) {
-          setAvatarId(response.data.id)
-          setUploadProgress(100)
+        const id = await upload(file, 'AVATAR')
+        if (id != null) {
+          setAvatarId(id)
           messageApi.success('头像上传成功')
         } else {
-          messageApi.error(response.msg || '头像上传失败')
+          messageApi.error('头像上传失败')
           setAvatarPreview('')
         }
       } catch {
         messageApi.error('头像上传失败，请稍后重试')
         setAvatarPreview('')
-      } finally {
-        setUploadingAvatar(false)
       }
     },
-    [messageApi]
+    [upload, messageApi]
   )
 
   const handleIntroChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {

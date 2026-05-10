@@ -9,8 +9,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
-
 /**
  * Bug 报告 Mapper 专用数据对象
  */
@@ -29,6 +27,6 @@ public class BugReportDO {
     private String environmentJson;
     private String reporterEmail;
     private BugReportStatus status;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    private String githubIssueUrl;
+    private Integer githubIssueNumber;
 }

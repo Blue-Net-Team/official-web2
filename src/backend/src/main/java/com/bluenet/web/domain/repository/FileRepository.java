@@ -95,4 +95,21 @@ public interface FileRepository {
      *            业务记录主键。
      */
     void deleteFileById(Long id);
+
+    /**
+     * 仅保存文件元数据，不操作对象存储。
+     *
+     * @param file
+     *            文件领域对象
+     * @return 保存后的文件领域对象
+     */
+    File saveFileMetadata(File file);
+
+    /**
+     * 更新文件元数据。
+     *
+     * @param file
+     *            文件领域对象
+     */
+    void updateFileMetadata(File file);
 }

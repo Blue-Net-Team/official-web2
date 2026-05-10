@@ -5,7 +5,7 @@ import com.bluenet.web.api.dto.ResponseMessage;
 import com.bluenet.web.api.dto.adminuser.*;
 import com.bluenet.web.api.converter.adminuser.AdminUserRequestConverter;
 import com.bluenet.web.application.AdminUserResult;
-import com.bluenet.web.application.converter.AdminUserAppConverter;
+import com.bluenet.web.api.converter.adminuser.AdminUserResponseConverter;
 import com.bluenet.web.application.service.AdminUserAppService;
 import com.bluenet.web.domain.exception.BadRequest;
 import com.bluenet.web.domain.exception.DataNotFound;
@@ -35,7 +35,7 @@ public class AdminUserController {
 
     private final AdminUserAppService adminUserAppService;
     private final AdminUserRequestConverter requestConverter;
-    private final AdminUserAppConverter appConverter;
+    private final AdminUserResponseConverter responseConverter;
 
     @Operation(summary = "分页查询用户列表", description = "支持按角色、方向、学院筛选，按学号/姓名搜索")
     @ApiResponses({
@@ -47,7 +47,7 @@ public class AdminUserController {
     public ResponseMessage<PageDTO<AdminUserListItemResponseDTO>> getUserList(
             @Valid AdminUserListQueryDTO query) {
         var page = adminUserAppService.getUserList(requestConverter.toCommand(query));
-        return ResponseMessage.success(appConverter.toPageDTO(page));
+        return ResponseMessage.success(responseConverter.toPageDTO(page));
     }
 
     @Operation(summary = "获取用户详情", description = "获取用户详细信息及关联数据统计")
@@ -61,7 +61,7 @@ public class AdminUserController {
             @Parameter(description = "用户ID", required = true) @PathVariable Long id) {
         try {
             AdminUserResult.Detail detail = adminUserAppService.getUserDetail(id);
-            return ResponseMessage.success(appConverter.toDetailDTO(detail));
+            return ResponseMessage.success(responseConverter.toDetailDTO(detail));
         } catch (DataNotFound e) {
             return ResponseMessage.error(404, e.getMessage());
         }
@@ -207,7 +207,7 @@ public class AdminUserController {
             @Valid @RequestBody AdminUserCreateRequestDTO request) {
         try {
             AdminUserResult.Created created = adminUserAppService.createUser(requestConverter.toCommand(request));
-            return ResponseMessage.success(appConverter.toCreateResponseDTO(created));
+            return ResponseMessage.success(responseConverter.toCreateResponseDTO(created));
         } catch (BadRequest e) {
             return ResponseMessage.error(400, e.getMessage());
         }

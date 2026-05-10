@@ -19,4 +19,7 @@ public class BugReportCreatedDTO {
 
     @Schema(description = "当前状态", example = "PENDING")
     private BugReportStatus status;
+
+    @Schema(description = "GitHub Issue URL（异步同步完成后可通过详情接口获取）")
+    private String githubIssueUrl;
 }

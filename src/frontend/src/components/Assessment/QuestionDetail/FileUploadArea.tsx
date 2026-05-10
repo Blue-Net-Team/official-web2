@@ -12,10 +12,19 @@ import { Upload } from 'antd'
 import { formatFileSize } from './utils'
 import type { FileUploadAreaProps } from './types'
 
+const PHASE_LABELS: Record<string, string> = {
+  preparing: '正在准备...',
+  uploading: '正在上传...',
+  verifying: '正在校验...',
+  completed: '上传完成',
+  error: '上传失败',
+}
+
 export default function FileUploadArea({
   uploadPhase,
   uploadedFile,
   uploadProgress,
+  presignedPhase,
   isExpired,
   answer,
   dropHintText,
@@ -47,12 +56,27 @@ export default function FileUploadArea({
     </div>
   )
 
+  const showProgress =
+    presignedPhase != null &&
+    presignedPhase !== 'idle' &&
+    (uploadProgress > 0 || presignedPhase === 'preparing')
+
   const renderProgressBar = () =>
-    uploadProgress > 0 && uploadProgress < 100 ? (
+    showProgress ? (
       <div className="mt-4">
+        <div className="flex items-center justify-between mb-1.5">
+          <span className="text-xs text-white/50">{PHASE_LABELS[presignedPhase] || ''}</span>
+          {presignedPhase !== 'verifying' && presignedPhase !== 'completed' && (
+            <span className="text-xs text-white/50">{Math.round(uploadProgress)}%</span>
+          )}
+        </div>
         <div className="h-1 rounded-[2px] bg-white/[0.04] overflow-hidden">
           <div
-            className="h-full rounded-[2px] transition-[width] duration-300 ease-out"
+            className={
+              presignedPhase === 'verifying'
+                ? 'h-full rounded-[2px] animate-pulse'
+                : 'h-full rounded-[2px] transition-[width] duration-300 ease-out'
+            }
             style={{
               width: `${uploadProgress}%`,
               background: 'linear-gradient(90deg, #6677ff, #8594ff)',

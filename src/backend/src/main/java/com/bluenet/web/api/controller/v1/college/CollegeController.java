@@ -4,7 +4,7 @@ import com.bluenet.web.api.dto.ResponseMessage;
 import com.bluenet.web.api.dto.college.CollegeDTO;
 import com.bluenet.web.api.dto.college.ResponseMessageCollegeList;
 import com.bluenet.web.application.CollegeResult;
-import com.bluenet.web.application.converter.CollegeAppConverter;
+import com.bluenet.web.api.converter.college.CollegeResponseConverter;
 import com.bluenet.web.application.service.CollegeAppService;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
 import com.bluenet.web.infrastructure.security.annotation.RequiresPermission;
@@ -32,7 +32,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class CollegeController {
     private final CollegeAppService collegeAppService;
-    private final CollegeAppConverter collegeAppConverter;
+    private final CollegeResponseConverter collegeResponseConverter;
 
     @Operation(summary = "获取学院列表", description = "获取所有学院列表，公开接口")
     @ApiResponse(responseCode = "200", description = "获取成功", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseMessageCollegeList.class)))
@@ -40,6 +40,6 @@ public class CollegeController {
     @GetMapping
     public ResponseMessage<List<CollegeDTO>> getAllColleges() {
         List<CollegeResult> results = collegeAppService.getAllColleges();
-        return ResponseMessage.success(collegeAppConverter.toDTOList(results));
+        return ResponseMessage.success(collegeResponseConverter.toDTOList(results));
     }
 }

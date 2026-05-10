@@ -26,5 +26,9 @@ public record AssessmentTimeResult(
         /** 是否限时 */
         Boolean timeLimit,
         /** 限时分钟数 */
-        Integer timeLimitMinutes) {
+        Integer timeLimitMinutes,
+        /** 题目总数 */
+        Integer totalQuestions,
+        /** 已完成题目数 */
+        Integer completedQuestions) {
 }

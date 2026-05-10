@@ -4,74 +4,7 @@
       <settings>
         <option name="imageTag" value="bluenet-judge-service:latest" />
         <option name="containerName" value="judge-service-dev" />
-        <option name="envVars">
-          <list>
-            <DockerEnvVarImpl>
-              <option name="name" value="DATABASE_HOST" />
-              <option name="value" value="bluenet-pgsql" />
-            </DockerEnvVarImpl>
-            <DockerEnvVarImpl>
-              <option name="name" value="DATABASE_PORT" />
-              <option name="value" value="5432" />
-            </DockerEnvVarImpl>
-            <DockerEnvVarImpl>
-              <option name="name" value="DATABASE_NAME" />
-              <option name="value" value="db_blue_net" />
-            </DockerEnvVarImpl>
-            <DockerEnvVarImpl>
-              <option name="name" value="DATABASE_USERNAME" />
-              <option name="value" value="postgres" />
-            </DockerEnvVarImpl>
-            <DockerEnvVarImpl>
-              <option name="name" value="DATABASE_PASSWORD" />
-              <option name="value" value="000000" />
-            </DockerEnvVarImpl>
-            <DockerEnvVarImpl>
-              <option name="name" value="RABBITMQ_HOST" />
-              <option name="value" value="bluenet-rabbitmq" />
-            </DockerEnvVarImpl>
-            <DockerEnvVarImpl>
-              <option name="name" value="RABBITMQ_PORT" />
-              <option name="value" value="5672" />
-            </DockerEnvVarImpl>
-            <DockerEnvVarImpl>
-              <option name="name" value="RABBITMQ_USERNAME" />
-              <option name="value" value="admin" />
-            </DockerEnvVarImpl>
-            <DockerEnvVarImpl>
-              <option name="name" value="RABBITMQ_PASSWORD" />
-              <option name="value" value="bluenet123" />
-            </DockerEnvVarImpl>
-            <DockerEnvVarImpl>
-              <option name="name" value="MINIO_ENDPOINT" />
-              <option name="value" value="bluenet-oss" />
-            </DockerEnvVarImpl>
-            <DockerEnvVarImpl>
-              <option name="name" value="MINIO_PORT" />
-              <option name="value" value="9000" />
-            </DockerEnvVarImpl>
-            <DockerEnvVarImpl>
-              <option name="name" value="MINIO_AK" />
-              <option name="value" value="admin" />
-            </DockerEnvVarImpl>
-            <DockerEnvVarImpl>
-              <option name="name" value="MINIO_SK" />
-              <option name="value" value="admin123" />
-            </DockerEnvVarImpl>
-            <DockerEnvVarImpl>
-              <option name="name" value="MINIO_USE_SSL" />
-              <option name="value" value="false" />
-            </DockerEnvVarImpl>
-            <DockerEnvVarImpl>
-              <option name="name" value="STORAGE_PROVIDER" />
-              <option name="value" value="minio" />
-            </DockerEnvVarImpl>
-            <DockerEnvVarImpl>
-              <option name="name" value="JUDGE_STORAGE_BUCKET" />
-              <option name="value" value="bluenet-judge" />
-            </DockerEnvVarImpl>
-          </list>
-        </option>
+        <option name="contextFolderPath" value="." />
         <option name="portBindings">
           <list>
             <DockerPortBindingImpl>
@@ -84,8 +17,7 @@
             </DockerPortBindingImpl>
           </list>
         </option>
-        <option name="commandLineOptions" value="--privileged --network bluenet_bluenet-network" />
-        <option name="contextFolderPath" value="." />
+        <option name="commandLineOptions" value="--privileged --network bluenet_network --env-file docker/.env" />
         <option name="sourceFilePath" value="docker/judge-service.Dockerfile" />
       </settings>
     </deployment>

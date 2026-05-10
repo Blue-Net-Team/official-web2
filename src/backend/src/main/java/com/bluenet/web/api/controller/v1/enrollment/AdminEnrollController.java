@@ -3,7 +3,7 @@ package com.bluenet.web.api.controller.v1.enrollment;
 import com.bluenet.web.api.dto.ResponseMessage;
 import com.bluenet.web.api.dto.enrollment.*;
 import com.bluenet.web.api.converter.enroll.EnrollRequestConverter;
-import com.bluenet.web.application.converter.EnrollAppConverter;
+import com.bluenet.web.api.converter.enroll.EnrollResponseConverter;
 import com.bluenet.web.application.EnrollResult;
 import com.bluenet.web.application.service.EnrollAppService;
 import com.bluenet.web.domain.exception.DataNotFound;
@@ -32,7 +32,7 @@ import org.springframework.web.bind.annotation.*;
 public class AdminEnrollController {
     private final EnrollAppService enrollAppService;
     private final EnrollRequestConverter enrollRequestConverter;
-    private final EnrollAppConverter enrollAppConverter;
+    private final EnrollResponseConverter enrollResponseConverter;
 
     @Operation(summary = "分页查询报名列表", description = "管理员分页查询报名列表，支持按状态、方向、关键词筛选")
     @ApiResponses({
@@ -49,7 +49,7 @@ public class AdminEnrollController {
 
         var command = enrollRequestConverter.toListCommand(page, size, keyword, status, direction);
         Page<EnrollResult.Brief> result = enrollAppService.getEnrollmentList(command);
-        return ResponseMessage.success(enrollAppConverter.toBriefDTOPage(result));
+        return ResponseMessage.success(enrollResponseConverter.toBriefDTOPage(result));
     }
 
     @Operation(summary = "获取报名详情", description = "管理员获取单个报名的详细信息")
@@ -63,7 +63,7 @@ public class AdminEnrollController {
             @Parameter(description = "报名ID", required = true) @PathVariable Long id) {
         try {
             EnrollResult.Detail detail = enrollAppService.getEnrollmentDetail(id);
-            return ResponseMessage.success(enrollAppConverter.toDetailDTO(detail));
+            return ResponseMessage.success(enrollResponseConverter.toDetailDTO(detail));
         } catch (DataNotFound e) {
             return ResponseMessage.error(HttpStatus.NOT_FOUND.value(), e.getMessage());
         }
@@ -83,7 +83,7 @@ public class AdminEnrollController {
         try {
             var command = enrollRequestConverter.toCommand(request);
             EnrollResult.Approval result = enrollAppService.approveEnrollment(id, command);
-            return ResponseMessage.success("审核通过，账号已发放", enrollAppConverter.toApprovalDTO(result));
+            return ResponseMessage.success("审核通过，账号已发放", enrollResponseConverter.toApprovalDTO(result));
         } catch (DataNotFound e) {
             return ResponseMessage.error(HttpStatus.NOT_FOUND.value(), e.getMessage());
         }
@@ -103,7 +103,7 @@ public class AdminEnrollController {
         try {
             var command = enrollRequestConverter.toCommand(request);
             EnrollResult.Approval result = enrollAppService.rejectEnrollment(id, command);
-            return ResponseMessage.success("已拒绝", enrollAppConverter.toApprovalDTO(result));
+            return ResponseMessage.success("已拒绝", enrollResponseConverter.toApprovalDTO(result));
         } catch (DataNotFound e) {
             return ResponseMessage.error(HttpStatus.NOT_FOUND.value(), e.getMessage());
         }
@@ -117,6 +117,6 @@ public class AdminEnrollController {
     @GetMapping("/statistics")
     public ResponseMessage<EnrollmentStatisticsDTO> getStatistics() {
         EnrollResult.Statistics statistics = enrollAppService.getStatistics();
-        return ResponseMessage.success(enrollAppConverter.toStatisticsDTO(statistics));
+        return ResponseMessage.success(enrollResponseConverter.toStatisticsDTO(statistics));
     }
 }

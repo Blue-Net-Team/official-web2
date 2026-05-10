@@ -7,8 +7,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
-
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -31,9 +29,9 @@ public class BugReportBriefDTO {
     @Schema(description = "当前状态", example = "PENDING")
     private BugReportStatus status;
 
-    @Schema(description = "创建时间")
-    private LocalDateTime createdAt;
-
     @Schema(description = "关联图片数量", example = "2")
     private int imageCount;
+
+    @Schema(description = "GitHub Issue URL")
+    private String githubIssueUrl;
 }

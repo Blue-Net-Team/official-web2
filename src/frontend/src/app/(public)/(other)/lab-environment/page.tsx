@@ -92,13 +92,19 @@ function EquipmentCard({ equipment }: { equipment: EquipmentDTO }) {
 }
 
 async function VenuesSection() {
-  const response = await VenueService.getAllVenues()
-
-  if (response.code !== 200 || !response.data || response.data.length === 0) {
-    return <EmptyState message="暂无场地数据" />
+  let venues: VenueDTO[] = []
+  try {
+    const response = await VenueService.getAllVenues()
+    if (response.code === 200 && response.data) {
+      venues = response.data
+    }
+  } catch {
+    // 构建时 API 不可用，使用空数组
   }
 
-  const venues: VenueDTO[] = response.data
+  if (venues.length === 0) {
+    return <EmptyState message="暂无场地数据" />
+  }
 
   return (
     <div className="grid grid-cols-2 max-sm:grid-cols-1 gap-6 max-sm:gap-4 w-full">
@@ -110,13 +116,19 @@ async function VenuesSection() {
 }
 
 async function EquipmentsSection() {
-  const response = await EquipmentService.getAllEquipments()
-
-  if (response.code !== 200 || !response.data || response.data.length === 0) {
-    return <EmptyState message="暂无设备数据" />
+  let equipments: EquipmentDTO[] = []
+  try {
+    const response = await EquipmentService.getAllEquipments()
+    if (response.code === 200 && response.data) {
+      equipments = response.data
+    }
+  } catch {
+    // 构建时 API 不可用，使用空数组
   }
 
-  const equipments: EquipmentDTO[] = response.data
+  if (equipments.length === 0) {
+    return <EmptyState message="暂无设备数据" />
+  }
 
   return (
     <div className="grid grid-cols-3 max-sm:grid-cols-1 gap-6 max-sm:gap-4 w-full">

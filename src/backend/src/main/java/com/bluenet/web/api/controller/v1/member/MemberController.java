@@ -8,9 +8,10 @@ import com.bluenet.web.api.dto.member.MemberBriefDTO;
 import com.bluenet.web.api.dto.member.MemberDetailDTO;
 import com.bluenet.web.api.dto.member.MemberListQueryDTO;
 import com.bluenet.web.api.converter.member.MemberRequestConverter;
+import com.bluenet.web.api.converter.member.MemberResponseConverter;
+import com.bluenet.web.api.converter.userexperience.UserExperienceResponseConverter;
 import com.bluenet.web.application.MemberResult;
 import com.bluenet.web.application.command.member.MemberCommands;
-import com.bluenet.web.application.converter.MemberAppConverter;
 import com.bluenet.web.application.service.MemberAppService;
 import com.bluenet.web.domain.exception.GlobalException;
 import com.bluenet.web.domain.model.enumerate.Direction;
@@ -36,7 +37,8 @@ import java.util.List;
 public class MemberController {
     private final MemberAppService memberAppService;
     private final MemberRequestConverter memberRequestConverter;
-    private final MemberAppConverter memberAppConverter;
+    private final MemberResponseConverter memberResponseConverter;
+    private final UserExperienceResponseConverter userExperienceResponseConverter;
 
     @Operation(summary = "获取团队成员列表", description = "分页查询团队成员列表，支持按方向筛选，按入学年份降序排列（新人在前）")
     @ApiResponses({
@@ -55,7 +57,7 @@ public class MemberController {
                 .build();
         MemberCommands.GetMemberListCommand command = memberRequestConverter.toCommand(query);
         Page<MemberResult> resultPage = memberAppService.getMemberList(command);
-        Page<MemberBriefDTO> dtoPage = resultPage.map(memberAppConverter::toBriefDTO);
+        Page<MemberBriefDTO> dtoPage = resultPage.map(memberResponseConverter::toBriefDTO);
         return ResponseMessage.success(PageDTO.from(dtoPage));
     }
 
@@ -70,7 +72,7 @@ public class MemberController {
             @Parameter(description = "成员ID") @PathVariable Long id) {
         try {
             MemberResult result = memberAppService.getMemberById(id);
-            return ResponseMessage.success(memberAppConverter.toDetailDTO(result));
+            return ResponseMessage.success(memberResponseConverter.toDetailDTO(result));
         } catch (GlobalException e) {
             return ResponseMessage.error(e);
         }
@@ -84,7 +86,7 @@ public class MemberController {
     @GetMapping("/direction-leaders")
     public ResponseMessage<List<DirectionLeaderDTO>> getDirectionLeaders() {
         List<MemberResult> results = memberAppService.getDirectionLeaders();
-        return ResponseMessage.success(memberAppConverter.toDirectionLeaderDTOs(results));
+        return ResponseMessage.success(memberResponseConverter.toDirectionLeaderDTOs(results));
     }
 
     @Operation(summary = "获取成员经历", description = "获取指定团队成员的经历列表（公开接口，无需登录）")
@@ -98,7 +100,9 @@ public class MemberController {
             @Parameter(description = "成员ID") @PathVariable Long memberId,
             @Parameter(description = "经历类型：PROJECT/COMPETITION/INTERNSHIP") @RequestParam(required = false) String type) {
         try {
-            return ResponseMessage.success(memberAppService.getMemberExperiences(memberId, type));
+            return ResponseMessage.success(
+                    userExperienceResponseConverter
+                            .toDTOListFromVO(memberAppService.getMemberExperiences(memberId, type)));
         } catch (GlobalException e) {
             return ResponseMessage.error(e);
         }

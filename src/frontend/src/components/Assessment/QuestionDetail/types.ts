@@ -25,11 +25,20 @@ export interface UploadedFileInfo {
   size?: number
 }
 
+export type PresignedUploadPhase =
+  | 'idle'
+  | 'preparing'
+  | 'uploading'
+  | 'verifying'
+  | 'completed'
+  | 'error'
+
 /* ---------- FileUploadArea ---------- */
 export interface FileUploadAreaProps {
   uploadPhase: UploadPhase
   uploadedFile: UploadedFileInfo | null
   uploadProgress: number
+  presignedPhase?: PresignedUploadPhase
   isExpired: boolean
   answer: AssessmentAnswerDTO | null
   dropHintText: string
@@ -108,6 +117,7 @@ export interface QuestionSidebarProps {
   onAlgorithmRun: () => void
   onAlgorithmSubmit: () => void
   onRemoveFile: () => void
+  onDownloadFile?: (fileId: number) => void
 }
 
 /* ---------- CountdownSection ---------- */

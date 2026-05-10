@@ -31,8 +31,8 @@ public class BugReportRepositoryConverter {
                 .environmentJson(entity.getEnvironmentJson())
                 .reporterEmail(entity.getReporterEmail())
                 .status(entity.getStatus())
-                .createdAt(entity.getCreatedAt())
-                .updatedAt(entity.getUpdatedAt())
+                .githubIssueUrl(entity.getGithubIssueUrl())
+                .githubIssueNumber(entity.getGithubIssueNumber())
                 .build();
     }
 
@@ -50,8 +50,8 @@ public class BugReportRepositoryConverter {
                 dataObject.getEnvironmentJson(),
                 dataObject.getReporterEmail(),
                 dataObject.getStatus(),
-                dataObject.getCreatedAt(),
-                dataObject.getUpdatedAt(),
+                dataObject.getGithubIssueUrl(),
+                dataObject.getGithubIssueNumber(),
                 images);
     }
 

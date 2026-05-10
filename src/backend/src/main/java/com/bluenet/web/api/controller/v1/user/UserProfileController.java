@@ -10,7 +10,7 @@ import com.bluenet.web.api.dto.user.UpdateProfileRequestDTO;
 import com.bluenet.web.api.dto.user.UserInfo;
 import com.bluenet.web.api.dto.user.VerifyPasswordRequestDTO;
 import com.bluenet.web.api.converter.userinfo.UserInfoRequestConverter;
-import com.bluenet.web.application.converter.UserInfoAppConverter;
+import com.bluenet.web.api.converter.userinfo.UserInfoResponseConverter;
 import com.bluenet.web.application.service.UserInfoAppService;
 import com.bluenet.web.domain.exception.GlobalException;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
@@ -38,7 +38,7 @@ import org.springframework.web.bind.annotation.*;
 class UserProfileController {
     private final UserInfoAppService userInfoAppService;
     private final UserInfoRequestConverter requestConverter;
-    private final UserInfoAppConverter userInfoAppConverter;
+    private final UserInfoResponseConverter userInfoResponseConverter;
 
     @Operation(summary = "获取当前用户信息", description = "返回当前登录用户的基本信息")
     @ApiResponses({
@@ -50,7 +50,7 @@ class UserProfileController {
     @GetMapping("/info")
     public ResponseMessage<UserInfo> getMyInfo() {
         try {
-            return ResponseMessage.success(userInfoAppConverter.toDTO(userInfoAppService.getMyInfo()));
+            return ResponseMessage.success(userInfoResponseConverter.toDTO(userInfoAppService.getMyInfo()));
         } catch (GlobalException e) {
             return ResponseMessage.error(e);
         }
@@ -83,7 +83,7 @@ class UserProfileController {
     @GetMapping("/tab-counts")
     public ResponseMessage<TabCountsDTO> getTabCounts() {
         try {
-            return ResponseMessage.success(userInfoAppConverter.toTabCountsDTO(userInfoAppService.getTabCounts()));
+            return ResponseMessage.success(userInfoResponseConverter.toTabCountsDTO(userInfoAppService.getTabCounts()));
         } catch (GlobalException e) {
             return ResponseMessage.error(e);
         }

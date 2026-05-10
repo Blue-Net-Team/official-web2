@@ -8,7 +8,7 @@ import com.bluenet.web.api.dto.college.UpdateCollegeRequestDTO;
 import com.bluenet.web.api.converter.college.CollegeRequestConverter;
 import com.bluenet.web.application.CollegeResult;
 import com.bluenet.web.application.command.college.CollegeCommands;
-import com.bluenet.web.application.converter.CollegeAppConverter;
+import com.bluenet.web.api.converter.college.CollegeResponseConverter;
 import com.bluenet.web.application.service.CollegeAppService;
 import com.bluenet.web.domain.exception.DataNotFound;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
@@ -40,7 +40,7 @@ import org.springframework.web.bind.annotation.*;
 public class AdminCollegeController {
     private final CollegeAppService collegeAppService;
     private final CollegeRequestConverter collegeRequestConverter;
-    private final CollegeAppConverter collegeAppConverter;
+    private final CollegeResponseConverter collegeResponseConverter;
 
     @Operation(summary = "创建学院", description = "创建新的学院")
     @ApiResponses({
@@ -53,7 +53,7 @@ public class AdminCollegeController {
         try {
             CollegeCommands.CreateCollegeCommand command = collegeRequestConverter.toCommand(request);
             CollegeResult result = collegeAppService.createCollege(command);
-            return ResponseMessage.success(collegeAppConverter.toDTO(result));
+            return ResponseMessage.success(collegeResponseConverter.toDTO(result));
         } catch (IllegalArgumentException e) {
             return ResponseMessage.error(400, e.getMessage());
         }
@@ -72,7 +72,7 @@ public class AdminCollegeController {
         try {
             CollegeCommands.UpdateCollegeCommand command = collegeRequestConverter.toCommand(id, request);
             CollegeResult result = collegeAppService.updateCollege(command);
-            return ResponseMessage.success(collegeAppConverter.toDTO(result));
+            return ResponseMessage.success(collegeResponseConverter.toDTO(result));
         } catch (DataNotFound e) {
             return ResponseMessage.error(404, e.getMessage());
         } catch (IllegalArgumentException e) {

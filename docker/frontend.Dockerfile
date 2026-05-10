@@ -6,8 +6,10 @@ FROM node:20-alpine AS builder
 
 # 构建时参数：后端公网地址（用于 SSR 预渲染时访问后端 API）
 # 在 CI/CD 中构建时传入，例如：--build-arg BUILD_BACKEND_HOST=api.example.com
+ARG CACHE_BUST=default
 ARG BUILD_BACKEND_HOST=localhost
 ARG BUILD_BACKEND_PORT=8080
+ARG BUILD_SSL_ENABLED=false
 
 # 构建时参数：客户端访问后端的地址（NEXT_PUBLIC_* 会被打包进客户端代码）
 ARG NEXT_PUBLIC_BACKEND_HOST=localhost
@@ -31,6 +33,7 @@ COPY src/frontend/ ./
 # 设置构建时的环境变量并构建应用
 ENV BACKEND_HOST=${BUILD_BACKEND_HOST}
 ENV BACKEND_PORT=${BUILD_BACKEND_PORT}
+ENV SSL_ENABLED=${BUILD_SSL_ENABLED}
 ENV NEXT_PUBLIC_BACKEND_HOST=${NEXT_PUBLIC_BACKEND_HOST}
 ENV NEXT_PUBLIC_BACKEND_PORT=${NEXT_PUBLIC_BACKEND_PORT}
 ENV NEXT_PUBLIC_SSL_ENABLED=${NEXT_PUBLIC_SSL_ENABLED}
@@ -45,7 +48,7 @@ WORKDIR /app
 
 # 运行时环境变量
 # 注意：这里的 BACKEND_HOST 默认值会被 docker-compose.yml 中的环境变量覆盖
-# 在 Docker 网络内，应该使用容器名（如 'backend'）而不是 localhost 或公网地址
+# 在 Docker 网络内，应该使用容器名（如 'api-service'）而不是 localhost 或公网地址
 ENV NODE_ENV=production
 ENV BACKEND_HOST=localhost
 ENV BACKEND_PORT=8080

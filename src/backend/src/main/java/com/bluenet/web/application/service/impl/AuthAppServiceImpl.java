@@ -2,7 +2,6 @@ package com.bluenet.web.application.service.impl;
 
 import com.bluenet.web.application.AuthResult;
 import com.bluenet.web.application.command.auth.AuthCommands;
-import com.bluenet.web.application.converter.UserAppConverter;
 import com.bluenet.web.application.message.MessageRequest;
 import com.bluenet.web.application.message.MessageDispatcher;
 import com.bluenet.web.application.message.template.EmailVerificationCodeTemplate;
@@ -70,8 +69,6 @@ public class AuthAppServiceImpl implements AuthAppService {
      *            JWT工具
      * @param authTokenService
      *            认证令牌服务
-     * @param userConverter
-     *            用户转换器
      * @param cookieService
      *            Cookie服务
      * @param csrfTokenService
@@ -97,7 +94,6 @@ public class AuthAppServiceImpl implements AuthAppService {
             AuthDomainService authDomainService,
             JwtUtil jwtUtil,
             AuthTokenService authTokenService,
-            UserAppConverter userConverter,
             CookieService cookieService,
             CsrfTokenService csrfTokenService,
             VerificationCodeDomainService verificationCodeDomainService,
@@ -119,7 +115,6 @@ public class AuthAppServiceImpl implements AuthAppService {
         this.authSessionIssuer = new AuthSessionIssuer(
                 jwtUtil,
                 authTokenService,
-                userConverter,
                 cookieService,
                 csrfTokenService);
         StudentIdLoginProvider studentIdLoginProvider = new StudentIdLoginProvider(authDomainService);

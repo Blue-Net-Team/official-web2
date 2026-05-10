@@ -1,6 +1,5 @@
 package com.bluenet.web.application.service.impl;
 
-import com.bluenet.web.api.dto.experience.ExperienceDTO;
 import com.bluenet.web.application.MemberResult;
 import com.bluenet.web.application.command.member.MemberCommands;
 import com.bluenet.web.application.service.MemberAppService;
@@ -88,10 +87,10 @@ public class MemberAppServiceImpl implements MemberAppService {
      *            成员ID
      * @param type
      *            经历类型
-     * @return 经历DTO列表
+     * @return 经历VO列表
      */
     @Override
-    public List<ExperienceDTO> getMemberExperiences(Long memberId, String type) {
+    public List<ExperienceVO> getMemberExperiences(Long memberId, String type) {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new DataNotFound("成员不存在"));
 
@@ -100,17 +99,12 @@ public class MemberAppServiceImpl implements MemberAppService {
             return Collections.emptyList();
         }
 
-        List<ExperienceVO> experiences;
         if (type != null && !type.isBlank()) {
             ExperienceType experienceType = parseExperienceType(type);
-            experiences = userExperienceDomainService.getExperiencesByType(memberId, experienceType);
+            return userExperienceDomainService.getExperiencesByType(memberId, experienceType);
         } else {
-            experiences = userExperienceDomainService.getExperiences(memberId);
+            return userExperienceDomainService.getExperiences(memberId);
         }
-
-        return experiences.stream()
-                .map(this::convertToDTO)
-                .toList();
     }
 
     private ExperienceType parseExperienceType(String type) {
@@ -140,55 +134,5 @@ public class MemberAppServiceImpl implements MemberAppService {
                 member.getWechatQrcode(),
                 member.getEnrollmentYear(),
                 member.getAssessmentGradeYear());
-    }
-
-    private ExperienceDTO convertToDTO(ExperienceVO vo) {
-        ExperienceDTO dto = ExperienceDTO.builder()
-                .id(String.valueOf(vo.getId()))
-                .type(vo.getType().name())
-                .startDate(vo.getStartTime())
-                .endDate(vo.getEndTime())
-                .build();
-
-        dto.setNameByType(vo.getType().name(), vo.getTitle());
-
-        try {
-            com.fasterxml.jackson.databind.ObjectMapper objectMapper = new com.fasterxml.jackson.databind.ObjectMapper();
-            switch (vo.getType()) {
-                case PROJECT -> {
-                    com.bluenet.web.domain.model.vo.content.ProjectContent content = objectMapper
-                            .readValue(vo.getContent(), com.bluenet.web.domain.model.vo.content.ProjectContent.class);
-                    dto.setRole(content.getRole());
-                    dto.setDescription(content.getDescription());
-                    dto.setTechStack(content.getTechStack());
-                    dto.setDemoUrl(content.getDemoUrl());
-                }
-                case COMPETITION -> {
-                    com.bluenet.web.domain.model.vo.content.CompetitionContent content = objectMapper.readValue(
-                            vo.getContent(),
-                            com.bluenet.web.domain.model.vo.content.CompetitionContent.class);
-                    dto.setRole(content.getRole());
-                    dto.setDate(content.getDate());
-                    dto.setLevel(content.getLevel());
-                    dto.setAward(content.getAward());
-                    dto.setTeamSize(content.getTeamSize());
-                    dto.setDescription(content.getDescription());
-                    dto.setCertificateUrl(content.getCertificateUrl());
-                }
-                case INTERNSHIP -> {
-                    com.bluenet.web.domain.model.vo.content.InternshipContent content = objectMapper.readValue(
-                            vo.getContent(),
-                            com.bluenet.web.domain.model.vo.content.InternshipContent.class);
-                    dto.setPosition(content.getPosition());
-                    dto.setDescription(content.getDescription());
-                    dto.setAchievements(content.getAchievements());
-                    dto.setStatus(content.getStatus());
-                }
-            }
-        } catch (Exception e) {
-            log.error("解析经历内容失败: id={}", vo.getId(), e);
-        }
-
-        return dto;
     }
 }

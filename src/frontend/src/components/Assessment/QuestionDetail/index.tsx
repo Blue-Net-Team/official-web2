@@ -21,6 +21,7 @@ import { algorithmJudgeService } from '@/apis/services/algorithm-judge.service'
 import { assessmentStatisticsService } from '@/apis/services/assessment-statistics.service'
 import { fileService } from '@/apis/services/file.service'
 import { useAuth } from '@/hooks'
+import { usePresignedUpload } from '@/hooks/usePresignedUpload'
 import type {
   AssessmentQuestionDTO,
   AssessmentAnswerDTO,
@@ -61,8 +62,8 @@ export default function QuestionDetailPage() {
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [isResubmitting, setIsResubmitting] = useState(false)
-  const [uploadProgress, setUploadProgress] = useState(0)
   const [uploadedFile, setUploadedFile] = useState<UploadedFileInfo | null>(null)
+  const { phase: presignedPhase, progress: uploadProgress, upload } = usePresignedUpload()
   const [isExpired, setIsExpired] = useState(false)
   const [selectedOption, setSelectedOption] = useState<string | null>(null)
   const [selectedOptions, setSelectedOptions] = useState<string[]>([])
@@ -510,6 +511,14 @@ export default function QuestionDetailPage() {
     setUploadedFile(null)
   }
 
+  const handleDownloadFile = async (fileId: number) => {
+    try {
+      await fileService.downloadFile(fileId)
+    } catch {
+      message.error('文件不存在或无权访问')
+    }
+  }
+
   // 导航
   const currentIndex = questionsList.findIndex((q) => q.id === questionId)
   const hasPrev = currentIndex > 0
@@ -594,27 +603,21 @@ export default function QuestionDetailPage() {
     accept: fileContent?.allowedExtensions?.map((ext) => `.${ext}`).join(',') || undefined,
     customRequest: async ({ file, onSuccess, onError }) => {
       try {
-        setUploadProgress(0)
-        const response = await fileService.upload(file as File, 'WORK', (progress) => {
-          setUploadProgress(progress)
-        })
-        if (response.code === 200 && response.data) {
+        const fileId = await upload(file as File, 'WORK')
+        if (fileId != null) {
           setUploadedFile({
-            id: response.data.id,
+            id: fileId,
             name: (file as File).name,
             size: (file as File).size,
           })
           message.success('文件上传成功')
-          onSuccess?.(response.data)
+          onSuccess?.({ id: fileId })
         } else {
-          message.error(response.msg || '上传失败')
-          onError?.(new Error(response.msg || '上传失败'))
+          onError?.(new Error('上传失败'))
         }
       } catch (error) {
         message.error('上传失败，请重试')
         onError?.(error as Error)
-      } finally {
-        setUploadProgress(0)
       }
     },
     beforeUpload: (file) => {
@@ -733,7 +736,7 @@ export default function QuestionDetailPage() {
                 </div>
                 <button
                   className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#6677ff]/[0.15] border-none text-[#6677ff] text-xs font-medium cursor-pointer transition-all duration-200 flex-shrink-0 hover:bg-[#6677ff]/[0.25]"
-                  onClick={() => fileService.downloadFile(question.attachmentId!)}
+                  onClick={() => handleDownloadFile(question.attachmentId!)}
                 >
                   <DownOutlined className="text-sm" />
                   下载附件
@@ -757,6 +760,7 @@ export default function QuestionDetailPage() {
                     uploadPhase={uploadPhase}
                     uploadedFile={uploadedFile}
                     uploadProgress={uploadProgress}
+                    presignedPhase={presignedPhase}
                     isExpired={isExpired}
                     answer={answer}
                     dropHintText={dropHintText}
@@ -876,6 +880,7 @@ export default function QuestionDetailPage() {
               onAlgorithmRun={handleAlgorithmRun}
               onAlgorithmSubmit={handleAlgorithmSubmit}
               onRemoveFile={handleRemoveFile}
+              onDownloadFile={handleDownloadFile}
             />
           </aside>
         </div>

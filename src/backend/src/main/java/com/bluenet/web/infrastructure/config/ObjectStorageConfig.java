@@ -4,9 +4,11 @@ import com.bluenet.web.infrastructure.storage.ObjectStorage;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+@Slf4j
 /**
  * 对象存储启动配置。
  * <p>
@@ -27,6 +29,9 @@ public class ObjectStorageConfig {
     @ConditionalOnProperty(name = "storage.enabled", havingValue = "true", matchIfMissing = true)
     @ConditionalOnBean(ObjectStorage.class)
     public CommandLineRunner initializeObjectStorage(ObjectStorage objectStorage) {
-        return args -> objectStorage.ensureBucket();
+        return args -> {
+            log.info("ObjectStorageConfig: initializing object storage, class={}", objectStorage.getClass().getName());
+            objectStorage.ensureBucket();
+        };
     }
 }

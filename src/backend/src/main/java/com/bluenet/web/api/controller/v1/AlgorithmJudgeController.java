@@ -7,7 +7,7 @@ import com.bluenet.web.api.dto.algorithm_judge.JudgeJobPollingResponseDTO;
 import com.bluenet.web.api.dto.assessment_answer.CreateAnswerRequestDTO;
 import com.bluenet.web.api.converter.algorithm_judge.AlgorithmJudgeRequestConverter;
 import com.bluenet.web.application.AlgorithmJudgeResult;
-import com.bluenet.web.application.converter.AlgorithmJudgeAppConverter;
+import com.bluenet.web.api.converter.algorithm_judge.AlgorithmJudgeResponseConverter;
 import com.bluenet.web.application.service.AlgorithmJudgeAppService;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
 import com.bluenet.web.infrastructure.security.annotation.RequiresPermission;
@@ -31,7 +31,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class AlgorithmJudgeController {
     private final AlgorithmJudgeAppService algorithmJudgeAppService;
     private final AlgorithmJudgeRequestConverter algorithmJudgeRequestConverter;
-    private final AlgorithmJudgeAppConverter algorithmJudgeAppConverter;
+    private final AlgorithmJudgeResponseConverter algorithmJudgeResponseConverter;
 
     @Operation(summary = "运行算法题代码", description = "创建不计分运行任务并投递判题消息，可使用默认运行用例或自定义输入。")
     @RequiresPermission(name = "运行算法题", value = "algorithm-judge:run", access = AccessLevel.AUTHENTICATED)
@@ -39,7 +39,7 @@ public class AlgorithmJudgeController {
     public ResponseMessage<AlgorithmSubmitResponseDTO> run(@Valid @RequestBody AlgorithmRunRequestDTO request) {
         AlgorithmJudgeResult.SubmitResult result = algorithmJudgeAppService
                 .run(algorithmJudgeRequestConverter.toCommand(request));
-        return ResponseMessage.success(algorithmJudgeAppConverter.toSubmitDTO(result));
+        return ResponseMessage.success(algorithmJudgeResponseConverter.toSubmitDTO(result));
     }
 
     @Operation(summary = "提交算法题答案", description = "保存正式答案，创建判题任务并投递队列。")
@@ -48,7 +48,7 @@ public class AlgorithmJudgeController {
     public ResponseMessage<AlgorithmSubmitResponseDTO> submit(@Valid @RequestBody CreateAnswerRequestDTO request) {
         AlgorithmJudgeResult.SubmitResult result = algorithmJudgeAppService
                 .submit(algorithmJudgeRequestConverter.toCommand(request));
-        return ResponseMessage.success(algorithmJudgeAppConverter.toSubmitDTO(result));
+        return ResponseMessage.success(algorithmJudgeResponseConverter.toSubmitDTO(result));
     }
 
     @Operation(summary = "轮询算法判题任务", description = "查询当前用户自己的运行或正式提交任务状态。任务入队后会等待后续独立消费者处理。")
@@ -57,6 +57,6 @@ public class AlgorithmJudgeController {
     public ResponseMessage<JudgeJobPollingResponseDTO> getJob(@PathVariable Long jobId) {
         // 轮询接口保持只读语义，当前主应用不会主动推进判题状态。
         AlgorithmJudgeResult.PollResult result = algorithmJudgeAppService.getJob(jobId);
-        return ResponseMessage.success(algorithmJudgeAppConverter.toPollingDTO(result));
+        return ResponseMessage.success(algorithmJudgeResponseConverter.toPollingDTO(result));
     }
 }

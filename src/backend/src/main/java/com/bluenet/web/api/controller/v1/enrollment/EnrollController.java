@@ -5,7 +5,7 @@ import com.bluenet.web.api.dto.enrollment.CreateEnrollmentRequestDTO;
 import com.bluenet.web.api.dto.enrollment.EnrollmentConflictDTO;
 import com.bluenet.web.api.dto.enrollment.EnrollmentResultDTO;
 import com.bluenet.web.api.converter.enroll.EnrollRequestConverter;
-import com.bluenet.web.application.converter.EnrollAppConverter;
+import com.bluenet.web.api.converter.enroll.EnrollResponseConverter;
 import com.bluenet.web.application.EnrollResult;
 import com.bluenet.web.application.service.EnrollAppService;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
@@ -31,7 +31,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class EnrollController {
     private final EnrollAppService enrollAppService;
     private final EnrollRequestConverter enrollRequestConverter;
-    private final EnrollAppConverter enrollAppConverter;
+    private final EnrollResponseConverter enrollResponseConverter;
 
     @Operation(summary = "发起报名", description = "外部用户提交报名申请，无需登录。如果学号已存在且 forceUpdate 为 false，返回 409 冲突")
     @ApiResponses({
@@ -44,7 +44,7 @@ public class EnrollController {
     @PostMapping
     public ResponseMessage<?> createEnrollment(@Valid @RequestBody CreateEnrollmentRequestDTO request) {
         EnrollResult.Enrollment result = enrollAppService.createEnrollment(enrollRequestConverter.toCommand(request));
-        EnrollmentResultDTO dto = enrollAppConverter.toEnrollmentResultDTO(result);
+        EnrollmentResultDTO dto = enrollResponseConverter.toEnrollmentResultDTO(result);
         HttpStatus status = dto.isCreated() ? HttpStatus.CREATED : HttpStatus.OK;
         String message = dto.isCreated() ? "报名成功" : "报名信息已更新";
         return new ResponseMessage<>(status.value(), message, dto);

@@ -1,8 +1,8 @@
 package com.bluenet.web.application.service;
 
-import com.bluenet.web.api.dto.experience.ExperienceDTO;
 import com.bluenet.web.application.MemberResult;
 import com.bluenet.web.application.command.member.MemberCommands;
+import com.bluenet.web.domain.model.vo.ExperienceVO;
 import org.springframework.data.domain.Page;
 
 import java.util.List;
@@ -46,7 +46,7 @@ public interface MemberAppService {
      *            成员ID
      * @param type
      *            经历类型
-     * @return 经历DTO列表
+     * @return 经历VO列表
      */
-    List<ExperienceDTO> getMemberExperiences(Long memberId, String type);
+    List<ExperienceVO> getMemberExperiences(Long memberId, String type);
 }

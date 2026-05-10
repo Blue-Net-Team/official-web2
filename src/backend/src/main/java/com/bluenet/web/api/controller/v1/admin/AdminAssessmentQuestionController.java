@@ -8,8 +8,8 @@ import com.bluenet.web.api.dto.assessment_question.ResponseMessageAssessmentQues
 import com.bluenet.web.api.dto.assessment_question.ResponseMessageAssessmentQuestionList;
 import com.bluenet.web.api.dto.assessment_question.UpdateQuestionRequestDTO;
 import com.bluenet.web.application.command.assessment_question.AssessmentQuestionCommands;
-import com.bluenet.web.application.converter.AssessmentQuestionAppConverter;
 import com.bluenet.web.api.converter.assessment_question.AssessmentQuestionRequestConverter;
+import com.bluenet.web.api.converter.assessment_question.AssessmentQuestionResponseConverter;
 import com.bluenet.web.application.service.AssessmentQuestionAppService;
 import com.bluenet.web.domain.exception.GlobalException;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
@@ -40,7 +40,7 @@ import org.springframework.web.bind.annotation.*;
 public class AdminAssessmentQuestionController {
     private final AssessmentQuestionAppService assessmentQuestionAppService;
     private final AssessmentQuestionRequestConverter assessmentQuestionRequestConverter;
-    private final AssessmentQuestionAppConverter assessmentQuestionConverter;
+    private final AssessmentQuestionResponseConverter responseConverter;
 
     @Operation(summary = "创建考题", description = "创建新的考题")
     @ApiResponses({
@@ -55,8 +55,8 @@ public class AdminAssessmentQuestionController {
         try {
             AssessmentQuestionCommands.CreateAssessmentQuestionCommand command = assessmentQuestionRequestConverter
                     .toCommand(request);
-            AssessmentQuestionDTO created = assessmentQuestionConverter
-                    .convertToDTO(assessmentQuestionAppService.createQuestion(command));
+            AssessmentQuestionDTO created = responseConverter
+                    .toDTO(assessmentQuestionAppService.createQuestion(command));
             return ResponseMessage.success(created);
         } catch (IllegalArgumentException e) {
             return ResponseMessage.error(400, e.getMessage());
@@ -77,8 +77,8 @@ public class AdminAssessmentQuestionController {
         try {
             AssessmentQuestionCommands.UpdateAssessmentQuestionCommand command = assessmentQuestionRequestConverter
                     .toCommand(id, request);
-            AssessmentQuestionDTO updated = assessmentQuestionConverter
-                    .convertToDTO(assessmentQuestionAppService.updateQuestion(command));
+            AssessmentQuestionDTO updated = responseConverter
+                    .toDTO(assessmentQuestionAppService.updateQuestion(command));
             return ResponseMessage.success(updated);
         } catch (IllegalArgumentException e) {
             if (e.getMessage().contains("不存在")) {
@@ -117,7 +117,7 @@ public class AdminAssessmentQuestionController {
             @Parameter(description = "每页大小（默认10）") @RequestParam(required = false, defaultValue = "10") Integer size) {
         PageDTO<AssessmentQuestionDTO> result = PageDTO.from(
                 assessmentQuestionAppService.listQuestionsForAdmin(assessmentTimeId, page, size)
-                        .map(assessmentQuestionConverter::convertToDTO));
+                        .map(responseConverter::toDTO));
         return ResponseMessage.success(result);
     }
 

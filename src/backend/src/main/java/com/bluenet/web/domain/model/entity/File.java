@@ -1,5 +1,6 @@
 package com.bluenet.web.domain.model.entity;
 
+import com.bluenet.web.domain.model.enumerate.FileStatus;
 import com.bluenet.web.domain.model.enumerate.FileType;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -31,6 +32,11 @@ public class File {
     private String url;
 
     /**
+     * 文件状态。
+     */
+    private FileStatus status;
+
+    /**
      * 构造新文件聚合根 —— 带领域校验
      *
      * @param name
@@ -48,7 +54,7 @@ public class File {
         if (type == null) {
             throw new IllegalArgumentException("文件类型不能为空");
         }
-        return new File(null, name.trim(), type, null);
+        return new File(null, name.trim(), type, null, FileStatus.PENDING);
     }
 
     /**
@@ -65,6 +71,10 @@ public class File {
      * @return 重建的文件实体
      */
     public static File reconstruct(Long id, String name, FileType type, String url) {
-        return new File(id, name, type, url);
+        return new File(id, name, type, url, FileStatus.ACTIVE);
+    }
+
+    public static File reconstruct(Long id, String name, FileType type, String url, FileStatus status) {
+        return new File(id, name, type, url, status);
     }
 }

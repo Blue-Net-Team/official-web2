@@ -19,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class BugReportAppServiceImpl implements BugReportAppService {
 
     private final BugReportRepository bugReportRepository;
+    private final GitHubIssueSyncService gitHubIssueSyncService;
 
     @Override
     @Transactional
@@ -33,6 +34,9 @@ public class BugReportAppServiceImpl implements BugReportAppService {
         bugReportRepository.save(bugReport);
         log.info("提交 Bug 报告: id={}", bugReport.getId());
 
-        return new BugReportResult.Created(bugReport.getId(), bugReport.getStatus());
+        // 异步同步到 GitHub Issue（失败不影响用户提交体验）
+        gitHubIssueSyncService.sync(bugReport);
+
+        return new BugReportResult.Created(bugReport.getId(), bugReport.getStatus(), null);
     }
 }

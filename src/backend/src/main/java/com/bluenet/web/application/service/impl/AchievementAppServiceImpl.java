@@ -1,11 +1,7 @@
 package com.bluenet.web.application.service.impl;
 
-import com.bluenet.web.api.dto.PageDTO;
-import com.bluenet.web.api.dto.achievement.AchievementDTO;
-import com.bluenet.web.api.dto.achievement.AchievementStatsDTO;
 import com.bluenet.web.application.AchievementResult;
 import com.bluenet.web.application.command.achievement.AchievementCommands;
-import com.bluenet.web.application.converter.AchievementAppConverter;
 import com.bluenet.web.application.service.AchievementAppService;
 import com.bluenet.web.domain.exception.BadRequest;
 import com.bluenet.web.domain.exception.DataNotFound;
@@ -35,7 +31,6 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class AchievementAppServiceImpl implements AchievementAppService {
     private final AchievementRepository achievementRepository;
-    private final AchievementAppConverter achievementAppConverter;
     private final FileDomainService fileDomainService;
 
     /**
@@ -54,16 +49,14 @@ public class AchievementAppServiceImpl implements AchievementAppService {
      * @return 成就分页结果
      */
     @Override
-    public PageDTO<AchievementDTO> getAchievements(Integer page, Integer size, AchievementType type,
+    public Page<AchievementResult> getAchievements(Integer page, Integer size, AchievementType type,
             AwardLevel awardLevel, Integer year) {
         int pageNum = page != null ? page : 0;
         int pageSize = size != null ? size : 12;
         Pageable pageable = PageRequest.of(pageNum, pageSize);
 
         Page<AchievementVO> voPage = achievementRepository.findAchievementsWithFilter(type, awardLevel, year, pageable);
-        Page<AchievementResult> resultPage = voPage.map(this::toResult);
-        Page<AchievementDTO> dtoPage = resultPage.map(achievementAppConverter::toDTO);
-        return PageDTO.from(dtoPage);
+        return voPage.map(this::toResult);
     }
 
     /**
@@ -72,9 +65,8 @@ public class AchievementAppServiceImpl implements AchievementAppService {
      * @return 成就统计结果
      */
     @Override
-    public AchievementStatsDTO getAchievementStats() {
-        AchievementStatsVO vo = achievementRepository.findAchievementStats();
-        return achievementAppConverter.toStatsDTO(vo);
+    public AchievementStatsVO getAchievementStats() {
+        return achievementRepository.findAchievementStats();
     }
 
     /**

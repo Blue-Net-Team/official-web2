@@ -21,7 +21,12 @@ public class AliyunOssConfig {
     private final StorageProperties storageProperties;
 
     /**
-     * 创建阿里云 OSS 客户端 Bean。
+     * 创建阿里云 OSS 客户端 Bean（用于后端读写操作）。
+     * <p>
+     * 公共端点（预签名 URL 场景）由
+     * {@link com.bluenet.web.infrastructure.storage.AliyunOssObjectStorage}
+     * 内部按需创建，不再额外注册 Spring Bean，保持与 MinIO 实现风格一致。
+     * </p>
      *
      * @return OSS 客户端实例
      */

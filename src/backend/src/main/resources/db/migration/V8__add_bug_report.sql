@@ -4,9 +4,7 @@ CREATE TABLE tb_bug_report (
     page_url VARCHAR(2048),
     environment_json TEXT,
     reporter_email VARCHAR(255),
-    status VARCHAR(50) NOT NULL DEFAULT 'PENDING',
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    status VARCHAR(50) NOT NULL DEFAULT 'PENDING'
 );
 
 CREATE TABLE tb_bug_report_image (
@@ -16,7 +14,6 @@ CREATE TABLE tb_bug_report_image (
 );
 
 CREATE INDEX idx_bug_report_status ON tb_bug_report(status);
-CREATE INDEX idx_bug_report_created_at ON tb_bug_report(created_at);
 CREATE INDEX idx_bug_report_image_bug_report_id ON tb_bug_report_image(bug_report_id);
 
 COMMENT ON TABLE tb_bug_report IS 'Bug 报告表';
