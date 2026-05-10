@@ -116,6 +116,7 @@ jobs:
   # ==================== 构建 API 服务阶段 ====================
 
   build-api-service:
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     needs: [api-service-test]
     permissions:
@@ -214,6 +215,7 @@ jobs:
   # ==================== 构建判题服务阶段 ====================
 
   build-judge-service:
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     needs: [judge-service-test]
     permissions:
@@ -311,6 +313,7 @@ jobs:
   # ==================== 部署数据库阶段 ====================
 
   deploy-database:
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     needs: [api-service-test, frontend-test, judge-service-test]
 
@@ -406,6 +409,7 @@ jobs:
   # ==================== 部署 Redis 阶段 ====================
 
   deploy-redis:
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     needs: [api-service-test, frontend-test, judge-service-test]
 
@@ -501,6 +505,7 @@ jobs:
   # ==================== 部署 RabbitMQ 阶段 ====================
 
   deploy-rabbitmq:
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     needs: [api-service-test, frontend-test, judge-service-test]
 
@@ -596,6 +601,7 @@ jobs:
   # ==================== 部署 API 服务阶段 ====================
 
   deploy-api-service:
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     needs: [build-api-service, deploy-database, deploy-redis, deploy-rabbitmq]
     outputs:
@@ -665,6 +671,7 @@ jobs:
   # ==================== 部署判题服务阶段 ====================
 
   deploy-judge-service:
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     needs: [build-judge-service, deploy-database, deploy-redis, deploy-rabbitmq]
 
@@ -743,6 +750,7 @@ jobs:
   # ==================== 健康检查阶段 ====================
 
   health-check:
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     needs: [deploy-api-service, deploy-judge-service]
     timeout-minutes: 5
@@ -791,6 +799,7 @@ jobs:
   # ==================== 构建前端阶段 ====================
 
   build-frontend:
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     needs: [frontend-test, health-check]
     permissions:
@@ -885,6 +894,7 @@ jobs:
   # ==================== 部署前端阶段 ====================
 
   deploy-frontend:
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     needs: [build-frontend]
 
