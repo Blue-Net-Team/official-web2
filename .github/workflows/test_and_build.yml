@@ -517,9 +517,9 @@ jobs:
     - name: Set health check URL
       id: health
       run: |
-        HOST="${{ secrets.BACKEND_HOST }}"
-        PORT="${{ secrets.BACKEND_PORT }}"
-        SSL="${{ secrets.SSL_ENABLED }}"
+        HOST="${{ vars.BACKEND_HOST }}"
+        PORT="${{ vars.BACKEND_PORT }}"
+        SSL="${{ vars.SSL_ENABLED }}"
         if [ "$SSL" = "true" ]; then
           echo "url=https://$HOST:$PORT/api/v1/health" >> $GITHUB_OUTPUT
         else
@@ -602,12 +602,12 @@ jobs:
         labels: ${{ steps.meta.outputs.labels }}
         build-args: |
           CACHE_BUST=${{ github.sha }}_${{ github.run_id }}
-          BUILD_BACKEND_HOST=${{ secrets.BACKEND_HOST }}
-          BUILD_BACKEND_PORT=${{ secrets.BACKEND_PORT }}
-          BUILD_SSL_ENABLED=${{ secrets.SSL_ENABLED }}
-          NEXT_PUBLIC_BACKEND_HOST=${{ secrets.BACKEND_HOST }}
-          NEXT_PUBLIC_BACKEND_PORT=${{ secrets.BACKEND_PORT }}
-          NEXT_PUBLIC_SSL_ENABLED=${{ secrets.SSL_ENABLED }}
+          BUILD_BACKEND_HOST=${{ vars.BACKEND_HOST }}
+          BUILD_BACKEND_PORT=${{ vars.BACKEND_PORT }}
+          BUILD_SSL_ENABLED=${{ vars.SSL_ENABLED }}
+          NEXT_PUBLIC_BACKEND_HOST=${{ vars.BACKEND_HOST }}
+          NEXT_PUBLIC_BACKEND_PORT=${{ vars.BACKEND_PORT }}
+          NEXT_PUBLIC_SSL_ENABLED=${{ vars.SSL_ENABLED }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
 
