@@ -592,6 +592,13 @@ jobs:
           type=sha,prefix=
           type=raw,value=latest,enable=${{ github.ref == 'refs/heads/master' }}
 
+    - name: Debug vars values
+      run: |
+        echo "=== 前端构建时变量 ==="
+        echo "BACKEND_HOST=${{ vars.BACKEND_HOST }}"
+        echo "BACKEND_PORT=${{ vars.BACKEND_PORT }}"
+        echo "SSL_ENABLED=${{ vars.SSL_ENABLED }}"
+
     - name: Build frontend image
       uses: docker/build-push-action@v5
       with:
