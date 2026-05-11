@@ -275,6 +275,7 @@ class AlgorithmJudgeAppServiceImplTest {
                                         null,
                                         null,
                                         false,
+                                        null,
                                         null)));
     }
 

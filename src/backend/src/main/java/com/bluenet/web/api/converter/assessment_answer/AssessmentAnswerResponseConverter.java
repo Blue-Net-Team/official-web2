@@ -1,10 +1,14 @@
 package com.bluenet.web.api.converter.assessment_answer;
 
 import com.bluenet.web.api.converter.assessment_judgement.AssessmentJudgementResponseConverter;
+import com.bluenet.web.api.converter.assessment_judgement.CommentResponseConverter;
 import com.bluenet.web.api.dto.assessment_answer.AssessmentAnswerDTO;
 import com.bluenet.web.application.AssessmentAnswerResult;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+
+import java.util.Collections;
+import java.util.List;
 
 /**
  * 评测答案响应转换器
@@ -17,6 +21,7 @@ import org.springframework.stereotype.Component;
 public class AssessmentAnswerResponseConverter {
 
     private final AssessmentJudgementResponseConverter judgementResponseConverter;
+    private final CommentResponseConverter commentResponseConverter;
 
     /**
      * 将应用层结果转换为 API 响应 DTO
@@ -33,6 +38,17 @@ public class AssessmentAnswerResponseConverter {
                 .language(result.language())
                 .submitTime(result.submitTime())
                 .judgement(judgementResponseConverter.toDTO(result.judgement()))
+                .comments(toCommentDTOs(result.comments()))
                 .build();
+    }
+
+    private List<com.bluenet.web.api.dto.assessment_judgement.CommentDTO> toCommentDTOs(
+            List<com.bluenet.web.domain.model.vo.CommentVO> comments) {
+        if (comments == null || comments.isEmpty()) {
+            return Collections.emptyList();
+        }
+        return comments.stream()
+                .map(commentResponseConverter::toDTO)
+                .toList();
     }
 }

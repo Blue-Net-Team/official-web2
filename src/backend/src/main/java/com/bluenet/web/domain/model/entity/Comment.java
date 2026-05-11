@@ -1,11 +1,14 @@
 package com.bluenet.web.domain.model.entity;
 
+import lombok.AccessLevel;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Data
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class Comment {
     /**
      * 当前对象在系统中的唯一标识。
@@ -31,4 +34,41 @@ public class Comment {
      * 评价或留言提交时间。
      */
     private LocalDateTime commentTime;
+
+    private Comment(Long id, Long answerId, Long userId, String content, BigDecimal score,
+            LocalDateTime commentTime) {
+        this.id = id;
+        this.answerId = answerId;
+        this.userId = userId;
+        this.content = content;
+        this.score = score;
+        this.commentTime = commentTime;
+    }
+
+    /**
+     * 构造新评论
+     */
+    public static Comment create(Long answerId, Long userId, String content, BigDecimal score) {
+        return new Comment(null, answerId, userId, content, score, LocalDateTime.now());
+    }
+
+    /**
+     * 从数据库重建
+     */
+    public static Comment reconstruct(Long id, Long answerId, Long userId, String content, BigDecimal score,
+            LocalDateTime commentTime) {
+        return new Comment(id, answerId, userId, content, score, commentTime);
+    }
+
+    /**
+     * 更新评论内容
+     */
+    public void update(String content, BigDecimal score) {
+        if (content != null) {
+            this.content = content;
+        }
+        if (score != null) {
+            this.score = score;
+        }
+    }
 }

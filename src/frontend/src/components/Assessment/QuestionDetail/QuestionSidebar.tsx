@@ -160,37 +160,88 @@ export default function QuestionSidebar({
               提交语言：{LANGUAGE_LABELS[answer.language] ?? answer.language}
             </div>
           )}
-          {answer?.judgement?.resultCode && !isChoiceQuestion && (
-            <div className="flex items-center justify-between gap-3">
-              <span className="text-[13px] text-white/45">评判结果</span>
-              <span
-                className={`inline-flex items-center px-2.5 py-1 rounded-md border text-xs font-semibold ${
-                  (
-                    {
-                      AC: 'text-[#07c160] bg-[#07c160]/[0.08] border-[#07c160]/[0.18]',
-                      WA: 'text-[#ff4d4f] bg-[#ff4d4f]/[0.08] border-[#ff4d4f]/[0.18]',
-                      TLE: 'text-[#fa8c16] bg-[#fa8c16]/[0.08] border-[#fa8c16]/[0.18]',
-                      RE: 'text-[#ff4d4f] bg-[#ff4d4f]/[0.08] border-[#ff4d4f]/[0.18]',
-                      CE: 'text-[#fa8c16] bg-[#fa8c16]/[0.08] border-[#fa8c16]/[0.18]',
-                      MLE: 'text-[#fa8c16] bg-[#fa8c16]/[0.08] border-[#fa8c16]/[0.18]',
-                    } as Record<string, string>
-                  )[answer.judgement.resultCode] ??
-                  'text-white/65 bg-white/[0.08] border-white/[0.12]'
-                }
-                `}
-              >
-                {answer.judgement.resultCode} ·{' '}
-                {(
-                  {
-                    AC: '通过',
-                    WA: '答案错误',
-                    TLE: '超时',
-                    RE: '运行错误',
-                    CE: '编译错误',
-                    MLE: '内存超限',
-                  } as Record<string, string>
-                )[answer.judgement.resultCode] ?? answer.judgement.resultCode}
-              </span>
+          {answer?.judgement && !isChoiceQuestion && (
+            <>
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-[13px] text-white/45">得分</span>
+                <span className="text-[13px] font-semibold text-[#fa8c16]">
+                  {answer.judgement.score} / {answer.judgement.maxScore}
+                </span>
+              </div>
+              {answer.judgement.resultCode && (
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-[13px] text-white/45">评判结果</span>
+                  <span
+                    className={`inline-flex items-center px-2.5 py-1 rounded-md border text-xs font-semibold ${
+                      (
+                        {
+                          AC: 'text-[#07c160] bg-[#07c160]/[0.08] border-[#07c160]/[0.18]',
+                          WA: 'text-[#ff4d4f] bg-[#ff4d4f]/[0.08] border-[#ff4d4f]/[0.18]',
+                          TLE: 'text-[#fa8c16] bg-[#fa8c16]/[0.08] border-[#fa8c16]/[0.18]',
+                          RE: 'text-[#ff4d4f] bg-[#ff4d4f]/[0.08] border-[#ff4d4f]/[0.18]',
+                          CE: 'text-[#fa8c16] bg-[#fa8c16]/[0.08] border-[#fa8c16]/[0.18]',
+                          MLE: 'text-[#fa8c16] bg-[#fa8c16]/[0.08] border-[#fa8c16]/[0.18]',
+                        } as Record<string, string>
+                      )[answer.judgement.resultCode] ??
+                      'text-white/65 bg-white/[0.08] border-white/[0.12]'
+                    }
+                    `}
+                  >
+                    {answer.judgement.resultCode} ·{' '}
+                    {(
+                      {
+                        AC: '通过',
+                        WA: '答案错误',
+                        TLE: '超时',
+                        RE: '运行错误',
+                        CE: '编译错误',
+                        MLE: '内存超限',
+                      } as Record<string, string>
+                    )[answer.judgement.resultCode] ?? answer.judgement.resultCode}
+                  </span>
+                </div>
+              )}
+              {answer.judgement.comment && (
+                <div className="flex flex-col gap-1">
+                  <span className="text-[13px] text-white/45">评语</span>
+                  <span className="text-[13px] text-white/65 leading-relaxed">
+                    {answer.judgement.comment}
+                  </span>
+                </div>
+              )}
+            </>
+          )}
+          {answer?.comments && answer.comments.length > 0 && (
+            <div className="flex flex-col gap-3 mt-1">
+              <hr className="w-full h-px bg-white/[0.04] border-none m-0" />
+              <span className="text-[13px] text-white/45">成员评语</span>
+              <div className="flex flex-col gap-2.5">
+                {answer.comments.map((comment) => (
+                  <div
+                    key={comment.id}
+                    className="rounded-lg border border-white/[0.06] bg-white/[0.03] px-3 py-2.5 flex flex-col gap-1"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-[13px] text-white/70">
+                        {comment.username ?? `用户 ${comment.userId}`}
+                      </span>
+                      <span className="text-[11px] text-white/35">
+                        {comment.commentTime
+                          ? new Date(comment.commentTime).toLocaleString('zh-CN')
+                          : ''}
+                      </span>
+                    </div>
+                    {comment.score != null && (
+                      <span className="text-[12px] text-[#fa8c16]">
+                        参考评分：{comment.score} 分
+                      </span>
+                    )}
+                    <span className="text-[13px] text-white/65 leading-relaxed">
+                      {comment.content || <span className="text-white/30">无评论内容</span>}
+                    </span>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </div>

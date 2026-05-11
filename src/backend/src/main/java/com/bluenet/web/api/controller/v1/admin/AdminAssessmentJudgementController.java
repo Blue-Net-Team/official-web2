@@ -8,6 +8,7 @@ import com.bluenet.web.api.dto.assessment_judgement.AssessmentCandidateScoreboar
 import com.bluenet.web.api.dto.assessment_judgement.AssessmentJudgementDTO;
 import com.bluenet.web.api.dto.assessment_judgement.AssessmentQuestionScoreboardDTO;
 import com.bluenet.web.api.dto.assessment_judgement.AssessmentQuestionSubmissionDTO;
+import com.bluenet.web.api.dto.assessment_judgement.FinalizeScoreRequestDTO;
 import com.bluenet.web.api.dto.assessment_judgement.ManualReviewRequestDTO;
 import com.bluenet.web.api.converter.assessment_judgement.AssessmentJudgementRequestConverter;
 import com.bluenet.web.api.converter.assessment_judgement.AssessmentJudgementResponseConverter;
@@ -209,6 +210,24 @@ public class AdminAssessmentJudgementController {
                 responseConverter.convertDecisionWorkspaceToDTO(
                         assessmentJudgementAppService
                                 .getDecisionWorkspace(assessmentTimeId, keyword, decisionStatus)));
+    }
+
+    /**
+     * 方向管理员确认文件上传题最终评分。
+     *
+     * @param request
+     *            最终评分请求
+     * @return 最终评判 DTO
+     */
+    @Operation(summary = "确认最终评分", description = "方向管理员基于成员评论确认某题最终评分")
+    @RequiresPermission(name = "确认考核最终评分", value = "assessment-judgement:finalize", access = AccessLevel.PROTECTED)
+    @PostMapping("/finalize")
+    public ResponseMessage<AssessmentJudgementDTO> finalizeScore(
+            @Valid @RequestBody FinalizeScoreRequestDTO request) {
+        AssessmentJudgementCommands.FinalizeScoreCommand command = new AssessmentJudgementCommands.FinalizeScoreCommand(
+                request.getAnswerId(), request.getScore(), request.getComment());
+        AssessmentJudgementResult result = assessmentJudgementAppService.finalizeScore(command);
+        return ResponseMessage.success(responseConverter.toDTO(result));
     }
 
     /**

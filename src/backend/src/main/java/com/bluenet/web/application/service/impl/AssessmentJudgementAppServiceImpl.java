@@ -37,6 +37,7 @@ import com.bluenet.web.domain.service.AssessmentDecisionDomainService;
 import com.bluenet.web.domain.service.AssessmentJudgementDomainService;
 import com.bluenet.web.domain.repository.AssessmentQuestionRepository;
 import com.bluenet.web.domain.repository.AssessmentTimeRepository;
+import com.bluenet.web.domain.repository.CommentRepository;
 import com.bluenet.web.domain.service.UserDomainService;
 import com.bluenet.web.application.message.MessageDispatcher;
 import com.bluenet.web.domain.model.enumerate.MessageChannel;
@@ -78,6 +79,7 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
     private final MessageDispatcher messageDispatcher;
     private final AssessmentJudgementAccessGuard accessGuard;
     private final AssessmentDecisionNotificationTemplate notificationTemplate;
+    private final CommentRepository commentRepository;
 
     /**
      * 保留原应用服务依赖入口，内部组合访问 guard 和通知模板，降低调用方和单测构造成本。
@@ -113,7 +115,8 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
             AssessmentDecisionRepository assessmentDecisionRepository,
             UserDomainService userDomainService,
             MessageDispatcher messageDispatcher,
-            MessageTemplateRegistry messageTemplateRegistry) {
+            MessageTemplateRegistry messageTemplateRegistry,
+            CommentRepository commentRepository) {
         this.assessmentJudgementDomainService = assessmentJudgementDomainService;
         this.assessmentDecisionDomainService = assessmentDecisionDomainService;
         this.assessmentAnswerRepository = assessmentAnswerRepository;
@@ -125,6 +128,7 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
         this.messageDispatcher = messageDispatcher;
         this.accessGuard = new AssessmentJudgementAccessGuard(assessmentTimeRepository);
         this.notificationTemplate = new AssessmentDecisionNotificationTemplate(messageTemplateRegistry);
+        this.commentRepository = commentRepository;
     }
 
     /**
@@ -200,6 +204,54 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
     }
 
     /**
+     * 方向管理员确认文件上传题的最终评分。
+     *
+     * @param command
+     *            最终评分命令
+     * @return 评判结果
+     */
+    @Override
+    @Transactional
+    public AssessmentJudgementResult finalizeScore(AssessmentJudgementCommands.FinalizeScoreCommand command) {
+        UserVO currentUser = accessGuard.requireCurrentUser();
+        RoleType roleType = accessGuard.requireRole(currentUser);
+        if (!RoleHierarchy.isDirectionAdminOrAbove(roleType)) {
+            throw new Forbidden("只有方向管理员及以上权限可以确认最终评分");
+        }
+
+        AssessmentAnswer answer = assessmentAnswerRepository.findById(command.answerId())
+                .orElseThrow(() -> new DataNotFound("答题不存在，ID: " + command.answerId()));
+        AssessmentQuestion question = assessmentQuestionRepository.findById(answer.getQuestionId())
+                .orElseThrow(() -> new DataNotFound("题目不存在，ID: " + answer.getQuestionId()));
+        if (question.getQuestionType() != QuestionType.FILE_UPLOAD) {
+            throw new BadRequest("只有文件上传题可以确认最终评分");
+        }
+        if (command.score().compareTo(BigDecimal.ZERO) < 0
+                || command.score().compareTo(question.getScore()) > 0) {
+            throw new BadRequest("最终评分必须在 0 到题目满分之间");
+        }
+        if (!commentRepository.existsByAnswerIdAndUserId(answer.getId(), currentUser.getId())) {
+            throw new BadRequest("确认最终评分前，您需要先对该答案发表个人评论");
+        }
+
+        AssessmentJudgementVO judgement = AssessmentJudgementVO.builder()
+                .answerId(answer.getId())
+                .questionId(question.getId())
+                .assessmentTimeId(question.getAssessmentTimeId())
+                .userId(answer.getUserId())
+                .score(command.score())
+                .maxScore(question.getScore())
+                .status(JudgementStatus.JUDGED)
+                .source(JudgementSource.ADMIN_FINALIZED)
+                .reviewerId(currentUser.getId())
+                .reviewerType(resolveReviewerType(roleType))
+                .comment(command.comment())
+                .judgedAt(LocalDateTime.now())
+                .build();
+        return toResult(assessmentJudgementDomainService.finalizeJudgement(judgement));
+    }
+
+    /**
      * 保存考生在某轮考核中的通过或淘汰决策。
      *
      * @param command
@@ -222,7 +274,16 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
                 .decidedBy(currentUser.getId())
                 .decisionComment(command.decisionComment())
                 .build();
-        return toDecisionResult(assessmentDecisionDomainService.saveDecision(decision));
+        AssessmentDecisionResult result = toDecisionResult(assessmentDecisionDomainService.saveDecision(decision));
+
+        AssessmentTime assessmentTime = assessmentTimeRepository.findById(command.assessmentTimeId())
+                .orElseThrow(() -> new DataNotFound("考核时间不存在，ID: " + command.assessmentTimeId()));
+        if (!assessmentTime.isResultsPublished()) {
+            assessmentTime.publishResults();
+            assessmentTimeRepository.update(assessmentTime);
+        }
+
+        return result;
     }
 
     /**
@@ -340,6 +401,12 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
         accessGuard.requireDecisionScope(assessmentTimeId);
         AssessmentTime assessmentTime = assessmentTimeRepository.findById(assessmentTimeId)
                 .orElseThrow(() -> new DataNotFound("考核时间不存在，ID: " + assessmentTimeId));
+
+        if (!assessmentTime.isResultsPublished()) {
+            assessmentTime.publishResults();
+            assessmentTimeRepository.update(assessmentTime);
+        }
+
         List<AssessmentDecisionVO> decisions = assessmentDecisionRepository
                 .findByAssessmentTimeId(assessmentTimeId)
                 .stream()

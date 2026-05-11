@@ -56,4 +56,19 @@ public class AssessmentJudgementCommands {
             /** 考核时间ID */
             Long assessmentTimeId) {
     }
+
+    /**
+     * 确认最终评分命令。
+     * <p>
+     * 方向管理员基于成员评论确认某题最终评分。
+     * </p>
+     */
+    public record FinalizeScoreCommand(
+            /** 答案ID */
+            Long answerId,
+            /** 最终分数 */
+            BigDecimal score,
+            /** 评语 */
+            String comment) {
+    }
 }

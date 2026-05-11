@@ -87,6 +87,26 @@ public class AssessmentJudgementDomainServiceImpl implements AssessmentJudgement
                 .toList();
     }
 
+    @Override
+    @Transactional
+    public AssessmentJudgementVO finalizeJudgement(AssessmentJudgementVO judgement) {
+        log.info(
+                "finalize judgement for answer {}, question {}",
+                judgement.getAnswerId(),
+                judgement.getQuestionId());
+        AssessmentJudgement entity = convertToEntity(judgement);
+        LocalDateTime now = LocalDateTime.now();
+        entity.setCreatedAt(now);
+        entity.setUpdatedAt(now);
+        if (entity.getJudgedAt() == null) {
+            entity.setJudgedAt(now);
+        }
+        assessmentJudgementRepository.save(entity);
+        return convertToVO(
+                assessmentJudgementRepository.findById(entity.getId())
+                        .orElseThrow(() -> new GlobalException("创建最终评定记录失败")));
+    }
+
     private AssessmentJudgement convertToEntity(AssessmentJudgementVO judgement) {
         AssessmentJudgement entity = AssessmentJudgement.create(
                 judgement.getAnswerId(),

@@ -64,4 +64,13 @@ public interface AssessmentJudgementDomainService {
      * @return 评判记录列表
      */
     List<AssessmentJudgementVO> listByQuestionId(Long questionId);
+
+    /**
+     * 方向管理员确认最终评分。
+     *
+     * @param judgement
+     *            评判记录VO，source 应为 ADMIN_FINALIZED
+     * @return 创建后的评判记录
+     */
+    AssessmentJudgementVO finalizeJudgement(AssessmentJudgementVO judgement);
 }

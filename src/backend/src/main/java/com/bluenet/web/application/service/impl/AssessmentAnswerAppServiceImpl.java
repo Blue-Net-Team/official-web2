@@ -15,6 +15,8 @@ import com.bluenet.web.domain.model.enumerate.JudgementSource;
 import com.bluenet.web.domain.model.enumerate.JudgementStatus;
 import com.bluenet.web.domain.model.enumerate.ObjectiveResultCode;
 import com.bluenet.web.domain.model.enumerate.QuestionType;
+import com.bluenet.web.domain.model.enumerate.RoleType;
+import com.bluenet.web.domain.model.policy.RoleHierarchy;
 import com.bluenet.web.domain.model.vo.AssessmentJudgementVO;
 import com.bluenet.web.domain.model.entity.AssessmentQuestion;
 import com.bluenet.web.domain.model.entity.AssessmentTime;
@@ -27,6 +29,7 @@ import com.bluenet.web.domain.repository.AssessmentSessionRepository;
 import com.bluenet.web.domain.service.AssessmentJudgementDomainService;
 import com.bluenet.web.domain.repository.AssessmentQuestionRepository;
 import com.bluenet.web.domain.repository.AssessmentTimeRepository;
+import com.bluenet.web.domain.service.CommentDomainService;
 import com.bluenet.web.domain.service.FileDomainService;
 import com.bluenet.web.domain.service.UserDomainService;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -67,6 +70,7 @@ public class AssessmentAnswerAppServiceImpl implements AssessmentAnswerAppServic
     private final AssessmentSessionRepository assessmentSessionRepository;
     private final ObjectMapper objectMapper;
     private final UserDomainService userDomainService;
+    private final CommentDomainService commentDomainService;
 
     /**
      * 创建答案。
@@ -125,7 +129,7 @@ public class AssessmentAnswerAppServiceImpl implements AssessmentAnswerAppServic
                 entity.getId());
 
         AssessmentJudgementVO judgement = judgeObjectiveAnswerIfNeeded(entity, question);
-        AssessmentAnswerResult result = toResult(entity, judgement);
+        AssessmentAnswerResult result = toResult(entity, judgement, java.util.Collections.emptyList());
         if (question.getQuestionType().isChoiceQuestion()) {
             return result.withJudgementErased();
         }
@@ -201,7 +205,7 @@ public class AssessmentAnswerAppServiceImpl implements AssessmentAnswerAppServic
         log.info("update answer success for answer {}", updated.getId());
 
         AssessmentJudgementVO judgement = judgeObjectiveAnswerIfNeeded(updated, question);
-        AssessmentAnswerResult result = toResult(updated, judgement);
+        AssessmentAnswerResult result = toResult(updated, judgement, java.util.Collections.emptyList());
         if (question.getQuestionType().isChoiceQuestion()) {
             return result.withJudgementErased();
         }
@@ -235,7 +239,10 @@ public class AssessmentAnswerAppServiceImpl implements AssessmentAnswerAppServic
         }
         AssessmentAnswer answer = answerOpt.get();
         AssessmentJudgementVO judgement = findLatestJudgement(answer);
-        AssessmentAnswerResult result = toResult(answer, judgement);
+        List<com.bluenet.web.domain.model.vo.CommentVO> comments = commentDomainService
+                .listCommentsByAnswerId(answer.getId());
+        List<com.bluenet.web.domain.model.vo.CommentVO> memberComments = filterMemberCommentsOnly(comments);
+        AssessmentAnswerResult result = toResult(answer, judgement, memberComments);
 
         AssessmentQuestion question = assessmentQuestionRepository.findById(questionId)
                 .orElse(null);
@@ -243,6 +250,30 @@ public class AssessmentAnswerAppServiceImpl implements AssessmentAnswerAppServic
             return result.withJudgementErased();
         }
         return result;
+    }
+
+    /**
+     * 过滤掉方向管理员及以上角色的评论，考生端仅展示普通成员的参考评语，并填充用户名。
+     */
+    private List<com.bluenet.web.domain.model.vo.CommentVO> filterMemberCommentsOnly(
+            List<com.bluenet.web.domain.model.vo.CommentVO> comments) {
+        if (comments == null || comments.isEmpty()) {
+            return java.util.Collections.emptyList();
+        }
+        return comments.stream()
+                .filter(c -> {
+                    Optional<UserVO> userOpt = userDomainService.getUser(c.getUserId());
+                    if (userOpt.isEmpty()) {
+                        return false;
+                    }
+                    RoleType role = RoleType.fromName(userOpt.get().getRoleName());
+                    return !RoleHierarchy.isDirectionAdminOrAbove(role);
+                })
+                .peek(c -> {
+                    Optional<UserVO> userOpt = userDomainService.getUser(c.getUserId());
+                    userOpt.ifPresent(u -> c.setUsername(u.getUsername()));
+                })
+                .toList();
     }
 
     private AssessmentTime validateDirectionMatch(UserVO user, AssessmentQuestion question) {
@@ -361,7 +392,8 @@ public class AssessmentAnswerAppServiceImpl implements AssessmentAnswerAppServic
         return answer == null ? "" : answer.trim();
     }
 
-    private AssessmentAnswerResult toResult(AssessmentAnswer answer, AssessmentJudgementVO judgement) {
+    private AssessmentAnswerResult toResult(AssessmentAnswer answer, AssessmentJudgementVO judgement,
+            List<com.bluenet.web.domain.model.vo.CommentVO> comments) {
         return new AssessmentAnswerResult(
                 answer.getId(),
                 answer.getQuestionId(),
@@ -369,7 +401,8 @@ public class AssessmentAnswerAppServiceImpl implements AssessmentAnswerAppServic
                 answer.getContent(),
                 answer.getLanguage(),
                 answer.getSubmitTime(),
-                toJudgementResult(judgement));
+                toJudgementResult(judgement),
+                comments);
     }
 
     private AssessmentJudgementResult toJudgementResult(AssessmentJudgementVO judgement) {

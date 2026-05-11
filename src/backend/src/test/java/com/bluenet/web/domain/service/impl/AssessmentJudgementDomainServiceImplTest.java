@@ -138,6 +138,31 @@ class AssessmentJudgementDomainServiceImplTest {
         assertEquals(JUDGEMENT_ID, result.get(0).getId());
     }
 
+    @Test
+    @DisplayName("确认最终评分：应保存ADMIN_FINALIZED记录并返回")
+    void finalizeJudgement_valid_shouldSaveAndReturnCreatedRecord() {
+        AssessmentJudgementVO request = createJudgementVO(null, ObjectiveResultCode.AC);
+        request.setSource(JudgementSource.ADMIN_FINALIZED);
+        AssessmentJudgement savedEntity = createJudgementEntity(JUDGEMENT_ID, ObjectiveResultCode.AC);
+        savedEntity.setSource(JudgementSource.ADMIN_FINALIZED);
+        doAnswer(invocation -> {
+            AssessmentJudgement entity = invocation.getArgument(0);
+            entity.setId(JUDGEMENT_ID);
+            return null;
+        }).when(assessmentJudgementRepository).save(any(AssessmentJudgement.class));
+        when(assessmentJudgementRepository.findById(JUDGEMENT_ID)).thenReturn(Optional.of(savedEntity));
+
+        AssessmentJudgementVO result = assessmentJudgementDomainService.finalizeJudgement(request);
+
+        assertEquals(JUDGEMENT_ID, result.getId());
+        assertEquals(JudgementSource.ADMIN_FINALIZED, result.getSource());
+        ArgumentCaptor<AssessmentJudgement> captor = ArgumentCaptor.forClass(AssessmentJudgement.class);
+        verify(assessmentJudgementRepository).save(captor.capture());
+        assertNotNull(captor.getValue().getJudgedAt());
+        assertNotNull(captor.getValue().getCreatedAt());
+        assertNotNull(captor.getValue().getUpdatedAt());
+    }
+
     private AssessmentJudgementVO createJudgementVO(Long id, ObjectiveResultCode resultCode) {
         return AssessmentJudgementVO.builder()
                 .id(id)

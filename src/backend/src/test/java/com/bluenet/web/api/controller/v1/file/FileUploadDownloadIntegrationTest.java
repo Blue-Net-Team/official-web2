@@ -200,7 +200,7 @@ class FileUploadDownloadIntegrationTest extends BaseIntegrationTest {
         RepositoryTestObjects.insert(userMapper, user, UserDO.class);
 
         AssessmentTime time = AssessmentTime
-                .reconstruct(100L, Direction.COMPUTER_VISION, null, null, null, null, false, null);
+                .reconstruct(100L, Direction.COMPUTER_VISION, null, null, null, null, false, null, null);
         RepositoryTestObjects.insert(assessmentTimeMapper, time, AssessmentTimeDO.class);
 
         AssessmentQuestion question = AssessmentQuestion.reconstruct(100L, 100L, 1, null, null, null, null, null);
@@ -247,7 +247,7 @@ class FileUploadDownloadIntegrationTest extends BaseIntegrationTest {
         RepositoryTestObjects.insert(userMapper, submitter, UserDO.class);
 
         AssessmentTime time = AssessmentTime
-                .reconstruct(101L, Direction.COMPUTER_VISION, null, null, null, null, false, null);
+                .reconstruct(101L, Direction.COMPUTER_VISION, null, null, null, null, false, null, null);
         RepositoryTestObjects.insert(assessmentTimeMapper, time, AssessmentTimeDO.class);
 
         AssessmentQuestion question = AssessmentQuestion.reconstruct(101L, 101L, 1, null, null, null, null, null);
@@ -292,7 +292,7 @@ class FileUploadDownloadIntegrationTest extends BaseIntegrationTest {
         RepositoryTestObjects.insert(userMapper, submitter, UserDO.class);
 
         AssessmentTime time = AssessmentTime
-                .reconstruct(102L, Direction.COMPUTER_VISION, null, null, null, null, false, null);
+                .reconstruct(102L, Direction.COMPUTER_VISION, null, null, null, null, false, null, null);
         RepositoryTestObjects.insert(assessmentTimeMapper, time, AssessmentTimeDO.class);
 
         AssessmentQuestion question = AssessmentQuestion.reconstruct(102L, 102L, 1, null, null, null, null, null);
@@ -339,7 +339,7 @@ class FileUploadDownloadIntegrationTest extends BaseIntegrationTest {
         RepositoryTestObjects.insert(userMapper, user, UserDO.class);
 
         AssessmentTime time = AssessmentTime
-                .reconstruct(103L, Direction.COMPUTER_VISION, null, null, null, null, false, null);
+                .reconstruct(103L, Direction.COMPUTER_VISION, null, null, null, null, false, null, null);
         RepositoryTestObjects.insert(assessmentTimeMapper, time, AssessmentTimeDO.class);
 
         AssessmentQuestion question = AssessmentQuestion.reconstruct(103L, 103L, 1, null, null, null, null, null);
@@ -383,7 +383,7 @@ class FileUploadDownloadIntegrationTest extends BaseIntegrationTest {
         RepositoryTestObjects.insert(userMapper, user, UserDO.class);
 
         AssessmentTime time = AssessmentTime
-                .reconstruct(104L, Direction.COMPUTER_VISION, null, null, null, null, false, null);
+                .reconstruct(104L, Direction.COMPUTER_VISION, null, null, null, null, false, null, null);
         RepositoryTestObjects.insert(assessmentTimeMapper, time, AssessmentTimeDO.class);
 
         AssessmentQuestion question = AssessmentQuestion.reconstruct(104L, 104L, 1, null, null, null, null, null);
@@ -455,7 +455,7 @@ class FileUploadDownloadIntegrationTest extends BaseIntegrationTest {
         RepositoryTestObjects.insert(userMapper, user, UserDO.class);
 
         AssessmentTime time = AssessmentTime
-                .reconstruct(105L, Direction.COMPUTER_VISION, null, null, null, null, false, null);
+                .reconstruct(105L, Direction.COMPUTER_VISION, null, null, null, null, false, null, null);
         RepositoryTestObjects.insert(assessmentTimeMapper, time, AssessmentTimeDO.class);
 
         AssessmentQuestion question = AssessmentQuestion.reconstruct(105L, 105L, 1, null, null, null, null, null);

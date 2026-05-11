@@ -8,6 +8,7 @@ import type {
   AssessmentJudgementDTO,
   AssessmentQuestionScoreboardDTO,
   AssessmentQuestionSubmissionDTO,
+  FinalizeScoreRequestDTO,
   ManualReviewRequestDTO,
   QuestionType,
 } from '@/apis/schema/assessment.dto'
@@ -94,6 +95,17 @@ export const adminAssessmentJudgementService = {
     const response = await apiClient.get<ResponseMessage<AssessmentDecisionWorkspaceDTO>>(
       '/admin/assessment-judgements/decisions',
       { params }
+    )
+    return response.data
+  },
+
+  /** 方向管理员确认最终评分。 */
+  async finalizeScore(
+    request: FinalizeScoreRequestDTO
+  ): Promise<ResponseMessage<AssessmentJudgementDTO>> {
+    const response = await apiClient.post<ResponseMessage<AssessmentJudgementDTO>>(
+      '/admin/assessment-judgements/finalize',
+      request
     )
     return response.data
   },

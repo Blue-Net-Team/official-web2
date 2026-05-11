@@ -56,4 +56,9 @@ public class AssessmentTimeDO {
      * 考核作答时长限制，单位分钟。
      */
     private Integer timeLimitMinutes;
+
+    /**
+     * 考核结果发布时间，设置后考生可见评论和最终评分。
+     */
+    private LocalDateTime resultsPublishedAt;
 }

@@ -65,7 +65,8 @@ class AssessmentTimeAppServiceImplTest {
                 futureStart,
                 futureEnd,
                 true,
-                120);
+                120,
+                null);
     }
 
     // ==================== createAssessmentTime 测试 ====================
@@ -173,6 +174,7 @@ class AssessmentTimeAppServiceImplTest {
                     LocalDateTime.of(2020, 1, 1, 9, 0),
                     futureEnd,
                     false,
+                    null,
                     null);
 
             AssessmentTimeCommands.UpdateAssessmentTimeCommand command = new AssessmentTimeCommands.UpdateAssessmentTimeCommand(
@@ -320,6 +322,7 @@ class AssessmentTimeAppServiceImplTest {
                         futureStart,
                         futureEnd,
                         false,
+                        null,
                         null);
                 when(assessmentTimeRepository.findById(TEST_ID)).thenReturn(Optional.of(existing));
 
@@ -373,6 +376,7 @@ class AssessmentTimeAppServiceImplTest {
                         futureStart,
                         futureEnd,
                         false,
+                        null,
                         null);
                 when(assessmentTimeRepository.findById(TEST_ID)).thenReturn(Optional.of(existing));
 

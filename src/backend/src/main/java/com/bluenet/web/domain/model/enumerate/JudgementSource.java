@@ -8,7 +8,8 @@ import lombok.Getter;
 @Getter
 public enum JudgementSource implements ValueEnum {
     AUTO("AUTO", "自动评判"),
-    MANUAL("MANUAL", "人工评判");
+    MANUAL("MANUAL", "人工评判"),
+    ADMIN_FINALIZED("ADMIN_FINALIZED", "管理员最终评定");
 
     private final String value;
     private final String description;

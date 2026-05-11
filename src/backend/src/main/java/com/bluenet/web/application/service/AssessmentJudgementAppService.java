@@ -116,4 +116,13 @@ public interface AssessmentJudgementAppService {
      * @return 成功发送的邮件数量
      */
     int publishDecisions(Long assessmentTimeId);
+
+    /**
+     * 方向管理员确认文件上传题的最终评分。
+     *
+     * @param command
+     *            最终评分命令
+     * @return 评判结果
+     */
+    AssessmentJudgementResult finalizeScore(AssessmentJudgementCommands.FinalizeScoreCommand command);
 }

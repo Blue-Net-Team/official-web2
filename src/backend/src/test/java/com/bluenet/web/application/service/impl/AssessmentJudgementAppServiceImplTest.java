@@ -25,6 +25,7 @@ import com.bluenet.web.domain.model.vo.UserVO;
 import com.bluenet.web.domain.repository.AssessmentDecisionRepository;
 import com.bluenet.web.domain.repository.AssessmentJudgementRepository;
 import com.bluenet.web.domain.repository.AssessmentAnswerRepository;
+import com.bluenet.web.domain.repository.CommentRepository;
 import com.bluenet.web.domain.service.AssessmentDecisionDomainService;
 import com.bluenet.web.domain.service.AssessmentJudgementDomainService;
 import com.bluenet.web.domain.repository.AssessmentQuestionRepository;
@@ -93,6 +94,9 @@ class AssessmentJudgementAppServiceImplTest {
 
     @Mock
     private com.bluenet.web.application.message.MessageTemplateRegistry messageTemplateRegistry;
+
+    @Mock
+    private CommentRepository commentRepository;
 
     @InjectMocks
     private AssessmentJudgementAppServiceImpl assessmentJudgementAppService;
@@ -241,6 +245,7 @@ class AssessmentJudgementAppServiceImplTest {
             mockedUserCTX.when(UserCTX::getCurrentUser).thenReturn(createUser(RoleType.DIRECTION_ADMIN));
             when(assessmentDecisionDomainService.saveDecision(any(AssessmentDecisionVO.class)))
                     .thenReturn(createDecisionVO(true));
+            when(assessmentTimeRepository.findById(ASSESSMENT_TIME_ID)).thenReturn(Optional.of(createTime()));
 
             AssessmentDecisionResult result = assessmentJudgementAppService.decideAssessment(
                     new AssessmentJudgementCommands.DecideAssessmentCommand(
@@ -557,6 +562,114 @@ class AssessmentJudgementAppServiceImplTest {
         }
     }
 
+    // ========== 确认最终评分测试 ==========
+
+    /**
+     * 验证方向管理员可以对文件上传题确认最终评分。
+     */
+    @Test
+    @DisplayName("确认最终评分：方向管理员对文件上传题应创建ADMIN_FINALIZED评判")
+    void finalizeScore_directionAdminFileUploadWithComment_shouldCreateAdminFinalized() {
+        try (MockedStatic<UserCTX> mockedUserCTX = mockStatic(UserCTX.class)) {
+            mockedUserCTX.when(UserCTX::getCurrentUser).thenReturn(createUser(RoleType.DIRECTION_ADMIN));
+            when(assessmentAnswerRepository.findById(ANSWER_ID)).thenReturn(Optional.of(createAnswerEntity()));
+            when(assessmentQuestionRepository.findById(QUESTION_ID))
+                    .thenReturn(Optional.of(createQuestion(QuestionType.FILE_UPLOAD)));
+            when(commentRepository.existsByAnswerIdAndUserId(ANSWER_ID, REVIEWER_ID)).thenReturn(true);
+            when(assessmentJudgementDomainService.finalizeJudgement(any(AssessmentJudgementVO.class)))
+                    .thenReturn(createJudgementVO(JudgementSource.ADMIN_FINALIZED, ReviewerType.DIRECTION_ADMIN));
+
+            AssessmentJudgementResult result = assessmentJudgementAppService.finalizeScore(
+                    new AssessmentJudgementCommands.FinalizeScoreCommand(ANSWER_ID, BigDecimal.valueOf(8), "最终评语"));
+
+            assertEquals(JudgementSource.ADMIN_FINALIZED, result.source());
+            ArgumentCaptor<AssessmentJudgementVO> captor = ArgumentCaptor.forClass(AssessmentJudgementVO.class);
+            verify(assessmentJudgementDomainService).finalizeJudgement(captor.capture());
+            assertEquals(JudgementSource.ADMIN_FINALIZED, captor.getValue().getSource());
+            assertEquals(REVIEWER_ID, captor.getValue().getReviewerId());
+        }
+    }
+
+    /**
+     * 验证普通成员不能确认最终评分。
+     */
+    @Test
+    @DisplayName("确认最终评分：普通成员应被拒绝")
+    void finalizeScore_member_shouldThrowForbidden() {
+        try (MockedStatic<UserCTX> mockedUserCTX = mockStatic(UserCTX.class)) {
+            mockedUserCTX.when(UserCTX::getCurrentUser).thenReturn(createUser(RoleType.MEMBER));
+
+            assertThrows(
+                    Forbidden.class,
+                    () -> assessmentJudgementAppService.finalizeScore(
+                            new AssessmentJudgementCommands.FinalizeScoreCommand(ANSWER_ID, BigDecimal.ONE, null)));
+            verifyNoInteractions(assessmentJudgementDomainService);
+        }
+    }
+
+    /**
+     * 验证非文件上传题不能确认最终评分。
+     */
+    @Test
+    @DisplayName("确认最终评分：单选题应被拒绝")
+    void finalizeScore_singleChoice_shouldThrowBadRequest() {
+        try (MockedStatic<UserCTX> mockedUserCTX = mockStatic(UserCTX.class)) {
+            mockedUserCTX.when(UserCTX::getCurrentUser).thenReturn(createUser(RoleType.DIRECTION_ADMIN));
+            when(assessmentAnswerRepository.findById(ANSWER_ID)).thenReturn(Optional.of(createAnswerEntity()));
+            when(assessmentQuestionRepository.findById(QUESTION_ID))
+                    .thenReturn(Optional.of(createQuestion(QuestionType.SINGLE_CHOICE)));
+
+            assertThrows(
+                    BadRequest.class,
+                    () -> assessmentJudgementAppService.finalizeScore(
+                            new AssessmentJudgementCommands.FinalizeScoreCommand(ANSWER_ID, BigDecimal.ONE, null)));
+            verify(assessmentJudgementDomainService, never()).finalizeJudgement(any());
+        }
+    }
+
+    /**
+     * 验证最终评分超出满分应被拒绝。
+     */
+    @Test
+    @DisplayName("确认最终评分：超出满分应被拒绝")
+    void finalizeScore_aboveMax_shouldThrowBadRequest() {
+        try (MockedStatic<UserCTX> mockedUserCTX = mockStatic(UserCTX.class)) {
+            mockedUserCTX.when(UserCTX::getCurrentUser).thenReturn(createUser(RoleType.DIRECTION_ADMIN));
+            when(assessmentAnswerRepository.findById(ANSWER_ID)).thenReturn(Optional.of(createAnswerEntity()));
+            when(assessmentQuestionRepository.findById(QUESTION_ID))
+                    .thenReturn(Optional.of(createQuestion(QuestionType.FILE_UPLOAD)));
+
+            assertThrows(
+                    BadRequest.class,
+                    () -> assessmentJudgementAppService.finalizeScore(
+                            new AssessmentJudgementCommands.FinalizeScoreCommand(ANSWER_ID, BigDecimal.valueOf(11),
+                                    null)));
+            verify(assessmentJudgementDomainService, never()).finalizeJudgement(any());
+        }
+    }
+
+    /**
+     * 验证未发表评论就确认最终评分应被拒绝。
+     */
+    @Test
+    @DisplayName("确认最终评分：未发表评论应被拒绝")
+    void finalizeScore_noComment_shouldThrowBadRequest() {
+        try (MockedStatic<UserCTX> mockedUserCTX = mockStatic(UserCTX.class)) {
+            mockedUserCTX.when(UserCTX::getCurrentUser).thenReturn(createUser(RoleType.DIRECTION_ADMIN));
+            when(assessmentAnswerRepository.findById(ANSWER_ID)).thenReturn(Optional.of(createAnswerEntity()));
+            when(assessmentQuestionRepository.findById(QUESTION_ID))
+                    .thenReturn(Optional.of(createQuestion(QuestionType.FILE_UPLOAD)));
+            when(commentRepository.existsByAnswerIdAndUserId(ANSWER_ID, REVIEWER_ID)).thenReturn(false);
+
+            assertThrows(
+                    BadRequest.class,
+                    () -> assessmentJudgementAppService.finalizeScore(
+                            new AssessmentJudgementCommands.FinalizeScoreCommand(ANSWER_ID, BigDecimal.valueOf(8),
+                                    null)));
+            verify(assessmentJudgementDomainService, never()).finalizeJudgement(any());
+        }
+    }
+
     // ========== 测试数据构造 ==========
 
     private UserVO createUser(RoleType roleType) {
@@ -640,6 +753,7 @@ class AssessmentJudgementAppServiceImplTest {
                 null,
                 null,
                 false,
+                null,
                 null);
     }
 

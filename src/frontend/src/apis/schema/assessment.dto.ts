@@ -399,6 +399,8 @@ export interface AssessmentAnswerDTO {
   submitTime: string | null
   /** 自动或人工评判结果 */
   judgement: AssessmentJudgementDTO | null
+  /** 成员评论列表 */
+  comments: CommentDTO[]
 }
 
 /** 创建答案请求 - 对应后端 CreateAnswerRequestDTO */
@@ -705,6 +707,31 @@ export interface QuestionStatisticsDTO {
   passRate: number
   /** 结果码分布 */
   resultDistribution: Partial<Record<ObjectiveResultCode, number>>
+}
+
+/** 考核评论 */
+export interface CommentDTO {
+  id: number
+  answerId: number
+  userId: number
+  username: string | null
+  content: string | null
+  score: number | null
+  commentTime: string | null
+}
+
+/** 考核评论请求 */
+export interface CommentRequestDTO {
+  answerId: number
+  content?: string | null
+  score?: number | null
+}
+
+/** 确认最终评分请求 */
+export interface FinalizeScoreRequestDTO {
+  answerId: number
+  score: number
+  comment?: string | null
 }
 
 /** 考核会话 - 对应后端 AssessmentSessionVO */

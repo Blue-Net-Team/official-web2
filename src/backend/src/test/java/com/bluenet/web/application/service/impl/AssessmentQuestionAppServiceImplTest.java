@@ -80,7 +80,8 @@ class AssessmentQuestionAppServiceImplTest {
                 null,
                 null,
                 true,
-                120);
+                120,
+                null);
     }
 
     @Test

@@ -64,4 +64,9 @@ public class AssessmentTimeVO {
      * 已完成题目数
      */
     private Integer completedQuestions;
+
+    /**
+     * 考核结果发布时间
+     */
+    private LocalDateTime resultsPublishedAt;
 }

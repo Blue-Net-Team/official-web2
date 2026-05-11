@@ -48,10 +48,14 @@ public class AssessmentTime {
      * 考核作答时长限制，单位分钟。
      */
     private Integer timeLimitMinutes;
+    /**
+     * 考核结果发布时间，设置后考生可见评论和最终评分。
+     */
+    private LocalDateTime resultsPublishedAt;
 
     private AssessmentTime(Long id, Direction direction, Integer epoch, Integer grade,
             LocalDateTime startTime, LocalDateTime endTime,
-            Boolean timeLimit, Integer timeLimitMinutes) {
+            Boolean timeLimit, Integer timeLimitMinutes, LocalDateTime resultsPublishedAt) {
         this.id = id;
         this.direction = direction;
         this.epoch = epoch;
@@ -60,6 +64,7 @@ public class AssessmentTime {
         this.endTime = endTime;
         this.timeLimit = timeLimit;
         this.timeLimitMinutes = timeLimitMinutes;
+        this.resultsPublishedAt = resultsPublishedAt;
     }
 
     /**
@@ -74,7 +79,7 @@ public class AssessmentTime {
         if (Boolean.TRUE.equals(timeLimit) && (timeLimitMinutes == null || timeLimitMinutes <= 0)) {
             throw new IllegalArgumentException("限时考核必须设置有效的限时分钟数");
         }
-        return new AssessmentTime(null, direction, epoch, grade, startTime, endTime, timeLimit, timeLimitMinutes);
+        return new AssessmentTime(null, direction, epoch, grade, startTime, endTime, timeLimit, timeLimitMinutes, null);
     }
 
     /**
@@ -82,8 +87,9 @@ public class AssessmentTime {
      */
     public static AssessmentTime reconstruct(Long id, Direction direction, Integer epoch, Integer grade,
             LocalDateTime startTime, LocalDateTime endTime,
-            Boolean timeLimit, Integer timeLimitMinutes) {
-        return new AssessmentTime(id, direction, epoch, grade, startTime, endTime, timeLimit, timeLimitMinutes);
+            Boolean timeLimit, Integer timeLimitMinutes, LocalDateTime resultsPublishedAt) {
+        return new AssessmentTime(id, direction, epoch, grade, startTime, endTime, timeLimit, timeLimitMinutes,
+                resultsPublishedAt);
     }
 
     /**
@@ -113,6 +119,20 @@ public class AssessmentTime {
         if (timeLimitMinutes != null) {
             this.timeLimitMinutes = timeLimitMinutes;
         }
+    }
+
+    /**
+     * 发布考核结果
+     */
+    public void publishResults() {
+        this.resultsPublishedAt = LocalDateTime.now();
+    }
+
+    /**
+     * 考核结果是否已发布
+     */
+    public boolean isResultsPublished() {
+        return this.resultsPublishedAt != null;
     }
 
     /**

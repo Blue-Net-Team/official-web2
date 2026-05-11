@@ -19,6 +19,7 @@ import com.bluenet.web.domain.repository.AssessmentSessionRepository;
 import com.bluenet.web.domain.service.AssessmentJudgementDomainService;
 import com.bluenet.web.domain.repository.AssessmentQuestionRepository;
 import com.bluenet.web.domain.repository.AssessmentTimeRepository;
+import com.bluenet.web.domain.service.CommentDomainService;
 import com.bluenet.web.domain.service.FileDomainService;
 import com.bluenet.web.domain.service.UserDomainService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -60,6 +61,8 @@ class AssessmentAnswerAppServiceImplTest {
     private ObjectMapper objectMapper = new ObjectMapper();
     @Mock
     private UserDomainService userDomainService;
+    @Mock
+    private CommentDomainService commentDomainService;
     @InjectMocks
     private AssessmentAnswerAppServiceImpl assessmentAnswerAppService;
 
@@ -162,12 +165,21 @@ class AssessmentAnswerAppServiceImplTest {
 
     private AssessmentTime createTestTime() {
         return AssessmentTime
-                .reconstruct(TEST_ASSESSMENT_TIME_ID, Direction.COMPUTER_VISION, 1, 2024, null, null, true, 90);
+                .reconstruct(TEST_ASSESSMENT_TIME_ID, Direction.COMPUTER_VISION, 1, 2024, null, null, true, 90, null);
     }
 
     private AssessmentTime createNonTimedTime() {
         return AssessmentTime
-                .reconstruct(TEST_ASSESSMENT_TIME_ID, Direction.COMPUTER_VISION, 1, 2024, null, null, false, null);
+                .reconstruct(
+                        TEST_ASSESSMENT_TIME_ID,
+                        Direction.COMPUTER_VISION,
+                        1,
+                        2024,
+                        null,
+                        null,
+                        false,
+                        null,
+                        null);
     }
 
     private void stubDirectionAndFileValidation() {
@@ -518,6 +530,8 @@ class AssessmentAnswerAppServiceImplTest {
             AssessmentAnswer answer = createTestAnswer();
             when(assessmentAnswerRepository.findByUserIdAndQuestionId(TEST_USER_ID, TEST_QUESTION_ID))
                     .thenReturn(Optional.of(answer));
+            when(commentDomainService.listCommentsByAnswerId(TEST_ANSWER_ID))
+                    .thenReturn(java.util.Collections.emptyList());
             AssessmentAnswerResult result = assessmentAnswerAppService.getMyAnswer(TEST_USER_ID, TEST_QUESTION_ID);
             assertNotNull(result);
             assertEquals(TEST_ANSWER_ID, result.id());
@@ -539,6 +553,8 @@ class AssessmentAnswerAppServiceImplTest {
                     .thenReturn(Optional.of(question));
             when(assessmentJudgementDomainService.getLatestByAnswerId(TEST_ANSWER_ID))
                     .thenReturn(createJudgementVO(ObjectiveResultCode.AC));
+            when(commentDomainService.listCommentsByAnswerId(TEST_ANSWER_ID))
+                    .thenReturn(java.util.Collections.emptyList());
             AssessmentAnswerResult result = assessmentAnswerAppService.getMyAnswer(TEST_USER_ID, TEST_QUESTION_ID);
             assertNotNull(result);
             assertNotNull(result.judgement());
@@ -556,6 +572,8 @@ class AssessmentAnswerAppServiceImplTest {
                     .thenReturn(Optional.of(question));
             when(assessmentJudgementDomainService.getLatestByAnswerId(TEST_ANSWER_ID))
                     .thenReturn(createJudgementVO(ObjectiveResultCode.AC));
+            when(commentDomainService.listCommentsByAnswerId(TEST_ANSWER_ID))
+                    .thenReturn(java.util.Collections.emptyList());
             AssessmentAnswerResult result = assessmentAnswerAppService.getMyAnswer(TEST_USER_ID, TEST_QUESTION_ID);
             assertNotNull(result);
             assertNull(result.judgement());

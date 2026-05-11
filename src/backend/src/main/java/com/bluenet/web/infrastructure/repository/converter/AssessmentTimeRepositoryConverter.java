@@ -31,6 +31,7 @@ public class AssessmentTimeRepositoryConverter {
                 .endTime(entity.getEndTime())
                 .timeLimit(entity.getTimeLimit())
                 .timeLimitMinutes(entity.getTimeLimitMinutes())
+                .resultsPublishedAt(entity.getResultsPublishedAt())
                 .build();
     }
 
@@ -49,7 +50,8 @@ public class AssessmentTimeRepositoryConverter {
                 dataObject.getStartTime(),
                 dataObject.getEndTime(),
                 dataObject.getTimeLimit(),
-                dataObject.getTimeLimitMinutes());
+                dataObject.getTimeLimitMinutes(),
+                dataObject.getResultsPublishedAt());
     }
 
     /**

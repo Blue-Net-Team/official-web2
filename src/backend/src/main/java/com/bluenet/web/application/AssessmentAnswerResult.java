@@ -1,8 +1,10 @@
 package com.bluenet.web.application;
 
 import com.bluenet.web.domain.model.enumerate.ProgrammingLanguage;
+import com.bluenet.web.domain.model.vo.CommentVO;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * 评测答案聚合的应用层结果对象。
@@ -24,7 +26,9 @@ public record AssessmentAnswerResult(
         /** 提交时间 */
         LocalDateTime submitTime,
         /** 评测结果 */
-        AssessmentJudgementResult judgement) {
+        AssessmentJudgementResult judgement,
+        /** 成员评论列表 */
+        List<CommentVO> comments) {
 
     /**
      * 通过已有的对象创建一个新实例，将评测结果设为 null。
@@ -33,6 +37,6 @@ public record AssessmentAnswerResult(
      */
     public AssessmentAnswerResult withJudgementErased() {
         return new AssessmentAnswerResult(
-                id, questionId, fileId, content, language, submitTime, null);
+                id, questionId, fileId, content, language, submitTime, null, comments);
     }
 }

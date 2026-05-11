@@ -34,11 +34,13 @@ import type {
   AssessmentQuestionScoreboardDTO,
   AssessmentQuestionSubmissionDTO,
   AssessmentTimeDTO,
+  CommentDTO,
   QuestionType,
 } from '@/apis/schema/assessment.dto'
 import { Direction, DIRECTION_LABELS } from '@/apis/schema/enumerate'
 import { adminAssessmentJudgementService } from '@/apis/services/admin-assessment-judgement.service'
 import { adminAssessmentTimeService } from '@/apis/services/admin-assessment-time.service'
+import { adminCommentService } from '@/apis/services/admin-comment.service'
 import { fileService } from '@/apis/services/file.service'
 import { useAuth } from '@/hooks'
 import { getRoleLevel } from '@/utils/RoleUtils'
@@ -124,6 +126,15 @@ export default function AssessmentJudgementManagementPage() {
   const [loadingCandidateQuestionIds, setLoadingCandidateQuestionIds] = useState<number[]>([])
   const [savingReview, setSavingReview] = useState(false)
   const [savingDecisionUserId, setSavingDecisionUserId] = useState<number | null>(null)
+
+  // 评论相关状态
+  const [comments, setComments] = useState<CommentDTO[]>([])
+  const [loadingComments, setLoadingComments] = useState(false)
+  const [commentForm] = Form.useForm<{ content: string; score?: number }>()
+  const [editCommentForm] = Form.useForm<{ content: string; score?: number }>()
+  const [editingCommentId, setEditingCommentId] = useState<number | null>(null)
+  const [savingComment, setSavingComment] = useState(false)
+  const [savingFinalize, setSavingFinalize] = useState(false)
 
   const directionOptions = useMemo(() => {
     const entries = Object.entries(DIRECTION_LABELS) as [Direction, string][]
@@ -317,7 +328,96 @@ export default function AssessmentJudgementManagementPage() {
       score: Number(reviewing.latestJudgement?.score ?? 0),
       comment: reviewing.latestJudgement?.comment ?? undefined,
     })
+    fetchComments(reviewing.answerId)
   }, [reviewing, form])
+
+  /** 加载评论列表 */
+  const fetchComments = async (answerId: number) => {
+    setLoadingComments(true)
+    try {
+      const response = await adminCommentService.listComments(answerId)
+      setComments(response.data ?? [])
+    } catch {
+      messageApi.error('加载评论失败')
+    } finally {
+      setLoadingComments(false)
+    }
+  }
+
+  /** 提交评论 */
+  const handleSubmitComment = async () => {
+    if (!reviewing) return
+    const values = await commentForm.validateFields()
+    setSavingComment(true)
+    try {
+      await adminCommentService.addComment({
+        answerId: reviewing.answerId,
+        content: values.content || undefined,
+        score: values.score ?? undefined,
+      })
+      messageApi.success('评论已提交')
+      commentForm.resetFields()
+      await fetchComments(reviewing.answerId)
+    } catch {
+      messageApi.error('提交评论失败')
+    } finally {
+      setSavingComment(false)
+    }
+  }
+
+  /** 更新评论 */
+  const handleUpdateComment = async (commentId: number) => {
+    const values = await editCommentForm.validateFields()
+    setSavingComment(true)
+    try {
+      await adminCommentService.updateComment(commentId, {
+        answerId: reviewing!.answerId,
+        content: values.content || undefined,
+        score: values.score ?? undefined,
+      })
+      messageApi.success('评论已更新')
+      setEditingCommentId(null)
+      await fetchComments(reviewing!.answerId)
+    } catch {
+      messageApi.error('更新评论失败')
+    } finally {
+      setSavingComment(false)
+    }
+  }
+
+  /** 删除评论 */
+  const handleDeleteComment = async (commentId: number) => {
+    try {
+      await adminCommentService.deleteComment(commentId)
+      messageApi.success('评论已删除')
+      if (reviewing) {
+        await fetchComments(reviewing.answerId)
+      }
+    } catch {
+      messageApi.error('删除评论失败')
+    }
+  }
+
+  /** 确认最终评分 */
+  const handleFinalizeScore = async () => {
+    if (!reviewing) return
+    const values = await form.validateFields()
+    setSavingFinalize(true)
+    try {
+      await adminAssessmentJudgementService.finalizeScore({
+        answerId: reviewing.answerId,
+        score: values.score,
+        comment: values.comment || undefined,
+      })
+      messageApi.success('最终评分已确认')
+      setReviewing(null)
+      await refreshAfterScore()
+    } catch {
+      messageApi.error('确认最终评分失败')
+    } finally {
+      setSavingFinalize(false)
+    }
+  }
 
   useEffect(() => {
     setDecisionComment(selectedDecisionCandidate?.decisionComment ?? '')
@@ -1187,6 +1287,125 @@ export default function AssessmentJudgementManagementPage() {
               </Card>
             )}
 
+            {/* 评论列表 */}
+            {isFileUploadReview && (
+              <Card size="small" title="团队评论">
+                <Spin spinning={loadingComments}>
+                  {comments.length === 0 ? (
+                    <Empty description="暂无评论" />
+                  ) : (
+                    <div className="flex flex-col gap-3">
+                      {comments.map((comment) => (
+                        <div
+                          key={comment.id}
+                          className="rounded-lg border border-white/10 bg-black/20 px-3 py-2"
+                        >
+                          {editingCommentId === comment.id ? (
+                            <Form form={editCommentForm} layout="vertical">
+                              <Form.Item name="content" initialValue={comment.content ?? ''}>
+                                <Input.TextArea rows={2} maxLength={500} showCount />
+                              </Form.Item>
+                              <Form.Item name="score" initialValue={comment.score ?? undefined}>
+                                <InputNumber
+                                  min={0}
+                                  max={Number(reviewing.maxScore)}
+                                  precision={1}
+                                  placeholder="参考评分"
+                                  className="w-full"
+                                />
+                              </Form.Item>
+                              <div className="flex gap-2">
+                                <Button
+                                  size="small"
+                                  loading={savingComment}
+                                  onClick={() => handleUpdateComment(comment.id)}
+                                >
+                                  保存
+                                </Button>
+                                <Button size="small" onClick={() => setEditingCommentId(null)}>
+                                  取消
+                                </Button>
+                              </div>
+                            </Form>
+                          ) : (
+                            <>
+                              <div className="flex items-center justify-between">
+                                <span className="text-sm text-white/70">用户 {comment.userId}</span>
+                                <span className="text-xs text-white/40">
+                                  {formatTime(comment.commentTime)}
+                                </span>
+                              </div>
+                              <div className="mt-1 text-white/85">
+                                {comment.content || (
+                                  <span className="text-white/35">无评论内容</span>
+                                )}
+                              </div>
+                              {comment.score != null && (
+                                <div className="mt-1 text-sm text-white/60">
+                                  参考评分：{formatScore(comment.score)}
+                                </div>
+                              )}
+                              {comment.userId === userInfo?.id && (
+                                <div className="mt-2 flex gap-2">
+                                  <Button
+                                    size="small"
+                                    onClick={() => {
+                                      setEditingCommentId(comment.id)
+                                      editCommentForm.setFieldsValue({
+                                        content: comment.content ?? '',
+                                        score: comment.score ?? undefined,
+                                      })
+                                    }}
+                                  >
+                                    编辑
+                                  </Button>
+                                  <Button
+                                    size="small"
+                                    danger
+                                    onClick={() => handleDeleteComment(comment.id)}
+                                  >
+                                    删除
+                                  </Button>
+                                </div>
+                              )}
+                            </>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </Spin>
+              </Card>
+            )}
+
+            {/* 评论表单（未评论时显示） */}
+            {isFileUploadReview && !comments.some((c) => c.userId === userInfo?.id) && (
+              <Card size="small" title="发表评论">
+                <Form form={commentForm} layout="vertical">
+                  <Form.Item name="content" label="评论内容">
+                    <Input.TextArea rows={3} maxLength={500} showCount placeholder="输入评论内容" />
+                  </Form.Item>
+                  <Form.Item name="score" label="参考评分">
+                    <InputNumber
+                      min={0}
+                      max={Number(reviewing.maxScore)}
+                      precision={1}
+                      className="w-full"
+                      placeholder="可选"
+                    />
+                  </Form.Item>
+                  <Button
+                    type="default"
+                    block
+                    loading={savingComment}
+                    onClick={handleSubmitComment}
+                  >
+                    提交评论
+                  </Button>
+                </Form>
+              </Card>
+            )}
+
             {isFileUploadReview ? (
               <Form form={form} layout="vertical">
                 {/* 文件上传题是唯一允许人工改分的题型，客观题保持后端自动评判只读。 */}
@@ -1202,17 +1421,25 @@ export default function AssessmentJudgementManagementPage() {
                     className="w-full"
                   />
                 </Form.Item>
-                <Form.Item name="comment" label="评论">
-                  <Input.TextArea
-                    rows={5}
-                    maxLength={500}
-                    showCount
-                    placeholder="输入给作品的评论"
-                  />
+                <Form.Item name="comment" label="评语">
+                  <Input.TextArea rows={3} maxLength={500} showCount placeholder="输入评语" />
                 </Form.Item>
-                <Button type="primary" block loading={savingReview} onClick={handleSubmitReview}>
-                  提交评分
-                </Button>
+                <div className="flex flex-col gap-2">
+                  <Button type="primary" block loading={savingReview} onClick={handleSubmitReview}>
+                    提交评分
+                  </Button>
+                  {isDecisionMaker && (
+                    <Button
+                      type="primary"
+                      danger
+                      block
+                      loading={savingFinalize}
+                      onClick={handleFinalizeScore}
+                    >
+                      确认最终评分
+                    </Button>
+                  )}
+                </div>
               </Form>
             ) : (
               <Card size="small">
