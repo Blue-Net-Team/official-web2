@@ -10,6 +10,8 @@ import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Repository;
 
 import java.io.InputStream;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -60,5 +62,11 @@ public class MockFileRepository implements FileRepository {
     @Override
     public void updateFileMetadata(File file) {
         log.debug("Mock updating file metadata: {}", file.getId());
+    }
+
+    @Override
+    public List<File> findOrphanFiles() {
+        log.debug("Mock findOrphanFiles called");
+        return Collections.emptyList();
     }
 }

@@ -102,6 +102,7 @@ public class FileDomainServiceImpl implements FileDomainService {
                 .type(fileType)
                 .url(generateFileUrl(fileType))
                 .status(FileStatus.ACTIVE)
+                .createdAt(java.time.LocalDateTime.now())
                 .build();
         File savedFile = fileRepository.saveFile(inputStream, file);
 
@@ -124,6 +125,7 @@ public class FileDomainServiceImpl implements FileDomainService {
                 .type(fileType)
                 .url(generateFileUrl(fileType))
                 .status(FileStatus.PENDING)
+                .createdAt(java.time.LocalDateTime.now())
                 .build();
 
         File savedFile = fileRepository.saveFileMetadata(file);

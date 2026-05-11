@@ -80,6 +80,11 @@ storage:
     accessKeySecret: ${ALIYUN_OSS_SK:}
     publicEndpoint: ${ALIYUN_OSS_PUBLIC_ENDPOINT:}
 
+# 定时任务配置
+job:
+  orphan-file-cleanup:
+    cron: "${ORPHAN_FILE_CLEANUP_CRON:0 0 2 * * *}"
+
 # Judge assets use an isolated bucket and must not be exposed through candidate file APIs.
 judge:
   storage:

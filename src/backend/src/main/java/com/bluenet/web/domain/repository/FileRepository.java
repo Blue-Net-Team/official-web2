@@ -112,4 +112,11 @@ public interface FileRepository {
      *            文件领域对象
      */
     void updateFileMetadata(File file);
+
+    /**
+     * 查询所有孤儿文件。
+     *
+     * @return 孤儿文件领域对象列表。
+     */
+    java.util.List<File> findOrphanFiles();
 }

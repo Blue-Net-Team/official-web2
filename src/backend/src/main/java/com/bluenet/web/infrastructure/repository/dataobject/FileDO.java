@@ -43,4 +43,9 @@ public class FileDO {
      * 文件状态。
      */
     private FileStatus status;
+
+    /**
+     * 文件记录创建时间。
+     */
+    private java.time.LocalDateTime createdAt;
 }

@@ -37,6 +37,11 @@ public class File {
     private FileStatus status;
 
     /**
+     * 文件记录创建时间。
+     */
+    private java.time.LocalDateTime createdAt;
+
+    /**
      * 构造新文件聚合根 —— 带领域校验
      *
      * @param name
@@ -54,7 +59,14 @@ public class File {
         if (type == null) {
             throw new IllegalArgumentException("文件类型不能为空");
         }
-        return new File(null, name.trim(), type, null, FileStatus.PENDING);
+        return File.builder()
+                .id(null)
+                .name(name.trim())
+                .type(type)
+                .url(null)
+                .status(FileStatus.PENDING)
+                .createdAt(java.time.LocalDateTime.now())
+                .build();
     }
 
     /**
@@ -71,10 +83,15 @@ public class File {
      * @return 重建的文件实体
      */
     public static File reconstruct(Long id, String name, FileType type, String url) {
-        return new File(id, name, type, url, FileStatus.ACTIVE);
+        return new File(id, name, type, url, FileStatus.ACTIVE, null);
     }
 
     public static File reconstruct(Long id, String name, FileType type, String url, FileStatus status) {
-        return new File(id, name, type, url, status);
+        return new File(id, name, type, url, status, null);
+    }
+
+    public static File reconstruct(Long id, String name, FileType type, String url, FileStatus status,
+            java.time.LocalDateTime createdAt) {
+        return new File(id, name, type, url, status, createdAt);
     }
 }

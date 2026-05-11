@@ -16,6 +16,9 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.InputStream;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -135,6 +138,13 @@ public class FileRepositoryImpl implements FileRepository {
         FileDO dataObject = converter.toDataObject(file);
         fileMapper.updateById(dataObject);
         log.debug("File metadata updated successfully: id={}, status={}", file.getId(), file.getStatus());
+    }
+
+    @Override
+    public List<File> findOrphanFiles() {
+        LocalDateTime pendingThreshold = LocalDateTime.now().minus(75, ChronoUnit.MINUTES);
+        List<FileDO> orphanFiles = fileMapper.selectOrphanFiles(pendingThreshold);
+        return converter.toEntityList(orphanFiles);
     }
 
     /**

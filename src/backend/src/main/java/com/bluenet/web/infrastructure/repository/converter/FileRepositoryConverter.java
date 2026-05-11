@@ -28,6 +28,7 @@ public class FileRepositoryConverter {
                 .type(entity.getType())
                 .url(entity.getUrl())
                 .status(entity.getStatus())
+                .createdAt(entity.getCreatedAt())
                 .build();
     }
 
@@ -43,7 +44,8 @@ public class FileRepositoryConverter {
                 dataObject.getName(),
                 dataObject.getType(),
                 dataObject.getUrl(),
-                dataObject.getStatus());
+                dataObject.getStatus(),
+                dataObject.getCreatedAt());
     }
 
     /**
