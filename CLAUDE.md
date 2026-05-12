@@ -60,7 +60,7 @@ docker run -d \
 
 ```bash
 cd docker
-docker compose --profile infra up -d
+docker compose -p bluenet --profile infra up -d
 ```
 
 包含：PostgreSQL（15432）、Redis（6739）、RabbitMQ（5672/15672）、MinIO（7000/7001）。
