@@ -52,6 +52,52 @@
 - **WHEN** 上传文件 `my-photo.jpg` type=AVATAR
 - **THEN** 生成的文件名格式为 `avatar-{uuid}.jpg`
 
+### Requirement: 预签名上传准备接口
+系统 SHALL 提供 `POST /api/v1/file/prepare-upload` 接口，生成预签名 PUT URL 和回调 Token。AVATAR 和 NORMAL_IMG 类型允许匿名调用，其他类型需要登录。
+
+#### Scenario: 已登录用户准备上传考核作品
+- **WHEN** 已登录用户 POST `/api/v1/file/prepare-upload` body=`{filename: 'work.zip', type: WORK, size: 10485760, contentType: 'application/zip'}`
+- **THEN** 在 tb_file 创建 PENDING 记录
+- **AND** 生成预签名 PUT URL（默认 15 分钟有效）
+- **AND** 生成 callbackToken
+- **AND** 返回 200 + PrepareUploadResponse `{fileId, uploadUrl, callbackToken, filename, type}`
+
+#### Scenario: 匿名用户准备上传头像
+- **WHEN** 未登录用户 POST `/api/v1/file/prepare-upload` body=`{filename: 'avatar.jpg', type: AVATAR, size: 1024, contentType: 'image/jpeg'}`
+- **THEN** 通过限流检查
+- **AND** 返回 200 + PrepareUploadResponse
+
+#### Scenario: 匿名用户准备上传非 AVATAR/NORMAL_IMG 类型被拒绝
+- **WHEN** 未登录用户 POST `/api/v1/file/prepare-upload` body=`{filename: 'work.zip', type: WORK, ...}`
+- **THEN** 返回 401 Unauthorized
+
+#### Scenario: 匿名用户触发上传限流
+- **WHEN** 同一 IP 在短时间内多次调用 `prepare-upload`
+- **THEN** 返回 429 Too Many Requests
+
+### Requirement: 预签名上传确认接口
+系统 SHALL 提供 `POST /api/v1/file/confirm-upload` 接口，校验文件并激活记录。
+
+#### Scenario: 上传确认成功
+- **WHEN** POST `/api/v1/file/confirm-upload` body=`{fileId: 123, callbackToken: 'xxx', md5: 'abc123', size: 1024}`
+- **THEN** 校验 callbackToken 有效且匹配 fileId
+- **AND** 文件状态为 PENDING
+- **AND** OSS 对象存在
+- **AND** MD5、大小、魔数校验通过
+- **AND** 状态更新为 ACTIVE
+- **AND** 返回 200 + ConfirmUploadResponse `{fileId, filename, type, status: ACTIVE}`
+
+#### Scenario: 上传确认失败（MD5 不匹配）
+- **WHEN** POST `/api/v1/file/confirm-upload` body=`{fileId: 123, callbackToken: 'xxx', md5: 'wrong', size: 1024}`
+- **THEN** 删除 OSS 对象
+- **AND** 状态更新为 REJECTED
+- **AND** 返回 200 + ConfirmUploadResponse `{fileId, filename, type, status: REJECTED}`
+
+#### Scenario: 重复确认已激活的文件（幂等）
+- **WHEN** 文件状态已为 ACTIVE 时再次 POST `/api/v1/file/confirm-upload` 携带有效 Token
+- **THEN** 返回 200 + ConfirmUploadResponse `{fileId, filename, type, status: ACTIVE}`
+- **AND** 不报错、不修改数据库
+
 ### Requirement: FileService 仅提供纯粹文件操作
 `FileService` SHALL 仅提供 `uploadFile(file, type)` 方法进行文件存储，不依赖任何业务领域服务。
 
