@@ -120,7 +120,7 @@ services:
       - "8090:8090"
     environment:
       <<: *shared-env
-      JUDGE_STORAGE_BUCKET: bluenet-judge
+      JUDGE_STORAGE_BUCKET: ${JUDGE_STORAGE_BUCKET:-bluenet-judge}
       JUDGE_SANDBOX_ENGINE: isolate
       JUDGE_WORK_ROOT: /var/lib/bluenet-judge/work
       LANG: C.UTF-8
