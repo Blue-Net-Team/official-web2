@@ -310,9 +310,9 @@ jobs:
         path: judge-service-image.tar.gz
         retention-days: 1
 
-  # ==================== 部署数据库阶段 ====================
+  # ==================== 部署数据库基础设施阶段（PostgreSQL + Redis）====================
 
-  deploy-database:
+  deploy-database-infra:
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     needs: [api-service-test, frontend-test, judge-service-test]
@@ -324,82 +324,18 @@ jobs:
       id: vars
       run: |
         if [ "${{ github.ref }}" = "refs/heads/master" ]; then
-          if [ -n "${{ secrets.DATABASE_DEPLOY_PATH_PROD }}" ]; then
-            echo "deploy_path=${{ secrets.DATABASE_DEPLOY_PATH_PROD }}" >> $GITHUB_OUTPUT
-          else
-            echo "deploy_path=${{ secrets.DEPLOY_PATH_PROD }}" >> $GITHUB_OUTPUT
-          fi
-          if [ -n "${{ secrets.DATABASE_HOST_PROD }}" ]; then
-            echo "deploy_host=${{ secrets.DATABASE_HOST_PROD }}" >> $GITHUB_OUTPUT
-          else
-            echo "deploy_host=${{ secrets.DEPLOY_HOST_PROD }}" >> $GITHUB_OUTPUT
-          fi
-          if [ -n "${{ secrets.DATABASE_DEPLOY_USER_PROD }}" ]; then
-            echo "deploy_user=${{ secrets.DATABASE_DEPLOY_USER_PROD }}" >> $GITHUB_OUTPUT
-          elif [ -n "${{ secrets.DATABASE_DEPLOY_USER }}" ]; then
-            echo "deploy_user=${{ secrets.DATABASE_DEPLOY_USER }}" >> $GITHUB_OUTPUT
-          elif [ -n "${{ secrets.DEPLOY_USER_PROD }}" ]; then
-            echo "deploy_user=${{ secrets.DEPLOY_USER_PROD }}" >> $GITHUB_OUTPUT
-          else
-            echo "deploy_user=${{ secrets.DEPLOY_USER }}" >> $GITHUB_OUTPUT
-          fi
-          if [ -n "${{ secrets.DATABASE_DEPLOY_KEY_PROD }}" ]; then
-            echo "deploy_key=${{ secrets.DATABASE_DEPLOY_KEY_PROD }}" >> $GITHUB_OUTPUT
-          elif [ -n "${{ secrets.DATABASE_DEPLOY_KEY }}" ]; then
-            echo "deploy_key=${{ secrets.DATABASE_DEPLOY_KEY }}" >> $GITHUB_OUTPUT
-          elif [ -n "${{ secrets.DEPLOY_KEY_PROD }}" ]; then
-            echo "deploy_key=${{ secrets.DEPLOY_KEY_PROD }}" >> $GITHUB_OUTPUT
-          else
-            echo "deploy_key=${{ secrets.DEPLOY_KEY }}" >> $GITHUB_OUTPUT
-          fi
-          if [ -n "${{ secrets.DATABASE_DEPLOY_PORT_PROD }}" ]; then
-            echo "deploy_port=${{ secrets.DATABASE_DEPLOY_PORT_PROD }}" >> $GITHUB_OUTPUT
-          elif [ -n "${{ secrets.DATABASE_DEPLOY_PORT }}" ]; then
-            echo "deploy_port=${{ secrets.DATABASE_DEPLOY_PORT }}" >> $GITHUB_OUTPUT
-          elif [ -n "${{ secrets.DEPLOY_PORT_PROD }}" ]; then
-            echo "deploy_port=${{ secrets.DEPLOY_PORT_PROD }}" >> $GITHUB_OUTPUT
-          else
-            echo "deploy_port=${{ secrets.DEPLOY_PORT || 22 }}" >> $GITHUB_OUTPUT
-          fi
+          echo "deploy_path=${{ secrets.DATABASE_DEPLOY_PATH_PROD }}" >> $GITHUB_OUTPUT
+          echo "deploy_host=${{ secrets.DATABASE_HOST_PROD }}" >> $GITHUB_OUTPUT
+          echo "deploy_user=${{ secrets.DATABASE_DEPLOY_USER }}" >> $GITHUB_OUTPUT
+          echo "deploy_key=${{ secrets.DATABASE_DEPLOY_KEY }}" >> $GITHUB_OUTPUT
+          echo "deploy_port=${{ secrets.DATABASE_DEPLOY_PORT }}" >> $GITHUB_OUTPUT
           echo "env_name=production" >> $GITHUB_OUTPUT
         else
-          if [ -n "${{ secrets.DATABASE_DEPLOY_PATH_DEV }}" ]; then
-            echo "deploy_path=${{ secrets.DATABASE_DEPLOY_PATH_DEV }}" >> $GITHUB_OUTPUT
-          else
-            echo "deploy_path=${{ secrets.DEPLOY_PATH_DEV }}" >> $GITHUB_OUTPUT
-          fi
-          if [ -n "${{ secrets.DATABASE_HOST_DEV }}" ]; then
-            echo "deploy_host=${{ secrets.DATABASE_HOST_DEV }}" >> $GITHUB_OUTPUT
-          else
-            echo "deploy_host=${{ secrets.DEPLOY_HOST_DEV }}" >> $GITHUB_OUTPUT
-          fi
-          if [ -n "${{ secrets.DATABASE_DEPLOY_USER_DEV }}" ]; then
-            echo "deploy_user=${{ secrets.DATABASE_DEPLOY_USER_DEV }}" >> $GITHUB_OUTPUT
-          elif [ -n "${{ secrets.DATABASE_DEPLOY_USER }}" ]; then
-            echo "deploy_user=${{ secrets.DATABASE_DEPLOY_USER }}" >> $GITHUB_OUTPUT
-          elif [ -n "${{ secrets.DEPLOY_USER_DEV }}" ]; then
-            echo "deploy_user=${{ secrets.DEPLOY_USER_DEV }}" >> $GITHUB_OUTPUT
-          else
-            echo "deploy_user=${{ secrets.DEPLOY_USER }}" >> $GITHUB_OUTPUT
-          fi
-          if [ -n "${{ secrets.DATABASE_DEPLOY_KEY_DEV }}" ]; then
-            echo "deploy_key=${{ secrets.DATABASE_DEPLOY_KEY_DEV }}" >> $GITHUB_OUTPUT
-          elif [ -n "${{ secrets.DATABASE_DEPLOY_KEY }}" ]; then
-            echo "deploy_key=${{ secrets.DATABASE_DEPLOY_KEY }}" >> $GITHUB_OUTPUT
-          elif [ -n "${{ secrets.DEPLOY_KEY_DEV }}" ]; then
-            echo "deploy_key=${{ secrets.DEPLOY_KEY_DEV }}" >> $GITHUB_OUTPUT
-          else
-            echo "deploy_key=${{ secrets.DEPLOY_KEY }}" >> $GITHUB_OUTPUT
-          fi
-          if [ -n "${{ secrets.DATABASE_DEPLOY_PORT_DEV }}" ]; then
-            echo "deploy_port=${{ secrets.DATABASE_DEPLOY_PORT_DEV }}" >> $GITHUB_OUTPUT
-          elif [ -n "${{ secrets.DATABASE_DEPLOY_PORT }}" ]; then
-            echo "deploy_port=${{ secrets.DATABASE_DEPLOY_PORT }}" >> $GITHUB_OUTPUT
-          elif [ -n "${{ secrets.DEPLOY_PORT_DEV }}" ]; then
-            echo "deploy_port=${{ secrets.DEPLOY_PORT_DEV }}" >> $GITHUB_OUTPUT
-          else
-            echo "deploy_port=${{ secrets.DEPLOY_PORT || 22 }}" >> $GITHUB_OUTPUT
-          fi
+          echo "deploy_path=${{ secrets.DATABASE_DEPLOY_PATH_DEV }}" >> $GITHUB_OUTPUT
+          echo "deploy_host=${{ secrets.DATABASE_HOST_DEV }}" >> $GITHUB_OUTPUT
+          echo "deploy_user=${{ secrets.DATABASE_DEPLOY_USER }}" >> $GITHUB_OUTPUT
+          echo "deploy_key=${{ secrets.DATABASE_DEPLOY_KEY }}" >> $GITHUB_OUTPUT
+          echo "deploy_port=${{ secrets.DATABASE_DEPLOY_PORT }}" >> $GITHUB_OUTPUT
           echo "env_name=development" >> $GITHUB_OUTPUT
         fi
 
@@ -414,7 +350,7 @@ jobs:
         target: ${{ steps.vars.outputs.deploy_path }}
         strip_components: 1
 
-    - name: Deploy database via SSH
+    - name: Deploy database and redis via SSH
       uses: appleboy/ssh-action@v1.0.3
       with:
         host: ${{ steps.vars.outputs.deploy_host }}
@@ -424,129 +360,9 @@ jobs:
         envs: DEPLOY_PATH
         script: |
           cd $DEPLOY_PATH
-          echo "=== Deploying database to ${{ steps.vars.outputs.env_name }} environment ==="
-          docker compose up -d database --remove-orphans
-          echo "Database deployment completed!"
-      env:
-        DEPLOY_PATH: ${{ steps.vars.outputs.deploy_path }}
-
-  # ==================== 部署 Redis 阶段 ====================
-
-  deploy-redis:
-    if: github.event_name != 'pull_request'
-    runs-on: ubuntu-latest
-    needs: [api-service-test, frontend-test, judge-service-test]
-
-    steps:
-    - uses: actions/checkout@v4
-
-    - name: Set deployment variables
-      id: vars
-      run: |
-        if [ "${{ github.ref }}" = "refs/heads/master" ]; then
-          if [ -n "${{ secrets.REDIS_DEPLOY_PATH_PROD }}" ]; then
-            echo "deploy_path=${{ secrets.REDIS_DEPLOY_PATH_PROD }}" >> $GITHUB_OUTPUT
-          else
-            echo "deploy_path=${{ secrets.DEPLOY_PATH_PROD }}" >> $GITHUB_OUTPUT
-          fi
-          if [ -n "${{ secrets.REDIS_HOST_PROD }}" ]; then
-            echo "deploy_host=${{ secrets.REDIS_HOST_PROD }}" >> $GITHUB_OUTPUT
-          else
-            echo "deploy_host=${{ secrets.DEPLOY_HOST_PROD }}" >> $GITHUB_OUTPUT
-          fi
-          if [ -n "${{ secrets.REDIS_DEPLOY_USER_PROD }}" ]; then
-            echo "deploy_user=${{ secrets.REDIS_DEPLOY_USER_PROD }}" >> $GITHUB_OUTPUT
-          elif [ -n "${{ secrets.REDIS_DEPLOY_USER }}" ]; then
-            echo "deploy_user=${{ secrets.REDIS_DEPLOY_USER }}" >> $GITHUB_OUTPUT
-          elif [ -n "${{ secrets.DEPLOY_USER_PROD }}" ]; then
-            echo "deploy_user=${{ secrets.DEPLOY_USER_PROD }}" >> $GITHUB_OUTPUT
-          else
-            echo "deploy_user=${{ secrets.DEPLOY_USER }}" >> $GITHUB_OUTPUT
-          fi
-          if [ -n "${{ secrets.REDIS_DEPLOY_KEY_PROD }}" ]; then
-            echo "deploy_key=${{ secrets.REDIS_DEPLOY_KEY_PROD }}" >> $GITHUB_OUTPUT
-          elif [ -n "${{ secrets.REDIS_DEPLOY_KEY }}" ]; then
-            echo "deploy_key=${{ secrets.REDIS_DEPLOY_KEY }}" >> $GITHUB_OUTPUT
-          elif [ -n "${{ secrets.DEPLOY_KEY_PROD }}" ]; then
-            echo "deploy_key=${{ secrets.DEPLOY_KEY_PROD }}" >> $GITHUB_OUTPUT
-          else
-            echo "deploy_key=${{ secrets.DEPLOY_KEY }}" >> $GITHUB_OUTPUT
-          fi
-          if [ -n "${{ secrets.REDIS_DEPLOY_PORT_PROD }}" ]; then
-            echo "deploy_port=${{ secrets.REDIS_DEPLOY_PORT_PROD }}" >> $GITHUB_OUTPUT
-          elif [ -n "${{ secrets.REDIS_DEPLOY_PORT }}" ]; then
-            echo "deploy_port=${{ secrets.REDIS_DEPLOY_PORT }}" >> $GITHUB_OUTPUT
-          elif [ -n "${{ secrets.DEPLOY_PORT_PROD }}" ]; then
-            echo "deploy_port=${{ secrets.DEPLOY_PORT_PROD }}" >> $GITHUB_OUTPUT
-          else
-            echo "deploy_port=${{ secrets.DEPLOY_PORT || 22 }}" >> $GITHUB_OUTPUT
-          fi
-          echo "env_name=production" >> $GITHUB_OUTPUT
-        else
-          if [ -n "${{ secrets.REDIS_DEPLOY_PATH_DEV }}" ]; then
-            echo "deploy_path=${{ secrets.REDIS_DEPLOY_PATH_DEV }}" >> $GITHUB_OUTPUT
-          else
-            echo "deploy_path=${{ secrets.DEPLOY_PATH_DEV }}" >> $GITHUB_OUTPUT
-          fi
-          if [ -n "${{ secrets.REDIS_HOST_DEV }}" ]; then
-            echo "deploy_host=${{ secrets.REDIS_HOST_DEV }}" >> $GITHUB_OUTPUT
-          else
-            echo "deploy_host=${{ secrets.DEPLOY_HOST_DEV }}" >> $GITHUB_OUTPUT
-          fi
-          if [ -n "${{ secrets.REDIS_DEPLOY_USER_DEV }}" ]; then
-            echo "deploy_user=${{ secrets.REDIS_DEPLOY_USER_DEV }}" >> $GITHUB_OUTPUT
-          elif [ -n "${{ secrets.REDIS_DEPLOY_USER }}" ]; then
-            echo "deploy_user=${{ secrets.REDIS_DEPLOY_USER }}" >> $GITHUB_OUTPUT
-          elif [ -n "${{ secrets.DEPLOY_USER_DEV }}" ]; then
-            echo "deploy_user=${{ secrets.DEPLOY_USER_DEV }}" >> $GITHUB_OUTPUT
-          else
-            echo "deploy_user=${{ secrets.DEPLOY_USER }}" >> $GITHUB_OUTPUT
-          fi
-          if [ -n "${{ secrets.REDIS_DEPLOY_KEY_DEV }}" ]; then
-            echo "deploy_key=${{ secrets.REDIS_DEPLOY_KEY_DEV }}" >> $GITHUB_OUTPUT
-          elif [ -n "${{ secrets.REDIS_DEPLOY_KEY }}" ]; then
-            echo "deploy_key=${{ secrets.REDIS_DEPLOY_KEY }}" >> $GITHUB_OUTPUT
-          elif [ -n "${{ secrets.DEPLOY_KEY_DEV }}" ]; then
-            echo "deploy_key=${{ secrets.DEPLOY_KEY_DEV }}" >> $GITHUB_OUTPUT
-          else
-            echo "deploy_key=${{ secrets.DEPLOY_KEY }}" >> $GITHUB_OUTPUT
-          fi
-          if [ -n "${{ secrets.REDIS_DEPLOY_PORT_DEV }}" ]; then
-            echo "deploy_port=${{ secrets.REDIS_DEPLOY_PORT_DEV }}" >> $GITHUB_OUTPUT
-          elif [ -n "${{ secrets.REDIS_DEPLOY_PORT }}" ]; then
-            echo "deploy_port=${{ secrets.REDIS_DEPLOY_PORT }}" >> $GITHUB_OUTPUT
-          elif [ -n "${{ secrets.DEPLOY_PORT_DEV }}" ]; then
-            echo "deploy_port=${{ secrets.DEPLOY_PORT_DEV }}" >> $GITHUB_OUTPUT
-          else
-            echo "deploy_port=${{ secrets.DEPLOY_PORT || 22 }}" >> $GITHUB_OUTPUT
-          fi
-          echo "env_name=development" >> $GITHUB_OUTPUT
-        fi
-
-    - name: Sync compose file to server
-      uses: appleboy/scp-action@v0.1.7
-      with:
-        host: ${{ steps.vars.outputs.deploy_host }}
-        username: ${{ steps.vars.outputs.deploy_user }}
-        key: ${{ steps.vars.outputs.deploy_key }}
-        port: ${{ steps.vars.outputs.deploy_port }}
-        source: "docker/docker-compose.yml"
-        target: ${{ steps.vars.outputs.deploy_path }}
-        strip_components: 1
-
-    - name: Deploy redis via SSH
-      uses: appleboy/ssh-action@v1.0.3
-      with:
-        host: ${{ steps.vars.outputs.deploy_host }}
-        username: ${{ steps.vars.outputs.deploy_user }}
-        key: ${{ steps.vars.outputs.deploy_key }}
-        port: ${{ steps.vars.outputs.deploy_port }}
-        envs: DEPLOY_PATH
-        script: |
-          cd $DEPLOY_PATH
-          echo "=== Deploying redis to ${{ steps.vars.outputs.env_name }} environment ==="
-          docker compose up -d redis --remove-orphans
-          echo "Redis deployment completed!"
+          echo "=== Deploying database and redis to ${{ steps.vars.outputs.env_name }} environment ==="
+          docker compose up -d database redis --remove-orphans
+          echo "Database and redis deployment completed!"
       env:
         DEPLOY_PATH: ${{ steps.vars.outputs.deploy_path }}
 
@@ -564,82 +380,18 @@ jobs:
       id: vars
       run: |
         if [ "${{ github.ref }}" = "refs/heads/master" ]; then
-          if [ -n "${{ secrets.RABBITMQ_DEPLOY_PATH_PROD }}" ]; then
-            echo "deploy_path=${{ secrets.RABBITMQ_DEPLOY_PATH_PROD }}" >> $GITHUB_OUTPUT
-          else
-            echo "deploy_path=${{ secrets.DEPLOY_PATH_PROD }}" >> $GITHUB_OUTPUT
-          fi
-          if [ -n "${{ secrets.RABBITMQ_HOST_PROD }}" ]; then
-            echo "deploy_host=${{ secrets.RABBITMQ_HOST_PROD }}" >> $GITHUB_OUTPUT
-          else
-            echo "deploy_host=${{ secrets.DEPLOY_HOST_PROD }}" >> $GITHUB_OUTPUT
-          fi
-          if [ -n "${{ secrets.RABBITMQ_DEPLOY_USER_PROD }}" ]; then
-            echo "deploy_user=${{ secrets.RABBITMQ_DEPLOY_USER_PROD }}" >> $GITHUB_OUTPUT
-          elif [ -n "${{ secrets.RABBITMQ_DEPLOY_USER }}" ]; then
-            echo "deploy_user=${{ secrets.RABBITMQ_DEPLOY_USER }}" >> $GITHUB_OUTPUT
-          elif [ -n "${{ secrets.DEPLOY_USER_PROD }}" ]; then
-            echo "deploy_user=${{ secrets.DEPLOY_USER_PROD }}" >> $GITHUB_OUTPUT
-          else
-            echo "deploy_user=${{ secrets.DEPLOY_USER }}" >> $GITHUB_OUTPUT
-          fi
-          if [ -n "${{ secrets.RABBITMQ_DEPLOY_KEY_PROD }}" ]; then
-            echo "deploy_key=${{ secrets.RABBITMQ_DEPLOY_KEY_PROD }}" >> $GITHUB_OUTPUT
-          elif [ -n "${{ secrets.RABBITMQ_DEPLOY_KEY }}" ]; then
-            echo "deploy_key=${{ secrets.RABBITMQ_DEPLOY_KEY }}" >> $GITHUB_OUTPUT
-          elif [ -n "${{ secrets.DEPLOY_KEY_PROD }}" ]; then
-            echo "deploy_key=${{ secrets.DEPLOY_KEY_PROD }}" >> $GITHUB_OUTPUT
-          else
-            echo "deploy_key=${{ secrets.DEPLOY_KEY }}" >> $GITHUB_OUTPUT
-          fi
-          if [ -n "${{ secrets.RABBITMQ_DEPLOY_PORT_PROD }}" ]; then
-            echo "deploy_port=${{ secrets.RABBITMQ_DEPLOY_PORT_PROD }}" >> $GITHUB_OUTPUT
-          elif [ -n "${{ secrets.RABBITMQ_DEPLOY_PORT }}" ]; then
-            echo "deploy_port=${{ secrets.RABBITMQ_DEPLOY_PORT }}" >> $GITHUB_OUTPUT
-          elif [ -n "${{ secrets.DEPLOY_PORT_PROD }}" ]; then
-            echo "deploy_port=${{ secrets.DEPLOY_PORT_PROD }}" >> $GITHUB_OUTPUT
-          else
-            echo "deploy_port=${{ secrets.DEPLOY_PORT || 22 }}" >> $GITHUB_OUTPUT
-          fi
+          echo "deploy_path=${{ secrets.RABBITMQ_DEPLOY_PATH_PROD }}" >> $GITHUB_OUTPUT
+          echo "deploy_host=${{ secrets.RABBITMQ_HOST_PROD }}" >> $GITHUB_OUTPUT
+          echo "deploy_user=${{ secrets.RABBITMQ_DEPLOY_USER }}" >> $GITHUB_OUTPUT
+          echo "deploy_key=${{ secrets.RABBITMQ_DEPLOY_KEY }}" >> $GITHUB_OUTPUT
+          echo "deploy_port=${{ secrets.RABBITMQ_DEPLOY_PORT }}" >> $GITHUB_OUTPUT
           echo "env_name=production" >> $GITHUB_OUTPUT
         else
-          if [ -n "${{ secrets.RABBITMQ_DEPLOY_PATH_DEV }}" ]; then
-            echo "deploy_path=${{ secrets.RABBITMQ_DEPLOY_PATH_DEV }}" >> $GITHUB_OUTPUT
-          else
-            echo "deploy_path=${{ secrets.DEPLOY_PATH_DEV }}" >> $GITHUB_OUTPUT
-          fi
-          if [ -n "${{ secrets.RABBITMQ_HOST_DEV }}" ]; then
-            echo "deploy_host=${{ secrets.RABBITMQ_HOST_DEV }}" >> $GITHUB_OUTPUT
-          else
-            echo "deploy_host=${{ secrets.DEPLOY_HOST_DEV }}" >> $GITHUB_OUTPUT
-          fi
-          if [ -n "${{ secrets.RABBITMQ_DEPLOY_USER_DEV }}" ]; then
-            echo "deploy_user=${{ secrets.RABBITMQ_DEPLOY_USER_DEV }}" >> $GITHUB_OUTPUT
-          elif [ -n "${{ secrets.RABBITMQ_DEPLOY_USER }}" ]; then
-            echo "deploy_user=${{ secrets.RABBITMQ_DEPLOY_USER }}" >> $GITHUB_OUTPUT
-          elif [ -n "${{ secrets.DEPLOY_USER_DEV }}" ]; then
-            echo "deploy_user=${{ secrets.DEPLOY_USER_DEV }}" >> $GITHUB_OUTPUT
-          else
-            echo "deploy_user=${{ secrets.DEPLOY_USER }}" >> $GITHUB_OUTPUT
-          fi
-          if [ -n "${{ secrets.RABBITMQ_DEPLOY_KEY_DEV }}" ]; then
-            echo "deploy_key=${{ secrets.RABBITMQ_DEPLOY_KEY_DEV }}" >> $GITHUB_OUTPUT
-          elif [ -n "${{ secrets.RABBITMQ_DEPLOY_KEY }}" ]; then
-            echo "deploy_key=${{ secrets.RABBITMQ_DEPLOY_KEY }}" >> $GITHUB_OUTPUT
-          elif [ -n "${{ secrets.DEPLOY_KEY_DEV }}" ]; then
-            echo "deploy_key=${{ secrets.DEPLOY_KEY_DEV }}" >> $GITHUB_OUTPUT
-          else
-            echo "deploy_key=${{ secrets.DEPLOY_KEY }}" >> $GITHUB_OUTPUT
-          fi
-          if [ -n "${{ secrets.RABBITMQ_DEPLOY_PORT_DEV }}" ]; then
-            echo "deploy_port=${{ secrets.RABBITMQ_DEPLOY_PORT_DEV }}" >> $GITHUB_OUTPUT
-          elif [ -n "${{ secrets.RABBITMQ_DEPLOY_PORT }}" ]; then
-            echo "deploy_port=${{ secrets.RABBITMQ_DEPLOY_PORT }}" >> $GITHUB_OUTPUT
-          elif [ -n "${{ secrets.DEPLOY_PORT_DEV }}" ]; then
-            echo "deploy_port=${{ secrets.DEPLOY_PORT_DEV }}" >> $GITHUB_OUTPUT
-          else
-            echo "deploy_port=${{ secrets.DEPLOY_PORT || 22 }}" >> $GITHUB_OUTPUT
-          fi
+          echo "deploy_path=${{ secrets.RABBITMQ_DEPLOY_PATH_DEV }}" >> $GITHUB_OUTPUT
+          echo "deploy_host=${{ secrets.RABBITMQ_HOST_DEV }}" >> $GITHUB_OUTPUT
+          echo "deploy_user=${{ secrets.RABBITMQ_DEPLOY_USER }}" >> $GITHUB_OUTPUT
+          echo "deploy_key=${{ secrets.RABBITMQ_DEPLOY_KEY }}" >> $GITHUB_OUTPUT
+          echo "deploy_port=${{ secrets.RABBITMQ_DEPLOY_PORT }}" >> $GITHUB_OUTPUT
           echo "env_name=development" >> $GITHUB_OUTPUT
         fi
 
@@ -675,7 +427,7 @@ jobs:
   deploy-api-service:
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
-    needs: [build-api-service, deploy-database, deploy-redis, deploy-rabbitmq]
+    needs: [build-api-service, deploy-database-infra, deploy-rabbitmq]
     outputs:
       deploy_host: ${{ steps.vars.outputs.deploy_host }}
 
@@ -690,41 +442,17 @@ jobs:
           echo "deploy_host=${{ secrets.DEPLOY_HOST_PROD }}" >> $GITHUB_OUTPUT
           echo "image_tag=latest" >> $GITHUB_OUTPUT
           echo "env_name=production" >> $GITHUB_OUTPUT
-          if [ -n "${{ secrets.DEPLOY_USER_PROD }}" ]; then
-            echo "deploy_user=${{ secrets.DEPLOY_USER_PROD }}" >> $GITHUB_OUTPUT
-          else
-            echo "deploy_user=${{ secrets.DEPLOY_USER }}" >> $GITHUB_OUTPUT
-          fi
-          if [ -n "${{ secrets.DEPLOY_KEY_PROD }}" ]; then
-            echo "deploy_key=${{ secrets.DEPLOY_KEY_PROD }}" >> $GITHUB_OUTPUT
-          else
-            echo "deploy_key=${{ secrets.DEPLOY_KEY }}" >> $GITHUB_OUTPUT
-          fi
-          if [ -n "${{ secrets.DEPLOY_PORT_PROD }}" ]; then
-            echo "deploy_port=${{ secrets.DEPLOY_PORT_PROD }}" >> $GITHUB_OUTPUT
-          else
-            echo "deploy_port=${{ secrets.DEPLOY_PORT || 22 }}" >> $GITHUB_OUTPUT
-          fi
+          echo "deploy_user=${{ secrets.DEPLOY_USER }}" >> $GITHUB_OUTPUT
+          echo "deploy_key=${{ secrets.DEPLOY_KEY }}" >> $GITHUB_OUTPUT
+          echo "deploy_port=${{ secrets.DEPLOY_PORT }}" >> $GITHUB_OUTPUT
         else
           echo "deploy_path=${{ secrets.DEPLOY_PATH_DEV }}" >> $GITHUB_OUTPUT
           echo "deploy_host=${{ secrets.DEPLOY_HOST_DEV }}" >> $GITHUB_OUTPUT
           echo "image_tag=develop" >> $GITHUB_OUTPUT
           echo "env_name=development" >> $GITHUB_OUTPUT
-          if [ -n "${{ secrets.DEPLOY_USER_DEV }}" ]; then
-            echo "deploy_user=${{ secrets.DEPLOY_USER_DEV }}" >> $GITHUB_OUTPUT
-          else
-            echo "deploy_user=${{ secrets.DEPLOY_USER }}" >> $GITHUB_OUTPUT
-          fi
-          if [ -n "${{ secrets.DEPLOY_KEY_DEV }}" ]; then
-            echo "deploy_key=${{ secrets.DEPLOY_KEY_DEV }}" >> $GITHUB_OUTPUT
-          else
-            echo "deploy_key=${{ secrets.DEPLOY_KEY }}" >> $GITHUB_OUTPUT
-          fi
-          if [ -n "${{ secrets.DEPLOY_PORT_DEV }}" ]; then
-            echo "deploy_port=${{ secrets.DEPLOY_PORT_DEV }}" >> $GITHUB_OUTPUT
-          else
-            echo "deploy_port=${{ secrets.DEPLOY_PORT || 22 }}" >> $GITHUB_OUTPUT
-          fi
+          echo "deploy_user=${{ secrets.DEPLOY_USER }}" >> $GITHUB_OUTPUT
+          echo "deploy_key=${{ secrets.DEPLOY_KEY }}" >> $GITHUB_OUTPUT
+          echo "deploy_port=${{ secrets.DEPLOY_PORT }}" >> $GITHUB_OUTPUT
         fi
 
     - name: Download api-service image artifact
@@ -732,6 +460,17 @@ jobs:
       with:
         name: api-service-image
         path: ./images
+
+    - name: Sync compose file to server
+      uses: appleboy/scp-action@v0.1.7
+      with:
+        host: ${{ steps.vars.outputs.deploy_host }}
+        username: ${{ steps.vars.outputs.deploy_user }}
+        key: ${{ steps.vars.outputs.deploy_key }}
+        port: ${{ steps.vars.outputs.deploy_port }}
+        source: "docker/docker-compose.yml"
+        target: ${{ steps.vars.outputs.deploy_path }}
+        strip_components: 1
 
     - name: Transfer image to server
       uses: appleboy/scp-action@v0.1.7
@@ -763,7 +502,7 @@ jobs:
 
           echo "Starting api-service..."
           export API_SERVICE_IMAGE="${API_SERVICE_IMAGE}"
-          docker compose up -d api-service --remove-orphans
+          docker compose --profile app up -d api-service --remove-orphans
 
           echo "Api-service deployment completed!"
       env:
@@ -775,7 +514,7 @@ jobs:
   deploy-judge-service:
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
-    needs: [build-judge-service, deploy-database, deploy-redis, deploy-rabbitmq]
+    needs: [build-judge-service, deploy-database-infra, deploy-rabbitmq]
 
     steps:
     - uses: actions/checkout@v4
@@ -1011,41 +750,17 @@ jobs:
           echo "deploy_host=${{ secrets.DEPLOY_HOST_PROD }}" >> $GITHUB_OUTPUT
           echo "image_tag=latest" >> $GITHUB_OUTPUT
           echo "env_name=production" >> $GITHUB_OUTPUT
-          if [ -n "${{ secrets.DEPLOY_USER_PROD }}" ]; then
-            echo "deploy_user=${{ secrets.DEPLOY_USER_PROD }}" >> $GITHUB_OUTPUT
-          else
-            echo "deploy_user=${{ secrets.DEPLOY_USER }}" >> $GITHUB_OUTPUT
-          fi
-          if [ -n "${{ secrets.DEPLOY_KEY_PROD }}" ]; then
-            echo "deploy_key=${{ secrets.DEPLOY_KEY_PROD }}" >> $GITHUB_OUTPUT
-          else
-            echo "deploy_key=${{ secrets.DEPLOY_KEY }}" >> $GITHUB_OUTPUT
-          fi
-          if [ -n "${{ secrets.DEPLOY_PORT_PROD }}" ]; then
-            echo "deploy_port=${{ secrets.DEPLOY_PORT_PROD }}" >> $GITHUB_OUTPUT
-          else
-            echo "deploy_port=${{ secrets.DEPLOY_PORT || 22 }}" >> $GITHUB_OUTPUT
-          fi
+          echo "deploy_user=${{ secrets.DEPLOY_USER }}" >> $GITHUB_OUTPUT
+          echo "deploy_key=${{ secrets.DEPLOY_KEY }}" >> $GITHUB_OUTPUT
+          echo "deploy_port=${{ secrets.DEPLOY_PORT }}" >> $GITHUB_OUTPUT
         else
           echo "deploy_path=${{ secrets.DEPLOY_PATH_DEV }}" >> $GITHUB_OUTPUT
           echo "deploy_host=${{ secrets.DEPLOY_HOST_DEV }}" >> $GITHUB_OUTPUT
           echo "image_tag=develop" >> $GITHUB_OUTPUT
           echo "env_name=development" >> $GITHUB_OUTPUT
-          if [ -n "${{ secrets.DEPLOY_USER_DEV }}" ]; then
-            echo "deploy_user=${{ secrets.DEPLOY_USER_DEV }}" >> $GITHUB_OUTPUT
-          else
-            echo "deploy_user=${{ secrets.DEPLOY_USER }}" >> $GITHUB_OUTPUT
-          fi
-          if [ -n "${{ secrets.DEPLOY_KEY_DEV }}" ]; then
-            echo "deploy_key=${{ secrets.DEPLOY_KEY_DEV }}" >> $GITHUB_OUTPUT
-          else
-            echo "deploy_key=${{ secrets.DEPLOY_KEY }}" >> $GITHUB_OUTPUT
-          fi
-          if [ -n "${{ secrets.DEPLOY_PORT_DEV }}" ]; then
-            echo "deploy_port=${{ secrets.DEPLOY_PORT_DEV }}" >> $GITHUB_OUTPUT
-          else
-            echo "deploy_port=${{ secrets.DEPLOY_PORT || 22 }}" >> $GITHUB_OUTPUT
-          fi
+          echo "deploy_user=${{ secrets.DEPLOY_USER }}" >> $GITHUB_OUTPUT
+          echo "deploy_key=${{ secrets.DEPLOY_KEY }}" >> $GITHUB_OUTPUT
+          echo "deploy_port=${{ secrets.DEPLOY_PORT }}" >> $GITHUB_OUTPUT
         fi
 
     - name: Download frontend image artifact
@@ -1053,6 +768,17 @@ jobs:
       with:
         name: frontend-image
         path: ./images
+
+    - name: Sync compose file to server
+      uses: appleboy/scp-action@v0.1.7
+      with:
+        host: ${{ steps.vars.outputs.deploy_host }}
+        username: ${{ steps.vars.outputs.deploy_user }}
+        key: ${{ steps.vars.outputs.deploy_key }}
+        port: ${{ steps.vars.outputs.deploy_port }}
+        source: "docker/docker-compose.yml"
+        target: ${{ steps.vars.outputs.deploy_path }}
+        strip_components: 1
 
     - name: Transfer image to server
       uses: appleboy/scp-action@v0.1.7
@@ -1083,7 +809,7 @@ jobs:
           rm -f /tmp/bluenet-deploy/images/frontend-image.tar.gz
 
           echo "Starting frontend service..."
-          docker compose up -d --no-deps frontend --remove-orphans
+          docker compose --profile app up -d --no-deps frontend --remove-orphans
 
           echo "Cleaning up old images..."
           docker image prune -f
