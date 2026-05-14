@@ -124,6 +124,12 @@ services:
       JUDGE_SANDBOX_ENGINE: isolate
       JUDGE_WORK_ROOT: /var/lib/bluenet-judge/work
       LANG: C.UTF-8
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8090/api/v1/judge/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
     profiles:
       - full
       - judge
