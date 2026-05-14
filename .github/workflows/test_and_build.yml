@@ -116,6 +116,7 @@ jobs:
   # ==================== 构建 API 服务阶段 ====================
 
   build-api-service:
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     needs: [api-service-test]
     permissions:
@@ -214,6 +215,7 @@ jobs:
   # ==================== 构建判题服务阶段 ====================
 
   build-judge-service:
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     needs: [judge-service-test]
     permissions:
@@ -308,13 +310,12 @@ jobs:
         path: judge-service-image.tar.gz
         retention-days: 1
 
-  # ==================== 部署基础设施阶段 ====================
+  # ==================== 部署数据库基础设施阶段（PostgreSQL + Redis）====================
 
-  deploy-infra:
+  deploy-database-infra:
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     needs: [api-service-test, frontend-test, judge-service-test]
-    outputs:
-      deploy_host: ${{ steps.vars.outputs.deploy_host }}
 
     steps:
     - uses: actions/checkout@v4
@@ -323,12 +324,18 @@ jobs:
       id: vars
       run: |
         if [ "${{ github.ref }}" = "refs/heads/master" ]; then
-          echo "deploy_path=${{ secrets.DEPLOY_PATH_PROD }}" >> $GITHUB_OUTPUT
-          echo "deploy_host=${{ secrets.DEPLOY_HOST_PROD }}" >> $GITHUB_OUTPUT
+          echo "deploy_path=${{ secrets.DATABASE_DEPLOY_PATH_PROD }}" >> $GITHUB_OUTPUT
+          echo "deploy_host=${{ secrets.DATABASE_HOST_PROD }}" >> $GITHUB_OUTPUT
+          echo "deploy_user=${{ secrets.DATABASE_DEPLOY_USER }}" >> $GITHUB_OUTPUT
+          echo "deploy_key=${{ secrets.DATABASE_DEPLOY_KEY }}" >> $GITHUB_OUTPUT
+          echo "deploy_port=${{ secrets.DATABASE_DEPLOY_PORT }}" >> $GITHUB_OUTPUT
           echo "env_name=production" >> $GITHUB_OUTPUT
         else
-          echo "deploy_path=${{ secrets.DEPLOY_PATH_DEV }}" >> $GITHUB_OUTPUT
-          echo "deploy_host=${{ secrets.DEPLOY_HOST_DEV }}" >> $GITHUB_OUTPUT
+          echo "deploy_path=${{ secrets.DATABASE_DEPLOY_PATH_DEV }}" >> $GITHUB_OUTPUT
+          echo "deploy_host=${{ secrets.DATABASE_HOST_DEV }}" >> $GITHUB_OUTPUT
+          echo "deploy_user=${{ secrets.DATABASE_DEPLOY_USER }}" >> $GITHUB_OUTPUT
+          echo "deploy_key=${{ secrets.DATABASE_DEPLOY_KEY }}" >> $GITHUB_OUTPUT
+          echo "deploy_port=${{ secrets.DATABASE_DEPLOY_PORT }}" >> $GITHUB_OUTPUT
           echo "env_name=development" >> $GITHUB_OUTPUT
         fi
 
@@ -336,38 +343,91 @@ jobs:
       uses: appleboy/scp-action@v0.1.7
       with:
         host: ${{ steps.vars.outputs.deploy_host }}
-        username: ${{ secrets.DEPLOY_USER }}
-        key: ${{ secrets.DEPLOY_KEY }}
-        port: ${{ secrets.DEPLOY_PORT || 22 }}
+        username: ${{ steps.vars.outputs.deploy_user }}
+        key: ${{ steps.vars.outputs.deploy_key }}
+        port: ${{ steps.vars.outputs.deploy_port }}
         source: "docker/docker-compose.yml"
         target: ${{ steps.vars.outputs.deploy_path }}
         strip_components: 1
 
-    - name: Deploy infrastructure via SSH
+    - name: Deploy database and redis via SSH
       uses: appleboy/ssh-action@v1.0.3
       with:
         host: ${{ steps.vars.outputs.deploy_host }}
-        username: ${{ secrets.DEPLOY_USER }}
-        key: ${{ secrets.DEPLOY_KEY }}
-        port: ${{ secrets.DEPLOY_PORT || 22 }}
+        username: ${{ steps.vars.outputs.deploy_user }}
+        key: ${{ steps.vars.outputs.deploy_key }}
+        port: ${{ steps.vars.outputs.deploy_port }}
         envs: DEPLOY_PATH
         script: |
           cd $DEPLOY_PATH
+          echo "=== Deploying database and redis to ${{ steps.vars.outputs.env_name }} environment ==="
+          docker compose up -d database redis --remove-orphans
+          echo "Database and redis deployment completed!"
+      env:
+        DEPLOY_PATH: ${{ steps.vars.outputs.deploy_path }}
 
-          echo "=== Deploying infrastructure to ${{ steps.vars.outputs.env_name }} environment ==="
+  # ==================== 部署 RabbitMQ 阶段 ====================
 
-          echo "Starting infrastructure services (database, redis, rabbitmq)..."
-          docker compose --profile infra up -d --remove-orphans
+  deploy-rabbitmq:
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    needs: [api-service-test, frontend-test, judge-service-test]
 
-          echo "Infrastructure deployment completed!"
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set deployment variables
+      id: vars
+      run: |
+        if [ "${{ github.ref }}" = "refs/heads/master" ]; then
+          echo "deploy_path=${{ secrets.RABBITMQ_DEPLOY_PATH_PROD }}" >> $GITHUB_OUTPUT
+          echo "deploy_host=${{ secrets.RABBITMQ_HOST_PROD }}" >> $GITHUB_OUTPUT
+          echo "deploy_user=${{ secrets.RABBITMQ_DEPLOY_USER }}" >> $GITHUB_OUTPUT
+          echo "deploy_key=${{ secrets.RABBITMQ_DEPLOY_KEY }}" >> $GITHUB_OUTPUT
+          echo "deploy_port=${{ secrets.RABBITMQ_DEPLOY_PORT }}" >> $GITHUB_OUTPUT
+          echo "env_name=production" >> $GITHUB_OUTPUT
+        else
+          echo "deploy_path=${{ secrets.RABBITMQ_DEPLOY_PATH_DEV }}" >> $GITHUB_OUTPUT
+          echo "deploy_host=${{ secrets.RABBITMQ_HOST_DEV }}" >> $GITHUB_OUTPUT
+          echo "deploy_user=${{ secrets.RABBITMQ_DEPLOY_USER }}" >> $GITHUB_OUTPUT
+          echo "deploy_key=${{ secrets.RABBITMQ_DEPLOY_KEY }}" >> $GITHUB_OUTPUT
+          echo "deploy_port=${{ secrets.RABBITMQ_DEPLOY_PORT }}" >> $GITHUB_OUTPUT
+          echo "env_name=development" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Sync compose file to server
+      uses: appleboy/scp-action@v0.1.7
+      with:
+        host: ${{ steps.vars.outputs.deploy_host }}
+        username: ${{ steps.vars.outputs.deploy_user }}
+        key: ${{ steps.vars.outputs.deploy_key }}
+        port: ${{ steps.vars.outputs.deploy_port }}
+        source: "docker/docker-compose.yml"
+        target: ${{ steps.vars.outputs.deploy_path }}
+        strip_components: 1
+
+    - name: Deploy rabbitmq via SSH
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ steps.vars.outputs.deploy_host }}
+        username: ${{ steps.vars.outputs.deploy_user }}
+        key: ${{ steps.vars.outputs.deploy_key }}
+        port: ${{ steps.vars.outputs.deploy_port }}
+        envs: DEPLOY_PATH
+        script: |
+          cd $DEPLOY_PATH
+          echo "=== Deploying rabbitmq to ${{ steps.vars.outputs.env_name }} environment ==="
+          docker compose up -d rabbitmq --remove-orphans
+          echo "RabbitMQ deployment completed!"
       env:
         DEPLOY_PATH: ${{ steps.vars.outputs.deploy_path }}
 
   # ==================== 部署 API 服务阶段 ====================
 
   deploy-api-service:
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
-    needs: [build-api-service, deploy-infra]
+    needs: [build-api-service, deploy-database-infra, deploy-rabbitmq]
     outputs:
       deploy_host: ${{ steps.vars.outputs.deploy_host }}
 
@@ -382,11 +442,17 @@ jobs:
           echo "deploy_host=${{ secrets.DEPLOY_HOST_PROD }}" >> $GITHUB_OUTPUT
           echo "image_tag=latest" >> $GITHUB_OUTPUT
           echo "env_name=production" >> $GITHUB_OUTPUT
+          echo "deploy_user=${{ secrets.DEPLOY_USER }}" >> $GITHUB_OUTPUT
+          echo "deploy_key=${{ secrets.DEPLOY_KEY }}" >> $GITHUB_OUTPUT
+          echo "deploy_port=${{ secrets.DEPLOY_PORT }}" >> $GITHUB_OUTPUT
         else
           echo "deploy_path=${{ secrets.DEPLOY_PATH_DEV }}" >> $GITHUB_OUTPUT
           echo "deploy_host=${{ secrets.DEPLOY_HOST_DEV }}" >> $GITHUB_OUTPUT
           echo "image_tag=develop" >> $GITHUB_OUTPUT
           echo "env_name=development" >> $GITHUB_OUTPUT
+          echo "deploy_user=${{ secrets.DEPLOY_USER }}" >> $GITHUB_OUTPUT
+          echo "deploy_key=${{ secrets.DEPLOY_KEY }}" >> $GITHUB_OUTPUT
+          echo "deploy_port=${{ secrets.DEPLOY_PORT }}" >> $GITHUB_OUTPUT
         fi
 
     - name: Download api-service image artifact
@@ -395,13 +461,24 @@ jobs:
         name: api-service-image
         path: ./images
 
+    - name: Sync compose file to server
+      uses: appleboy/scp-action@v0.1.7
+      with:
+        host: ${{ steps.vars.outputs.deploy_host }}
+        username: ${{ steps.vars.outputs.deploy_user }}
+        key: ${{ steps.vars.outputs.deploy_key }}
+        port: ${{ steps.vars.outputs.deploy_port }}
+        source: "docker/docker-compose.yml"
+        target: ${{ steps.vars.outputs.deploy_path }}
+        strip_components: 1
+
     - name: Transfer image to server
       uses: appleboy/scp-action@v0.1.7
       with:
         host: ${{ steps.vars.outputs.deploy_host }}
-        username: ${{ secrets.DEPLOY_USER }}
-        key: ${{ secrets.DEPLOY_KEY }}
-        port: ${{ secrets.DEPLOY_PORT || 22 }}
+        username: ${{ steps.vars.outputs.deploy_user }}
+        key: ${{ steps.vars.outputs.deploy_key }}
+        port: ${{ steps.vars.outputs.deploy_port }}
         source: "images/api-service-image.tar.gz"
         target: /tmp/bluenet-deploy
 
@@ -409,9 +486,9 @@ jobs:
       uses: appleboy/ssh-action@v1.0.3
       with:
         host: ${{ steps.vars.outputs.deploy_host }}
-        username: ${{ secrets.DEPLOY_USER }}
-        key: ${{ secrets.DEPLOY_KEY }}
-        port: ${{ secrets.DEPLOY_PORT || 22 }}
+        username: ${{ steps.vars.outputs.deploy_user }}
+        key: ${{ steps.vars.outputs.deploy_key }}
+        port: ${{ steps.vars.outputs.deploy_port }}
         envs: API_SERVICE_IMAGE, DEPLOY_PATH
         script: |
           cd $DEPLOY_PATH
@@ -424,7 +501,8 @@ jobs:
           rm -f /tmp/bluenet-deploy/images/api-service-image.tar.gz
 
           echo "Starting api-service..."
-          docker compose up -d api-service --remove-orphans
+          export API_SERVICE_IMAGE="${API_SERVICE_IMAGE}"
+          docker compose --profile app up -d api-service --remove-orphans
 
           echo "Api-service deployment completed!"
       env:
@@ -434,8 +512,9 @@ jobs:
   # ==================== 部署判题服务阶段 ====================
 
   deploy-judge-service:
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
-    needs: [build-judge-service, deploy-infra]
+    needs: [build-judge-service, deploy-database-infra, deploy-rabbitmq]
 
     steps:
     - uses: actions/checkout@v4
@@ -444,13 +523,13 @@ jobs:
       id: vars
       run: |
         if [ "${{ github.ref }}" = "refs/heads/master" ]; then
-          echo "deploy_path=${{ secrets.DEPLOY_PATH_PROD }}" >> $GITHUB_OUTPUT
-          echo "deploy_host=${{ secrets.DEPLOY_HOST_PROD }}" >> $GITHUB_OUTPUT
+          echo "deploy_path=${{ secrets.JUDGE_DEPLOY_PATH_PROD }}" >> $GITHUB_OUTPUT
+          echo "deploy_host=${{ secrets.JUDGE_DEPLOY_HOST_PROD }}" >> $GITHUB_OUTPUT
           echo "image_tag=latest" >> $GITHUB_OUTPUT
           echo "env_name=production" >> $GITHUB_OUTPUT
         else
-          echo "deploy_path=${{ secrets.DEPLOY_PATH_DEV }}" >> $GITHUB_OUTPUT
-          echo "deploy_host=${{ secrets.DEPLOY_HOST_DEV }}" >> $GITHUB_OUTPUT
+          echo "deploy_path=${{ secrets.JUDGE_DEPLOY_PATH_DEV }}" >> $GITHUB_OUTPUT
+          echo "deploy_host=${{ secrets.JUDGE_DEPLOY_HOST_DEV }}" >> $GITHUB_OUTPUT
           echo "image_tag=develop" >> $GITHUB_OUTPUT
           echo "env_name=development" >> $GITHUB_OUTPUT
         fi
@@ -461,13 +540,24 @@ jobs:
         name: judge-service-image
         path: ./images
 
+    - name: Sync compose file to judge server
+      uses: appleboy/scp-action@v0.1.7
+      with:
+        host: ${{ steps.vars.outputs.deploy_host }}
+        username: ${{ secrets.JUDGE_DEPLOY_USER }}
+        key: ${{ secrets.JUDGE_DEPLOY_KEY }}
+        port: ${{ secrets.JUDGE_DEPLOY_PORT || 22 }}
+        source: "docker/docker-compose.yml"
+        target: ${{ steps.vars.outputs.deploy_path }}
+        strip_components: 1
+
     - name: Transfer image to server
       uses: appleboy/scp-action@v0.1.7
       with:
         host: ${{ steps.vars.outputs.deploy_host }}
-        username: ${{ secrets.DEPLOY_USER }}
-        key: ${{ secrets.DEPLOY_KEY }}
-        port: ${{ secrets.DEPLOY_PORT || 22 }}
+        username: ${{ secrets.JUDGE_DEPLOY_USER }}
+        key: ${{ secrets.JUDGE_DEPLOY_KEY }}
+        port: ${{ secrets.JUDGE_DEPLOY_PORT || 22 }}
         source: "images/judge-service-image.tar.gz"
         target: /tmp/bluenet-deploy
 
@@ -475,9 +565,9 @@ jobs:
       uses: appleboy/ssh-action@v1.0.3
       with:
         host: ${{ steps.vars.outputs.deploy_host }}
-        username: ${{ secrets.DEPLOY_USER }}
-        key: ${{ secrets.DEPLOY_KEY }}
-        port: ${{ secrets.DEPLOY_PORT || 22 }}
+        username: ${{ secrets.JUDGE_DEPLOY_USER }}
+        key: ${{ secrets.JUDGE_DEPLOY_KEY }}
+        port: ${{ secrets.JUDGE_DEPLOY_PORT || 22 }}
         envs: JUDGE_IMAGE, DEPLOY_PATH
         script: |
           cd $DEPLOY_PATH
@@ -490,7 +580,8 @@ jobs:
           rm -f /tmp/bluenet-deploy/images/judge-service-image.tar.gz
 
           echo "Starting judge-service..."
-          docker compose up -d judge-service --remove-orphans
+          export JUDGE_IMAGE="${JUDGE_IMAGE}"
+          docker compose --profile judge up -d --remove-orphans
 
           echo "Judge-service deployment completed!"
       env:
@@ -500,6 +591,7 @@ jobs:
   # ==================== 健康检查阶段 ====================
 
   health-check:
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     needs: [deploy-api-service, deploy-judge-service]
     timeout-minutes: 5
@@ -548,6 +640,7 @@ jobs:
   # ==================== 构建前端阶段 ====================
 
   build-frontend:
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     needs: [frontend-test, health-check]
     permissions:
@@ -642,6 +735,7 @@ jobs:
   # ==================== 部署前端阶段 ====================
 
   deploy-frontend:
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     needs: [build-frontend]
 
@@ -656,11 +750,17 @@ jobs:
           echo "deploy_host=${{ secrets.DEPLOY_HOST_PROD }}" >> $GITHUB_OUTPUT
           echo "image_tag=latest" >> $GITHUB_OUTPUT
           echo "env_name=production" >> $GITHUB_OUTPUT
+          echo "deploy_user=${{ secrets.DEPLOY_USER }}" >> $GITHUB_OUTPUT
+          echo "deploy_key=${{ secrets.DEPLOY_KEY }}" >> $GITHUB_OUTPUT
+          echo "deploy_port=${{ secrets.DEPLOY_PORT }}" >> $GITHUB_OUTPUT
         else
           echo "deploy_path=${{ secrets.DEPLOY_PATH_DEV }}" >> $GITHUB_OUTPUT
           echo "deploy_host=${{ secrets.DEPLOY_HOST_DEV }}" >> $GITHUB_OUTPUT
           echo "image_tag=develop" >> $GITHUB_OUTPUT
           echo "env_name=development" >> $GITHUB_OUTPUT
+          echo "deploy_user=${{ secrets.DEPLOY_USER }}" >> $GITHUB_OUTPUT
+          echo "deploy_key=${{ secrets.DEPLOY_KEY }}" >> $GITHUB_OUTPUT
+          echo "deploy_port=${{ secrets.DEPLOY_PORT }}" >> $GITHUB_OUTPUT
         fi
 
     - name: Download frontend image artifact
@@ -669,13 +769,24 @@ jobs:
         name: frontend-image
         path: ./images
 
+    - name: Sync compose file to server
+      uses: appleboy/scp-action@v0.1.7
+      with:
+        host: ${{ steps.vars.outputs.deploy_host }}
+        username: ${{ steps.vars.outputs.deploy_user }}
+        key: ${{ steps.vars.outputs.deploy_key }}
+        port: ${{ steps.vars.outputs.deploy_port }}
+        source: "docker/docker-compose.yml"
+        target: ${{ steps.vars.outputs.deploy_path }}
+        strip_components: 1
+
     - name: Transfer image to server
       uses: appleboy/scp-action@v0.1.7
       with:
         host: ${{ steps.vars.outputs.deploy_host }}
-        username: ${{ secrets.DEPLOY_USER }}
-        key: ${{ secrets.DEPLOY_KEY }}
-        port: ${{ secrets.DEPLOY_PORT || 22 }}
+        username: ${{ steps.vars.outputs.deploy_user }}
+        key: ${{ steps.vars.outputs.deploy_key }}
+        port: ${{ steps.vars.outputs.deploy_port }}
         source: "images/frontend-image.tar.gz"
         target: /tmp/bluenet-deploy
 
@@ -683,9 +794,9 @@ jobs:
       uses: appleboy/ssh-action@v1.0.3
       with:
         host: ${{ steps.vars.outputs.deploy_host }}
-        username: ${{ secrets.DEPLOY_USER }}
-        key: ${{ secrets.DEPLOY_KEY }}
-        port: ${{ secrets.DEPLOY_PORT || 22 }}
+        username: ${{ steps.vars.outputs.deploy_user }}
+        key: ${{ steps.vars.outputs.deploy_key }}
+        port: ${{ steps.vars.outputs.deploy_port }}
         envs: FRONTEND_IMAGE, DEPLOY_PATH
         script: |
           cd $DEPLOY_PATH
@@ -698,7 +809,7 @@ jobs:
           rm -f /tmp/bluenet-deploy/images/frontend-image.tar.gz
 
           echo "Starting frontend service..."
-          docker compose up -d --no-deps frontend --remove-orphans
+          docker compose --profile app up -d --no-deps frontend --remove-orphans
 
           echo "Cleaning up old images..."
           docker image prune -f
