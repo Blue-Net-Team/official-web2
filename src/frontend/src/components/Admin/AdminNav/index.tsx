@@ -59,7 +59,7 @@ export const menuConfig: MenuItemConfig[] = [
     minLevel: 1,
   },
   {
-    key: 'achievement',
+    key: 'users',
     label: '用户管理',
     path: '/admin/users',
     icon: <UserOutlined />,
