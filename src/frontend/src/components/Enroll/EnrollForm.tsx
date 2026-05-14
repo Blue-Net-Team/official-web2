@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { useState } from 'react'
 import { Form, Input, Select, Button, Spin } from 'antd'
 import type { MessageInstance } from 'antd/es/message/interface'
 import type { FormInstance } from 'antd/es/form'
@@ -11,6 +11,8 @@ import type { CollegeDTO } from '@/apis/schema/type'
 import { GENDER_OPTIONS } from './constants'
 import AvatarUpload from './AvatarUpload'
 import MobileDirectionSelector from './MobileDirectionSelector'
+import PolicyModal from './PolicyModal'
+import { enrollmentNotice, privacyPolicy } from './policies'
 import styles from '@/app/(public)/(other)/enroll/styles.module.css'
 
 const { TextArea } = Input
@@ -48,6 +50,16 @@ const EnrollForm: React.FC<EnrollFormProps> = ({
   handleSubmit,
   messageApi,
 }) => {
+  const [policyModalOpen, setPolicyModalOpen] = useState(false)
+  const [policyModalTitle, setPolicyModalTitle] = useState('')
+  const [policyModalContent, setPolicyModalContent] = useState('')
+
+  const openPolicyModal = (title: string, content: string) => {
+    setPolicyModalTitle(title)
+    setPolicyModalContent(content)
+    setPolicyModalOpen(true)
+  }
+
   return (
     <div className="w-full max-w-[600px] bg-[rgba(20,20,30,0.6)] border border-[rgba(102,119,255,0.15)] rounded-3xl p-10 max-sm:p-7 max-sm:rounded-2xl backdrop-blur-[20px] relative overflow-hidden shadow-[0_0_60px_rgba(102,119,255,0.1),inset_0_0_60px_rgba(102,119,255,0.02)] animate-[fadeInUp_0.8s_cubic-bezier(0.4,0,0.2,1)]">
       <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-[#6677ff] via-[#ff6b35] to-[#2f27b0] shadow-[0_0_20px_#6677ff]" />
@@ -251,19 +263,33 @@ const EnrollForm: React.FC<EnrollFormProps> = ({
 
         <div className="text-center text-[13px] text-white/40 leading-relaxed animate-[slideIn_0.6s_cubic-bezier(0.4,0,0.2,1)_0.7s_both]">
           提交即表示您同意我们的
-          <Link
-            href="#"
-            className={`${styles.link} text-[#6677ff]! hover:text-[#6677ff]! no-underline relative transition-all`}
+          <a
+            role="button"
+            tabIndex={0}
+            onClick={() => openPolicyModal('报名须知', enrollmentNotice)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                openPolicyModal('报名须知', enrollmentNotice)
+              }
+            }}
+            className={`${styles.link} text-[#6677ff] hover:text-[#6677ff] no-underline relative transition-all cursor-pointer`}
           >
             报名须知
-          </Link>
+          </a>
           和
-          <Link
-            href="#"
-            className={`${styles.link} text-[#6677ff]! hover:text-[#6677ff]! no-underline relative transition-all`}
+          <a
+            role="button"
+            tabIndex={0}
+            onClick={() => openPolicyModal('隐私政策', privacyPolicy)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                openPolicyModal('隐私政策', privacyPolicy)
+              }
+            }}
+            className={`${styles.link} text-[#6677ff] hover:text-[#6677ff] no-underline relative transition-all cursor-pointer`}
           >
             隐私政策
-          </Link>
+          </a>
           <br />
           已有账号？
           <Link
@@ -273,6 +299,13 @@ const EnrollForm: React.FC<EnrollFormProps> = ({
             立即登录
           </Link>
         </div>
+
+        <PolicyModal
+          open={policyModalOpen}
+          onClose={() => setPolicyModalOpen(false)}
+          title={policyModalTitle}
+          content={policyModalContent}
+        />
       </Form>
     </div>
   )

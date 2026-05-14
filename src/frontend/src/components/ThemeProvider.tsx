@@ -174,6 +174,12 @@ const themeConfig = {
       colorTextHeading: 'rgba(255, 255, 255, 0.85)',
       colorIcon: 'rgba(255, 255, 255, 0.45)',
       colorIconHover: 'rgba(255, 255, 255, 0.85)',
+      headerBg: '#141414',
+      contentBg: '#141414',
+      footerBg: '#141414',
+      titleColor: 'rgba(255, 255, 255, 0.85)',
+      titleFontSize: 18,
+      borderRadiusLG: 16,
     },
     // 抽屉
     Drawer: {
