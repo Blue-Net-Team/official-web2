@@ -326,16 +326,10 @@ jobs:
         if [ "${{ github.ref }}" = "refs/heads/master" ]; then
           echo "deploy_path=${{ secrets.DATABASE_DEPLOY_PATH_PROD }}" >> $GITHUB_OUTPUT
           echo "deploy_host=${{ secrets.DATABASE_HOST_PROD }}" >> $GITHUB_OUTPUT
-          echo "deploy_user=${{ secrets.DATABASE_DEPLOY_USER }}" >> $GITHUB_OUTPUT
-          echo "deploy_key=${{ secrets.DATABASE_DEPLOY_KEY }}" >> $GITHUB_OUTPUT
-          echo "deploy_port=${{ secrets.DATABASE_DEPLOY_PORT }}" >> $GITHUB_OUTPUT
           echo "env_name=production" >> $GITHUB_OUTPUT
         else
           echo "deploy_path=${{ secrets.DATABASE_DEPLOY_PATH_DEV }}" >> $GITHUB_OUTPUT
           echo "deploy_host=${{ secrets.DATABASE_HOST_DEV }}" >> $GITHUB_OUTPUT
-          echo "deploy_user=${{ secrets.DATABASE_DEPLOY_USER }}" >> $GITHUB_OUTPUT
-          echo "deploy_key=${{ secrets.DATABASE_DEPLOY_KEY }}" >> $GITHUB_OUTPUT
-          echo "deploy_port=${{ secrets.DATABASE_DEPLOY_PORT }}" >> $GITHUB_OUTPUT
           echo "env_name=development" >> $GITHUB_OUTPUT
         fi
 
@@ -343,9 +337,9 @@ jobs:
       uses: appleboy/scp-action@v0.1.7
       with:
         host: ${{ steps.vars.outputs.deploy_host }}
-        username: ${{ steps.vars.outputs.deploy_user }}
-        key: ${{ steps.vars.outputs.deploy_key }}
-        port: ${{ steps.vars.outputs.deploy_port }}
+        username: ${{ secrets.DATABASE_DEPLOY_USER }}
+        key: ${{ secrets.DATABASE_DEPLOY_KEY }}
+        port: ${{ secrets.DATABASE_DEPLOY_PORT }}
         source: "docker/docker-compose.yml"
         target: ${{ steps.vars.outputs.deploy_path }}
         strip_components: 1
@@ -354,9 +348,9 @@ jobs:
       uses: appleboy/ssh-action@v1.0.3
       with:
         host: ${{ steps.vars.outputs.deploy_host }}
-        username: ${{ steps.vars.outputs.deploy_user }}
-        key: ${{ steps.vars.outputs.deploy_key }}
-        port: ${{ steps.vars.outputs.deploy_port }}
+        username: ${{ secrets.DATABASE_DEPLOY_USER }}
+        key: ${{ secrets.DATABASE_DEPLOY_KEY }}
+        port: ${{ secrets.DATABASE_DEPLOY_PORT }}
         envs: DEPLOY_PATH
         script: |
           cd $DEPLOY_PATH
@@ -382,16 +376,10 @@ jobs:
         if [ "${{ github.ref }}" = "refs/heads/master" ]; then
           echo "deploy_path=${{ secrets.RABBITMQ_DEPLOY_PATH_PROD }}" >> $GITHUB_OUTPUT
           echo "deploy_host=${{ secrets.RABBITMQ_HOST_PROD }}" >> $GITHUB_OUTPUT
-          echo "deploy_user=${{ secrets.RABBITMQ_DEPLOY_USER }}" >> $GITHUB_OUTPUT
-          echo "deploy_key=${{ secrets.RABBITMQ_DEPLOY_KEY }}" >> $GITHUB_OUTPUT
-          echo "deploy_port=${{ secrets.RABBITMQ_DEPLOY_PORT }}" >> $GITHUB_OUTPUT
           echo "env_name=production" >> $GITHUB_OUTPUT
         else
           echo "deploy_path=${{ secrets.RABBITMQ_DEPLOY_PATH_DEV }}" >> $GITHUB_OUTPUT
           echo "deploy_host=${{ secrets.RABBITMQ_HOST_DEV }}" >> $GITHUB_OUTPUT
-          echo "deploy_user=${{ secrets.RABBITMQ_DEPLOY_USER }}" >> $GITHUB_OUTPUT
-          echo "deploy_key=${{ secrets.RABBITMQ_DEPLOY_KEY }}" >> $GITHUB_OUTPUT
-          echo "deploy_port=${{ secrets.RABBITMQ_DEPLOY_PORT }}" >> $GITHUB_OUTPUT
           echo "env_name=development" >> $GITHUB_OUTPUT
         fi
 
@@ -399,9 +387,9 @@ jobs:
       uses: appleboy/scp-action@v0.1.7
       with:
         host: ${{ steps.vars.outputs.deploy_host }}
-        username: ${{ steps.vars.outputs.deploy_user }}
-        key: ${{ steps.vars.outputs.deploy_key }}
-        port: ${{ steps.vars.outputs.deploy_port }}
+        username: ${{ secrets.RABBITMQ_DEPLOY_USER }}
+        key: ${{ secrets.RABBITMQ_DEPLOY_KEY }}
+        port: ${{ secrets.RABBITMQ_DEPLOY_PORT }}
         source: "docker/docker-compose.yml"
         target: ${{ steps.vars.outputs.deploy_path }}
         strip_components: 1
@@ -410,9 +398,9 @@ jobs:
       uses: appleboy/ssh-action@v1.0.3
       with:
         host: ${{ steps.vars.outputs.deploy_host }}
-        username: ${{ steps.vars.outputs.deploy_user }}
-        key: ${{ steps.vars.outputs.deploy_key }}
-        port: ${{ steps.vars.outputs.deploy_port }}
+        username: ${{ secrets.RABBITMQ_DEPLOY_USER }}
+        key: ${{ secrets.RABBITMQ_DEPLOY_KEY }}
+        port: ${{ secrets.RABBITMQ_DEPLOY_PORT }}
         envs: DEPLOY_PATH
         script: |
           cd $DEPLOY_PATH
@@ -442,17 +430,11 @@ jobs:
           echo "deploy_host=${{ secrets.DEPLOY_HOST_PROD }}" >> $GITHUB_OUTPUT
           echo "image_tag=latest" >> $GITHUB_OUTPUT
           echo "env_name=production" >> $GITHUB_OUTPUT
-          echo "deploy_user=${{ secrets.DEPLOY_USER }}" >> $GITHUB_OUTPUT
-          echo "deploy_key=${{ secrets.DEPLOY_KEY }}" >> $GITHUB_OUTPUT
-          echo "deploy_port=${{ secrets.DEPLOY_PORT }}" >> $GITHUB_OUTPUT
         else
           echo "deploy_path=${{ secrets.DEPLOY_PATH_DEV }}" >> $GITHUB_OUTPUT
           echo "deploy_host=${{ secrets.DEPLOY_HOST_DEV }}" >> $GITHUB_OUTPUT
           echo "image_tag=develop" >> $GITHUB_OUTPUT
           echo "env_name=development" >> $GITHUB_OUTPUT
-          echo "deploy_user=${{ secrets.DEPLOY_USER }}" >> $GITHUB_OUTPUT
-          echo "deploy_key=${{ secrets.DEPLOY_KEY }}" >> $GITHUB_OUTPUT
-          echo "deploy_port=${{ secrets.DEPLOY_PORT }}" >> $GITHUB_OUTPUT
         fi
 
     - name: Download api-service image artifact
@@ -465,9 +447,9 @@ jobs:
       uses: appleboy/scp-action@v0.1.7
       with:
         host: ${{ steps.vars.outputs.deploy_host }}
-        username: ${{ steps.vars.outputs.deploy_user }}
-        key: ${{ steps.vars.outputs.deploy_key }}
-        port: ${{ steps.vars.outputs.deploy_port }}
+        username: ${{ secrets.DEPLOY_USER }}
+        key: ${{ secrets.DEPLOY_KEY }}
+        port: ${{ secrets.DEPLOY_PORT }}
         source: "docker/docker-compose.yml"
         target: ${{ steps.vars.outputs.deploy_path }}
         strip_components: 1
@@ -476,9 +458,9 @@ jobs:
       uses: appleboy/scp-action@v0.1.7
       with:
         host: ${{ steps.vars.outputs.deploy_host }}
-        username: ${{ steps.vars.outputs.deploy_user }}
-        key: ${{ steps.vars.outputs.deploy_key }}
-        port: ${{ steps.vars.outputs.deploy_port }}
+        username: ${{ secrets.DEPLOY_USER }}
+        key: ${{ secrets.DEPLOY_KEY }}
+        port: ${{ secrets.DEPLOY_PORT }}
         source: "images/api-service-image.tar.gz"
         target: /tmp/bluenet-deploy
 
@@ -486,9 +468,9 @@ jobs:
       uses: appleboy/ssh-action@v1.0.3
       with:
         host: ${{ steps.vars.outputs.deploy_host }}
-        username: ${{ steps.vars.outputs.deploy_user }}
-        key: ${{ steps.vars.outputs.deploy_key }}
-        port: ${{ steps.vars.outputs.deploy_port }}
+        username: ${{ secrets.DEPLOY_USER }}
+        key: ${{ secrets.DEPLOY_KEY }}
+        port: ${{ secrets.DEPLOY_PORT }}
         envs: API_SERVICE_IMAGE, DEPLOY_PATH
         script: |
           cd $DEPLOY_PATH
@@ -750,17 +732,11 @@ jobs:
           echo "deploy_host=${{ secrets.DEPLOY_HOST_PROD }}" >> $GITHUB_OUTPUT
           echo "image_tag=latest" >> $GITHUB_OUTPUT
           echo "env_name=production" >> $GITHUB_OUTPUT
-          echo "deploy_user=${{ secrets.DEPLOY_USER }}" >> $GITHUB_OUTPUT
-          echo "deploy_key=${{ secrets.DEPLOY_KEY }}" >> $GITHUB_OUTPUT
-          echo "deploy_port=${{ secrets.DEPLOY_PORT }}" >> $GITHUB_OUTPUT
         else
           echo "deploy_path=${{ secrets.DEPLOY_PATH_DEV }}" >> $GITHUB_OUTPUT
           echo "deploy_host=${{ secrets.DEPLOY_HOST_DEV }}" >> $GITHUB_OUTPUT
           echo "image_tag=develop" >> $GITHUB_OUTPUT
           echo "env_name=development" >> $GITHUB_OUTPUT
-          echo "deploy_user=${{ secrets.DEPLOY_USER }}" >> $GITHUB_OUTPUT
-          echo "deploy_key=${{ secrets.DEPLOY_KEY }}" >> $GITHUB_OUTPUT
-          echo "deploy_port=${{ secrets.DEPLOY_PORT }}" >> $GITHUB_OUTPUT
         fi
 
     - name: Download frontend image artifact
@@ -773,9 +749,9 @@ jobs:
       uses: appleboy/scp-action@v0.1.7
       with:
         host: ${{ steps.vars.outputs.deploy_host }}
-        username: ${{ steps.vars.outputs.deploy_user }}
-        key: ${{ steps.vars.outputs.deploy_key }}
-        port: ${{ steps.vars.outputs.deploy_port }}
+        username: ${{ secrets.DEPLOY_USER }}
+        key: ${{ secrets.DEPLOY_KEY }}
+        port: ${{ secrets.DEPLOY_PORT }}
         source: "docker/docker-compose.yml"
         target: ${{ steps.vars.outputs.deploy_path }}
         strip_components: 1
@@ -784,9 +760,9 @@ jobs:
       uses: appleboy/scp-action@v0.1.7
       with:
         host: ${{ steps.vars.outputs.deploy_host }}
-        username: ${{ steps.vars.outputs.deploy_user }}
-        key: ${{ steps.vars.outputs.deploy_key }}
-        port: ${{ steps.vars.outputs.deploy_port }}
+        username: ${{ secrets.DEPLOY_USER }}
+        key: ${{ secrets.DEPLOY_KEY }}
+        port: ${{ secrets.DEPLOY_PORT }}
         source: "images/frontend-image.tar.gz"
         target: /tmp/bluenet-deploy
 
@@ -794,9 +770,9 @@ jobs:
       uses: appleboy/ssh-action@v1.0.3
       with:
         host: ${{ steps.vars.outputs.deploy_host }}
-        username: ${{ steps.vars.outputs.deploy_user }}
-        key: ${{ steps.vars.outputs.deploy_key }}
-        port: ${{ steps.vars.outputs.deploy_port }}
+        username: ${{ secrets.DEPLOY_USER }}
+        key: ${{ secrets.DEPLOY_KEY }}
+        port: ${{ secrets.DEPLOY_PORT }}
         envs: FRONTEND_IMAGE, DEPLOY_PATH
         script: |
           cd $DEPLOY_PATH
