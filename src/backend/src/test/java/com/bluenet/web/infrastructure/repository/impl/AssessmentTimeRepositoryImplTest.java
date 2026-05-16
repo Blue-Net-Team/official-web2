@@ -45,7 +45,7 @@ class AssessmentTimeRepositoryImplTest {
     private static final LocalDateTime END_TIME = LocalDateTime.of(2099, 1, 1, 11, 0);
 
     private AssessmentTime createTestEntity(Long id, Direction direction, int epoch, int grade) {
-        return AssessmentTime.reconstruct(id, direction, epoch, grade, START_TIME, END_TIME, false, null, null);
+        return AssessmentTime.reconstruct(id, direction, epoch, grade, START_TIME, END_TIME, false, null, null, false);
     }
 
     private AssessmentTimeDO toDataObject(AssessmentTime entity) {
@@ -77,7 +77,8 @@ class AssessmentTimeRepositoryImplTest {
                     END_TIME,
                     false,
                     null,
-                    null);
+                    null,
+                    false);
 
             assessmentTimeRepository.update(entity);
 

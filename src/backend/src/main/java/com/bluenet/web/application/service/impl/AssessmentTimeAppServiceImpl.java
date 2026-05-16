@@ -66,7 +66,8 @@ public class AssessmentTimeAppServiceImpl implements AssessmentTimeAppService {
                 command.startTime(),
                 command.endTime(),
                 command.timeLimit(),
-                command.timeLimitMinutes());
+                command.timeLimitMinutes(),
+                command.allowTeam());
 
         assessmentTimeRepository.save(entity);
         return toResult(entity);
@@ -122,7 +123,17 @@ public class AssessmentTimeAppServiceImpl implements AssessmentTimeAppService {
             throw new IllegalArgumentException("该方向轮次年级的考核时间已存在");
         }
 
-        existing.update(newDirection, newEpoch, newGrade, newStartTime, newEndTime, newTimeLimit, newTimeLimitMinutes);
+        Boolean newAllowTeam = command.allowTeam() != null ? command.allowTeam() : existing.getAllowTeam();
+
+        existing.update(
+                newDirection,
+                newEpoch,
+                newGrade,
+                newStartTime,
+                newEndTime,
+                newTimeLimit,
+                newTimeLimitMinutes,
+                newAllowTeam);
         assessmentTimeRepository.update(existing);
         return toResult(existing);
     }
@@ -278,6 +289,7 @@ public class AssessmentTimeAppServiceImpl implements AssessmentTimeAppService {
                 entity.getEndTime(),
                 entity.getTimeLimit(),
                 entity.getTimeLimitMinutes(),
+                entity.getAllowTeam(),
                 totalQuestions,
                 completedQuestions);
     }

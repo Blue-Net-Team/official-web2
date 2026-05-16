@@ -36,7 +36,9 @@ public class AssessmentTimeCommands {
             /** 是否限时 */
             Boolean timeLimit,
             /** 限时分钟数 */
-            Integer timeLimitMinutes) {
+            Integer timeLimitMinutes,
+            /** 是否允许组队 */
+            Boolean allowTeam) {
     }
 
     /**
@@ -61,6 +63,8 @@ public class AssessmentTimeCommands {
             /** 是否限时 */
             Boolean timeLimit,
             /** 限时分钟数 */
-            Integer timeLimitMinutes) {
+            Integer timeLimitMinutes,
+            /** 是否允许组队 */
+            Boolean allowTeam) {
     }
 }

@@ -100,7 +100,8 @@ class AssessmentAnswerAppServiceImplTest {
                 "test answer content",
                 null,
                 TEST_FILE_ID,
-                TEST_SUBMIT_TIME);
+                TEST_SUBMIT_TIME,
+                null);
     }
 
     private AssessmentQuestion createTestQuestion() {
@@ -165,7 +166,17 @@ class AssessmentAnswerAppServiceImplTest {
 
     private AssessmentTime createTestTime() {
         return AssessmentTime
-                .reconstruct(TEST_ASSESSMENT_TIME_ID, Direction.COMPUTER_VISION, 1, 2024, null, null, true, 90, null);
+                .reconstruct(
+                        TEST_ASSESSMENT_TIME_ID,
+                        Direction.COMPUTER_VISION,
+                        1,
+                        2024,
+                        null,
+                        null,
+                        true,
+                        90,
+                        null,
+                        false);
     }
 
     private AssessmentTime createNonTimedTime() {
@@ -179,7 +190,8 @@ class AssessmentAnswerAppServiceImplTest {
                         null,
                         false,
                         null,
-                        null);
+                        null,
+                        false);
     }
 
     private void stubDirectionAndFileValidation() {
@@ -390,7 +402,8 @@ class AssessmentAnswerAppServiceImplTest {
                     "[\"B\",\"A\"]",
                     null,
                     TEST_FILE_ID,
-                    TEST_SUBMIT_TIME);
+                    TEST_SUBMIT_TIME,
+                    null);
             when(assessmentQuestionRepository.findById(TEST_QUESTION_ID)).thenReturn(Optional.of(question));
             when(assessmentTimeRepository.findById(TEST_ASSESSMENT_TIME_ID)).thenReturn(Optional.of(createTestTime()));
             when(assessmentSessionRepository.findByUserIdAndAssessmentTimeId(TEST_USER_ID, TEST_ASSESSMENT_TIME_ID))
@@ -420,7 +433,8 @@ class AssessmentAnswerAppServiceImplTest {
                     "A,B",
                     null,
                     TEST_FILE_ID,
-                    TEST_SUBMIT_TIME);
+                    TEST_SUBMIT_TIME,
+                    null);
             when(assessmentQuestionRepository.findById(TEST_QUESTION_ID)).thenReturn(Optional.of(question));
             when(assessmentTimeRepository.findById(TEST_ASSESSMENT_TIME_ID)).thenReturn(Optional.of(createTestTime()));
             when(assessmentSessionRepository.findByUserIdAndAssessmentTimeId(TEST_USER_ID, TEST_ASSESSMENT_TIME_ID))

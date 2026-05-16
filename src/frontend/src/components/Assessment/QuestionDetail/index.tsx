@@ -11,12 +11,15 @@ import {
   UploadOutlined,
   ExperimentOutlined,
   CheckCircleOutlined,
+  TeamOutlined,
+  PlusOutlined,
 } from '@ant-design/icons'
 import { Button, Tag, message, Spin, Upload, type UploadProps } from 'antd'
 import { assessmentQuestionService } from '@/apis/services/assessment-question.service'
 import { assessmentTimeService } from '@/apis/services/assessment-time.service'
 import { assessmentAnswerService } from '@/apis/services/assessment-answer.service'
 import { assessmentSessionService } from '@/apis/services/assessment-session.service'
+import { assessmentTeamService } from '@/apis/services/assessment-team.service'
 import { algorithmJudgeService } from '@/apis/services/algorithm-judge.service'
 import { assessmentStatisticsService } from '@/apis/services/assessment-statistics.service'
 import { fileService } from '@/apis/services/file.service'
@@ -33,6 +36,7 @@ import type {
   JudgeJobPollingResponseDTO,
   ProgrammingLanguage,
   QuestionStatisticsDTO,
+  AssessmentTeamDTO,
 } from '@/apis/schema/assessment.dto'
 import { DIRECTION_LABELS as DirectionLabels } from '@/apis/schema/enumerate'
 import { QuestionTypeLabels } from '@/types/assessment'
@@ -43,6 +47,7 @@ import AlgorithmQuestion from './AlgorithmQuestion'
 import JudgeResultPanel from './JudgeResultPanel'
 import QuestionSidebar from './QuestionSidebar'
 import CountdownSection from './CountdownSection'
+import TeamPanel from './TeamPanel'
 import styles from '@/app/(public)/(other)/assessment/[timeId]/questions/[questionId]/styles.module.css'
 import { getStatusInfo, formatFileSize, getUploadPhase } from './utils'
 import { LANGUAGE_LABELS } from './constants'
@@ -76,8 +81,10 @@ export default function QuestionDetailPage() {
   const [questionStatistics, setQuestionStatistics] = useState<QuestionStatisticsDTO | null>(null)
   const [pollingJobId, setPollingJobId] = useState<number | null>(null)
   const [pollingFormalJob, setPollingFormalJob] = useState(false)
+  const [teamInfo, setTeamInfo] = useState<AssessmentTeamDTO | null>(null)
+  const [teamLoading, setTeamLoading] = useState(false)
   const autoSubmitRef = useRef(false)
-  const { isAuthenticated, checkAuthStatus } = useAuth()
+  const { isAuthenticated, checkAuthStatus, userInfo } = useAuth()
 
   // 认证检查
   useEffect(() => {
@@ -155,6 +162,22 @@ export default function QuestionDetailPage() {
     }
   }, [questionId])
 
+  // 加载队伍信息
+  const fetchTeamInfo = useCallback(async () => {
+    if (!timeInfo?.allowTeam) return
+    setTeamLoading(true)
+    try {
+      const response = await assessmentTeamService.getMyTeam(timeId)
+      if (response.code === 200) {
+        setTeamInfo(response.data)
+      }
+    } catch (error) {
+      console.error('Failed to fetch team info:', error)
+    } finally {
+      setTeamLoading(false)
+    }
+  }, [timeId, timeInfo?.allowTeam])
+
   // 后端未开启候选人通过率展示时会返回错误，这里静默隐藏可选统计卡片
   const fetchQuestionStatistics = useCallback(async () => {
     try {
@@ -193,6 +216,13 @@ export default function QuestionDetailPage() {
     fetchTimeInfo,
     fetchSession,
   ])
+
+  // timeInfo 加载完成后获取队伍信息
+  useEffect(() => {
+    if (isAuthenticated && timeInfo?.allowTeam && !loading) {
+      fetchTeamInfo()
+    }
+  }, [isAuthenticated, timeInfo?.allowTeam, loading, fetchTeamInfo])
 
   // 非限时考核：endTime 到达时自动标记过期
   useEffect(() => {
@@ -519,6 +549,64 @@ export default function QuestionDetailPage() {
     }
   }
 
+  // 队伍管理操作
+  const handleLeaveTeam = async () => {
+    if (!teamInfo) return
+    setTeamLoading(true)
+    try {
+      const response = await assessmentTeamService.leaveTeam({ teamId: teamInfo.id })
+      if (response.code === 200) {
+        setTeamInfo(null)
+        message.success('已退出队伍')
+      } else {
+        message.error(response.msg || '退出失败')
+      }
+    } catch (error) {
+      message.error('退出失败')
+    } finally {
+      setTeamLoading(false)
+    }
+  }
+
+  const handleTransferLeader = async (newLeaderId: number) => {
+    if (!teamInfo) return
+    setTeamLoading(true)
+    try {
+      const response = await assessmentTeamService.transferLeader({
+        teamId: teamInfo.id,
+        newLeaderId,
+      })
+      if (response.code === 200 && response.data) {
+        setTeamInfo(response.data)
+        message.success('队长转让成功')
+      } else {
+        message.error(response.msg || '转让失败')
+      }
+    } catch (error) {
+      message.error('转让失败')
+    } finally {
+      setTeamLoading(false)
+    }
+  }
+
+  const handleDisbandTeam = async () => {
+    if (!teamInfo) return
+    setTeamLoading(true)
+    try {
+      const response = await assessmentTeamService.disbandTeam(teamInfo.id)
+      if (response.code === 200) {
+        setTeamInfo(null)
+        message.success('队伍已解散')
+      } else {
+        message.error(response.msg || '解散失败')
+      }
+    } catch (error) {
+      message.error('解散失败')
+    } finally {
+      setTeamLoading(false)
+    }
+  }
+
   // 导航
   const currentIndex = questionsList.findIndex((q) => q.id === questionId)
   const hasPrev = currentIndex > 0
@@ -580,6 +668,14 @@ export default function QuestionDetailPage() {
     questionStatistics?.passRate !== undefined
       ? `${(Number(questionStatistics.passRate) * 100).toFixed(2)}%`
       : null
+
+  // 队伍相关计算
+  const allowTeam = timeInfo?.allowTeam ?? false
+  const isInTeam = teamInfo !== null
+  const isTeamLeader = isInTeam && teamInfo?.leaderId === userInfo?.id
+  const canUploadFile = !allowTeam || isTeamLeader
+  const showTeamPanel = allowTeam && isFileUpload
+  const showTeamActionInUpload = allowTeam && isFileUpload && !isInTeam && !isExpired
 
   const allowedExtsText = fileContent?.allowedExtensions
     ? `支持 ${fileContent.allowedExtensions.join(', ')} 格式`
@@ -756,19 +852,71 @@ export default function QuestionDetailPage() {
                 </div>
                 <hr className="w-full h-px bg-white/[0.04] border-none m-0" />
                 <div className="flex-1 pt-[18px]">
-                  <FileUploadArea
-                    uploadPhase={uploadPhase}
-                    uploadedFile={uploadedFile}
-                    uploadProgress={uploadProgress}
-                    presignedPhase={presignedPhase}
-                    isExpired={isExpired}
-                    answer={answer}
-                    dropHintText={dropHintText}
-                    draggerProps={draggerProps}
-                    onResubmit={() => setIsResubmitting(true)}
-                    onRemoveFile={handleRemoveFile}
-                    onSetUploadedFile={setUploadedFile}
-                  />
+                  {/* 允许组队但未在队伍中：显示创建/加入队伍按钮 */}
+                  {showTeamActionInUpload ? (
+                    <div className="flex flex-col items-center gap-4 py-8 px-4 rounded-[10px] bg-white/[0.03] border border-white/[0.06]">
+                      <TeamOutlined className="text-[32px] text-[#6677ff]/40" />
+                      <p className="text-[13px] text-white/45 m-0">
+                        本考核允许组队，请先创建或加入队伍
+                      </p>
+                      <div className="flex gap-3">
+                        <Button
+                          type="primary"
+                          icon={<PlusOutlined />}
+                          onClick={() => router.push(`/assessment/${timeId}/questions`)}
+                        >
+                          去创建/加入队伍
+                        </Button>
+                      </div>
+                    </div>
+                  ) : /* 在队伍中但不是队长：只读显示 */
+                  allowTeam && isInTeam && !isTeamLeader ? (
+                    <div className="flex flex-col gap-4">
+                      {answer?.fileId ? (
+                        <div className="flex items-center gap-4 p-5 rounded-[10px] bg-[#07c160]/[0.06] border border-[#07c160]/[0.12]">
+                          <CheckCircleOutlined className="text-[32px] text-[#07c160]" />
+                          <div className="flex-1">
+                            <p className="text-base font-semibold text-[#07c160] mb-1">
+                              队长已提交
+                            </p>
+                            <p className="text-[13px] text-white/45 m-0">
+                              提交时间：
+                              {answer?.submitTime
+                                ? new Date(answer.submitTime).toLocaleString('zh-CN')
+                                : '-'}
+                            </p>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-4 p-5 rounded-[10px] bg-white/[0.03] border border-white/[0.06]">
+                          <TeamOutlined className="text-[32px] text-white/20" />
+                          <div>
+                            <p className="text-base font-semibold text-white/45 mb-1">
+                              等待队长提交
+                            </p>
+                            <p className="text-[13px] text-white/30 m-0">
+                              您无上传权限，请联系队长
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    /* 普通情况或队长：正常上传 */
+                    <FileUploadArea
+                      uploadPhase={uploadPhase}
+                      uploadedFile={uploadedFile}
+                      uploadProgress={uploadProgress}
+                      presignedPhase={presignedPhase}
+                      isExpired={isExpired}
+                      answer={answer}
+                      dropHintText={dropHintText}
+                      draggerProps={draggerProps}
+                      onResubmit={() => setIsResubmitting(true)}
+                      onRemoveFile={handleRemoveFile}
+                      onSetUploadedFile={setUploadedFile}
+                    />
+                  )}
                 </div>
               </section>
             ) : isChoiceQuestion ? (
@@ -824,6 +972,16 @@ export default function QuestionDetailPage() {
 
           {/* Sidebar */}
           <aside className="w-full lg:w-80 flex-shrink-0 lg:sticky lg:top-6 lg:self-start flex flex-col gap-6">
+            {showTeamPanel && teamInfo && userInfo && (
+              <TeamPanel
+                team={teamInfo}
+                currentUserId={userInfo.id}
+                onLeaveTeam={handleLeaveTeam}
+                onTransferLeader={handleTransferLeader}
+                onDisbandTeam={handleDisbandTeam}
+                loading={teamLoading}
+              />
+            )}
             <CountdownSection
               isTimed={isTimed}
               deadline={deadline}

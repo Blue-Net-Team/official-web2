@@ -61,4 +61,9 @@ public class AssessmentTimeDO {
      * 考核结果发布时间，设置后考生可见评论和最终评分。
      */
     private LocalDateTime resultsPublishedAt;
+
+    /**
+     * 是否允许组队答题。
+     */
+    private Boolean allowTeam;
 }

@@ -161,7 +161,8 @@ class AdminCommentControllerIntegrationTest extends BaseIntegrationTest {
                 LocalDateTime.now().minusDays(1),
                 LocalDateTime.now().plusDays(7),
                 false,
-                null);
+                null,
+                false);
         RepositoryTestObjects.insert(assessmentTimeMapper, assessmentTime, AssessmentTimeDO.class);
 
         // 创建文件上传题

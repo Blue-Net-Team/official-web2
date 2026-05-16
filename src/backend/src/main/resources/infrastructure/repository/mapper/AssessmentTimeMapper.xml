@@ -63,11 +63,12 @@
         (
             <choose>
                 <when test="direction != null and enrollmentYear != null">
-                    t.direction = #{direction}
-                    AND t.grade = #{enrollmentYear}
+                    (t.direction = #{direction} AND t.grade = #{enrollmentYear})
+                    OR (t.direction IS NULL AND t.grade = #{enrollmentYear})
                 </when>
                 <when test="direction != null">
                     t.direction = #{direction}
+                    OR t.direction IS NULL
                 </when>
                 <when test="enrollmentYear != null">
                     t.grade = #{enrollmentYear}

@@ -51,4 +51,9 @@ public class AssessmentAnswerDO {
      * 答案提交时间。
      */
     private LocalDateTime submitTime;
+
+    /**
+     * 队伍ID，组队题时关联到队伍。
+     */
+    private Long teamId;
 }

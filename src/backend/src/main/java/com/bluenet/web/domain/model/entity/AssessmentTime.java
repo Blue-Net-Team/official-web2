@@ -52,10 +52,15 @@ public class AssessmentTime {
      * 考核结果发布时间，设置后考生可见评论和最终评分。
      */
     private LocalDateTime resultsPublishedAt;
+    /**
+     * 是否允许组队答题。
+     */
+    private Boolean allowTeam;
 
     private AssessmentTime(Long id, Direction direction, Integer epoch, Integer grade,
             LocalDateTime startTime, LocalDateTime endTime,
-            Boolean timeLimit, Integer timeLimitMinutes, LocalDateTime resultsPublishedAt) {
+            Boolean timeLimit, Integer timeLimitMinutes, LocalDateTime resultsPublishedAt,
+            Boolean allowTeam) {
         this.id = id;
         this.direction = direction;
         this.epoch = epoch;
@@ -65,6 +70,7 @@ public class AssessmentTime {
         this.timeLimit = timeLimit;
         this.timeLimitMinutes = timeLimitMinutes;
         this.resultsPublishedAt = resultsPublishedAt;
+        this.allowTeam = allowTeam;
     }
 
     /**
@@ -72,14 +78,15 @@ public class AssessmentTime {
      */
     public static AssessmentTime create(Direction direction, Integer epoch, Integer grade,
             LocalDateTime startTime, LocalDateTime endTime,
-            Boolean timeLimit, Integer timeLimitMinutes) {
+            Boolean timeLimit, Integer timeLimitMinutes, Boolean allowTeam) {
         if (startTime != null && endTime != null && !startTime.isBefore(endTime)) {
             throw new IllegalArgumentException("开始时间必须早于结束时间");
         }
         if (Boolean.TRUE.equals(timeLimit) && (timeLimitMinutes == null || timeLimitMinutes <= 0)) {
             throw new IllegalArgumentException("限时考核必须设置有效的限时分钟数");
         }
-        return new AssessmentTime(null, direction, epoch, grade, startTime, endTime, timeLimit, timeLimitMinutes, null);
+        return new AssessmentTime(null, direction, epoch, grade, startTime, endTime, timeLimit, timeLimitMinutes, null,
+                allowTeam);
     }
 
     /**
@@ -87,9 +94,10 @@ public class AssessmentTime {
      */
     public static AssessmentTime reconstruct(Long id, Direction direction, Integer epoch, Integer grade,
             LocalDateTime startTime, LocalDateTime endTime,
-            Boolean timeLimit, Integer timeLimitMinutes, LocalDateTime resultsPublishedAt) {
+            Boolean timeLimit, Integer timeLimitMinutes, LocalDateTime resultsPublishedAt,
+            Boolean allowTeam) {
         return new AssessmentTime(id, direction, epoch, grade, startTime, endTime, timeLimit, timeLimitMinutes,
-                resultsPublishedAt);
+                resultsPublishedAt, allowTeam);
     }
 
     /**
@@ -97,7 +105,7 @@ public class AssessmentTime {
      */
     public void update(Direction direction, Integer epoch, Integer grade,
             LocalDateTime startTime, LocalDateTime endTime,
-            Boolean timeLimit, Integer timeLimitMinutes) {
+            Boolean timeLimit, Integer timeLimitMinutes, Boolean allowTeam) {
         if (direction != null) {
             this.direction = direction;
         }
@@ -118,6 +126,9 @@ public class AssessmentTime {
         }
         if (timeLimitMinutes != null) {
             this.timeLimitMinutes = timeLimitMinutes;
+        }
+        if (allowTeam != null) {
+            this.allowTeam = allowTeam;
         }
     }
 

@@ -99,7 +99,8 @@ class EntityCrudTest extends BaseIntegrationTest {
                 LocalDateTime.now(),
                 LocalDateTime.now().plusDays(7),
                 true,
-                120);
+                120,
+                false);
         RepositoryTestObjects.insert(assessmentTimeMapper, evalTime, AssessmentTimeDO.class);
 
         // 创建题目 - 单选题
@@ -148,7 +149,8 @@ class EntityCrudTest extends BaseIntegrationTest {
                 LocalDateTime.now(),
                 LocalDateTime.now().plusDays(7),
                 false,
-                null);
+                null,
+                false);
         RepositoryTestObjects.insert(assessmentTimeMapper, evalTime, AssessmentTimeDO.class);
 
         AlgorithmContent content = new AlgorithmContent();

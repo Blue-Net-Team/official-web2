@@ -50,6 +50,7 @@ public class AssessmentTimeResponseConverter {
                 .timeLimitMinutes(result.timeLimitMinutes())
                 .totalQuestions(result.totalQuestions())
                 .completedQuestions(result.completedQuestions())
+                .allowTeam(result.allowTeam())
                 .build();
     }
 

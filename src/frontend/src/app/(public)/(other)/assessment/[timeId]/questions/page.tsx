@@ -9,16 +9,21 @@ import {
   MinusCircleOutlined,
   FileTextOutlined,
   TrophyOutlined,
+  TeamOutlined,
+  PlusOutlined,
+  LoginOutlined,
 } from '@ant-design/icons'
-import { Spin, Table, Tag, message } from 'antd'
+import { Spin, Table, Tag, message, Button, Modal, Input, Form } from 'antd'
 import type { TableColumnsType } from 'antd'
 import { assessmentQuestionService } from '@/apis/services/assessment-question.service'
 import { assessmentTimeService } from '@/apis/services/assessment-time.service'
+import { assessmentTeamService } from '@/apis/services/assessment-team.service'
 import { useAuth } from '@/hooks'
 import type {
   AssessmentQuestionDTO,
   AssessmentTimeDTO,
   QuestionType,
+  AssessmentTeamDTO,
 } from '@/apis/schema/assessment.dto'
 import { QuestionTypeLabels } from '@/types/assessment'
 import { DIRECTION_LABELS as DirectionLabels } from '@/apis/schema/enumerate'
@@ -74,7 +79,14 @@ export default function QuestionsPage() {
   const [totalElements, setTotalElements] = useState(0)
   const [ended, setEnded] = useState(false)
   const [loading, setLoading] = useState(true)
-  const { isAuthenticated, checkAuthStatus } = useAuth()
+  const [teamInfo, setTeamInfo] = useState<AssessmentTeamDTO | null>(null)
+  const [teamLoading, setTeamLoading] = useState(false)
+  const [createTeamModalOpen, setCreateTeamModalOpen] = useState(false)
+  const [joinTeamModalOpen, setJoinTeamModalOpen] = useState(false)
+  const [createTeamForm] = Form.useForm()
+  const [joinTeamForm] = Form.useForm()
+  const [teamActionLoading, setTeamActionLoading] = useState(false)
+  const { isAuthenticated, checkAuthStatus, userInfo } = useAuth()
 
   // 认证检查
   useEffect(() => {
@@ -119,12 +131,86 @@ export default function QuestionsPage() {
     }
   }, [timeId, currentPage])
 
+  // 加载队伍信息
+  const fetchTeamInfo = useCallback(async () => {
+    if (!timeInfo?.allowTeam) return
+    setTeamLoading(true)
+    try {
+      const response = await assessmentTeamService.getMyTeam(timeId)
+      if (response.code === 200) {
+        setTeamInfo(response.data)
+      }
+    } catch (error) {
+      console.error('Failed to fetch team info:', error)
+    } finally {
+      setTeamLoading(false)
+    }
+  }, [timeId, timeInfo?.allowTeam])
+
   useEffect(() => {
     if (isAuthenticated) {
       fetchTimeInfo()
       fetchQuestions()
     }
   }, [isAuthenticated, fetchTimeInfo, fetchQuestions])
+
+  // 考核时间信息加载完成后，加载队伍信息
+  useEffect(() => {
+    if (isAuthenticated && timeInfo?.allowTeam) {
+      fetchTeamInfo()
+    }
+  }, [isAuthenticated, timeInfo?.allowTeam, fetchTeamInfo])
+
+  // 创建队伍
+  const handleCreateTeam = async () => {
+    try {
+      const values = await createTeamForm.validateFields()
+      setTeamActionLoading(true)
+      const response = await assessmentTeamService.createTeam({
+        assessmentTimeId: timeId,
+        name: values.name,
+      })
+      if (response.code === 200 && response.data) {
+        setTeamInfo(response.data)
+        setCreateTeamModalOpen(false)
+        createTeamForm.resetFields()
+        message.success('队伍创建成功')
+      } else {
+        message.error(response.msg || '创建失败')
+      }
+    } catch (err: unknown) {
+      if (err && typeof err === 'object' && 'errorFields' in err) return
+      const msg = (err as { response?: { data?: { msg?: string } } })?.response?.data?.msg
+      message.error(msg || '创建失败')
+    } finally {
+      setTeamActionLoading(false)
+    }
+  }
+
+  // 加入队伍
+  const handleJoinTeam = async () => {
+    try {
+      const values = await joinTeamForm.validateFields()
+      setTeamActionLoading(true)
+      const response = await assessmentTeamService.joinTeam({
+        inviteCode: values.inviteCode,
+      })
+      if (response.code === 200 && response.data) {
+        setTeamInfo(response.data)
+        setJoinTeamModalOpen(false)
+        joinTeamForm.resetFields()
+        message.success('加入队伍成功')
+      } else {
+        message.error(response.msg || '加入失败')
+      }
+    } catch (err: unknown) {
+      if (err && typeof err === 'object' && 'errorFields' in err) return
+      const msg = (err as { response?: { data?: { msg?: string } } })?.response?.data?.msg
+      message.error(msg || '加入失败')
+    } finally {
+      setTeamActionLoading(false)
+    }
+  }
 
   const columns: TableColumnsType<AssessmentQuestionDTO> = useMemo(
     () => [
@@ -256,9 +342,73 @@ export default function QuestionsPage() {
                       {formatDate(timeInfo.startTime)} — {formatDate(timeInfo.endTime)}
                     </span>
                   </span>
+                  {timeInfo.allowTeam && (
+                    <Tag color="blue" icon={<TeamOutlined />}>
+                      允许组队
+                    </Tag>
+                  )}
                 </>
               )}
             </div>
+
+            {/* 队伍信息区域 */}
+            {timeInfo?.allowTeam && !ended && (
+              <div className="mb-6 p-4 rounded-xl bg-white/[0.04] border border-white/[0.08] backdrop-blur-xl">
+                {teamLoading ? (
+                  <div className="flex items-center gap-2 text-white/45">
+                    <Spin size="small" />
+                    <span className="text-[13px]">加载队伍信息...</span>
+                  </div>
+                ) : teamInfo ? (
+                  <div className="flex items-center justify-between flex-wrap gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-lg bg-[#6677ff]/[0.15] flex items-center justify-center">
+                        <TeamOutlined className="text-lg text-[#6677ff]" />
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-sm font-medium text-white">{teamInfo.name}</span>
+                        <span className="text-[12px] text-white/45">
+                          队长：{teamInfo.leaderName} · 成员 {teamInfo.members.length} 人
+                        </span>
+                      </div>
+                    </div>
+                    <Button
+                      type="primary"
+                      size="small"
+                      onClick={() =>
+                        router.push(`/assessment/${timeId}/questions/${questions[0]?.id || ''}`)
+                      }
+                    >
+                      进入答题
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-between flex-wrap gap-3">
+                    <div className="flex items-center gap-2 text-white/45">
+                      <TeamOutlined className="text-sm" />
+                      <span className="text-[13px]">本考核允许组队，您当前未加入队伍</span>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        type="primary"
+                        size="small"
+                        icon={<PlusOutlined />}
+                        onClick={() => setCreateTeamModalOpen(true)}
+                      >
+                        创建队伍
+                      </Button>
+                      <Button
+                        size="small"
+                        icon={<LoginOutlined />}
+                        onClick={() => setJoinTeamModalOpen(true)}
+                      >
+                        加入队伍
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
@@ -330,6 +480,54 @@ export default function QuestionsPage() {
             )}
           </>
         )}
+
+        {/* 创建队伍弹窗 */}
+        <Modal
+          title="创建队伍"
+          open={createTeamModalOpen}
+          onOk={handleCreateTeam}
+          onCancel={() => {
+            setCreateTeamModalOpen(false)
+            createTeamForm.resetFields()
+          }}
+          confirmLoading={teamActionLoading}
+          okText="创建"
+          cancelText="取消"
+        >
+          <Form form={createTeamForm} layout="vertical">
+            <Form.Item
+              name="name"
+              label="队伍名称"
+              rules={[{ required: true, message: '请输入队伍名称' }]}
+            >
+              <Input placeholder="请输入队伍名称" maxLength={30} showCount />
+            </Form.Item>
+          </Form>
+        </Modal>
+
+        {/* 加入队伍弹窗 */}
+        <Modal
+          title="加入队伍"
+          open={joinTeamModalOpen}
+          onOk={handleJoinTeam}
+          onCancel={() => {
+            setJoinTeamModalOpen(false)
+            joinTeamForm.resetFields()
+          }}
+          confirmLoading={teamActionLoading}
+          okText="加入"
+          cancelText="取消"
+        >
+          <Form form={joinTeamForm} layout="vertical">
+            <Form.Item
+              name="inviteCode"
+              label="邀请码"
+              rules={[{ required: true, message: '请输入邀请码' }]}
+            >
+              <Input placeholder="请输入队伍邀请码" />
+            </Form.Item>
+          </Form>
+        </Modal>
       </div>
     </div>
   )

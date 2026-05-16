@@ -9,6 +9,7 @@
         <result column="language" property="language"/>
         <result column="file_id" property="fileId"/>
         <result column="submit_time" property="submitTime"/>
+        <result column="team_id" property="teamId"/>
     </resultMap>
 
     <select id="countByUserIdAndAssessmentTimeId" resultType="int">

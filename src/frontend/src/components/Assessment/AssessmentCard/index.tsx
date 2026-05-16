@@ -8,6 +8,7 @@ import {
   InboxOutlined,
   DesktopOutlined,
   RightOutlined,
+  TeamOutlined,
 } from '@ant-design/icons'
 import type { Assessment } from '@/types/profile'
 import type { AssessmentTimeDTO, AssessmentStatus } from '@/apis/schema/assessment.dto'
@@ -73,6 +74,7 @@ export default function AssessmentCard({ assessment, status }: AssessmentCardPro
   const direction = isDTO ? assessment.direction : null
   const timeLimit = isDTO ? assessment.timeLimit : false
   const timeLimitMinutes = isDTO ? assessment.timeLimitMinutes : undefined
+  const allowTeam = isDTO ? assessment.allowTeam : false
 
   return (
     <div
@@ -151,6 +153,12 @@ export default function AssessmentCard({ assessment, status }: AssessmentCardPro
           <div className="flex items-center gap-[6px] text-[13px] text-white/50">
             <ClockCircleOutlined className="text-sm" />
             <span>不限时</span>
+          </div>
+        )}
+        {allowTeam && (
+          <div className="flex items-center gap-[6px] text-[13px] text-[#6677ff] font-medium">
+            <TeamOutlined className="text-sm" />
+            <span>允许组队</span>
           </div>
         )}
       </div>

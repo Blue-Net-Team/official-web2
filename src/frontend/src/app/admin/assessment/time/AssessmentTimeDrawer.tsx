@@ -33,6 +33,7 @@ interface FormValues {
   timeRange: [Dayjs, Dayjs]
   timeLimit: boolean
   timeLimitMinutes: number | null
+  allowTeam: boolean
 }
 
 export default function AssessmentTimeDrawer({
@@ -71,6 +72,7 @@ export default function AssessmentTimeDrawer({
         timeRange: [dayjs(assessmentTime.startTime), dayjs(assessmentTime.endTime)],
         timeLimit: assessmentTime.timeLimit,
         timeLimitMinutes: assessmentTime.timeLimitMinutes,
+        allowTeam: assessmentTime.allowTeam,
       })
     }
   }, [open, mode, assessmentTime, form, isCreateMode, isSuperAdmin, userDirection])
@@ -96,6 +98,7 @@ export default function AssessmentTimeDrawer({
         endTime: values.timeRange[1].format('YYYY-MM-DDTHH:mm:ss'),
         timeLimit: values.timeLimit,
         timeLimitMinutes: values.timeLimit ? values.timeLimitMinutes : null,
+        allowTeam: values.allowTeam,
       }
 
       if (isCreateMode) {
@@ -155,7 +158,7 @@ export default function AssessmentTimeDrawer({
         form={form}
         layout="vertical"
         disabled={isViewMode}
-        initialValues={{ timeLimit: false }}
+        initialValues={{ timeLimit: false, allowTeam: false }}
       >
         <Form.Item
           name="direction"
@@ -203,6 +206,10 @@ export default function AssessmentTimeDrawer({
             <InputNumber min={1} placeholder="限时分钟数" className="w-full" suffix="分钟" />
           </Form.Item>
         )}
+
+        <Form.Item name="allowTeam" label="允许组队" valuePropName="checked">
+          <Switch checkedChildren="允许" unCheckedChildren="不允许" />
+        </Form.Item>
       </Form>
     </Drawer>
   )

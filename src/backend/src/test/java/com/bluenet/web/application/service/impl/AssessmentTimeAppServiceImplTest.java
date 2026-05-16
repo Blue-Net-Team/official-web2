@@ -66,7 +66,8 @@ class AssessmentTimeAppServiceImplTest {
                 futureEnd,
                 true,
                 120,
-                null);
+                null,
+                false);
     }
 
     // ==================== createAssessmentTime 测试 ====================
@@ -79,7 +80,7 @@ class AssessmentTimeAppServiceImplTest {
         @DisplayName("正常创建：应返回Result")
         void create_validCommand_shouldReturnResult() {
             AssessmentTimeCommands.CreateAssessmentTimeCommand command = new AssessmentTimeCommands.CreateAssessmentTimeCommand(
-                    Direction.COMPUTER_VISION, 1, 2024, futureStart, futureEnd, true, 120);
+                    Direction.COMPUTER_VISION, 1, 2024, futureStart, futureEnd, true, 120, false);
 
             when(assessmentTimeRepository.existsByDirectionAndEpochAndGrade(any(), any(), any())).thenReturn(false);
 
@@ -94,7 +95,7 @@ class AssessmentTimeAppServiceImplTest {
         @DisplayName("重复组合：应抛出IllegalArgumentException")
         void create_duplicateCombination_shouldThrow() {
             AssessmentTimeCommands.CreateAssessmentTimeCommand command = new AssessmentTimeCommands.CreateAssessmentTimeCommand(
-                    Direction.COMPUTER_VISION, 1, 2024, futureStart, futureEnd, false, null);
+                    Direction.COMPUTER_VISION, 1, 2024, futureStart, futureEnd, false, null, false);
 
             when(assessmentTimeRepository.existsByDirectionAndEpochAndGrade(any(), any(), any())).thenReturn(true);
 
@@ -108,7 +109,7 @@ class AssessmentTimeAppServiceImplTest {
         @DisplayName("开始时间不早于结束时间：应抛出IllegalArgumentException")
         void create_startTimeNotBeforeEndTime_shouldThrow() {
             AssessmentTimeCommands.CreateAssessmentTimeCommand command = new AssessmentTimeCommands.CreateAssessmentTimeCommand(
-                    Direction.COMPUTER_VISION, 1, 2024, futureEnd, futureStart, false, null);
+                    Direction.COMPUTER_VISION, 1, 2024, futureEnd, futureStart, false, null, false);
 
             IllegalArgumentException ex = assertThrows(
                     IllegalArgumentException.class,
@@ -120,7 +121,7 @@ class AssessmentTimeAppServiceImplTest {
         @DisplayName("限时考核未设置限时分钟数：应抛出IllegalArgumentException")
         void create_timeLimitWithoutMinutes_shouldThrow() {
             AssessmentTimeCommands.CreateAssessmentTimeCommand command = new AssessmentTimeCommands.CreateAssessmentTimeCommand(
-                    Direction.COMPUTER_VISION, 1, 2024, futureStart, futureEnd, true, null);
+                    Direction.COMPUTER_VISION, 1, 2024, futureStart, futureEnd, true, null, false);
 
             IllegalArgumentException ex = assertThrows(
                     IllegalArgumentException.class,
@@ -140,7 +141,7 @@ class AssessmentTimeAppServiceImplTest {
         void update_validCommand_shouldReturnResult() {
             AssessmentTime existing = createTestEntity();
             AssessmentTimeCommands.UpdateAssessmentTimeCommand command = new AssessmentTimeCommands.UpdateAssessmentTimeCommand(
-                    TEST_ID, null, null, null, futureStart, futureEnd, true, 90);
+                    TEST_ID, null, null, null, futureStart, futureEnd, true, 90, false);
 
             when(assessmentTimeRepository.findById(TEST_ID)).thenReturn(Optional.of(existing));
 
@@ -154,7 +155,7 @@ class AssessmentTimeAppServiceImplTest {
         @DisplayName("更新不存在记录：应抛出DataNotFound")
         void update_notFound_shouldThrow() {
             AssessmentTimeCommands.UpdateAssessmentTimeCommand command = new AssessmentTimeCommands.UpdateAssessmentTimeCommand(
-                    TEST_ID, null, null, null, null, null, null, null);
+                    TEST_ID, null, null, null, null, null, null, null, null);
 
             when(assessmentTimeRepository.findById(TEST_ID)).thenReturn(Optional.empty());
 
@@ -175,10 +176,11 @@ class AssessmentTimeAppServiceImplTest {
                     futureEnd,
                     false,
                     null,
-                    null);
+                    null,
+                    false);
 
             AssessmentTimeCommands.UpdateAssessmentTimeCommand command = new AssessmentTimeCommands.UpdateAssessmentTimeCommand(
-                    TEST_ID, null, null, null, LocalDateTime.of(2025, 6, 1, 9, 0), null, null, null);
+                    TEST_ID, null, null, null, LocalDateTime.of(2025, 6, 1, 9, 0), null, null, null, null);
 
             when(assessmentTimeRepository.findById(TEST_ID)).thenReturn(Optional.of(existing));
 
@@ -248,7 +250,7 @@ class AssessmentTimeAppServiceImplTest {
                 mockedUserCTX.when(UserCTX::getCurrentUser).thenReturn(userVO);
 
                 AssessmentTimeCommands.CreateAssessmentTimeCommand command = new AssessmentTimeCommands.CreateAssessmentTimeCommand(
-                        Direction.COMPUTER_VISION, 1, 2025, futureStart, futureEnd, false, null);
+                        Direction.COMPUTER_VISION, 1, 2025, futureStart, futureEnd, false, null, false);
 
                 when(assessmentTimeRepository.existsByDirectionAndEpochAndGrade(any(), any(), any())).thenReturn(false);
 
@@ -271,7 +273,7 @@ class AssessmentTimeAppServiceImplTest {
                 mockedUserCTX.when(UserCTX::getCurrentUser).thenReturn(userVO);
 
                 AssessmentTimeCommands.CreateAssessmentTimeCommand command = new AssessmentTimeCommands.CreateAssessmentTimeCommand(
-                        Direction.STRUCTURAL_DESIGN, 1, 2025, futureStart, futureEnd, false, null);
+                        Direction.STRUCTURAL_DESIGN, 1, 2025, futureStart, futureEnd, false, null, false);
 
                 Forbidden ex = assertThrows(
                         Forbidden.class,
@@ -295,7 +297,7 @@ class AssessmentTimeAppServiceImplTest {
                 when(assessmentTimeRepository.findById(TEST_ID)).thenReturn(Optional.of(existing));
 
                 AssessmentTimeCommands.UpdateAssessmentTimeCommand command = new AssessmentTimeCommands.UpdateAssessmentTimeCommand(
-                        TEST_ID, null, null, null, null, null, null, 90);
+                        TEST_ID, null, null, null, null, null, null, 90, false);
 
                 AssessmentTimeResult result = assessmentTimeAppService.updateAssessmentTime(command);
 
@@ -323,11 +325,12 @@ class AssessmentTimeAppServiceImplTest {
                         futureEnd,
                         false,
                         null,
-                        null);
+                        null,
+                        false);
                 when(assessmentTimeRepository.findById(TEST_ID)).thenReturn(Optional.of(existing));
 
                 AssessmentTimeCommands.UpdateAssessmentTimeCommand command = new AssessmentTimeCommands.UpdateAssessmentTimeCommand(
-                        TEST_ID, null, null, null, null, null, null, 90);
+                        TEST_ID, null, null, null, null, null, null, 90, false);
 
                 Forbidden ex = assertThrows(
                         Forbidden.class,
@@ -377,7 +380,8 @@ class AssessmentTimeAppServiceImplTest {
                         futureEnd,
                         false,
                         null,
-                        null);
+                        null,
+                        false);
                 when(assessmentTimeRepository.findById(TEST_ID)).thenReturn(Optional.of(existing));
 
                 Forbidden ex = assertThrows(

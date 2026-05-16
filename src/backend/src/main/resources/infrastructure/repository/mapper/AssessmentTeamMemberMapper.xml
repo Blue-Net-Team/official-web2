@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bluenet.web.infrastructure.repository.mapper.AssessmentTeamMemberMapper">
+    <resultMap id="BaseResultMap" type="com.bluenet.web.infrastructure.repository.dataobject.AssessmentTeamMemberDO">
+        <id column="id" property="id"/>
+        <result column="team_id" property="teamId"/>
+        <result column="user_id" property="userId"/>
+        <result column="joined_at" property="joinedAt"/>
+    </resultMap>
+
+    <select id="selectByTeamId" resultMap="BaseResultMap">
+        SELECT * FROM tb_assessment_team_member WHERE team_id = #{teamId}
+    </select>
+
+    <delete id="deleteByTeamIdAndUserId">
+        DELETE FROM tb_assessment_team_member WHERE team_id = #{teamId} AND user_id = #{userId}
+    </delete>
+
+    <select id="existsByTeamIdAndUserId" resultType="boolean">
+        SELECT EXISTS(SELECT 1 FROM tb_assessment_team_member WHERE team_id = #{teamId} AND user_id = #{userId})
+    </select>
+</mapper>

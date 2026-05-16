@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bluenet.web.infrastructure.repository.mapper.AssessmentTeamMapper">
+    <resultMap id="BaseResultMap" type="com.bluenet.web.infrastructure.repository.dataobject.AssessmentTeamDO">
+        <id column="id" property="id"/>
+        <result column="assessment_time_id" property="assessmentTimeId"/>
+        <result column="leader_id" property="leaderId"/>
+        <result column="name" property="name"/>
+        <result column="invite_code" property="inviteCode"/>
+        <result column="status" property="status"/>
+        <result column="created_at" property="createdAt"/>
+    </resultMap>
+
+    <select id="selectByInviteCode" resultMap="BaseResultMap">
+        SELECT * FROM tb_assessment_team WHERE invite_code = #{inviteCode}
+    </select>
+
+    <select id="selectByAssessmentTimeIdAndUserId" resultMap="BaseResultMap">
+        SELECT t.* FROM tb_assessment_team t
+        INNER JOIN tb_assessment_team_member m ON m.team_id = t.id
+        WHERE t.assessment_time_id = #{assessmentTimeId}
+          AND m.user_id = #{userId}
+          AND t.status = 'ACTIVE'
+    </select>
+
+    <select id="selectMemberUserIdsByTeamId" resultType="java.lang.Long">
+        SELECT user_id FROM tb_assessment_team_member WHERE team_id = #{teamId}
+    </select>
+</mapper>

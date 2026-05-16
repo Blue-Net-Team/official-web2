@@ -41,4 +41,7 @@ public class UpdateAssessmentTimeRequestDTO {
 
     @Schema(description = "限时分钟数")
     private Integer timeLimitMinutes;
+
+    @Schema(description = "是否允许组队")
+    private Boolean allowTeam;
 }

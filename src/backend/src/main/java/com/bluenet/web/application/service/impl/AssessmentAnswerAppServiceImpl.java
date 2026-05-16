@@ -24,8 +24,10 @@ import com.bluenet.web.domain.model.vo.FileVO;
 import com.bluenet.web.domain.model.vo.UserVO;
 import com.bluenet.web.domain.model.vo.evaluation.MultipleChoiceContent;
 import com.bluenet.web.domain.model.vo.evaluation.SingleChoiceContent;
+import com.bluenet.web.domain.model.entity.AssessmentTeam;
 import com.bluenet.web.domain.repository.AssessmentAnswerRepository;
 import com.bluenet.web.domain.repository.AssessmentSessionRepository;
+import com.bluenet.web.domain.repository.AssessmentTeamRepository;
 import com.bluenet.web.domain.service.AssessmentJudgementDomainService;
 import com.bluenet.web.domain.repository.AssessmentQuestionRepository;
 import com.bluenet.web.domain.repository.AssessmentTimeRepository;
@@ -68,6 +70,7 @@ public class AssessmentAnswerAppServiceImpl implements AssessmentAnswerAppServic
     private final AssessmentJudgementDomainService assessmentJudgementDomainService;
     private final AssessmentAnswerRepository assessmentAnswerRepository;
     private final AssessmentSessionRepository assessmentSessionRepository;
+    private final AssessmentTeamRepository assessmentTeamRepository;
     private final ObjectMapper objectMapper;
     private final UserDomainService userDomainService;
     private final CommentDomainService commentDomainService;
@@ -113,12 +116,18 @@ public class AssessmentAnswerAppServiceImpl implements AssessmentAnswerAppServic
             throw new DataConflict("已经提交过该题目的答案");
         }
 
+        Long teamId = null;
+        if (question.getQuestionType() == QuestionType.FILE_UPLOAD && Boolean.TRUE.equals(timeVO.getAllowTeam())) {
+            teamId = validateTeamLeaderForAnswer(command.userId(), timeVO.getId());
+        }
+
         AssessmentAnswer entity = AssessmentAnswer.create(
                 command.userId(),
                 command.questionId(),
                 command.content(),
                 command.language(),
-                command.fileId());
+                command.fileId(),
+                teamId);
 
         assessmentAnswerRepository.save(entity);
 
@@ -186,6 +195,10 @@ public class AssessmentAnswerAppServiceImpl implements AssessmentAnswerAppServic
                 command.fileId(),
                 command.content() != null ? command.content().length() : 0);
 
+        if (question.getQuestionType() == QuestionType.FILE_UPLOAD && Boolean.TRUE.equals(timeVO.getAllowTeam())) {
+            validateTeamLeaderForAnswer(command.userId(), timeVO.getId());
+        }
+
         if (command.fileId() != null) {
             existing.setFileId(command.fileId());
         }
@@ -232,20 +245,47 @@ public class AssessmentAnswerAppServiceImpl implements AssessmentAnswerAppServic
      */
     @Override
     public AssessmentAnswerResult getMyAnswer(Long userId, Long questionId) {
+        AssessmentQuestion question = assessmentQuestionRepository.findById(questionId)
+                .orElse(null);
+
         Optional<AssessmentAnswer> answerOpt = assessmentAnswerRepository
                 .findByUserIdAndQuestionId(userId, questionId);
+
         if (answerOpt.isEmpty()) {
+            // For FILE_UPLOAD questions in team-enabled assessments, if user is team member
+            // (not leader), return leader's answer
+            if (question != null && question.getQuestionType() == QuestionType.FILE_UPLOAD) {
+                AssessmentTime time = assessmentTimeRepository.findById(question.getAssessmentTimeId())
+                        .orElse(null);
+                if (time != null && Boolean.TRUE.equals(time.getAllowTeam())) {
+                    Optional<AssessmentTeam> teamOpt = assessmentTeamRepository
+                            .findByAssessmentTimeIdAndUserId(time.getId(), userId);
+                    if (teamOpt.isPresent()) {
+                        AssessmentTeam team = teamOpt.get();
+                        if (!team.isLeader(userId)) {
+                            Optional<AssessmentAnswer> leaderAnswerOpt = assessmentAnswerRepository
+                                    .findByUserIdAndQuestionId(team.getLeaderId(), questionId);
+                            if (leaderAnswerOpt.isPresent()) {
+                                return toAnswerResult(leaderAnswerOpt.get(), question);
+                            }
+                        }
+                    }
+                }
+            }
             return null;
         }
+
         AssessmentAnswer answer = answerOpt.get();
+        return toAnswerResult(answer, question);
+    }
+
+    private AssessmentAnswerResult toAnswerResult(AssessmentAnswer answer, AssessmentQuestion question) {
         AssessmentJudgementVO judgement = findLatestJudgement(answer);
         List<com.bluenet.web.domain.model.vo.CommentVO> comments = commentDomainService
                 .listCommentsByAnswerId(answer.getId());
         List<com.bluenet.web.domain.model.vo.CommentVO> memberComments = filterMemberCommentsOnly(comments);
         AssessmentAnswerResult result = toResult(answer, judgement, memberComments);
 
-        AssessmentQuestion question = assessmentQuestionRepository.findById(questionId)
-                .orElse(null);
         if (question != null && question.getQuestionType().isChoiceQuestion()) {
             return result.withJudgementErased();
         }
@@ -276,10 +316,27 @@ public class AssessmentAnswerAppServiceImpl implements AssessmentAnswerAppServic
                 .toList();
     }
 
+    private Long validateTeamLeaderForAnswer(Long userId, Long assessmentTimeId) {
+        Optional<AssessmentTeam> teamOpt = assessmentTeamRepository
+                .findByAssessmentTimeIdAndUserId(assessmentTimeId, userId);
+        if (teamOpt.isEmpty()) {
+            throw new BadRequest("该题目需要加入队伍后才能提交答案");
+        }
+        AssessmentTeam team = teamOpt.get();
+        if (!team.isActive()) {
+            throw new BadRequest("队伍已解散，无法提交答案");
+        }
+        if (!team.isLeader(userId)) {
+            throw new Forbidden("只有队长可以提交文件上传题的答案");
+        }
+        return team.getId();
+    }
+
     private AssessmentTime validateDirectionMatch(UserVO user, AssessmentQuestion question) {
         AssessmentTime time = assessmentTimeRepository.findById(question.getAssessmentTimeId())
                 .orElseThrow(() -> new BadRequest("考核时间不存在"));
-        if (user.getDirection() != null && !user.getDirection().equals(time.getDirection())) {
+        if (time.getDirection() != null && user.getDirection() != null
+                && !user.getDirection().equals(time.getDirection())) {
             throw new Forbidden("方向不匹配");
         }
         return time;

@@ -25,7 +25,8 @@ public class AssessmentTimeRequestConverter {
                 dto.getStartTime(),
                 dto.getEndTime(),
                 dto.getTimeLimit(),
-                Boolean.TRUE.equals(dto.getTimeLimit()) ? dto.getTimeLimitMinutes() : null);
+                Boolean.TRUE.equals(dto.getTimeLimit()) ? dto.getTimeLimitMinutes() : null,
+                dto.getAllowTeam());
     }
 
     /**
@@ -40,6 +41,7 @@ public class AssessmentTimeRequestConverter {
                 dto.getStartTime(),
                 dto.getEndTime(),
                 dto.getTimeLimit(),
-                Boolean.FALSE.equals(dto.getTimeLimit()) ? null : dto.getTimeLimitMinutes());
+                Boolean.FALSE.equals(dto.getTimeLimit()) ? null : dto.getTimeLimitMinutes(),
+                dto.getAllowTeam());
     }
 }

@@ -32,6 +32,7 @@ public class AssessmentAnswerRepositoryConverter {
                 .language(entity.getLanguage())
                 .fileId(entity.getFileId())
                 .submitTime(entity.getSubmitTime())
+                .teamId(entity.getTeamId())
                 .build();
     }
 
@@ -53,6 +54,7 @@ public class AssessmentAnswerRepositoryConverter {
                 dataObject.getContent(),
                 dataObject.getLanguage(),
                 dataObject.getFileId(),
-                dataObject.getSubmitTime());
+                dataObject.getSubmitTime(),
+                dataObject.getTeamId());
     }
 }

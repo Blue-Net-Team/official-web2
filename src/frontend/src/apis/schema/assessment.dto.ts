@@ -47,6 +47,8 @@ export interface CreateAssessmentTimeRequestDTO {
   timeLimit: boolean
   /** 限时分钟数（timeLimit为true时必填） */
   timeLimitMinutes?: number | null
+  /** 是否允许组队 */
+  allowTeam: boolean
 }
 
 /** 更新考核时间请求 - 对应后端 UpdateAssessmentTimeRequestDTO */
@@ -65,6 +67,8 @@ export interface UpdateAssessmentTimeRequestDTO {
   timeLimit?: boolean
   /** 限时分钟数 */
   timeLimitMinutes?: number | null
+  /** 是否允许组队 */
+  allowTeam?: boolean
 }
 
 /** 考核时间信息 - 对应后端 AssessmentTimeDTO */
@@ -85,6 +89,8 @@ export interface AssessmentTimeDTO {
   timeLimit: boolean
   /** 限时分钟数 */
   timeLimitMinutes: number | null
+  /** 是否允许组队 */
+  allowTeam: boolean
   /** 题目总数 */
   totalQuestions: number | null
   /** 已完成题目数 */
@@ -756,4 +762,66 @@ export interface UserQuestionListResponseDTO {
   deadline: string | null
   /** 考核是否已结束 */
   ended: boolean
+}
+
+/** 考核队伍成员信息 - 对应后端 AssessmentTeamMemberDTO */
+export interface AssessmentTeamMemberDTO {
+  /** 用户ID */
+  userId: number
+  /** 用户名 */
+  username: string
+  /** 昵称 */
+  nickname: string | null
+  /** 方向 */
+  direction: Direction | null
+  /** 是否为队长 */
+  leader: boolean
+}
+
+/** 考核队伍信息 - 对应后端 AssessmentTeamDTO */
+export interface AssessmentTeamDTO {
+  /** 队伍ID */
+  id: number
+  /** 队伍名称 */
+  name: string
+  /** 考核时间ID */
+  assessmentTimeId: number
+  /** 队长ID */
+  leaderId: number
+  /** 队长名称 */
+  leaderName: string
+  /** 邀请码 */
+  inviteCode: string
+  /** 成员列表 */
+  members: AssessmentTeamMemberDTO[]
+  /** 创建时间 */
+  createdAt: string
+}
+
+/** 创建队伍请求 - 对应后端 CreateAssessmentTeamRequestDTO */
+export interface CreateAssessmentTeamRequestDTO {
+  /** 考核时间ID */
+  assessmentTimeId: number
+  /** 队伍名称 */
+  name: string
+}
+
+/** 加入队伍请求 - 对应后端 JoinAssessmentTeamRequestDTO */
+export interface JoinAssessmentTeamRequestDTO {
+  /** 邀请码 */
+  inviteCode: string
+}
+
+/** 转让队长请求 - 对应后端 TransferLeaderRequestDTO */
+export interface TransferLeaderRequestDTO {
+  /** 队伍ID */
+  teamId: number
+  /** 新队长用户ID */
+  newLeaderId: number
+}
+
+/** 退出队伍请求 - 对应后端 LeaveTeamRequestDTO */
+export interface LeaveTeamRequestDTO {
+  /** 队伍ID */
+  teamId: number
 }

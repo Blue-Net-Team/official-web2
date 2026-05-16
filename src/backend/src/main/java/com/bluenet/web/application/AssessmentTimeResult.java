@@ -27,6 +27,8 @@ public record AssessmentTimeResult(
         Boolean timeLimit,
         /** 限时分钟数 */
         Integer timeLimitMinutes,
+        /** 是否允许组队 */
+        Boolean allowTeam,
         /** 题目总数 */
         Integer totalQuestions,
         /** 已完成题目数 */

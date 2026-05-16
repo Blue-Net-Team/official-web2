@@ -689,7 +689,7 @@ class AssessmentJudgementAppServiceImplTest {
     }
 
     private AssessmentAnswer createAnswerEntity() {
-        return AssessmentAnswer.reconstruct(ANSWER_ID, CANDIDATE_ID, QUESTION_ID, null, null, null, null);
+        return AssessmentAnswer.reconstruct(ANSWER_ID, CANDIDATE_ID, QUESTION_ID, null, null, null, null, null);
     }
 
     private AssessmentQuestion createQuestion(QuestionType questionType) {
@@ -754,7 +754,8 @@ class AssessmentJudgementAppServiceImplTest {
                 null,
                 false,
                 null,
-                null);
+                null,
+                false);
     }
 
     private AssessmentQuestionSubmissionVO createSubmissionVO(boolean judged) {

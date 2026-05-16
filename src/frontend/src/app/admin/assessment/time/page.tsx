@@ -16,7 +16,7 @@ import {
   Table,
   Tag,
 } from 'antd'
-import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons'
+import { PlusOutlined, EditOutlined, DeleteOutlined, TeamOutlined } from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
 import dayjs from 'dayjs'
 import type {
@@ -192,6 +192,19 @@ export default function AssessmentTimeManagementPage() {
           record.timeLimit ? `${record.timeLimitMinutes} 分钟` : '不限时',
       },
       {
+        title: '组队',
+        key: 'allowTeam',
+        width: 80,
+        render: (_: unknown, record: AssessmentTimeDTO) =>
+          record.allowTeam ? (
+            <Tag color="blue" icon={<TeamOutlined />} bordered={false}>
+              允许
+            </Tag>
+          ) : (
+            <Tag bordered={false}>不允许</Tag>
+          ),
+      },
+      {
         title: '状态',
         key: 'status',
         width: 80,
@@ -239,7 +252,7 @@ export default function AssessmentTimeManagementPage() {
 
     // Hide some columns on mobile
     if (isMobile) {
-      return cols.filter((c) => !['grade', 'timeLimit'].includes(c.key as string))
+      return cols.filter((c) => !['grade', 'timeLimit', 'allowTeam'].includes(c.key as string))
     }
 
     return cols

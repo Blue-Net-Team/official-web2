@@ -48,4 +48,7 @@ public class CreateAssessmentTimeRequestDTO {
 
     @Schema(description = "限时分钟数（timeLimit为true时必填）")
     private Integer timeLimitMinutes;
+
+    @Schema(description = "是否允许组队")
+    private Boolean allowTeam;
 }

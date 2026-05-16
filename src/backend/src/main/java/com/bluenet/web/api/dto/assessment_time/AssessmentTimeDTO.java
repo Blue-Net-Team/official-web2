@@ -50,4 +50,7 @@ public class AssessmentTimeDTO {
 
     @Schema(description = "已完成题目数")
     private Integer completedQuestions;
+
+    @Schema(description = "是否允许组队")
+    private Boolean allowTeam;
 }
