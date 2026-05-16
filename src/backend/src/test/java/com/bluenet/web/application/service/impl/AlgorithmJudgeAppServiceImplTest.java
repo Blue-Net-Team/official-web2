@@ -323,7 +323,15 @@ class AlgorithmJudgeAppServiceImplTest {
 
     private AssessmentAnswer createAnswer() {
         return AssessmentAnswer
-                .reconstruct(ANSWER_ID, USER_ID, QUESTION_ID, "print(input())", ProgrammingLanguage.PYTHON, null, null);
+                .reconstruct(
+                        ANSWER_ID,
+                        USER_ID,
+                        QUESTION_ID,
+                        "print(input())",
+                        ProgrammingLanguage.PYTHON,
+                        null,
+                        null,
+                        null);
     }
 
     private AlgorithmJudgeJob createJob(JudgeJobStatus status, Long answerId) {
