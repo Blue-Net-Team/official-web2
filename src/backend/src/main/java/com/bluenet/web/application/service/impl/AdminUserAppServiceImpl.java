@@ -12,8 +12,10 @@ import com.bluenet.web.domain.model.enumerate.RoleType;
 import com.bluenet.web.domain.repository.CollegeRepository;
 import com.bluenet.web.domain.repository.UserRepository;
 import com.bluenet.web.domain.service.ReferralCodeGenerator;
+import com.bluenet.web.infrastructure.config.properties.SystemUserProperties;
 import com.bluenet.web.infrastructure.repository.dataobject.RoleDO;
 import com.bluenet.web.infrastructure.repository.mapper.RoleMapper;
+import com.bluenet.web.infrastructure.security.util.UserCTX;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -35,6 +37,7 @@ public class AdminUserAppServiceImpl implements AdminUserAppService {
     private final CollegeRepository collegeRepository;
     private final PasswordEncoder passwordEncoder;
     private final ReferralCodeGenerator referralCodeGenerator;
+    private final SystemUserProperties systemUserProperties;
 
     private static final int MAX_BATCH_SIZE = 50;
 
@@ -108,7 +111,7 @@ public class AdminUserAppServiceImpl implements AdminUserAppService {
     public void deleteUser(Long userId) {
         User user = userRepository.findEntityById(userId)
                 .orElseThrow(() -> new DataNotFound("用户不存在"));
-        preventSuperAdminModification(user);
+        preventProtectedUserDeletion(user);
         userRepository.deleteByIdWithCascade(userId);
     }
 
@@ -119,7 +122,7 @@ public class AdminUserAppServiceImpl implements AdminUserAppService {
         for (Long userId : command.userIds()) {
             User user = userRepository.findEntityById(userId).orElse(null);
             if (user != null) {
-                preventSuperAdminModification(user);
+                preventProtectedUserDeletion(user);
             }
         }
         userRepository.batchDeleteByIds(command.userIds());
@@ -209,6 +212,17 @@ public class AdminUserAppServiceImpl implements AdminUserAppService {
         RoleDO role = roleMapper.selectById(user.getRoleId());
         if (role != null && RoleType.SUPER_ADMIN.getName().equals(role.getName())) {
             throw new BadRequest("不能对超级管理员执行此操作");
+        }
+    }
+
+    private void preventProtectedUserDeletion(User user) {
+        preventSuperAdminModification(user);
+        if (systemUserProperties.getStudentId().equals(user.getStudentId())) {
+            throw new BadRequest("不能删除系统账号");
+        }
+        Long currentUserId = UserCTX.getCurrentUserId();
+        if (currentUserId != null && currentUserId.equals(user.getId())) {
+            throw new BadRequest("不能删除自己的账号");
         }
     }
 

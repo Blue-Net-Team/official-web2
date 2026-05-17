@@ -27,7 +27,7 @@ import {
   TeamOutlined,
   PlusOutlined,
 } from '@ant-design/icons'
-import { usePagination, useApi } from '@/hooks'
+import { usePagination, useApi, useAuth } from '@/hooks'
 import { hashPassword } from '@/utils/passwordHash'
 import { adminUserService } from '@/apis/services/admin-user.service'
 import { collegeService } from '@/apis/services/college.service'
@@ -63,6 +63,7 @@ interface FilterValues {
 
 export default function AdminUserManagementPage() {
   const { message: messageApi, modal } = App.useApp()
+  const { userInfo } = useAuth()
 
   // Filters
   const [filters, setFilters] = useState<FilterValues>({
@@ -222,8 +223,20 @@ export default function AdminUserManagementPage() {
     }
   }
 
+  const isProtectedUser = (user: AdminUserListItemDTO) => {
+    if (user.studentId === '000000000000') return true
+    if (userInfo && user.id === userInfo.id) return true
+    return false
+  }
+
   // Open delete
   const handleDelete = (user: AdminUserListItemDTO) => {
+    if (isProtectedUser(user)) {
+      messageApi.warning(
+        user.studentId === '000000000000' ? '系统账号不可删除' : '不能删除自己的账号'
+      )
+      return
+    }
     setDeletingUser(user)
     setDeleteModalOpen(true)
   }
@@ -252,6 +265,12 @@ export default function AdminUserManagementPage() {
   const handleBatchDelete = async () => {
     const ids = selectedRowKeys.map(Number)
     if (ids.length === 0) return
+    const protectedUsers = data?.filter((u) => selectedRowKeys.includes(u.id) && isProtectedUser(u))
+    if (protectedUsers && protectedUsers.length > 0) {
+      const names = protectedUsers.map((u) => u.username).join('、')
+      messageApi.warning(`选中用户中包含不可删除账号：${names}`)
+      return
+    }
     modal.confirm({
       title: `确认批量删除 ${ids.length} 个用户？`,
       content: '此操作将物理删除用户及其所有关联数据，不可撤销。',
