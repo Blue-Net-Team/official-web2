@@ -1,6 +1,8 @@
 package com.bluenet.web.infrastructure.repository.dataobject;
 
+import com.baomidou.mybatisplus.annotation.FieldStrategy;
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.bluenet.web.domain.model.enumerate.Direction;
@@ -37,6 +39,7 @@ public class AssessmentTimeDO {
     /**
      * 学生年级或成绩等级。
      */
+    @TableField(insertStrategy = FieldStrategy.IGNORED, updateStrategy = FieldStrategy.IGNORED)
     private Integer grade;
     /**
      * 经历、考核或有效期的开始时间。

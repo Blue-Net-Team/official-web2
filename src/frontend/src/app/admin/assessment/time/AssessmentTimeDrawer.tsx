@@ -223,12 +223,16 @@ export default function AssessmentTimeDrawer({
         </Form.Item>
 
         <Form.Item name="grade" label="年级">
-          <InputNumber
-            min={2000}
-            max={2100}
-            placeholder="入学年份（如 2025，不限可选全局方向）"
-            className="w-full"
-          />
+          {direction === GLOBAL_DIRECTION_VALUE ? (
+            <div className="text-white/60 h-8 flex items-center">不限年级</div>
+          ) : (
+            <InputNumber
+              min={2000}
+              max={2100}
+              placeholder="入学年份（如 2025）"
+              className="w-full"
+            />
+          )}
         </Form.Item>
 
         <Form.Item

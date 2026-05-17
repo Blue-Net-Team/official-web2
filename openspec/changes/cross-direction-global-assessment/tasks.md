@@ -1,6 +1,8 @@
 ## 1. 数据库迁移
 
 - [x] 1.1 创建迁移文件 `V15__allow_null_grade_for_global_assessment.sql`，`ALTER TABLE tb_assessment_time ALTER COLUMN grade DROP NOT NULL`
+- [x] 1.2 创建迁移文件 `V16__set_grade_default_null.sql`，`ALTER TABLE tb_assessment_time ALTER COLUMN grade SET DEFAULT NULL`（修复 MyBatis-Plus 省略 null 字段时误用 DEFAULT 1）
+- [x] 1.3 `AssessmentTimeDO.java`：`grade` 字段添加 `@TableField(insertStrategy = FieldStrategy.IGNORED, updateStrategy = FieldStrategy.IGNORED)`
 
 ## 2. 后端 DTO 与命令对象
 
@@ -45,6 +47,7 @@
 - [x] 8.4 `page.tsx`：表格年级列支持 null 时显示"不限"标签
 - [x] 8.5 `AssessmentTimeDrawer.tsx` + `page.tsx`：DIRECTION_ADMIN 不显示"全局"选项，且不可编辑全局考核记录
 - [x] 8.6 确认前端类型定义 `assessment.dto.ts` 中 direction/grade 类型是否需调整
+- [x] 8.7 `AssessmentCard/index.tsx`：修复 `isAssessmentTimeDTO` 类型守卫对 `direction=null` 的全局考核误判为 `Assessment` 类型的问题；全局考核卡片方向区域显示"全局"标签
 
 ## 9. 验收
 

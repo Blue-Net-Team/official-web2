@@ -32,7 +32,7 @@ function getEpochLabel(epoch: number): string {
 }
 
 function isAssessmentTimeDTO(data: Assessment | AssessmentTimeDTO): data is AssessmentTimeDTO {
-  return 'direction' in data && typeof data.direction === 'string'
+  return 'timeLimit' in data
 }
 
 function getAssessmentStatus(startTime: string, endTime: string): AssessmentStatus {
@@ -116,7 +116,7 @@ export default function AssessmentCard({ assessment, status }: AssessmentCardPro
           <div className="flex flex-col gap-1">
             <span className="text-base font-semibold text-white">{getEpochLabel(epoch)}</span>
             <span className="text-[13px] text-white/45">
-              {direction ? DIRECTION_LABELS[direction] : !isDTO && assessment.round}
+              {direction ? DIRECTION_LABELS[direction] : isDTO ? '全局' : assessment.round}
             </span>
           </div>
         </div>
