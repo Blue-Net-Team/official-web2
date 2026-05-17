@@ -1,4 +1,5 @@
 import { publicClient, apiClient } from '../client'
+import { API_BASE_URL } from '../config'
 import {
   ResponseMessage,
   FileInfo,
@@ -150,31 +151,8 @@ export const fileService = {
     return response.data
   },
 
-  async downloadFile(fileId: number, customFilename?: string): Promise<void> {
-    const response = await apiClient.get(`/file/download/${fileId}`, {
-      responseType: 'blob',
-    })
-
-    const blob = response.data as Blob
-    const headers = response.headers as Record<string, string>
-    const originalFilename = extractFilenameFromHeaders(headers)
-
-    let filename = customFilename ?? originalFilename
-    if (customFilename && originalFilename.includes('.')) {
-      const ext = originalFilename.split('.').pop()
-      if (ext) {
-        filename = `${customFilename}.${ext}`
-      }
-    }
-
-    const url = window.URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = filename
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-    window.URL.revokeObjectURL(url)
+  async downloadFile(fileId: number): Promise<void> {
+    window.open(`${API_BASE_URL}/file/download/${fileId}`, '_blank')
   },
 
   async downloadBatch(
