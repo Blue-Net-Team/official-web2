@@ -49,11 +49,26 @@
         ORDER BY id DESC
     </select>
 
-    <select id="selectMaxEpochByDirectionAndGrade" resultType="java.lang.Integer">
+    <select id="selectMaxEpoch" resultType="java.lang.Integer">
         SELECT MAX(epoch)
         FROM tb_assessment_time
-        WHERE direction = #{direction}
-          AND grade = #{grade}
+        <where>
+            <if test="direction != null">AND direction = #{direction}</if>
+            <if test="direction == null">AND direction IS NULL</if>
+            <if test="grade != null">AND grade = #{grade}</if>
+            <if test="grade == null">AND grade IS NULL</if>
+        </where>
+    </select>
+
+    <select id="countByEpochGrade" resultType="long">
+        SELECT COUNT(*)
+        FROM tb_assessment_time
+        WHERE direction IS NULL
+          AND epoch = #{epoch}
+          AND (<choose>
+                  <when test="grade != null">grade = #{grade}</when>
+                  <otherwise>grade IS NULL</otherwise>
+              </choose>)
     </select>
 
     <select id="selectPageByUserParticipation" resultMap="BaseResultMap">
@@ -63,15 +78,16 @@
         (
             <choose>
                 <when test="direction != null and enrollmentYear != null">
-                    (t.direction = #{direction} AND t.grade = #{enrollmentYear})
-                    OR (t.direction IS NULL AND t.grade = #{enrollmentYear})
+                    (t.direction = #{direction} AND (t.grade = #{enrollmentYear} OR t.grade IS NULL))
+                    OR (t.direction IS NULL AND (t.grade = #{enrollmentYear} OR t.grade IS NULL))
                 </when>
                 <when test="direction != null">
                     t.direction = #{direction}
-                    OR t.direction IS NULL
+                    OR (t.direction IS NULL AND t.grade IS NULL)
                 </when>
                 <when test="enrollmentYear != null">
                     t.grade = #{enrollmentYear}
+                    OR t.grade IS NULL
                 </when>
                 <otherwise>
                     1 = 0

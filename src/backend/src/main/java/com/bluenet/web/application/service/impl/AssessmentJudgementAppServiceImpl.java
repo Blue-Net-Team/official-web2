@@ -422,16 +422,13 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
             String subject = "[蓝网] 考核结果通知";
             String directionLabel = assessmentTime.getDirection() != null
                     ? assessmentTime.getDirection().getDescription()
-                    : "";
+                    : "全局";
             int epoch = assessmentTime.getEpoch() != null ? assessmentTime.getEpoch() : 0;
 
-            boolean isFinalRound = false;
-            if (assessmentTime.getDirection() != null && assessmentTime.getGrade() != null) {
-                Integer maxEpoch = assessmentTimeRepository.findMaxEpochByDirectionAndGrade(
-                        assessmentTime.getDirection(),
-                        assessmentTime.getGrade()).orElse(null);
-                isFinalRound = maxEpoch != null && maxEpoch.equals(assessmentTime.getEpoch());
-            }
+            Integer maxEpoch = assessmentTimeRepository.findMaxEpoch(
+                    assessmentTime.getDirection(),
+                    assessmentTime.getGrade()).orElse(null);
+            boolean isFinalRound = maxEpoch != null && maxEpoch.equals(assessmentTime.getEpoch());
 
             String resultText;
             if (isFinalRound) {

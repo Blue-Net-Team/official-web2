@@ -85,6 +85,7 @@ public class AssessmentJudgementAccessGuard {
                 .orElseThrow(() -> new DataNotFound("考核时间不存在，ID: " + assessmentTimeId));
         if (roleType == RoleType.DIRECTION_ADMIN
                 && currentUser.getDirection() != null
+                && assessmentTime.getDirection() != null
                 && !Objects.equals(currentUser.getDirection(), assessmentTime.getDirection())) {
             throw new Forbidden("不能访问其他方向的考核评判数据");
         }

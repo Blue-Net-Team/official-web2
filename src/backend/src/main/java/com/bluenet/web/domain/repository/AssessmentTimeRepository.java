@@ -124,13 +124,24 @@ public interface AssessmentTimeRepository {
             Pageable pageable);
 
     /**
-     * 查询指定方向和年级的最大考核轮次。
+     * 统计全局考核（direction IS NULL）下满足轮次和年级的记录数量。
+     *
+     * @param epoch
+     *            考核轮次。
+     * @param grade
+     *            考核年级（可为 null）。
+     * @return 满足条件的记录数量。
+     */
+    long countByEpochGrade(Integer epoch, Integer grade);
+
+    /**
+     * 查询最大考核轮次，支持方向/年级为 null。
      *
      * @param direction
-     *            技术方向过滤条件。
+     *            技术方向过滤条件（可为 null）。
      * @param grade
-     *            考核年级。
+     *            考核年级（可为 null）。
      * @return 最大轮次；不存在时返回 Optional.empty()。
      */
-    Optional<Integer> findMaxEpochByDirectionAndGrade(Direction direction, Integer grade);
+    Optional<Integer> findMaxEpoch(Direction direction, Integer grade);
 }

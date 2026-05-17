@@ -52,11 +52,17 @@ public class AssessmentTimeAppServiceImpl implements AssessmentTimeAppService {
     public AssessmentTimeResult createAssessmentTime(AssessmentTimeCommands.CreateAssessmentTimeCommand command) {
         validateDirectionPermission(command.direction());
 
-        if (assessmentTimeRepository.existsByDirectionAndEpochAndGrade(
-                command.direction(),
-                command.epoch(),
-                command.grade())) {
-            throw new IllegalArgumentException("该方向轮次年级的考核时间已存在");
+        if (command.direction() == null) {
+            if (assessmentTimeRepository.countByEpochGrade(command.epoch(), command.grade()) > 0) {
+                throw new IllegalArgumentException("该轮次的全局考核时间已存在");
+            }
+        } else {
+            if (assessmentTimeRepository.existsByDirectionAndEpochAndGrade(
+                    command.direction(),
+                    command.epoch(),
+                    command.grade())) {
+                throw new IllegalArgumentException("该方向轮次年级的考核时间已存在");
+            }
         }
 
         AssessmentTime entity = AssessmentTime.create(
@@ -115,12 +121,18 @@ public class AssessmentTimeAppServiceImpl implements AssessmentTimeAppService {
         Integer newEpoch = command.epoch() != null ? command.epoch() : existing.getEpoch();
         Integer newGrade = command.grade() != null ? command.grade() : existing.getGrade();
 
-        if (assessmentTimeRepository.existsByDirectionAndEpochAndGradeAndIdNot(
-                newDirection,
-                newEpoch,
-                newGrade,
-                command.id())) {
-            throw new IllegalArgumentException("该方向轮次年级的考核时间已存在");
+        if (newDirection == null) {
+            if (assessmentTimeRepository.countByEpochGrade(newEpoch, newGrade) > 0) {
+                throw new IllegalArgumentException("该轮次的全局考核时间已存在");
+            }
+        } else {
+            if (assessmentTimeRepository.existsByDirectionAndEpochAndGradeAndIdNot(
+                    newDirection,
+                    newEpoch,
+                    newGrade,
+                    command.id())) {
+                throw new IllegalArgumentException("该方向轮次年级的考核时间已存在");
+            }
         }
 
         Boolean newAllowTeam = command.allowTeam() != null ? command.allowTeam() : existing.getAllowTeam();
@@ -159,7 +171,8 @@ public class AssessmentTimeAppServiceImpl implements AssessmentTimeAppService {
     }
 
     /**
-     * 校验 DIRECTION_ADMIN 方向权限：只能操作自己方向的考核时间
+     * 校验 DIRECTION_ADMIN 方向权限：只能操作自己方向的考核时间；全局考核（targetDirection == null）仅
+     * SUPER_ADMIN 可操作
      */
     private void validateDirectionPermission(Direction targetDirection) {
         UserVO currentUser = UserCTX.getCurrentUser();
@@ -168,6 +181,9 @@ public class AssessmentTimeAppServiceImpl implements AssessmentTimeAppService {
 
         RoleType roleType = RoleType.fromName(currentUser.getRoleName());
         if (roleType == RoleType.DIRECTION_ADMIN) {
+            if (targetDirection == null) {
+                throw new Forbidden("方向管理员不能创建跨方向考核");
+            }
             if (!targetDirection.equals(currentUser.getDirection())) {
                 throw new Forbidden("只能操作本方向的考核时间");
             }

@@ -273,13 +273,14 @@ public class AssessmentQuestionAppServiceImpl implements AssessmentQuestionAppSe
         if (currentUser != null) {
             RoleType roleType = RoleType.fromName(currentUser.getRoleName());
             if (roleType == RoleType.CANDIDATE) {
-                if (!currentUser.getDirection().equals(time.getDirection())) {
+                if (time.getDirection() != null && !currentUser.getDirection().equals(time.getDirection())) {
                     throw new SecurityException("无权查看该考核的题目");
                 }
                 Integer userEnrollmentYear = GradeCalculator.resolveAssessmentYear(
                         currentUser.getStudentId(),
                         currentUser.getAssessmentGradeYear());
-                if (userEnrollmentYear != null && !userEnrollmentYear.equals(time.getGrade())) {
+                if (time.getGrade() != null
+                        && (userEnrollmentYear == null || !userEnrollmentYear.equals(time.getGrade()))) {
                     throw new SecurityException("无权查看该考核的题目");
                 }
                 LocalDateTime now = LocalDateTime.now();
@@ -346,13 +347,14 @@ public class AssessmentQuestionAppServiceImpl implements AssessmentQuestionAppSe
             if (roleType == RoleType.CANDIDATE) {
                 AssessmentTime time = assessmentTimeRepository.findById(entity.getAssessmentTimeId())
                         .orElseThrow(() -> new IllegalArgumentException("考核时间不存在"));
-                if (!currentUser.getDirection().equals(time.getDirection())) {
+                if (time.getDirection() != null && !currentUser.getDirection().equals(time.getDirection())) {
                     throw new SecurityException("无权查看该题目");
                 }
                 Integer userEnrollmentYear = GradeCalculator.resolveAssessmentYear(
                         currentUser.getStudentId(),
                         currentUser.getAssessmentGradeYear());
-                if (userEnrollmentYear != null && !userEnrollmentYear.equals(time.getGrade())) {
+                if (time.getGrade() != null
+                        && (userEnrollmentYear == null || !userEnrollmentYear.equals(time.getGrade()))) {
                     throw new SecurityException("无权查看该题目");
                 }
                 LocalDateTime now = LocalDateTime.now();

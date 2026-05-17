@@ -79,13 +79,24 @@ public interface AssessmentTimeMapper extends BaseMapper<AssessmentTimeDO> {
             @Param("direction") Direction direction, @Param("enrollmentYear") Integer enrollmentYear);
 
     /**
+     * 统计全局考核（direction IS NULL）下满足轮次和年级的记录数量。
+     *
+     * @param epoch
+     *            考核批次或轮次。
+     * @param grade
+     *            考核年级（可为 null）。
+     * @return 满足条件的记录数量。
+     */
+    long countByEpochGrade(@Param("epoch") Integer epoch, @Param("grade") Integer grade);
+
+    /**
      * 查询指定方向和年级的最大考核轮次。
      *
      * @param direction
-     *            技术方向过滤条件。
+     *            技术方向过滤条件（可为 null）。
      * @param grade
-     *            考核年级。
+     *            考核年级（可为 null）。
      * @return 最大轮次；不存在时返回 null。
      */
-    Integer selectMaxEpochByDirectionAndGrade(@Param("direction") Direction direction, @Param("grade") Integer grade);
+    Integer selectMaxEpoch(@Param("direction") Direction direction, @Param("grade") Integer grade);
 }

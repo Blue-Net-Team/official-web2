@@ -59,7 +59,7 @@ export default function AssessmentTimeManagementPage() {
   )
 
   // Filter state
-  const [filterDirection, setFilterDirection] = useState<Direction | undefined>(undefined)
+  const [filterDirection, setFilterDirection] = useState<Direction | null | undefined>(undefined)
   const [filterGrade, setFilterGrade] = useState<number | undefined>(undefined)
 
   // Drawer state
@@ -74,7 +74,13 @@ export default function AssessmentTimeManagementPage() {
   // Client-side filtering
   const filteredList = useMemo(() => {
     return data.filter((item) => {
-      if (filterDirection && item.direction !== filterDirection) return false
+      if (filterDirection !== undefined) {
+        if (filterDirection === null) {
+          if (item.direction !== null) return false
+        } else if (item.direction !== filterDirection) {
+          return false
+        }
+      }
       if (filterGrade !== undefined && item.grade !== filterGrade) return false
       return true
     })
@@ -82,14 +88,16 @@ export default function AssessmentTimeManagementPage() {
 
   // Unique grades from current data for filter dropdown
   const gradeOptions = useMemo(() => {
-    const grades = [...new Set(data.map((item) => item.grade))].sort((a, b) => b - a)
+    const grades = [
+      ...new Set(data.map((item) => item.grade).filter((g): g is number => g != null)),
+    ].sort((a, b) => b - a)
     return grades.map((g) => ({ label: `${g}级`, value: g }))
   }, [data])
 
-  // Check if current user can operate on a given direction
+  // Check if current user can operate on a given direction (null = global = only SUPER_ADMIN)
   const canOperate = useCallback(
-    (direction: Direction) => {
-      return isSuperAdmin || direction === userDirection
+    (direction: Direction | null) => {
+      return isSuperAdmin || (direction != null && direction === userDirection)
     },
     [isSuperAdmin, userDirection]
   )
@@ -137,8 +145,8 @@ export default function AssessmentTimeManagementPage() {
     refresh()
   }
 
-  const handleFilterDirectionChange = (value: Direction | undefined) => {
-    setFilterDirection(value)
+  const handleFilterDirectionChange = (value: Direction | '__GLOBAL__' | undefined) => {
+    setFilterDirection(value === '__GLOBAL__' ? null : value)
     setCurrentPage(0)
   }
 
@@ -155,7 +163,14 @@ export default function AssessmentTimeManagementPage() {
         dataIndex: 'direction',
         key: 'direction',
         width: 110,
-        render: (direction: Direction) => <Tag bordered={false}>{DIRECTION_LABELS[direction]}</Tag>,
+        render: (direction: Direction | null) =>
+          direction ? (
+            <Tag bordered={false}>{DIRECTION_LABELS[direction]}</Tag>
+          ) : (
+            <Tag color="blue" bordered={false}>
+              全局
+            </Tag>
+          ),
       },
       {
         title: '轮次',
@@ -168,7 +183,8 @@ export default function AssessmentTimeManagementPage() {
         dataIndex: 'grade',
         key: 'grade',
         width: 70,
-        render: (grade: number) => `${grade}级`,
+        render: (grade: number | null) =>
+          grade != null ? `${grade}级` : <Tag bordered={false}>不限</Tag>,
       },
       {
         title: '开始时间',
@@ -274,12 +290,21 @@ export default function AssessmentTimeManagementPage() {
           placeholder="筛选方向"
           allowClear
           className="w-[140px]"
-          value={filterDirection}
+          value={
+            filterDirection === undefined
+              ? undefined
+              : filterDirection === null
+                ? '__GLOBAL__'
+                : filterDirection
+          }
           onChange={handleFilterDirectionChange}
-          options={Object.entries(DIRECTION_LABELS).map(([value, label]) => ({
-            value,
-            label,
-          }))}
+          options={[
+            ...Object.entries(DIRECTION_LABELS).map(([value, label]) => ({
+              value,
+              label,
+            })),
+            { value: '__GLOBAL__', label: '全局' },
+          ]}
         />
         <Select
           placeholder="筛选年级"
@@ -344,8 +369,10 @@ export default function AssessmentTimeManagementPage() {
         okButtonProps={{ danger: true }}
       >
         <p>
-          确认删除考核时间「{DIRECTION_LABELS[deletingItem?.direction as Direction]} 第
-          {deletingItem?.epoch} 轮 {deletingItem?.grade}级」？此操作不可撤销。
+          确认删除考核时间「
+          {deletingItem?.direction ? DIRECTION_LABELS[deletingItem.direction] : '全局'} 第
+          {deletingItem?.epoch} 轮{' '}
+          {deletingItem?.grade != null ? `${deletingItem.grade}级` : '不限年级'}」？此操作不可撤销。
         </p>
       </Modal>
     </div>

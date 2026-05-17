@@ -185,7 +185,7 @@ class UserTest {
                 null,
                 "简介");
 
-        user.updateAdminFields(2L, Direction.EMBEDDED, true, "测试工程师");
+        user.updateAdminFields(2L, Direction.EMBEDDED, true, "测试工程师", null, null, null, null, null, null, null, null);
 
         assertEquals(2L, user.getRoleId());
         assertEquals(Direction.EMBEDDED, user.getDirection());
@@ -217,7 +217,7 @@ class UserTest {
                 null,
                 "简介");
 
-        user.updateAdminFields(null, null, null, null);
+        user.updateAdminFields(null, null, null, null, null, null, null, null, null, null, null, null);
 
         assertEquals(1L, user.getRoleId());
         assertEquals(Direction.COMPUTER_VISION, user.getDirection());

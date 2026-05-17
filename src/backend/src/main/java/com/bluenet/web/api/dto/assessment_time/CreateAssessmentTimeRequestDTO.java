@@ -19,8 +19,7 @@ import java.time.LocalDateTime;
 @Builder
 @Schema(description = "创建考核时间请求")
 public class CreateAssessmentTimeRequestDTO {
-    @NotNull(message = "方向不能为空")
-    @Schema(description = "方向", required = true)
+    @Schema(description = "方向（null 表示全局考核）")
     private Direction direction;
 
     @NotNull(message = "届次不能为空")
@@ -28,10 +27,7 @@ public class CreateAssessmentTimeRequestDTO {
     @Schema(description = "届次", required = true, example = "1")
     private Integer epoch;
 
-    @NotNull(message = "入学年份不能为空")
-    @Min(value = 2000, message = "入学年份不合法")
-    @Max(value = 2100, message = "入学年份不合法")
-    @Schema(description = "入学年份（如 2024、2025）", required = true, example = "2024")
+    @Schema(description = "入学年份（如 2024、2025，null 表示不限年级）")
     private Integer grade;
 
     @NotNull(message = "开始时间不能为空")

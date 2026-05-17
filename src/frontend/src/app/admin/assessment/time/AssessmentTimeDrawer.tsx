@@ -26,10 +26,13 @@ interface AssessmentTimeDrawerProps {
   userDirection: Direction | null
 }
 
+/** 前端使用的特殊值，Select 提交时转回 undefined（即后端 null） */
+const GLOBAL_DIRECTION_VALUE = '__GLOBAL__' as const
+
 interface FormValues {
-  direction: Direction
+  direction: Direction | typeof GLOBAL_DIRECTION_VALUE
   epoch: number
-  grade: number
+  grade: number | undefined
   timeRange: [Dayjs, Dayjs]
   timeLimit: boolean
   timeLimitMinutes: number | null
@@ -66,9 +69,10 @@ export default function AssessmentTimeDrawer({
       }
     } else if (assessmentTime) {
       form.setFieldsValue({
-        direction: assessmentTime.direction,
+        direction:
+          assessmentTime.direction ?? (GLOBAL_DIRECTION_VALUE as typeof GLOBAL_DIRECTION_VALUE),
         epoch: assessmentTime.epoch,
-        grade: assessmentTime.grade,
+        grade: assessmentTime.grade ?? undefined,
         timeRange: [dayjs(assessmentTime.startTime), dayjs(assessmentTime.endTime)],
         timeLimit: assessmentTime.timeLimit,
         timeLimitMinutes: assessmentTime.timeLimitMinutes,
@@ -84,14 +88,24 @@ export default function AssessmentTimeDrawer({
     if (!isSuperAdmin && userDirection) {
       return entries.filter(([value]) => value === userDirection)
     }
-    return entries
+    // SUPER_ADMIN: add the global option
+    return [...entries, [GLOBAL_DIRECTION_VALUE, '全局'] as [typeof GLOBAL_DIRECTION_VALUE, string]]
   }, [isSuperAdmin, userDirection])
+
+  // Whether current user can operate on the given direction
+  const canOperate = useMemo(() => {
+    if (assessmentTime == null) return true
+    return (
+      isSuperAdmin ||
+      (assessmentTime.direction != null && assessmentTime.direction === userDirection)
+    )
+  }, [isSuperAdmin, userDirection, assessmentTime])
 
   const handleSubmit = async () => {
     try {
       const values = await form.validateFields()
       const payload: CreateAssessmentTimeRequestDTO | UpdateAssessmentTimeRequestDTO = {
-        direction: values.direction,
+        direction: values.direction === GLOBAL_DIRECTION_VALUE ? undefined : values.direction,
         epoch: values.epoch,
         grade: values.grade,
         startTime: values.timeRange[0].format('YYYY-MM-DDTHH:mm:ss'),
@@ -135,14 +149,16 @@ export default function AssessmentTimeDrawer({
       footer={
         isViewMode ? (
           <div className="flex justify-end gap-2">
-            {assessmentTime && (
+            {canOperate && assessmentTime && (
               <Button danger onClick={() => onDelete(assessmentTime)}>
                 删除
               </Button>
             )}
-            <Button type="primary" onClick={onEdit}>
-              编辑
-            </Button>
+            {canOperate && (
+              <Button type="primary" onClick={onEdit}>
+                编辑
+              </Button>
+            )}
           </div>
         ) : (
           <div className="flex justify-end gap-2">
@@ -160,15 +176,16 @@ export default function AssessmentTimeDrawer({
         disabled={isViewMode}
         initialValues={{ timeLimit: false, allowTeam: false }}
       >
-        <Form.Item
-          name="direction"
-          label="方向"
-          rules={[{ required: true, message: '请选择方向' }]}
-        >
+        <Form.Item name="direction" label="方向">
           <Select
             options={directionOptions.map(([value, label]) => ({ value, label }))}
             placeholder="选择方向"
             disabled={isViewMode || (!isSuperAdmin && !!userDirection)}
+            onChange={(value) => {
+              if (value === GLOBAL_DIRECTION_VALUE) {
+                form.setFieldsValue({ grade: undefined })
+              }
+            }}
           />
         </Form.Item>
 
@@ -176,8 +193,13 @@ export default function AssessmentTimeDrawer({
           <InputNumber min={1} placeholder="第几轮" className="w-full" />
         </Form.Item>
 
-        <Form.Item name="grade" label="年级" rules={[{ required: true, message: '请输入年级' }]}>
-          <InputNumber min={2000} max={2100} placeholder="入学年份（如 2025）" className="w-full" />
+        <Form.Item name="grade" label="年级">
+          <InputNumber
+            min={2000}
+            max={2100}
+            placeholder="入学年份（如 2025，不限可选全局方向）"
+            className="w-full"
+          />
         </Form.Item>
 
         <Form.Item

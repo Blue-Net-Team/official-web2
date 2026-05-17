@@ -33,12 +33,12 @@ export type ObjectiveResultCode = 'AC' | 'WA' | 'TLE' | 'RE' | 'CE' | 'MLE'
 
 /** 创建考核时间请求 - 对应后端 CreateAssessmentTimeRequestDTO */
 export interface CreateAssessmentTimeRequestDTO {
-  /** 方向 */
-  direction: Direction
+  /** 方向（省略表示全局考核） */
+  direction?: Direction
   /** 届次（第几轮） */
   epoch: number
-  /** 入学年份 */
-  grade: number
+  /** 入学年份（省略表示不限年级） */
+  grade?: number
   /** 开始时间 */
   startTime: string
   /** 结束时间 */
@@ -75,12 +75,12 @@ export interface UpdateAssessmentTimeRequestDTO {
 export interface AssessmentTimeDTO {
   /** 考核时间ID */
   id: number
-  /** 方向 */
-  direction: Direction
+  /** 方向（null 表示全局考核） */
+  direction: Direction | null
   /** 届次（第几轮） */
   epoch: number
-  /** 入学年份（如 2024、2025） */
-  grade: number
+  /** 入学年份（如 2024、2025，null 表示不限年级） */
+  grade: number | null
   /** 开始时间 */
   startTime: string
   /** 结束时间 */

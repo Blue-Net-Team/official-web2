@@ -103,8 +103,13 @@ public class AssessmentTimeRepositoryImpl implements AssessmentTimeRepository {
     }
 
     @Override
-    public Optional<Integer> findMaxEpochByDirectionAndGrade(Direction direction, Integer grade) {
-        Integer maxEpoch = assessmentTimeMapper.selectMaxEpochByDirectionAndGrade(direction, grade);
+    public long countByEpochGrade(Integer epoch, Integer grade) {
+        return assessmentTimeMapper.countByEpochGrade(epoch, grade);
+    }
+
+    @Override
+    public Optional<Integer> findMaxEpoch(Direction direction, Integer grade) {
+        Integer maxEpoch = assessmentTimeMapper.selectMaxEpoch(direction, grade);
         return Optional.ofNullable(maxEpoch);
     }
 }
