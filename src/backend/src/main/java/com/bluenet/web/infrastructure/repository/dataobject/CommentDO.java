@@ -47,4 +47,9 @@ public class CommentDO {
      * 评价或留言提交时间。
      */
     private LocalDateTime commentTime;
+
+    /**
+     * 评论者用户名，关联查询时填充。
+     */
+    private String username;
 }

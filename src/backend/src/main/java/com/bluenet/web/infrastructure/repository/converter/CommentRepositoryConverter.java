@@ -37,7 +37,7 @@ public class CommentRepositoryConverter {
                 dataObject.getCommentTime());
     }
 
-    public CommentVO toVO(Comment entity) {
+    public CommentVO toVO(Comment entity, String username) {
         if (entity == null) {
             return null;
         }
@@ -45,6 +45,7 @@ public class CommentRepositoryConverter {
                 .id(entity.getId())
                 .answerId(entity.getAnswerId())
                 .userId(entity.getUserId())
+                .username(username)
                 .content(entity.getContent())
                 .score(entity.getScore())
                 .commentTime(entity.getCommentTime())
@@ -56,7 +57,7 @@ public class CommentRepositoryConverter {
             return List.of();
         }
         return entities.stream()
-                .map(this::toVO)
+                .map(entity -> toVO(entity, null))
                 .toList();
     }
 }

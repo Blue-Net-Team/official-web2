@@ -1330,7 +1330,9 @@ export default function AssessmentJudgementManagementPage() {
                           ) : (
                             <>
                               <div className="flex items-center justify-between">
-                                <span className="text-sm text-white/70">用户 {comment.userId}</span>
+                                <span className="text-sm text-white/70">
+                                  {comment.username ?? `用户 ${comment.userId}`}
+                                </span>
                                 <span className="text-xs text-white/40">
                                   {formatTime(comment.commentTime)}
                                 </span>

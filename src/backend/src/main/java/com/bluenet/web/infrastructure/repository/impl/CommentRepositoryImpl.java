@@ -36,12 +36,9 @@ public class CommentRepositoryImpl implements CommentRepository {
 
     @Override
     public List<CommentVO> findByAnswerId(Long answerId) {
-        List<CommentDO> dataObjects = commentMapper.selectList(
-                new QueryWrapper<CommentDO>().eq("answer_id", answerId)
-                        .orderByAsc("comment_time"));
+        List<CommentDO> dataObjects = commentMapper.selectByAnswerIdWithUsername(answerId);
         return dataObjects.stream()
-                .map(converter::toEntity)
-                .map(converter::toVO)
+                .map(do_ -> converter.toVO(converter.toEntity(do_), do_.getUsername()))
                 .toList();
     }
 

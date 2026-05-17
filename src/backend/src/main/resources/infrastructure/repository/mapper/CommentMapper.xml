@@ -9,4 +9,23 @@
         <result column="score" property="score"/>
         <result column="comment_time" property="commentTime"/>
     </resultMap>
+
+    <resultMap id="WithUsernameResultMap" type="com.bluenet.web.infrastructure.repository.dataobject.CommentDO" extends="BaseResultMap">
+        <result column="username" property="username"/>
+    </resultMap>
+
+    <select id="selectByAnswerIdWithUsername" resultMap="WithUsernameResultMap">
+        SELECT
+            c.id,
+            c.answer_id,
+            c.user_id,
+            c.content,
+            c.score,
+            c.comment_time,
+            u.username
+        FROM tb_comment c
+        INNER JOIN tb_user u ON c.user_id = u.id
+        WHERE c.answer_id = #{answerId}
+        ORDER BY c.comment_time ASC
+    </select>
 </mapper>
