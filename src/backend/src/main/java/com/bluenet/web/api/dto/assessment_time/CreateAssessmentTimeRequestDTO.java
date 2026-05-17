@@ -23,7 +23,7 @@ public class CreateAssessmentTimeRequestDTO {
     private Direction direction;
 
     @NotNull(message = "届次不能为空")
-    @Min(value = 1, message = "届次必须大于0")
+    @Min(value = 0, message = "届次必须大于等于0")
     @Schema(description = "届次", required = true, example = "1")
     private Integer epoch;
 

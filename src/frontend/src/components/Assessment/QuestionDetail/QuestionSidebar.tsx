@@ -59,7 +59,7 @@ export default function QuestionSidebar({
         <div className="flex justify-between items-center">
           <span className="text-[13px] text-white/45">考核轮次</span>
           <span className="text-[13px] text-white/65">
-            {timeInfo ? `第${timeInfo.epoch}轮考核` : '-'}
+            {timeInfo ? (timeInfo.epoch === 0 ? '最终考核' : `第${timeInfo.epoch}轮考核`) : '-'}
           </span>
         </div>
         <div className="flex justify-between items-center">

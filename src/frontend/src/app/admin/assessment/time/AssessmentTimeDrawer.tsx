@@ -1,7 +1,19 @@
 'use client'
 
 import { useEffect, useMemo } from 'react'
-import { App, Button, DatePicker, Drawer, Form, InputNumber, Select, Space, Switch } from 'antd'
+import {
+  App,
+  Button,
+  DatePicker,
+  Drawer,
+  Form,
+  InputNumber,
+  Select,
+  Space,
+  Switch,
+  Tooltip,
+} from 'antd'
+import { QuestionCircleOutlined } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import type { Dayjs } from 'dayjs'
 import type {
@@ -56,6 +68,7 @@ export default function AssessmentTimeDrawer({
   const isViewMode = mode === 'view'
   const isCreateMode = mode === 'create'
   const timeLimitValue = Form.useWatch('timeLimit', form)
+  const direction = Form.useWatch('direction', form)
 
   // Populate form when opening
   useEffect(() => {
@@ -106,7 +119,7 @@ export default function AssessmentTimeDrawer({
       const values = await form.validateFields()
       const payload: CreateAssessmentTimeRequestDTO | UpdateAssessmentTimeRequestDTO = {
         direction: values.direction === GLOBAL_DIRECTION_VALUE ? undefined : values.direction,
-        epoch: values.epoch,
+        epoch: values.direction === GLOBAL_DIRECTION_VALUE ? 0 : values.epoch,
         grade: values.grade,
         startTime: values.timeRange[0].format('YYYY-MM-DDTHH:mm:ss'),
         endTime: values.timeRange[1].format('YYYY-MM-DDTHH:mm:ss'),
@@ -183,14 +196,30 @@ export default function AssessmentTimeDrawer({
             disabled={isViewMode || (!isSuperAdmin && !!userDirection)}
             onChange={(value) => {
               if (value === GLOBAL_DIRECTION_VALUE) {
-                form.setFieldsValue({ grade: undefined })
+                form.setFieldsValue({ grade: undefined, epoch: 0 })
               }
             }}
           />
         </Form.Item>
 
-        <Form.Item name="epoch" label="轮次" rules={[{ required: true, message: '请输入轮次' }]}>
-          <InputNumber min={1} placeholder="第几轮" className="w-full" />
+        <Form.Item
+          name="epoch"
+          label={
+            <span>
+              轮次
+              <Tooltip title="全局考核固定为最终轮次（轮次0）。如有多次全局考核，轮次数从1开始递增。">
+                <QuestionCircleOutlined className="text-white/45 cursor-help ml-1" />
+              </Tooltip>
+            </span>
+          }
+          rules={[{ required: true, message: '请输入轮次' }]}
+        >
+          <InputNumber
+            min={0}
+            placeholder="第几轮"
+            className="w-full"
+            disabled={direction === GLOBAL_DIRECTION_VALUE}
+          />
         </Form.Item>
 
         <Form.Item name="grade" label="年级">

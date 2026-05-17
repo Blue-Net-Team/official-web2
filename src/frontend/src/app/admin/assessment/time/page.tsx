@@ -370,8 +370,8 @@ export default function AssessmentTimeManagementPage() {
       >
         <p>
           确认删除考核时间「
-          {deletingItem?.direction ? DIRECTION_LABELS[deletingItem.direction] : '全局'} 第
-          {deletingItem?.epoch} 轮{' '}
+          {deletingItem?.direction ? DIRECTION_LABELS[deletingItem.direction] : '全局'}{' '}
+          {deletingItem?.epoch === 0 ? '最终考核' : `第${deletingItem?.epoch} 轮`}{' '}
           {deletingItem?.grade != null ? `${deletingItem.grade}级` : '不限年级'}」？此操作不可撤销。
         </p>
       </Modal>

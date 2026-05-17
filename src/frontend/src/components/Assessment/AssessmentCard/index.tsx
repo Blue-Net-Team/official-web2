@@ -26,6 +26,7 @@ function formatDate(dateStr: string): string {
 }
 
 function getEpochLabel(epoch: number): string {
+  if (epoch === 0) return '最终考核'
   const chineseNumbers = ['一', '二', '三', '四', '五', '六', '七', '八', '九', '十']
   return `第${chineseNumbers[epoch - 1] || epoch}轮考核`
 }
