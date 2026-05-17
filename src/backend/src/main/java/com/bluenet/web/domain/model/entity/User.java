@@ -129,8 +129,26 @@ public class User {
      *            禁用状态
      * @param job
      *            岗位职责
+     * @param studentId
+     *            学生学号
+     * @param email
+     *            邮箱地址
+     * @param username
+     *            用户名
+     * @param nickname
+     *            昵称
+     * @param collegeId
+     *            学院标识
+     * @param major
+     *            专业
+     * @param gender
+     *            性别
+     * @param assessmentGradeYear
+     *            考核年级年份
      */
-    public void updateAdminFields(Long roleId, Direction direction, Boolean disable, String job) {
+    public void updateAdminFields(Long roleId, Direction direction, Boolean disable, String job,
+            String studentId, String email, String username, String nickname,
+            Long collegeId, String major, Gender gender, Integer assessmentGradeYear) {
         if (roleId != null) {
             this.roleId = roleId;
         }
@@ -142,6 +160,30 @@ public class User {
         }
         if (job != null) {
             this.job = job;
+        }
+        if (studentId != null) {
+            this.studentId = studentId;
+        }
+        if (email != null) {
+            this.email = email;
+        }
+        if (username != null) {
+            this.username = username;
+        }
+        if (nickname != null) {
+            this.nickname = nickname;
+        }
+        if (collegeId != null) {
+            this.collegeId = collegeId;
+        }
+        if (major != null) {
+            this.major = major;
+        }
+        if (gender != null) {
+            this.gender = gender;
+        }
+        if (assessmentGradeYear != null) {
+            this.assessmentGradeYear = assessmentGradeYear;
         }
     }
 

@@ -159,6 +159,14 @@ export default function AdminUserManagementPage() {
       direction: user.direction ?? undefined,
       disable: user.disable,
       job: user.job ?? undefined,
+      studentId: user.studentId ?? undefined,
+      username: user.username ?? undefined,
+      nickname: user.nickname ?? undefined,
+      email: user.email ?? undefined,
+      collegeId: undefined,
+      major: user.major ?? undefined,
+      gender: user.gender ?? undefined,
+      assessmentGradeYear: undefined,
     })
     setEditModalOpen(true)
   }
@@ -647,26 +655,79 @@ export default function AdminUserManagementPage() {
         okText="保存"
         cancelText="取消"
         confirmLoading={editSubmitting}
+        width={520}
       >
         <Form form={editForm} layout="vertical" className="mt-4">
-          <Form.Item name="roleId" label="角色">
-            <Select allowClear placeholder="选择角色" options={ROLE_OPTIONS} />
-          </Form.Item>
-          <Form.Item name="direction" label="方向">
-            <Select allowClear placeholder="选择方向" options={DIRECTION_OPTIONS} />
-          </Form.Item>
-          <Form.Item name="job" label="职位">
-            <Input placeholder="职位" />
-          </Form.Item>
-          <Form.Item name="disable" label="状态">
-            <Select
-              placeholder="选择状态"
-              options={[
-                { value: false, label: '正常' },
-                { value: true, label: '禁用' },
-              ]}
-            />
-          </Form.Item>
+          <div className="grid grid-cols-2 gap-4">
+            <Form.Item
+              name="studentId"
+              label="学号"
+              rules={[{ pattern: /^\d{12,13}$/, message: '学号必须为12-13位数字' }]}
+            >
+              <Input placeholder="学号" />
+            </Form.Item>
+            <Form.Item name="username" label="姓名">
+              <Input placeholder="姓名" />
+            </Form.Item>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <Form.Item name="nickname" label="昵称">
+              <Input placeholder="昵称" />
+            </Form.Item>
+            <Form.Item
+              name="email"
+              label="邮箱"
+              rules={[{ type: 'email', message: '邮箱格式不正确' }]}
+            >
+              <Input placeholder="邮箱地址" />
+            </Form.Item>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <Form.Item name="roleId" label="角色">
+              <Select allowClear placeholder="选择角色" options={ROLE_OPTIONS} />
+            </Form.Item>
+            <Form.Item name="direction" label="方向">
+              <Select allowClear placeholder="选择方向" options={DIRECTION_OPTIONS} />
+            </Form.Item>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <Form.Item name="collegeId" label="学院">
+              <Select allowClear placeholder="选择学院" options={collegeOptions} />
+            </Form.Item>
+            <Form.Item name="major" label="专业">
+              <Input placeholder="专业" />
+            </Form.Item>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <Form.Item name="gender" label="性别">
+              <Select
+                allowClear
+                placeholder="选择性别"
+                options={[
+                  { value: 'MALE', label: GENDER_LABELS.MALE },
+                  { value: 'FEMALE', label: GENDER_LABELS.FEMALE },
+                  { value: 'UNKNOWN', label: GENDER_LABELS.UNKNOWN },
+                ]}
+              />
+            </Form.Item>
+            <Form.Item name="job" label="岗位">
+              <Input placeholder="岗位" />
+            </Form.Item>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <Form.Item name="assessmentGradeYear" label="考核年级">
+              <Input type="number" placeholder="考核年级年份" />
+            </Form.Item>
+            <Form.Item name="disable" label="状态">
+              <Select
+                placeholder="选择状态"
+                options={[
+                  { value: false, label: '正常' },
+                  { value: true, label: '禁用' },
+                ]}
+              />
+            </Form.Item>
+          </div>
         </Form>
       </Modal>
 

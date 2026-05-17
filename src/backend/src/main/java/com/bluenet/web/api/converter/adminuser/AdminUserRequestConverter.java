@@ -15,7 +15,9 @@ public class AdminUserRequestConverter {
 
     public AdminUserCommands.UpdateUserCommand toCommand(Long userId, AdminUserUpdateRequestDTO dto) {
         return new AdminUserCommands.UpdateUserCommand(
-                userId, dto.getRoleId(), dto.getDirection(), dto.getDisable(), dto.getJob());
+                userId, dto.getRoleId(), dto.getDirection(), dto.getDisable(), dto.getJob(),
+                dto.getStudentId(), dto.getEmail(), dto.getUsername(), dto.getNickname(),
+                dto.getCollegeId(), dto.getMajor(), dto.getGender(), dto.getAssessmentGradeYear());
     }
 
     public AdminUserCommands.ResetPasswordCommand toCommand(Long userId, AdminUserResetPasswordRequestDTO dto) {

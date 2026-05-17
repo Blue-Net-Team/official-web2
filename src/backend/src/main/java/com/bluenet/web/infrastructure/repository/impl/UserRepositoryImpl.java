@@ -346,7 +346,9 @@ public class UserRepositoryImpl implements UserRepository {
     }
 
     @Override
-    public int updateAdminFields(Long userId, Long roleId, Direction direction, Boolean disable, String job) {
+    public int updateAdminFields(Long userId, Long roleId, Direction direction, Boolean disable, String job,
+            String studentId, String email, String username, String nickname,
+            Long collegeId, String major, Gender gender, Integer assessmentGradeYear) {
         UserDO userDO = new UserDO();
         userDO.setId(userId);
         if (roleId != null) {
@@ -360,6 +362,30 @@ public class UserRepositoryImpl implements UserRepository {
         }
         if (job != null) {
             userDO.setJob(job);
+        }
+        if (studentId != null) {
+            userDO.setStudentId(studentId);
+        }
+        if (email != null) {
+            userDO.setEmail(email);
+        }
+        if (username != null) {
+            userDO.setUsername(username);
+        }
+        if (nickname != null) {
+            userDO.setNickname(nickname);
+        }
+        if (collegeId != null) {
+            userDO.setCollegeId(collegeId);
+        }
+        if (major != null) {
+            userDO.setMajor(major);
+        }
+        if (gender != null) {
+            userDO.setGender(gender);
+        }
+        if (assessmentGradeYear != null) {
+            userDO.setAssessmentGradeYear(assessmentGradeYear);
         }
         return userMapper.updateById(userDO);
     }

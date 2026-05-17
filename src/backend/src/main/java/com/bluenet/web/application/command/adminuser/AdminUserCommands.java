@@ -33,7 +33,15 @@ public class AdminUserCommands {
             Long roleId,
             Direction direction,
             Boolean disable,
-            String job) {
+            String job,
+            String studentId,
+            String email,
+            String username,
+            String nickname,
+            Long collegeId,
+            String major,
+            Gender gender,
+            Integer assessmentGradeYear) {
     }
 
     /**

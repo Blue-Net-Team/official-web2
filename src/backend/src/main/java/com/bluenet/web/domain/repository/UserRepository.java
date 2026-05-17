@@ -209,9 +209,27 @@ public interface UserRepository {
      *            禁用状态
      * @param job
      *            岗位
+     * @param studentId
+     *            学号
+     * @param email
+     *            邮箱
+     * @param username
+     *            姓名
+     * @param nickname
+     *            昵称
+     * @param collegeId
+     *            学院ID
+     * @param major
+     *            专业
+     * @param gender
+     *            性别
+     * @param assessmentGradeYear
+     *            考核年级年份
      * @return 受影响行数
      */
-    int updateAdminFields(Long userId, Long roleId, Direction direction, Boolean disable, String job);
+    int updateAdminFields(Long userId, Long roleId, Direction direction, Boolean disable, String job,
+            String studentId, String email, String username, String nickname,
+            Long collegeId, String major, Gender gender, Integer assessmentGradeYear);
 
     /**
      * 级联删除用户及关联数据

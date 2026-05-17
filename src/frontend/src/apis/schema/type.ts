@@ -874,6 +874,14 @@ export interface AdminUserUpdateRequestDTO {
   direction?: string
   disable?: boolean
   job?: string
+  studentId?: string
+  email?: string
+  username?: string
+  nickname?: string
+  collegeId?: number
+  major?: string
+  gender?: string
+  assessmentGradeYear?: number
 }
 
 export interface AdminUserResetPasswordRequestDTO {

@@ -65,13 +65,33 @@ public class AdminUserAppServiceImpl implements AdminUserAppService {
     public void updateUser(AdminUserCommands.UpdateUserCommand command) {
         User user = userRepository.findEntityById(command.userId())
                 .orElseThrow(() -> new DataNotFound("用户不存在"));
-        user.updateAdminFields(command.roleId(), command.direction(), command.disable(), command.job());
+        user.updateAdminFields(
+                command.roleId(),
+                command.direction(),
+                command.disable(),
+                command.job(),
+                command.studentId(),
+                command.email(),
+                command.username(),
+                command.nickname(),
+                command.collegeId(),
+                command.major(),
+                command.gender(),
+                command.assessmentGradeYear());
         userRepository.updateAdminFields(
                 command.userId(),
                 command.roleId(),
                 command.direction(),
                 command.disable(),
-                command.job());
+                command.job(),
+                command.studentId(),
+                command.email(),
+                command.username(),
+                command.nickname(),
+                command.collegeId(),
+                command.major(),
+                command.gender(),
+                command.assessmentGradeYear());
     }
 
     @Override
