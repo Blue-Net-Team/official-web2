@@ -138,7 +138,7 @@ services:
       - network
 
   database:
-    image: postgres:17
+    image: pgvector/pgvector:pg17
     container_name: bluenet-pgsql
     ports:
       - "15432:5432"
