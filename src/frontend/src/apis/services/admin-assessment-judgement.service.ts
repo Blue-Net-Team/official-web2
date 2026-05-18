@@ -9,7 +9,6 @@ import type {
   AssessmentQuestionScoreboardDTO,
   AssessmentQuestionSubmissionDTO,
   FinalizeScoreRequestDTO,
-  ManualReviewRequestDTO,
   QuestionType,
 } from '@/apis/schema/assessment.dto'
 
@@ -23,17 +22,6 @@ export const adminAssessmentJudgementService = {
     const response = await apiClient.get<ResponseMessage<AssessmentJudgementDTO[]>>(
       '/admin/assessment-judgements',
       { params: { questionId } }
-    )
-    return response.data
-  },
-
-  /** 提交文件上传题的人工评分和评论。 */
-  async manualReview(
-    request: ManualReviewRequestDTO
-  ): Promise<ResponseMessage<AssessmentJudgementDTO>> {
-    const response = await apiClient.post<ResponseMessage<AssessmentJudgementDTO>>(
-      '/admin/assessment-judgements/manual-review',
-      request
     )
     return response.data
   },

@@ -159,51 +159,6 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
     }
 
     /**
-     * 对文件上传题执行人工评分，并记录评分人身份。
-     *
-     * @param command
-     *            人工评分命令，包含答案ID、分数和可选评论
-     * @return 新创建的评判结果
-     */
-    @Override
-    @Transactional
-    public AssessmentJudgementResult reviewFileUploadAnswer(AssessmentJudgementCommands.ManualReviewCommand command) {
-        UserVO currentUser = accessGuard.requireCurrentUser();
-        RoleType roleType = accessGuard.requireRole(currentUser);
-        if (!RoleHierarchy.isMemberOrAbove(roleType)) {
-            throw new Forbidden("只有团队成员及以上权限可以人工评分");
-        }
-
-        AssessmentAnswer answer = assessmentAnswerRepository.findById(command.answerId())
-                .orElseThrow(() -> new DataNotFound("答题不存在，ID: " + command.answerId()));
-        AssessmentQuestion question = assessmentQuestionRepository.findById(answer.getQuestionId())
-                .orElseThrow(() -> new DataNotFound("题目不存在，ID: " + answer.getQuestionId()));
-        if (question.getQuestionType() != QuestionType.FILE_UPLOAD) {
-            throw new BadRequest("只有文件上传题可以人工评分");
-        }
-        if (command.score().compareTo(java.math.BigDecimal.ZERO) < 0
-                || command.score().compareTo(question.getScore()) > 0) {
-            throw new BadRequest("人工评分必须在 0 到题目满分之间");
-        }
-
-        AssessmentJudgementVO judgement = AssessmentJudgementVO.builder()
-                .answerId(answer.getId())
-                .questionId(question.getId())
-                .assessmentTimeId(question.getAssessmentTimeId())
-                .userId(answer.getUserId())
-                .score(command.score())
-                .maxScore(question.getScore())
-                .status(JudgementStatus.JUDGED)
-                .source(JudgementSource.MANUAL)
-                .reviewerId(currentUser.getId())
-                .reviewerType(resolveReviewerType(roleType))
-                .comment(command.comment())
-                .judgedAt(LocalDateTime.now())
-                .build();
-        return toResult(assessmentJudgementDomainService.createJudgement(judgement));
-    }
-
-    /**
      * 方向管理员确认文件上传题的最终评分。
      *
      * @param command

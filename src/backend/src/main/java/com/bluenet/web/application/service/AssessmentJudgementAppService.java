@@ -38,15 +38,6 @@ public interface AssessmentJudgementAppService {
     List<AssessmentJudgementResult> listByQuestionId(Long questionId);
 
     /**
-     * 对文件上传题进行人工评分。
-     *
-     * @param command
-     *            人工评分命令
-     * @return 评判结果
-     */
-    AssessmentJudgementResult reviewFileUploadAnswer(AssessmentJudgementCommands.ManualReviewCommand command);
-
-    /**
      * 设置考生最终通过决策。
      *
      * @param command

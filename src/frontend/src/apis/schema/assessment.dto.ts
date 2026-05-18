@@ -523,16 +523,6 @@ export interface JudgeJobPollingResponseDTO {
   judgement: AssessmentJudgementDTO | null
 }
 
-/** 文件上传题人工评分请求 */
-export interface ManualReviewRequestDTO {
-  /** 答案ID */
-  answerId: number
-  /** 得分 */
-  score: number
-  /** 评语 */
-  comment?: string | null
-}
-
 /** 考核最终通过决策请求 */
 export interface AssessmentDecisionRequestDTO {
   /** 考生用户ID */

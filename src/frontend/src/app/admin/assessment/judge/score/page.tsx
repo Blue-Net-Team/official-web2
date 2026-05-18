@@ -124,7 +124,6 @@ export default function AssessmentJudgementManagementPage() {
     Record<number, AssessmentQuestionSubmissionDTO | null>
   >({})
   const [loadingCandidateQuestionIds, setLoadingCandidateQuestionIds] = useState<number[]>([])
-  const [savingReview, setSavingReview] = useState(false)
   const [savingDecisionUserId, setSavingDecisionUserId] = useState<number | null>(null)
 
   // 评论相关状态
@@ -432,27 +431,6 @@ export default function AssessmentJudgementManagementPage() {
     ])
     if (activeTab === 'decision') {
       await fetchDecisionWorkspace()
-    }
-  }
-
-  /** 提交文件上传题人工评分。 */
-  const handleSubmitReview = async () => {
-    if (!reviewing || reviewing.questionType !== 'FILE_UPLOAD') return
-    const values = await form.validateFields()
-    setSavingReview(true)
-    try {
-      await adminAssessmentJudgementService.manualReview({
-        answerId: reviewing.answerId,
-        score: values.score,
-        comment: values.comment,
-      })
-      messageApi.success('评分已提交')
-      setReviewing(null)
-      await refreshAfterScore()
-    } catch {
-      messageApi.error('提交评分失败')
-    } finally {
-      setSavingReview(false)
     }
   }
 
@@ -1427,9 +1405,6 @@ export default function AssessmentJudgementManagementPage() {
                   <Input.TextArea rows={3} maxLength={500} showCount placeholder="输入评语" />
                 </Form.Item>
                 <div className="flex flex-col gap-2">
-                  <Button type="primary" block loading={savingReview} onClick={handleSubmitReview}>
-                    提交评分
-                  </Button>
                   {isDecisionMaker && (
                     <Button
                       type="primary"

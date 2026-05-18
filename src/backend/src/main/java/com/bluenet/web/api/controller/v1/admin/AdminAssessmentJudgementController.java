@@ -9,7 +9,6 @@ import com.bluenet.web.api.dto.assessment_judgement.AssessmentJudgementDTO;
 import com.bluenet.web.api.dto.assessment_judgement.AssessmentQuestionScoreboardDTO;
 import com.bluenet.web.api.dto.assessment_judgement.AssessmentQuestionSubmissionDTO;
 import com.bluenet.web.api.dto.assessment_judgement.FinalizeScoreRequestDTO;
-import com.bluenet.web.api.dto.assessment_judgement.ManualReviewRequestDTO;
 import com.bluenet.web.api.converter.assessment_judgement.AssessmentJudgementRequestConverter;
 import com.bluenet.web.api.converter.assessment_judgement.AssessmentJudgementResponseConverter;
 import com.bluenet.web.application.AssessmentDecisionResult;
@@ -75,24 +74,6 @@ public class AdminAssessmentJudgementController {
                 results.stream()
                         .map(responseConverter::toDTO)
                         .toList());
-    }
-
-    /**
-     * 提交文件上传题人工评分。
-     *
-     * @param request
-     *            人工评分请求
-     * @return 新创建的评判 DTO
-     */
-    @Operation(summary = "人工评分文件上传题", description = "团队成员及以上可对文件上传题进行人工评分和评论")
-    @RequiresPermission(name = "人工评分考核答案", value = "assessment-judgement:manual-review", access = AccessLevel.PROTECTED)
-    @PostMapping("/manual-review")
-    public ResponseMessage<AssessmentJudgementDTO> reviewFileUploadAnswer(
-            @Valid @RequestBody ManualReviewRequestDTO request) {
-        AssessmentJudgementCommands.ManualReviewCommand command = assessmentJudgementRequestConverter
-                .toCommand(request);
-        AssessmentJudgementResult result = assessmentJudgementAppService.reviewFileUploadAnswer(command);
-        return ResponseMessage.success(responseConverter.toDTO(result));
     }
 
     /**

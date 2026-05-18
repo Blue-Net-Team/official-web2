@@ -1,7 +1,6 @@
 package com.bluenet.web.api.converter.assessment_judgement;
 
 import com.bluenet.web.api.dto.assessment_judgement.AssessmentDecisionRequestDTO;
-import com.bluenet.web.api.dto.assessment_judgement.ManualReviewRequestDTO;
 import com.bluenet.web.application.command.assessment_judgement.AssessmentJudgementCommands;
 import org.springframework.stereotype.Component;
 
@@ -13,13 +12,6 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class AssessmentJudgementRequestConverter {
-
-    /**
-     * 将人工评分请求 DTO 转换为命令
-     */
-    public AssessmentJudgementCommands.ManualReviewCommand toCommand(ManualReviewRequestDTO dto) {
-        return new AssessmentJudgementCommands.ManualReviewCommand(dto.getAnswerId(), dto.getScore(), dto.getComment());
-    }
 
     /**
      * 将决策请求 DTO 转换为命令

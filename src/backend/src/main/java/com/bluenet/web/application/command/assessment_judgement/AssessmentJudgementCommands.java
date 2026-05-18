@@ -15,21 +15,6 @@ public class AssessmentJudgementCommands {
     }
 
     /**
-     * 人工评分命令。
-     * <p>
-     * 用于对考核答案进行人工评分。
-     * </p>
-     */
-    public record ManualReviewCommand(
-            /** 答案ID */
-            Long answerId,
-            /** 分数 */
-            BigDecimal score,
-            /** 评语 */
-            String comment) {
-    }
-
-    /**
      * 设置考核最终通过决策命令。
      * <p>
      * 用于设置考核的最终通过与否决策。
