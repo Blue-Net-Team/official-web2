@@ -1,6 +1,7 @@
 package com.bluenet.web.infrastructure.repository.dataobject;
 
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import java.math.BigDecimal;
@@ -51,5 +52,6 @@ public class CommentDO {
     /**
      * 评论者用户名，关联查询时填充。
      */
+    @TableField(exist = false)
     private String username;
 }
