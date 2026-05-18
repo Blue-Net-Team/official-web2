@@ -130,3 +130,6 @@ coverage/
 
 # secret
 *.pem
+
+# python
+__pycache__/
