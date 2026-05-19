@@ -4,9 +4,9 @@ Schema 管理（CREATE TABLE / CREATE INDEX）完全交由主 API 服务的 Flyw
 本模块仅负责 DML（CRUD、向量搜索、标量过滤）。
 
 表结构假设（由 Flyway 创建）：
-- tb_rag_tags   (tag_id PK, tag_name, tag_vector vector(dim), tag_description, chunks_count)
-- tb_rag_chunks (chunk_id PK, doc_id, doc_vector vector(dim), title, content, tags[], source, metadata JSONB)
-- tb_rag_docs   (doc_id PK, doc_vector vector(dim), title, content, source, metadata JSONB)
+- tb_rag_tags   (id PK, tag_name, tag_vector vector(dim), tag_description, chunks_count)
+- tb_rag_chunks (id PK, doc_id, doc_vector vector(dim), title, content, tags[], source, metadata JSONB)
+- tb_rag_docs   (id PK, doc_vector vector(dim), title, content, source, metadata JSONB)
 """
 
 from __future__ import annotations
@@ -110,7 +110,7 @@ class PgVectorStore(VectorStore):
         self.close()
 
     def _execute(
-        self, sql: str, params: tuple | list | None = None, fetch: bool = False
+        self, sql: str, params: tuple | list | dict | None = None, fetch: bool = False
     ) -> list[dict] | None:
         """执行 SQL 语句。
 
@@ -337,13 +337,18 @@ class PgVectorStore(VectorStore):
             return {"insert_count": 0, "ids": []}
 
         sql = f"""
-            INSERT INTO {table} (tag_id, tag_name, tag_vector, tag_description, chunks_count)
-            VALUES (%(tag_id)s, %(tag_name)s, %(tag_vector)s, %(tag_description)s, %(chunks_count)s)
+            INSERT INTO {table} (tag_name, tag_vector, tag_description, chunks_count)
+            VALUES (%(tag_name)s, %(tag_vector)s, %(tag_description)s, %(chunks_count)s)
+            RETURNING id
         """
+        ids: list[int] = []
         for row in rows:
-            self._execute(sql, row)
+            row.pop("id", None)
+            result = self._execute(sql, row, fetch=True)
+            if result:
+                ids.append(result[0]["id"])
 
-        return {"insert_count": len(rows), "ids": [r["tag_id"] for r in rows]}
+        return {"insert_count": len(ids), "ids": ids}
 
     def upsert_tags(self, data: list[TagRecord]) -> dict:
         """批量覆盖插入标签数据（存在则更新）。"""
@@ -356,9 +361,9 @@ class PgVectorStore(VectorStore):
             return {"upsert_count": 0, "ids": []}
 
         sql = f"""
-            INSERT INTO {table} (tag_id, tag_name, tag_vector, tag_description, chunks_count)
-            VALUES (%(tag_id)s, %(tag_name)s, %(tag_vector)s, %(tag_description)s, %(chunks_count)s)
-            ON CONFLICT (tag_id) DO UPDATE SET
+            INSERT INTO {table} (id, tag_name, tag_vector, tag_description, chunks_count)
+            VALUES (%(id)s, %(tag_name)s, %(tag_vector)s, %(tag_description)s, %(chunks_count)s)
+            ON CONFLICT (id) DO UPDATE SET
                 tag_name = EXCLUDED.tag_name,
                 tag_vector = EXCLUDED.tag_vector,
                 tag_description = EXCLUDED.tag_description,
@@ -367,7 +372,7 @@ class PgVectorStore(VectorStore):
         for row in rows:
             self._execute(sql, row)
 
-        return {"upsert_count": len(rows), "ids": [r["tag_id"] for r in rows]}
+        return {"upsert_count": len(rows), "ids": [r["id"] for r in rows]}
 
     def insert_chunks(self, data: list[ChunkRecord]) -> dict:
         """批量插入分段数据。"""
@@ -380,13 +385,18 @@ class PgVectorStore(VectorStore):
             return {"insert_count": 0, "ids": []}
 
         sql = f"""
-            INSERT INTO {table} (chunk_id, doc_id, doc_vector, title, content, tags, source, metadata)
-            VALUES (%(chunk_id)s, %(doc_id)s, %(doc_vector)s, %(title)s, %(content)s, %(tags)s, %(source)s, %(metadata)s)
+            INSERT INTO {table} (doc_id, doc_vector, title, content, tags, source, metadata)
+            VALUES (%(doc_id)s, %(doc_vector)s, %(title)s, %(content)s, %(tags)s, %(source)s, %(metadata)s)
+            RETURNING id
         """
+        ids: list[int] = []
         for row in rows:
-            self._execute(sql, row)
+            row.pop("id", None)
+            result = self._execute(sql, row, fetch=True)
+            if result:
+                ids.append(result[0]["id"])
 
-        return {"insert_count": len(rows), "ids": [r["chunk_id"] for r in rows]}
+        return {"insert_count": len(ids), "ids": ids}
 
     def upsert_chunks(self, data: list[ChunkRecord]) -> dict:
         """批量覆盖插入分段数据（存在则更新）。"""
@@ -399,9 +409,9 @@ class PgVectorStore(VectorStore):
             return {"upsert_count": 0, "ids": []}
 
         sql = f"""
-            INSERT INTO {table} (chunk_id, doc_id, doc_vector, title, content, tags, source, metadata)
-            VALUES (%(chunk_id)s, %(doc_id)s, %(doc_vector)s, %(title)s, %(content)s, %(tags)s, %(source)s, %(metadata)s)
-            ON CONFLICT (chunk_id) DO UPDATE SET
+            INSERT INTO {table} (id, doc_id, doc_vector, title, content, tags, source, metadata)
+            VALUES (%(id)s, %(doc_id)s, %(doc_vector)s, %(title)s, %(content)s, %(tags)s, %(source)s, %(metadata)s)
+            ON CONFLICT (id) DO UPDATE SET
                 doc_id = EXCLUDED.doc_id,
                 doc_vector = EXCLUDED.doc_vector,
                 title = EXCLUDED.title,
@@ -413,7 +423,7 @@ class PgVectorStore(VectorStore):
         for row in rows:
             self._execute(sql, row)
 
-        return {"upsert_count": len(rows), "ids": [r["chunk_id"] for r in rows]}
+        return {"upsert_count": len(rows), "ids": [r["id"] for r in rows]}
 
     def insert_docs(self, data: list[DocRecord]) -> dict:
         """批量插入文档数据。"""
@@ -426,13 +436,18 @@ class PgVectorStore(VectorStore):
             return {"insert_count": 0, "ids": []}
 
         sql = f"""
-            INSERT INTO {table} (doc_id, doc_vector, title, content, source, metadata)
-            VALUES (%(doc_id)s, %(doc_vector)s, %(title)s, %(content)s, %(source)s, %(metadata)s)
+            INSERT INTO {table} (doc_vector, title, content, source, metadata)
+            VALUES (%(doc_vector)s, %(title)s, %(content)s, %(source)s, %(metadata)s)
+            RETURNING id
         """
+        ids: list[int] = []
         for row in rows:
-            self._execute(sql, row)
+            row.pop("id", None)
+            result = self._execute(sql, row, fetch=True)
+            if result:
+                ids.append(result[0]["id"])
 
-        return {"insert_count": len(rows), "ids": [r["doc_id"] for r in rows]}
+        return {"insert_count": len(ids), "ids": ids}
 
     def upsert_docs(self, data: list[DocRecord]) -> dict:
         """批量覆盖插入文档数据（存在则更新）。"""
@@ -445,9 +460,9 @@ class PgVectorStore(VectorStore):
             return {"upsert_count": 0, "ids": []}
 
         sql = f"""
-            INSERT INTO {table} (doc_id, doc_vector, title, content, source, metadata)
-            VALUES (%(doc_id)s, %(doc_vector)s, %(title)s, %(content)s, %(source)s, %(metadata)s)
-            ON CONFLICT (doc_id) DO UPDATE SET
+            INSERT INTO {table} (id, doc_vector, title, content, source, metadata)
+            VALUES (%(id)s, %(doc_vector)s, %(title)s, %(content)s, %(source)s, %(metadata)s)
+            ON CONFLICT (id) DO UPDATE SET
                 doc_vector = EXCLUDED.doc_vector,
                 title = EXCLUDED.title,
                 content = EXCLUDED.content,
@@ -457,7 +472,7 @@ class PgVectorStore(VectorStore):
         for row in rows:
             self._execute(sql, row)
 
-        return {"upsert_count": len(rows), "ids": [r["doc_id"] for r in rows]}
+        return {"upsert_count": len(rows), "ids": [r["id"] for r in rows]}
 
     # ------------------------------------------------------------------
     # 数据查询
@@ -469,7 +484,7 @@ class PgVectorStore(VectorStore):
         top_k: int = 30,
         filters: str | None = None,
         output_fields: list[str] | None = None,
-    ) -> list[dict]:
+    ) -> list[TagRecord]:
         """在 tags 表中执行向量搜索。"""
         table = _get_table(settings.TAGS_COLLECTION_NAME)
         if not self._check_table_exists(table):
@@ -478,7 +493,7 @@ class PgVectorStore(VectorStore):
         metric = settings.VECTOR_METRIC_TYPE
         op = _METRIC_OPS.get(metric, "<=>")
 
-        default_fields = ["tag_id", "tag_name", "tag_description", "chunks_count"]
+        default_fields = ["id", "tag_name", "tag_vector", "tag_description", "chunks_count"]
         fields = output_fields or default_fields
         select_cols = ", ".join(fields)
 
@@ -489,15 +504,14 @@ class PgVectorStore(VectorStore):
             where_clause = "WHERE " + self._convert_filter(filters)
 
         sql = f"""
-            SELECT {select_cols}, tag_vector {op} %s AS distance
+            SELECT {select_cols}
             FROM {table}
             {where_clause}
-            ORDER BY tag_vector {op} %s
+            ORDER BY tag_vector {op} %s::vector
             LIMIT {top_k}
         """
-        params.append(vector)
         rows = self._execute(sql, params, fetch=True)
-        return self._format_search_result(rows or [], fields)
+        return [TagRecord(**row) for row in rows or []]
 
     def search_chunks(
         self,
@@ -505,7 +519,7 @@ class PgVectorStore(VectorStore):
         top_k: int = 100,
         tag_filter: list[str] | None = None,
         output_fields: list[str] | None = None,
-    ) -> list[dict]:
+    ) -> list[ChunkRecord]:
         """在 chunks 表中执行向量搜索，支持标签过滤。"""
         table = _get_table(settings.CHUNKS_COLLECTION_NAME)
         if not self._check_table_exists(table):
@@ -514,7 +528,7 @@ class PgVectorStore(VectorStore):
         metric = settings.VECTOR_METRIC_TYPE
         op = _METRIC_OPS.get(metric, "<=>")
 
-        default_fields = ["chunk_id", "doc_id", "title", "content", "tags", "source", "metadata"]
+        default_fields = ["id", "doc_id", "doc_vector", "title", "content", "tags", "source", "metadata"]
         fields = output_fields or default_fields
         select_cols = ", ".join(fields)
 
@@ -529,15 +543,14 @@ class PgVectorStore(VectorStore):
             where_clause = "WHERE " + " AND ".join(conditions)
 
         sql = f"""
-            SELECT {select_cols}, doc_vector {op} %s AS distance
+            SELECT {select_cols}
             FROM {table}
             {where_clause}
-            ORDER BY doc_vector {op} %s
+            ORDER BY doc_vector {op} %s::vector
             LIMIT {top_k}
         """
-        params.append(vector)
         rows = self._execute(sql, params, fetch=True)
-        return self._format_search_result(rows or [], fields)
+        return [ChunkRecord(**row) for row in rows or []]
 
     def search_docs(
         self,
@@ -545,7 +558,7 @@ class PgVectorStore(VectorStore):
         top_k: int = 100,
         filters: str | None = None,
         output_fields: list[str] | None = None,
-    ) -> list[dict]:
+    ) -> list[DocRecord]:
         """在 docs 表中执行向量搜索。"""
         table = _get_table(settings.DOCS_COLLECTION_NAME)
         if not self._check_table_exists(table):
@@ -554,7 +567,7 @@ class PgVectorStore(VectorStore):
         metric = settings.VECTOR_METRIC_TYPE
         op = _METRIC_OPS.get(metric, "<=>")
 
-        default_fields = ["doc_id", "title", "content", "source", "metadata"]
+        default_fields = ["id", "doc_vector", "title", "content", "source", "metadata"]
         fields = output_fields or default_fields
         select_cols = ", ".join(fields)
 
@@ -564,23 +577,22 @@ class PgVectorStore(VectorStore):
             where_clause = "WHERE " + self._convert_filter(filters)
 
         sql = f"""
-            SELECT {select_cols}, doc_vector {op} %s AS distance
+            SELECT {select_cols}
             FROM {table}
             {where_clause}
-            ORDER BY doc_vector {op} %s
+            ORDER BY doc_vector {op} %s::vector
             LIMIT {top_k}
         """
-        params.append(vector)
         rows = self._execute(sql, params, fetch=True)
-        return self._format_search_result(rows or [], fields)
+        return [DocRecord(**row) for row in rows or []]
 
     @staticmethod
-    def _format_search_result(rows: list[dict], output_fields: list[str]) -> list[dict]:
+    def _format_search_result(rows: list[dict | TagRecord | ChunkRecord], output_fields: list[str]) -> list[dict]:
         """格式化搜索结果，与 Milvus 返回结构保持一致。"""
         result: list[dict] = []
         for row in rows:
             item: dict[str, Any] = {
-                "id": row.get("tag_id") or row.get("chunk_id") or row.get("doc_id"),
+                "id": row.get("id"),
                 "distance": row.get("distance"),
             }
             for field in output_fields:
@@ -600,9 +612,9 @@ class PgVectorStore(VectorStore):
 
         placeholders = ", ".join(["%s"] * len(tag_ids))
         sql = f"""
-            SELECT tag_id, tag_name, tag_vector, tag_description, chunks_count
+            SELECT id, tag_name, tag_vector, tag_description, chunks_count
             FROM {table}
-            WHERE tag_id IN ({placeholders})
+            WHERE id IN ({placeholders})
         """
         return self._execute(sql, tuple(tag_ids), fetch=True) or []
 
@@ -617,9 +629,9 @@ class PgVectorStore(VectorStore):
 
         placeholders = ", ".join(["%s"] * len(chunk_ids))
         sql = f"""
-            SELECT chunk_id, doc_id, doc_vector, title, content, tags, source, metadata
+            SELECT id, doc_id, doc_vector, title, content, tags, source, metadata
             FROM {table}
-            WHERE chunk_id IN ({placeholders})
+            WHERE id IN ({placeholders})
         """
         return self._execute(sql, tuple(chunk_ids), fetch=True) or []
 
@@ -634,9 +646,9 @@ class PgVectorStore(VectorStore):
 
         placeholders = ", ".join(["%s"] * len(doc_ids))
         sql = f"""
-            SELECT doc_id, doc_vector, title, content, source, metadata
+            SELECT id, doc_vector, title, content, source, metadata
             FROM {table}
-            WHERE doc_id IN ({placeholders})
+            WHERE id IN ({placeholders})
         """
         return self._execute(sql, tuple(doc_ids), fetch=True) or []
 

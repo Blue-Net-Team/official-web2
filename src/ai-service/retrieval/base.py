@@ -48,9 +48,9 @@ class ConnectionError(VectorStoreError):
 class TagRecord:
     """标签记录。"""
 
-    tag_id: int
     tag_name: str
     tag_vector: list[float]
+    id: int | None = None
     tag_description: str = ""
     chunks_count: int = 0
 
@@ -59,8 +59,8 @@ class TagRecord:
 class ChunkRecord:
     """分段记录。"""
 
-    chunk_id: int
     doc_vector: list[float]
+    id: int | None = None
     doc_id: int | None = None
     title: str = ""
     content: str = ""
@@ -73,8 +73,8 @@ class ChunkRecord:
 class DocRecord:
     """文档记录。"""
 
-    doc_id: int
     doc_vector: list[float]
+    id: int | None = None
     title: str = ""
     content: str = ""
     source: str = ""
@@ -222,7 +222,7 @@ class VectorStore(ABC):
         top_k: int = 30,
         filters: str | None = None,
         output_fields: list[str] | None = None,
-    ) -> list[dict]:
+    ) -> list[TagRecord]:
         """在 tags 集合/表中执行向量搜索。"""
         ...
 
@@ -233,7 +233,7 @@ class VectorStore(ABC):
         top_k: int = 100,
         tag_filter: list[str] | None = None,
         output_fields: list[str] | None = None,
-    ) -> list[dict]:
+    ) -> list[ChunkRecord]:
         """在 chunks 集合/表中执行向量搜索，支持标签过滤。"""
         ...
 
@@ -244,22 +244,22 @@ class VectorStore(ABC):
         top_k: int = 100,
         filters: str | None = None,
         output_fields: list[str] | None = None,
-    ) -> list[dict]:
+    ) -> list[DocRecord]:
         """在 docs 集合/表中执行向量搜索。"""
         ...
 
     @abstractmethod
-    def get_tags_by_ids(self, tag_ids: list[int]) -> list[dict]:
+    def get_tags_by_ids(self, tag_ids: list[int]) -> list[TagRecord]:
         """根据 tag_id 列表精确查询标签。"""
         ...
 
     @abstractmethod
-    def get_chunks_by_ids(self, chunk_ids: list[int]) -> list[dict]:
+    def get_chunks_by_ids(self, chunk_ids: list[int]) -> list[ChunkRecord]:
         """根据 chunk_id 列表精确查询分段。"""
         ...
 
     @abstractmethod
-    def get_docs_by_ids(self, doc_ids: list[int]) -> list[dict]:
+    def get_docs_by_ids(self, doc_ids: list[int]) -> list[DocRecord]:
         """根据 doc_id 列表精确查询文档。"""
         ...
 
@@ -271,7 +271,7 @@ class VectorStore(ABC):
         output_fields: list[str] | None = None,
         limit: int = 1000,
         offset: int = 0,
-    ) -> list[dict]:
+    ) -> list[DocRecord]:
         """使用标量过滤条件查询数据（非向量搜索）。"""
         ...
 
