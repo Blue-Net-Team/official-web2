@@ -4,7 +4,7 @@ from typing import Any
 
 from loguru import logger
 
-from .base import ToolDefinition
+from .base import TagSearchResult, ToolDefinition
 
 _log = logger.bind(module="ToolRegistry")
 
@@ -55,11 +55,16 @@ class ToolRegistry:
 
     @classmethod
     def _format_result(cls, name: str, result: Any) -> str:
+        if isinstance(result, str):
+            return result
+
         from .chunk_search import RerankResult
 
         if isinstance(result, list) and len(result) > 0:
             if isinstance(result[0], RerankResult):
                 return cls._format_rerank_results(result)
+            if isinstance(result[0], TagSearchResult):
+                return cls._format_tag_search_results(result)
             if isinstance(result[0], str):
                 formatted = "\n".join(f"- {item}" for item in result)
                 return f"共 {len(result)} 项:\n{formatted}"
@@ -73,6 +78,14 @@ class ToolRegistry:
             text_preview = r.text[:200] + "..." if len(r.text) > 200 else r.text
             lines.append(f"[{i}] 相关度: {r.relevance_score:.4f}")
             lines.append(f"    内容: {text_preview}")
+        return "\n".join(lines)
+
+    @classmethod
+    def _format_tag_search_results(cls, results: list[TagSearchResult]) -> str:
+        lines = [f"标签检索结果（共 {len(results)} 项）:\n"]
+        for i, r in enumerate(results, 1):
+            desc = f" - {r.tag_description[:60]}" if r.tag_description else ""
+            lines.append(f"[{i}] {r.tag_name:<12} score={r.relevance_score:.4f}  docs={r.chunks_count}{desc}")
         return "\n".join(lines)
 
     @classmethod
