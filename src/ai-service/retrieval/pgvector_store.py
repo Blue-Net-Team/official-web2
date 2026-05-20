@@ -14,6 +14,7 @@ from __future__ import annotations
 import json
 from typing import Any
 
+from llm_providers import SiliconFlowEmbedding
 from loguru import logger
 
 from config import settings
@@ -552,6 +553,31 @@ class PgVectorStore(VectorStore):
         rows = self._execute(sql, params, fetch=True)
         return [ChunkRecord(**row) for row in rows or []]
 
+    def get_chunks_by_tags(self, tags: list[str], limit: int = 50) -> list[ChunkRecord]:
+        """根据标签列表精确查询 chunks（纯标签匹配，非向量搜索）。
+
+        使用 PostgreSQL 数组重叠操作符 &&，直接匹配 chunks 表的 tags 数组字段。
+        """
+        table = _get_table(settings.CHUNKS_COLLECTION_NAME)
+        if not self._check_table_exists(table):
+            raise CollectionNotFoundError(f"表不存在: {table}")
+
+        if not tags:
+            return []
+
+        default_fields = ["id", "doc_id", "doc_vector", "title", "content", "tags", "source", "metadata"]
+        select_cols = ", ".join(default_fields)
+
+        tag_sql = self._build_tag_filter_sql(tags)
+        sql = f"""
+            SELECT {select_cols}
+            FROM {table}
+            WHERE {tag_sql}
+            LIMIT {limit}
+        """
+        rows = self._execute(sql, fetch=True)
+        return [ChunkRecord(**row) for row in rows or []]
+
     def search_docs(
         self,
         vector: list[float],
@@ -755,3 +781,28 @@ class PgVectorStore(VectorStore):
         sql = f"SELECT COUNT(*) AS cnt FROM {table}"
         rows = self._execute(sql, fetch=True)
         return rows[0]["cnt"] if rows else 0
+
+if __name__ == "__main__":
+    store = PgVectorStore("postgresql://postgres:000000@127.0.0.1:5432/rag", 10)
+    # 创建标签表
+    # store.create_tags_collection()
+    # 插入一个标签
+    embed_model = SiliconFlowEmbedding("sk-voorywxibbossdgyorlfyengicrlesylynjnhsocmvfxjtei")
+    
+    tag1_name = "计算机视觉"
+    tag1_vector = embed_model.embed_texts([tag1_name])[0]
+    tag1_description = "计算机视觉，一种基于计算机和人工智能的技术，用于分析和理解图像和视频的技术。"
+    tag1 = TagRecord(tag1_name, tag1_vector, tag_description=tag1_description)
+    
+    tag2_name = "自然语言处理"
+    tag2_vector = embed_model.embed_texts([tag2_name])[0]
+    tag2_description = "自然语言处理，一种基于计算机和人工智能的技术，用于理解和生成人类语言的技术。"
+    tag2 = TagRecord(tag2_name, tag2_vector, tag_description=tag2_description)
+    
+    store.insert_tags([tag1, tag2])
+    
+    # 查询标签
+    
+    tags = store.search_tags(embed_model.embed_texts(["机器视觉"])[0])
+    print(tags)
+# end main

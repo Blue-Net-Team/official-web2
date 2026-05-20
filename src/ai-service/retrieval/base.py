@@ -264,6 +264,15 @@ class VectorStore(ABC):
         ...
 
     @abstractmethod
+    def get_chunks_by_tags(
+        self,
+        tags: list[str],
+        limit: int = 50,
+    ) -> list[ChunkRecord]:
+        """根据标签列表精确查询 chunks（纯标签匹配，非向量搜索）。"""
+        ...
+
+    @abstractmethod
     def query_with_filter(
         self,
         collection_name: str,

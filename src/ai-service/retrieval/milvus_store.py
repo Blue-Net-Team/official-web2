@@ -626,6 +626,31 @@ class MilvusStore(VectorStore):
         )
         return self._flatten_search_result(result)
 
+    def get_chunks_by_tags(self, tags: list[str], limit: int = 50) -> list[dict]:
+        """根据标签列表精确查询 chunks（纯标签匹配，非向量搜索）。
+
+        使用 Milvus query() + array_contains 过滤，不依赖向量相似度。
+        """
+        if self._client is None:
+            raise ConnectionError("Milvus 未连接")
+
+        name = settings.CHUNKS_COLLECTION_NAME
+        if not self.collection_exists(name):
+            raise CollectionNotFoundError(f"集合不存在: {name}")
+
+        if not tags:
+            return []
+
+        filter_expr = self._build_tag_filter_expr(tags)
+        fields = ["chunk_id", "title", "content", "tags", "source", "metadata"]
+
+        return self._client.query(
+            collection_name=name,
+            filter=filter_expr,
+            output_fields=fields,
+            limit=limit,
+        )
+
     @staticmethod
     def _flatten_search_result(raw: list[list[dict]]) -> list[dict]:
         """将 Milvus 嵌套搜索结果展平为列表。"""
