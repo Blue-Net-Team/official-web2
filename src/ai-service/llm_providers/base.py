@@ -40,7 +40,12 @@ class LLMProvider(ABC):
         """调用 LLM 并返回文本响应。
 
         Args:
-            messages: OpenAI 格式消息列表，如 [{"role": "user", "content": "..."}]
+            messages: OpenAI 格式消息列表，如 
+            [
+                {"role": "system", "content": "你是助手"},
+                {"role": "user", "content": "你好"},
+                {"role": "ai", "content": "你好"},
+            ]
         """
         ...
 

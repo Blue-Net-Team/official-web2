@@ -3,6 +3,7 @@
 from .base import EmbeddingProvider, LLMProvider, RerankResult, RerankerProvider
 
 from .deepseek import DeepSeekLLM
+from .factory import EmbeddingFactory, LLMFactory, RerankerFactory
 from .ollama import OllamaEmbedding, OllamaLLM, OllamaReranker
 from .siliconflow import SiliconFlowEmbedding, SiliconFlowLLM, SiliconFlowReranker
 
@@ -12,6 +13,10 @@ __all__ = [
     "RerankerProvider",
     "LLMProvider",
     "RerankResult",
+    # 工厂
+    "EmbeddingFactory",
+    "LLMFactory",
+    "RerankerFactory",
     # DeepSeek
     "DeepSeekLLM",
     # SiliconFlow

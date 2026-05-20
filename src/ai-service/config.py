@@ -39,6 +39,26 @@ class Settings(BaseSettings):
     CHUNK_LLM_BASE_URL: str = ""
     CHUNK_LLM_API_KEY: str = ""
 
+    # Embedding 模型
+    EMBEDDING_PROVIDER: str = "siliconflow"
+    EMBEDDING_API_KEY: str = ""
+    EMBEDDING_MODEL: str = ""
+    EMBEDDING_BASE_URL: str = ""
+
+    # LLM 通用
+    LLM_PROVIDER: str = "siliconflow"
+    LLM_API_KEY: str = ""
+    LLM_MODEL: str = ""
+    LLM_BASE_URL: str = ""
+    LLM_TEMPERATURE: float = 0.7
+    LLM_TIMEOUT: int = 60
+
+    # Reranker 模型
+    RERANKER_PROVIDER: str = "siliconflow"
+    RERANKER_API_KEY: str = ""
+    RERANKER_MODEL: str = ""
+    RERANKER_BASE_URL: str = ""
+
     class Config:
         env_file = ".env"
         env_prefix = "TBD_RAG_"
