@@ -7,8 +7,8 @@ from typing import override
 from docx import Document
 from loguru import logger
 
-from chunking.factory import ChunkerFactory
 from chunking.semantic_chunker import SemanticChunker
+from llm_providers.factory import LLMFactory
 
 
 class Loader(ABC):
@@ -63,9 +63,9 @@ class WordLoader(Loader):
     """Word 文档加载器，基于 LLM 语义主题自动分片。
 
     当 chunker 为 None 时，自动根据配置创建 SemanticChunker：
-    1. 优先读取 TBD_RAG_CHUNK_LLM_* 系列环境变量
-    2. 若未配置，回退到主业务 LLM 的默认配置（如 DEEPSEEK_API_KEY）
-    3. 若仍无法创建，回退到按段落简单分片
+    1. 通过 LLMFactory 创建 LLM 实例
+    2. 通过 ChunkerFactory.create(llm=llm) 创建 SemanticChunker
+    3. 若 LLM 创建失败，回退到按段落简单分片
     """
 
     def __init__(
@@ -97,7 +97,14 @@ class WordLoader(Loader):
 
         chunker = self.chunker
         if chunker is None:
-            chunker = ChunkerFactory.get()
+            try:
+                llm = LLMFactory.create()
+                from chunking.factory import ChunkerFactory
+
+                chunker = ChunkerFactory.create(llm=llm)
+            except ValueError as exc:
+                logger.warning(f"创建分片 LLM 失败: {exc}，回退到段落简单分片")
+                chunker = None
 
         if chunker is not None:
             logger.info("使用 LLM 语义分片")
