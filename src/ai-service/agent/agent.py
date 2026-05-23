@@ -2,11 +2,11 @@ from __future__ import annotations
 
 from typing import Iterator
 
-from langchain_openai import ChatOpenAI
-from loguru import logger
 from langchain_core.messages import AIMessage
+from loguru import logger
 
-from config import settings
+from llm_providers.base import LLMProvider
+from llm_providers.factory import LLMFactory
 from tools import ToolRegistry
 from tools.tag_search_detailed import tag_search_detailed
 from tools.tag_search import tag_generate
@@ -16,18 +16,6 @@ from .prompts import TAG_RETRIEVAL_SYSTEM_PROMPT
 
 _log = logger.bind(module="RagAgent")
 
-_DEFAULT_BASE_URLS: dict[str, str] = {
-    "siliconflow": "https://api.siliconflow.cn/v1",
-    "deepseek": "https://api.deepseek.com/v1",
-    "ollama": "http://localhost:11434/v1",
-}
-
-_DEFAULT_LLM_MODELS: dict[str, str] = {
-    "siliconflow": "deepseek-ai/DeepSeek-V3",
-    "deepseek": "deepseek-chat",
-    "ollama": "qwen3:8b",
-}
-
 _MAX_TAG_ROUNDS = 3
 _MAX_CHUNK_ROUNDS = 2
 
@@ -36,33 +24,11 @@ class RagAgent:
     def __init__(
         self,
         system_prompt: str = "",
-        provider: str = "",
-        api_key: str = "",
-        model: str = "",
-        base_url: str = "",
-        temperature: float | None = None,
-        timeout: int | None = None,
+        llm: LLMProvider | None = None,
     ):
-        provider = provider or settings.LLM_PROVIDER
-        api_key = api_key or settings.LLM_API_KEY
-        model = model or settings.LLM_MODEL or _DEFAULT_LLM_MODELS.get(provider, "")
-        base_url = base_url or settings.LLM_BASE_URL or _DEFAULT_BASE_URLS.get(provider, "")
-        temperature = temperature if temperature is not None else settings.LLM_TEMPERATURE
-        timeout = timeout or settings.LLM_TIMEOUT
-
-        if not api_key:
-            raise ValueError("LLM API Key 未配置，请在环境变量 TBD_RAG_LLM_API_KEY 中设置")
-
-        self._llm = ChatOpenAI(
-            api_key=api_key,
-            base_url=base_url,
-            model=model,
-            temperature=temperature,
-            request_timeout=timeout,
-        )
+        self._llm = llm or LLMFactory.create()
 
         self._tool_specs = ToolRegistry.get_function_calling_specs()
-        self._llm_with_tools = self._llm.bind_tools(self._tool_specs) if self._tool_specs else self._llm
 
         system_prompt = system_prompt or TAG_RETRIEVAL_SYSTEM_PROMPT
         self.conversation = Conversation(system_prompt=system_prompt)
@@ -71,7 +37,7 @@ class RagAgent:
         self._chunk_rounds = 0
 
         tool_names = [t["function"]["name"] for t in self._tool_specs]
-        _log.info(f"Agent 初始化完成, provider={provider}, model={model}, tools={tool_names}")
+        _log.info(f"Agent 初始化完成, tools={tool_names}")
 
     # ------------------------------------------------------------------
     # 同步对话
@@ -109,10 +75,10 @@ class RagAgent:
             return
 
         full_content = ""
-        for chunk in self._llm_with_tools.stream(messages):
-            if chunk.content:
-                full_content += chunk.content
-                yield chunk.content
+        for chunk in self._llm.stream(messages):
+            if chunk:
+                full_content += chunk
+                yield chunk
 
         self.conversation.add_assistant_message(full_content)
         _log.info(f"Agent 流式响应完成, 长度={len(full_content)}")
@@ -161,7 +127,8 @@ class RagAgent:
     def _run_two_stage_loop(self, messages: list[dict]) -> AIMessage:
         max_total = _MAX_TAG_ROUNDS + _MAX_CHUNK_ROUNDS + 1
         for turn in range(max_total):
-            response: AIMessage = self._llm_with_tools.invoke(messages)
+            response_text = self._llm.invoke(messages)
+            response = AIMessage(content=response_text)
 
             if not response.tool_calls:
                 return response
@@ -206,3 +173,8 @@ class RagAgent:
         self._tag_rounds = 0
         self._chunk_rounds = 0
         _log.info("对话历史已重置")
+
+if __name__ == "__main__":
+    agent = RagAgent()
+    print(agent.chat("报名什么时候截止"))
+# end main
