@@ -1,3 +1,4 @@
+import asyncio
 import os
 from chunking import SemanticChunker
 from llm_providers import EmbeddingFactory, LLMFactory
@@ -32,13 +33,36 @@ for root, _, files in os.walk(DOC_FOLDER_PATH):
         if f.lower().endswith(".md"):
             docs.append(os.path.join(root, f))
 
-# 遍历路径
-for doc in docs:
-    with open(doc, "r", encoding="utf-8") as f:
-        # 分片文档，语义分割
-        raw_text = f.read()
-        chunks = chunker.split(raw_text)
+
+async def _read_and_chunk(doc: str) -> list[str]:
+    """异步读取单个文档并进行语义分段。"""
+    loop = asyncio.get_running_loop()
+    # 文件 I/O 在线程池中执行，避免阻塞事件循环
+    raw_text = await loop.run_in_executor(None, _read_file, doc)
+    # chunker.split 是 CPU/LLM 密集型操作，同样放到线程池
+    chunks = await loop.run_in_executor(None, chunker.split, raw_text)
     _log.info(f"文档 {doc} 分片为 {len(chunks)} 个分段")
+    return chunks
+
+
+def _read_file(doc: str) -> str:
+    """同步读取文件内容。"""
+    with open(doc, "r", encoding="utf-8") as f:
+        return f.read()
+
+
+async def _load_all_chunks() -> list[str]:
+    """并发读取所有文档并分段，返回合并后的 chunk 列表。"""
+    tasks = [_read_and_chunk(doc) for doc in docs]
+    results = await asyncio.gather(*tasks)
+    all_chunks: list[str] = []
+    for chunks in results:
+        all_chunks.extend(chunks)
+    return all_chunks
+
+
+# 执行异步文档加载
+chunks = asyncio.run(_load_all_chunks())
 
 for chunk in chunks:
     # 读取已有的tag
