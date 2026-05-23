@@ -51,7 +51,7 @@ class RagAgent:
         timeout = timeout or settings.LLM_TIMEOUT
 
         if not api_key:
-            raise ValueError(f"LLM API Key 未配置，请在环境变量 TBD_RAG_LLM_API_KEY 中设置")
+            raise ValueError("LLM API Key 未配置，请在环境变量 TBD_RAG_LLM_API_KEY 中设置")
 
         self._llm = ChatOpenAI(
             api_key=api_key,
