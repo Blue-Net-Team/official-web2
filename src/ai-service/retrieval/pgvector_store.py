@@ -5,8 +5,8 @@ Schema 管理（CREATE TABLE / CREATE INDEX）完全交由主 API 服务的 Flyw
 
 表结构假设（由 Flyway 创建）：
 - tb_rag_tags   (id PK, tag_name, tag_vector vector(dim), tag_description, chunks_count)
-- tb_rag_chunks (id PK, doc_id, doc_vector vector(dim), title, content, tags[], source, metadata JSONB)
-- tb_rag_docs   (id PK, doc_vector vector(dim), title, content, source, metadata JSONB)
+- tb_rag_chunks (id PK, doc_id, chunk_vector vector(dim), content, tags[], source)
+- tb_rag_docs   (id PK, file_id, title, source, metadata JSONB)
 """
 
 from __future__ import annotations
@@ -386,8 +386,8 @@ class PgVectorStore(VectorStore):
             return {"insert_count": 0, "ids": []}
 
         sql = f"""
-            INSERT INTO {table} (doc_id, doc_vector, title, content, tags, source, metadata)
-            VALUES (%(doc_id)s, %(doc_vector)s, %(title)s, %(content)s, %(tags)s, %(source)s, %(metadata)s)
+            INSERT INTO {table} (doc_id, chunk_vector, content, tags, source)
+            VALUES (%(doc_id)s, %(chunk_vector)s, %(content)s, %(tags)s, %(source)s)
             RETURNING id
         """
         ids: list[int] = []
@@ -410,16 +410,14 @@ class PgVectorStore(VectorStore):
             return {"upsert_count": 0, "ids": []}
 
         sql = f"""
-            INSERT INTO {table} (id, doc_id, doc_vector, title, content, tags, source, metadata)
-            VALUES (%(id)s, %(doc_id)s, %(doc_vector)s, %(title)s, %(content)s, %(tags)s, %(source)s, %(metadata)s)
+            INSERT INTO {table} (id, doc_id, chunk_vector, content, tags, source)
+            VALUES (%(id)s, %(doc_id)s, %(chunk_vector)s, %(content)s, %(tags)s, %(source)s)
             ON CONFLICT (id) DO UPDATE SET
                 doc_id = EXCLUDED.doc_id,
-                doc_vector = EXCLUDED.doc_vector,
-                title = EXCLUDED.title,
+                chunk_vector = EXCLUDED.chunk_vector,
                 content = EXCLUDED.content,
                 tags = EXCLUDED.tags,
-                source = EXCLUDED.source,
-                metadata = EXCLUDED.metadata
+                source = EXCLUDED.source
         """
         for row in rows:
             self._execute(sql, row)
@@ -437,8 +435,8 @@ class PgVectorStore(VectorStore):
             return {"insert_count": 0, "ids": []}
 
         sql = f"""
-            INSERT INTO {table} (doc_vector, title, content, source, metadata)
-            VALUES (%(doc_vector)s, %(title)s, %(content)s, %(source)s, %(metadata)s)
+            INSERT INTO {table} (file_id, title, source, metadata)
+            VALUES (%(file_id)s, %(title)s, %(source)s, %(metadata)s)
             RETURNING id
         """
         ids: list[int] = []
@@ -461,12 +459,11 @@ class PgVectorStore(VectorStore):
             return {"upsert_count": 0, "ids": []}
 
         sql = f"""
-            INSERT INTO {table} (id, doc_vector, title, content, source, metadata)
-            VALUES (%(id)s, %(doc_vector)s, %(title)s, %(content)s, %(source)s, %(metadata)s)
+            INSERT INTO {table} (id, file_id, title, source, metadata)
+            VALUES (%(id)s, %(file_id)s, %(title)s, %(source)s, %(metadata)s)
             ON CONFLICT (id) DO UPDATE SET
-                doc_vector = EXCLUDED.doc_vector,
+                file_id = EXCLUDED.file_id,
                 title = EXCLUDED.title,
-                content = EXCLUDED.content,
                 source = EXCLUDED.source,
                 metadata = EXCLUDED.metadata
         """
@@ -529,7 +526,7 @@ class PgVectorStore(VectorStore):
         metric = settings.VECTOR_METRIC_TYPE
         op = _METRIC_OPS.get(metric, "<=>")
 
-        default_fields = ["id", "doc_id", "doc_vector", "title", "content", "tags", "source", "metadata"]
+        default_fields = ["id", "doc_id", "chunk_vector", "content", "tags", "source"]
         fields = output_fields or default_fields
         select_cols = ", ".join(fields)
 
@@ -547,7 +544,7 @@ class PgVectorStore(VectorStore):
             SELECT {select_cols}
             FROM {table}
             {where_clause}
-            ORDER BY doc_vector {op} %s::vector
+            ORDER BY chunk_vector {op} %s::vector
             LIMIT {top_k}
         """
         rows = self._execute(sql, params, fetch=True)
@@ -565,7 +562,7 @@ class PgVectorStore(VectorStore):
         if not tags:
             return []
 
-        default_fields = ["id", "doc_id", "doc_vector", "title", "content", "tags", "source", "metadata"]
+        default_fields = ["id", "doc_id", "chunk_vector", "content", "tags", "source"]
         select_cols = ", ".join(default_fields)
 
         tag_sql = self._build_tag_filter_sql(tags)
@@ -593,12 +590,12 @@ class PgVectorStore(VectorStore):
         metric = settings.VECTOR_METRIC_TYPE
         op = _METRIC_OPS.get(metric, "<=>")
 
-        default_fields = ["id", "doc_vector", "title", "content", "source", "metadata"]
+        default_fields = ["id", "file_id", "title", "source", "metadata"]
         fields = output_fields or default_fields
         select_cols = ", ".join(fields)
 
         where_clause = ""
-        params: list[Any] = [vector]
+        params: list[Any] = []
         if filters:
             where_clause = "WHERE " + self._convert_filter(filters)
 
@@ -606,7 +603,6 @@ class PgVectorStore(VectorStore):
             SELECT {select_cols}
             FROM {table}
             {where_clause}
-            ORDER BY doc_vector {op} %s::vector
             LIMIT {top_k}
         """
         rows = self._execute(sql, params, fetch=True)
@@ -667,7 +663,7 @@ class PgVectorStore(VectorStore):
 
         placeholders = ", ".join(["%s"] * len(chunk_ids))
         sql = f"""
-            SELECT id, doc_id, doc_vector, title, content, tags, source, metadata
+            SELECT id, doc_id, chunk_vector, content, tags, source
             FROM {table}
             WHERE id IN ({placeholders})
         """
@@ -684,7 +680,7 @@ class PgVectorStore(VectorStore):
 
         placeholders = ", ".join(["%s"] * len(doc_ids))
         sql = f"""
-            SELECT id, doc_vector, title, content, source, metadata
+            SELECT id, file_id, title, source, metadata
             FROM {table}
             WHERE id IN ({placeholders})
         """

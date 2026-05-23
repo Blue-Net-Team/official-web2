@@ -59,24 +59,21 @@ class TagRecord:
 class ChunkRecord:
     """分段记录。"""
 
-    doc_vector: list[float]
+    chunk_vector: list[float]
     id: int | None = None
     doc_id: int | None = None
-    title: str = ""
     content: str = ""
     tags: list[str] | None = None
     source: str = ""
-    metadata: dict | None = None
 
 
 @dataclass
 class DocRecord:
     """文档记录。"""
 
-    doc_vector: list[float]
     id: int | None = None
     title: str = ""
-    content: str = ""
+    file_id: int | None = None
     source: str = ""
     metadata: dict | None = None
 
