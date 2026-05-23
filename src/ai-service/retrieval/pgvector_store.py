@@ -17,7 +17,7 @@ from typing import Any
 from llm_providers import SiliconFlowEmbedding
 from loguru import logger
 
-from config import settings
+from setting import settings
 from retrieval.base import (
     ChunkRecord,
     CollectionNotFoundError,

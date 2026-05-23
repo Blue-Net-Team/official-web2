@@ -4,7 +4,7 @@
 调用时可显式传参覆盖 settings 中的配置。
 """
 
-from config import settings
+from setting import settings
 
 from .base import EmbeddingProvider, LLMProvider, RerankerProvider
 
@@ -28,14 +28,30 @@ _DEFAULT_RERANKER_MODEL: dict[str, str] = {
     "ollama": "qwen3:8b",
 }
 
-_OLLAMA_DEFAULT_BASE_URL = "http://localhost:11434"
-
 
 def _model_or_default(provider: str, model: str, default_map: dict[str, str]) -> str:
     """优先用显式传入的 model，其次用 settings 中的模型名（如已配置），最后用硬编码默认值。"""
     if model:
         return model
     return default_map.get(provider, "")
+
+
+def _api_key_for(provider: str) -> str:
+    """根据提供商返回对应的 API Key。"""
+    if provider == "siliconflow":
+        return settings.SILICONFLOW_API_KEY
+    if provider == "deepseek":
+        return settings.DEEPSEEK_API_KEY
+    return ""
+
+
+def _base_url_for(provider: str, base_url: str = "") -> str:
+    """根据提供商返回对应的 base_url。"""
+    if base_url:
+        return base_url
+    if provider == "ollama":
+        return settings.OLLAMA_BASE_URL
+    return ""
 
 
 # ---------------------------------------------------------------------------
@@ -51,7 +67,7 @@ class EmbeddingFactory:
     - ollama — Ollama 本地服务，需要 base_url
 
     settings 环境变量（前缀 TBD_RAG_）：
-      EMBEDDING_PROVIDER, EMBEDDING_API_KEY, EMBEDDING_MODEL, EMBEDDING_BASE_URL
+      EMBEDDING_PROVIDER, SILICONFLOW_API_KEY, OLLAMA_BASE_URL, EMBEDDING_MODEL
     """
 
     @staticmethod
@@ -62,8 +78,8 @@ class EmbeddingFactory:
         base_url: str = "",
     ) -> EmbeddingProvider:
         provider = provider or settings.EMBEDDING_PROVIDER
-        api_key = api_key or settings.EMBEDDING_API_KEY
-        base_url = base_url or settings.EMBEDDING_BASE_URL
+        api_key = api_key or _api_key_for(provider)
+        base_url = _base_url_for(provider, base_url)
         model = _model_or_default(provider, model or settings.EMBEDDING_MODEL, _DEFAULT_EMBEDDING_MODEL)
 
         if provider == "siliconflow":
@@ -74,7 +90,7 @@ class EmbeddingFactory:
         if provider == "ollama":
             from .ollama import OllamaEmbedding
 
-            return OllamaEmbedding(base_url=base_url or _OLLAMA_DEFAULT_BASE_URL, model=model)
+            return OllamaEmbedding(base_url=base_url, model=model)
 
         raise ValueError(f"不支持的嵌入提供商: {provider}，支持: {list(_DEFAULT_EMBEDDING_MODEL)}")
 
@@ -93,7 +109,8 @@ class LLMFactory:
     - ollama — Ollama 本地服务，需要 base_url
 
     settings 环境变量（前缀 TBD_RAG_）：
-      LLM_PROVIDER, LLM_API_KEY, LLM_MODEL, LLM_BASE_URL, LLM_TEMPERATURE, LLM_TIMEOUT
+      LLM_PROVIDER, SILICONFLOW_API_KEY, DEEPSEEK_API_KEY, OLLAMA_BASE_URL,
+      LLM_MODEL, LLM_TEMPERATURE, LLM_TIMEOUT
     """
 
     @staticmethod
@@ -106,15 +123,18 @@ class LLMFactory:
         timeout: int | None = None,
     ) -> LLMProvider:
         provider = provider or settings.LLM_PROVIDER
-        api_key = api_key or settings.LLM_API_KEY
-        base_url = base_url or settings.LLM_BASE_URL
+        api_key = api_key or _api_key_for(provider)
+        base_url = _base_url_for(provider, base_url)
         temperature = temperature if temperature is not None else settings.LLM_TEMPERATURE
         timeout = timeout if timeout is not None else settings.LLM_TIMEOUT
         model = _model_or_default(provider, model or settings.LLM_MODEL, _DEFAULT_LLM_MODEL)
 
         if provider in ("siliconflow", "deepseek"):
             if not api_key:
-                raise ValueError(f"{provider} LLM 需要 api_key，请在环境变量 TBD_RAG_LLM_API_KEY 中配置")
+                raise ValueError(
+                    f"{provider} LLM 需要 api_key，"
+                    f"请在环境变量 TBD_RAG_SILICONFLOW_API_KEY 或 TBD_RAG_DEEPSEEK_API_KEY 中配置"
+                )
             if provider == "siliconflow":
                 from .siliconflow import SiliconFlowLLM
 
@@ -130,7 +150,7 @@ class LLMFactory:
         if provider == "ollama":
             from .ollama import OllamaLLM
 
-            return OllamaLLM(base_url=base_url or _OLLAMA_DEFAULT_BASE_URL, model=model, temperature=temperature)
+            return OllamaLLM(base_url=base_url, model=model, temperature=temperature)
 
         raise ValueError(f"不支持的 LLM 提供商: {provider}，支持: {list(_DEFAULT_LLM_MODEL)}")
 
@@ -148,7 +168,7 @@ class RerankerFactory:
     - ollama — Ollama 本地服务，需要 base_url
 
     settings 环境变量（前缀 TBD_RAG_）：
-      RERANKER_PROVIDER, RERANKER_API_KEY, RERANKER_MODEL, RERANKER_BASE_URL
+      RERANKER_PROVIDER, SILICONFLOW_API_KEY, OLLAMA_BASE_URL, RERANKER_MODEL
     """
 
     @staticmethod
@@ -159,8 +179,8 @@ class RerankerFactory:
         base_url: str = "",
     ) -> RerankerProvider:
         provider = provider or settings.RERANKER_PROVIDER
-        api_key = api_key or settings.RERANKER_API_KEY
-        base_url = base_url or settings.RERANKER_BASE_URL
+        api_key = api_key or _api_key_for(provider)
+        base_url = _base_url_for(provider, base_url)
         model = _model_or_default(provider, model or settings.RERANKER_MODEL, _DEFAULT_RERANKER_MODEL)
 
         if provider == "siliconflow":
@@ -171,6 +191,6 @@ class RerankerFactory:
         if provider == "ollama":
             from .ollama import OllamaReranker
 
-            return OllamaReranker(base_url=base_url or _OLLAMA_DEFAULT_BASE_URL, model=model)
+            return OllamaReranker(base_url=base_url, model=model)
 
         raise ValueError(f"不支持的 Reranker 提供商: {provider}，支持: {list(_DEFAULT_RERANKER_MODEL)}")

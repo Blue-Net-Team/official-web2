@@ -5,7 +5,7 @@ from typing import ClassVar
 from loguru import logger
 
 from chunking.semantic_chunker import SemanticChunker
-from config import settings
+from setting import settings
 from llm_providers.base import LLMProvider
 
 

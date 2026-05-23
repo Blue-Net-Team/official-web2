@@ -18,7 +18,7 @@ from pymilvus import (
 
 from loguru import logger
 
-from config import settings
+from setting import settings
 from retrieval.base import (
     ChunkRecord,
     CollectionNotFoundError,

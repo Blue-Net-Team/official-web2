@@ -34,30 +34,27 @@ class Settings(BaseSettings):
 
     # 语义分片配置
     CHUNK_MAX_TOKENS: int = 4000
-    CHUNK_LLM_PROVIDER: str = "deepseek"
-    CHUNK_LLM_MODEL: str = "deepseek-v4-flash"
-    CHUNK_LLM_BASE_URL: str = ""
-    CHUNK_LLM_API_KEY: str = ""
 
-    # Embedding 模型
-    EMBEDDING_PROVIDER: str = "siliconflow"
-    EMBEDDING_API_KEY: str = ""
+    # API 密钥
+    SILICONFLOW_API_KEY: str = ""
+    DEEPSEEK_API_KEY: str = ""
+
+    # Ollama 本地服务地址
+    OLLAMA_BASE_URL: str = "http://localhost:11434"
+
+    # Embedding 模型配置
+    EMBEDDING_PROVIDER: str = "siliconflow"  # "siliconflow" | "ollama"
     EMBEDDING_MODEL: str = ""
-    EMBEDDING_BASE_URL: str = ""
 
-    # LLM 通用
-    LLM_PROVIDER: str = "siliconflow"
-    LLM_API_KEY: str = ""
+    # LLM 配置
+    LLM_PROVIDER: str = "siliconflow"  # "siliconflow" | "deepseek" | "ollama"
     LLM_MODEL: str = ""
-    LLM_BASE_URL: str = ""
     LLM_TEMPERATURE: float = 0.7
     LLM_TIMEOUT: int = 60
 
-    # Reranker 模型
-    RERANKER_PROVIDER: str = "siliconflow"
-    RERANKER_API_KEY: str = ""
+    # Reranker 模型配置
+    RERANKER_PROVIDER: str = "siliconflow"  # "siliconflow" | "ollama"
     RERANKER_MODEL: str = ""
-    RERANKER_BASE_URL: str = ""
 
     class Config:
         env_file = ".env"

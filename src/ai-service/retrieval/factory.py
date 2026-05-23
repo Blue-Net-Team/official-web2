@@ -6,7 +6,7 @@ from typing import ClassVar
 
 from loguru import logger
 
-from config import settings
+from setting import settings
 from retrieval.base import VectorStore
 
 _log = logger.bind(module="VectorStoreFactory")
