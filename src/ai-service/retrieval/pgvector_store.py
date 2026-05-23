@@ -612,6 +612,18 @@ class PgVectorStore(VectorStore):
         rows = self._execute(sql, params, fetch=True)
         return [DocRecord(**row) for row in rows or []]
 
+    def get_all_tags(self) -> list[TagRecord]:
+        """获取所有标签。"""
+        table = _get_table(settings.TAGS_COLLECTION_NAME)
+        if not self._check_table_exists(table):
+            raise CollectionNotFoundError(f"表不存在: {table}")
+
+        sql = f"""
+            SELECT id, tag_name, tag_vector, tag_description, chunks_count
+            FROM {table}
+        """
+        return [TagRecord(**row) for row in self._execute(sql, fetch=True) or []]
+    
     @staticmethod
     def _format_search_result(rows: list[dict | TagRecord | ChunkRecord], output_fields: list[str]) -> list[dict]:
         """格式化搜索结果，与 Milvus 返回结构保持一致。"""

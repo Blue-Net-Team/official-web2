@@ -107,6 +107,10 @@ class VectorStore(ABC):
     def __exit__(self, *args: Any) -> None:
         self.close()
 
+    def load_collection(self, name: str) -> None:
+        """将集合加载到内存（Milvus 需要，PgVector 空操作）。"""
+        pass
+
     # ------------------------------------------------------------------
     # Collection/Table 管理
     # ------------------------------------------------------------------
@@ -251,6 +255,11 @@ class VectorStore(ABC):
     @abstractmethod
     def get_tags_by_ids(self, tag_ids: list[int]) -> list[TagRecord]:
         """根据 tag_id 列表精确查询标签。"""
+        ...
+        
+    @abstractmethod
+    def get_all_tags(self) -> list[TagRecord]:
+        """获取所有标签。"""
         ...
 
     @abstractmethod
