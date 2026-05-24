@@ -48,7 +48,7 @@ app.add_middleware(
 app.include_router(api_router)
 
 
-@app.get("/health")
+@app.get("/ai/v1/health")
 async def health_check():
     """健康检查接口。"""
     return {"status": "ok"}
