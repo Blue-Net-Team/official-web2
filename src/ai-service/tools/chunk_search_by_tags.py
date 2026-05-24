@@ -87,8 +87,6 @@ def chunk_search_by_tags(query: str, tags: str, top_k: int = 10) -> str:
         original = unique_records[rr.index]
         text_preview = _get_content(original)[:300] + "..." if len(_get_content(original)) > 300 else _get_content(original)
         source = f" [{_get_source(original)}]" if _get_source(original) else ""
-        title = f" [{_get_title(original)}]" if _get_title(original) else ""
-        lines.append(f"[{i}] score={rr.relevance_score:.4f}{source}{title}")
-        lines.append(f"     {text_preview}")
+        lines.append(f"[{i}] score={rr.relevance_score:.4f}{source}{text_preview}")
 
     return "\n".join(lines)
