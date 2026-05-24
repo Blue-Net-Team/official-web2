@@ -7,7 +7,7 @@ import httpx
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from loguru import logger
 
-from .base import EmbeddingProvider, LLMProvider, RerankResult, RerankerProvider
+from .base import EmbeddingProvider, LLMProvider, LLMResponse, RerankResult, RerankerProvider
 
 API_BASE_URL = "https://api.siliconflow.cn/v1"
 
@@ -87,9 +87,24 @@ class SiliconFlowLLM(LLMProvider):
         self._llm = ChatOpenAI(api_key=api_key, base_url=API_BASE_URL, model=model, temperature=temperature, request_timeout=timeout)
 
     def _build_messages(self, messages: list[dict]):
-        from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
-        msg_map = {"system": SystemMessage, "human": HumanMessage, "user": HumanMessage, "ai": AIMessage}
-        return [msg_map[m["role"]](content=m["content"]) for m in messages]
+        from langchain_core.messages import AIMessage, HumanMessage, SystemMessage, ToolMessage
+
+        def _to_lc_message(m: dict):
+            role = m["role"]
+            if role == "system":
+                return SystemMessage(content=m["content"])
+            if role in ("human", "user"):
+                return HumanMessage(content=m["content"])
+            if role in ("ai", "assistant"):
+                tool_calls = m.get("tool_calls")
+                if tool_calls:
+                    return AIMessage(content=m["content"], tool_calls=tool_calls)
+                return AIMessage(content=m["content"])
+            if role == "tool":
+                return ToolMessage(content=m["content"], tool_call_id=m.get("tool_call_id", ""))
+            return HumanMessage(content=m["content"])
+
+        return [_to_lc_message(m) for m in messages]
 
     @_retry
     def invoke(self, messages: list[dict]) -> str:
@@ -99,6 +114,21 @@ class SiliconFlowLLM(LLMProvider):
         logger.info(f"收到 LLM 响应, 长度={len(result)}")
         return result
 
+    @_retry
+    def invoke_with_tools(self, messages: list[dict], tools: list[dict]) -> LLMResponse:
+        logger.info(f"发送 LLM 请求(含工具), messages={len(messages)}, tools={len(tools)}, model={self._llm.model_name}")
+        lc_messages = self._build_messages(messages)
+        llm_with_tools = self._llm.bind_tools(tools)
+        result = llm_with_tools.invoke(lc_messages)
+
+        tool_calls = []
+        if hasattr(result, "tool_calls") and result.tool_calls:
+            tool_calls = result.tool_calls
+
+        content = result.content or ""
+        logger.info(f"收到 LLM 响应, content_len={len(content)}, tool_calls={len(tool_calls)}")
+        return LLMResponse(content=content, tool_calls=tool_calls)
+
     def stream(self, messages: list[dict]) -> Iterator[str]:
         logger.info(f"流式 LLM 请求, messages={len(messages)}, model={self._llm.model_name}")
         lc_messages = self._build_messages(messages)
@@ -107,3 +137,23 @@ class SiliconFlowLLM(LLMProvider):
             if text:
                 yield text
         logger.info("流式 LLM 响应结束")
+
+    def stream_with_tools(self, messages: list[dict], tools: list[dict]) -> Iterator[LLMResponse]:
+        logger.info(f"流式 LLM 请求(含工具), messages={len(messages)}, tools={len(tools)}, model={self._llm.model_name}")
+        lc_messages = self._build_messages(messages)
+        llm_with_tools = self._llm.bind_tools(tools)
+
+        full_content = ""
+        tool_calls_buffer = []
+
+        for chunk in llm_with_tools.stream(lc_messages):
+            delta = chunk.content if hasattr(chunk, "content") else ""
+            if delta:
+                full_content += delta
+
+            if hasattr(chunk, "tool_calls") and chunk.tool_calls:
+                for tc in chunk.tool_calls:
+                    tool_calls_buffer.append(tc)
+
+        yield LLMResponse(content=full_content, tool_calls=tool_calls_buffer)
+        logger.info(f"流式 LLM 响应结束, content_len={len(full_content)}, tool_calls={len(tool_calls_buffer)}")

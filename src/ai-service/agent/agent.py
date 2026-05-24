@@ -68,12 +68,48 @@ class RagAgent:
 
         self._tag_rounds = 0
         self._chunk_rounds = 0
-        response = self._run_two_stage_loop(messages)
 
-        if response.tool_calls:
+        # 阶段 1：工具调用循环（非流式，收集结果）
+        max_total = _MAX_TAG_ROUNDS + _MAX_CHUNK_ROUNDS + 1
+        for turn in range(max_total):
+            llm_response = self._llm.invoke_with_tools(messages, self._tool_specs)
+
+            if not llm_response.tool_calls:
+                # 没有工具调用了，进入阶段 2 流式输出最终答案
+                break
+
+            _log.info(
+                f"流式-工具调用第 {turn + 1} 轮: "
+                f"{[tc['name'] for tc in llm_response.tool_calls]}"
+                f"(tag={self._tag_rounds}, chunk={self._chunk_rounds})"
+            )
+
+            # 添加 assistant 消息（包含 tool_calls 和 reasoning_content）
+            assistant_msg = {
+                "role": "assistant",
+                "content": llm_response.content,
+                "tool_calls": llm_response.tool_calls,
+            }
+            if llm_response.reasoning_content:
+                assistant_msg["reasoning_content"] = llm_response.reasoning_content
+            messages.append(assistant_msg)
+
+            # 执行工具
+            for tc in llm_response.tool_calls:
+                result = self._handle_tool_call_with_limit(tc, messages)
+                if result is not None:
+                    tool_call_id = tc.get("id", "")
+                    messages.append({
+                        "role": "tool",
+                        "content": result,
+                        "tool_call_id": tool_call_id
+                    })
+        else:
+            # 达到上限
             yield "工具调用次数过多，请简化查询"
             return
 
+        # 阶段 2：流式输出最终答案（纯文本，无 tools）
         full_content = ""
         for chunk in self._llm.stream(messages):
             if chunk:
@@ -127,8 +163,13 @@ class RagAgent:
     def _run_two_stage_loop(self, messages: list[dict]) -> AIMessage:
         max_total = _MAX_TAG_ROUNDS + _MAX_CHUNK_ROUNDS + 1
         for turn in range(max_total):
-            response_text = self._llm.invoke(messages)
-            response = AIMessage(content=response_text)
+            # 使用 invoke_with_tools 替代 invoke
+            llm_response = self._llm.invoke_with_tools(messages, self._tool_specs)
+
+            response = AIMessage(
+                content=llm_response.content,
+                tool_calls=llm_response.tool_calls
+            )
 
             if not response.tool_calls:
                 return response
@@ -139,11 +180,25 @@ class RagAgent:
                 f"(tag={self._tag_rounds}, chunk={self._chunk_rounds})"
             )
 
+            # 添加 assistant 消息（包含 tool_calls 和 reasoning_content）
+            assistant_msg = {
+                "role": "assistant",
+                "content": llm_response.content,
+                "tool_calls": llm_response.tool_calls,
+            }
+            if llm_response.reasoning_content:
+                assistant_msg["reasoning_content"] = llm_response.reasoning_content
+            messages.append(assistant_msg)
+
             for tc in response.tool_calls:
                 result = self._handle_tool_call_with_limit(tc, messages)
                 if result is not None:
                     tool_call_id = tc.get("id", "")
-                    messages.append({"role": "tool", "content": result, "tool_call_id": tool_call_id})
+                    messages.append({
+                        "role": "tool",
+                        "content": result,
+                        "tool_call_id": tool_call_id
+                    })
 
         _log.warning(f"工具调用已达上限 {max_total} 轮")
         return response
