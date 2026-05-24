@@ -85,7 +85,7 @@ class RagAgent:
             # 透出思考过程
             if llm_response.reasoning_content:
                 _log.info(f"Agent 思考: {llm_response.reasoning_content}")
-                yield StreamChunk(reasoning=llm_response.reasoning_content)
+                yield StreamChunk(type="reasoning", content=llm_response.reasoning_content)
 
             if not llm_response.tool_calls:
                 # 没有工具调用了，进入阶段 2 流式输出最终答案
@@ -109,8 +109,18 @@ class RagAgent:
 
             # 执行工具
             for tc in llm_response.tool_calls:
+                yield StreamChunk(
+                    type="tool_call",
+                    tool_name=tc.get("name"),
+                    tool_args=tc.get("args", {}),
+                )
                 result = self._handle_tool_call_with_limit(tc, messages)
                 if result is not None:
+                    yield StreamChunk(
+                        type="tool_result",
+                        content=result,
+                        tool_name=tc.get("name"),
+                    )
                     tool_call_id = tc.get("id", "")
                     messages.append({
                         "role": "tool",
@@ -130,10 +140,11 @@ class RagAgent:
         for chunk in self._llm.stream(messages):
             if chunk:
                 full_content += chunk
-                yield StreamChunk(content=chunk)
+                yield StreamChunk(type="content", content=chunk)
 
         self.conversation.add_assistant_message(full_content)
         _log.info(f"Agent 流式响应完成, 长度={len(full_content)}")
+        yield StreamChunk(type="done")
 
     # ------------------------------------------------------------------
     # 内部方法

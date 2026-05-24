@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import json
+
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 from loguru import logger
@@ -90,17 +92,21 @@ async def chat_stream(req: ChatRequest):
         try:
             for chunk in agent.chat_stream(req.message):
                 if isinstance(chunk, StreamChunk):
-                    if chunk.reasoning:
-                        yield f"event: reasoning\ndata: {chunk.reasoning}\n\n"
-                    if chunk.content:
-                        yield f"event: content\ndata: {chunk.content}\n\n"
+                    data = {
+                        "type": chunk.type,
+                        "content": chunk.content,
+                    }
+                    if chunk.tool_name:
+                        data["tool_name"] = chunk.tool_name
+                    if chunk.tool_args:
+                        data["tool_args"] = chunk.tool_args
+                    yield f"data: {json.dumps(data, ensure_ascii=False)}\n\n"
                 else:
                     # 兼容旧格式（字符串）
-                    yield f"event: content\ndata: {chunk}\n\n"
-            yield "event: done\ndata: [DONE]\n\n"
+                    yield f"data: {json.dumps({'type': 'content', 'content': str(chunk)}, ensure_ascii=False)}\n\n"
         except Exception as exc:
             _log.error(f"流式对话异常: {exc}")
-            yield f"event: error\ndata: [ERROR] {exc}\n\n"
+            yield f"data: {json.dumps({'type': 'error', 'content': str(exc)}, ensure_ascii=False)}\n\n"
 
     return StreamingResponse(
         _event_generator(),
