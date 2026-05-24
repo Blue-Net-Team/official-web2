@@ -259,10 +259,15 @@ class RagAgent:
         self._chunk_rounds = 0
         _log.info("对话历史已重置")
 
-if __name__ == "__main__":
+
+def test() -> None:
     agent = RagAgent()
     response = agent.chat("3个方向应该怎么选")
     print(response.content)
     if response.reasoning:
         print(f"\n[思考过程]\n{response.reasoning}")
+
+
+if __name__ == "__main__":
+    test()
 # end main
