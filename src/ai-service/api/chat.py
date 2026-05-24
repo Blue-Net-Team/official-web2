@@ -7,6 +7,7 @@ from pydantic import BaseModel, Field
 from loguru import logger
 
 from agent.agent import RagAgent
+from agent.types import StreamChunk
 
 _log = logger.bind(module="ChatAPI")
 
@@ -29,6 +30,7 @@ class ChatResponse(BaseModel):
     """非流式对话响应。"""
 
     reply: str = Field(..., description="助手回复内容")
+    reasoning: str | None = Field(None, description="助手思考过程")
     conversation_id: str | None = Field(None, description="会话标识")
 
 
@@ -65,12 +67,12 @@ async def chat(req: ChatRequest) -> ChatResponse:
     cid, agent = _get_or_create_agent(req.conversation_id)
 
     try:
-        reply = agent.chat(req.message)
+        response = agent.chat(req.message)
     except Exception as exc:
         _log.error(f"对话异常: {exc}")
         raise HTTPException(status_code=500, detail=f"对话处理失败: {exc}") from exc
 
-    return ChatResponse(reply=reply, conversation_id=cid)
+    return ChatResponse(reply=response.content, reasoning=response.reasoning or None, conversation_id=cid)
 
 
 @router.post("/stream")
@@ -83,11 +85,18 @@ async def chat_stream(req: ChatRequest):
     def _event_generator():
         try:
             for chunk in agent.chat_stream(req.message):
-                yield f"data: {chunk}\n\n"
-            yield "data: [DONE]\n\n"
+                if isinstance(chunk, StreamChunk):
+                    if chunk.reasoning:
+                        yield f"event: reasoning\ndata: {chunk.reasoning}\n\n"
+                    if chunk.content:
+                        yield f"event: content\ndata: {chunk.content}\n\n"
+                else:
+                    # 兼容旧格式（字符串）
+                    yield f"event: content\ndata: {chunk}\n\n"
+            yield "event: done\ndata: [DONE]\n\n"
         except Exception as exc:
             _log.error(f"流式对话异常: {exc}")
-            yield f"data: [ERROR] {exc}\n\n"
+            yield f"event: error\ndata: [ERROR] {exc}\n\n"
 
     return StreamingResponse(
         _event_generator(),

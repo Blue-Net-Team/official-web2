@@ -2,10 +2,9 @@ from __future__ import annotations
 
 from typing import Iterator
 
-from langchain_core.messages import AIMessage
 from loguru import logger
 
-from llm_providers.base import LLMProvider
+from llm_providers.base import LLMProvider, LLMResponse
 from llm_providers.factory import LLMFactory
 from tools import ToolRegistry
 from tools.tag_search_detailed import tag_search_detailed
@@ -13,11 +12,12 @@ from tools.tag_search import tag_generate
 
 from .conversation import Conversation
 from .prompts import TAG_RETRIEVAL_SYSTEM_PROMPT
+from .types import AgentResponse, StreamChunk
 
 _log = logger.bind(module="RagAgent")
 
-_MAX_TAG_ROUNDS = 3
-_MAX_CHUNK_ROUNDS = 2
+_MAX_TAG_ROUNDS = 4
+_MAX_CHUNK_ROUNDS = 3
 
 
 class RagAgent:
@@ -43,25 +43,26 @@ class RagAgent:
     # 同步对话
     # ------------------------------------------------------------------
 
-    def chat(self, user_input: str) -> str:
+    def chat(self, user_input: str) -> AgentResponse:
         enriched_input = self._pre_disclosure(user_input)
         self.conversation.add_user_message(enriched_input)
         messages = self.conversation.get_messages()
 
         self._tag_rounds = 0
         self._chunk_rounds = 0
-        response = self._run_two_stage_loop(messages)
-        final_text = response.content or ""
+        llm_response = self._run_two_stage_loop(messages)
+        final_text = llm_response.content or ""
+        reasoning = llm_response.reasoning_content or ""
 
         self.conversation.add_assistant_message(final_text)
-        _log.info(f"Agent 响应完成, 长度={len(final_text)}, tag_rounds={self._tag_rounds}, chunk_rounds={self._chunk_rounds}")
-        return final_text
+        _log.info(f"Agent 响应完成, 长度={len(final_text)}, reasoning_len={len(reasoning)}, tag_rounds={self._tag_rounds}, chunk_rounds={self._chunk_rounds}")
+        return AgentResponse(content=final_text, reasoning=reasoning)
 
     # ------------------------------------------------------------------
     # 流式对话
     # ------------------------------------------------------------------
 
-    def chat_stream(self, user_input: str) -> Iterator[str]:
+    def chat_stream(self, user_input: str) -> Iterator[StreamChunk]:
         enriched_input = self._pre_disclosure(user_input)
         self.conversation.add_user_message(enriched_input)
         messages = self.conversation.get_messages()
@@ -72,7 +73,19 @@ class RagAgent:
         # 阶段 1：工具调用循环（非流式，收集结果）
         max_total = _MAX_TAG_ROUNDS + _MAX_CHUNK_ROUNDS + 1
         for turn in range(max_total):
+            # 最后一轮前提示模型
+            if turn == max_total - 1:
+                messages.append({
+                    "role": "user",
+                    "content": "【系统提示】工具调用即将达到上限，这是你最后的机会。请基于已获取的所有检索信息，直接生成最终答案，不要再调用任何工具。"
+                })
+
             llm_response = self._llm.invoke_with_tools(messages, self._tool_specs)
+
+            # 透出思考过程
+            if llm_response.reasoning_content:
+                _log.info(f"Agent 思考: {llm_response.reasoning_content}")
+                yield StreamChunk(reasoning=llm_response.reasoning_content)
 
             if not llm_response.tool_calls:
                 # 没有工具调用了，进入阶段 2 流式输出最终答案
@@ -105,16 +118,19 @@ class RagAgent:
                         "tool_call_id": tool_call_id
                     })
         else:
-            # 达到上限
-            yield "工具调用次数过多，请简化查询"
-            return
+            # 达到上限，强制让模型基于已有信息生成答案
+            _log.warning(f"工具调用已达上限 {max_total} 轮，强制生成答案")
+            messages.append({
+                "role": "user",
+                "content": "【系统提示】工具调用次数已达上限。请基于已获取的所有检索结果，直接给出完整准确的最终答案，不要调用任何工具。"
+            })
 
         # 阶段 2：流式输出最终答案（纯文本，无 tools）
         full_content = ""
         for chunk in self._llm.stream(messages):
             if chunk:
                 full_content += chunk
-                yield chunk
+                yield StreamChunk(content=chunk)
 
         self.conversation.add_assistant_message(full_content)
         _log.info(f"Agent 流式响应完成, 长度={len(full_content)}")
@@ -160,23 +176,28 @@ class RagAgent:
         lines.append("  4. 基于结果生成答案")
         return "\n".join(lines)
 
-    def _run_two_stage_loop(self, messages: list[dict]) -> AIMessage:
+    def _run_two_stage_loop(self, messages: list[dict]) -> LLMResponse:
         max_total = _MAX_TAG_ROUNDS + _MAX_CHUNK_ROUNDS + 1
         for turn in range(max_total):
-            # 使用 invoke_with_tools 替代 invoke
+            # 最后一轮前提示模型
+            if turn == max_total - 1:
+                messages.append({
+                    "role": "user",
+                    "content": "【系统提示】工具调用即将达到上限，这是你最后的机会。请基于已获取的所有检索信息，直接生成最终答案，不要再调用任何工具。"
+                })
+
             llm_response = self._llm.invoke_with_tools(messages, self._tool_specs)
 
-            response = AIMessage(
-                content=llm_response.content,
-                tool_calls=llm_response.tool_calls
-            )
+            # 透出思考过程到日志
+            if llm_response.reasoning_content:
+                _log.info(f"Agent 思考: {llm_response.reasoning_content}")
 
-            if not response.tool_calls:
-                return response
+            if not llm_response.tool_calls:
+                return llm_response
 
             _log.info(
                 f"工具调用第 {turn + 1} 轮: "
-                f"{[tc['name'] for tc in response.tool_calls]}"
+                f"{[tc['name'] for tc in llm_response.tool_calls]}"
                 f"(tag={self._tag_rounds}, chunk={self._chunk_rounds})"
             )
 
@@ -190,7 +211,7 @@ class RagAgent:
                 assistant_msg["reasoning_content"] = llm_response.reasoning_content
             messages.append(assistant_msg)
 
-            for tc in response.tool_calls:
+            for tc in llm_response.tool_calls:
                 result = self._handle_tool_call_with_limit(tc, messages)
                 if result is not None:
                     tool_call_id = tc.get("id", "")
@@ -200,8 +221,13 @@ class RagAgent:
                         "tool_call_id": tool_call_id
                     })
 
-        _log.warning(f"工具调用已达上限 {max_total} 轮")
-        return response
+        # 达到上限，强制让模型基于已有信息生成答案
+        _log.warning(f"工具调用已达上限 {max_total} 轮，强制生成答案")
+        messages.append({
+            "role": "user",
+            "content": "【系统提示】工具调用次数已达上限。请基于已获取的所有检索结果，直接给出完整准确的最终答案，不要调用任何工具。"
+        })
+        return self._llm.invoke(messages)
 
     def _handle_tool_call_with_limit(self, tc: dict, messages: list[dict]) -> str | None:
         tool_name = tc["name"]
@@ -213,6 +239,8 @@ class RagAgent:
                 msg = f"标签搜索已达上限 {_MAX_TAG_ROUNDS} 轮，请直接基于已有标签进入选择阶段"
                 _log.warning(msg)
                 return msg
+            if self._tag_rounds == _MAX_TAG_ROUNDS:
+                _log.info(f"标签搜索剩余 1 次机会")
 
         if tool_name == "chunk_search_by_tags":
             self._chunk_rounds += 1
@@ -220,6 +248,8 @@ class RagAgent:
                 msg = f"分片检索已达上限 {_MAX_CHUNK_ROUNDS} 轮，请基于已有检索结果生成答案"
                 _log.warning(msg)
                 return msg
+            if self._chunk_rounds == _MAX_CHUNK_ROUNDS:
+                _log.info(f"分片检索剩余 1 次机会")
 
         return ToolRegistry.execute(tool_name, **tool_args)
 
@@ -231,5 +261,8 @@ class RagAgent:
 
 if __name__ == "__main__":
     agent = RagAgent()
-    print(agent.chat("3个方向应该怎么选"))
+    response = agent.chat("3个方向应该怎么选")
+    print(response.content)
+    if response.reasoning:
+        print(f"\n[思考过程]\n{response.reasoning}")
 # end main
