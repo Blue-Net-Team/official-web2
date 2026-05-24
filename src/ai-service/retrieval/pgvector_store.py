@@ -328,7 +328,7 @@ class PgVectorStore(VectorStore):
         return result
 
     def insert_tags(self, data: list[TagRecord]) -> dict:
-        """批量插入标签数据。"""
+        """批量插入标签数据，存在则忽略。"""
         table = _get_table(settings.TAGS_COLLECTION_NAME)
         if not self._check_table_exists(table):
             raise CollectionNotFoundError(f"表不存在: {table}")
@@ -340,6 +340,7 @@ class PgVectorStore(VectorStore):
         sql = f"""
             INSERT INTO {table} (tag_name, tag_vector, tag_description, chunks_count)
             VALUES (%(tag_name)s, %(tag_vector)s, %(tag_description)s, %(chunks_count)s)
+            ON CONFLICT (tag_name) DO NOTHING
             RETURNING id
         """
         ids: list[int] = []

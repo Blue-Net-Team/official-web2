@@ -389,7 +389,7 @@ class MilvusStore(VectorStore):
         return result
 
     def insert_tags(self, data: list[TagRecord]) -> dict:
-        """批量插入标签数据。
+        """批量插入标签数据，已存在则忽略。
 
         Returns:
             {"insert_count": int, "ids": list[int]}
@@ -401,7 +401,19 @@ class MilvusStore(VectorStore):
         if not self.collection_exists(name):
             raise CollectionNotFoundError(f"集合不存在: {name}")
 
-        rows = self._records_to_dicts(data)
+        # 过滤掉已存在的标签
+        existing = self.query_with_filter(
+            collection_name=name,
+            filter_expr=f"tag_name in {[d.tag_name for d in data]}",
+            output_fields=["tag_name"],
+            limit=len(data),
+        )
+        existing_names = {r["tag_name"] for r in existing}
+        rows = self._records_to_dicts([d for d in data if d.tag_name not in existing_names])
+
+        if not rows:
+            return {"insert_count": 0, "ids": []}
+
         result = self._client.insert(collection_name=name, data=rows)
         return {
             "insert_count": result["insert_count"],

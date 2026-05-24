@@ -231,5 +231,5 @@ class RagAgent:
 
 if __name__ == "__main__":
     agent = RagAgent()
-    print(agent.chat("报名什么时候截止"))
+    print(agent.chat("3个方向应该怎么选"))
 # end main

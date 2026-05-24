@@ -61,55 +61,59 @@ async def _load_all_chunks() -> list[str]:
     return all_chunks
 
 
+def _generate_tags_for_chunk(chunk: str, existing_tags: list[str]) -> list[str]:
+    """为单个 chunk 生成标签，复用已有标签。"""
+    prompt = TAG_GENERATION_PROMPT.format(
+        existing_tags=existing_tags, text=chunk
+    )
+    response = llm.invoke([{"role": "user", "content": prompt}])
+    tags = [t.strip() for t in response.strip().split(",") if t.strip()]
+    return tags
+
+
 async def load2db_pipeline():
     # 执行异步文档加载
     chunks = await _load_all_chunks()
 
+    # 阶段一：收集所有 chunk 的标签（全局去重）
+    chunk_tag_map: dict[str, list[str]] = {}
+    all_tag_names: set[str] = set()
+
     for chunk in chunks:
-        # 读取已有的tag
-        existing_tags = []
-        # 从db读取已有的tag
-        
-        with PgVectorStore() as store:
-            existing_tag_records = store.get_all_tags()
-            existing_tags = [tag.tag_name for tag in existing_tag_records]
-        
-        # 对chunk打标，复用已有的标签
-        prompt = TAG_GENERATION_PROMPT.format(
-            existing_tags=existing_tags, text=chunk
-        )
-        response = llm.invoke([{"role": "user", "content": prompt}])
-        tags = response.strip().split(",")
+        tags = _generate_tags_for_chunk(chunk, existing_tags=list(all_tag_names))
+        chunk_tag_map[chunk] = tags
+        all_tag_names.update(tags)
         _log.info(f"生成标签: {tags}")
-        
-        # 记录复用标签数
-        num_reused_tags = sum(tag in existing_tags for tag in tags)
-        _log.info(f"复用 {num_reused_tags} 个标签\t新标签数: {len(tags) - num_reused_tags}")
-        
-        # 取出新标签
-        new_tag = [tag.strip() for tag in tags if tag not in existing_tags]
 
-        # 对新tag向量化
-        new_tag_embeddings = embedding.embed_texts(new_tag)
+    # 阶段二：查询已有标签，筛选新标签
+    with PgVectorStore() as store:
+        existing_tag_records = store.get_all_tags()
+        existing_names = {tag.tag_name for tag in existing_tag_records}
 
-        # 构造tagRecord
-        tag_records = []
-        for tag_name, tag_vector in zip(new_tag, new_tag_embeddings):
-            tag_records.append(TagRecord(tag_name=tag_name, tag_vector=tag_vector))
-        
-        # 存储tag到db
+    new_tag_names = list(all_tag_names - existing_names)
+    num_reused = len(all_tag_names) - len(new_tag_names)
+    _log.info(f"复用 {num_reused} 个标签\t新标签数: {len(new_tag_names)}")
+
+    # 阶段三：插入新标签
+    if new_tag_names:
+        new_tag_embeddings = embedding.embed_texts(new_tag_names)
+        tag_records = [
+            TagRecord(tag_name=name, tag_vector=vec)
+            for name, vec in zip(new_tag_names, new_tag_embeddings)
+        ]
         with PgVectorStore() as store:
             store.insert_tags(tag_records)
             _log.info(f"存储 {len(tag_records)} 个新标签")
 
-        # 对chunk向量化
+    # 阶段四：插入所有 chunks
+    for chunk, tags in chunk_tag_map.items():
         chunk_embedding = embedding.embed_texts([chunk])
-
-        # 存储chunk到db
-        chunk_record = ChunkRecord(content=chunk, chunk_vector=chunk_embedding[0], tags=tags)
+        chunk_record = ChunkRecord(
+            content=chunk, chunk_vector=chunk_embedding[0], tags=tags
+        )
         with PgVectorStore() as store:
             store.insert_chunks([chunk_record])
-            _log.info(f"存储 {chunk_record.content} 到 chunks")
+            _log.info(f"存储 chunk 到 chunks，标签: {tags}")
 
 
 if __name__ == "__main__":

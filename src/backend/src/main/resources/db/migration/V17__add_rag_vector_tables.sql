@@ -9,7 +9,7 @@ CREATE EXTENSION IF NOT EXISTS vector;
 -- ============================================
 CREATE TABLE tb_rag_tags (
     id BIGSERIAL PRIMARY KEY,
-    tag_name VARCHAR(128) NOT NULL,
+    tag_name VARCHAR(128) NOT NULL UNIQUE,
     tag_vector VECTOR(1024) NOT NULL,
     tag_description VARCHAR(512) DEFAULT '',
     chunks_count INT DEFAULT 0
