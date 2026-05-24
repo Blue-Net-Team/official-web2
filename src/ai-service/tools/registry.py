@@ -32,7 +32,9 @@ class ToolRegistry:
             raise ValueError(f"未知工具: {name}，可用工具: {list(cls._tools)}")
         _log.info(f"执行工具: {name}, 参数: {kwargs}")
         result = tool.handler(**kwargs)
-        return cls._format_result(name, result)
+        formatted = cls._format_result(name, result)
+        _log.info(f"工具 {name} 返回:\n{formatted}")
+        return formatted
 
     @classmethod
     def get_function_calling_specs(cls) -> list[dict]:
