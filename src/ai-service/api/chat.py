@@ -5,6 +5,7 @@ from __future__ import annotations
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 from loguru import logger
+import uuid
 
 from agent.agent import RagAgent
 from agent.types import StreamChunk
@@ -48,8 +49,12 @@ _conversations: dict[str, RagAgent] = {}
 
 
 def _get_or_create_agent(conversation_id: str | None) -> tuple[str, RagAgent]:
-    """根据 conversation_id 获取或新建 RagAgent。"""
-    cid = conversation_id or "default"
+    """根据 conversation_id 获取或新建 RagAgent。
+
+    如果不传 conversation_id，自动生成一个新的唯一会话 ID，
+    确保每个未指定会话的请求都有独立的上下文。
+    """
+    cid = conversation_id or str(uuid.uuid4())
     if cid not in _conversations:
         _conversations[cid] = RagAgent()
         _log.info(f"新建会话: {cid}")
