@@ -9,6 +9,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
 
 from api import router as api_router
+from logging_config import setup_logging
+
+# 初始化统一日志（拦截标准库 logging 到 loguru）
+setup_logging()
 
 _log = logger.bind(module="Main")
 
@@ -34,6 +38,7 @@ app = FastAPI(
     description="蓝网团队 AI 智能检索客服 API",
     version="0.1.0",
     lifespan=lifespan,
+    redirect_slashes=False,
 )
 
 app.add_middleware(

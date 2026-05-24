@@ -23,7 +23,6 @@ class ChatRequest(BaseModel):
 
     message: str = Field(..., min_length=1, description="用户输入内容")
     conversation_id: str | None = Field(None, description="会话标识（可选，用于多轮对话）")
-    stream: bool = Field(False, description="是否使用流式返回")
 
 
 class ChatResponse(BaseModel):

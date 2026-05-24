@@ -28,6 +28,7 @@ dependencies = [
 [project.scripts]
 load2db = "pipeline.load2db_pipeline:main"
 agent = "agent.agent:test"
+api = "uvicorn.main:main"
 
 [project.optional-dependencies]
 local-reranker = [
