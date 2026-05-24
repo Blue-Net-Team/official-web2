@@ -115,6 +115,48 @@ async def load2db_pipeline():
             store.insert_chunks([chunk_record])
             _log.info(f"存储 chunk 到 chunks，标签: {tags}")
 
+    # 阶段五：统计并更新标签引用次数
+    _log.info("开始统计并更新标签引用次数...")
+    with PgVectorStore() as store:
+        tag_counts: dict[str, int] = {}
+        rows = store._execute(
+            """
+            SELECT tags FROM tb_rag_chunks
+            WHERE tags IS NOT NULL AND array_length(tags, 1) > 0
+            """,
+            fetch=True,
+        )
+        for row in rows or []:
+            for tag in row.get("tags") or []:
+                tag = tag.strip()
+                if tag:
+                    tag_counts[tag] = tag_counts.get(tag, 0) + 1
+
+        if tag_counts:
+            # 先清零
+            store._execute("UPDATE tb_rag_tags SET chunks_count = 0")
+            # 批量更新
+            items = list(tag_counts.items())
+            values = ", ".join(["(%s, %s)"] * len(items))
+            params: list[Any] = []
+            for tag, cnt in items:
+                params.extend([tag, cnt])
+
+            sql_update = f"""
+                WITH counts AS (
+                    SELECT v.tag_name, v.cnt::int
+                    FROM (VALUES {values}) AS v(tag_name, cnt)
+                )
+                UPDATE tb_rag_tags t
+                SET chunks_count = c.cnt
+                FROM counts c
+                WHERE t.tag_name = c.tag_name
+            """
+            store._execute(sql_update, tuple(params))
+            _log.info(f"已更新 {len(tag_counts)} 个标签的引用次数")
+        else:
+            _log.warning("未统计到任何标签引用")
+
 
 if __name__ == "__main__":
     asyncio.run(load2db_pipeline())
