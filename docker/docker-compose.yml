@@ -216,6 +216,56 @@ services:
     networks:
       - network
 
+  ai-service:
+    image: ${AI_SERVICE_IMAGE:-bluenet-ai-service:latest}
+    build:
+      context: ..
+      dockerfile: docker/ai-service.Dockerfile
+    container_name: bluenet-ai-service
+    ports:
+      - "8000:8000"
+    environment:
+      <<: *shared-env
+      # API 密钥（从 .env 注入，不在 Dockerfile 中写死）
+      TBD_RAG_SILICONFLOW_API_KEY: ${TBD_RAG_SILICONFLOW_API_KEY:-}
+      TBD_RAG_DEEPSEEK_API_KEY: ${TBD_RAG_DEEPSEEK_API_KEY:-}
+      # Milvus
+      TBD_RAG_MILVUS_URI: ${TBD_RAG_MILVUS_URI:-http://milvus:19530}
+      TBD_RAG_MILVUS_TOKEN: ${TBD_RAG_MILVUS_TOKEN:-}
+      # PgVector
+      TBD_RAG_PGVECTOR_URI: ${TBD_RAG_PGVECTOR_URI:-postgresql://postgres:postgres@database:5432/rag}
+      TBD_RAG_PGVECTOR_POOL_SIZE: ${TBD_RAG_PGVECTOR_POOL_SIZE:-10}
+      # Collection & Vector
+      TBD_RAG_TAGS_COLLECTION_NAME: ${TBD_RAG_TAGS_COLLECTION_NAME:-tags_collection}
+      TBD_RAG_CHUNKS_COLLECTION_NAME: ${TBD_RAG_CHUNKS_COLLECTION_NAME:-chunks_collection}
+      TBD_RAG_DOCS_COLLECTION_NAME: ${TBD_RAG_DOCS_COLLECTION_NAME:-docs_collection}
+      TBD_RAG_VECTOR_DIMENSION: ${TBD_RAG_VECTOR_DIMENSION:-1024}
+      TBD_RAG_VECTOR_INDEX_TYPE: ${TBD_RAG_VECTOR_INDEX_TYPE:-HNSW}
+      TBD_RAG_VECTOR_METRIC_TYPE: ${TBD_RAG_VECTOR_METRIC_TYPE:-COSINE}
+      TBD_RAG_VECTOR_STORE_BACKEND: ${TBD_RAG_VECTOR_STORE_BACKEND:-milvus}
+      # Chunking
+      TBD_RAG_CHUNK_MAX_TOKENS: ${TBD_RAG_CHUNK_MAX_TOKENS:-4000}
+      # Embedding / LLM / Reranker
+      TBD_RAG_EMBEDDING_PROVIDER: ${TBD_RAG_EMBEDDING_PROVIDER:-siliconflow}
+      TBD_RAG_LLM_PROVIDER: ${TBD_RAG_LLM_PROVIDER:-siliconflow}
+      TBD_RAG_LLM_TEMPERATURE: ${TBD_RAG_LLM_TEMPERATURE:-0.7}
+      TBD_RAG_LLM_TIMEOUT: ${TBD_RAG_LLM_TIMEOUT:-60}
+      TBD_RAG_RERANKER_PROVIDER: ${TBD_RAG_RERANKER_PROVIDER:-siliconflow}
+      # Ollama（本地开发可选）
+      TBD_RAG_OLLAMA_BASE_URL: ${TBD_RAG_OLLAMA_BASE_URL:-}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/ai/v1/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    profiles:
+      - full
+      - app
+    restart: ${RESTART_POLICY:-no}
+    networks:
+      - network
+
   oss:
     image: minio/minio:RELEASE.2025-09-07T16-13-09Z
     container_name: bluenet-oss
