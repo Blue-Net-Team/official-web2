@@ -72,7 +72,7 @@ export default function AssessmentJudgementManagementPage() {
     () =>
       assessmentTimes.map((item) => ({
         value: item.id,
-        label: `${DIRECTION_LABELS[item.direction]} · 第 ${item.epoch} 轮 · ${item.grade}级`,
+        label: `${item.direction ? DIRECTION_LABELS[item.direction] : '全局'} · 第 ${item.epoch} 轮 · ${item.grade}级`,
       })),
     [assessmentTimes]
   )
