@@ -60,11 +60,11 @@ const sanitizeFilenameSegment = (value: string) => value.replace(/[\\/:*?"<>|]/g
  * 任一关键字段缺失时返回 undefined，让 fileService 回落到响应头里的原始文件名。
  */
 const buildWorkFilename = (params: {
-  direction?: Direction
-  epoch?: number
-  grade?: number
+  direction?: Direction | null
+  epoch?: number | null
+  grade?: number | null
   username?: string
-  questionNo?: number
+  questionNo?: number | null
 }): string | undefined => {
   const { direction, epoch, grade, username, questionNo } = params
   if (!direction || !epoch || !grade || !username || !questionNo) return undefined
@@ -147,7 +147,7 @@ export default function AssessmentJudgementManagementPage() {
     () =>
       assessmentTimes.map((item) => ({
         value: item.id,
-        label: `${DIRECTION_LABELS[item.direction]} · 第 ${item.epoch} 轮 · ${item.grade}级`,
+        label: `${item.direction ? DIRECTION_LABELS[item.direction] : '全局'} · 第 ${item.epoch} 轮 · ${item.grade}级`,
       })),
     [assessmentTimes]
   )
@@ -492,8 +492,9 @@ export default function AssessmentJudgementManagementPage() {
       return { fileId: sub.fileId!, filename }
     })
 
-    const directionLabel =
-      DIRECTION_LABELS[currentAssessmentTime.direction] ?? currentAssessmentTime.direction
+    const directionLabel = currentAssessmentTime.direction
+      ? DIRECTION_LABELS[currentAssessmentTime.direction]
+      : '全局'
     const zipName = sanitizeFilenameSegment(
       `${directionLabel}-第${currentAssessmentTime.epoch}轮-${currentAssessmentTime.grade}级-第${selectedQuestion.questionNo}题-考生答案.zip`
     )
@@ -582,16 +583,7 @@ export default function AssessmentJudgementManagementPage() {
             icon={<DownloadOutlined />}
             onClick={(e) => {
               e.stopPropagation()
-              fileService.downloadFile(
-                record.fileId!,
-                buildWorkFilename({
-                  direction: currentAssessmentTime?.direction,
-                  epoch: currentAssessmentTime?.epoch,
-                  grade: currentAssessmentTime?.grade,
-                  username: record.username,
-                  questionNo: record.questionNo,
-                })
-              )
+              fileService.downloadFile(record.fileId!)
             }}
           >
             下载
@@ -744,18 +736,7 @@ export default function AssessmentJudgementManagementPage() {
           <Button
             size="small"
             icon={<DownloadOutlined />}
-            onClick={() =>
-              fileService.downloadFile(
-                detail.fileId!,
-                buildWorkFilename({
-                  direction: currentAssessmentTime?.direction,
-                  epoch: currentAssessmentTime?.epoch,
-                  grade: currentAssessmentTime?.grade,
-                  username: detail.username,
-                  questionNo: detail.questionNo,
-                })
-              )
-            }
+            onClick={() => fileService.downloadFile(detail.fileId!)}
           >
             下载答案文件
           </Button>
@@ -1212,18 +1193,7 @@ export default function AssessmentJudgementManagementPage() {
           reviewing?.fileId ? (
             <Button
               icon={<DownloadOutlined />}
-              onClick={() =>
-                fileService.downloadFile(
-                  reviewing.fileId!,
-                  buildWorkFilename({
-                    direction: currentAssessmentTime?.direction,
-                    epoch: currentAssessmentTime?.epoch,
-                    grade: currentAssessmentTime?.grade,
-                    username: reviewing.username,
-                    questionNo: reviewing.questionNo,
-                  })
-                )
-              }
+              onClick={() => fileService.downloadFile(reviewing.fileId!)}
             >
               下载作品
             </Button>

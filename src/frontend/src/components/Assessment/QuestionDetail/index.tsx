@@ -775,7 +775,7 @@ export default function QuestionDetailPage() {
             <div className="flex items-center gap-4 flex-wrap">
               {timeInfo && (
                 <Tag color="blue" className="!m-0">
-                  {DirectionLabels[timeInfo.direction]}
+                  {timeInfo.direction ? DirectionLabels[timeInfo.direction] : '全局'}
                 </Tag>
               )}
               {timeInfo && (

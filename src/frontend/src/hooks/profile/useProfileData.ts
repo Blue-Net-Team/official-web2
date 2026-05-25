@@ -13,7 +13,7 @@ dayjs.extend(duration)
 
 /** 将 AssessmentTimeDTO 转换为前端 Assessment 类型 */
 function convertToAssessment(dto: AssessmentTimeDTO): Assessment {
-  const directionLabel = DIRECTION_LABELS[dto.direction] || dto.direction
+  const directionLabel = dto.direction ? DIRECTION_LABELS[dto.direction] : '全局'
   const title = `${directionLabel}方向${dto.grade}级第${dto.epoch}轮考核`
   const round = `第${dto.epoch}轮`
 
