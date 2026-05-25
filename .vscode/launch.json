@@ -2,6 +2,33 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "ai service Debugger",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/src/ai-service/main.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}/src/ai-service",
+            "envFile": "${workspaceFolder}/src/ai-service/.env"
+        },
+        {
+            "name": "pipeline Debugger: load to db pipeline",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/src/ai-service/pipeline/load2db_pipeline.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}/src/ai-service",
+            "envFile": "${workspaceFolder}/src/ai-service/.env"
+        },
+        {
+            "name": "agent Debugger: ragagent",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "agent.agent",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}/src/ai-service",
+            "envFile": "${workspaceFolder}/src/ai-service/.env"
+        },
+        {
             "type": "java",
             "name": "backend server",
             "request": "launch",
