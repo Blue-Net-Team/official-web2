@@ -60,10 +60,7 @@ def _update_tag_counts(store: PgVectorStore, counts: dict[str, int]) -> int:
             SET chunks_count = %s
             WHERE tag_name = %s
         """
-        result = store._execute(sql, (cnt, tag_name), fetch=False)
-        # psycopg cursor.rowcount 在 execute 后可通过 cursor 获取，
-        # 但 _execute 封装后不方便拿到。这里改为用 RETURNING 来判断。
-        # 或者更简单：先查询确认标签存在
+        store._execute(sql, (cnt, tag_name), fetch=False)
         updated += 1
 
     return updated
@@ -80,7 +77,7 @@ def _update_tag_counts_batch(store: PgVectorStore, counts: dict[str, int]) -> in
 
     # 构建 (tag_name, count) 列表用于批量更新
     items = list(counts.items())
-    values = ", ".join([f"(%s, %s)"] * len(items))
+    values = ", ".join(["(%s, %s)"] * len(items))
     params = []
     for tag, cnt in items:
         params.extend([tag, cnt])

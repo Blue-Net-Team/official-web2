@@ -251,7 +251,7 @@ class RagAgent:
                 _log.warning(msg)
                 return msg
             if self._tag_rounds == _MAX_TAG_ROUNDS:
-                _log.info(f"标签搜索剩余 1 次机会")
+                _log.info("标签搜索剩余 1 次机会")
 
         if tool_name == "chunk_search_by_tags":
             self._chunk_rounds += 1
@@ -260,7 +260,7 @@ class RagAgent:
                 _log.warning(msg)
                 return msg
             if self._chunk_rounds == _MAX_CHUNK_ROUNDS:
-                _log.info(f"分片检索剩余 1 次机会")
+                _log.info("分片检索剩余 1 次机会")
 
         return ToolRegistry.execute(tool_name, **tool_args)
 

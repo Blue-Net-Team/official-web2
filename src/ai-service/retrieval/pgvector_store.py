@@ -588,9 +588,6 @@ class PgVectorStore(VectorStore):
         if not self._check_table_exists(table):
             raise CollectionNotFoundError(f"表不存在: {table}")
 
-        metric = settings.VECTOR_METRIC_TYPE
-        op = _METRIC_OPS.get(metric, "<=>")
-
         default_fields = ["id", "file_id", "title", "source", "metadata"]
         fields = output_fields or default_fields
         select_cols = ", ".join(fields)
