@@ -77,7 +77,8 @@ export default function CodeEditor({
           automaticLayout: true,
           scrollBeyondLastLine: false,
           fontSize: 13,
-          fontFamily: 'monospace',
+          fontFamily:
+            "'Fira Code', 'JetBrains Mono', 'Consolas', 'Monaco', 'Courier New', monospace",
           tabSize: 4,
           insertSpaces: true,
           wordWrap: 'on',

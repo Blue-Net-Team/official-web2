@@ -7,4 +7,9 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 public class FileUploadContent extends QuestionContent {
     // 文件上传题只有题干，无其他字段
+
+    @Override
+    public void sanitizeForUser() {
+        // 文件上传题无需擦除任何信息
+    }
 }

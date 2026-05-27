@@ -60,7 +60,7 @@ public class AssessmentQuestionResponseConverter {
     }
 
     /**
-     * 将考题实体转换为 DTO（用户端，不包含 content）
+     * 将考题实体转换为 DTO（用户端）
      */
     public AssessmentQuestionDTO toDTOForUser(AssessmentQuestion entity) {
         if (entity == null) {
@@ -72,14 +72,14 @@ public class AssessmentQuestionResponseConverter {
                 .questionNo(entity.getQuestionNo())
                 .questionType(entity.getQuestionType())
                 .title(entity.getTitle())
-                .content(null)
+                .content(entity.getContent())
                 .attachmentId(entity.getAttachmentId())
                 .score(entity.getScore())
                 .build();
     }
 
     /**
-     * 将考题结果转换为 DTO（用户端，不包含 content）
+     * 将考题结果转换为 DTO（用户端）
      */
     public AssessmentQuestionDTO toDTOForUser(AssessmentQuestionResult result) {
         if (result == null) {
@@ -91,7 +91,7 @@ public class AssessmentQuestionResponseConverter {
                 .questionNo(result.questionNo())
                 .questionType(result.questionType())
                 .title(result.title())
-                .content(null)
+                .content(result.content())
                 .attachmentId(result.attachmentId())
                 .score(result.score())
                 .answered(result.answered())

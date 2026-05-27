@@ -35,7 +35,7 @@
 - [x] 5.2 启动前端开发服务验证各编辑器正常渲染（管理端和考生端均正常渲染）
 - [x] 5.3 测试五种语言（Python/C/C++/Java/JS）的语法高亮（均已验证通过）
 - [x] 5.4 测试行号显示、括号匹配功能（均已验证通过）
-- [ ] 5.5 测试代码修改后表单提交数据正确（因后端 API 返回 content 为 null，前端语言选择器被禁用，暂时无法完整测试）
+- [x] 5.5 测试代码修改后表单提交数据正确（后端已修复，考生端能正常获取 content，语言选择器和编辑器均正常工作）
 - [x] 5.6 测试只读模式下编辑器不可编辑（已通过 JavaScript 直接设置 readOnly 选项验证）
 
 ## 端到端验证总结
@@ -50,7 +50,13 @@
 6. **只读模式**：通过 JavaScript 直接设置 readOnly 选项验证，编辑器变为不可编辑状态
 7. **代码编辑**：在可编辑模式下，可以通过 setValue 修改编辑器内容
 
-### 发现的问题
+### 修复的问题
 
-1. **后端 API 数据返回问题**：考生端 API `/api/v1/assessment-questions/{id}` 返回的 `content` 字段为 `null`，导致前端语言选择器被禁用。数据库中数据是正确的（已验证），问题出在后端 DTO 转换或权限控制逻辑。
-2. **第一个测试题目（id=17）content 为空**：创建时题干 textarea 的值没有正确绑定到表单，导致 content 为空。第二个题目（id=18）已正确保存。
+1. **后端答案擦除逻辑重构**：原 `AssessmentQuestionResponseConverter.toDTOForUser` 一刀切地将所有题型的 `content` 设为 `null`，导致算法题的语言模板无法返回给前端。
+   - 修复方案：在 `QuestionContent` 抽象基类中添加 `sanitizeForUser()` 方法，由各子类自行实现敏感信息擦除
+   - `AlgorithmContent`：清除 `testCases`（正式评测用例）
+   - `SingleChoiceContent`：清除 `correctAnswer`
+   - `MultipleChoiceContent`：清除 `correctAnswers`
+   - `FileUploadContent`：空实现（无敏感信息）
+
+2. **字体问题修复**：`fontFamily: 'monospace'` 太宽泛，修改为 `'Fira Code', 'JetBrains Mono', 'Consolas', 'Monaco', 'Courier New', monospace`
