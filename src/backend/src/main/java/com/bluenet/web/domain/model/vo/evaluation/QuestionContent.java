@@ -15,4 +15,9 @@ public abstract class QuestionContent {
      * 正文内容、题目内容或结构化配置内容。
      */
     private String content;
+
+    /**
+     * 擦除不应暴露给考生的敏感信息（如正确答案、评测用例等）。 每个子类需实现具体的擦除逻辑。
+     */
+    public abstract void sanitizeForUser();
 }

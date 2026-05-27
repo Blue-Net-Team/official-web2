@@ -16,4 +16,9 @@ public class SingleChoiceContent extends QuestionContent {
      * 单选题的正确选项标识。
      */
     private String correctAnswer;
+
+    @Override
+    public void sanitizeForUser() {
+        this.correctAnswer = null;
+    }
 }

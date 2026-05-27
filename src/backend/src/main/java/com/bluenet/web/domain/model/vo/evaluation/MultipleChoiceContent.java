@@ -16,4 +16,9 @@ public class MultipleChoiceContent extends QuestionContent {
      * 多选题的正确选项标识集合。
      */
     private List<String> correctAnswers;
+
+    @Override
+    public void sanitizeForUser() {
+        this.correctAnswers = null;
+    }
 }

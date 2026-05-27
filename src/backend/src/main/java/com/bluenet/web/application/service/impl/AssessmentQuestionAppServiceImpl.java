@@ -445,31 +445,11 @@ public class AssessmentQuestionAppServiceImpl implements AssessmentQuestionAppSe
     }
 
     private AssessmentQuestion sanitizeQuestionForUser(AssessmentQuestion question) {
-        if (question.getQuestionType() != QuestionType.ALGORITHM
-                || !(question.getContent()instanceof AlgorithmContent algorithmContent)) {
+        if (question.getContent() == null) {
             return question;
         }
-        AlgorithmContent sanitizedContent = new AlgorithmContent();
-        sanitizedContent.setContent(algorithmContent.getContent());
-        sanitizedContent.setInputDescription(algorithmContent.getInputDescription());
-        sanitizedContent.setOutputDescription(algorithmContent.getOutputDescription());
-        sanitizedContent.setConstraints(algorithmContent.getConstraints());
-        sanitizedContent.setExamples(algorithmContent.getExamples());
-        sanitizedContent.setRunTestCases(algorithmContent.getRunTestCases());
-        sanitizedContent.setStarterCode(algorithmContent.getStarterCode());
-        sanitizedContent.setTimeLimit(algorithmContent.getTimeLimit());
-        sanitizedContent.setMemoryLimit(algorithmContent.getMemoryLimit());
-        sanitizedContent.setTestCases(null);
-
-        return AssessmentQuestion.reconstruct(
-                question.getId(),
-                question.getAssessmentTimeId(),
-                question.getQuestionNo(),
-                question.getQuestionType(),
-                question.getTitle(),
-                sanitizedContent,
-                question.getAttachmentId(),
-                question.getScore());
+        question.getContent().sanitizeForUser();
+        return question;
     }
 
     private AssessmentQuestionResult toResult(AssessmentQuestion entity, Boolean answered) {

@@ -46,6 +46,11 @@ public class AlgorithmContent extends QuestionContent {
      */
     private Integer memoryLimit;
 
+    @Override
+    public void sanitizeForUser() {
+        this.testCases = null;
+    }
+
     @Data
     public static class Example {
         /**
