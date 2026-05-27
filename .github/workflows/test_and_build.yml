@@ -113,6 +113,28 @@ jobs:
     - name: Run judge-service tests
       run: src/backend/mvnw -B test -f src/judge-service/pom.xml
 
+  # ==================== AI 服务测试阶段 ====================
+
+  ai-service-test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src/ai-service
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@v5
+      with:
+        version: "0.6.x"
+
+    - name: Sync dependencies
+      run: uv sync --frozen --no-dev
+
+    - name: Ruff check
+      run: uv run ruff check .
+
   # ==================== 构建 API 服务阶段 ====================
 
   build-api-service:
@@ -310,12 +332,90 @@ jobs:
         path: judge-service-image.tar.gz
         retention-days: 1
 
+  # ==================== 构建 AI 服务阶段 ====================
+
+  build-ai-service:
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    needs: [ai-service-test]
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set image name
+      id: image
+      run: echo "name=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
+
+    - name: Set deployment variables
+      id: vars
+      run: |
+        if [ "${{ github.ref }}" = "refs/heads/master" ]; then
+          echo "image_tag=latest" >> $GITHUB_OUTPUT
+        else
+          echo "image_tag=develop" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Login to GitHub Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Extract metadata
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.REGISTRY }}/${{ steps.image.outputs.name }}/bluenet-ai-service
+        tags: |
+          type=ref,event=branch
+          type=sha,prefix=
+          type=raw,value=latest,enable=${{ github.ref == 'refs/heads/master' }}
+
+    - name: Build ai-service image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: docker/ai-service.Dockerfile
+        load: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+    - name: Push ai-service image to ghcr.io
+      run: |
+        echo '${{ steps.meta.outputs.tags }}' | while read -r tag; do
+          [ -n "$tag" ] && docker push "$tag"
+        done
+
+    - name: Save ai-service image as tar
+      run: |
+        IMAGE_TAG="${{ steps.vars.outputs.image_tag }}"
+        GHCR_IMAGE="${{ env.REGISTRY }}/${{ steps.image.outputs.name }}/bluenet-ai-service:${IMAGE_TAG}"
+        LOCAL_TAG="bluenet-ai-service:${IMAGE_TAG}"
+        docker tag "$GHCR_IMAGE" "$LOCAL_TAG"
+        docker save "$LOCAL_TAG" | gzip > ai-service-image.tar.gz
+
+    - name: Upload ai-service image artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ai-service-image
+        path: ai-service-image.tar.gz
+        retention-days: 1
+
   # ==================== 部署数据库基础设施阶段（PostgreSQL + Redis）====================
 
   deploy-database-infra:
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
-    needs: [api-service-test, frontend-test, judge-service-test]
+    needs: [api-service-test, frontend-test, judge-service-test, ai-service-test]
 
     steps:
     - uses: actions/checkout@v4
@@ -570,12 +670,86 @@ jobs:
         JUDGE_IMAGE: bluenet-judge-service:${{ steps.vars.outputs.image_tag }}
         DEPLOY_PATH: ${{ steps.vars.outputs.deploy_path }}
 
+  # ==================== 部署 AI 服务阶段 ====================
+
+  deploy-ai-service:
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    needs: [build-ai-service, deploy-database-infra]
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set deployment variables
+      id: vars
+      run: |
+        if [ "${{ github.ref }}" = "refs/heads/master" ]; then
+          echo "deploy_path=${{ secrets.AI_DEPLOY_PATH_PROD }}" >> $GITHUB_OUTPUT
+          echo "deploy_host=${{ secrets.AI_DEPLOY_HOST_PROD }}" >> $GITHUB_OUTPUT
+          echo "image_tag=latest" >> $GITHUB_OUTPUT
+          echo "env_name=production" >> $GITHUB_OUTPUT
+        else
+          echo "deploy_path=${{ secrets.AI_DEPLOY_PATH_DEV }}" >> $GITHUB_OUTPUT
+          echo "deploy_host=${{ secrets.AI_DEPLOY_HOST_DEV }}" >> $GITHUB_OUTPUT
+          echo "image_tag=develop" >> $GITHUB_OUTPUT
+          echo "env_name=development" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Download ai-service image artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: ai-service-image
+        path: ./images
+
+    - name: Sync compose file to ai server
+      uses: appleboy/scp-action@v0.1.7
+      with:
+        host: ${{ steps.vars.outputs.deploy_host }}
+        username: ${{ secrets.AI_DEPLOY_USER }}
+        key: ${{ secrets.AI_DEPLOY_KEY }}
+        port: ${{ secrets.AI_DEPLOY_PORT || 22 }}
+        source: "docker/docker-compose.yml"
+        target: ${{ steps.vars.outputs.deploy_path }}
+        strip_components: 1
+
+    - name: Transfer image to server
+      uses: appleboy/scp-action@v0.1.7
+      with:
+        host: ${{ steps.vars.outputs.deploy_host }}
+        username: ${{ secrets.AI_DEPLOY_USER }}
+        key: ${{ secrets.AI_DEPLOY_KEY }}
+        port: ${{ secrets.AI_DEPLOY_PORT || 22 }}
+        source: "images/ai-service-image.tar.gz"
+        target: /tmp/bluenet-deploy
+
+    - name: Deploy ai-service via SSH
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ steps.vars.outputs.deploy_host }}
+        username: ${{ secrets.AI_DEPLOY_USER }}
+        key: ${{ secrets.AI_DEPLOY_KEY }}
+        port: ${{ secrets.AI_DEPLOY_PORT || 22 }}
+        envs: AI_SERVICE_IMAGE, DEPLOY_PATH
+        script: |
+          cd $DEPLOY_PATH
+          echo "=== Deploying ai-service to ${{ steps.vars.outputs.env_name }} environment ==="
+          echo "Loading ai-service image from tar..."
+          gunzip -c /tmp/bluenet-deploy/images/ai-service-image.tar.gz | docker load
+          rm -f /tmp/bluenet-deploy/images/ai-service-image.tar.gz
+          echo "Starting ai-service..."
+          export AI_SERVICE_IMAGE="${AI_SERVICE_IMAGE}"
+          docker compose --profile app up -d ai-service --remove-orphans
+          echo "Ai-service deployment completed!"
+      env:
+        AI_SERVICE_IMAGE: bluenet-ai-service:${{ steps.vars.outputs.image_tag }}
+        DEPLOY_PATH: ${{ steps.vars.outputs.deploy_path }}
+
   # ==================== 健康检查阶段 ====================
 
   health-check:
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
-    needs: [deploy-api-service, deploy-judge-service]
+    needs: [deploy-api-service, deploy-judge-service, deploy-ai-service]
     timeout-minutes: 5
 
     steps:
@@ -595,6 +769,15 @@ jobs:
           echo "judge_host=${{ secrets.JUDGE_DEPLOY_HOST_PROD }}" >> $GITHUB_OUTPUT
         else
           echo "judge_host=${{ secrets.JUDGE_DEPLOY_HOST_DEV }}" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Set ai deployment variables
+      id: ai_vars
+      run: |
+        if [ "${{ github.ref }}" = "refs/heads/master" ]; then
+          echo "ai_host=${{ secrets.AI_DEPLOY_HOST_PROD }}" >> $GITHUB_OUTPUT
+        else
+          echo "ai_host=${{ secrets.AI_DEPLOY_HOST_DEV }}" >> $GITHUB_OUTPUT
         fi
 
     - name: Wait for api-service health check
@@ -633,6 +816,25 @@ jobs:
         done
 
         echo "❌ Judge-service health check failed after 5 minutes"
+        exit 1
+
+    - name: Wait for ai-service health check
+      run: |
+        URL="http://${{ steps.ai_vars.outputs.ai_host }}:8000/ai/v1/health"
+        echo "Waiting for ai-service at $URL to be healthy..."
+
+        for i in {1..30}; do
+          RESPONSE=$(curl -sfL "$URL" 2>/dev/null || echo "")
+          if echo "$RESPONSE" | grep -q '"status":"ok"'; then
+            echo "✅ Ai-service is healthy!"
+            echo "Response: $RESPONSE"
+            exit 0
+          fi
+          echo "Waiting for ai-service... ($i/30)"
+          sleep 10
+        done
+
+        echo "❌ Ai-service health check failed after 5 minutes"
         exit 1
 
   # ==================== 构建前端阶段 ====================

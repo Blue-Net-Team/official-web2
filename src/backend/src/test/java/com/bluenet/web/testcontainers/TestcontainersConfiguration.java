@@ -12,7 +12,7 @@ import org.testcontainers.utility.DockerImageName;
 @TestConfiguration(proxyBeanMethods = false)
 public class TestcontainersConfiguration {
 
-    private static final DockerImageName POSTGRES_IMAGE = DockerImageName.parse("postgres:17");
+    private static final DockerImageName POSTGRES_IMAGE = DockerImageName.parse("pgvector/pgvector:pg17");
     private static final DockerImageName MINIO_IMAGE = DockerImageName
             .parse("minio/minio:RELEASE.2025-09-07T16-13-09Z");
     private static final DockerImageName REDIS_IMAGE = DockerImageName.parse("redis:7");
