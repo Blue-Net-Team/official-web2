@@ -39,10 +39,21 @@ import { adminAssessmentQuestionService } from '@/apis/services/admin-assessment
 import { adminJudgeProblemConfigService } from '@/apis/services/admin-judge-problem-config.service'
 import { usePresignedUpload } from '@/hooks/usePresignedUpload'
 import { MarkdownRenderer, QuestionStemMarkdownEditor } from '@/components/Assessment'
+import CodeEditor from '@/components/CodeEditor'
+import type { CodeEditorProps } from '@/components/CodeEditor'
 import { QUESTION_TYPE_LABELS } from '@/app/admin/assessment/judge/shared'
 
 export type DrawerMode = 'view' | 'edit' | 'create'
 export { QUESTION_TYPE_LABELS }
+
+interface FormListCodeEditorProps extends Omit<CodeEditorProps, 'language'> {
+  languageFieldPath: (string | number)[]
+}
+
+function FormListCodeEditor({ languageFieldPath, ...rest }: FormListCodeEditorProps) {
+  const language = Form.useWatch(languageFieldPath)
+  return <CodeEditor {...rest} language={language} />
+}
 
 interface QuestionDrawerProps {
   open: boolean
@@ -404,6 +415,7 @@ export default function QuestionDrawer({
   const questionTypeValue = Form.useWatch('questionType', form)
   const optionsValue = Form.useWatch('options', form)
   const standardSolutionsValue = Form.useWatch('standardSolutions', form)
+  const generatorLanguage = Form.useWatch('generatorLanguage', form)
 
   // Populate form on open.
   useEffect(() => {
@@ -762,10 +774,11 @@ export default function QuestionDrawer({
                     rules={[{ required: true, message: '请输入模板代码' }]}
                     className="flex-1 mb-0"
                   >
-                    <Input.TextArea
-                      rows={8}
+                    <FormListCodeEditor
+                      languageFieldPath={['starterCodeTemplates', field.name, 'language']}
+                      readOnly={isViewMode}
+                      height={260}
                       placeholder="输入该语言的初始代码"
-                      disabled={isViewMode}
                     />
                   </Form.Item>
                   {!isViewMode && (
@@ -827,10 +840,11 @@ export default function QuestionDrawer({
         </Form.Item>
       </div>
       <Form.Item name="generatorSource" label="Generator 源码">
-        <Input.TextArea
-          rows={10}
+        <CodeEditor
+          language={generatorLanguage}
+          readOnly={isViewMode}
+          height={300}
           placeholder="输入用于生成测试数据的 generator 源码"
-          disabled={isViewMode}
         />
       </Form.Item>
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -895,10 +909,11 @@ export default function QuestionDrawer({
                     label="标准解源码"
                     className="flex-1 mb-0"
                   >
-                    <Input.TextArea
-                      rows={8}
+                    <FormListCodeEditor
+                      languageFieldPath={['standardSolutions', field.name, 'language']}
+                      readOnly={isViewMode}
+                      height={260}
                       placeholder="输入该语言标准解源码"
-                      disabled={isViewMode}
                     />
                   </Form.Item>
                   {!isViewMode && (

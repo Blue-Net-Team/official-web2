@@ -3,6 +3,7 @@
 import { Select } from 'antd'
 import { ExperimentOutlined } from '@ant-design/icons'
 import { MarkdownRenderer } from '@/components/Assessment'
+import CodeEditor from '@/components/CodeEditor'
 import { RESULT_LABELS, RESULT_COLOR_CLASSES } from './constants'
 import type { AlgorithmQuestionProps } from './types'
 import type { AlgorithmContent } from '@/apis/schema/assessment.dto'
@@ -124,12 +125,12 @@ export default function AlgorithmQuestion({
           </div>
           {answer?.judgement && renderResultBadge(answer.judgement.resultCode)}
         </div>
-        <textarea
+        <CodeEditor
           value={algorithmCode}
-          disabled={isExpired}
-          onChange={(event) => onCodeChange(event.target.value)}
-          className="w-full min-h-80 resize-y rounded-lg bg-black/30 border border-white/[0.08] p-4 text-sm text-white/80 font-mono outline-none focus:border-[#6677ff]/60 disabled:opacity-60"
-          spellCheck={false}
+          onChange={onCodeChange}
+          language={algorithmLanguage}
+          readOnly={isExpired}
+          height={320}
           placeholder="在这里编写标准输入输出代码"
         />
         <div className="flex flex-col gap-3">
