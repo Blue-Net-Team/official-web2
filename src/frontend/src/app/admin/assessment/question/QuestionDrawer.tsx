@@ -127,11 +127,21 @@ const CONTENT_TYPE_MAP: Record<QuestionType, string> = {
   ALGORITHM: 'algorithm',
 }
 
-const QUESTION_TYPE_OPTIONS: { value: QuestionType; label: string }[] = [
+const QUESTION_TYPE_OPTIONS: { value: QuestionType; label: React.ReactNode }[] = [
   { value: 'FILE_UPLOAD', label: '文件上传' },
   { value: 'SINGLE_CHOICE', label: '单选题' },
   { value: 'MULTIPLE_CHOICE', label: '多选题' },
-  { value: 'ALGORITHM', label: '算法题' },
+  {
+    value: 'ALGORITHM',
+    label: (
+      <Space size={4}>
+        算法题
+        <Tag color="blue" style={{ marginInlineEnd: 0 }}>
+          Beta
+        </Tag>
+      </Space>
+    ),
+  },
 ]
 
 const PROGRAMMING_LANGUAGE_OPTIONS: { value: ProgrammingLanguage; label: string }[] = [
