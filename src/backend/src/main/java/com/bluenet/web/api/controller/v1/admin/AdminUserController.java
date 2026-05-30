@@ -21,6 +21,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -46,7 +47,7 @@ public class AdminUserController {
     @GetMapping
     public ResponseMessage<PageDTO<AdminUserListItemResponseDTO>> getUserList(
             @Valid AdminUserListQueryDTO query) {
-        var page = adminUserAppService.getUserList(requestConverter.toCommand(query));
+        Page<AdminUserResult.ListItem> page = adminUserAppService.getUserList(requestConverter.toCommand(query));
         return ResponseMessage.success(responseConverter.toPageDTO(page));
     }
 

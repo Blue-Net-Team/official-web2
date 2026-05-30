@@ -71,7 +71,8 @@ class FileDomainServiceImplTest {
         @DisplayName("重复 confirm 已 ACTIVE 文件应返回成功")
         void confirmUpload_alreadyActive_shouldReturnSuccessIdempotently() {
             // 准备
-            File activeFile = File.reconstruct(TEST_FILE_ID, TEST_FILENAME, FileType.AVATAR, "url", FileStatus.ACTIVE);
+            File activeFile = File
+                    .reconstruct(TEST_FILE_ID, TEST_FILENAME, FileType.AVATAR, "url", FileStatus.ACTIVE, null);
 
             when(presignedUploadTokenService.getFileId(TEST_CALLBACK_TOKEN)).thenReturn(TEST_FILE_ID);
             when(fileRepository.findById(TEST_FILE_ID)).thenReturn(Optional.of(activeFile));
@@ -97,7 +98,7 @@ class FileDomainServiceImplTest {
         void confirmUpload_rejected_shouldThrowForbidden() {
             // 准备
             File rejectedFile = File
-                    .reconstruct(TEST_FILE_ID, TEST_FILENAME, FileType.AVATAR, "url", FileStatus.REJECTED);
+                    .reconstruct(TEST_FILE_ID, TEST_FILENAME, FileType.AVATAR, "url", FileStatus.REJECTED, null);
 
             when(presignedUploadTokenService.getFileId(TEST_CALLBACK_TOKEN)).thenReturn(TEST_FILE_ID);
             when(fileRepository.findById(TEST_FILE_ID)).thenReturn(Optional.of(rejectedFile));

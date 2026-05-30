@@ -17,6 +17,7 @@ import com.bluenet.web.domain.model.enumerate.FileType;
 import com.bluenet.web.domain.model.enumerate.Gender;
 import com.bluenet.web.domain.model.enumerate.MessageChannel;
 import com.bluenet.web.domain.model.enumerate.RoleType;
+import com.bluenet.web.domain.model.vo.EnrollStatisticsVO;
 import com.bluenet.web.domain.model.vo.RoleVO;
 import com.bluenet.web.domain.model.vo.UserVO;
 import com.bluenet.web.domain.repository.EnrollRepository;
@@ -293,8 +294,9 @@ public class EnrollAppServiceImpl implements EnrollAppService {
      */
     @Override
     public EnrollResult.Statistics getStatistics() {
-        var vo = enrollRepository.getStatistics();
-        return new EnrollResult.Statistics(vo.getTotal(), vo.getByStatus(), vo.getByDirection());
+        EnrollStatisticsVO statistics = enrollRepository.getStatistics();
+        return new EnrollResult.Statistics(statistics.getTotal(), statistics.getByStatus(),
+                statistics.getByDirection());
     }
 
     private void validateAssessmentGradeYear(Integer assessmentGradeYear) {
@@ -326,21 +328,25 @@ public class EnrollAppServiceImpl implements EnrollAppService {
         String encodedPassword = passwordEncoder.encode(hashedPassword);
         String referralCode = referralCodeGenerator.generate();
 
-        User user = User.builder()
-                .studentId(enroll.getStudentId())
-                .email(enroll.getEmail())
-                .password(encodedPassword)
-                .username(enroll.getUsername())
-                .collegeId(enroll.getCollegeId())
-                .major(enroll.getMajor())
-                .assessmentGradeYear(assessmentGradeYear)
-                .gender(enroll.getGender() != null ? enroll.getGender() : Gender.UNKNOWN)
-                .direction(enroll.getDirection())
-                .avatarId(enroll.getAvatarId())
-                .roleId(candidateRole.getId())
-                .disable(false)
-                .internalReferralCode(referralCode)
-                .build();
+        User user = User.create(
+                enroll.getStudentId(),
+                enroll.getEmail(),
+                candidateRole.getId(),
+                encodedPassword,
+                enroll.getUsername(),
+                null,
+                enroll.getCollegeId(),
+                enroll.getMajor(),
+                assessmentGradeYear,
+                enroll.getDirection(),
+                enroll.getGender() != null ? enroll.getGender() : Gender.UNKNOWN,
+                null,
+                enroll.getAvatarId(),
+                null,
+                null,
+                null,
+                referralCode,
+                null);
 
         userRepository.save(user);
         log.info("创建新用户 {}, 学号: {}, 内推码: {}", user.getId(), user.getStudentId(), referralCode);

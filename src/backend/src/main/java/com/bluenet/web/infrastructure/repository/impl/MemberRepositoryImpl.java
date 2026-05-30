@@ -179,28 +179,27 @@ public class MemberRepositoryImpl implements MemberRepository {
         if (dataObject == null) {
             return null;
         }
-        return User.builder()
-                .id(dataObject.getId())
-                .studentId(dataObject.getStudentId())
-                .email(dataObject.getEmail())
-                .roleId(dataObject.getRoleId())
-                .password(dataObject.getPassword())
-                .username(dataObject.getUsername())
-                .nickname(dataObject.getNickname())
-                .collegeId(dataObject.getCollegeId())
-                .major(dataObject.getMajor())
-                .assessmentGradeYear(dataObject.getAssessmentGradeYear())
-                .direction(dataObject.getDirection())
-                .gender(dataObject.getGender())
-                .job(dataObject.getJob())
-                .avatarId(dataObject.getAvatarId())
-                .disable(dataObject.getDisable())
-                .qrcodeId(dataObject.getQrcodeId())
-                .githubId(dataObject.getGithubId())
-                .githubUsername(dataObject.getGithubUsername())
-                .internalReferralCode(dataObject.getInternalReferralCode())
-                .bio(dataObject.getBio())
-                .build();
+        return User.reconstruct(
+                dataObject.getId(),
+                dataObject.getStudentId(),
+                dataObject.getEmail(),
+                dataObject.getRoleId(),
+                dataObject.getPassword(),
+                dataObject.getUsername(),
+                dataObject.getNickname(),
+                dataObject.getCollegeId(),
+                dataObject.getMajor(),
+                dataObject.getAssessmentGradeYear(),
+                dataObject.getDirection(),
+                dataObject.getGender(),
+                dataObject.getJob(),
+                dataObject.getAvatarId(),
+                dataObject.getDisable(),
+                dataObject.getQrcodeId(),
+                dataObject.getGithubId(),
+                dataObject.getGithubUsername(),
+                dataObject.getInternalReferralCode(),
+                dataObject.getBio());
     }
 
     private List<User> toUserList(List<UserDO> dataObjects) {
@@ -216,10 +215,7 @@ public class MemberRepositoryImpl implements MemberRepository {
         if (dataObject == null) {
             return null;
         }
-        return Role.builder()
-                .id(dataObject.getId())
-                .name(dataObject.getName())
-                .build();
+        return Role.reconstruct(dataObject.getId(), dataObject.getName());
     }
 
     private List<Role> toRoleList(List<RoleDO> dataObjects) {

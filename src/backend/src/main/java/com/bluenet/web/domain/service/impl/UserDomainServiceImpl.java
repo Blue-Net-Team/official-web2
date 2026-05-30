@@ -84,10 +84,7 @@ public class UserDomainServiceImpl implements UserDomainService {
     public void changePassword(Long userId, String rawNewPassword) {
         UserVO userVO = userRepository.findById(userId)
                 .orElseThrow(() -> new DataNotFound("用户不存在"));
-        User user = User.builder()
-                .id(userVO.getId())
-                .password(userVO.getPassword())
-                .build();
+        User user = User.reconstruct(userVO.getId(), userVO.getPassword());
         user.changePassword(passwordEncoder.encode(rawNewPassword));
         userRepository.updatePassword(user.getId(), user.getPassword());
     }

@@ -11,7 +11,9 @@ import com.bluenet.web.domain.model.enumerate.FileType;
 import com.bluenet.web.domain.model.enumerate.MessageChannel;
 import com.bluenet.web.domain.model.enumerate.RoleType;
 import com.bluenet.web.domain.model.vo.FileVO;
+import com.bluenet.web.domain.model.vo.TabCountsVO;
 import com.bluenet.web.domain.model.vo.UserVO;
+import com.bluenet.web.domain.model.vo.VerifyCodeVO;
 import com.bluenet.web.domain.repository.VerificationCodeRepository;
 import com.bluenet.web.domain.service.FileDomainService;
 import com.bluenet.web.domain.service.UserDomainService;
@@ -126,7 +128,7 @@ public class UserInfoAppServiceImpl implements UserInfoAppService {
     @Override
     public UserInfoResult.TabCounts getTabCounts() {
         Long userId = getCurrentUserId();
-        var tabCountsVO = userDomainService.getTabCounts(userId);
+        TabCountsVO tabCountsVO = userDomainService.getTabCounts(userId);
         return new UserInfoResult.TabCounts(
                 tabCountsVO.getProjects(),
                 tabCountsVO.getCompetitions(),
@@ -152,7 +154,7 @@ public class UserInfoAppServiceImpl implements UserInfoAppService {
         if (!"change-email-original".equals(scene) && !"change-email-new".equals(scene)) {
             throw new BadRequest("无效的验证码场景");
         }
-        var verifyCodeVO = verificationCodeDomainService.generateCode(email, scene);
+        VerifyCodeVO verifyCodeVO = verificationCodeDomainService.generateCode(email, scene);
         verificationCodeRepository.save(verifyCodeVO);
         String subject = "change-email-original".equals(scene) ? "蓝网修改邮箱 - 验证原邮箱" : "蓝网修改邮箱 - 验证新邮箱";
         VerificationCodeScene codeScene = "change-email-original".equals(scene)

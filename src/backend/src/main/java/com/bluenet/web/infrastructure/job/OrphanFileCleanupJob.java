@@ -1,6 +1,7 @@
 package com.bluenet.web.infrastructure.job;
 
 import com.bluenet.web.domain.model.entity.File;
+import com.bluenet.web.domain.model.enumerate.FileType;
 import com.bluenet.web.domain.repository.FileRepository;
 import com.bluenet.web.infrastructure.storage.ObjectStorage;
 import lombok.RequiredArgsConstructor;
@@ -56,7 +57,7 @@ public class OrphanFileCleanupJob {
     private void cleanupSingleFile(File file) {
         Long fileId = file.getId();
         String filename = file.getName();
-        var fileType = file.getType();
+        FileType fileType = file.getType();
 
         fileRepository.deleteFileById(fileId);
         log.info("已删除孤儿文件数据库记录: fileId={}, filename={}", fileId, filename);

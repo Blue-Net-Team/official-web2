@@ -228,7 +228,7 @@ class EntityCrudTest extends BaseIntegrationTest {
         // 验证所有枚举都能在实体中正确使用
 
         // FileType 在 File 实体中
-        File file = File.builder().name("test.jpg").type(FileType.AVATAR).url("/uploads/test.jpg").build();
+        File file = File.reconstruct(null, "test.jpg", FileType.AVATAR, "/uploads/test.jpg", FileStatus.ACTIVE, null);
 
         assertEquals(FileType.AVATAR, file.getType());
 

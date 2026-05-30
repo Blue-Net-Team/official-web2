@@ -97,13 +97,13 @@ public class FileDomainServiceImpl implements FileDomainService {
     public FileVO saveFile(FileType fileType, String filename, InputStream inputStream) {
         String newFilename = generateFilename(fileType, getFileExtension(filename));
 
-        File file = File.builder()
-                .name(newFilename)
-                .type(fileType)
-                .url(generateFileUrl(fileType))
-                .status(FileStatus.ACTIVE)
-                .createdAt(java.time.LocalDateTime.now())
-                .build();
+        File file = File.reconstruct(
+                null,
+                newFilename,
+                fileType,
+                generateFileUrl(fileType),
+                FileStatus.ACTIVE,
+                java.time.LocalDateTime.now());
         File savedFile = fileRepository.saveFile(inputStream, file);
 
         return convertToVO(savedFile);
@@ -120,13 +120,13 @@ public class FileDomainServiceImpl implements FileDomainService {
         String extension = getFileExtension(originalFilename);
         String filename = generateFilename(fileType, extension);
 
-        File file = File.builder()
-                .name(filename)
-                .type(fileType)
-                .url(generateFileUrl(fileType))
-                .status(FileStatus.PENDING)
-                .createdAt(java.time.LocalDateTime.now())
-                .build();
+        File file = File.reconstruct(
+                null,
+                filename,
+                fileType,
+                generateFileUrl(fileType),
+                FileStatus.PENDING,
+                java.time.LocalDateTime.now());
 
         File savedFile = fileRepository.saveFileMetadata(file);
         Long fileId = savedFile.getId();

@@ -8,7 +8,9 @@ import com.bluenet.web.api.dto.file.PrepareUploadRequestDTO;
 import com.bluenet.web.api.dto.file.PrepareUploadResponse;
 import com.bluenet.web.api.converter.file.FileRequestConverter;
 import com.bluenet.web.api.converter.file.FileResponseConverter;
+import com.bluenet.web.application.ConfirmUploadResult;
 import com.bluenet.web.application.FileResult;
+import com.bluenet.web.application.PresignedUploadResult;
 import com.bluenet.web.application.service.FileAppService;
 import com.bluenet.web.domain.exception.TooManyRequests;
 import com.bluenet.web.domain.exception.Unauthorized;
@@ -96,7 +98,7 @@ public class FileUploadController {
             }
         }
 
-        var result = fileAppService.prepareUpload(fileRequestConverter.toCommand(dto));
+        PresignedUploadResult result = fileAppService.prepareUpload(fileRequestConverter.toCommand(dto));
         log.info("预签名上传准备成功，文件id: {}, 类型: {}", result.fileId(), dto.getType());
         return ResponseMessage.success(fileResponseConverter.toPrepareUploadDTO(result));
     }
@@ -107,7 +109,7 @@ public class FileUploadController {
     @SecurityRequirement(name = "bearer-jwt")
     public ResponseMessage<ConfirmUploadResponse> confirmUpload(
             @Valid @org.springframework.web.bind.annotation.RequestBody ConfirmUploadRequestDTO dto) {
-        var result = fileAppService.confirmUpload(fileRequestConverter.toCommand(dto));
+        ConfirmUploadResult result = fileAppService.confirmUpload(fileRequestConverter.toCommand(dto));
         log.info("预签名上传确认完成，文件id: {}, 状态: {}", result.fileId(), result.status());
         return ResponseMessage.success(fileResponseConverter.toConfirmUploadDTO(result));
     }

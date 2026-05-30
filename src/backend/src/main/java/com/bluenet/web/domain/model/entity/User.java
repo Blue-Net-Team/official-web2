@@ -2,15 +2,14 @@ package com.bluenet.web.domain.model.entity;
 
 import com.bluenet.web.domain.model.enumerate.Direction;
 import com.bluenet.web.domain.model.enumerate.Gender;
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-@AllArgsConstructor
-@Builder
-@NoArgsConstructor
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class User {
     /**
      * 当前对象在系统中的唯一标识。
@@ -328,6 +327,13 @@ public class User {
         user.setGithubUsername(githubUsername);
         user.setInternalReferralCode(internalReferralCode);
         user.setBio(bio);
+        return user;
+    }
+
+    public static User reconstruct(Long id, String password) {
+        User user = new User();
+        user.setId(id);
+        user.setPassword(password);
         return user;
     }
 }

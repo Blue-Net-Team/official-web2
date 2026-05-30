@@ -4,14 +4,12 @@ import com.bluenet.web.domain.model.enumerate.FileStatus;
 import com.bluenet.web.domain.model.enumerate.FileType;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
-@Builder
 public class File {
     /**
      * 当前对象在系统中的唯一标识。
@@ -59,14 +57,7 @@ public class File {
         if (type == null) {
             throw new IllegalArgumentException("文件类型不能为空");
         }
-        return File.builder()
-                .id(null)
-                .name(name.trim())
-                .type(type)
-                .url(null)
-                .status(FileStatus.PENDING)
-                .createdAt(java.time.LocalDateTime.now())
-                .build();
+        return new File(null, name.trim(), type, null, FileStatus.PENDING, java.time.LocalDateTime.now());
     }
 
     /**
@@ -80,16 +71,12 @@ public class File {
      *            文件类型
      * @param url
      *            资源访问地址
+     * @param status
+     *            文件状态
+     * @param createdAt
+     *            创建时间
      * @return 重建的文件实体
      */
-    public static File reconstruct(Long id, String name, FileType type, String url) {
-        return new File(id, name, type, url, FileStatus.ACTIVE, null);
-    }
-
-    public static File reconstruct(Long id, String name, FileType type, String url, FileStatus status) {
-        return new File(id, name, type, url, status, null);
-    }
-
     public static File reconstruct(Long id, String name, FileType type, String url, FileStatus status,
             java.time.LocalDateTime createdAt) {
         return new File(id, name, type, url, status, createdAt);

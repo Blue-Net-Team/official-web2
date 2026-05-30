@@ -46,13 +46,25 @@ public class SystemUserInitializer implements CommandLineRunner {
             String hashedPassword = sha256Hash(rawPassword);
             String encodedPassword = passwordEncoder.encode(hashedPassword);
 
-            User systemUser = User.builder()
-                    .studentId(studentId)
-                    .username(systemUserProperties.getUsername())
-                    .password(encodedPassword)
-                    .disable(false)
-                    .roleId(role.getId())
-                    .build();
+            User systemUser = User.create(
+                    studentId,
+                    null,
+                    role.getId(),
+                    encodedPassword,
+                    systemUserProperties.getUsername(),
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null);
 
             userRepository.save(systemUser);
             log.info("System user created successfully with username: {}", systemUserProperties.getUsername());

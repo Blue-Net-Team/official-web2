@@ -27,6 +27,7 @@ import com.bluenet.web.api.dto.ResponseMessage;
 import com.bluenet.web.api.dto.venue.VenueDTO;
 import com.bluenet.web.domain.model.entity.File;
 import com.bluenet.web.domain.model.entity.Venue;
+import com.bluenet.web.domain.model.enumerate.FileStatus;
 import com.bluenet.web.domain.model.enumerate.FileType;
 import com.bluenet.web.infrastructure.repository.mapper.FileMapper;
 import com.bluenet.web.infrastructure.repository.mapper.VenueMapper;
@@ -62,12 +63,8 @@ class VenueControllerIntegrationTest extends BaseIntegrationTest {
     @BeforeEach
     void setUpTestData() {
         // 创建测试文件
-        File file = File.builder()
-                .id(TEST_FILE_ID)
-                .name(TEST_FILE_NAME)
-                .url(TEST_FILE_URL)
-                .type(TEST_FILE_TYPE)
-                .build();
+        File file = File
+                .reconstruct(TEST_FILE_ID, TEST_FILE_NAME, TEST_FILE_TYPE, TEST_FILE_URL, FileStatus.ACTIVE, null);
         RepositoryTestObjects.insert(fileMapper, file, FileDO.class);
 
         // 创建测试场地1

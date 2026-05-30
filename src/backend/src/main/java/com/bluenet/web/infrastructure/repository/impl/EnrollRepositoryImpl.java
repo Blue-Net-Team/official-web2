@@ -10,6 +10,8 @@ import com.bluenet.web.domain.model.vo.EnrollStatisticsVO;
 import com.bluenet.web.domain.repository.EnrollRepository;
 import com.bluenet.web.infrastructure.repository.converter.CollegeRepositoryConverter;
 import com.bluenet.web.infrastructure.repository.converter.EnrollRepositoryConverter;
+import com.bluenet.web.domain.model.entity.College;
+import com.bluenet.web.infrastructure.repository.dataobject.CollegeDO;
 import com.bluenet.web.infrastructure.repository.dataobject.EnrollDO;
 import com.bluenet.web.infrastructure.repository.dataobject.UserDO;
 import com.bluenet.web.infrastructure.repository.mapper.CollegeMapper;
@@ -149,8 +151,8 @@ public class EnrollRepositoryImpl implements EnrollRepository {
         if (collegeId == null) {
             return null;
         }
-        var collegeDO = collegeMapper.selectById(collegeId);
-        var college = collegeConverter.toEntity(collegeDO);
+        CollegeDO collegeDO = collegeMapper.selectById(collegeId);
+        College college = collegeConverter.toEntity(collegeDO);
         return college != null ? college.getName() : null;
     }
 
@@ -174,27 +176,26 @@ public class EnrollRepositoryImpl implements EnrollRepository {
         if (dataObject == null) {
             return null;
         }
-        return User.builder()
-                .id(dataObject.getId())
-                .studentId(dataObject.getStudentId())
-                .email(dataObject.getEmail())
-                .roleId(dataObject.getRoleId())
-                .password(dataObject.getPassword())
-                .username(dataObject.getUsername())
-                .nickname(dataObject.getNickname())
-                .collegeId(dataObject.getCollegeId())
-                .major(dataObject.getMajor())
-                .assessmentGradeYear(dataObject.getAssessmentGradeYear())
-                .direction(dataObject.getDirection())
-                .gender(dataObject.getGender())
-                .job(dataObject.getJob())
-                .avatarId(dataObject.getAvatarId())
-                .disable(dataObject.getDisable())
-                .qrcodeId(dataObject.getQrcodeId())
-                .githubId(dataObject.getGithubId())
-                .githubUsername(dataObject.getGithubUsername())
-                .internalReferralCode(dataObject.getInternalReferralCode())
-                .bio(dataObject.getBio())
-                .build();
+        return User.reconstruct(
+                dataObject.getId(),
+                dataObject.getStudentId(),
+                dataObject.getEmail(),
+                dataObject.getRoleId(),
+                dataObject.getPassword(),
+                dataObject.getUsername(),
+                dataObject.getNickname(),
+                dataObject.getCollegeId(),
+                dataObject.getMajor(),
+                dataObject.getAssessmentGradeYear(),
+                dataObject.getDirection(),
+                dataObject.getGender(),
+                dataObject.getJob(),
+                dataObject.getAvatarId(),
+                dataObject.getDisable(),
+                dataObject.getQrcodeId(),
+                dataObject.getGithubId(),
+                dataObject.getGithubUsername(),
+                dataObject.getInternalReferralCode(),
+                dataObject.getBio());
     }
 }

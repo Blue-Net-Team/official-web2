@@ -12,6 +12,7 @@ import com.bluenet.web.domain.model.enumerate.Direction;
 import com.bluenet.web.api.dto.qrcode.UpdateConsultationQrcodeRequestDTO;
 import com.bluenet.web.domain.model.entity.File;
 import com.bluenet.web.domain.model.entity.Qrcode;
+import com.bluenet.web.domain.model.enumerate.FileStatus;
 import com.bluenet.web.domain.model.enumerate.FileType;
 import com.bluenet.web.domain.model.enumerate.QrcodeType;
 import com.bluenet.web.infrastructure.repository.mapper.FileMapper;
@@ -275,7 +276,7 @@ class QrcodeControllerIntegrationTest extends BaseIntegrationTest {
     }
 
     private File createTestFileWithType(String filename, FileType type) {
-        File file = File.reconstruct(null, filename, type, "test-url/" + filename);
+        File file = File.reconstruct(null, filename, type, "test-url/" + filename, FileStatus.ACTIVE, null);
         RepositoryTestObjects.insert(fileMapper, file, FileDO.class);
         return file;
     }

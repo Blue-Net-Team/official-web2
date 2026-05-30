@@ -33,6 +33,7 @@ import com.bluenet.web.api.dto.auth.StudentIdLoginRequestDTO;
 import com.bluenet.web.api.dto.auth.UserAuthResponseDTO;
 import com.bluenet.web.domain.model.entity.*;
 import com.bluenet.web.domain.model.enumerate.Direction;
+import com.bluenet.web.domain.model.enumerate.FileStatus;
 import com.bluenet.web.domain.model.enumerate.FileType;
 import com.bluenet.web.infrastructure.repository.mapper.*;
 import com.bluenet.web.infrastructure.security.cache.PermissionCache;
@@ -85,7 +86,7 @@ class AdminAchievementControllerIntegrationTest extends BaseIntegrationTest {
 
     @BeforeEach
     void setUpTestData() {
-        File file = File.builder().name(TEST_FILE_NAME).url(TEST_FILE_URL).type(TEST_FILE_TYPE).build();
+        File file = File.reconstruct(null, TEST_FILE_NAME, TEST_FILE_TYPE, TEST_FILE_URL, FileStatus.ACTIVE, null);
         RepositoryTestObjects.insert(fileMapper, file, FileDO.class);
         testFileId = file.getId();
 

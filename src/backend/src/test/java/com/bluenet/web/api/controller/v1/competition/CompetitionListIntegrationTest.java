@@ -10,6 +10,7 @@ import com.bluenet.web.api.dto.competition.CompetitionResponseDTO;
 import com.bluenet.web.domain.model.entity.Competition;
 import com.bluenet.web.domain.model.entity.File;
 import com.bluenet.web.domain.model.enumerate.AwardLevel;
+import com.bluenet.web.domain.model.enumerate.FileStatus;
 import com.bluenet.web.domain.model.enumerate.FileType;
 import com.bluenet.web.infrastructure.repository.mapper.CompetitionMapper;
 import com.bluenet.web.infrastructure.repository.mapper.FileMapper;
@@ -64,11 +65,13 @@ class CompetitionListIntegrationTest extends BaseIntegrationTest {
     @BeforeEach
     void setUpTestData() {
         // 创建测试文件（不指定ID，使用自动生成的ID）
-        File logoFile = File.builder()
-                .name("logo.png")
-                .url("http://example.com/logo.png")
-                .type(FileType.NORMAL_IMG)
-                .build();
+        File logoFile = File.reconstruct(
+                null,
+                "logo.png",
+                FileType.NORMAL_IMG,
+                "http://example.com/logo.png",
+                FileStatus.ACTIVE,
+                null);
         RepositoryTestObjects.insert(fileMapper, logoFile, FileDO.class);
         logoFileId = logoFile.getId();
     }
@@ -120,11 +123,13 @@ class CompetitionListIntegrationTest extends BaseIntegrationTest {
     @DisplayName("集成测试：竞赛列表有coverFileId时应正确返回")
     void getCompetitionList_withCoverFile_shouldReturnCoverFileId() {
         // 创建封面文件
-        File coverFile = File.builder()
-                .name("cover.jpg")
-                .url("http://example.com/cover.jpg")
-                .type(FileType.NORMAL_IMG)
-                .build();
+        File coverFile = File.reconstruct(
+                null,
+                "cover.jpg",
+                FileType.NORMAL_IMG,
+                "http://example.com/cover.jpg",
+                FileStatus.ACTIVE,
+                null);
         RepositoryTestObjects.insert(fileMapper, coverFile, FileDO.class);
 
         // 准备：创建竞赛并设置封面
@@ -296,18 +301,22 @@ class CompetitionListIntegrationTest extends BaseIntegrationTest {
     @DisplayName("集成测试：多个竞赛各自应有正确的封面")
     void getCompetitionList_multipleCompetitionsWithCovers_shouldReturnCorrectCovers() {
         // 创建封面文件
-        File coverFile1 = File.builder()
-                .name("cover1.jpg")
-                .url("http://example.com/cover1.jpg")
-                .type(FileType.NORMAL_IMG)
-                .build();
+        File coverFile1 = File.reconstruct(
+                null,
+                "cover1.jpg",
+                FileType.NORMAL_IMG,
+                "http://example.com/cover1.jpg",
+                FileStatus.ACTIVE,
+                null);
         RepositoryTestObjects.insert(fileMapper, coverFile1, FileDO.class);
 
-        File coverFile2 = File.builder()
-                .name("cover2.jpg")
-                .url("http://example.com/cover2.jpg")
-                .type(FileType.NORMAL_IMG)
-                .build();
+        File coverFile2 = File.reconstruct(
+                null,
+                "cover2.jpg",
+                FileType.NORMAL_IMG,
+                "http://example.com/cover2.jpg",
+                FileStatus.ACTIVE,
+                null);
         RepositoryTestObjects.insert(fileMapper, coverFile2, FileDO.class);
 
         // 准备：创建两个竞赛，各自有封面

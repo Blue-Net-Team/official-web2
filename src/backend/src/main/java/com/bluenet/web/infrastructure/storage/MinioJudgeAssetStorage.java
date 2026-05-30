@@ -3,10 +3,11 @@ package com.bluenet.web.infrastructure.storage;
 import com.bluenet.web.infrastructure.config.properties.JudgeAssetStorageProperties;
 import com.bluenet.web.infrastructure.config.properties.StorageProperties;
 import io.minio.BucketExistsArgs;
+import io.minio.GetObjectArgs;
+import io.minio.GetObjectResponse;
 import io.minio.ListObjectsArgs;
 import io.minio.MakeBucketArgs;
 import io.minio.MinioClient;
-import io.minio.GetObjectArgs;
 import io.minio.PutObjectArgs;
 import io.minio.RemoveObjectArgs;
 import io.minio.Result;
@@ -118,7 +119,7 @@ public class MinioJudgeAssetStorage implements JudgeAssetStorage {
         try {
             MinioClient client = client();
             ensureBucket(client);
-            try (var stream = client.getObject(
+            try (GetObjectResponse stream = client.getObject(
                     GetObjectArgs.builder()
                             .bucket(judgeProperties.getBucket())
                             .object(objectKey)

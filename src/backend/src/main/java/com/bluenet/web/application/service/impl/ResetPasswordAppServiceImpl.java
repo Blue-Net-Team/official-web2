@@ -189,10 +189,7 @@ public class ResetPasswordAppServiceImpl implements ResetPasswordAppService {
         Long userId = Long.parseLong(userIdStr);
         UserVO userVO = userRepository.findById(userId)
                 .orElseThrow(() -> new BadRequest("用户不存在"));
-        User user = User.builder()
-                .id(userVO.getId())
-                .password(userVO.getPassword())
-                .build();
+        User user = User.reconstruct(userVO.getId(), userVO.getPassword());
         user.changePassword(passwordEncoder.encode(command.newPassword()));
         userRepository.updatePassword(user.getId(), user.getPassword());
 

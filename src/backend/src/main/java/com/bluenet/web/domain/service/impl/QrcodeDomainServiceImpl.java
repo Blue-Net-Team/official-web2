@@ -60,10 +60,7 @@ public class QrcodeDomainServiceImpl implements QrcodeDomainService {
         if (type == null) {
             throw new IllegalArgumentException("二维码类型不能为空");
         }
-        Qrcode qrcode = Qrcode.builder()
-                .fileId(fileVO.getId())
-                .type(type)
-                .build();
+        Qrcode qrcode = Qrcode.create(fileVO.getId(), type);
         qrcodeRepository.save(qrcode);
         log.info("二维码保存成功，fileId={}, type={}", fileVO.getId(), type);
     }

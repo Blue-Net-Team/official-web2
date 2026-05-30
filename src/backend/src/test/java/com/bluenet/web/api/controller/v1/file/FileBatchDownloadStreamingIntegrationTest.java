@@ -1,6 +1,7 @@
 package com.bluenet.web.api.controller.v1.file;
 
 import com.bluenet.web.BaseIntegrationTest;
+import com.bluenet.web.domain.model.enumerate.FileStatus;
 import com.bluenet.web.domain.model.enumerate.FileType;
 import com.bluenet.web.domain.model.vo.FileVO;
 import com.bluenet.web.domain.repository.FileRepository;
@@ -68,9 +69,9 @@ class FileBatchDownloadStreamingIntegrationTest extends BaseIntegrationTest {
 
     private FileVO createFile(String filename, FileType fileType, byte[] content) {
         com.bluenet.web.domain.model.entity.File file = com.bluenet.web.domain.model.entity.File
-                .reconstruct(null, filename, fileType, "test-url");
+                .reconstruct(null, filename, fileType, "test-url", FileStatus.ACTIVE, null);
         ByteArrayInputStream inputStream = new ByteArrayInputStream(content);
-        var savedFile = fileRepository.saveFile(inputStream, file);
+        com.bluenet.web.domain.model.entity.File savedFile = fileRepository.saveFile(inputStream, file);
         return FileVO.builder()
                 .id(savedFile.getId())
                 .name(savedFile.getName())

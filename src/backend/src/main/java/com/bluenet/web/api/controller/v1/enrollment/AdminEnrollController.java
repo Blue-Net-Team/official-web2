@@ -5,6 +5,7 @@ import com.bluenet.web.api.dto.enrollment.*;
 import com.bluenet.web.api.converter.enroll.EnrollRequestConverter;
 import com.bluenet.web.api.converter.enroll.EnrollResponseConverter;
 import com.bluenet.web.application.EnrollResult;
+import com.bluenet.web.application.command.enroll.EnrollCommands;
 import com.bluenet.web.application.service.EnrollAppService;
 import com.bluenet.web.domain.exception.DataNotFound;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
@@ -47,7 +48,8 @@ public class AdminEnrollController {
             @Parameter(description = "方向筛选") @RequestParam(required = false) String direction,
             @Parameter(description = "关键词搜索（姓名/学号）") @RequestParam(required = false) String keyword) {
 
-        var command = enrollRequestConverter.toListCommand(page, size, keyword, status, direction);
+        EnrollCommands.GetEnrollmentListCommand command = enrollRequestConverter
+                .toListCommand(page, size, keyword, status, direction);
         Page<EnrollResult.Brief> result = enrollAppService.getEnrollmentList(command);
         return ResponseMessage.success(enrollResponseConverter.toBriefDTOPage(result));
     }
@@ -81,7 +83,7 @@ public class AdminEnrollController {
             @Parameter(description = "报名ID", required = true) @PathVariable Long id,
             @Valid @RequestBody(required = false) ApproveEnrollmentRequestDTO request) {
         try {
-            var command = enrollRequestConverter.toCommand(request);
+            EnrollCommands.ApproveEnrollmentCommand command = enrollRequestConverter.toCommand(request);
             EnrollResult.Approval result = enrollAppService.approveEnrollment(id, command);
             return ResponseMessage.success("审核通过，账号已发放", enrollResponseConverter.toApprovalDTO(result));
         } catch (DataNotFound e) {
@@ -101,7 +103,7 @@ public class AdminEnrollController {
             @Parameter(description = "报名ID", required = true) @PathVariable Long id,
             @RequestBody(required = false) RejectEnrollmentRequestDTO request) {
         try {
-            var command = enrollRequestConverter.toCommand(request);
+            EnrollCommands.RejectEnrollmentCommand command = enrollRequestConverter.toCommand(request);
             EnrollResult.Approval result = enrollAppService.rejectEnrollment(id, command);
             return ResponseMessage.success("已拒绝", enrollResponseConverter.toApprovalDTO(result));
         } catch (DataNotFound e) {

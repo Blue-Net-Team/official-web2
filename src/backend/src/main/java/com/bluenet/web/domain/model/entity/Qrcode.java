@@ -3,14 +3,12 @@ package com.bluenet.web.domain.model.entity;
 import com.bluenet.web.domain.model.enumerate.QrcodeType;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
-@Builder
 public class Qrcode {
     /**
      * 当前对象在系统中的唯一标识。

@@ -29,6 +29,7 @@ import com.bluenet.web.domain.model.entity.Achievement;
 import com.bluenet.web.domain.model.entity.File;
 import com.bluenet.web.domain.model.enumerate.AchievementType;
 import com.bluenet.web.domain.model.enumerate.AwardLevel;
+import com.bluenet.web.domain.model.enumerate.FileStatus;
 import com.bluenet.web.domain.model.enumerate.FileType;
 import com.bluenet.web.infrastructure.repository.mapper.AchievementMapper;
 import com.bluenet.web.infrastructure.repository.mapper.FileMapper;
@@ -54,11 +55,13 @@ class AchievementControllerIntegrationTest extends BaseIntegrationTest {
 
     @BeforeEach
     void setUpTestData() {
-        File file = File.builder()
-                .name("test-achievement.jpg")
-                .url("http://example.com/test.jpg")
-                .type(FileType.NORMAL_IMG)
-                .build();
+        File file = File.reconstruct(
+                null,
+                "test-achievement.jpg",
+                FileType.NORMAL_IMG,
+                "http://example.com/test.jpg",
+                FileStatus.ACTIVE,
+                null);
         RepositoryTestObjects.insert(fileMapper, file, FileDO.class);
         testFileId = file.getId();
     }

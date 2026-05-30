@@ -1,6 +1,7 @@
 package com.bluenet.web.infrastructure.repository.impl;
 
 import com.bluenet.web.domain.model.entity.File;
+import com.bluenet.web.domain.model.enumerate.FileStatus;
 import com.bluenet.web.domain.model.enumerate.FileType;
 import com.bluenet.web.domain.repository.FileRepository;
 import com.bluenet.web.infrastructure.repository.converter.FileRepositoryConverter;
@@ -42,7 +43,7 @@ class FileRepositoryImplTest {
     @DisplayName("saveFile persists metadata and delegates object storage")
     void saveFile_ShouldPersistMetadataAndDelegateObjectStorage() {
         InputStream inputStream = new ByteArrayInputStream("test content".getBytes());
-        File file = File.builder().name("test.jpg").type(FileType.NORMAL_IMG).build();
+        File file = File.reconstruct(null, "test.jpg", FileType.NORMAL_IMG, null, FileStatus.ACTIVE, null);
 
         repository.saveFile(inputStream, file);
 
@@ -62,7 +63,7 @@ class FileRepositoryImplTest {
     @DisplayName("saveFile rejects empty filename")
     void saveFile_EmptyFilename_ShouldThrowException() {
         InputStream inputStream = new ByteArrayInputStream("test".getBytes());
-        File file = File.builder().name("").type(FileType.AVATAR).build();
+        File file = File.reconstruct(null, "", FileType.AVATAR, null, FileStatus.ACTIVE, null);
 
         assertThatThrownBy(() -> repository.saveFile(inputStream, file))
                 .isInstanceOf(IllegalArgumentException.class)
@@ -72,7 +73,7 @@ class FileRepositoryImplTest {
     @Test
     @DisplayName("saveFile rejects null input stream")
     void saveFile_NullInputStream_ShouldThrowException() {
-        File file = File.builder().name("test.jpg").type(FileType.AVATAR).build();
+        File file = File.reconstruct(null, "test.jpg", FileType.AVATAR, null, FileStatus.ACTIVE, null);
 
         assertThatThrownBy(() -> repository.saveFile((InputStream) null, file))
                 .isInstanceOf(IllegalArgumentException.class)
@@ -83,7 +84,7 @@ class FileRepositoryImplTest {
     @DisplayName("saveFile rejects null file type")
     void saveFile_NullFileType_ShouldThrowException() {
         InputStream inputStream = new ByteArrayInputStream("test".getBytes());
-        File file = File.builder().name("test.jpg").type(null).build();
+        File file = File.reconstruct(null, "test.jpg", null, null, FileStatus.ACTIVE, null);
 
         assertThatThrownBy(() -> repository.saveFile(inputStream, file))
                 .isInstanceOf(IllegalArgumentException.class)

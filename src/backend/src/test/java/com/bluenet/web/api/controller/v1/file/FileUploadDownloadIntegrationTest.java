@@ -11,6 +11,7 @@ import com.bluenet.web.domain.model.entity.AssessmentTime;
 import com.bluenet.web.domain.model.entity.File;
 import com.bluenet.web.domain.model.entity.User;
 import com.bluenet.web.domain.model.enumerate.Direction;
+import com.bluenet.web.domain.model.enumerate.FileStatus;
 import com.bluenet.web.domain.model.enumerate.FileType;
 import com.bluenet.web.domain.model.vo.FileVO;
 import com.bluenet.web.domain.repository.FileRepository;
@@ -92,7 +93,7 @@ class FileUploadDownloadIntegrationTest extends BaseIntegrationTest {
     }
 
     private FileVO createFileInMinio(String filename, FileType fileType) {
-        File file = File.reconstruct(null, filename, fileType, "test-url");
+        File file = File.reconstruct(null, filename, fileType, "test-url", FileStatus.ACTIVE, null);
         ByteArrayInputStream inputStream = new ByteArrayInputStream("test content".getBytes(StandardCharsets.UTF_8));
         var savedFile = fileRepository.saveFile(inputStream, file);
         return FileVO.builder()

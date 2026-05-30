@@ -35,18 +35,8 @@ class OrphanFileCleanupJobTest {
     @Test
     @DisplayName("cleanup deletes orphan files from database and object storage")
     void cleanup_ShouldDeleteOrphanFiles() {
-        File orphan1 = File.builder()
-                .id(1L)
-                .name("orphan1.jpg")
-                .type(FileType.NORMAL_IMG)
-                .status(FileStatus.ACTIVE)
-                .build();
-        File orphan2 = File.builder()
-                .id(2L)
-                .name("orphan2.jpg")
-                .type(FileType.AVATAR)
-                .status(FileStatus.REJECTED)
-                .build();
+        File orphan1 = File.reconstruct(1L, "orphan1.jpg", FileType.NORMAL_IMG, null, FileStatus.ACTIVE, null);
+        File orphan2 = File.reconstruct(2L, "orphan2.jpg", FileType.AVATAR, null, FileStatus.REJECTED, null);
 
         when(fileRepository.findOrphanFiles()).thenReturn(List.of(orphan1, orphan2));
 
@@ -72,18 +62,8 @@ class OrphanFileCleanupJobTest {
     @Test
     @DisplayName("cleanup continues when single file deletion fails")
     void cleanup_SingleFailure_ShouldContinue() {
-        File orphan1 = File.builder()
-                .id(1L)
-                .name("orphan1.jpg")
-                .type(FileType.NORMAL_IMG)
-                .status(FileStatus.ACTIVE)
-                .build();
-        File orphan2 = File.builder()
-                .id(2L)
-                .name("orphan2.jpg")
-                .type(FileType.AVATAR)
-                .status(FileStatus.REJECTED)
-                .build();
+        File orphan1 = File.reconstruct(1L, "orphan1.jpg", FileType.NORMAL_IMG, null, FileStatus.ACTIVE, null);
+        File orphan2 = File.reconstruct(2L, "orphan2.jpg", FileType.AVATAR, null, FileStatus.REJECTED, null);
 
         when(fileRepository.findOrphanFiles()).thenReturn(List.of(orphan1, orphan2));
         doThrow(new RuntimeException("DB error")).when(fileRepository).deleteFileById(1L);
@@ -99,12 +79,7 @@ class OrphanFileCleanupJobTest {
     @Test
     @DisplayName("cleanup handles object storage deletion failure after db record removed")
     void cleanup_ObjectStorageFailure_ShouldLogAndContinue() {
-        File orphan = File.builder()
-                .id(1L)
-                .name("orphan.jpg")
-                .type(FileType.NORMAL_IMG)
-                .status(FileStatus.ACTIVE)
-                .build();
+        File orphan = File.reconstruct(1L, "orphan.jpg", FileType.NORMAL_IMG, null, FileStatus.ACTIVE, null);
 
         when(fileRepository.findOrphanFiles()).thenReturn(List.of(orphan));
         doThrow(new RuntimeException("OSS error")).when(objectStorage).delete(FileType.NORMAL_IMG, "orphan.jpg");
