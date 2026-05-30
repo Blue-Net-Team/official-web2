@@ -6,6 +6,8 @@ from llm_providers import EmbeddingFactory, LLMFactory
 from retrieval import PgVectorStore, TagRecord
 from loguru import logger
 from retrieval.base import ChunkRecord
+from tag_normalization import normalize_tags, get_canonical_tags
+
 _log = logger.bind(module="load2db_pipeline")
 
 DOC_FOLDER_PATH = "..\\..\\docs\\ai-knowledge-base"
@@ -18,10 +20,16 @@ chunker = SemanticChunker(llm)
 # 标签生成提示
 TAG_GENERATION_PROMPT = """\
 请为以下文本生成2-3个简短标签（中文标签），用于信息检索分类。
+
+【标签规范】
+以下是我们已经标准化的标签名称，生成标签时优先使用这些标准名称，不要创建同义词：
+{canonical_tags}
+
 已有可用标签: {existing_tags}
 
-如果以下文本的主题与已有标签匹配，请直接输出对应的已有标签名；
-如果已有标签都不合适，再生成新的简短标签。
+如果文本主题与已有标签匹配，请直接输出对应的已有标签名；
+如果都不合适，再生成新的简短标签，但新标签应语义清晰、避免与上述标准标签重复表达同一概念。
+
 只输出标签，用英文逗号分隔，不要输出任何其他内容。
 
 文本: {text}"""
@@ -63,20 +71,26 @@ async def _load_all_chunks() -> list[str]:
 
 
 def _generate_tags_for_chunk(chunk: str, existing_tags: list[str]) -> list[str]:
-    """为单个 chunk 生成标签，复用已有标签。"""
+    """为单个 chunk 生成标签，复用已有标签，并做同义词归一化。"""
     prompt = TAG_GENERATION_PROMPT.format(
-        existing_tags=existing_tags, text=chunk
+        canonical_tags=get_canonical_tags(),
+        existing_tags=existing_tags,
+        text=chunk,
     )
     response = llm.invoke([{"role": "user", "content": prompt}])
-    tags = [t.strip() for t in response.strip().split(",") if t.strip()]
-    return tags
+    raw_tags = [t.strip() for t in response.strip().split(",") if t.strip()]
+    # 同义词归一化：将"嵌入式"→"电控方向"、"机械设计"→"结构方向"等
+    normalized = normalize_tags(raw_tags)
+    if normalized != raw_tags:
+        _log.debug(f"标签归一化: {raw_tags} → {normalized}")
+    return normalized
 
 
 async def load2db_pipeline():
     # 执行异步文档加载
     chunks = await _load_all_chunks()
 
-    # 阶段一：收集所有 chunk 的标签（全局去重）
+    # 阶段一：收集所有 chunk 的标签（全局去重，已含归一化）
     chunk_tag_map: dict[str, list[str]] = {}
     all_tag_names: set[str] = set()
 
