@@ -700,9 +700,7 @@ export interface EnrollmentDetailDTO {
  */
 export interface EnrollmentStatisticsDTO {
   total: number
-  pending: number
-  approved: number
-  rejected: number
+  byStatus: Record<string, number>
   byDirection: Record<string, number>
 }
 

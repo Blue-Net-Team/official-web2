@@ -1,5 +1,6 @@
 package com.bluenet.web.api.controller.v1.enrollment;
 
+import com.bluenet.web.api.dto.PageDTO;
 import com.bluenet.web.api.dto.ResponseMessage;
 import com.bluenet.web.api.dto.enrollment.*;
 import com.bluenet.web.api.converter.enroll.EnrollRequestConverter;
@@ -41,7 +42,7 @@ public class AdminEnrollController {
     })
     @RequiresPermission(name = "查询报名列表", value = "enrollment:list", access = AccessLevel.PROTECTED)
     @GetMapping
-    public ResponseMessage<Page<EnrollmentBriefDTO>> getEnrollmentList(
+    public ResponseMessage<PageDTO<EnrollmentBriefDTO>> getEnrollmentList(
             @Parameter(description = "页码，从0开始") @RequestParam(defaultValue = "0") Integer page,
             @Parameter(description = "每页数量，默认20，最大100") @RequestParam(defaultValue = "20") Integer size,
             @Parameter(description = "状态筛选：pending/approved/rejected") @RequestParam(required = false) String status,
@@ -51,7 +52,7 @@ public class AdminEnrollController {
         EnrollCommands.GetEnrollmentListCommand command = enrollRequestConverter
                 .toListCommand(page, size, keyword, status, direction);
         Page<EnrollResult.Brief> result = enrollAppService.getEnrollmentList(command);
-        return ResponseMessage.success(enrollResponseConverter.toBriefDTOPage(result));
+        return ResponseMessage.success(PageDTO.from(enrollResponseConverter.toBriefDTOPage(result)));
     }
 
     @Operation(summary = "获取报名详情", description = "管理员获取单个报名的详细信息")

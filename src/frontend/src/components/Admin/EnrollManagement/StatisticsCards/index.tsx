@@ -16,6 +16,7 @@ interface StatisticsCardsProps {
 const cardStyle: React.CSSProperties = { borderColor: 'rgba(255,255,255,0.12)' }
 
 export const StatisticsCards: React.FC<StatisticsCardsProps> = ({ statistics }) => {
+  const byStatus = statistics?.byStatus ?? {}
   const items = [
     {
       title: '总报名',
@@ -25,19 +26,19 @@ export const StatisticsCards: React.FC<StatisticsCardsProps> = ({ statistics }) 
     },
     {
       title: '待审核',
-      value: statistics?.pending ?? 0,
+      value: byStatus['pending'] ?? byStatus['PENDING'] ?? 0,
       icon: <ClockCircleOutlined />,
       contentStyle: { color: '#1677ff' },
     },
     {
       title: '已通过',
-      value: statistics?.approved ?? 0,
+      value: byStatus['approved'] ?? byStatus['APPROVED'] ?? 0,
       icon: <CheckCircleOutlined />,
       contentStyle: { color: '#52c41a' },
     },
     {
       title: '已拒绝',
-      value: statistics?.rejected ?? 0,
+      value: byStatus['rejected'] ?? byStatus['REJECTED'] ?? 0,
       icon: <CloseCircleOutlined />,
       contentStyle: { color: '#ff4d4f' },
     },
