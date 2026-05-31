@@ -841,6 +841,7 @@ export interface AdminUserListItemDTO {
   job: string | null
   disable: boolean
   avatarFileId: number | null
+  assessmentGradeYear: number | null
 }
 
 export interface AdminUserDetailDTO {

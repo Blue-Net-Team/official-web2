@@ -167,7 +167,7 @@ export default function AdminUserManagementPage() {
       collegeId: undefined,
       major: user.major ?? undefined,
       gender: user.gender ?? undefined,
-      assessmentGradeYear: undefined,
+      assessmentGradeYear: user.assessmentGradeYear ?? undefined,
     })
     setEditModalOpen(true)
   }
@@ -463,6 +463,12 @@ export default function AdminUserManagementPage() {
       render: (v: string | null) => (v ? GENDER_LABELS[v as keyof typeof GENDER_LABELS] || v : '-'),
     },
     {
+      title: '考核年级',
+      dataIndex: 'assessmentGradeYear',
+      width: 100,
+      render: (v: number | null) => v ?? '-',
+    },
+    {
       title: '状态',
       dataIndex: 'disable',
       width: 80,
@@ -647,6 +653,9 @@ export default function AdminUserManagementPage() {
                   : '-'}
               </Descriptions.Item>
               <Descriptions.Item label="职位">{detailData.job || '-'}</Descriptions.Item>
+              <Descriptions.Item label="考核年级">
+                {detailData.assessmentGradeYear ?? '-'}
+              </Descriptions.Item>
               <Descriptions.Item label="GitHub">
                 {detailData.githubUsername || '-'}
               </Descriptions.Item>

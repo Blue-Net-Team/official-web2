@@ -42,4 +42,6 @@ public class AdminUserListItemResponseDTO {
     private Boolean disable;
     @Schema(description = "头像文件ID")
     private Long avatarFileId;
+    @Schema(description = "考核年级年份")
+    private Integer assessmentGradeYear;
 }

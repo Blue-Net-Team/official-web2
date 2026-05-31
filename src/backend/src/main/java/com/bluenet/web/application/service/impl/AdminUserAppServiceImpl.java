@@ -242,7 +242,7 @@ public class AdminUserAppServiceImpl implements AdminUserAppService {
                 user.getId(), user.getStudentId(), user.getUsername(), user.getNickname(),
                 user.getEmail(), user.getRoleId(), roleName, user.getDirection(),
                 collegeName, user.getMajor(), user.getGender(), user.getJob(),
-                user.getDisable(), user.getAvatarId());
+                user.getDisable(), user.getAvatarId(), user.getAssessmentGradeYear());
     }
 
     private AdminUserResult.Detail toDetail(User user, UserRepository.UserStatistics stats) {

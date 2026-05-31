@@ -37,6 +37,7 @@ public class AdminUserResponseConverter {
                 .job(item.job())
                 .disable(item.disable())
                 .avatarFileId(item.avatarFileId())
+                .assessmentGradeYear(item.assessmentGradeYear())
                 .build();
     }
 

@@ -28,7 +28,8 @@ public class AdminUserResult {
             Gender gender,
             String job,
             Boolean disable,
-            Long avatarFileId) {
+            Long avatarFileId,
+            Integer assessmentGradeYear) {
     }
 
     /**
