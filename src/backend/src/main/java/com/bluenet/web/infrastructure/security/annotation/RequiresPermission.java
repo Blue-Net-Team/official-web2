@@ -27,4 +27,9 @@ public @interface RequiresPermission {
      * 访问级别 默认 PROTECTED（需要权限校验）
      */
     AccessLevel access() default AccessLevel.PROTECTED;
+
+    /**
+     * 是否记录审计日志 默认 true（记录）
+     */
+    boolean audit() default true;
 }

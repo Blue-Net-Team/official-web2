@@ -68,6 +68,10 @@ public class AuditAspect {
 
     @Around("@annotation(requiresPermission)")
     public Object audit(ProceedingJoinPoint pjp, RequiresPermission requiresPermission) throws Throwable {
+        if (!requiresPermission.audit()) {
+            return pjp.proceed();
+        }
+
         long startTime = System.currentTimeMillis();
 
         HttpServletRequest request = getCurrentRequest();
