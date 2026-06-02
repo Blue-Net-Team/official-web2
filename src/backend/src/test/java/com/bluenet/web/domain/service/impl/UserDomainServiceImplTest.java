@@ -1,9 +1,12 @@
 package com.bluenet.web.domain.service.impl;
 
 import com.bluenet.web.domain.exception.DataNotFound;
+import com.bluenet.web.domain.exception.BadRequest;
 import com.bluenet.web.domain.model.enumerate.Direction;
+import com.bluenet.web.domain.model.enumerate.FileType;
 import com.bluenet.web.domain.model.enumerate.Gender;
 import com.bluenet.web.domain.model.vo.FileVO;
+import com.bluenet.web.domain.service.FileDomainService;
 import com.bluenet.web.domain.model.vo.TabCountsVO;
 import com.bluenet.web.domain.model.vo.UserVO;
 import com.bluenet.web.domain.repository.UserRepository;
@@ -34,6 +37,9 @@ class UserDomainServiceImplTest {
 
     @Mock
     private PasswordEncoder passwordEncoder;
+
+    @Mock
+    private FileDomainService fileDomainService;
 
     @InjectMocks
     private UserDomainServiceImpl userDomainService;
@@ -102,7 +108,8 @@ class UserDomainServiceImplTest {
                 TEST_MAJOR,
                 Direction.COMPUTER_VISION,
                 Gender.MALE,
-                TEST_BIO);
+                TEST_BIO,
+                null);
 
         verify(userRepository).findById(TEST_USER_ID);
         verify(userRepository).updateProfile(
@@ -114,6 +121,7 @@ class UserDomainServiceImplTest {
                 eq(Direction.COMPUTER_VISION),
                 eq(Gender.MALE),
                 eq(TEST_BIO));
+        verify(userRepository).updateQrcodeId(TEST_USER_ID, null);
     }
 
     @Test
@@ -130,7 +138,8 @@ class UserDomainServiceImplTest {
                         TEST_MAJOR,
                         Direction.COMPUTER_VISION,
                         Gender.MALE,
-                        TEST_BIO));
+                        TEST_BIO,
+                        null));
 
         verify(userRepository).findById(TEST_USER_ID);
         verify(userRepository, never()).updateProfile(anyLong(), any(), any(), any(), any(), any(), any(), any());
@@ -156,8 +165,9 @@ class UserDomainServiceImplTest {
                         isNull(),
                         isNull(),
                         isNull())).thenReturn(1);
+        when(userRepository.updateQrcodeId(TEST_USER_ID, null)).thenReturn(1);
 
-        userDomainService.updateProfile(TEST_USER_ID, null, null, null, null, null, null, null);
+        userDomainService.updateProfile(TEST_USER_ID, null, null, null, null, null, null, null, null);
 
         verify(userRepository).updateProfile(
                 eq(TEST_USER_ID),
@@ -168,6 +178,90 @@ class UserDomainServiceImplTest {
                 isNull(),
                 isNull(),
                 isNull());
+        verify(userRepository).updateQrcodeId(TEST_USER_ID, null);
+    }
+
+    @Test
+    void updateProfile_withValidQrcodeFileId_updatesQrcode() {
+        UserVO userVO = UserVO.builder()
+                .id(TEST_USER_ID)
+                .username(TEST_USERNAME)
+                .build();
+        FileVO qrcodeFile = FileVO.builder().id(100L).type(FileType.QRCODE).build();
+
+        when(userRepository.findById(TEST_USER_ID)).thenReturn(Optional.of(userVO));
+        when(fileDomainService.getFileById(100L)).thenReturn(qrcodeFile);
+        when(userRepository.updateProfile(anyLong(), any(), any(), any(), any(), any(), any(), any())).thenReturn(1);
+        when(userRepository.updateQrcodeId(TEST_USER_ID, 100L)).thenReturn(1);
+
+        userDomainService.updateProfile(
+                TEST_USER_ID,
+                TEST_USERNAME,
+                TEST_NICKNAME,
+                TEST_COLLEGE,
+                TEST_MAJOR,
+                Direction.COMPUTER_VISION,
+                Gender.MALE,
+                TEST_BIO,
+                100L);
+
+        verify(fileDomainService).getFileById(100L);
+        verify(userRepository).updateQrcodeId(TEST_USER_ID, 100L);
+    }
+
+    @Test
+    void updateProfile_withQrcodeFileNotFound_throwsDataNotFound() {
+        UserVO userVO = UserVO.builder()
+                .id(TEST_USER_ID)
+                .username(TEST_USERNAME)
+                .build();
+
+        when(userRepository.findById(TEST_USER_ID)).thenReturn(Optional.of(userVO));
+        when(fileDomainService.getFileById(999L)).thenReturn(null);
+
+        DataNotFound ex = assertThrows(
+                DataNotFound.class,
+                () -> userDomainService.updateProfile(
+                        TEST_USER_ID,
+                        TEST_USERNAME,
+                        TEST_NICKNAME,
+                        TEST_COLLEGE,
+                        TEST_MAJOR,
+                        Direction.COMPUTER_VISION,
+                        Gender.MALE,
+                        TEST_BIO,
+                        999L));
+
+        assertEquals("文件不存在", ex.getMessage());
+        verify(userRepository, never()).updateQrcodeId(anyLong(), any());
+    }
+
+    @Test
+    void updateProfile_withQrcodeFileTypeMismatch_throwsBadRequest() {
+        UserVO userVO = UserVO.builder()
+                .id(TEST_USER_ID)
+                .username(TEST_USERNAME)
+                .build();
+        FileVO wrongFile = FileVO.builder().id(100L).type(FileType.AVATAR).build();
+
+        when(userRepository.findById(TEST_USER_ID)).thenReturn(Optional.of(userVO));
+        when(fileDomainService.getFileById(100L)).thenReturn(wrongFile);
+
+        BadRequest ex = assertThrows(
+                BadRequest.class,
+                () -> userDomainService.updateProfile(
+                        TEST_USER_ID,
+                        TEST_USERNAME,
+                        TEST_NICKNAME,
+                        TEST_COLLEGE,
+                        TEST_MAJOR,
+                        Direction.COMPUTER_VISION,
+                        Gender.MALE,
+                        TEST_BIO,
+                        100L));
+
+        assertEquals("文件类型不匹配，期望 QRCODE", ex.getMessage());
+        verify(userRepository, never()).updateQrcodeId(anyLong(), any());
     }
 
     @Test

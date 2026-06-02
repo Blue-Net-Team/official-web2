@@ -35,7 +35,9 @@ public record UserInfoResult(
         /** 个人简介 */
         String bio,
         /** GitHub用户名 */
-        String githubUsername) {
+        String githubUsername,
+        /** 微信二维码URL */
+        String wechatQrcode) {
     /**
      * 各标签页数量统计。
      */

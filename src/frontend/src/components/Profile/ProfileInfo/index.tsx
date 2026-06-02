@@ -21,10 +21,21 @@ import {
   ROLE_LABELS,
   getRoleTagColor,
 } from '@/apis/schema/enumerate'
-import { EditOutlined, SaveOutlined, CloseOutlined } from '@ant-design/icons'
-import { Form, Input, Button, message, Select, Tag } from 'antd'
+import {
+  EditOutlined,
+  SaveOutlined,
+  CloseOutlined,
+  UploadOutlined,
+  DeleteOutlined,
+  QrcodeOutlined,
+} from '@ant-design/icons'
+import { Form, Input, Button, message, Select, Tag, Upload } from 'antd'
+import type { UploadFile } from 'antd/es/upload/interface'
 import { userService } from '@/apis/services/user.service'
+import { fileService } from '@/apis/services/file.service'
 import { useAuth } from '@/hooks'
+import Image from 'next/image'
+import { API_BASE_URL } from '@/apis/config'
 import GitHubBinding from './GitHubBinding'
 import ChangeEmailModal from './ChangeEmailModal'
 import EmailSettings from './EmailSettings'
@@ -51,6 +62,9 @@ export default function ProfileInfo({ profile, onUpdate }: ProfileInfoProps) {
   const { userInfo: currentUser } = useAuth()
   const canEditExtendedFields = isMemberOrAbove(currentUser?.roleName)
 
+  const [qrcodeFileId, setQrcodeFileId] = useState<number | null>(profile.qrcodeFileId)
+  const [qrcodeUploading, setQrcodeUploading] = useState(false)
+
   const handleEdit = () => {
     form.setFieldsValue({
       username: profile.username,
@@ -60,7 +74,9 @@ export default function ProfileInfo({ profile, onUpdate }: ProfileInfoProps) {
       college: profile.college,
       major: profile.major,
       direction: profile.direction,
+      qrcodeFileId: profile.qrcodeFileId,
     })
+    setQrcodeFileId(profile.qrcodeFileId)
     setIsEditing(true)
   }
 
@@ -72,7 +88,11 @@ export default function ProfileInfo({ profile, onUpdate }: ProfileInfoProps) {
   const handleSubmit = async (values: UpdateProfileRequestDTO) => {
     setIsSubmitting(true)
     try {
-      const res = await userService.updateProfile(values)
+      const payload: UpdateProfileRequestDTO = {
+        ...values,
+        qrcodeFileId: qrcodeFileId,
+      }
+      const res = await userService.updateProfile(payload)
       if (res.code === 200) {
         message.success('保存成功')
         setIsEditing(false)
@@ -85,6 +105,28 @@ export default function ProfileInfo({ profile, onUpdate }: ProfileInfoProps) {
     } finally {
       setIsSubmitting(false)
     }
+  }
+
+  const handleQrcodeUpload = async (file: File) => {
+    setQrcodeUploading(true)
+    try {
+      const res = await fileService.upload(file, 'QRCODE')
+      if (res.code === 200 && res.data) {
+        setQrcodeFileId(res.data.id)
+        message.success('二维码上传成功')
+      } else {
+        message.error(res.msg || '二维码上传失败')
+      }
+    } catch {
+      message.error('二维码上传失败，请重试')
+    } finally {
+      setQrcodeUploading(false)
+    }
+    return false
+  }
+
+  const handleQrcodeRemove = () => {
+    setQrcodeFileId(null)
   }
 
   const directionLabel = profile.direction ? DIRECTION_LABELS[profile.direction] : '-'
@@ -206,6 +248,48 @@ export default function ProfileInfo({ profile, onUpdate }: ProfileInfoProps) {
                 className="!rounded-[10px]"
               />
             </Form.Item>
+
+            {/* 微信二维码 - 所有人可编辑 */}
+            <Form.Item
+              className="col-span-full"
+              label={<span className="text-sm font-medium text-white/80">微信二维码</span>}
+            >
+              {qrcodeFileId ? (
+                <div className="flex items-center gap-4">
+                  <div className="w-[120px] h-[120px] rounded-[10px] bg-white/[0.02] p-2 overflow-hidden">
+                    <Image
+                      src={`${API_BASE_URL}/file/download/${qrcodeFileId}`}
+                      alt="微信二维码"
+                      width={120}
+                      height={120}
+                      className="w-full h-full object-contain"
+                    />
+                  </div>
+                  <Button
+                    danger
+                    icon={<DeleteOutlined />}
+                    onClick={handleQrcodeRemove}
+                    className="!rounded-[10px]"
+                  >
+                    删除二维码
+                  </Button>
+                </div>
+              ) : (
+                <Upload
+                  beforeUpload={handleQrcodeUpload}
+                  showUploadList={false}
+                  accept="image/jpeg,image/png"
+                >
+                  <Button
+                    icon={<UploadOutlined />}
+                    loading={qrcodeUploading}
+                    className="!rounded-[10px]"
+                  >
+                    上传微信二维码
+                  </Button>
+                </Upload>
+              )}
+            </Form.Item>
           </div>
 
           <div className="flex justify-end gap-3 mt-8 pt-6 border-t border-white/[0.05] max-[640px]:flex-col">
@@ -289,6 +373,22 @@ export default function ProfileInfo({ profile, onUpdate }: ProfileInfoProps) {
               </div>
               <div className="text-sm text-white">{profile.bio || '-'}</div>
             </div>
+            {profile.wechatQrcode && (
+              <div className="flex flex-col gap-1.5 col-span-full">
+                <div className="text-xs font-medium text-[rgba(140,140,141,1)] uppercase tracking-[0.5px]">
+                  微信二维码
+                </div>
+                <div className="w-[120px] h-[120px] rounded-[10px] bg-white/[0.02] p-2 overflow-hidden">
+                  <Image
+                    src={profile.wechatQrcode}
+                    alt="微信二维码"
+                    width={120}
+                    height={120}
+                    className="w-full h-full object-contain"
+                  />
+                </div>
+              </div>
+            )}
           </div>
 
           <EmailSettings email={profile.email} onChangeEmail={() => setChangeEmailOpen(true)} />

@@ -102,6 +102,17 @@ public interface UserRepository {
             String major, Direction direction, Gender gender, String bio);
 
     /**
+     * 更新用户微信二维码文件关联。
+     *
+     * @param userId
+     *            用户主键。
+     * @param qrcodeId
+     *            二维码文件主键，null 表示清空。
+     * @return 数据库受影响行数。
+     */
+    int updateQrcodeId(Long userId, Long qrcodeId);
+
+    /**
      * 统计用户主页各标签页展示数量。
      *
      * @param userId

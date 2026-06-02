@@ -26,7 +26,8 @@ public class UserInfoRequestConverter {
                 dto.getMajor(),
                 dto.getDirection(),
                 dto.getGender(),
-                dto.getBio());
+                dto.getBio(),
+                dto.getQrcodeFileId());
     }
 
     public UserInfoCommands.SendEmailVerificationCodeCommand toCommand(SendEmailVerificationCodeRequestDTO dto) {

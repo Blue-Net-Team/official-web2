@@ -35,7 +35,9 @@ public class UserInfoCommands {
             /** 性别 */
             Gender gender,
             /** 个人简介 */
-            String bio) {
+            String bio,
+            /** 微信二维码文件ID */
+            Long qrcodeFileId) {
     }
 
     /**

@@ -12,6 +12,8 @@ export interface UpdateProfileRequestDTO {
   direction?: Direction
   gender?: Gender
   bio?: string
+  /** 微信二维码文件ID */
+  qrcodeFileId?: number | null
 }
 
 /**

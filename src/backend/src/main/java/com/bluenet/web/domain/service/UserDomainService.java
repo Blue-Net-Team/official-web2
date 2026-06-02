@@ -14,7 +14,7 @@ public interface UserDomainService {
     Optional<UserVO> getUser(Long userId);
 
     void updateProfile(Long userId, String username, String nickname, String college,
-            String major, Direction direction, Gender gender, String bio);
+            String major, Direction direction, Gender gender, String bio, Long qrcodeFileId);
 
     TabCountsVO getTabCounts(Long userId);
 

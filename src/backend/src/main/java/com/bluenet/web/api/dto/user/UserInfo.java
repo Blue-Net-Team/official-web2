@@ -50,4 +50,7 @@ public class UserInfo {
 
     @Schema(description = "GitHub 用户名")
     private String githubUsername;
+
+    @Schema(description = "微信二维码URL")
+    private String wechatQrcode;
 }

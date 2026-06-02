@@ -209,6 +209,11 @@ public class UserRepositoryImpl implements UserRepository {
         return userMapper.updateProfile(userId, username, nickname, college, major, direction, gender, bio);
     }
 
+    @Override
+    public int updateQrcodeId(Long userId, Long qrcodeId) {
+        return userMapper.updateQrcodeId(userId, qrcodeId);
+    }
+
     /**
      * 统计用户主页各标签页展示数量。
      *

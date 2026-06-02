@@ -84,7 +84,8 @@ public class UserInfoAppServiceImpl implements UserInfoAppService {
                 userVO.getDirection(),
                 userVO.getGender(),
                 userVO.getBio(),
-                userVO.getGithubUsername());
+                userVO.getGithubUsername(),
+                userVO.getWechatQrcode());
     }
 
     /**
@@ -112,7 +113,8 @@ public class UserInfoAppServiceImpl implements UserInfoAppService {
                 command.major(),
                 command.direction(),
                 command.gender(),
-                command.bio());
+                command.bio(),
+                command.qrcodeFileId());
     }
 
     /**

@@ -117,7 +117,7 @@ class UserInfoAppServiceImplTest {
         UserCTX.setCurrentUser(candidateUser);
 
         UserInfoCommands.UpdateProfileCommand command = new UserInfoCommands.UpdateProfileCommand(
-                "newUsername", null, null, null, null, null, null);
+                "newUsername", null, null, null, null, null, null, null);
 
         Forbidden ex = assertThrows(Forbidden.class, () -> userInfoAppService.updateProfile(command));
         assertEquals("只有成员及以上角色才能修改用户名、性别、学院、专业和报名方向", ex.getMessage());
@@ -135,7 +135,7 @@ class UserInfoAppServiceImplTest {
         UserCTX.setCurrentUser(memberUser);
 
         UserInfoCommands.UpdateProfileCommand command = new UserInfoCommands.UpdateProfileCommand(
-                "newUsername", "newNickname", null, null, null, null, null);
+                "newUsername", "newNickname", null, null, null, null, null, null);
 
         userInfoAppService.updateProfile(command);
 
@@ -143,6 +143,7 @@ class UserInfoAppServiceImplTest {
                 TEST_USER_ID,
                 "newUsername",
                 "newNickname",
+                null,
                 null,
                 null,
                 null,
@@ -264,6 +265,57 @@ class UserInfoAppServiceImplTest {
                         new UserInfoCommands.ChangePasswordCommand(TEST_USER_ID, "token", "newPwd", "newPwd")));
 
         assertEquals("验证信息不匹配", ex.getMessage());
+    }
+
+    // ==================== wechatQrcode 测试 ====================
+
+    @Test
+    void getMyInfo_whenUserHasQrcode_returnsWechatQrcode() {
+        UserVO userVO = UserVO.builder()
+                .id(TEST_USER_ID)
+                .studentId(TEST_STUDENT_ID)
+                .username(TEST_USERNAME)
+                .email(TEST_EMAIL)
+                .roleName(TEST_ROLE_NAME)
+                .college("计算机学院")
+                .major("软件工程")
+                .wechatQrcode("https://minio.example.com/qrcode/123.jpg")
+                .build();
+
+        UserCTX.setCurrentUser(userVO);
+
+        var result = userInfoAppService.getMyInfo();
+
+        assertNotNull(result);
+        assertEquals("https://minio.example.com/qrcode/123.jpg", result.wechatQrcode());
+    }
+
+    @Test
+    void updateProfile_withQrcodeFileId_succeeds() {
+        UserVO memberUser = UserVO.builder()
+                .id(TEST_USER_ID)
+                .studentId(TEST_STUDENT_ID)
+                .username(TEST_USERNAME)
+                .email(TEST_EMAIL)
+                .roleName("MEMBER")
+                .build();
+        UserCTX.setCurrentUser(memberUser);
+
+        UserInfoCommands.UpdateProfileCommand command = new UserInfoCommands.UpdateProfileCommand(
+                null, "newNickname", null, null, null, null, null, 100L);
+
+        userInfoAppService.updateProfile(command);
+
+        verify(userDomainService).updateProfile(
+                TEST_USER_ID,
+                null,
+                "newNickname",
+                null,
+                null,
+                null,
+                null,
+                null,
+                100L);
     }
 
     // ==================== updateAvatar 测试 ====================

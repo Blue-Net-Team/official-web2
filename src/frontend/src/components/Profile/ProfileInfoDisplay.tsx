@@ -8,6 +8,7 @@ import {
   getRoleTagColor,
 } from '@/apis/schema/enumerate'
 import { Tag } from 'antd'
+import Image from 'next/image'
 
 /**
  * 统一的只读个人信息展示数据接口
@@ -23,6 +24,7 @@ export interface ProfileDisplayData {
   gender: string | null
   roleName: string | null
   bio: string | null
+  wechatQrcode: string | null
 }
 
 interface ProfileInfoDisplayProps {
@@ -86,6 +88,22 @@ export const ProfileInfoDisplay: React.FC<ProfileInfoDisplayProps> = ({ profile 
               个人简介
             </span>
             <span className="text-sm text-white">{profile.bio}</span>
+          </div>
+        )}
+        {profile.wechatQrcode && (
+          <div className="col-span-1 md:col-span-2 flex flex-col gap-1.5">
+            <span className="text-xs font-medium text-[#8c8c8d] uppercase tracking-[0.5px]">
+              微信二维码
+            </span>
+            <div className="w-[120px] h-[120px] rounded-[10px] bg-white/[0.02] p-2 overflow-hidden">
+              <Image
+                src={profile.wechatQrcode}
+                alt="微信二维码"
+                width={120}
+                height={120}
+                className="w-full h-full object-contain"
+              />
+            </div>
           </div>
         )}
       </div>

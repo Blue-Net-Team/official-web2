@@ -28,4 +28,7 @@ public class UpdateProfileRequestDTO {
 
     @Schema(description = "个人简介")
     private String bio;
+
+    @Schema(description = "微信二维码文件ID")
+    private Long qrcodeFileId;
 }

@@ -27,6 +27,7 @@ function adaptToSidebarProfile(member: MemberDetailDTO): SidebarProfile {
     grade: member.grade,
     bio: member.bio || '',
     avatarFileId: member.avatarFileId,
+    wechatQrcode: member.wechatQrcode,
     roleName: member.role,
     direction: member.direction,
   }
@@ -44,6 +45,7 @@ function adaptToDisplayData(member: MemberDetailDTO): ProfileDisplayData {
     gender: member.gender,
     roleName: member.role,
     bio: member.bio,
+    wechatQrcode: member.wechatQrcode,
   }
 }
 

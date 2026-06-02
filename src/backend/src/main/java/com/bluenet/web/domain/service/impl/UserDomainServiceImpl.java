@@ -4,6 +4,7 @@ import com.bluenet.web.domain.exception.BadRequest;
 import com.bluenet.web.domain.exception.DataNotFound;
 import com.bluenet.web.domain.model.entity.User;
 import com.bluenet.web.domain.model.enumerate.Direction;
+import com.bluenet.web.domain.model.enumerate.FileType;
 import com.bluenet.web.domain.model.enumerate.Gender;
 import com.bluenet.web.domain.model.vo.FileVO;
 import com.bluenet.web.domain.model.vo.TabCountsVO;
@@ -11,6 +12,7 @@ import com.bluenet.web.domain.model.vo.UserVO;
 import com.bluenet.web.domain.model.vo.VerifyCodeVO;
 import com.bluenet.web.domain.repository.UserRepository;
 import com.bluenet.web.domain.repository.VerificationCodeRepository;
+import com.bluenet.web.domain.service.FileDomainService;
 import com.bluenet.web.domain.service.UserDomainService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -25,6 +27,7 @@ public class UserDomainServiceImpl implements UserDomainService {
     private final UserRepository userRepository;
     private final VerificationCodeRepository verificationCodeRepository;
     private final PasswordEncoder passwordEncoder;
+    private final FileDomainService fileDomainService;
 
     @Override
     @Transactional
@@ -42,11 +45,22 @@ public class UserDomainServiceImpl implements UserDomainService {
     @Override
     @Transactional
     public void updateProfile(Long userId, String username, String nickname, String college,
-            String major, Direction direction, Gender gender, String bio) {
+            String major, Direction direction, Gender gender, String bio, Long qrcodeFileId) {
         userRepository.findById(userId)
                 .orElseThrow(() -> new DataNotFound("用户不存在"));
 
+        if (qrcodeFileId != null) {
+            FileVO fileVO = fileDomainService.getFileById(qrcodeFileId);
+            if (fileVO == null) {
+                throw new DataNotFound("文件不存在");
+            }
+            if (fileVO.getType() != FileType.QRCODE) {
+                throw new BadRequest("文件类型不匹配，期望 QRCODE");
+            }
+        }
+
         userRepository.updateProfile(userId, username, nickname, college, major, direction, gender, bio);
+        userRepository.updateQrcodeId(userId, qrcodeFileId);
     }
 
     @Override
