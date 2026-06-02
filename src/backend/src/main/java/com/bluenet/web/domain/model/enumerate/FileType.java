@@ -8,7 +8,8 @@ public enum FileType implements ValueEnum {
     NORMAL_IMG("normal-img", "普通图片"),
     ASSESSMENT_ATTACHMENT("assessment-attachment", "考题附件"),
     WORK("work", "考生作品"),
-    QRCODE("qrcode", "二维码");
+    QRCODE("qrcode", "二维码"),
+    KNOWLEDGE("knowledge", "知识库文档");
 
     private final String value;
     private final String description;

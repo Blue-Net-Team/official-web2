@@ -56,6 +56,12 @@ class Settings(BaseSettings):
     RERANKER_PROVIDER: str = "siliconflow"  # "siliconflow" | "ollama"
     RERANKER_MODEL: str = ""
 
+    # RabbitMQ 配置（知识库文档解析任务）
+    RABBITMQ_HOST: str = "localhost"
+    RABBITMQ_PORT: int = 5672
+    RABBITMQ_USERNAME: str = "admin"
+    RABBITMQ_PASSWORD: str = "bluenet123"
+
     class Config:
         env_file = ".env"
         env_prefix = "TBD_RAG_"

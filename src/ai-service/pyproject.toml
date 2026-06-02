@@ -23,6 +23,7 @@ dependencies = [
     "ruff>=0.15.10",
     "fastapi>=0.115.0",
     "uvicorn[standard]>=0.32.0",
+    "aio-pika>=9.5.0",
 ]
 
 [project.scripts]

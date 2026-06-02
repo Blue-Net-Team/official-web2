@@ -23,6 +23,8 @@ import {
   ToolOutlined,
   BugOutlined,
   QrcodeOutlined,
+  BookOutlined,
+  TagOutlined,
 } from '@ant-design/icons'
 import type { MenuProps } from 'antd'
 
@@ -192,6 +194,28 @@ export const menuConfig: MenuItemConfig[] = [
     path: '/admin/bug-report',
     icon: <BugOutlined />,
     minLevel: 1,
+  },
+  {
+    key: 'knowledge',
+    label: '知识库管理',
+    icon: <BookOutlined />,
+    minLevel: 3,
+    children: [
+      {
+        key: 'knowledgeDocs',
+        label: '文档管理',
+        path: '/admin/knowledge/docs',
+        icon: <FileTextOutlined />,
+        minLevel: 3,
+      },
+      {
+        key: 'knowledgeTags',
+        label: '标签管理',
+        path: '/admin/knowledge/tags',
+        icon: <TagOutlined />,
+        minLevel: 3,
+      },
+    ],
   },
   {
     key: 'qa',
