@@ -40,4 +40,16 @@ def tag_search_detailed(query: str, top_k: int = 10) -> list[TagSearchResult]:
             tag_description=original.tag_description,
         ))
 
+    # 动态阈值过滤：淘汰低相关度噪声标签
+    MIN_SCORE = 0.005
+    RATIO = 0.15
+    if results_out:
+        top_score = max(r.relevance_score for r in results_out)
+        threshold = max(MIN_SCORE, top_score * RATIO)
+        filtered = [r for r in results_out if r.relevance_score >= threshold]
+        # 保底：至少保留分数最高的一个标签
+        if not filtered:
+            filtered = [results_out[0]]
+        return filtered
+
     return results_out

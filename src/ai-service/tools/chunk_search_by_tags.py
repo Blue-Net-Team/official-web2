@@ -48,6 +48,16 @@ def chunk_search_by_tags(query: str, tags: str, top_k: int = 10) -> str:
     embedding = EmbeddingFactory.create()
     vector_store = VectorStoreFactory.get()
 
+    # --- 检索诊断：检查标签在库情况 ---
+    try:
+        all_existing_tags = vector_store.get_all_tags()
+        existing_tag_names = {t.tag_name for t in all_existing_tags}
+    except Exception:
+        existing_tag_names = set()
+
+    in_library_tags = [t for t in tag_list if t in existing_tag_names]
+    not_in_library_tags = [t for t in tag_list if t not in existing_tag_names]
+
     seen = set()
     unique_texts = []
     unique_records = []
@@ -70,14 +80,28 @@ def chunk_search_by_tags(query: str, tags: str, top_k: int = 10) -> str:
     for r in tag_records:
         _dedup(_get_content(r), r)
 
+    # --- 构建检索诊断段落 ---
+    diag_lines = ["\n【检索诊断】"]
+    diag_lines.append(f"传入标签: {', '.join(tag_list)}")
+    diag_lines.append(f"在库标签 ({len(in_library_tags)}个): {', '.join(in_library_tags) if in_library_tags else '无'}")
+    diag_lines.append(f"不在库标签 ({len(not_in_library_tags)}个): {', '.join(not_in_library_tags) if not_in_library_tags else '无'}")
+    diag_lines.append(f"精确匹配召回: {len(tag_records)} 条分片")
+
+    if not in_library_tags:
+        diag_lines.append("⚠️ 标签均不在库中，精确匹配路径失效。建议：使用 chunk_search(query) 直接进行语义搜索。")
+    elif not_in_library_tags:
+        diag_lines.append(f"提示: 部分标签不在库中 ({', '.join(not_in_library_tags)})，仅使用在库标签进行检索。")
+
+    diag_text = "\n".join(diag_lines)
+
     if not unique_texts:
-        return "未找到匹配的文本分片"
+        return f"未找到匹配的文本分片{diag_text}"
 
     reranker = RerankerFactory.create()
     rerank_results = reranker.rerank(query, unique_texts, top_k=top_k)
 
     if not rerank_results:
-        return "重排序后无有效结果"
+        return f"重排序后无有效结果{diag_text}"
 
     scores = [r.relevance_score for r in rerank_results]
     avg_score = sum(scores) / len(scores)
@@ -92,4 +116,5 @@ def chunk_search_by_tags(query: str, tags: str, top_k: int = 10) -> str:
         source = f" [{_get_source(original)}]" if _get_source(original) else ""
         lines.append(f"[{i}] score={rr.relevance_score:.4f}{source}{text_preview}")
 
+    lines.append(diag_text)
     return "\n".join(lines)

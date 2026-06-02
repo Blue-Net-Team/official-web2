@@ -18,6 +18,7 @@ _log = logger.bind(module="RagAgent")
 
 _MAX_TAG_ROUNDS = 4
 _MAX_CHUNK_ROUNDS = 3
+_MAX_FALLBACK_ROUNDS = 1  # chunk_search 兜底最多 1 轮
 
 
 class RagAgent:
@@ -35,6 +36,7 @@ class RagAgent:
 
         self._tag_rounds = 0
         self._chunk_rounds = 0
+        self._fallback_rounds = 0
 
         tool_names = [t["function"]["name"] for t in self._tool_specs]
         _log.info(f"Agent 初始化完成, tools={tool_names}")
@@ -183,8 +185,9 @@ class RagAgent:
         lines.append("请按两阶段工作流执行：")
         lines.append("  1. 如果标签不充分，调用 tag_search_detailed 扩展（最多3轮）")
         lines.append("  2. 标签充分后，选择标签子集")
-        lines.append("  3. 调用 chunk_search_by_tags 检索分片（最多2轮）")
-        lines.append("  4. 基于结果生成答案")
+        lines.append("  3. 调用 chunk_search_by_tags 检索分片（最多3轮）")
+        lines.append("  4. 如果 chunk_search_by_tags 诊断显示'标签均不在库中'，调用 chunk_search(query) 进行兜底语义搜索（最多1轮）")
+        lines.append("  5. 基于结果生成答案")
         return "\n".join(lines)
 
     def _run_two_stage_loop(self, messages: list[dict]) -> LLMResponse:
@@ -262,12 +265,20 @@ class RagAgent:
             if self._chunk_rounds == _MAX_CHUNK_ROUNDS:
                 _log.info("分片检索剩余 1 次机会")
 
+        if tool_name == "chunk_search":
+            self._fallback_rounds += 1
+            if self._fallback_rounds > _MAX_FALLBACK_ROUNDS:
+                msg = f"兜底语义搜索已达上限 {_MAX_FALLBACK_ROUNDS} 轮，请基于已有检索结果生成答案"
+                _log.warning(msg)
+                return msg
+
         return ToolRegistry.execute(tool_name, **tool_args)
 
     def reset_conversation(self) -> None:
         self.conversation.clear()
         self._tag_rounds = 0
         self._chunk_rounds = 0
+        self._fallback_rounds = 0
         _log.info("对话历史已重置")
 
 
