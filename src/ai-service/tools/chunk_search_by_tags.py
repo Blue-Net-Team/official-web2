@@ -2,7 +2,6 @@ from typing import Any
 
 from llm_providers import EmbeddingFactory, RerankerFactory
 from retrieval.factory import VectorStoreFactory
-from tag_normalization import expand_tags
 
 
 def _get_content(record: Any) -> str:
@@ -27,8 +26,8 @@ def chunk_search_by_tags(query: str, tags: str, top_k: int = 10) -> str:
     """按标签过滤搜索文本分片，返回含 score 分布的格式化结果。
 
     采用双路搜索策略：
-    1. 标签向量搜 chunks — 对每个标签名称做 embedding，用标签语义向量搜索 chunks
-    2. 标签字段精确匹配 — 直接匹配 chunks.tags 数组字段（支持同义词扩展）
+    1. 标签语义向量搜 chunks — 对每个标签名称做 embedding，用标签语义向量搜索 chunks
+    2. 标签字段精确匹配 — 直接匹配 chunks.tags 数组字段
     两路结果合并去重后，经 Reranker 精排返回。
 
     Args:
@@ -43,8 +42,8 @@ def chunk_search_by_tags(query: str, tags: str, top_k: int = 10) -> str:
     if not raw_tags:
         return "错误: 未提供有效标签"
 
-    # 同义词扩展：将每个标签扩展为其等价词组
-    tag_list = expand_tags(raw_tags)
+    # 直接使用原始标签，不再做同义词扩展
+    tag_list = raw_tags
 
     embedding = EmbeddingFactory.create()
     vector_store = VectorStoreFactory.get()
