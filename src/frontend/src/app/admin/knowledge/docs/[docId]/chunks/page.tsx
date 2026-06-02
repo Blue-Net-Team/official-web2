@@ -60,15 +60,11 @@ export default function KnowledgeChunksPage() {
                 title={
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="text-white/70 text-sm">ID: {chunk.id}</span>
-                    {chunk.source && (
-                      <Tag size="small" className="m-0">
-                        {chunk.source}
-                      </Tag>
-                    )}
+                    {chunk.source && <Tag className="m-0">{chunk.source}</Tag>}
                     {chunk.tags &&
                       chunk.tags.length > 0 &&
                       chunk.tags.map((tag) => (
-                        <Tag key={tag} color="blue" size="small" className="m-0">
+                        <Tag key={tag} color="blue" className="m-0">
                           {tag}
                         </Tag>
                       ))}

@@ -1,13 +1,11 @@
 import asyncio
 import os
-from typing import Any
 
 from chunking import SemanticChunker
-from llm_providers import EmbeddingFactory, LLMFactory, RerankerFactory
 from loguru import logger
-from pipeline.document_parser import get_models, ingest_chunks, recalculate_tag_counts
+from pipeline.document_parser import get_models, ingest_chunks
 from retrieval import PgVectorStore
-from retrieval.base import ChunkRecord, DocRecord
+from retrieval.base import DocRecord
 
 _log = logger.bind(module="load2db_pipeline")
 
