@@ -44,6 +44,13 @@ export default function AssessmentQuestionManagementPage() {
   )
   const [filterTimeId, setFilterTimeId] = useState<number | undefined>(undefined)
 
+  // 用户加载完成后，非超管默认选中自己的方向
+  useEffect(() => {
+    if (!isSuperAdmin && userDirection && !filterDirection) {
+      setFilterDirection(userDirection)
+    }
+  }, [isSuperAdmin, userDirection, filterDirection])
+
   // Assessment times for the selected direction
   const [assessmentTimes, setAssessmentTimes] = useState<AssessmentTimeDTO[]>([])
 
