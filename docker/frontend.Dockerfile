@@ -27,6 +27,10 @@ COPY src/frontend/package.json src/frontend/pnpm-lock.yaml ./
 # 安装依赖
 RUN pnpm install --frozen-lockfile
 
+# 强制 invalidate layer cache：每次 CACHE_BUST 变化时重新复制源代码
+ARG CACHE_BUST
+RUN echo "Cache bust: ${CACHE_BUST}" > /dev/null
+
 # 复制源代码
 COPY src/frontend/ ./
 
