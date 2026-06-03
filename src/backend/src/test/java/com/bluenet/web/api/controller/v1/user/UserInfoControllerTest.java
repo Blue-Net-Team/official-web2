@@ -59,6 +59,7 @@ class UserInfoControllerTest {
                 Direction.COMPUTER_VISION,
                 Gender.UNKNOWN,
                 null,
+                null,
                 null);
 
         when(userInfoAppService.getMyInfo()).thenReturn(expected);
