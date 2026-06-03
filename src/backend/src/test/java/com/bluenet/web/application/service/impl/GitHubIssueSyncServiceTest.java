@@ -46,6 +46,7 @@ class GitHubIssueSyncServiceTest {
         @DisplayName("TC-013: 成功同步应回写数据库")
         void sync_success_shouldUpdateRepository() {
             when(gitHubAppProperties.isEnabled()).thenReturn(true);
+            when(gitHubAppProperties.getAppBaseUrl()).thenReturn("https://api.example.com");
 
             BugReport bugReport = BugReport.create(
                     "页面加载缓慢，持续超过5秒",
@@ -125,6 +126,64 @@ class GitHubIssueSyncServiceTest {
             verify(gitHubIssueClient).createIssue(anyString(), bodyCaptor.capture());
             String body = bodyCaptor.getValue();
             assertTrue(body.contains("无截图"));
+        }
+
+        @Test
+        @DisplayName("TC-017: 有截图时应使用 Markdown 图片语法嵌入")
+        void sync_withScreenshots_shouldUseImageEmbedSyntax() {
+            when(gitHubAppProperties.isEnabled()).thenReturn(true);
+            when(gitHubAppProperties.getAppBaseUrl()).thenReturn("https://api.example.com");
+
+            BugReport bugReport = BugReport.create(
+                    "带截图的 Bug",
+                    "/page",
+                    "{}",
+                    null,
+                    java.util.List.of(13L));
+
+            GitHubIssueCreateResult mockResult = new GitHubIssueCreateResult(1, "https://github.com/test/issues/1",
+                    "带截图的 Bug");
+            when(gitHubIssueClient.createIssue(anyString(), anyString())).thenReturn(mockResult);
+
+            service.sync(bugReport);
+
+            ArgumentCaptor<String> bodyCaptor = ArgumentCaptor.forClass(String.class);
+            verify(gitHubIssueClient).createIssue(anyString(), bodyCaptor.capture());
+            String body = bodyCaptor.getValue();
+
+            // 验证使用 Markdown 图片嵌入语法（而非超链接语法）
+            assertTrue(body.contains("![截图 13]"), "应使用 ![alt](url) 图片嵌入语法");
+            // 确保不是以列表超链接形式出现（"- [截图" 是超链接列表语法）
+            assertFalse(body.contains("- [截图 13]"), "不应使用 - [text](url) 超链接列表语法");
+        }
+
+        @Test
+        @DisplayName("TC-018: appBaseUrl 末尾带斜杠时不应产生双斜杠")
+        void sync_baseUrlWithTrailingSlash_shouldNotProduceDoubleSlash() {
+            when(gitHubAppProperties.isEnabled()).thenReturn(true);
+            // 模拟配置值末尾带斜杠的场景
+            when(gitHubAppProperties.getAppBaseUrl()).thenReturn("https://api.example.com/");
+
+            BugReport bugReport = BugReport.create(
+                    "双斜杠测试",
+                    "/page",
+                    "{}",
+                    null,
+                    java.util.List.of(42L));
+
+            GitHubIssueCreateResult mockResult = new GitHubIssueCreateResult(1, "https://github.com/test/issues/1",
+                    "双斜杠测试");
+            when(gitHubIssueClient.createIssue(anyString(), anyString())).thenReturn(mockResult);
+
+            service.sync(bugReport);
+
+            ArgumentCaptor<String> bodyCaptor = ArgumentCaptor.forClass(String.class);
+            verify(gitHubIssueClient).createIssue(anyString(), bodyCaptor.capture());
+            String body = bodyCaptor.getValue();
+
+            // 验证 URL 中没有双斜杠
+            assertTrue(body.contains("https://api.example.com/api/v1/file/download/42"));
+            assertFalse(body.contains("//api/v1"), "不应出现双斜杠");
         }
     }
 }

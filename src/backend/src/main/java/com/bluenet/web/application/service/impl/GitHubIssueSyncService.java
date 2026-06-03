@@ -98,9 +98,14 @@ public class GitHubIssueSyncService {
             sb.append("无截图\n");
         } else {
             String baseUrl = gitHubAppProperties.getAppBaseUrl();
+            // 移除末尾的斜杠，避免拼接出双斜杠
+            if (baseUrl.endsWith("/")) {
+                baseUrl = baseUrl.substring(0, baseUrl.length() - 1);
+            }
             for (Long fileId : fileIds) {
                 String downloadUrl = baseUrl + "/api/v1/file/download/" + fileId;
-                sb.append("- [截图 ").append(fileId).append("](").append(downloadUrl).append(")\n");
+                // 使用 Markdown 图片嵌入语法，确保在 GitHub 中直接展示图片
+                sb.append("- ![截图 ").append(fileId).append("](").append(downloadUrl).append(")\n");
             }
         }
 
