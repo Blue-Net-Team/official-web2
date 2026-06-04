@@ -291,10 +291,6 @@ export default function QuestionsPage() {
   }
 
   const handleRowClick = (record: AssessmentQuestionDTO) => {
-    if (ended) {
-      message.warning('考核已结束，无法进入答题')
-      return
-    }
     router.push(`/assessment/${timeId}/questions/${record.id}`)
   }
 
