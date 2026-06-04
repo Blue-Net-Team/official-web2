@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { App, Button, Grid, Modal, Pagination, Select, Spin, Table, Tag } from 'antd'
+import { App, Button, Empty, Grid, Modal, Pagination, Select, Spin, Table, Tag } from 'antd'
 import { PlusOutlined, EditOutlined, DeleteOutlined, PaperClipOutlined } from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
 import type {
@@ -296,81 +296,99 @@ export default function AssessmentQuestionManagementPage() {
         )}
       </div>
 
-      {/* Filters */}
-      <div className="flex gap-3 items-center flex-wrap">
-        <Select
-          placeholder="筛选方向"
-          allowClear
-          className="w-[140px]"
-          value={filterDirection}
-          onChange={handleDirectionChange}
-          options={directionOptions.map(([value, label]) => ({ value, label }))}
-        />
-        <Select
-          placeholder="选择考核时间"
-          allowClear
-          className="w-[200px]"
-          value={filterTimeId}
-          onChange={handleTimeChange}
-          options={timeOptions}
-          disabled={!filterDirection}
-        />
-      </div>
-
-      {/* Table */}
-      <Spin spinning={loading}>
-        <Table
-          dataSource={questions}
-          columns={columns}
-          rowKey={(record) => String(record.id)}
-          size="small"
-          pagination={false}
-          onRow={(record) => ({
-            onClick: () => handleRowClick(record),
-            className: 'cursor-pointer',
-          })}
-          locale={{ emptyText }}
-        />
-      </Spin>
-
-      {/* Pagination */}
-      {totalElements > PAGE_SIZE && (
-        <div className="flex justify-center">
-          <Pagination
-            current={currentPage + 1}
-            total={totalElements}
-            pageSize={PAGE_SIZE}
-            showSizeChanger={false}
-            onChange={(p) => setCurrentPage(p - 1)}
+      {/* 方向管理员未配置方向时的提示 */}
+      {!isSuperAdmin && !userDirection && (
+        <div className="flex justify-center py-20">
+          <Empty
+            description={
+              <span className="text-white/60">
+                您尚未配置方向，请联系超级管理员配置方向后再管理考题
+              </span>
+            }
           />
         </div>
       )}
 
-      {/* Drawer */}
-      <QuestionDrawer
-        key={selectedQuestion?.id ?? 'create'}
-        open={drawerOpen}
-        question={selectedQuestion}
-        assessmentTimeId={filterTimeId ?? null}
-        mode={drawerMode}
-        onClose={() => setDrawerOpen(false)}
-        onSuccess={handleDrawerSuccess}
-        onDelete={handleDeleteClick}
-        onEdit={() => setDrawerMode('edit')}
-      />
+      {/* 有权限操作时才显示筛选器和表格 */}
+      {(isSuperAdmin || userDirection) && (
+        <>
+          {/* Filters */}
+          <div className="flex gap-3 items-center flex-wrap">
+            <Select
+              placeholder="筛选方向"
+              allowClear
+              className="w-[140px]"
+              value={filterDirection}
+              onChange={handleDirectionChange}
+              options={directionOptions.map(([value, label]) => ({ value, label }))}
+            />
+            <Select
+              placeholder="选择考核时间"
+              allowClear
+              className="w-[200px]"
+              value={filterTimeId}
+              onChange={handleTimeChange}
+              options={timeOptions}
+              disabled={!filterDirection}
+            />
+          </div>
 
-      {/* Delete confirmation modal */}
-      <Modal
-        title="确认删除"
-        open={deleteModalOpen}
-        onOk={handleDeleteConfirm}
-        onCancel={() => setDeleteModalOpen(false)}
-        okText="确认删除"
-        cancelText="取消"
-        okButtonProps={{ danger: true }}
-      >
-        <p>确认删除考题「{deletingItem?.title}」？此操作不可撤销。</p>
-      </Modal>
+          {/* Table */}
+          <Spin spinning={loading}>
+            <Table
+              dataSource={questions}
+              columns={columns}
+              rowKey={(record) => String(record.id)}
+              size="small"
+              pagination={false}
+              onRow={(record) => ({
+                onClick: () => handleRowClick(record),
+                className: 'cursor-pointer',
+              })}
+              locale={{ emptyText }}
+            />
+          </Spin>
+
+          {/* Pagination */}
+          {totalElements > PAGE_SIZE && (
+            <div className="flex justify-center">
+              <Pagination
+                current={currentPage + 1}
+                total={totalElements}
+                pageSize={PAGE_SIZE}
+                showSizeChanger={false}
+                onChange={(p) => setCurrentPage(p - 1)}
+              />
+            </div>
+          )}
+
+          {/* Drawer */}
+          <QuestionDrawer
+            key={selectedQuestion?.id ?? 'create'}
+            open={drawerOpen}
+            question={selectedQuestion}
+            assessmentTimeId={filterTimeId ?? null}
+            mode={drawerMode}
+            onClose={() => setDrawerOpen(false)}
+            onSuccess={handleDrawerSuccess}
+            onDelete={handleDeleteClick}
+            onEdit={() => setDrawerMode('edit')}
+          />
+
+          {/* Delete confirmation modal */}
+          <Modal
+            title="确认删除"
+            open={deleteModalOpen}
+            onOk={handleDeleteConfirm}
+            onCancel={() => setDeleteModalOpen(false)}
+            okText="确认删除"
+            cancelText="取消"
+            okButtonProps={{ danger: true }}
+          >
+            <p>确认删除考题「{deletingItem?.title}」？此操作不可撤销。</p>
+          </Modal>
+        </>
+      )}
     </div>
   )
 }
