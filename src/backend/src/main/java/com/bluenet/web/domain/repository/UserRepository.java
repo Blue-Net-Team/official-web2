@@ -11,6 +11,7 @@ import com.bluenet.web.domain.model.vo.UserVO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -286,6 +287,15 @@ public interface UserRepository {
      * @return 关联数据统计
      */
     UserStatistics getStatistics(Long userId);
+
+    /**
+     * 查询淘汰超过指定时间且未被禁用的用户ID列表。
+     *
+     * @param cutoffTime
+     *            截止时间，decided_at 早于该时间的淘汰决策会被选中。
+     * @return 需要被禁用的用户ID列表。
+     */
+    List<Long> findUserIdsToDisableByElimination(LocalDateTime cutoffTime);
 
     /**
      * 用户关联数据统计

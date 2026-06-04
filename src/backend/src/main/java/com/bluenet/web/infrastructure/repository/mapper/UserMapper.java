@@ -9,6 +9,7 @@ import com.bluenet.web.domain.model.enumerate.Gender;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Mapper
@@ -178,4 +179,13 @@ public interface UserMapper extends BaseMapper<UserDO> {
      * @return 满足条件的记录数量。
      */
     long countByCollegeId(@Param("collegeId") Long collegeId);
+
+    /**
+     * 查询淘汰超过指定时间且未被禁用的用户ID列表。
+     *
+     * @param cutoffTime
+     *            截止时间，decided_at 早于该时间的淘汰决策会被选中。
+     * @return 需要被禁用的用户ID列表。
+     */
+    List<Long> selectUserIdsToDisableByElimination(@Param("cutoffTime") LocalDateTime cutoffTime);
 }

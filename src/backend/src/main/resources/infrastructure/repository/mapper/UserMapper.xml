@@ -142,4 +142,13 @@
         FROM tb_user
         WHERE college_id = #{collegeId}
     </select>
+
+    <select id="selectUserIdsToDisableByElimination" resultType="java.lang.Long">
+        SELECT DISTINCT d.user_id
+        FROM tb_assessment_decision d
+        JOIN tb_user u ON u.id = d.user_id
+        WHERE d.passed = false
+          AND d.decided_at &lt;= #{cutoffTime}
+          AND u.disable = false
+    </select>
 </mapper>

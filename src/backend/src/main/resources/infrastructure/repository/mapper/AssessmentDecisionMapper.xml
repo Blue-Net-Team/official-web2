@@ -22,4 +22,9 @@
         SELECT * FROM tb_assessment_decision
         WHERE assessment_time_id = #{assessmentTimeId}
     </select>
+
+    <select id="selectEliminatedDecisionsByUserId" resultMap="BaseResultMap">
+        SELECT * FROM tb_assessment_decision
+        WHERE user_id = #{userId} AND passed = false
+    </select>
 </mapper>

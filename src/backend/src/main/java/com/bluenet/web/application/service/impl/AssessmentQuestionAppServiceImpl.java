@@ -22,6 +22,7 @@ import com.bluenet.web.domain.repository.AssessmentAnswerRepository;
 import com.bluenet.web.domain.repository.AssessmentQuestionRepository;
 import com.bluenet.web.domain.repository.AssessmentTimeRepository;
 import com.bluenet.web.domain.repository.FileRepository;
+import com.bluenet.web.domain.service.AssessmentDecisionDomainService;
 import com.bluenet.web.domain.util.GradeCalculator;
 import com.bluenet.web.infrastructure.repository.mapper.JudgeProblemConfigMapper;
 import com.bluenet.web.infrastructure.repository.dataobject.JudgeProblemConfigDO;
@@ -60,6 +61,7 @@ public class AssessmentQuestionAppServiceImpl implements AssessmentQuestionAppSe
     private final FileRepository fileRepository;
     private final JudgeProblemConfigMapper judgeProblemConfigMapper;
     private final JudgeAssetStorage judgeAssetStorage;
+    private final AssessmentDecisionDomainService assessmentDecisionDomainService;
 
     /**
      * 创建考题。
@@ -287,8 +289,8 @@ public class AssessmentQuestionAppServiceImpl implements AssessmentQuestionAppSe
                 if (time.getStartTime() != null && now.isBefore(time.getStartTime())) {
                     throw new SecurityException("考核尚未开始");
                 }
-                if (time.getEndTime() != null && now.isAfter(time.getEndTime())) {
-                    throw new SecurityException("考核已结束");
+                if (assessmentDecisionDomainService.isEliminatedFromPriorEpoch(currentUser.getId(), time)) {
+                    throw new SecurityException("已在该方向考核中被淘汰，无法查看后续轮次题目");
                 }
             }
         }
@@ -361,8 +363,8 @@ public class AssessmentQuestionAppServiceImpl implements AssessmentQuestionAppSe
                 if (time.getStartTime() != null && now.isBefore(time.getStartTime())) {
                     throw new SecurityException("考核尚未开始");
                 }
-                if (time.getEndTime() != null && now.isAfter(time.getEndTime())) {
-                    throw new SecurityException("考核已结束");
+                if (assessmentDecisionDomainService.isEliminatedFromPriorEpoch(currentUser.getId(), time)) {
+                    throw new SecurityException("已在该方向考核中被淘汰，无法查看后续轮次题目");
                 }
             }
         }

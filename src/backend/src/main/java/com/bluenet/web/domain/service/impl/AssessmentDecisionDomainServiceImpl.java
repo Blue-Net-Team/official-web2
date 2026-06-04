@@ -3,8 +3,10 @@ package com.bluenet.web.domain.service.impl;
 import com.bluenet.web.domain.exception.DataNotFound;
 import com.bluenet.web.domain.exception.GlobalException;
 import com.bluenet.web.domain.model.entity.AssessmentDecision;
+import com.bluenet.web.domain.model.entity.AssessmentTime;
 import com.bluenet.web.domain.model.vo.AssessmentDecisionVO;
 import com.bluenet.web.domain.repository.AssessmentDecisionRepository;
+import com.bluenet.web.domain.repository.AssessmentTimeRepository;
 import com.bluenet.web.domain.service.AssessmentDecisionDomainService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -12,12 +14,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @Slf4j
 @RequiredArgsConstructor
 public class AssessmentDecisionDomainServiceImpl implements AssessmentDecisionDomainService {
     private final AssessmentDecisionRepository assessmentDecisionRepository;
+    private final AssessmentTimeRepository assessmentTimeRepository;
 
     @Override
     @Transactional
@@ -66,6 +70,50 @@ public class AssessmentDecisionDomainServiceImpl implements AssessmentDecisionDo
     public AssessmentDecisionVO getDecision(Long userId, Long assessmentTimeId) {
         return assessmentDecisionRepository.findByUserIdAndAssessmentTimeId(userId, assessmentTimeId)
                 .orElseThrow(() -> new DataNotFound("考生暂无该次考核通过决策"));
+    }
+
+    @Override
+    public boolean isEliminatedFromPriorEpoch(Long userId, AssessmentTime targetTime) {
+        List<AssessmentDecisionVO> eliminatedDecisions = assessmentDecisionRepository
+                .findEliminatedDecisionsByUserId(userId);
+        if (eliminatedDecisions.isEmpty()) {
+            return false;
+        }
+        for (AssessmentDecisionVO decision : eliminatedDecisions) {
+            AssessmentTime decisionTime = assessmentTimeRepository.findById(decision.getAssessmentTimeId())
+                    .orElse(null);
+            if (decisionTime == null) {
+                continue;
+            }
+            if (isSameDirectionAndGrade(decisionTime, targetTime)
+                    && isPriorEpoch(decisionTime.getEpoch(), targetTime.getEpoch())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean isSameDirectionAndGrade(AssessmentTime t1, AssessmentTime t2) {
+        if (t1.getDirection() == null ? t2.getDirection() != null : !t1.getDirection().equals(t2.getDirection())) {
+            return false;
+        }
+        if (t1.getGrade() == null ? t2.getGrade() != null : !t1.getGrade().equals(t2.getGrade())) {
+            return false;
+        }
+        return true;
+    }
+
+    private boolean isPriorEpoch(Integer priorEpoch, Integer currentEpoch) {
+        if (priorEpoch == null || currentEpoch == null) {
+            return false;
+        }
+        if (priorEpoch <= 0) {
+            return false;
+        }
+        if (currentEpoch == 0) {
+            return true;
+        }
+        return priorEpoch < currentEpoch;
     }
 
     private AssessmentDecision convertToEntity(AssessmentDecisionVO decision) {

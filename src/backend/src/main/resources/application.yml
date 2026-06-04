@@ -84,6 +84,8 @@ storage:
 job:
   orphan-file-cleanup:
     cron: "${ORPHAN_FILE_CLEANUP_CRON:0 0 2 * * *}"
+  eliminated-user-disable:
+    cron: "${ELIMINATED_USER_DISABLE_CRON:0 0 3 * * *}"
 
 # Judge assets use an isolated bucket and must not be exposed through candidate file APIs.
 judge:

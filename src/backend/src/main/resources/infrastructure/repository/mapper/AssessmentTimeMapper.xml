@@ -76,30 +76,43 @@
         FROM tb_assessment_time t
         WHERE
         (
-            <choose>
-                <when test="direction != null and enrollmentYear != null">
-                    (t.direction = #{direction} AND (t.grade = #{enrollmentYear} OR t.grade IS NULL))
-                    OR (t.direction IS NULL AND (t.grade = #{enrollmentYear} OR t.grade IS NULL))
-                </when>
-                <when test="direction != null">
-                    t.direction = #{direction}
-                    OR (t.direction IS NULL AND t.grade IS NULL)
-                </when>
-                <when test="enrollmentYear != null">
-                    t.grade = #{enrollmentYear}
-                    OR t.grade IS NULL
-                </when>
-                <otherwise>
-                    1 = 0
-                </otherwise>
-            </choose>
+            (
+                <choose>
+                    <when test="direction != null and enrollmentYear != null">
+                        (t.direction = #{direction} AND (t.grade = #{enrollmentYear} OR t.grade IS NULL))
+                        OR (t.direction IS NULL AND (t.grade = #{enrollmentYear} OR t.grade IS NULL))
+                    </when>
+                    <when test="direction != null">
+                        t.direction = #{direction}
+                        OR (t.direction IS NULL AND t.grade IS NULL)
+                    </when>
+                    <when test="enrollmentYear != null">
+                        t.grade = #{enrollmentYear}
+                        OR t.grade IS NULL
+                    </when>
+                    <otherwise>
+                        1 = 0
+                    </otherwise>
+                </choose>
+            )
+            OR EXISTS (
+                SELECT 1
+                FROM tb_assessment_question q
+                JOIN tb_assessment_answer a ON a.question_id = q.id
+                WHERE q.assessment_time_id = t.id
+                  AND a.user_id = #{userId}
+            )
         )
-        OR EXISTS (
+        AND NOT EXISTS (
             SELECT 1
-            FROM tb_assessment_question q
-            JOIN tb_assessment_answer a ON a.question_id = q.id
-            WHERE q.assessment_time_id = t.id
-              AND a.user_id = #{userId}
+            FROM tb_assessment_decision d
+            JOIN tb_assessment_time t2 ON t2.id = d.assessment_time_id
+            WHERE d.user_id = #{userId}
+              AND d.passed = false
+              AND t2.direction IS NOT DISTINCT FROM t.direction
+              AND t2.grade IS NOT DISTINCT FROM t.grade
+              AND t2.epoch &gt; 0
+              AND (t.epoch = 0 OR t2.epoch &lt; t.epoch)
         )
         ORDER BY t.id DESC
     </select>

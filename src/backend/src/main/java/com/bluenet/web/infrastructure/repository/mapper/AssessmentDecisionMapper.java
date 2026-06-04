@@ -29,4 +29,13 @@ public interface AssessmentDecisionMapper extends BaseMapper<AssessmentDecisionD
      * @return 满足条件的考核最终决策 结果集合。
      */
     List<AssessmentDecisionDO> selectByAssessmentTimeId(@Param("assessmentTimeId") Long assessmentTimeId);
+
+    /**
+     * 查询指定用户的所有淘汰决策记录（passed = false）。
+     *
+     * @param userId
+     *            用户主键。
+     * @return 该用户的淘汰决策数据行列表；无记录时返回空列表。
+     */
+    List<AssessmentDecisionDO> selectEliminatedDecisionsByUserId(@Param("userId") Long userId);
 }

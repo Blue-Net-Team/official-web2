@@ -28,6 +28,7 @@ import com.bluenet.web.domain.model.entity.AssessmentTeam;
 import com.bluenet.web.domain.repository.AssessmentAnswerRepository;
 import com.bluenet.web.domain.repository.AssessmentSessionRepository;
 import com.bluenet.web.domain.repository.AssessmentTeamRepository;
+import com.bluenet.web.domain.service.AssessmentDecisionDomainService;
 import com.bluenet.web.domain.service.AssessmentJudgementDomainService;
 import com.bluenet.web.domain.repository.AssessmentQuestionRepository;
 import com.bluenet.web.domain.repository.AssessmentTimeRepository;
@@ -74,6 +75,7 @@ public class AssessmentAnswerAppServiceImpl implements AssessmentAnswerAppServic
     private final ObjectMapper objectMapper;
     private final UserDomainService userDomainService;
     private final CommentDomainService commentDomainService;
+    private final AssessmentDecisionDomainService assessmentDecisionDomainService;
 
     /**
      * 创建答案。
@@ -99,6 +101,7 @@ public class AssessmentAnswerAppServiceImpl implements AssessmentAnswerAppServic
                 .orElseThrow(() -> new DataNotFound("题目不存在，ID: " + command.questionId()));
         AssessmentTime timeVO = validateDirectionMatch(currentUser, question);
         validateTimeNotEnded(timeVO);
+        validateNotEliminated(currentUser, timeVO);
         validateFileId(command.fileId());
 
         if (Boolean.TRUE.equals(timeVO.getTimeLimit())) {
@@ -169,6 +172,7 @@ public class AssessmentAnswerAppServiceImpl implements AssessmentAnswerAppServic
                 .orElseThrow(() -> new DataNotFound("题目不存在，ID: " + command.questionId()));
         AssessmentTime timeVO = validateDirectionMatch(currentUser, question);
         validateTimeNotEnded(timeVO);
+        validateNotEliminated(currentUser, timeVO);
         validateFileId(command.fileId());
 
         if (Boolean.TRUE.equals(timeVO.getTimeLimit())) {
@@ -345,6 +349,14 @@ public class AssessmentAnswerAppServiceImpl implements AssessmentAnswerAppServic
     private void validateTimeNotEnded(AssessmentTime time) {
         if (time.getEndTime() != null && LocalDateTime.now().isAfter(time.getEndTime())) {
             throw new BadRequest("考核时间已结束，无法提交答案");
+        }
+    }
+
+    private void validateNotEliminated(UserVO user, AssessmentTime time) {
+        RoleType roleType = RoleType.fromName(user.getRoleName());
+        if (roleType == RoleType.CANDIDATE
+                && assessmentDecisionDomainService.isEliminatedFromPriorEpoch(user.getId(), time)) {
+            throw new Forbidden("已在该方向考核中被淘汰，无法提交答案");
         }
     }
 

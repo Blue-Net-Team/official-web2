@@ -4,6 +4,7 @@ import com.bluenet.web.infrastructure.repository.converter.*;
 
 import com.bluenet.web.infrastructure.repository.dataobject.*;
 
+import java.time.LocalDateTime;
 import java.util.*;
 
 import com.bluenet.web.domain.exception.GlobalException;
@@ -466,6 +467,11 @@ public class UserRepositoryImpl implements UserRepository {
             userMapper.updateById(userDO);
         }
         log.info("Batch updated roleId={} for {} users", roleId, userIds.size());
+    }
+
+    @Override
+    public List<Long> findUserIdsToDisableByElimination(LocalDateTime cutoffTime) {
+        return userMapper.selectUserIdsToDisableByElimination(cutoffTime);
     }
 
     @Override

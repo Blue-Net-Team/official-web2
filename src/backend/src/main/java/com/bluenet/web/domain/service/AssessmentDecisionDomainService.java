@@ -35,4 +35,15 @@ public interface AssessmentDecisionDomainService {
      * @return 决策记录
      */
     AssessmentDecisionVO getDecision(Long userId, Long assessmentTimeId);
+
+    /**
+     * 检查用户是否因在某个更早轮次被淘汰而无法参与目标考核。
+     *
+     * @param userId
+     *            用户ID
+     * @param assessmentTime
+     *            目标考核时间
+     * @return 如果用户在相同 direction+grade 组合的某个更早 epoch 中被淘汰，返回 true
+     */
+    boolean isEliminatedFromPriorEpoch(Long userId, com.bluenet.web.domain.model.entity.AssessmentTime assessmentTime);
 }

@@ -16,6 +16,7 @@ import com.bluenet.web.domain.model.vo.evaluation.MultipleChoiceContent;
 import com.bluenet.web.domain.model.vo.evaluation.SingleChoiceContent;
 import com.bluenet.web.domain.repository.AssessmentAnswerRepository;
 import com.bluenet.web.domain.repository.AssessmentSessionRepository;
+import com.bluenet.web.domain.service.AssessmentDecisionDomainService;
 import com.bluenet.web.domain.service.AssessmentJudgementDomainService;
 import com.bluenet.web.domain.repository.AssessmentQuestionRepository;
 import com.bluenet.web.domain.repository.AssessmentTimeRepository;
@@ -63,6 +64,8 @@ class AssessmentAnswerAppServiceImplTest {
     private UserDomainService userDomainService;
     @Mock
     private CommentDomainService commentDomainService;
+    @Mock
+    private AssessmentDecisionDomainService assessmentDecisionDomainService;
     @InjectMocks
     private AssessmentAnswerAppServiceImpl assessmentAnswerAppService;
 
@@ -601,6 +604,80 @@ class AssessmentAnswerAppServiceImplTest {
             AssessmentAnswerResult result = assessmentAnswerAppService.getMyAnswer(TEST_USER_ID, TEST_QUESTION_ID);
             assertNull(result);
             verify(assessmentAnswerRepository).findByUserIdAndQuestionId(TEST_USER_ID, TEST_QUESTION_ID);
+        }
+    }
+
+    @Nested
+    @DisplayName("淘汰检查测试")
+    class EliminationTests {
+
+        @Test
+        @DisplayName("被淘汰考生创建答案：应抛出Forbidden")
+        void createAnswer_eliminatedCandidate_shouldThrowForbidden() {
+            UserVO user = createTestUser();
+            when(userDomainService.getUser(TEST_USER_ID)).thenReturn(Optional.of(user));
+            AssessmentQuestion question = createTestQuestion();
+            when(assessmentQuestionRepository.findById(TEST_QUESTION_ID)).thenReturn(Optional.of(question));
+            when(assessmentTimeRepository.findById(TEST_ASSESSMENT_TIME_ID)).thenReturn(Optional.of(createTestTime()));
+            when(assessmentDecisionDomainService.isEliminatedFromPriorEpoch(TEST_USER_ID, createTestTime()))
+                    .thenReturn(true);
+
+            AssessmentAnswerCommands.CreateAssessmentAnswerCommand command = createTestCreateCommand();
+            Forbidden ex = assertThrows(
+                    Forbidden.class,
+                    () -> assessmentAnswerAppService.createAnswer(command));
+            assertEquals("已在该方向考核中被淘汰，无法提交答案", ex.getMessage());
+            verify(assessmentAnswerRepository, never()).save(any());
+        }
+
+        @Test
+        @DisplayName("被淘汰考生更新答案：应抛出Forbidden")
+        void updateAnswer_eliminatedCandidate_shouldThrowForbidden() {
+            UserVO user = createTestUser();
+            when(userDomainService.getUser(TEST_USER_ID)).thenReturn(Optional.of(user));
+            AssessmentQuestion question = createTestQuestion();
+            when(assessmentQuestionRepository.findById(TEST_QUESTION_ID)).thenReturn(Optional.of(question));
+            when(assessmentTimeRepository.findById(TEST_ASSESSMENT_TIME_ID)).thenReturn(Optional.of(createTestTime()));
+            when(assessmentDecisionDomainService.isEliminatedFromPriorEpoch(TEST_USER_ID, createTestTime()))
+                    .thenReturn(true);
+
+            AssessmentAnswerCommands.UpdateAssessmentAnswerCommand command = createTestUpdateCommand();
+            Forbidden ex = assertThrows(
+                    Forbidden.class,
+                    () -> assessmentAnswerAppService.updateAnswer(command));
+            assertEquals("已在该方向考核中被淘汰，无法提交答案", ex.getMessage());
+            verify(assessmentAnswerRepository, never()).update(any());
+        }
+
+        @Test
+        @DisplayName("非考生角色提交答案：淘汰检查应跳过")
+        void createAnswer_nonCandidate_shouldSkipEliminationCheck() {
+            UserVO user = UserVO.builder()
+                    .id(TEST_USER_ID)
+                    .studentId("2024123456")
+                    .roleName("MEMBER")
+                    .direction(Direction.COMPUTER_VISION)
+                    .build();
+            when(userDomainService.getUser(TEST_USER_ID)).thenReturn(Optional.of(user));
+            AssessmentQuestion question = createTestQuestion();
+            when(assessmentQuestionRepository.findById(TEST_QUESTION_ID)).thenReturn(Optional.of(question));
+            when(assessmentTimeRepository.findById(TEST_ASSESSMENT_TIME_ID)).thenReturn(Optional.of(createTestTime()));
+            when(assessmentSessionRepository.findByUserIdAndAssessmentTimeId(TEST_USER_ID, TEST_ASSESSMENT_TIME_ID))
+                    .thenReturn(Optional.empty());
+            when(assessmentAnswerRepository.existsByUserIdAndQuestionId(TEST_USER_ID, TEST_QUESTION_ID))
+                    .thenReturn(false);
+            doAnswer(invocation -> {
+                AssessmentAnswer entity = invocation.getArgument(0);
+                entity.setId(TEST_ANSWER_ID);
+                return null;
+            }).when(assessmentAnswerRepository).save(any(AssessmentAnswer.class));
+
+            AssessmentAnswerCommands.CreateAssessmentAnswerCommand command = new AssessmentAnswerCommands.CreateAssessmentAnswerCommand(
+                    TEST_USER_ID, TEST_QUESTION_ID, "test answer", null, null);
+            AssessmentAnswerResult result = assessmentAnswerAppService.createAnswer(command);
+
+            assertNotNull(result);
+            verify(assessmentDecisionDomainService, never()).isEliminatedFromPriorEpoch(any(), any());
         }
     }
 }

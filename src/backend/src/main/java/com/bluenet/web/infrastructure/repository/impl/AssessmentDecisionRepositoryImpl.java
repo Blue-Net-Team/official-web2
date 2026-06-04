@@ -144,4 +144,20 @@ public class AssessmentDecisionRepositoryImpl implements AssessmentDecisionRepos
                 .map(this::convertToVO)
                 .toList();
     }
+
+    /**
+     * 查询指定用户的所有淘汰决策记录（passed = false）。
+     *
+     * @param userId
+     *            用户主键。
+     * @return 该用户的淘汰决策列表；无记录时返回空列表。
+     */
+    @Override
+    public List<AssessmentDecisionVO> findEliminatedDecisionsByUserId(Long userId) {
+        return converter.toEntityList(
+                assessmentDecisionMapper.selectEliminatedDecisionsByUserId(userId))
+                .stream()
+                .map(this::convertToVO)
+                .toList();
+    }
 }

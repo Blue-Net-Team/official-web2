@@ -8,24 +8,29 @@ import com.bluenet.web.domain.model.entity.AssessmentQuestion;
 import com.bluenet.web.domain.model.enumerate.QuestionType;
 import com.bluenet.web.domain.model.entity.AssessmentTime;
 import com.bluenet.web.domain.model.enumerate.Direction;
+import com.bluenet.web.domain.model.vo.UserVO;
 import com.bluenet.web.domain.model.vo.evaluation.AlgorithmContent;
 import com.bluenet.web.domain.repository.AssessmentAnswerRepository;
 import com.bluenet.web.domain.repository.AssessmentQuestionRepository;
 import com.bluenet.web.domain.repository.AssessmentTimeRepository;
+import com.bluenet.web.domain.service.AssessmentDecisionDomainService;
 import com.bluenet.web.infrastructure.repository.dataobject.JudgeProblemConfigDO;
 import com.bluenet.web.infrastructure.repository.mapper.JudgeProblemConfigMapper;
+import com.bluenet.web.infrastructure.security.util.UserCTX;
 import com.bluenet.web.infrastructure.storage.JudgeAssetStorage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -56,6 +61,8 @@ class AssessmentQuestionAppServiceImplTest {
     private JudgeProblemConfigMapper judgeProblemConfigMapper;
     @Mock
     private JudgeAssetStorage judgeAssetStorage;
+    @Mock
+    private AssessmentDecisionDomainService assessmentDecisionDomainService;
 
     private AssessmentQuestionAppServiceImpl assessmentQuestionAppService;
 
@@ -68,7 +75,8 @@ class AssessmentQuestionAppServiceImplTest {
                 assessmentAnswerRepository,
                 null,
                 judgeProblemConfigMapper,
-                judgeAssetStorage);
+                judgeAssetStorage,
+                assessmentDecisionDomainService);
     }
 
     private AssessmentTime createTime() {
@@ -372,5 +380,146 @@ class AssessmentQuestionAppServiceImplTest {
         verify(judgeProblemConfigMapper, never()).selectByQuestionId(any());
         verify(judgeAssetStorage, never()).deleteByPrefix(any());
         verify(assessmentQuestionRepository).deleteById(QUESTION_ID);
+    }
+
+    // ==================== 淘汰检查测试 ====================
+
+    @Test
+    @DisplayName("淘汰考生查看后续轮次题目列表：应抛出SecurityException")
+    void listQuestionsForUser_eliminatedCandidate_shouldThrowSecurityException() {
+        try (MockedStatic<UserCTX> mockedUserCTX = mockStatic(UserCTX.class)) {
+            UserVO userVO = UserVO.builder()
+                    .id(1L)
+                    .roleName("CANDIDATE")
+                    .direction(Direction.COMPUTER_VISION)
+                    .studentId("2024123456")
+                    .build();
+            mockedUserCTX.when(UserCTX::getCurrentUser).thenReturn(userVO);
+
+            AssessmentTime time = AssessmentTime.reconstruct(
+                    ASSESSMENT_TIME_ID,
+                    Direction.COMPUTER_VISION,
+                    2,
+                    2024,
+                    LocalDateTime.now().minusDays(1),
+                    LocalDateTime.now().plusDays(1),
+                    false,
+                    null,
+                    null,
+                    false);
+            when(assessmentTimeRepository.findById(ASSESSMENT_TIME_ID)).thenReturn(Optional.of(time));
+            when(assessmentDecisionDomainService.isEliminatedFromPriorEpoch(1L, time)).thenReturn(true);
+
+            SecurityException ex = assertThrows(
+                    SecurityException.class,
+                    () -> assessmentQuestionAppService.listQuestionsForUser(ASSESSMENT_TIME_ID, 0, 10));
+            assertEquals("已在该方向考核中被淘汰，无法查看后续轮次题目", ex.getMessage());
+        }
+    }
+
+    @Test
+    @DisplayName("淘汰考生查看后续轮次题目详情：应抛出SecurityException")
+    void getQuestionDetailForUser_eliminatedCandidate_shouldThrowSecurityException() {
+        try (MockedStatic<UserCTX> mockedUserCTX = mockStatic(UserCTX.class)) {
+            UserVO userVO = UserVO.builder()
+                    .id(1L)
+                    .roleName("CANDIDATE")
+                    .direction(Direction.COMPUTER_VISION)
+                    .studentId("2024123456")
+                    .build();
+            mockedUserCTX.when(UserCTX::getCurrentUser).thenReturn(userVO);
+
+            AssessmentQuestion entity = createQuestionEntity(QuestionType.SINGLE_CHOICE, null);
+            entity.setAssessmentTimeId(ASSESSMENT_TIME_ID);
+            when(assessmentQuestionRepository.findById(QUESTION_ID)).thenReturn(Optional.of(entity));
+
+            AssessmentTime time = AssessmentTime.reconstruct(
+                    ASSESSMENT_TIME_ID,
+                    Direction.COMPUTER_VISION,
+                    2,
+                    2024,
+                    LocalDateTime.now().minusDays(1),
+                    LocalDateTime.now().plusDays(1),
+                    false,
+                    null,
+                    null,
+                    false);
+            when(assessmentTimeRepository.findById(ASSESSMENT_TIME_ID)).thenReturn(Optional.of(time));
+            when(assessmentDecisionDomainService.isEliminatedFromPriorEpoch(1L, time)).thenReturn(true);
+
+            SecurityException ex = assertThrows(
+                    SecurityException.class,
+                    () -> assessmentQuestionAppService.getQuestionDetailForUser(QUESTION_ID));
+            assertEquals("已在该方向考核中被淘汰，无法查看后续轮次题目", ex.getMessage());
+        }
+    }
+
+    @Test
+    @DisplayName("考核结束后CANDIDATE仍可查看题目列表：时间拦截已移除")
+    void listQuestionsForUser_afterEndTime_shouldAllowView() {
+        try (MockedStatic<UserCTX> mockedUserCTX = mockStatic(UserCTX.class)) {
+            UserVO userVO = UserVO.builder()
+                    .id(1L)
+                    .roleName("CANDIDATE")
+                    .direction(Direction.COMPUTER_VISION)
+                    .studentId("2024123456")
+                    .build();
+            mockedUserCTX.when(UserCTX::getCurrentUser).thenReturn(userVO);
+
+            AssessmentTime time = AssessmentTime.reconstruct(
+                    ASSESSMENT_TIME_ID,
+                    Direction.COMPUTER_VISION,
+                    1,
+                    2024,
+                    LocalDateTime.now().minusDays(2),
+                    LocalDateTime.now().minusDays(1),
+                    false,
+                    null,
+                    null,
+                    false);
+            when(assessmentTimeRepository.findById(ASSESSMENT_TIME_ID)).thenReturn(Optional.of(time));
+            when(assessmentDecisionDomainService.isEliminatedFromPriorEpoch(1L, time)).thenReturn(false);
+            when(assessmentQuestionRepository.findAllByTimeId(eq(ASSESSMENT_TIME_ID), any(PageRequest.class)))
+                    .thenReturn(new PageImpl<>(List.of()));
+
+            var result = assessmentQuestionAppService.listQuestionsForUser(ASSESSMENT_TIME_ID, 0, 10);
+
+            assertNotNull(result);
+            assertTrue(result.questions().getContent().isEmpty());
+        }
+    }
+
+    @Test
+    @DisplayName("非淘汰考生查看后续轮次题目列表：应正常访问")
+    void listQuestionsForUser_notEliminated_shouldAllowAccess() {
+        try (MockedStatic<UserCTX> mockedUserCTX = mockStatic(UserCTX.class)) {
+            UserVO userVO = UserVO.builder()
+                    .id(1L)
+                    .roleName("CANDIDATE")
+                    .direction(Direction.COMPUTER_VISION)
+                    .studentId("2024123456")
+                    .build();
+            mockedUserCTX.when(UserCTX::getCurrentUser).thenReturn(userVO);
+
+            AssessmentTime time = AssessmentTime.reconstruct(
+                    ASSESSMENT_TIME_ID,
+                    Direction.COMPUTER_VISION,
+                    2,
+                    2024,
+                    LocalDateTime.now().minusDays(1),
+                    LocalDateTime.now().plusDays(1),
+                    false,
+                    null,
+                    null,
+                    false);
+            when(assessmentTimeRepository.findById(ASSESSMENT_TIME_ID)).thenReturn(Optional.of(time));
+            when(assessmentDecisionDomainService.isEliminatedFromPriorEpoch(1L, time)).thenReturn(false);
+            when(assessmentQuestionRepository.findAllByTimeId(eq(ASSESSMENT_TIME_ID), any(PageRequest.class)))
+                    .thenReturn(new PageImpl<>(List.of()));
+
+            var result = assessmentQuestionAppService.listQuestionsForUser(ASSESSMENT_TIME_ID, 0, 10);
+
+            assertNotNull(result);
+        }
     }
 }

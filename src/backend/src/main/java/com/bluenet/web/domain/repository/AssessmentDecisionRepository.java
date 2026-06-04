@@ -55,4 +55,13 @@ public interface AssessmentDecisionRepository {
      * @return 满足条件的考核最终决策 结果集合。
      */
     List<AssessmentDecisionVO> findByAssessmentTimeId(Long assessmentTimeId);
+
+    /**
+     * 查询指定用户的所有淘汰决策记录（passed = false）。
+     *
+     * @param userId
+     *            用户主键。
+     * @return 该用户的淘汰决策列表；无记录时返回空列表。
+     */
+    List<AssessmentDecisionVO> findEliminatedDecisionsByUserId(Long userId);
 }
