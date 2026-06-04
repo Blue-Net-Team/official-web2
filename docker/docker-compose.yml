@@ -74,7 +74,9 @@ services:
     ports:
       - "8080:8080"
       - "18088:8088"
-    environment: *api-service-env
+    environment:
+      <<: *api-service-env
+      TZ: Asia/Shanghai
     # 启用 Bug 报告同步到 GitHub Issue 时，确保宿主机 .env 中 GITHUB_APP_PRIVATE_KEY_PATH 指向私钥文件
     volumes:
       - ${GITHUB_APP_PRIVATE_KEY_PATH:-docker/null.pem}:/app/github-private-key.pem:ro
@@ -124,6 +126,7 @@ services:
       JUDGE_SANDBOX_ENGINE: isolate
       JUDGE_WORK_ROOT: /var/lib/bluenet-judge/work
       LANG: C.UTF-8
+      TZ: Asia/Shanghai
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8090/api/v1/judge/health"]
       interval: 10s

@@ -79,6 +79,8 @@ ENV JUDGE_SANDBOX_ENGINE=isolate
 ENV JUDGE_WORK_ROOT=/var/lib/bluenet-judge/work
 # 容器默认字符集，避免日志或源码内容乱码。
 ENV LANG=C.UTF-8
+# 容器时区，确保 LocalDateTime.now() 返回北京时间。
+ENV TZ=Asia/Shanghai
 
 WORKDIR /app
 
