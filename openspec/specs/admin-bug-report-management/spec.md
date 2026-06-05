@@ -8,7 +8,7 @@ TBD - created by archiving change add-bug-report-feature. Update Purpose after a
 
 #### Scenario: 管理员查看列表
 - **WHEN** ROLE_MEMBER 用户访问 Admin Bug 报告列表页
-- **THEN** 系统展示分页的 Bug 报告列表，包含报告 ID、描述摘要、状态、提交时间、页面 URL
+- **THEN** 系统展示分页的 Bug 报告列表，包含报告 ID、标题、状态、提交时间、页面 URL
 
 #### Scenario: 按状态筛选列表
 - **WHEN** 管理员选择筛选条件"状态 = 未解决"
@@ -23,7 +23,7 @@ TBD - created by archiving change add-bug-report-feature. Update Purpose after a
 
 #### Scenario: 查看详情
 - **WHEN** 管理员点击列表中的某条报告
-- **THEN** 系统展示该报告的完整信息，包括环境信息 JSON、可点击预览的截图列表
+- **THEN** 系统展示该报告的标题、完整信息（包括环境信息 JSON、可点击预览的截图列表）
 
 #### Scenario: 查看不存在的报告
 - **WHEN** 管理员请求 ID 为 99999 的报告详情
