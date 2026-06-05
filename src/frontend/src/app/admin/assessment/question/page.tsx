@@ -21,6 +21,11 @@ import { ResponseMessage, PageDTO } from '@/apis/schema/type'
 const PAGE_SIZE = 20
 const { useBreakpoint } = Grid
 
+/** Select 中「全局」选项的哨兵值，对应 direction = null。 */
+const GLOBAL_DIRECTION_VALUE = '__GLOBAL__' as const
+/** 方向筛选器支持的值类型。 */
+type DirectionFilterValue = Direction | typeof GLOBAL_DIRECTION_VALUE
+
 const QUESTION_TYPE_COLORS: Record<QuestionType, string> = {
   FILE_UPLOAD: 'blue',
   SINGLE_CHOICE: 'green',
@@ -39,7 +44,7 @@ export default function AssessmentQuestionManagementPage() {
   const userDirection = userInfo?.direction
 
   // Filter state
-  const [filterDirection, setFilterDirection] = useState<Direction | undefined>(
+  const [filterDirection, setFilterDirection] = useState<Direction | null | undefined>(
     isSuperAdmin ? undefined : (userDirection ?? undefined)
   )
   const [filterTimeId, setFilterTimeId] = useState<number | undefined>(undefined)
@@ -63,26 +68,35 @@ export default function AssessmentQuestionManagementPage() {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false)
   const [deletingItem, setDeletingItem] = useState<AssessmentQuestionDTO | null>(null)
 
-  // Permission: DIRECTION_ADMIN can only operate on own direction
+  // Permission: 全局考核仅 SUPER_ADMIN 可操作；其他情况 DIRECTION_ADMIN 只能操作本方向。
   const canOperate = useMemo(() => {
+    if (filterDirection === null) return isSuperAdmin
     return isSuperAdmin || filterDirection === userDirection
   }, [isSuperAdmin, filterDirection, userDirection])
 
-  // Direction options: SUPER_ADMIN sees all, DIRECTION_ADMIN sees only own
+  // Direction options: SUPER_ADMIN 额外看到「全局」；DIRECTION_ADMIN 只能看到本方向。
   const directionOptions = useMemo(() => {
     const entries = Object.entries(DIRECTION_LABELS) as [Direction, string][]
+    const options = entries.map(([value, label]) => ({ value, label }))
     if (!isSuperAdmin && userDirection) {
-      return entries.filter(([value]) => value === userDirection)
+      return options.filter((opt) => opt.value === userDirection)
     }
-    return entries
+    if (isSuperAdmin) {
+      return [{ value: GLOBAL_DIRECTION_VALUE, label: '全局' }, ...options]
+    }
+    return options
   }, [isSuperAdmin, userDirection])
 
-  // 方向变更后加载该方向下的考核时间。
-  const fetchAssessmentTimes = useCallback(async (direction: Direction) => {
+  // 方向变更后加载该方向下的考核时间；null 表示全局考核。
+  const fetchAssessmentTimes = useCallback(async (direction: Direction | null) => {
     try {
       const res = await adminAssessmentTimeService.getList(0, 100)
       if (res.data) {
-        setAssessmentTimes(res.data.content.filter((t) => t.direction === direction))
+        if (direction === null) {
+          setAssessmentTimes(res.data.content.filter((t) => t.direction === null))
+        } else {
+          setAssessmentTimes(res.data.content.filter((t) => t.direction === direction))
+        }
       }
     } catch {
       // silent
@@ -90,7 +104,7 @@ export default function AssessmentQuestionManagementPage() {
   }, [])
 
   useEffect(() => {
-    if (filterDirection) {
+    if (filterDirection !== undefined) {
       fetchAssessmentTimes(filterDirection)
     } else {
       setAssessmentTimes([])
@@ -98,11 +112,11 @@ export default function AssessmentQuestionManagementPage() {
     setFilterTimeId(undefined)
   }, [filterDirection, fetchAssessmentTimes])
 
-  // 考核时间下拉选项。
+  // 考核时间下拉选项；全局考核时 grade 为 null，显示为「不限年级」。
   const timeOptions = useMemo(() => {
     return assessmentTimes.map((t) => ({
       value: t.id,
-      label: `第 ${t.epoch} 轮 · ${t.grade}级`,
+      label: `${t.direction ? DIRECTION_LABELS[t.direction] : '全局'} · 第 ${t.epoch} 轮 · ${t.grade != null ? `${t.grade}级` : '不限年级'}`,
     }))
   }, [assessmentTimes])
 
@@ -141,9 +155,9 @@ export default function AssessmentQuestionManagementPage() {
     reset,
   } = usePagination(apiFn, { pageSize: PAGE_SIZE })
 
-  // 切换方向筛选并重置分页。
-  const handleDirectionChange = (value: Direction | undefined) => {
-    setFilterDirection(value)
+  // 切换方向筛选并重置分页；__GLOBAL__ 映射为 null 表示全局。
+  const handleDirectionChange = (value: DirectionFilterValue | undefined) => {
+    setFilterDirection(value === GLOBAL_DIRECTION_VALUE ? null : value)
   }
 
   // 切换考核时间筛选并重置分页。
@@ -278,11 +292,14 @@ export default function AssessmentQuestionManagementPage() {
   }, [isMobile, canOperate, handleEdit, handleDeleteClick, handleRowClick])
 
   // 空状态文案随方向和考核时间筛选状态变化。
-  const emptyText = !filterDirection
-    ? '请先选择方向'
-    : !filterTimeId
-      ? '请选择考核时间'
-      : '暂无考题，点击新增添加'
+  const emptyText =
+    filterDirection === undefined
+      ? '请先选择方向'
+      : filterDirection === null && assessmentTimes.length === 0
+        ? '暂无全局考核时间'
+        : !filterTimeId
+          ? '请选择考核时间'
+          : '暂无考题，点击新增添加'
 
   return (
     <div className="flex flex-col gap-4">
@@ -318,9 +335,9 @@ export default function AssessmentQuestionManagementPage() {
               placeholder="筛选方向"
               allowClear
               className="w-[140px]"
-              value={filterDirection}
+              value={filterDirection === null ? GLOBAL_DIRECTION_VALUE : filterDirection}
               onChange={handleDirectionChange}
-              options={directionOptions.map(([value, label]) => ({ value, label }))}
+              options={directionOptions}
             />
             <Select
               placeholder="选择考核时间"
@@ -329,7 +346,7 @@ export default function AssessmentQuestionManagementPage() {
               value={filterTimeId}
               onChange={handleTimeChange}
               options={timeOptions}
-              disabled={!filterDirection}
+              disabled={filterDirection === undefined}
             />
           </div>
 
