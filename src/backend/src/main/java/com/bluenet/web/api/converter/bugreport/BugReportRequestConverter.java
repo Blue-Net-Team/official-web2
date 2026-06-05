@@ -20,6 +20,7 @@ public class BugReportRequestConverter {
      */
     public BugReportCommands.CreateBugReportCommand toCommand(CreateBugReportRequestDTO dto) {
         return new BugReportCommands.CreateBugReportCommand(
+                dto.getTitle(),
                 dto.getDescription(),
                 dto.getPageUrl(),
                 dto.getEnvironmentJson(),

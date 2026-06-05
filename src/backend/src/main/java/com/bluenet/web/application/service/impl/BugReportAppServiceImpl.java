@@ -25,6 +25,7 @@ public class BugReportAppServiceImpl implements BugReportAppService {
     @Transactional
     public BugReportResult.Created submitBugReport(BugReportCommands.CreateBugReportCommand command) {
         BugReport bugReport = BugReport.create(
+                command.title(),
                 command.description(),
                 command.pageUrl(),
                 command.environmentJson(),

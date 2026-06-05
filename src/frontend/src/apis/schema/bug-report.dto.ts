@@ -37,6 +37,8 @@ export interface BugReportCreatedDTO {
  * 对应后端 CreateBugReportCommand / CreateBugReportRequestDTO
  */
 export interface CreateBugReportRequestDTO {
+  /** Bug 标题 */
+  title: string
   /** 问题描述 */
   description: string
   /** 截图文件 ID 列表 */
@@ -55,6 +57,7 @@ export interface CreateBugReportRequestDTO {
  */
 export interface BugReportListItemDTO {
   id: number
+  title: string
   description: string
   status: BugReportStatus
   pageUrl: string
@@ -68,6 +71,7 @@ export interface BugReportListItemDTO {
  */
 export interface BugReportDetailDTO {
   id: number
+  title: string
   description: string
   status: BugReportStatus
   pageUrl: string

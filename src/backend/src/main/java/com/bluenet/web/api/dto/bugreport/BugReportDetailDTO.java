@@ -19,6 +19,9 @@ public class BugReportDetailDTO {
     @Schema(description = "报告 ID", example = "1")
     private Long id;
 
+    @Schema(description = "Bug 标题", example = "提交按钮无响应")
+    private String title;
+
     @Schema(description = "Bug 描述", example = "点击提交按钮后页面无响应")
     private String description;
 

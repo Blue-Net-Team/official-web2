@@ -29,6 +29,7 @@ public class BugReportResponseConverter {
     public BugReportDetailDTO toDetailDTO(BugReportResult.Detail result) {
         return BugReportDetailDTO.builder()
                 .id(result.id())
+                .title(result.title())
                 .description(result.description())
                 .pageUrl(result.pageUrl())
                 .environmentJson(result.environmentJson())
@@ -43,6 +44,7 @@ public class BugReportResponseConverter {
     public BugReportBriefDTO toBriefDTO(BugReportResult.Brief result) {
         return BugReportBriefDTO.builder()
                 .id(result.id())
+                .title(result.title())
                 .description(result.description())
                 .pageUrl(result.pageUrl())
                 .reporterEmail(result.reporterEmail())

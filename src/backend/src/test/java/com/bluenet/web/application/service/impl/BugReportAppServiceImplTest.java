@@ -49,6 +49,7 @@ class BugReportAppServiceImplTest {
             }).when(bugReportRepository).save(any(BugReport.class));
 
             BugReportCommands.CreateBugReportCommand command = new BugReportCommands.CreateBugReportCommand(
+                    "提交按钮无响应",
                     "页面无响应",
                     "/home",
                     "{\"browser\":\"Chrome\"}",
@@ -64,6 +65,7 @@ class BugReportAppServiceImplTest {
 
             ArgumentCaptor<BugReport> captor = ArgumentCaptor.forClass(BugReport.class);
             verify(bugReportRepository).save(captor.capture());
+            assertEquals("提交按钮无响应", captor.getValue().getTitle());
             assertEquals("页面无响应", captor.getValue().getDescription());
 
             verify(gitHubIssueSyncService).sync(any(BugReport.class));
@@ -79,6 +81,7 @@ class BugReportAppServiceImplTest {
             }).when(bugReportRepository).save(any(BugReport.class));
 
             BugReportCommands.CreateBugReportCommand command = new BugReportCommands.CreateBugReportCommand(
+                    "测试标题",
                     "测试描述",
                     "/test",
                     "{}",
@@ -106,6 +109,7 @@ class BugReportAppServiceImplTest {
 
             BugReportCommands.CreateBugReportCommand command = new BugReportCommands.CreateBugReportCommand(
                     "配置未启用测试",
+                    "配置未启用测试描述",
                     "/page",
                     "{}",
                     null,

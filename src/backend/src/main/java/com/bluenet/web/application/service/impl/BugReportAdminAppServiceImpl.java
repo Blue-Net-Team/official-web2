@@ -66,6 +66,7 @@ public class BugReportAdminAppServiceImpl implements BugReportAdminAppService {
 
         return new BugReportResult.Brief(
                 bugReport.getId(),
+                bugReport.getTitle(),
                 description,
                 bugReport.getPageUrl(),
                 bugReport.getReporterEmail(),
@@ -81,6 +82,7 @@ public class BugReportAdminAppServiceImpl implements BugReportAdminAppService {
 
         return new BugReportResult.Detail(
                 bugReport.getId(),
+                bugReport.getTitle(),
                 bugReport.getDescription(),
                 bugReport.getPageUrl(),
                 bugReport.getEnvironmentJson(),

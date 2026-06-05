@@ -13,6 +13,7 @@ interface BugReportModalProps {
 }
 
 interface BugReportFormValues {
+  title: string
   description: string
   reporterEmail?: string
 }
@@ -66,6 +67,7 @@ export default function BugReportModal({ open, onClose }: BugReportModalProps) {
       })
 
       const res = await bugReportService.create({
+        title: values.title,
         description: values.description,
         reporterEmail: values.reporterEmail,
         fileIds,
@@ -115,6 +117,14 @@ export default function BugReportModal({ open, onClose }: BugReportModalProps) {
       destroyOnClose
     >
       <Form form={form} layout="vertical" className="mt-4">
+        <Form.Item
+          name="title"
+          label="Bug 标题"
+          rules={[{ required: true, message: '请填写 Bug 标题' }]}
+        >
+          <Input maxLength={100} showCount placeholder="请简要描述问题，例如：提交按钮无响应" />
+        </Form.Item>
+
         <Form.Item
           name="description"
           label="问题描述"

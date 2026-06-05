@@ -18,10 +18,12 @@ import java.util.List;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class BugReport {
 
+    private static final int MAX_TITLE_LENGTH = 100;
     private static final int MAX_DESCRIPTION_LENGTH = 2000;
     private static final int MAX_IMAGES = 3;
 
     private Long id;
+    private String title;
     private String description;
     private String pageUrl;
     private String environmentJson;
@@ -31,10 +33,11 @@ public class BugReport {
     private Integer githubIssueNumber;
     private List<BugReportImage> images = new ArrayList<>();
 
-    private BugReport(Long id, String description, String pageUrl, String environmentJson,
+    private BugReport(Long id, String title, String description, String pageUrl, String environmentJson,
             String reporterEmail, BugReportStatus status,
             String githubIssueUrl, Integer githubIssueNumber, List<BugReportImage> images) {
         this.id = id;
+        this.title = title;
         this.description = description;
         this.pageUrl = pageUrl;
         this.environmentJson = environmentJson;
@@ -48,8 +51,14 @@ public class BugReport {
     /**
      * 构造新 Bug 报告 —— 带领域校验
      */
-    public static BugReport create(String description, String pageUrl,
+    public static BugReport create(String title, String description, String pageUrl,
             String environmentJson, String reporterEmail, List<Long> fileIds) {
+        if (title == null || title.isBlank()) {
+            throw new IllegalArgumentException("Bug 标题不能为空");
+        }
+        if (title.length() > MAX_TITLE_LENGTH) {
+            throw new IllegalArgumentException("Bug 标题最多 " + MAX_TITLE_LENGTH + " 字符");
+        }
         if (description == null || description.isBlank()) {
             throw new IllegalArgumentException("Bug 描述不能为空");
         }
@@ -67,7 +76,7 @@ public class BugReport {
             }
         }
 
-        return new BugReport(null, description.trim(), pageUrl,
+        return new BugReport(null, title.trim(), description.trim(), pageUrl,
                 environmentJson, reporterEmail, BugReportStatus.PENDING,
                 null, null, imageList);
     }
@@ -75,10 +84,10 @@ public class BugReport {
     /**
      * 从数据库重建 —— 跳过创建校验
      */
-    public static BugReport reconstruct(Long id, String description, String pageUrl,
+    public static BugReport reconstruct(Long id, String title, String description, String pageUrl,
             String environmentJson, String reporterEmail, BugReportStatus status,
             String githubIssueUrl, Integer githubIssueNumber, List<BugReportImage> images) {
-        return new BugReport(id, description, pageUrl, environmentJson,
+        return new BugReport(id, title, description, pageUrl, environmentJson,
                 reporterEmail, status, githubIssueUrl, githubIssueNumber, images);
     }
 

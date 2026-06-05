@@ -16,6 +16,11 @@ import java.util.List;
 @Schema(description = "提交 Bug 报告请求")
 public class CreateBugReportRequestDTO {
 
+    @NotBlank(message = "Bug 标题不能为空")
+    @Size(max = 100, message = "Bug 标题最多 100 字符")
+    @Schema(description = "Bug 标题", required = true, example = "提交按钮无响应")
+    private String title;
+
     @NotBlank(message = "Bug 描述不能为空")
     @Size(max = 2000, message = "Bug 描述最多 2000 字符")
     @Schema(description = "Bug 描述", required = true, example = "点击提交按钮后页面无响应")

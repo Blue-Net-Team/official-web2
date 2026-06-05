@@ -104,6 +104,12 @@ export default function BugReportManagementPage() {
       width: 60,
     },
     {
+      title: '标题',
+      dataIndex: 'title',
+      ellipsis: true,
+      render: (v: string) => <span title={v}>{v.length > 50 ? `${v.slice(0, 50)}...` : v}</span>,
+    },
+    {
       title: '描述',
       dataIndex: 'description',
       ellipsis: true,
@@ -264,6 +270,12 @@ export default function BugReportManagementPage() {
                     </a>
                   </div>
                 )}
+              </div>
+
+              {/* Title */}
+              <div>
+                <div className="text-sm text-white/50 mb-1">标题</div>
+                <div className="text-sm font-medium bg-white/5 p-3 rounded">{detailData.title}</div>
               </div>
 
               {/* Description */}

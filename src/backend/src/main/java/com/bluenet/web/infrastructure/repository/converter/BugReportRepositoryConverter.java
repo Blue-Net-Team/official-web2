@@ -26,6 +26,7 @@ public class BugReportRepositoryConverter {
         }
         return BugReportDO.builder()
                 .id(entity.getId())
+                .title(entity.getTitle())
                 .description(entity.getDescription())
                 .pageUrl(entity.getPageUrl())
                 .environmentJson(entity.getEnvironmentJson())
@@ -45,6 +46,7 @@ public class BugReportRepositoryConverter {
         }
         return BugReport.reconstruct(
                 dataObject.getId(),
+                dataObject.getTitle(),
                 dataObject.getDescription(),
                 dataObject.getPageUrl(),
                 dataObject.getEnvironmentJson(),

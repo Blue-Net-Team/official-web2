@@ -49,6 +49,7 @@ class GitHubIssueSyncServiceTest {
             when(gitHubAppProperties.getAppBaseUrl()).thenReturn("https://api.example.com");
 
             BugReport bugReport = BugReport.create(
+                    "页面加载缓慢",
                     "页面加载缓慢，持续超过5秒",
                     "/dashboard",
                     "{\"browser\":\"Chrome 120\",\"os\":\"Windows 11\"}",
@@ -58,10 +59,14 @@ class GitHubIssueSyncServiceTest {
             GitHubIssueCreateResult mockResult = new GitHubIssueCreateResult(
                     42,
                     "https://github.com/bluenet-team/bluenet-issues/issues/42",
-                    "页面加载缓慢，持续超过5秒");
+                    "页面加载缓慢");
             when(gitHubIssueClient.createIssue(anyString(), anyString())).thenReturn(mockResult);
 
             service.sync(bugReport);
+
+            ArgumentCaptor<String> titleCaptor = ArgumentCaptor.forClass(String.class);
+            verify(gitHubIssueClient).createIssue(titleCaptor.capture(), anyString());
+            assertEquals("页面加载缓慢", titleCaptor.getValue());
 
             ArgumentCaptor<Long> idCaptor = ArgumentCaptor.forClass(Long.class);
             ArgumentCaptor<String> urlCaptor = ArgumentCaptor.forClass(String.class);
@@ -78,6 +83,7 @@ class GitHubIssueSyncServiceTest {
             when(gitHubAppProperties.isEnabled()).thenReturn(true);
 
             BugReport bugReport = BugReport.create(
+                    "测试标题",
                     "测试描述",
                     "/test",
                     "{}",
@@ -96,7 +102,7 @@ class GitHubIssueSyncServiceTest {
         void sync_disabled_shouldNotCallGitHubApi() {
             when(gitHubAppProperties.isEnabled()).thenReturn(false);
 
-            BugReport bugReport = BugReport.create("desc", "/page", "{}", null, java.util.List.of());
+            BugReport bugReport = BugReport.create("title", "desc", "/page", "{}", null, java.util.List.of());
 
             service.sync(bugReport);
 
@@ -111,6 +117,7 @@ class GitHubIssueSyncServiceTest {
 
             BugReport bugReport = BugReport.create(
                     "无截图的 Bug",
+                    "无截图的 Bug 描述",
                     "/home",
                     "{}",
                     null,
@@ -136,6 +143,7 @@ class GitHubIssueSyncServiceTest {
 
             BugReport bugReport = BugReport.create(
                     "带截图的 Bug",
+                    "带截图的 Bug 描述",
                     "/page",
                     "{}",
                     null,
@@ -166,6 +174,7 @@ class GitHubIssueSyncServiceTest {
 
             BugReport bugReport = BugReport.create(
                     "双斜杠测试",
+                    "双斜杠测试描述",
                     "/page",
                     "{}",
                     null,
@@ -184,6 +193,34 @@ class GitHubIssueSyncServiceTest {
             // 验证 URL 中没有双斜杠
             assertTrue(body.contains("https://api.example.com/api/v1/file/download/42"));
             assertFalse(body.contains("//api/v1"), "不应出现双斜杠");
+        }
+
+        @Test
+        @DisplayName("TC-019: title 缺失时应降级使用 description 作为 Issue 标题")
+        void sync_missingTitle_shouldFallbackToDescription() {
+            when(gitHubAppProperties.isEnabled()).thenReturn(true);
+
+            BugReport bugReport = BugReport.reconstruct(
+                    1L,
+                    null,
+                    "这是一个没有 title 的历史 Bug 描述",
+                    "/page",
+                    "{}",
+                    null,
+                    com.bluenet.web.domain.model.enumerate.BugReportStatus.PENDING,
+                    null,
+                    null,
+                    java.util.List.of());
+
+            GitHubIssueCreateResult mockResult = new GitHubIssueCreateResult(1, "https://github.com/test/issues/1",
+                    "这是一个没有 title 的历史 Bug 描述");
+            when(gitHubIssueClient.createIssue(anyString(), anyString())).thenReturn(mockResult);
+
+            service.sync(bugReport);
+
+            ArgumentCaptor<String> titleCaptor = ArgumentCaptor.forClass(String.class);
+            verify(gitHubIssueClient).createIssue(titleCaptor.capture(), anyString());
+            assertEquals("这是一个没有 title 的历史 Bug 描述", titleCaptor.getValue());
         }
     }
 }

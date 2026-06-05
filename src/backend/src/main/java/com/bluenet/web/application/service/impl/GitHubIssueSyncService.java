@@ -36,7 +36,7 @@ public class GitHubIssueSyncService {
             return;
         }
 
-        String title = buildTitle(bugReport.getDescription());
+        String title = buildTitle(bugReport);
         String body = buildBody(bugReport);
 
         try {
@@ -59,14 +59,18 @@ public class GitHubIssueSyncService {
         }
     }
 
-    private String buildTitle(String description) {
-        if (description == null || description.isBlank()) {
+    private String buildTitle(BugReport bugReport) {
+        String title = bugReport.getTitle();
+        if (title == null || title.isBlank()) {
+            title = bugReport.getDescription();
+        }
+        if (title == null || title.isBlank()) {
             return "Bug Report";
         }
-        if (description.length() <= MAX_TITLE_LENGTH) {
-            return description;
+        if (title.length() <= MAX_TITLE_LENGTH) {
+            return title;
         }
-        return description.substring(0, MAX_TITLE_LENGTH) + "...";
+        return title.substring(0, MAX_TITLE_LENGTH) + "...";
     }
 
     private String buildBody(BugReport bugReport) {

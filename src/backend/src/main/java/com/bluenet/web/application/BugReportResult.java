@@ -34,6 +34,8 @@ public final class BugReportResult {
     public record Detail(
             /** 唯一标识 */
             Long id,
+            /** Bug 标题 */
+            String title,
             /** Bug 描述 */
             String description,
             /** 发生页面 URL */
@@ -58,6 +60,8 @@ public final class BugReportResult {
     public record Brief(
             /** 唯一标识 */
             Long id,
+            /** Bug 标题 */
+            String title,
             /** Bug 描述（摘要） */
             String description,
             /** 发生页面 URL */

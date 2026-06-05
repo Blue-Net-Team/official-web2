@@ -23,6 +23,8 @@ public class BugReportCommands {
      * </p>
      */
     public record CreateBugReportCommand(
+            /** Bug 标题 */
+            String title,
             /** Bug 描述 */
             String description,
             /** 发生页面 URL */
@@ -34,6 +36,9 @@ public class BugReportCommands {
             /** 关联图片文件 ID 列表 */
             List<Long> fileIds) {
         public CreateBugReportCommand {
+            if (title != null) {
+                title = title.trim();
+            }
             if (description != null) {
                 description = description.trim();
             }
