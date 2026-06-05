@@ -319,7 +319,15 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
             String keyword,
             String decisionStatus) {
         accessGuard.requireDecisionScope(assessmentTimeId);
-        List<AssessmentCandidateScoreboardVO> scoreboards = listCandidateScoreboard(assessmentTimeId, keyword);
+        AssessmentTime assessmentTime = assessmentTimeRepository.findById(assessmentTimeId)
+                .orElseThrow(() -> new DataNotFound("考核时间不存在，ID: " + assessmentTimeId));
+        List<AssessmentCandidateScoreboardVO> scoreboards = listCandidateScoreboard(assessmentTimeId, keyword)
+                .stream()
+                .filter(
+                        scoreboard -> !assessmentDecisionDomainService.isEliminatedFromPriorEpoch(
+                                scoreboard.getCandidateUserId(),
+                                assessmentTime))
+                .toList();
         Map<Long, AssessmentDecisionVO> decisions = assessmentDecisionRepository
                 .findByAssessmentTimeId(assessmentTimeId)
                 .stream()

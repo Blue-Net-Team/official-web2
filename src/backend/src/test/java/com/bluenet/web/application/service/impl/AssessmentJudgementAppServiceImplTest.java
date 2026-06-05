@@ -13,6 +13,7 @@ import com.bluenet.web.domain.model.enumerate.RoleType;
 import com.bluenet.web.domain.model.entity.AssessmentAnswer;
 import com.bluenet.web.domain.model.vo.AssessmentCandidateScoreRowVO;
 import com.bluenet.web.domain.model.vo.AssessmentCandidateScoreboardVO;
+import com.bluenet.web.domain.model.vo.AssessmentDecisionCandidateVO;
 import com.bluenet.web.domain.model.vo.AssessmentDecisionVO;
 import com.bluenet.web.domain.model.vo.AssessmentDecisionWorkspaceVO;
 import com.bluenet.web.domain.model.vo.AssessmentJudgementVO;
@@ -286,6 +287,78 @@ class AssessmentJudgementAppServiceImplTest {
             assertEquals(3L, result.getStatistics().getCandidates());
             assertEquals(1L, result.getStatistics().getPending());
             assertEquals(1L, result.getStatistics().getPassed());
+            assertEquals(1L, result.getStatistics().getEliminated());
+        }
+    }
+
+    /**
+     * 验证在相同 direction+grade 的前序轮次被淘汰的考生不会出现在当前轮次决策工作台中。
+     */
+    @Test
+    @DisplayName("录用决策工作台：应排除前序轮次被淘汰的考生")
+    void getDecisionWorkspace_priorEpochEliminated_shouldFilterOut() {
+        try (MockedStatic<UserCTX> mockedUserCTX = mockStatic(UserCTX.class)) {
+            mockedUserCTX.when(UserCTX::getCurrentUser).thenReturn(createUser(RoleType.DIRECTION_ADMIN));
+            AssessmentTime currentTime = createTime(2);
+            when(assessmentTimeRepository.findById(ASSESSMENT_TIME_ID)).thenReturn(Optional.of(currentTime));
+            when(assessmentJudgementRepository.findCandidateScoreRows(ASSESSMENT_TIME_ID, null))
+                    .thenReturn(
+                            List.of(
+                                    createCandidateScoreRowVOForUser(40L, "20260001", QUESTION_ID, 1, true, true),
+                                    createCandidateScoreRowVOForUser(41L, "20260002", 21L, 1, true, true),
+                                    createCandidateScoreRowVOForUser(42L, "20260003", 22L, 1, true, true)));
+            when(assessmentDecisionRepository.findByAssessmentTimeId(ASSESSMENT_TIME_ID))
+                    .thenReturn(List.of(createDecisionVOForUser(41L, true), createDecisionVOForUser(42L, false)));
+            when(assessmentDecisionDomainService.isEliminatedFromPriorEpoch(40L, currentTime)).thenReturn(true);
+            when(assessmentDecisionDomainService.isEliminatedFromPriorEpoch(41L, currentTime)).thenReturn(false);
+            when(assessmentDecisionDomainService.isEliminatedFromPriorEpoch(42L, currentTime)).thenReturn(false);
+
+            AssessmentDecisionWorkspaceVO result = assessmentJudgementAppService
+                    .getDecisionWorkspace(ASSESSMENT_TIME_ID, null, null);
+
+            List<Long> actualUserIds = result.getCandidates()
+                    .stream()
+                    .map(AssessmentDecisionCandidateVO::getCandidateUserId)
+                    .toList();
+            assertEquals(List.of(41L, 42L), actualUserIds);
+            assertEquals(2L, result.getStatistics().getCandidates());
+            assertEquals(0L, result.getStatistics().getPending());
+            assertEquals(1L, result.getStatistics().getPassed());
+            assertEquals(1L, result.getStatistics().getEliminated());
+        }
+    }
+
+    /**
+     * 验证当前轮次被淘汰的考生仍应保留在工作台中，避免「淘汰」筛选丢失数据。
+     */
+    @Test
+    @DisplayName("录用决策工作台：当前轮次被淘汰的考生应保留")
+    void getDecisionWorkspace_currentEpochEliminated_shouldKeep() {
+        try (MockedStatic<UserCTX> mockedUserCTX = mockStatic(UserCTX.class)) {
+            mockedUserCTX.when(UserCTX::getCurrentUser).thenReturn(createUser(RoleType.DIRECTION_ADMIN));
+            AssessmentTime currentTime = createTime(1);
+            when(assessmentTimeRepository.findById(ASSESSMENT_TIME_ID)).thenReturn(Optional.of(currentTime));
+            when(assessmentJudgementRepository.findCandidateScoreRows(ASSESSMENT_TIME_ID, null))
+                    .thenReturn(
+                            List.of(
+                                    createCandidateScoreRowVOForUser(40L, "20260001", QUESTION_ID, 1, true, true),
+                                    createCandidateScoreRowVOForUser(41L, "20260002", 21L, 1, true, true)));
+            when(assessmentDecisionRepository.findByAssessmentTimeId(ASSESSMENT_TIME_ID))
+                    .thenReturn(List.of(createDecisionVOForUser(40L, false)));
+            when(assessmentDecisionDomainService.isEliminatedFromPriorEpoch(40L, currentTime)).thenReturn(false);
+            when(assessmentDecisionDomainService.isEliminatedFromPriorEpoch(41L, currentTime)).thenReturn(false);
+
+            AssessmentDecisionWorkspaceVO result = assessmentJudgementAppService
+                    .getDecisionWorkspace(ASSESSMENT_TIME_ID, null, "ELIMINATED");
+
+            List<Long> actualUserIds = result.getCandidates()
+                    .stream()
+                    .map(AssessmentDecisionCandidateVO::getCandidateUserId)
+                    .toList();
+            assertEquals(List.of(40L), actualUserIds);
+            assertEquals(2L, result.getStatistics().getCandidates());
+            assertEquals(1L, result.getStatistics().getPending());
+            assertEquals(0L, result.getStatistics().getPassed());
             assertEquals(1L, result.getStatistics().getEliminated());
         }
     }
@@ -641,10 +714,14 @@ class AssessmentJudgementAppServiceImplTest {
     }
 
     private AssessmentTime createTime() {
+        return createTime(1);
+    }
+
+    private AssessmentTime createTime(int epoch) {
         return AssessmentTime.reconstruct(
                 ASSESSMENT_TIME_ID,
                 com.bluenet.web.domain.model.enumerate.Direction.COMPUTER_VISION,
-                1,
+                epoch,
                 2026,
                 null,
                 null,
