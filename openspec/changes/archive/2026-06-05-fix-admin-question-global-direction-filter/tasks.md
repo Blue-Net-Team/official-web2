@@ -19,5 +19,6 @@
 - [x] 4.1 TypeScript 类型检查通过（`npx tsc --noEmit`）
 - [x] 4.2 Prettier 格式检查通过并自动修复
 - [x] 4.3 Playwright 确认登录页可正常加载，无编译错误
-- [ ] 4.4 需用户以 `SUPER_ADMIN` 登录，在 `/admin/assessment/question` 验证「全局」选项可筛选并管理全局考题
-- [ ] 4.5 需用户以 `DIRECTION_ADMIN` 登录，验证看不到「全局」选项
+- [x] 4.4 需用户以 `SUPER_ADMIN` 登录，在 `/admin/assessment/question` 验证「全局」选项可筛选并管理全局考题
+- [x] 4.5 需用户以 `DIRECTION_ADMIN` 登录，验证看不到「全局」选项
+
