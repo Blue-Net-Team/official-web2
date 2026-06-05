@@ -93,11 +93,35 @@ public class AssessmentDecisionDomainServiceImpl implements AssessmentDecisionDo
         return false;
     }
 
-    private boolean isSameDirectionAndGrade(AssessmentTime t1, AssessmentTime t2) {
-        if (t1.getDirection() == null ? t2.getDirection() != null : !t1.getDirection().equals(t2.getDirection())) {
+    private boolean isSameDirectionAndGrade(AssessmentTime eliminatedTime, AssessmentTime targetTime) {
+        // 目标考核是全局最终考核（direction=null, epoch=0）
+        // 任何方向考核（epoch>0）的淘汰决策都限制它
+        if (targetTime.getDirection() == null
+                && targetTime.getEpoch() != null
+                && targetTime.getEpoch() == 0) {
+            // 决策考核必须是方向考核（epoch>0），全局考核的淘汰不影响其他
+            if (eliminatedTime.getEpoch() == null || eliminatedTime.getEpoch() <= 0) {
+                return false;
+            }
+            // grade 匹配：全局考核 grade=null 表示不限年级，匹配所有
+            if (targetTime.getGrade() == null) {
+                return true;
+            }
+            if (eliminatedTime.getGrade() == null) {
+                return targetTime.getGrade() == null;
+            }
+            return eliminatedTime.getGrade().equals(targetTime.getGrade());
+        }
+
+        // 普通情况：direction 和 grade 都必须一致
+        if (eliminatedTime.getDirection() == null
+                ? targetTime.getDirection() != null
+                : !eliminatedTime.getDirection().equals(targetTime.getDirection())) {
             return false;
         }
-        if (t1.getGrade() == null ? t2.getGrade() != null : !t1.getGrade().equals(t2.getGrade())) {
+        if (eliminatedTime.getGrade() == null
+                ? targetTime.getGrade() != null
+                : !eliminatedTime.getGrade().equals(targetTime.getGrade())) {
             return false;
         }
         return true;

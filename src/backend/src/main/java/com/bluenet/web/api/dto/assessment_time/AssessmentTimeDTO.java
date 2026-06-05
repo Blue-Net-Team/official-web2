@@ -53,4 +53,7 @@ public class AssessmentTimeDTO {
 
     @Schema(description = "是否允许组队")
     private Boolean allowTeam;
+
+    @Schema(description = "是否已被淘汰（无法进入该考核）")
+    private Boolean eliminated;
 }

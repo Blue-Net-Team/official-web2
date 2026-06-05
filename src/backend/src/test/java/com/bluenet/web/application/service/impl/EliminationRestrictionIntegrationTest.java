@@ -87,11 +87,12 @@ class EliminationRestrictionIntegrationTest extends BaseIntegrationTest {
     }
 
     @Test
-    @DisplayName("淘汰考生不应看到后续轮次考核")
-    void eliminatedCandidate_shouldNotSeeNextRound() {
+    @DisplayName("淘汰考生应看到后续轮次但标记为 eliminated")
+    void eliminatedCandidate_shouldSeeNextRoundButMarkedEliminated() {
         Long userId = createCandidateUser("2024123456", Direction.COMPUTER_VISION);
         Long epoch1TimeId = createAssessmentTime(Direction.COMPUTER_VISION, 1, 2024);
         Long epoch2TimeId = createAssessmentTime(Direction.COMPUTER_VISION, 2, 2024);
+        Long globalTimeId = createAssessmentTime(null, 0, null);
 
         createDecision(userId, epoch1TimeId, false, LocalDateTime.now());
 
@@ -108,13 +109,29 @@ class EliminationRestrictionIntegrationTest extends BaseIntegrationTest {
                     .listAssessmentTimesForUser(0, 10);
 
             assertEquals(
-                    1,
+                    3,
                     result.getContent().size(),
-                    "被淘汰考生应只能看到自己参与的那一轮考核");
-            assertEquals(
-                    epoch1TimeId,
-                    result.getContent().get(0).id(),
-                    "应显示被淘汰的 epoch=1 考核");
+                    "被淘汰考生应看到所有轮次，包括后续轮次和全局考核");
+
+            var epoch1 = result.getContent()
+                    .stream()
+                    .filter(r -> r.id().equals(epoch1TimeId))
+                    .findFirst()
+                    .orElseThrow();
+            var epoch2 = result.getContent()
+                    .stream()
+                    .filter(r -> r.id().equals(epoch2TimeId))
+                    .findFirst()
+                    .orElseThrow();
+            var globalResult = result.getContent()
+                    .stream()
+                    .filter(r -> r.id().equals(globalTimeId))
+                    .findFirst()
+                    .orElseThrow();
+
+            assertFalse(epoch1.eliminated(), "已参加的 epoch=1 不应标记 eliminated");
+            assertTrue(epoch2.eliminated(), "后续 epoch=2 应标记 eliminated");
+            assertTrue(globalResult.eliminated(), "全局考核 epoch=0 应标记 eliminated");
         }
     }
 

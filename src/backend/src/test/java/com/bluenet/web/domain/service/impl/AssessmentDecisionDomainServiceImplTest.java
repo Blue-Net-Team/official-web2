@@ -211,6 +211,51 @@ class AssessmentDecisionDomainServiceImplTest {
     }
 
     @Test
+    @DisplayName("在epoch1方向考核被淘汰，查看全局考核epoch=0且direction=null：应返回true")
+    void isEliminatedFromPriorEpoch_directionEliminated_targetGlobal_shouldReturnTrue() {
+        AssessmentDecisionVO decision = createDecisionVO(1L, false);
+        when(assessmentDecisionRepository.findEliminatedDecisionsByUserId(USER_ID))
+                .thenReturn(List.of(decision));
+        when(assessmentTimeRepository.findById(ASSESSMENT_TIME_ID))
+                .thenReturn(Optional.of(createAssessmentTime(1, Direction.COMPUTER_VISION, 2024)));
+
+        AssessmentTime targetTime = createAssessmentTime(0, null, 2024);
+        boolean result = assessmentDecisionDomainService.isEliminatedFromPriorEpoch(USER_ID, targetTime);
+
+        assertTrue(result);
+    }
+
+    @Test
+    @DisplayName("在epoch1方向考核被淘汰，查看全局考核direction=null且grade=null：应返回true")
+    void isEliminatedFromPriorEpoch_directionEliminated_targetGlobalNullGrade_shouldReturnTrue() {
+        AssessmentDecisionVO decision = createDecisionVO(1L, false);
+        when(assessmentDecisionRepository.findEliminatedDecisionsByUserId(USER_ID))
+                .thenReturn(List.of(decision));
+        when(assessmentTimeRepository.findById(ASSESSMENT_TIME_ID))
+                .thenReturn(Optional.of(createAssessmentTime(1, Direction.COMPUTER_VISION, 2024)));
+
+        AssessmentTime targetTime = createAssessmentTime(0, null, null);
+        boolean result = assessmentDecisionDomainService.isEliminatedFromPriorEpoch(USER_ID, targetTime);
+
+        assertTrue(result);
+    }
+
+    @Test
+    @DisplayName("在epoch1方向考核被淘汰，查看全局考核direction=null但不同grade：应返回false")
+    void isEliminatedFromPriorEpoch_directionEliminated_targetGlobalDifferentGrade_shouldReturnFalse() {
+        AssessmentDecisionVO decision = createDecisionVO(1L, false);
+        when(assessmentDecisionRepository.findEliminatedDecisionsByUserId(USER_ID))
+                .thenReturn(List.of(decision));
+        when(assessmentTimeRepository.findById(ASSESSMENT_TIME_ID))
+                .thenReturn(Optional.of(createAssessmentTime(1, Direction.COMPUTER_VISION, 2024)));
+
+        AssessmentTime targetTime = createAssessmentTime(0, null, 2023);
+        boolean result = assessmentDecisionDomainService.isEliminatedFromPriorEpoch(USER_ID, targetTime);
+
+        assertFalse(result);
+    }
+
+    @Test
     @DisplayName("在epoch1被淘汰，查看epoch2，不同方向：应返回false")
     void isEliminatedFromPriorEpoch_differentDirection_shouldReturnFalse() {
         AssessmentDecisionVO decision = createDecisionVO(1L, false);

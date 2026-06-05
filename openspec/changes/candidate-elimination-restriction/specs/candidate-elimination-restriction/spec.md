@@ -5,10 +5,12 @@ The system SHALL prevent a CANDIDATE who has been eliminated (`passed = false`) 
 
 A CANDIDATE is considered eliminated for a given `(direction, grade)` when there exists an `AssessmentDecision` with `passed = false` for any `AssessmentTime` matching that direction and grade.
 
-#### Scenario: Eliminated candidate cannot see next round in list
+#### Scenario: Eliminated candidate can see next round but marked eliminated
 - **WHEN** a CANDIDATE eliminated in epoch=1 calls `GET /api/v1/assessment-times`
-- **THEN** the response SHALL NOT include any assessment time with epoch > 1 (or epoch = 0) for the same direction+grade
-- **AND** the response SHALL still include epoch=1 (the round they participated in)
+- **THEN** the response SHALL include all assessment times matching direction+grade, including epoch > 1 and epoch = 0
+- **AND** assessment times with epoch > 1 (or epoch = 0) for the same direction+grade SHALL have `eliminated = true`
+- **AND** the frontend card UI SHALL display "已被淘汰" and be disabled
+- **AND** the response SHALL still include epoch=1 with `eliminated = false` (the round they participated in)
 
 #### Scenario: Eliminated candidate cannot enter next round question list
 - **WHEN** a CANDIDATE eliminated in epoch=1 attempts to access `GET /api/v1/assessment-questions?assessmentTimeId={epoch2_id}`

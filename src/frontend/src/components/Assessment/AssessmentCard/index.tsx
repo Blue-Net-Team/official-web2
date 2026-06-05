@@ -67,8 +67,9 @@ export default function AssessmentCard({ assessment, status }: AssessmentCardPro
     status ??
     (isDTO ? getAssessmentStatus(assessment.startTime, assessment.endTime) : assessment.status)
 
-  const isInProgress = actualStatus === 'IN_PROGRESS'
-  const isEnded = actualStatus === 'ENDED'
+  const eliminated = isDTO ? assessment.eliminated : false
+  const isInProgress = actualStatus === 'IN_PROGRESS' && !eliminated
+  const isEnded = actualStatus === 'ENDED' && !eliminated
   const isNotStarted = actualStatus === 'NOT_STARTED'
 
   const epoch = isDTO ? assessment.epoch : extractEpochFromTitle(assessment.title)
@@ -79,12 +80,14 @@ export default function AssessmentCard({ assessment, status }: AssessmentCardPro
 
   return (
     <div
-      className={`relative bg-white/[0.04] border rounded-2xl p-6 max-sm:p-[18px] backdrop-blur-[24px] transition-all overflow-hidden hover:-translate-y-0.5 hover:bg-white/[0.06] ${
-        isInProgress
-          ? 'border-[rgba(102,119,255,0.2)] shadow-[0_0_20px_rgba(102,119,255,0.06),inset_0_1px_0_rgba(102,119,255,0.1)] hover:shadow-[0_8px_32px_rgba(102,119,255,0.12),inset_0_1px_0_rgba(102,119,255,0.15)] hover:border-[rgba(102,119,255,0.3)]'
-          : isEnded
-            ? 'border-[rgba(7,193,96,0.2)] shadow-[0_0_20px_rgba(7,193,96,0.06),inset_0_1px_0_rgba(7,193,96,0.1)] hover:shadow-[0_8px_32px_rgba(7,193,96,0.12),inset_0_1px_0_rgba(7,193,96,0.15)] hover:border-[rgba(7,193,96,0.3)]'
-            : 'border-white/[0.06] hover:shadow-[0_4px_16px_rgba(255,255,255,0.04)]'
+      className={`relative bg-white/[0.04] border rounded-2xl p-6 max-sm:p-[18px] backdrop-blur-[24px] transition-all overflow-hidden ${
+        eliminated
+          ? 'border-white/[0.04] opacity-70'
+          : isInProgress
+            ? 'border-[rgba(102,119,255,0.2)] shadow-[0_0_20px_rgba(102,119,255,0.06),inset_0_1px_0_rgba(102,119,255,0.1)] hover:-translate-y-0.5 hover:bg-white/[0.06] hover:shadow-[0_8px_32px_rgba(102,119,255,0.12),inset_0_1px_0_rgba(102,119,255,0.15)] hover:border-[rgba(102,119,255,0.3)]'
+            : isEnded
+              ? 'border-[rgba(7,193,96,0.2)] shadow-[0_0_20px_rgba(7,193,96,0.06),inset_0_1px_0_rgba(7,193,96,0.1)] hover:-translate-y-0.5 hover:bg-white/[0.06] hover:shadow-[0_8px_32px_rgba(7,193,96,0.12),inset_0_1px_0_rgba(7,193,96,0.15)] hover:border-[rgba(7,193,96,0.3)]'
+              : 'border-white/[0.06] hover:-translate-y-0.5 hover:bg-white/[0.06] hover:shadow-[0_4px_16px_rgba(255,255,255,0.04)]'
       }`}
     >
       {isInProgress && (
@@ -98,11 +101,13 @@ export default function AssessmentCard({ assessment, status }: AssessmentCardPro
         <div className="flex items-center gap-[14px]">
           <div
             className={`w-11 h-11 rounded-xl flex items-center justify-center text-xl shrink-0 backdrop-blur-[8px] ${
-              isInProgress
-                ? 'bg-[rgba(102,119,255,0.15)] text-[#6677ff] shadow-[0_0_16px_rgba(102,119,255,0.15)]'
-                : isEnded
-                  ? 'bg-[rgba(7,193,96,0.15)] text-[#07c160] shadow-[0_0_16px_rgba(7,193,96,0.15)]'
-                  : 'bg-[rgba(140,140,141,0.1)] text-[#8c8c8d]'
+              eliminated
+                ? 'bg-[rgba(140,140,141,0.08)] text-[#8c8c8d]/50'
+                : isInProgress
+                  ? 'bg-[rgba(102,119,255,0.15)] text-[#6677ff] shadow-[0_0_16px_rgba(102,119,255,0.15)]'
+                  : isEnded
+                    ? 'bg-[rgba(7,193,96,0.15)] text-[#07c160] shadow-[0_0_16px_rgba(7,193,96,0.15)]'
+                    : 'bg-[rgba(140,140,141,0.1)] text-[#8c8c8d]'
             }`}
           >
             {isEnded ? (
@@ -122,18 +127,22 @@ export default function AssessmentCard({ assessment, status }: AssessmentCardPro
         </div>
         <span
           className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap shrink-0 backdrop-blur-[8px] ${
-            isInProgress
-              ? 'bg-[rgba(102,119,255,0.15)] text-[#6677ff] border border-[rgba(102,119,255,0.2)]'
-              : isEnded
-                ? 'bg-[rgba(7,193,96,0.15)] text-[#07c160] border border-[rgba(7,193,96,0.2)]'
-                : 'bg-[rgba(140,140,141,0.1)] text-[#8c8c8d] border border-[rgba(140,140,141,0.15)]'
+            eliminated
+              ? 'bg-[rgba(255,77,79,0.1)] text-[#ff4d4f] border border-[rgba(255,77,79,0.15)]'
+              : isInProgress
+                ? 'bg-[rgba(102,119,255,0.15)] text-[#6677ff] border border-[rgba(102,119,255,0.2)]'
+                : isEnded
+                  ? 'bg-[rgba(7,193,96,0.15)] text-[#07c160] border border-[rgba(7,193,96,0.2)]'
+                  : 'bg-[rgba(140,140,141,0.1)] text-[#8c8c8d] border border-[rgba(140,140,141,0.15)]'
           }`}
         >
-          {actualStatus === 'ENDED'
-            ? '已结束'
-            : actualStatus === 'IN_PROGRESS'
-              ? '进行中'
-              : '未开始'}
+          {eliminated
+            ? '已被淘汰'
+            : actualStatus === 'ENDED'
+              ? '已结束'
+              : actualStatus === 'IN_PROGRESS'
+                ? '进行中'
+                : '未开始'}
         </span>
       </div>
 
@@ -190,20 +199,28 @@ export default function AssessmentCard({ assessment, status }: AssessmentCardPro
       <div className="flex justify-end">
         <button
           className={`inline-flex items-center gap-[6px] px-5 py-2 rounded-lg text-[13px] font-medium border-none cursor-pointer transition-all backdrop-blur-[8px] ${
-            isInProgress
-              ? 'bg-gradient-to-br from-[#6677ff] to-[#2f27b0] text-white shadow-[0_4px_16px_rgba(102,119,255,0.3)] hover:shadow-[0_6px_24px_rgba(102,119,255,0.4)]'
-              : isEnded
-                ? 'bg-gradient-to-br from-[#07c160] to-[#05a34e] text-white shadow-[0_4px_16px_rgba(7,193,96,0.3)] hover:shadow-[0_6px_24px_rgba(7,193,96,0.4)]'
-                : 'bg-[rgba(140,140,141,0.15)] text-[#8c8c8d] cursor-not-allowed border border-[rgba(140,140,141,0.15)]'
+            eliminated
+              ? 'bg-[rgba(140,140,141,0.1)] text-[#8c8c8d]/70 cursor-not-allowed'
+              : isInProgress
+                ? 'bg-gradient-to-br from-[#6677ff] to-[#2f27b0] text-white shadow-[0_4px_16px_rgba(102,119,255,0.3)] hover:shadow-[0_6px_24px_rgba(102,119,255,0.4)]'
+                : isEnded
+                  ? 'bg-gradient-to-br from-[#07c160] to-[#05a34e] text-white shadow-[0_4px_16px_rgba(7,193,96,0.3)] hover:shadow-[0_6px_24px_rgba(7,193,96,0.4)]'
+                  : 'bg-[rgba(140,140,141,0.15)] text-[#8c8c8d] cursor-not-allowed border border-[rgba(140,140,141,0.15)]'
           }`}
           onClick={() => {
-            if (isNotStarted) return
+            if (isNotStarted || eliminated) return
             const assessmentId = isDTO ? assessment.id.toString() : assessment.id
             router.push(`/assessment/${assessmentId}/questions`)
           }}
         >
-          {isInProgress ? '继续答题' : isEnded ? '查看详情' : '暂不可进入'}
-          {!isNotStarted && <RightOutlined className="text-xs" />}
+          {eliminated
+            ? '已被淘汰'
+            : isInProgress
+              ? '继续答题'
+              : isEnded
+                ? '查看详情'
+                : '暂不可进入'}
+          {!isNotStarted && !eliminated && <RightOutlined className="text-xs" />}
         </button>
       </div>
     </div>

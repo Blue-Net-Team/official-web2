@@ -15,6 +15,7 @@ import com.bluenet.web.domain.model.vo.UserVO;
 import com.bluenet.web.domain.repository.AssessmentAnswerRepository;
 import com.bluenet.web.domain.repository.AssessmentQuestionRepository;
 import com.bluenet.web.domain.repository.AssessmentTimeRepository;
+import com.bluenet.web.domain.service.AssessmentDecisionDomainService;
 import com.bluenet.web.domain.util.GradeCalculator;
 import com.bluenet.web.infrastructure.security.util.UserCTX;
 import lombok.RequiredArgsConstructor;
@@ -39,6 +40,7 @@ public class AssessmentTimeAppServiceImpl implements AssessmentTimeAppService {
     private final AssessmentTimeRepository assessmentTimeRepository;
     private final AssessmentQuestionRepository assessmentQuestionRepository;
     private final AssessmentAnswerRepository assessmentAnswerRepository;
+    private final AssessmentDecisionDomainService assessmentDecisionDomainService;
 
     /**
      * 创建考核时间。
@@ -246,7 +248,7 @@ public class AssessmentTimeAppServiceImpl implements AssessmentTimeAppService {
         if (currentUser == null) {
             Page<AssessmentTime> emptyPage = new PageImpl<>(
                     List.of(), PageRequest.of(pageNum, pageSize), 0);
-            return emptyPage.map(entity -> toResult(entity, null, null));
+            return emptyPage.map(entity -> toResult(entity, null, null, false));
         }
 
         Integer enrollmentYear = GradeCalculator.resolveAssessmentYear(
@@ -260,11 +262,19 @@ public class AssessmentTimeAppServiceImpl implements AssessmentTimeAppService {
                 enrollmentYear,
                 PageRequest.of(pageNum, pageSize));
 
+        RoleType roleType = RoleType.fromName(currentUser.getRoleName());
+        boolean isCandidate = roleType == RoleType.CANDIDATE;
+
         return entityPage.map(entity -> {
             int totalQuestions = assessmentQuestionRepository.countByAssessmentTimeId(entity.getId());
             int completedQuestions = assessmentAnswerRepository
                     .countByUserIdAndAssessmentTimeId(currentUser.getId(), entity.getId());
-            return toResult(entity, totalQuestions, completedQuestions);
+            boolean eliminated = false;
+            if (isCandidate) {
+                eliminated = assessmentDecisionDomainService
+                        .isEliminatedFromPriorEpoch(currentUser.getId(), entity);
+            }
+            return toResult(entity, totalQuestions, completedQuestions, eliminated);
         });
     }
 
@@ -292,10 +302,15 @@ public class AssessmentTimeAppServiceImpl implements AssessmentTimeAppService {
     }
 
     private AssessmentTimeResult toResult(AssessmentTime entity) {
-        return toResult(entity, null, null);
+        return toResult(entity, null, null, false);
     }
 
     private AssessmentTimeResult toResult(AssessmentTime entity, Integer totalQuestions, Integer completedQuestions) {
+        return toResult(entity, totalQuestions, completedQuestions, false);
+    }
+
+    private AssessmentTimeResult toResult(AssessmentTime entity, Integer totalQuestions, Integer completedQuestions,
+            boolean eliminated) {
         return new AssessmentTimeResult(
                 entity.getId(),
                 entity.getDirection(),
@@ -307,6 +322,7 @@ public class AssessmentTimeAppServiceImpl implements AssessmentTimeAppService {
                 entity.getTimeLimitMinutes(),
                 entity.getAllowTeam(),
                 totalQuestions,
-                completedQuestions);
+                completedQuestions,
+                eliminated);
     }
 }

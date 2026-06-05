@@ -49,6 +49,9 @@ class AssessmentTimeAppServiceImplTest {
     @Mock
     private AssessmentAnswerRepository assessmentAnswerRepository;
 
+    @Mock
+    private com.bluenet.web.domain.service.AssessmentDecisionDomainService assessmentDecisionDomainService;
+
     @InjectMocks
     private AssessmentTimeAppServiceImpl assessmentTimeAppService;
 
@@ -518,6 +521,7 @@ class AssessmentTimeAppServiceImplTest {
 
                 when(assessmentQuestionRepository.countByAssessmentTimeId(TEST_ID)).thenReturn(8);
                 when(assessmentAnswerRepository.countByUserIdAndAssessmentTimeId(1L, TEST_ID)).thenReturn(5);
+                when(assessmentDecisionDomainService.isEliminatedFromPriorEpoch(eq(1L), any())).thenReturn(false);
 
                 Page<AssessmentTimeResult> result = assessmentTimeAppService.listAssessmentTimesForUser(0, 5);
 
@@ -525,11 +529,46 @@ class AssessmentTimeAppServiceImplTest {
                 assertEquals(1, result.getContent().size());
                 assertEquals(8, result.getContent().get(0).totalQuestions());
                 assertEquals(5, result.getContent().get(0).completedQuestions());
+                assertEquals(Boolean.FALSE, result.getContent().get(0).eliminated());
                 verify(assessmentTimeRepository).findByUserParticipation(
                         eq(1L),
                         eq(Direction.COMPUTER_VISION),
                         eq(2024),
                         any());
+            }
+        }
+
+        @Test
+        @DisplayName("被淘汰CANDIDATE：后续轮次应标记eliminated=true")
+        void listForUser_eliminatedCandidate_shouldMarkSubsequentEliminated() {
+            try (MockedStatic<UserCTX> mockedUserCTX = mockStatic(UserCTX.class)) {
+                UserVO userVO = UserVO.builder()
+                        .id(1L)
+                        .roleName("CANDIDATE")
+                        .direction(Direction.COMPUTER_VISION)
+                        .studentId("2024123456")
+                        .build();
+                mockedUserCTX.when(UserCTX::getCurrentUser).thenReturn(userVO);
+
+                List<AssessmentTime> entityList = List.of(createTestEntity());
+                Page<AssessmentTime> entityPage = new PageImpl<>(entityList);
+                when(
+                        assessmentTimeRepository.findByUserParticipation(
+                                eq(1L),
+                                eq(Direction.COMPUTER_VISION),
+                                eq(2024),
+                                any()))
+                                        .thenReturn(entityPage);
+
+                when(assessmentQuestionRepository.countByAssessmentTimeId(TEST_ID)).thenReturn(8);
+                when(assessmentAnswerRepository.countByUserIdAndAssessmentTimeId(1L, TEST_ID)).thenReturn(5);
+                when(assessmentDecisionDomainService.isEliminatedFromPriorEpoch(eq(1L), any())).thenReturn(true);
+
+                Page<AssessmentTimeResult> result = assessmentTimeAppService.listAssessmentTimesForUser(0, 5);
+
+                assertNotNull(result);
+                assertEquals(1, result.getContent().size());
+                assertEquals(Boolean.TRUE, result.getContent().get(0).eliminated());
             }
         }
 

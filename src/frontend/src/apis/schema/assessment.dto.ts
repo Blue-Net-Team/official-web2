@@ -95,6 +95,8 @@ export interface AssessmentTimeDTO {
   totalQuestions: number | null
   /** 已完成题目数 */
   completedQuestions: number | null
+  /** 是否已被淘汰 */
+  eliminated?: boolean
 }
 
 /** 考核进度信息 - 对应后端 AssessmentProgressDTO */

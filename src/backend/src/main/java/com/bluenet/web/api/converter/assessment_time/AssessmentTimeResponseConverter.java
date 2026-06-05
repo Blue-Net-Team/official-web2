@@ -51,6 +51,7 @@ public class AssessmentTimeResponseConverter {
                 .totalQuestions(result.totalQuestions())
                 .completedQuestions(result.completedQuestions())
                 .allowTeam(result.allowTeam())
+                .eliminated(result.eliminated())
                 .build();
     }
 

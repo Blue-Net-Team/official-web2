@@ -12,7 +12,7 @@
 
 ## 3. Application Service Layer - List Filtering
 
-- [x] 3.1 Update `AssessmentTimeAppServiceImpl.listAssessmentTimesForUser` to ensure elimination filter is applied (via SQL)
+- [x] 3.1 Update `AssessmentTimeAppServiceImpl.listAssessmentTimesForUser` to compute `eliminated` flag per assessment item (removed SQL filter, now computed in app layer)
 
 ## 4. Application Service Layer - Question Access
 

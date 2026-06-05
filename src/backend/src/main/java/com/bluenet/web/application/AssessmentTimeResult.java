@@ -32,5 +32,7 @@ public record AssessmentTimeResult(
         /** 题目总数 */
         Integer totalQuestions,
         /** 已完成题目数 */
-        Integer completedQuestions) {
+        Integer completedQuestions,
+        /** 当前用户是否已被淘汰（无法进入该考核） */
+        Boolean eliminated) {
 }
