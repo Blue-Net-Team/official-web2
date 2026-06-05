@@ -148,6 +148,12 @@ type: description
 
 规则：冒号后必须有空格；描述至少 5 字符；不建议以句号结尾。
 
+**Issue 引用规则**：
+
+- 引用 issue 时默认使用 `ref #<issue号>`，例如：`fix: 容器设置 TZ=Asia/Shanghai 修复评论时间戳慢8小时问题\n\nref #22`
+- **禁止**在提交消息中使用 `fixes #<issue号>`、`fix #<issue号>`、`close #<issue号>`、`closes #<issue号>`，因为这些关键字会自动关闭 issue
+- 只有在你**明确确认**该 issue 已完全解决、且**经过用户同意**后，才允许使用 `fixes` 或 `close` 关键字
+
 ## 常见问题与排障
 
 ### PermissionScanner 启动失败
