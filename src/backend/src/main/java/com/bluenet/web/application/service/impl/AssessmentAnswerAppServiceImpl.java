@@ -134,6 +134,12 @@ public class AssessmentAnswerAppServiceImpl implements AssessmentAnswerAppServic
 
         assessmentAnswerRepository.save(entity);
 
+        // Auto-create answer records for team members when leader submits FILE_UPLOAD
+        // answer
+        if (teamId != null) {
+            createTeamMemberAnswers(teamId, question, command);
+        }
+
         log.info(
                 "创建答案成功，userId: {}, questionId: {}, answerId: {}",
                 command.userId(),
@@ -214,6 +220,11 @@ public class AssessmentAnswerAppServiceImpl implements AssessmentAnswerAppServic
         }
         existing.setSubmitTime(LocalDateTime.now());
         assessmentAnswerRepository.update(existing);
+
+        // Synchronize team member answers when leader updates FILE_UPLOAD answer
+        if (existing.getTeamId() != null) {
+            syncTeamMemberAnswers(existing.getTeamId(), question, command);
+        }
 
         AssessmentAnswer updated = assessmentAnswerRepository
                 .findByUserIdAndQuestionId(command.userId(), command.questionId())
@@ -493,5 +504,66 @@ public class AssessmentAnswerAppServiceImpl implements AssessmentAnswerAppServic
                 judgement.getReviewerType(),
                 judgement.getComment(),
                 judgement.getJudgedAt());
+    }
+
+    private void createTeamMemberAnswers(Long teamId, AssessmentQuestion question,
+            AssessmentAnswerCommands.CreateAssessmentAnswerCommand command) {
+        List<com.bluenet.web.domain.model.entity.AssessmentTeamMember> members = assessmentTeamRepository
+                .findMembersByTeamId(teamId);
+        List<Long> memberUserIds = members.stream()
+                .map(com.bluenet.web.domain.model.entity.AssessmentTeamMember::getUserId)
+                .filter(id -> !id.equals(command.userId()))
+                .toList();
+        if (memberUserIds.isEmpty()) {
+            return;
+        }
+
+        // Batch query: which members already have answers for this question
+        List<Long> existingUserIds = assessmentAnswerRepository
+                .findExistingAnswerUserIds(memberUserIds, command.questionId());
+
+        LocalDateTime now = LocalDateTime.now();
+        List<AssessmentAnswer> answersToInsert = new ArrayList<>();
+        for (Long memberUserId : memberUserIds) {
+            if (existingUserIds.contains(memberUserId)) {
+                continue;
+            }
+            answersToInsert.add(
+                    AssessmentAnswer.create(
+                            memberUserId,
+                            command.questionId(),
+                            command.content(),
+                            command.language(),
+                            command.fileId(),
+                            teamId));
+        }
+
+        if (!answersToInsert.isEmpty()) {
+            assessmentAnswerRepository.batchInsert(answersToInsert);
+            log.info(
+                    "批量创建组员答案，teamId: {}, questionId: {}, count: {}",
+                    teamId,
+                    command.questionId(),
+                    answersToInsert.size());
+        }
+    }
+
+    private void syncTeamMemberAnswers(Long teamId, AssessmentQuestion question,
+            AssessmentAnswerCommands.UpdateAssessmentAnswerCommand command) {
+        int updated = assessmentAnswerRepository.updateTeamMemberAnswers(
+                teamId,
+                command.userId(),
+                command.questionId(),
+                command.fileId(),
+                command.content(),
+                command.language(),
+                LocalDateTime.now());
+        if (updated > 0) {
+            log.info(
+                    "批量同步组员答案，teamId: {}, questionId: {}, count: {}",
+                    teamId,
+                    command.questionId(),
+                    updated);
+        }
     }
 }

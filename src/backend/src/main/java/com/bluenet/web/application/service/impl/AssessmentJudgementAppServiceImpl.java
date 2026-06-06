@@ -30,14 +30,15 @@ import com.bluenet.web.domain.model.vo.AssessmentQuestionSubmissionVO;
 import com.bluenet.web.domain.model.entity.AssessmentQuestion;
 import com.bluenet.web.domain.model.entity.AssessmentTime;
 import com.bluenet.web.domain.model.vo.UserVO;
+import com.bluenet.web.domain.repository.AssessmentAnswerRepository;
 import com.bluenet.web.domain.repository.AssessmentDecisionRepository;
 import com.bluenet.web.domain.repository.AssessmentJudgementRepository;
-import com.bluenet.web.domain.repository.AssessmentAnswerRepository;
-import com.bluenet.web.domain.service.AssessmentDecisionDomainService;
-import com.bluenet.web.domain.service.AssessmentJudgementDomainService;
 import com.bluenet.web.domain.repository.AssessmentQuestionRepository;
+import com.bluenet.web.domain.repository.AssessmentTeamRepository;
 import com.bluenet.web.domain.repository.AssessmentTimeRepository;
 import com.bluenet.web.domain.repository.CommentRepository;
+import com.bluenet.web.domain.service.AssessmentDecisionDomainService;
+import com.bluenet.web.domain.service.AssessmentJudgementDomainService;
 import com.bluenet.web.domain.service.UserDomainService;
 import com.bluenet.web.application.message.MessageDispatcher;
 import com.bluenet.web.domain.model.enumerate.MessageChannel;
@@ -75,6 +76,7 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
     private final AssessmentTimeRepository assessmentTimeRepository;
     private final AssessmentJudgementRepository assessmentJudgementRepository;
     private final AssessmentDecisionRepository assessmentDecisionRepository;
+    private final AssessmentTeamRepository assessmentTeamRepository;
     private final UserDomainService userDomainService;
     private final MessageDispatcher messageDispatcher;
     private final AssessmentJudgementAccessGuard accessGuard;
@@ -98,6 +100,8 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
      *            考核评判仓储
      * @param assessmentDecisionRepository
      *            考核决策仓储
+     * @param assessmentTeamRepository
+     *            考核队伍仓储
      * @param userDomainService
      *            用户领域服务
      * @param messageDispatcher
@@ -113,6 +117,7 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
             AssessmentTimeRepository assessmentTimeRepository,
             AssessmentJudgementRepository assessmentJudgementRepository,
             AssessmentDecisionRepository assessmentDecisionRepository,
+            AssessmentTeamRepository assessmentTeamRepository,
             UserDomainService userDomainService,
             MessageDispatcher messageDispatcher,
             MessageTemplateRegistry messageTemplateRegistry,
@@ -124,6 +129,7 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
         this.assessmentTimeRepository = assessmentTimeRepository;
         this.assessmentJudgementRepository = assessmentJudgementRepository;
         this.assessmentDecisionRepository = assessmentDecisionRepository;
+        this.assessmentTeamRepository = assessmentTeamRepository;
         this.userDomainService = userDomainService;
         this.messageDispatcher = messageDispatcher;
         this.accessGuard = new AssessmentJudgementAccessGuard(assessmentTimeRepository);
@@ -203,7 +209,20 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
                 .comment(command.comment())
                 .judgedAt(LocalDateTime.now())
                 .build();
-        return toResult(assessmentJudgementDomainService.finalizeJudgement(judgement));
+        AssessmentJudgementResult result = toResult(
+                assessmentJudgementDomainService.finalizeJudgement(judgement));
+
+        // Propagate finalized judgement to all team members
+        if (answer.getTeamId() != null) {
+            propagateFinalizedJudgementToTeamMembers(
+                    answer.getTeamId(),
+                    question,
+                    command,
+                    currentUser,
+                    roleType);
+        }
+
+        return result;
     }
 
     /**
@@ -730,5 +749,58 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
                 decision.getDecidedBy(),
                 decision.getDecisionComment(),
                 decision.getDecidedAt());
+    }
+
+    private void propagateFinalizedJudgementToTeamMembers(Long teamId, AssessmentQuestion question,
+            AssessmentJudgementCommands.FinalizeScoreCommand command,
+            UserVO currentUser, RoleType roleType) {
+        List<com.bluenet.web.domain.model.entity.AssessmentTeamMember> members = assessmentTeamRepository
+                .findMembersByTeamId(teamId);
+        if (members.isEmpty()) {
+            return;
+        }
+
+        List<Long> memberUserIds = members.stream()
+                .map(com.bluenet.web.domain.model.entity.AssessmentTeamMember::getUserId)
+                .toList();
+
+        // Batch query all member answers for this question
+        List<com.bluenet.web.domain.model.entity.AssessmentAnswer> memberAnswers = assessmentAnswerRepository
+                .findByTeamIdAndQuestionId(teamId, question.getId());
+
+        LocalDateTime now = LocalDateTime.now();
+        List<com.bluenet.web.domain.model.entity.AssessmentJudgement> judgementsToInsert = new ArrayList<>();
+        for (com.bluenet.web.domain.model.entity.AssessmentAnswer memberAnswer : memberAnswers) {
+            if (memberAnswer.getUserId().equals(command.userId())) {
+                continue; // Skip leader, already handled
+            }
+            com.bluenet.web.domain.model.entity.AssessmentJudgement memberJudgement = com.bluenet.web.domain.model.entity.AssessmentJudgement
+                    .create(
+                            memberAnswer.getId(),
+                            question.getId(),
+                            question.getAssessmentTimeId(),
+                            memberAnswer.getUserId(),
+                            command.score(),
+                            question.getScore(),
+                            JudgementStatus.JUDGED,
+                            null,
+                            JudgementSource.ADMIN_FINALIZED,
+                            currentUser.getId(),
+                            resolveReviewerType(roleType),
+                            command.comment(),
+                            now);
+            memberJudgement.setCreatedAt(now);
+            memberJudgement.setUpdatedAt(now);
+            judgementsToInsert.add(memberJudgement);
+        }
+
+        if (!judgementsToInsert.isEmpty()) {
+            assessmentJudgementRepository.batchInsert(judgementsToInsert);
+            log.info(
+                    "批量创建组员最终评分，teamId: {}, questionId: {}, count: {}",
+                    teamId,
+                    question.getId(),
+                    judgementsToInsert.size());
+        }
     }
 }

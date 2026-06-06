@@ -277,4 +277,28 @@
         LEFT JOIN display_judgement dj ON dj.user_id = u.id AND dj.question_id = q.id
         ORDER BY u.student_id ASC, q.question_no ASC, q.id ASC
     </select>
+
+    <delete id="deleteByAnswerIds">
+        DELETE FROM tb_assessment_judgement
+        WHERE answer_id IN
+        <foreach collection="answerIds" item="answerId" open="(" separator="," close=")">
+            #{answerId}
+        </foreach>
+    </delete>
+
+    <insert id="batchInsert">
+        INSERT INTO tb_assessment_judgement (
+            answer_id, question_id, assessment_time_id, user_id,
+            score, max_score, status, result_code, source,
+            reviewer_id, reviewer_type, comment, judged_at,
+            created_at, updated_at
+        )
+        VALUES
+        <foreach collection="judgements" item="j" separator="," >
+            (#{j.answerId}, #{j.questionId}, #{j.assessmentTimeId}, #{j.userId},
+             #{j.score}, #{j.maxScore}, #{j.status}, #{j.resultCode}, #{j.source},
+             #{j.reviewerId}, #{j.reviewerType}, #{j.comment}, #{j.judgedAt},
+             #{j.createdAt}, #{j.updatedAt})
+        </foreach>
+    </insert>
 </mapper>

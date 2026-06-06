@@ -10,7 +10,7 @@ import {
   DeleteOutlined,
   CheckCircleOutlined,
 } from '@ant-design/icons'
-import { Button, Tag, Modal, Select, message, Tooltip } from 'antd'
+import { Alert, Button, Collapse, Tag, Modal, Select, message, Tooltip } from 'antd'
 import type { AssessmentTeamDTO, AssessmentTeamMemberDTO } from '@/apis/schema/assessment.dto'
 import { DIRECTION_LABELS } from '@/apis/schema/enumerate'
 
@@ -126,6 +126,34 @@ export default function TeamPanel({
         </div>
       )}
 
+      {/* 组队规则 */}
+      <Collapse
+        ghost
+        size="small"
+        items={[
+          {
+            key: 'rules',
+            label: <span className="text-[12px] text-white/45">组队规则与风险提示</span>,
+            children: (
+              <Alert
+                type="warning"
+                showIcon
+                className="!bg-white/[0.04] !border-white/[0.08]"
+                description={
+                  <ul className="text-[12px] text-white/55 list-disc pl-4 space-y-1">
+                    <li>组队仅支持文件上传题，客观题需独立作答</li>
+                    <li>队长提交答案后，队伍锁定，所有成员不可退出</li>
+                    <li>队长解散队伍时，所有已提交答案将被删除</li>
+                    <li>退出队伍后可重新加入原队伍或其他队伍</li>
+                    <li>已有答案者不能加入新队伍</li>
+                  </ul>
+                }
+              />
+            ),
+          },
+        ]}
+      />
+
       {/* 成员列表 */}
       <div className="flex flex-col gap-1.5">
         <span className="text-[13px] text-white/45 mb-1">成员 ({team.members.length} 人)</span>
@@ -188,6 +216,7 @@ export default function TeamPanel({
         okButtonProps={{ danger: true }}
       >
         <p>确定要退出队伍「{team.name}」吗？</p>
+        <p className="text-white/45 text-[13px] mt-2">退出后可重新加入本队或其他队伍。</p>
       </Modal>
 
       {/* 转让队长 */}
@@ -239,6 +268,12 @@ export default function TeamPanel({
         okButtonProps={{ danger: true }}
       >
         <p>确定要解散队伍「{team.name}」吗？此操作不可撤销。</p>
+        <Alert
+          type="warning"
+          showIcon
+          className="mt-3 !bg-white/[0.04] !border-white/[0.08]"
+          message="<span className='text-[13px] text-white/70'>队伍解散后，所有已提交答案将被删除。</span>"
+        />
         <p className="text-white/45 text-[13px] mt-2">队伍解散后，所有成员将需要重新组队。</p>
       </Modal>
     </div>

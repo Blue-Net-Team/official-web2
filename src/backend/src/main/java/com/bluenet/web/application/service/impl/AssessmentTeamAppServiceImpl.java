@@ -6,15 +6,12 @@ import com.bluenet.web.application.service.AssessmentTeamAppService;
 import com.bluenet.web.domain.exception.BadRequest;
 import com.bluenet.web.domain.exception.DataNotFound;
 import com.bluenet.web.domain.exception.Forbidden;
-import com.bluenet.web.domain.model.entity.AssessmentAnswer;
-import com.bluenet.web.domain.model.entity.AssessmentQuestion;
 import com.bluenet.web.domain.model.entity.AssessmentTeam;
 import com.bluenet.web.domain.model.entity.AssessmentTeamMember;
 import com.bluenet.web.domain.model.entity.AssessmentTime;
-import com.bluenet.web.domain.model.enumerate.QuestionType;
 import com.bluenet.web.domain.model.vo.UserVO;
 import com.bluenet.web.domain.repository.AssessmentAnswerRepository;
-import com.bluenet.web.domain.repository.AssessmentQuestionRepository;
+import com.bluenet.web.domain.repository.AssessmentJudgementRepository;
 import com.bluenet.web.domain.repository.AssessmentTeamRepository;
 import com.bluenet.web.domain.repository.AssessmentTimeRepository;
 import com.bluenet.web.domain.service.UserDomainService;
@@ -44,6 +41,7 @@ public class AssessmentTeamAppServiceImpl implements AssessmentTeamAppService {
     private final AssessmentTeamRepository assessmentTeamRepository;
     private final AssessmentTimeRepository assessmentTimeRepository;
     private final AssessmentAnswerRepository assessmentAnswerRepository;
+    private final AssessmentJudgementRepository assessmentJudgementRepository;
     private final AssessmentQuestionRepository assessmentQuestionRepository;
     private final UserDomainService userDomainService;
 
@@ -159,6 +157,10 @@ public class AssessmentTeamAppServiceImpl implements AssessmentTeamAppService {
             throw new BadRequest("您已提交过个人答案，无法加入队伍");
         }
 
+        if (hasTeamAnswer(team.getAssessmentTimeId(), currentUser.getId())) {
+            throw new BadRequest("您已有队伍答案，无法加入其他队伍");
+        }
+
         assessmentTeamRepository.addMember(team.getId(), currentUser.getId());
 
         log.info("用户加入队伍成功，teamId: {}, userId: {}", team.getId(), currentUser.getId());
@@ -208,6 +210,10 @@ public class AssessmentTeamAppServiceImpl implements AssessmentTeamAppService {
             throw new BadRequest("您不是该队伍的成员");
         }
 
+        if (hasTeamSubmittedAnswer(teamId)) {
+            throw new Forbidden("队伍已提交答案，无法退出");
+        }
+
         assessmentTeamRepository.removeMember(teamId, currentUser.getId());
 
         log.info("用户离开队伍成功，teamId: {}, userId: {}", teamId, currentUser.getId());
@@ -230,6 +236,10 @@ public class AssessmentTeamAppServiceImpl implements AssessmentTeamAppService {
 
         if (!team.isLeader(currentUser.getId())) {
             throw new Forbidden("只有队长可以转让队长");
+        }
+
+        if (hasTeamSubmittedAnswer(teamId)) {
+            throw new Forbidden("队伍已提交答案，无法转让队长");
         }
 
         if (!assessmentTeamRepository.isMember(teamId, newLeaderId)) {
@@ -261,6 +271,13 @@ public class AssessmentTeamAppServiceImpl implements AssessmentTeamAppService {
             throw new Forbidden("只有队长可以解散队伍");
         }
 
+        if (hasTeamSubmittedAnswer(teamId)) {
+            throw new Forbidden("队伍已提交答案，无法解散");
+        }
+
+        // Clean up answers and judgements before disbanding
+        cleanupTeamAnswers(teamId);
+
         team.disband();
         assessmentTeamRepository.update(team);
 
@@ -283,30 +300,23 @@ public class AssessmentTeamAppServiceImpl implements AssessmentTeamAppService {
     }
 
     private boolean hasPersonalAnswer(Long assessmentTimeId, Long userId) {
-        List<AssessmentQuestion> questions = new ArrayList<>();
-        int page = 0;
-        while (true) {
-            org.springframework.data.domain.Page<AssessmentQuestion> questionPage = assessmentQuestionRepository
-                    .findAllByTimeId(
-                            assessmentTimeId,
-                            org.springframework.data.domain.PageRequest.of(page, 100));
-            questions.addAll(questionPage.getContent());
-            if (questionPage.isLast()) {
-                break;
-            }
-            page++;
-        }
+        return assessmentAnswerRepository.countPersonalAnswersByUserIdAndAssessmentTimeId(userId, assessmentTimeId) > 0;
+    }
 
-        for (AssessmentQuestion question : questions) {
-            if (question.getQuestionType() == QuestionType.FILE_UPLOAD) {
-                Optional<AssessmentAnswer> answerOpt = assessmentAnswerRepository
-                        .findByUserIdAndQuestionId(userId, question.getId());
-                if (answerOpt.isPresent() && answerOpt.get().getTeamId() == null) {
-                    return true;
-                }
-            }
+    private boolean hasTeamAnswer(Long assessmentTimeId, Long userId) {
+        return assessmentAnswerRepository.countTeamAnswersByUserIdAndAssessmentTimeId(userId, assessmentTimeId) > 0;
+    }
+
+    private boolean hasTeamSubmittedAnswer(Long teamId) {
+        return assessmentAnswerRepository.countByTeamId(teamId) > 0;
+    }
+
+    private void cleanupTeamAnswers(Long teamId) {
+        List<Long> answerIds = assessmentAnswerRepository.findAnswerIdsByTeamId(teamId);
+        if (!answerIds.isEmpty()) {
+            assessmentJudgementRepository.deleteByAnswerIds(answerIds);
         }
-        return false;
+        assessmentAnswerRepository.deleteByTeamId(teamId);
     }
 
     private TeamResult toTeamResult(AssessmentTeam team) {

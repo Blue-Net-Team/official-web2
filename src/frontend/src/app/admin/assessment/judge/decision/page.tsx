@@ -30,6 +30,8 @@ import { useAuth } from '@/hooks'
 import { getRoleLevel } from '@/utils/RoleUtils'
 import { formatScore, getDecisionTag } from '../shared'
 
+type DirectionOrGlobal = Direction | 'GLOBAL'
+
 export default function AssessmentJudgementManagementPage() {
   const { message: messageApi } = App.useApp()
   const screens = Grid.useBreakpoint()
@@ -39,7 +41,7 @@ export default function AssessmentJudgementManagementPage() {
   const isDecisionMaker = getRoleLevel(userInfo?.roleName || '') >= 2
   const userDirection = userInfo?.direction
 
-  const [direction, setDirection] = useState<Direction | undefined>(
+  const [direction, setDirection] = useState<DirectionOrGlobal | undefined>(
     isSuperAdmin ? undefined : (userDirection ?? undefined)
   )
   const [assessmentTimeId, setAssessmentTimeId] = useState<number | undefined>()
@@ -65,6 +67,9 @@ export default function AssessmentJudgementManagementPage() {
     if (!isSuperAdmin && userDirection) {
       return entries.filter(([value]) => value === userDirection)
     }
+    if (isSuperAdmin) {
+      return [...entries, ['GLOBAL' as DirectionOrGlobal, '全局']]
+    }
     return entries
   }, [isSuperAdmin, userDirection])
 
@@ -79,13 +84,17 @@ export default function AssessmentJudgementManagementPage() {
 
   /** 加载指定方向下可决策的考核时间。 */
   const fetchAssessmentTimes = useCallback(
-    async (nextDirection: Direction) => {
+    async (nextDirection: DirectionOrGlobal) => {
       setLoadingTimes(true)
       try {
         const response = await adminAssessmentTimeService.getList(0, 100)
-        setAssessmentTimes(
-          response.data?.content.filter((item) => item.direction === nextDirection) ?? []
-        )
+        if (nextDirection === 'GLOBAL') {
+          setAssessmentTimes(response.data?.content.filter((item) => item.direction === null) ?? [])
+        } else {
+          setAssessmentTimes(
+            response.data?.content.filter((item) => item.direction === nextDirection) ?? []
+          )
+        }
       } catch {
         messageApi.error('加载考核时间失败')
       } finally {
@@ -126,7 +135,7 @@ export default function AssessmentJudgementManagementPage() {
   }, [assessmentTimeId, decisionKeyword, decisionStatus, messageApi])
 
   useEffect(() => {
-    if (!direction) {
+    if (direction === undefined) {
       setAssessmentTimes([])
       setAssessmentTimeId(undefined)
       return
@@ -197,7 +206,7 @@ export default function AssessmentJudgementManagementPage() {
   /** 渲染考核方向和考核时间的公共筛选器。 */
   const renderFilters = (
     <div className="flex flex-wrap items-center gap-3">
-      <Select
+      <Select<DirectionOrGlobal>
         placeholder="考核方向"
         className="w-[160px]"
         value={direction}

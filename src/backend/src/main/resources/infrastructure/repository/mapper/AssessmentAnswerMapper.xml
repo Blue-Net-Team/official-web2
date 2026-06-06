@@ -41,4 +41,78 @@
         WHERE file_id = #{fileId}
         LIMIT 1
     </select>
+
+    <select id="selectByTeamIdAndQuestionId" resultMap="BaseResultMap">
+        SELECT *
+        FROM tb_assessment_answer
+        WHERE team_id = #{teamId}
+          AND question_id = #{questionId}
+    </select>
+
+    <delete id="deleteByTeamId">
+        DELETE FROM tb_assessment_answer
+        WHERE team_id = #{teamId}
+    </delete>
+
+    <select id="countByTeamId" resultType="int">
+        SELECT COUNT(*)
+        FROM tb_assessment_answer
+        WHERE team_id = #{teamId}
+    </select>
+
+    <select id="selectAnswerIdsByTeamId" resultType="java.lang.Long">
+        SELECT id
+        FROM tb_assessment_answer
+        WHERE team_id = #{teamId}
+    </select>
+
+    <insert id="batchInsert">
+        INSERT INTO tb_assessment_answer (user_id, question_id, content, language, file_id, submit_time, team_id)
+        VALUES
+        <foreach collection="answers" item="a" separator=",">
+            (#{a.userId}, #{a.questionId}, #{a.content}, #{a.language}, #{a.fileId}, #{a.submitTime}, #{a.teamId})
+        </foreach>
+    </insert>
+
+    <update id="updateTeamMemberAnswers">
+        UPDATE tb_assessment_answer
+        SET
+            <if test="fileId != null">file_id = #{fileId},</if>
+            <if test="content != null">content = #{content},</if>
+            <if test="language != null">language = #{language},</if>
+            submit_time = #{submitTime}
+        WHERE team_id = #{teamId}
+          AND question_id = #{questionId}
+          AND user_id != #{leaderId}
+    </update>
+
+    <select id="selectExistingAnswerUserIds" resultType="java.lang.Long">
+        SELECT user_id
+        FROM tb_assessment_answer
+        WHERE question_id = #{questionId}
+          AND user_id IN
+        <foreach collection="userIds" item="userId" open="(" separator="," close=")">
+            #{userId}
+        </foreach>
+    </select>
+
+    <select id="countPersonalAnswersByUserIdAndAssessmentTimeId" resultType="int">
+        SELECT COUNT(*)
+        FROM tb_assessment_answer a
+        JOIN tb_assessment_question q ON a.question_id = q.id
+        WHERE q.assessment_time_id = #{assessmentTimeId}
+          AND a.user_id = #{userId}
+          AND q.question_type = 'FILE_UPLOAD'
+          AND a.team_id IS NULL
+    </select>
+
+    <select id="countTeamAnswersByUserIdAndAssessmentTimeId" resultType="int">
+        SELECT COUNT(*)
+        FROM tb_assessment_answer a
+        JOIN tb_assessment_question q ON a.question_id = q.id
+        WHERE q.assessment_time_id = #{assessmentTimeId}
+          AND a.user_id = #{userId}
+          AND q.question_type = 'FILE_UPLOAD'
+          AND a.team_id IS NOT NULL
+    </select>
 </mapper>

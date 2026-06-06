@@ -126,4 +126,20 @@ public interface AssessmentJudgementRepository {
      * @return 满足条件的考核评审结果 结果集合。
      */
     List<AssessmentCandidateScoreRowVO> findCandidateScoreRows(Long assessmentTimeId, String keyword);
+
+    /**
+     * 按作答主键集合删除评审结果记录。
+     *
+     * @param answerIds
+     *            作答主键集合。
+     */
+    void deleteByAnswerIds(List<Long> answerIds);
+
+    /**
+     * 批量保存评审结果记录。
+     *
+     * @param judgements
+     *            评审结果实体列表。
+     */
+    void batchInsert(List<com.bluenet.web.domain.model.entity.AssessmentJudgement> judgements);
 }

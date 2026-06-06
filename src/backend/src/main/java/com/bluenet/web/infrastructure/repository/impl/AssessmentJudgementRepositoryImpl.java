@@ -203,6 +203,23 @@ public class AssessmentJudgementRepositoryImpl implements AssessmentJudgementRep
                 .toList();
     }
 
+    @Override
+    public void deleteByAnswerIds(List<Long> answerIds) {
+        if (answerIds == null || answerIds.isEmpty()) {
+            return;
+        }
+        assessmentJudgementMapper.deleteByAnswerIds(answerIds);
+    }
+
+    @Override
+    public void batchInsert(List<com.bluenet.web.domain.model.entity.AssessmentJudgement> judgements) {
+        if (judgements == null || judgements.isEmpty()) {
+            return;
+        }
+        List<AssessmentJudgementDO> dataObjects = converter.toDataObjectList(judgements);
+        assessmentJudgementMapper.batchInsert(dataObjects);
+    }
+
     /**
      * 处理考核评审结果 仓储职责中的业务数据访问逻辑。
      *

@@ -4,6 +4,8 @@ import com.bluenet.web.domain.model.entity.AssessmentAnswer;
 import com.bluenet.web.infrastructure.repository.dataobject.AssessmentAnswerDO;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+
 /**
  * 评测答案仓储转换器。
  * <p>
@@ -56,5 +58,19 @@ public class AssessmentAnswerRepositoryConverter {
                 dataObject.getFileId(),
                 dataObject.getSubmitTime(),
                 dataObject.getTeamId());
+    }
+
+    public List<AssessmentAnswerDO> toDataObjectList(List<AssessmentAnswer> entities) {
+        if (entities == null) {
+            return List.of();
+        }
+        return entities.stream().map(this::toDataObject).toList();
+    }
+
+    public List<AssessmentAnswer> toEntityList(List<AssessmentAnswerDO> dataObjects) {
+        if (dataObjects == null) {
+            return List.of();
+        }
+        return dataObjects.stream().map(this::toEntity).toList();
     }
 }

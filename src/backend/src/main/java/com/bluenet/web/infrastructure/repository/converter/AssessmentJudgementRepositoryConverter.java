@@ -69,6 +69,18 @@ public class AssessmentJudgementRepositoryConverter {
     }
 
     /**
+     * Entity 列表 → DO 列表
+     */
+    public List<AssessmentJudgementDO> toDataObjectList(List<AssessmentJudgement> entities) {
+        if (entities == null) {
+            return List.of();
+        }
+        return entities.stream()
+                .map(this::toDataObject)
+                .toList();
+    }
+
+    /**
      * DO 列表 → Entity 列表
      */
     public List<AssessmentJudgement> toEntityList(List<AssessmentJudgementDO> dataObjects) {

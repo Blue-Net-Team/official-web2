@@ -109,4 +109,23 @@ public interface AssessmentJudgementMapper extends BaseMapper<AssessmentJudgemen
     List<AssessmentCandidateScoreQueryDO> selectCandidateScoreRows(
             @Param("assessmentTimeId") Long assessmentTimeId,
             @Param("keyword") String keyword);
+
+    /**
+     * 按作答主键集合删除评审结果数据行。
+     *
+     * @param answerIds
+     *            作答主键集合。
+     * @return 删除的记录数量。
+     */
+    int deleteByAnswerIds(@Param("answerIds") List<Long> answerIds);
+
+    /**
+     * 批量插入评审结果数据行。
+     *
+     * @param judgements
+     *            评审结果数据对象列表。
+     * @return 插入的记录数量。
+     */
+    int batchInsert(
+            @Param("judgements") List<com.bluenet.web.infrastructure.repository.dataobject.AssessmentJudgementDO> judgements);
 }
