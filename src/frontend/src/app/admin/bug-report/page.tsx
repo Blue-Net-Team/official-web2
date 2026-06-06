@@ -106,14 +106,12 @@ export default function BugReportManagementPage() {
     {
       title: '标题',
       dataIndex: 'title',
-      ellipsis: true,
-      render: (v: string) => <span title={v}>{v.length > 50 ? `${v.slice(0, 50)}...` : v}</span>,
+      ellipsis: { showTitle: true },
     },
     {
       title: '描述',
       dataIndex: 'description',
-      ellipsis: true,
-      render: (v: string) => <span title={v}>{v.length > 50 ? `${v.slice(0, 50)}...` : v}</span>,
+      ellipsis: { showTitle: true },
     },
     {
       title: '状态',
@@ -136,19 +134,21 @@ export default function BugReportManagementPage() {
       title: '页面 URL',
       dataIndex: 'pageUrl',
       width: 180,
-      ellipsis: true,
-      render: (v: string) => (
-        <a
-          href={v}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-blue-400 hover:text-blue-300"
-          onClick={(e) => e.stopPropagation()}
-          title={v}
-        >
-          {v.length > 30 ? `${v.slice(0, 30)}...` : v}
-        </a>
-      ),
+      ellipsis: { showTitle: true },
+      render: (v: string) =>
+        v ? (
+          <a
+            href={v}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-400 hover:text-blue-300"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {v}
+          </a>
+        ) : (
+          <span className="text-white/20">-</span>
+        ),
     },
     {
       title: 'GitHub',
