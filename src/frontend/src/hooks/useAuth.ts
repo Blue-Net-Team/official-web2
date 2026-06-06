@@ -15,7 +15,7 @@ export function useAuth() {
   const checkAuthStatus = authStore((state) => state.checkAuthStatus)
   const sendVerificationCode = authStore((state) => state.sendVerificationCode)
 
-  const isAdmin = userInfo?.roleName === 'ADMIN' || userInfo?.roleName === 'SUPER_ADMIN'
+  const isAdmin = userInfo?.roleName === 'DIRECTION_ADMIN' || userInfo?.roleName === 'SUPER_ADMIN'
   const isSuperAdmin = userInfo?.roleName === 'SUPER_ADMIN'
 
   const refreshAuth = useCallback(async () => {

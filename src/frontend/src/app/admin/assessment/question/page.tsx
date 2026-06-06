@@ -38,9 +38,7 @@ export default function AssessmentQuestionManagementPage() {
   const screens = useBreakpoint()
   const isMobile = !screens.md
 
-  const { userInfo } = useAuth()
-  const isSuperAdmin = getRoleLevel(userInfo?.roleName || '') >= 3
-  const roleLevel = getRoleLevel(userInfo?.roleName || '')
+  const { userInfo, isSuperAdmin } = useAuth()
   const userDirection = userInfo?.direction
 
   // Filter state
