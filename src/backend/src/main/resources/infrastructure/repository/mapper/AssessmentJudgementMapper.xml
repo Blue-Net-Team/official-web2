@@ -213,11 +213,12 @@
             JOIN tb_role r ON r.id = u.role_id
             CROSS JOIN selected_time t
             WHERE r.name = 'CANDIDATE'
-              AND u.direction = t.direction
-              AND COALESCE(
-                  u.assessment_grade_year,
-                  CASE WHEN u.student_id ~ '^\d{4}' THEN SUBSTRING(u.student_id FROM 1 FOR 4)::INTEGER END
-              ) = t.grade
+              AND (t.direction IS NULL OR u.direction = t.direction)
+              AND (t.grade IS NULL
+                  OR COALESCE(
+                      u.assessment_grade_year,
+                      CASE WHEN u.student_id ~ '^\d{4}' THEN SUBSTRING(u.student_id FROM 1 FOR 4)::INTEGER END
+                  ) = t.grade)
             <if test="keyword != null and keyword != ''">
               AND (u.username ILIKE ('%' || CAST(#{keyword} AS TEXT) || '%')
                   OR u.nickname ILIKE ('%' || CAST(#{keyword} AS TEXT) || '%')

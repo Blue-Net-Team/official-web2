@@ -258,6 +258,32 @@ class AssessmentJudgementAppServiceImplTest {
     }
 
     /**
+     * 验证当考核时间 grade 为 null（不限年级）时，人员评分矩阵仍能正确返回考生数据。
+     */
+    @Test
+    @DisplayName("考生评分矩阵：grade=null 时应返回考生评分数据")
+    void listCandidateScoreboard_nullGrade_shouldReturnCandidates() {
+        try (MockedStatic<UserCTX> mockedUserCTX = mockStatic(UserCTX.class)) {
+            mockedUserCTX.when(UserCTX::getCurrentUser).thenReturn(createUser(RoleType.MEMBER));
+            when(assessmentTimeRepository.findById(ASSESSMENT_TIME_ID))
+                    .thenReturn(Optional.of(createTimeWithNullGrade()));
+            when(assessmentJudgementRepository.findCandidateScoreRows(ASSESSMENT_TIME_ID, null))
+                    .thenReturn(
+                            List.of(
+                                    createCandidateScoreRowVO(QUESTION_ID, 1, true, true),
+                                    createCandidateScoreRowVO(21L, 2, true, false)));
+
+            List<AssessmentCandidateScoreboardVO> result = assessmentJudgementAppService
+                    .listCandidateScoreboard(ASSESSMENT_TIME_ID, null);
+
+            assertEquals(1, result.size());
+            assertEquals(BigDecimal.TEN, result.get(0).getTotalScore());
+            assertEquals(1L, result.get(0).getJudgedQuestionCount());
+            assertEquals(1L, result.get(0).getPendingJudgementCount());
+        }
+    }
+
+    /**
      * 验证录用决策工作台会计算候选人状态统计。
      */
     @Test
@@ -723,6 +749,20 @@ class AssessmentJudgementAppServiceImplTest {
                 com.bluenet.web.domain.model.enumerate.Direction.COMPUTER_VISION,
                 epoch,
                 2026,
+                null,
+                null,
+                false,
+                null,
+                null,
+                false);
+    }
+
+    private AssessmentTime createTimeWithNullGrade() {
+        return AssessmentTime.reconstruct(
+                ASSESSMENT_TIME_ID,
+                com.bluenet.web.domain.model.enumerate.Direction.COMPUTER_VISION,
+                1,
+                null,
                 null,
                 null,
                 false,
