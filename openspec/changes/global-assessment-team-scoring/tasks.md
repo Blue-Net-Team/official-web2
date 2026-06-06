@@ -5,7 +5,7 @@
 - [x] 1.3 `AssessmentTeamAppServiceImpl.transferLeader()`：增加"队伍已提交答案"锁定检查
 - [x] 1.4 `AssessmentTeamAppServiceImpl.disbandTeam()`：增加"队伍已提交答案"锁定检查；解散前清理该队伍所有 answer 和关联 judgement
 - [x] 1.5 `AssessmentTeamAppServiceImpl.joinTeam()`：增加 `hasTeamAnswer()` 检查，已有队伍答案者禁止加入新队伍
-- [ ] 1.6 编写上述锁定和清理逻辑的单元测试
+- [x] 1.6 编写上述锁定和清理逻辑的单元测试
 
 ## 2. 后端 - 组员 answer 自动创建与同步
 
@@ -13,16 +13,16 @@
 - [x] 2.2 `AssessmentAnswerAppServiceImpl.updateAnswer()`：队长更新 FILE_UPLOAD 答案后，同步更新所有组员 answer 记录
 - [x] 2.3 `AssessmentAnswerRepository`：新增 `findByTeamIdAndQuestionId(teamId, questionId)` 和 `deleteByTeamId(teamId)` 方法
 - [x] 2.4 `AssessmentAnswerMapper.xml`：实现上述 Repository 方法对应的 SQL
-- [ ] 2.5 编写组员 answer 自动创建和同步的单元测试
+- [x] 2.5 编写组员 answer 自动创建和同步的单元测试
 
 ## 3. 后端 - 评分查询支持 team_id 展开
 
 - [x] 3.1 `AssessmentJudgementMapper.xml.selectQuestionSubmissions`：写时复制方案下组员已有独立 answer 记录，无需修改 SQL
 - [x] 3.2 `AssessmentJudgementMapper.xml.selectCandidateScoreRows`：写时复制方案下组员已有独立 answer 记录，无需修改 SQL
 - [x] 3.3 `AssessmentJudgementMapper.xml.selectQuestionScoreboard`：写时复制方案下组员已有独立 answer 记录，无需修改 SQL
-- [ ] 3.4 `AssessmentJudgementMapperIntegrationTest`：补充全局考核 + 组队场景的集成测试
+- [x] 3.4 `AssessmentJudgementMapperIntegrationTest`：补充全局考核 + 组队场景的集成测试
 - [x] 3.5 `AssessmentJudgementAppServiceImpl.finalizeScore()`：支持为所有组员创建 judgement（全队同分）
-- [ ] 3.6 编写评分查询和团队评分的单元测试
+- [x] 3.6 编写评分查询和团队评分的单元测试
 
 ## 4. 后端 - 全局考核评分/决策支持
 

@@ -14,6 +14,7 @@ import com.bluenet.web.domain.model.enumerate.Direction;
 import com.bluenet.web.domain.model.enumerate.QuestionType;
 import com.bluenet.web.domain.model.vo.UserVO;
 import com.bluenet.web.domain.repository.AssessmentAnswerRepository;
+import com.bluenet.web.domain.repository.AssessmentJudgementRepository;
 import com.bluenet.web.domain.repository.AssessmentQuestionRepository;
 import com.bluenet.web.domain.repository.AssessmentTeamRepository;
 import com.bluenet.web.domain.repository.AssessmentTimeRepository;
@@ -56,6 +57,9 @@ class AssessmentTeamAppServiceImplTest {
 
     @Mock
     private UserDomainService userDomainService;
+
+    @Mock
+    private AssessmentJudgementRepository assessmentJudgementRepository;
 
     @InjectMocks
     private AssessmentTeamAppServiceImpl assessmentTeamAppService;
@@ -406,6 +410,32 @@ class AssessmentTeamAppServiceImplTest {
                 assertEquals("您已加入该考核的队伍", ex.getMessage());
             }
         }
+
+        @Test
+        @DisplayName("已有队伍答案：应抛出BadRequest")
+        void joinTeam_hasTeamAnswer_shouldThrow() {
+            try (MockedStatic<UserCTX> mockedUserCTX = mockStatic(UserCTX.class)) {
+                mockedUserCTX.when(UserCTX::getCurrentUser).thenReturn(createTestUser());
+
+                AssessmentTeam team = createTestTeam();
+                AssessmentTime time = createTestAssessmentTime(true);
+                when(assessmentTeamRepository.findByInviteCode(TEST_INVITE_CODE)).thenReturn(Optional.of(team));
+                when(assessmentTimeRepository.findById(TEST_TIME_ID)).thenReturn(Optional.of(time));
+                when(assessmentTeamRepository.existsByAssessmentTimeIdAndUserId(TEST_TIME_ID, TEST_USER_ID))
+                        .thenReturn(false);
+                when(
+                        assessmentAnswerRepository
+                                .countPersonalAnswersByUserIdAndAssessmentTimeId(TEST_USER_ID, TEST_TIME_ID))
+                                        .thenReturn(0);
+                when(assessmentAnswerRepository.countTeamAnswersByUserIdAndAssessmentTimeId(TEST_USER_ID, TEST_TIME_ID))
+                        .thenReturn(1);
+
+                BadRequest ex = assertThrows(
+                        BadRequest.class,
+                        () -> assessmentTeamAppService.joinTeam(TEST_INVITE_CODE));
+                assertEquals("您已有队伍答案，无法加入其他队伍", ex.getMessage());
+            }
+        }
     }
 
     @Nested
@@ -537,6 +567,25 @@ class AssessmentTeamAppServiceImplTest {
                 assertEquals("您不是该队伍的成员", ex.getMessage());
             }
         }
+
+        @Test
+        @DisplayName("队伍已提交答案：应抛出Forbidden")
+        void leaveTeam_submittedAnswer_shouldThrowForbidden() {
+            try (MockedStatic<UserCTX> mockedUserCTX = mockStatic(UserCTX.class)) {
+                UserVO user = createTestUser(TEST_NEW_LEADER_ID, "member");
+                mockedUserCTX.when(UserCTX::getCurrentUser).thenReturn(user);
+
+                AssessmentTeam team = createTestTeam();
+                when(assessmentTeamRepository.findById(TEST_TEAM_ID)).thenReturn(Optional.of(team));
+                when(assessmentTeamRepository.isMember(TEST_TEAM_ID, TEST_NEW_LEADER_ID)).thenReturn(true);
+                when(assessmentAnswerRepository.countByTeamId(TEST_TEAM_ID)).thenReturn(1);
+
+                Forbidden ex = assertThrows(
+                        Forbidden.class,
+                        () -> assessmentTeamAppService.leaveTeam(TEST_TEAM_ID));
+                assertEquals("队伍已提交答案，无法退出", ex.getMessage());
+            }
+        }
     }
 
     @Nested
@@ -622,6 +671,23 @@ class AssessmentTeamAppServiceImplTest {
                 assertEquals("该队伍已解散", ex.getMessage());
             }
         }
+
+        @Test
+        @DisplayName("队伍已提交答案：应抛出Forbidden")
+        void transferLeader_submittedAnswer_shouldThrowForbidden() {
+            try (MockedStatic<UserCTX> mockedUserCTX = mockStatic(UserCTX.class)) {
+                mockedUserCTX.when(UserCTX::getCurrentUser).thenReturn(createTestUser());
+
+                AssessmentTeam team = createTestTeam();
+                when(assessmentTeamRepository.findById(TEST_TEAM_ID)).thenReturn(Optional.of(team));
+                when(assessmentAnswerRepository.countByTeamId(TEST_TEAM_ID)).thenReturn(1);
+
+                Forbidden ex = assertThrows(
+                        Forbidden.class,
+                        () -> assessmentTeamAppService.transferLeader(TEST_TEAM_ID, TEST_NEW_LEADER_ID));
+                assertEquals("队伍已提交答案，无法转让队长", ex.getMessage());
+            }
+        }
     }
 
     @Nested
@@ -670,6 +736,43 @@ class AssessmentTeamAppServiceImplTest {
                 assertThrows(
                         DataNotFound.class,
                         () -> assessmentTeamAppService.disbandTeam(TEST_TEAM_ID));
+            }
+        }
+
+        @Test
+        @DisplayName("队伍已提交答案：应抛出Forbidden")
+        void disbandTeam_submittedAnswer_shouldThrowForbidden() {
+            try (MockedStatic<UserCTX> mockedUserCTX = mockStatic(UserCTX.class)) {
+                mockedUserCTX.when(UserCTX::getCurrentUser).thenReturn(createTestUser());
+
+                AssessmentTeam team = createTestTeam();
+                when(assessmentTeamRepository.findById(TEST_TEAM_ID)).thenReturn(Optional.of(team));
+                when(assessmentAnswerRepository.countByTeamId(TEST_TEAM_ID)).thenReturn(1);
+
+                Forbidden ex = assertThrows(
+                        Forbidden.class,
+                        () -> assessmentTeamAppService.disbandTeam(TEST_TEAM_ID));
+                assertEquals("队伍已提交答案，无法解散", ex.getMessage());
+            }
+        }
+
+        @Test
+        @DisplayName("正常解散：应清理答案和评审记录")
+        void disbandTeam_leader_shouldCleanupAnswers() {
+            try (MockedStatic<UserCTX> mockedUserCTX = mockStatic(UserCTX.class)) {
+                mockedUserCTX.when(UserCTX::getCurrentUser).thenReturn(createTestUser());
+
+                AssessmentTeam team = createTestTeam();
+                when(assessmentTeamRepository.findById(TEST_TEAM_ID)).thenReturn(Optional.of(team));
+                when(assessmentAnswerRepository.countByTeamId(TEST_TEAM_ID)).thenReturn(0);
+                List<Long> answerIds = List.of(100L, 101L);
+                when(assessmentAnswerRepository.findAnswerIdsByTeamId(TEST_TEAM_ID)).thenReturn(answerIds);
+
+                assessmentTeamAppService.disbandTeam(TEST_TEAM_ID);
+
+                verify(assessmentJudgementRepository).deleteByAnswerIds(answerIds);
+                verify(assessmentAnswerRepository).deleteByTeamId(TEST_TEAM_ID);
+                verify(assessmentTeamRepository).update(any(AssessmentTeam.class));
             }
         }
     }

@@ -28,6 +28,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
@@ -36,10 +37,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @DisplayName("AssessmentAnswerAppServiceImpl 单元测试")
@@ -66,6 +68,8 @@ class AssessmentAnswerAppServiceImplTest {
     private CommentDomainService commentDomainService;
     @Mock
     private AssessmentDecisionDomainService assessmentDecisionDomainService;
+    @Mock
+    private AssessmentTeamRepository assessmentTeamRepository;
     @InjectMocks
     private AssessmentAnswerAppServiceImpl assessmentAnswerAppService;
 
@@ -451,6 +455,99 @@ class AssessmentAnswerAppServiceImplTest {
             assertEquals("多选题答案格式错误", ex.getMessage());
             verify(assessmentJudgementDomainService, never()).createJudgement(any());
         }
+
+        @Test
+        @DisplayName("队长更新 FILE_UPLOAD 答案：应同步组员答案")
+        void updateAnswer_teamLeaderFileUpload_shouldSyncMemberAnswers() {
+            UserVO user = createTestUser();
+            when(userDomainService.getUser(TEST_USER_ID)).thenReturn(Optional.of(user));
+
+            AssessmentQuestion question = AssessmentQuestion.reconstruct(
+                    TEST_QUESTION_ID,
+                    TEST_ASSESSMENT_TIME_ID,
+                    1,
+                    QuestionType.FILE_UPLOAD,
+                    "作品提交",
+                    null,
+                    null,
+                    BigDecimal.TEN);
+            when(assessmentQuestionRepository.findById(TEST_QUESTION_ID)).thenReturn(Optional.of(question));
+
+            AssessmentTime time = AssessmentTime.reconstruct(
+                    TEST_ASSESSMENT_TIME_ID,
+                    Direction.COMPUTER_VISION,
+                    1,
+                    2024,
+                    null,
+                    null,
+                    false,
+                    null,
+                    null,
+                    true);
+            when(assessmentTimeRepository.findById(TEST_ASSESSMENT_TIME_ID)).thenReturn(Optional.of(time));
+            when(fileDomainService.getFileById(TEST_FILE_ID))
+                    .thenReturn(FileVO.builder().id(TEST_FILE_ID).name("work.zip").type(FileType.WORK).build());
+            when(assessmentSessionRepository.findByUserIdAndAssessmentTimeId(TEST_USER_ID, TEST_ASSESSMENT_TIME_ID))
+                    .thenReturn(Optional.empty());
+
+            Long teamId = 50L;
+            AssessmentAnswer existing = AssessmentAnswer.reconstruct(
+                    TEST_ANSWER_ID,
+                    TEST_USER_ID,
+                    TEST_QUESTION_ID,
+                    "old content",
+                    null,
+                    TEST_FILE_ID,
+                    TEST_SUBMIT_TIME,
+                    teamId);
+            AssessmentAnswer updated = AssessmentAnswer.reconstruct(
+                    TEST_ANSWER_ID,
+                    TEST_USER_ID,
+                    TEST_QUESTION_ID,
+                    "new content",
+                    null,
+                    TEST_FILE_ID,
+                    LocalDateTime.now(),
+                    teamId);
+            when(assessmentAnswerRepository.findByUserIdAndQuestionId(TEST_USER_ID, TEST_QUESTION_ID))
+                    .thenReturn(Optional.of(existing), Optional.of(updated));
+
+            com.bluenet.web.domain.model.entity.AssessmentTeam team = com.bluenet.web.domain.model.entity.AssessmentTeam
+                    .reconstruct(
+                            teamId,
+                            TEST_ASSESSMENT_TIME_ID,
+                            TEST_USER_ID,
+                            "测试队",
+                            "ABC123",
+                            com.bluenet.web.domain.model.entity.AssessmentTeam.TeamStatus.ACTIVE,
+                            LocalDateTime.now());
+            when(assessmentTeamRepository.findByAssessmentTimeIdAndUserId(TEST_ASSESSMENT_TIME_ID, TEST_USER_ID))
+                    .thenReturn(Optional.of(team));
+            when(
+                    assessmentAnswerRepository.updateTeamMemberAnswers(
+                            eq(teamId),
+                            eq(TEST_USER_ID),
+                            eq(TEST_QUESTION_ID),
+                            eq(TEST_FILE_ID),
+                            eq("new content"),
+                            isNull(),
+                            any(LocalDateTime.class)))
+                                    .thenReturn(2);
+
+            AssessmentAnswerCommands.UpdateAssessmentAnswerCommand command = new AssessmentAnswerCommands.UpdateAssessmentAnswerCommand(
+                    TEST_USER_ID, TEST_QUESTION_ID, "new content", null, TEST_FILE_ID);
+            AssessmentAnswerResult result = assessmentAnswerAppService.updateAnswer(command);
+
+            assertNotNull(result);
+            verify(assessmentAnswerRepository).updateTeamMemberAnswers(
+                    eq(teamId),
+                    eq(TEST_USER_ID),
+                    eq(TEST_QUESTION_ID),
+                    eq(TEST_FILE_ID),
+                    eq("new content"),
+                    isNull(),
+                    any(LocalDateTime.class));
+        }
     }
 
     @Nested
@@ -678,6 +775,98 @@ class AssessmentAnswerAppServiceImplTest {
 
             assertNotNull(result);
             verify(assessmentDecisionDomainService, never()).isEliminatedFromPriorEpoch(any(), any());
+        }
+
+        @Test
+        @DisplayName("队长提交 FILE_UPLOAD 答案：应为组员批量创建答案")
+        void createAnswer_teamLeaderFileUpload_shouldBatchCreateMemberAnswers() {
+            UserVO user = createTestUser();
+            when(userDomainService.getUser(TEST_USER_ID)).thenReturn(Optional.of(user));
+
+            AssessmentQuestion question = AssessmentQuestion.reconstruct(
+                    TEST_QUESTION_ID,
+                    TEST_ASSESSMENT_TIME_ID,
+                    1,
+                    QuestionType.FILE_UPLOAD,
+                    "作品提交",
+                    null,
+                    null,
+                    BigDecimal.TEN);
+            when(assessmentQuestionRepository.findById(TEST_QUESTION_ID)).thenReturn(Optional.of(question));
+
+            AssessmentTime time = AssessmentTime.reconstruct(
+                    TEST_ASSESSMENT_TIME_ID,
+                    Direction.COMPUTER_VISION,
+                    1,
+                    2024,
+                    null,
+                    null,
+                    false,
+                    null,
+                    null,
+                    true);
+            when(assessmentTimeRepository.findById(TEST_ASSESSMENT_TIME_ID)).thenReturn(Optional.of(time));
+            when(fileDomainService.getFileById(TEST_FILE_ID))
+                    .thenReturn(FileVO.builder().id(TEST_FILE_ID).name("work.zip").type(FileType.WORK).build());
+            when(assessmentSessionRepository.findByUserIdAndAssessmentTimeId(TEST_USER_ID, TEST_ASSESSMENT_TIME_ID))
+                    .thenReturn(Optional.empty());
+            when(assessmentAnswerRepository.existsByUserIdAndQuestionId(TEST_USER_ID, TEST_QUESTION_ID))
+                    .thenReturn(false);
+
+            Long teamId = 50L;
+            com.bluenet.web.domain.model.entity.AssessmentTeam team = com.bluenet.web.domain.model.entity.AssessmentTeam
+                    .reconstruct(
+                            teamId,
+                            TEST_ASSESSMENT_TIME_ID,
+                            TEST_USER_ID,
+                            "测试队",
+                            "ABC123",
+                            com.bluenet.web.domain.model.entity.AssessmentTeam.TeamStatus.ACTIVE,
+                            LocalDateTime.now());
+            when(assessmentTeamRepository.findByAssessmentTimeIdAndUserId(TEST_ASSESSMENT_TIME_ID, TEST_USER_ID))
+                    .thenReturn(Optional.of(team));
+
+            Long memberId1 = 2L;
+            Long memberId2 = 3L;
+            when(assessmentTeamRepository.findMembersByTeamId(teamId))
+                    .thenReturn(
+                            List.of(
+                                    com.bluenet.web.domain.model.entity.AssessmentTeamMember.reconstruct(
+                                            1L,
+                                            teamId,
+                                            TEST_USER_ID,
+                                            LocalDateTime.now()),
+                                    com.bluenet.web.domain.model.entity.AssessmentTeamMember.reconstruct(
+                                            2L,
+                                            teamId,
+                                            memberId1,
+                                            LocalDateTime.now()),
+                                    com.bluenet.web.domain.model.entity.AssessmentTeamMember.reconstruct(
+                                            3L,
+                                            teamId,
+                                            memberId2,
+                                            LocalDateTime.now())));
+            when(assessmentAnswerRepository.findExistingAnswerUserIds(List.of(memberId1, memberId2), TEST_QUESTION_ID))
+                    .thenReturn(List.of());
+
+            doAnswer(invocation -> {
+                AssessmentAnswer entity = invocation.getArgument(0);
+                entity.setId(TEST_ANSWER_ID);
+                return null;
+            }).when(assessmentAnswerRepository).save(any(AssessmentAnswer.class));
+
+            AssessmentAnswerCommands.CreateAssessmentAnswerCommand command = new AssessmentAnswerCommands.CreateAssessmentAnswerCommand(
+                    TEST_USER_ID, TEST_QUESTION_ID, "content", null, TEST_FILE_ID);
+            AssessmentAnswerResult result = assessmentAnswerAppService.createAnswer(command);
+
+            assertNotNull(result);
+            ArgumentCaptor<List<AssessmentAnswer>> captor = ArgumentCaptor.forClass(List.class);
+            verify(assessmentAnswerRepository).batchInsert(captor.capture());
+            List<AssessmentAnswer> inserted = captor.getValue();
+            assertEquals(2, inserted.size());
+            assertTrue(inserted.stream().allMatch(a -> a.getTeamId().equals(teamId)));
+            assertTrue(inserted.stream().anyMatch(a -> a.getUserId().equals(memberId1)));
+            assertTrue(inserted.stream().anyMatch(a -> a.getUserId().equals(memberId2)));
         }
     }
 }

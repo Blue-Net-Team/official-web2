@@ -99,6 +99,9 @@ class AssessmentJudgementAppServiceImplTest {
     @Mock
     private CommentRepository commentRepository;
 
+    @Mock
+    private AssessmentTeamRepository assessmentTeamRepository;
+
     @InjectMocks
     private AssessmentJudgementAppServiceImpl assessmentJudgementAppService;
 
@@ -662,6 +665,97 @@ class AssessmentJudgementAppServiceImplTest {
                             new AssessmentJudgementCommands.FinalizeScoreCommand(ANSWER_ID, BigDecimal.valueOf(8),
                                     null)));
             verify(assessmentJudgementDomainService, never()).finalizeJudgement(any());
+        }
+    }
+
+    /**
+     * 验证队长确认最终评分后，评分会同步到所有组员。
+     */
+    @Test
+    @DisplayName("确认最终评分：队伍答案应同步到所有组员")
+    void finalizeScore_teamAnswer_shouldPropagateToMembers() {
+        try (MockedStatic<UserCTX> mockedUserCTX = mockStatic(UserCTX.class)) {
+            mockedUserCTX.when(UserCTX::getCurrentUser).thenReturn(createUser(RoleType.DIRECTION_ADMIN));
+
+            Long teamId = 60L;
+            AssessmentAnswer leaderAnswer = AssessmentAnswer.reconstruct(
+                    ANSWER_ID,
+                    CANDIDATE_ID,
+                    QUESTION_ID,
+                    null,
+                    null,
+                    null,
+                    null,
+                    teamId);
+            when(assessmentAnswerRepository.findById(ANSWER_ID)).thenReturn(Optional.of(leaderAnswer));
+            when(assessmentQuestionRepository.findById(QUESTION_ID))
+                    .thenReturn(Optional.of(createQuestion(QuestionType.FILE_UPLOAD)));
+            when(commentRepository.existsByAnswerIdAndUserId(ANSWER_ID, REVIEWER_ID)).thenReturn(true);
+            when(assessmentJudgementDomainService.finalizeJudgement(any(AssessmentJudgementVO.class)))
+                    .thenReturn(createJudgementVO(JudgementSource.ADMIN_FINALIZED, ReviewerType.DIRECTION_ADMIN));
+
+            Long memberId1 = 41L;
+            Long memberId2 = 42L;
+            when(assessmentTeamRepository.findMembersByTeamId(teamId))
+                    .thenReturn(
+                            List.of(
+                                    com.bluenet.web.domain.model.entity.AssessmentTeamMember.reconstruct(
+                                            1L,
+                                            teamId,
+                                            CANDIDATE_ID,
+                                            LocalDateTime.now()),
+                                    com.bluenet.web.domain.model.entity.AssessmentTeamMember.reconstruct(
+                                            2L,
+                                            teamId,
+                                            memberId1,
+                                            LocalDateTime.now()),
+                                    com.bluenet.web.domain.model.entity.AssessmentTeamMember.reconstruct(
+                                            3L,
+                                            teamId,
+                                            memberId2,
+                                            LocalDateTime.now())));
+
+            Long memberAnswerId1 = 101L;
+            Long memberAnswerId2 = 102L;
+            when(assessmentAnswerRepository.findByTeamIdAndQuestionId(teamId, QUESTION_ID))
+                    .thenReturn(
+                            List.of(
+                                    AssessmentAnswer.reconstruct(
+                                            memberAnswerId1,
+                                            memberId1,
+                                            QUESTION_ID,
+                                            null,
+                                            null,
+                                            null,
+                                            null,
+                                            teamId),
+                                    AssessmentAnswer.reconstruct(
+                                            memberAnswerId2,
+                                            memberId2,
+                                            QUESTION_ID,
+                                            null,
+                                            null,
+                                            null,
+                                            null,
+                                            teamId)));
+
+            AssessmentJudgementResult result = assessmentJudgementAppService.finalizeScore(
+                    new AssessmentJudgementCommands.FinalizeScoreCommand(ANSWER_ID, BigDecimal.valueOf(8), "评语"));
+
+            assertNotNull(result);
+            assertEquals(JudgementSource.ADMIN_FINALIZED, result.source());
+
+            ArgumentCaptor<List> captor = ArgumentCaptor.forClass(List.class);
+            verify(assessmentJudgementRepository).batchInsert(captor.capture());
+            List<com.bluenet.web.domain.model.entity.AssessmentJudgement> judgements = captor.getValue();
+            assertEquals(2, judgements.size());
+            assertTrue(judgements.stream().anyMatch(j -> j.getUserId().equals(memberId1)));
+            assertTrue(judgements.stream().anyMatch(j -> j.getUserId().equals(memberId2)));
+            assertTrue(judgements.stream().allMatch(j -> j.getScore().compareTo(BigDecimal.valueOf(8)) == 0));
+            assertTrue(
+                    judgements.stream()
+                            .allMatch(
+                                    j -> j.getSource() == JudgementSource.ADMIN_FINALIZED));
         }
     }
 
