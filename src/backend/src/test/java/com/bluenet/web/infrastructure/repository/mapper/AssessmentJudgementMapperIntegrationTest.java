@@ -53,6 +53,9 @@ class AssessmentJudgementMapperIntegrationTest extends BaseIntegrationTest {
     @Autowired
     private AssessmentTeamMapper assessmentTeamMapper;
 
+    @Autowired
+    private AssessmentTeamMemberMapper assessmentTeamMemberMapper;
+
     /**
      * 验证当考核时间的 grade 为 null（不限年级）时，人员视图仍能正确返回考生评分矩阵。
      */
@@ -304,7 +307,7 @@ class AssessmentJudgementMapperIntegrationTest extends BaseIntegrationTest {
                 .username("teammember2")
                 .nickname("组员2")
                 .collegeId(1L)
-                .direction(Direction.BACKEND)
+                .direction(Direction.EMBEDDED)
                 .assessmentGradeYear(2025)
                 .disable(false)
                 .build();
@@ -343,21 +346,21 @@ class AssessmentJudgementMapperIntegrationTest extends BaseIntegrationTest {
                 .userId(leaderId)
                 .joinedAt(LocalDateTime.now())
                 .build();
-        assessmentTeamMapper.insert(leaderMember);
+        assessmentTeamMemberMapper.insert(leaderMember);
 
         AssessmentTeamMemberDO tm1 = AssessmentTeamMemberDO.builder()
                 .teamId(teamId)
                 .userId(member1Id)
                 .joinedAt(LocalDateTime.now())
                 .build();
-        assessmentTeamMapper.insert(tm1);
+        assessmentTeamMemberMapper.insert(tm1);
 
         AssessmentTeamMemberDO tm2 = AssessmentTeamMemberDO.builder()
                 .teamId(teamId)
                 .userId(member2Id)
                 .joinedAt(LocalDateTime.now())
                 .build();
-        assessmentTeamMapper.insert(tm2);
+        assessmentTeamMemberMapper.insert(tm2);
 
         // 7. 创建队长和组员的 answer 记录（写时复制）
         AssessmentAnswerDO leaderAnswer = AssessmentAnswerDO.builder()

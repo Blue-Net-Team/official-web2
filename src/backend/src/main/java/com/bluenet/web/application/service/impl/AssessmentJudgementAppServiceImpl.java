@@ -771,7 +771,7 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
         LocalDateTime now = LocalDateTime.now();
         List<com.bluenet.web.domain.model.entity.AssessmentJudgement> judgementsToInsert = new ArrayList<>();
         for (com.bluenet.web.domain.model.entity.AssessmentAnswer memberAnswer : memberAnswers) {
-            if (memberAnswer.getUserId().equals(command.userId())) {
+            if (memberAnswer.getUserId().equals(currentUser.getId())) {
                 continue; // Skip leader, already handled
             }
             com.bluenet.web.domain.model.entity.AssessmentJudgement memberJudgement = com.bluenet.web.domain.model.entity.AssessmentJudgement

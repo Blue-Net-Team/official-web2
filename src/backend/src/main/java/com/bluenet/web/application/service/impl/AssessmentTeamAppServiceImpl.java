@@ -42,7 +42,6 @@ public class AssessmentTeamAppServiceImpl implements AssessmentTeamAppService {
     private final AssessmentTimeRepository assessmentTimeRepository;
     private final AssessmentAnswerRepository assessmentAnswerRepository;
     private final AssessmentJudgementRepository assessmentJudgementRepository;
-    private final AssessmentQuestionRepository assessmentQuestionRepository;
     private final UserDomainService userDomainService;
 
     private static final String INVITE_CODE_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";

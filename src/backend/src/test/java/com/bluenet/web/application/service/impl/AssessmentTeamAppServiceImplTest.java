@@ -5,13 +5,10 @@ import com.bluenet.web.application.TeamResult;
 import com.bluenet.web.domain.exception.BadRequest;
 import com.bluenet.web.domain.exception.DataNotFound;
 import com.bluenet.web.domain.exception.Forbidden;
-import com.bluenet.web.domain.model.entity.AssessmentAnswer;
-import com.bluenet.web.domain.model.entity.AssessmentQuestion;
 import com.bluenet.web.domain.model.entity.AssessmentTeam;
 import com.bluenet.web.domain.model.entity.AssessmentTeamMember;
 import com.bluenet.web.domain.model.entity.AssessmentTime;
 import com.bluenet.web.domain.model.enumerate.Direction;
-import com.bluenet.web.domain.model.enumerate.QuestionType;
 import com.bluenet.web.domain.model.vo.UserVO;
 import com.bluenet.web.domain.repository.AssessmentAnswerRepository;
 import com.bluenet.web.domain.repository.AssessmentJudgementRepository;
@@ -28,7 +25,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.PageImpl;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
@@ -134,8 +130,10 @@ class AssessmentTeamAppServiceImplTest {
                 when(assessmentTimeRepository.findById(TEST_TIME_ID)).thenReturn(Optional.of(time));
                 when(assessmentTeamRepository.existsByAssessmentTimeIdAndUserId(TEST_TIME_ID, TEST_USER_ID))
                         .thenReturn(false);
-                when(assessmentQuestionRepository.findAllByTimeId(anyLong(), any()))
-                        .thenReturn(new PageImpl<>(Collections.emptyList()));
+                when(
+                        assessmentAnswerRepository
+                                .countPersonalAnswersByUserIdAndAssessmentTimeId(TEST_USER_ID, TEST_TIME_ID))
+                                        .thenReturn(0);
                 when(assessmentTeamRepository.findByInviteCode(anyString())).thenReturn(Optional.empty());
                 doAnswer(invocation -> {
                     AssessmentTeam team = invocation.getArgument(0);
@@ -249,28 +247,10 @@ class AssessmentTeamAppServiceImplTest {
                 when(assessmentTeamRepository.existsByAssessmentTimeIdAndUserId(TEST_TIME_ID, TEST_USER_ID))
                         .thenReturn(false);
 
-                AssessmentQuestion question = AssessmentQuestion.reconstruct(
-                        TEST_QUESTION_ID,
-                        TEST_TIME_ID,
-                        1,
-                        QuestionType.FILE_UPLOAD,
-                        null,
-                        null,
-                        null,
-                        null);
-                when(assessmentQuestionRepository.findAllByTimeId(anyLong(), any()))
-                        .thenReturn(new PageImpl<>(List.of(question)));
-                AssessmentAnswer answer = AssessmentAnswer.reconstruct(
-                        100L,
-                        TEST_USER_ID,
-                        TEST_QUESTION_ID,
-                        "content",
-                        null,
-                        null,
-                        LocalDateTime.now(),
-                        null);
-                when(assessmentAnswerRepository.findByUserIdAndQuestionId(TEST_USER_ID, TEST_QUESTION_ID))
-                        .thenReturn(Optional.of(answer));
+                when(
+                        assessmentAnswerRepository
+                                .countPersonalAnswersByUserIdAndAssessmentTimeId(TEST_USER_ID, TEST_TIME_ID))
+                                        .thenReturn(1);
 
                 BadRequest ex = assertThrows(
                         BadRequest.class,
@@ -355,8 +335,12 @@ class AssessmentTeamAppServiceImplTest {
                 when(assessmentTimeRepository.findById(TEST_TIME_ID)).thenReturn(Optional.of(time));
                 when(assessmentTeamRepository.existsByAssessmentTimeIdAndUserId(TEST_TIME_ID, TEST_USER_ID))
                         .thenReturn(false);
-                when(assessmentQuestionRepository.findAllByTimeId(anyLong(), any()))
-                        .thenReturn(new PageImpl<>(Collections.emptyList()));
+                when(
+                        assessmentAnswerRepository
+                                .countPersonalAnswersByUserIdAndAssessmentTimeId(TEST_USER_ID, TEST_TIME_ID))
+                                        .thenReturn(0);
+                when(assessmentAnswerRepository.countTeamAnswersByUserIdAndAssessmentTimeId(TEST_USER_ID, TEST_TIME_ID))
+                        .thenReturn(0);
                 when(assessmentTeamRepository.findById(TEST_TEAM_ID)).thenReturn(Optional.of(team));
                 when(assessmentTeamRepository.findMembersByTeamId(TEST_TEAM_ID))
                         .thenReturn(List.of(createTestMember(1L, TEST_USER_ID)));

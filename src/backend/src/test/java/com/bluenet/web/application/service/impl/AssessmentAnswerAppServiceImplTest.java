@@ -16,6 +16,7 @@ import com.bluenet.web.domain.model.vo.evaluation.MultipleChoiceContent;
 import com.bluenet.web.domain.model.vo.evaluation.SingleChoiceContent;
 import com.bluenet.web.domain.repository.AssessmentAnswerRepository;
 import com.bluenet.web.domain.repository.AssessmentSessionRepository;
+import com.bluenet.web.domain.repository.AssessmentTeamRepository;
 import com.bluenet.web.domain.service.AssessmentDecisionDomainService;
 import com.bluenet.web.domain.service.AssessmentJudgementDomainService;
 import com.bluenet.web.domain.repository.AssessmentQuestionRepository;
@@ -487,8 +488,6 @@ class AssessmentAnswerAppServiceImplTest {
             when(assessmentTimeRepository.findById(TEST_ASSESSMENT_TIME_ID)).thenReturn(Optional.of(time));
             when(fileDomainService.getFileById(TEST_FILE_ID))
                     .thenReturn(FileVO.builder().id(TEST_FILE_ID).name("work.zip").type(FileType.WORK).build());
-            when(assessmentSessionRepository.findByUserIdAndAssessmentTimeId(TEST_USER_ID, TEST_ASSESSMENT_TIME_ID))
-                    .thenReturn(Optional.empty());
 
             Long teamId = 50L;
             AssessmentAnswer existing = AssessmentAnswer.reconstruct(
@@ -808,8 +807,6 @@ class AssessmentAnswerAppServiceImplTest {
             when(assessmentTimeRepository.findById(TEST_ASSESSMENT_TIME_ID)).thenReturn(Optional.of(time));
             when(fileDomainService.getFileById(TEST_FILE_ID))
                     .thenReturn(FileVO.builder().id(TEST_FILE_ID).name("work.zip").type(FileType.WORK).build());
-            when(assessmentSessionRepository.findByUserIdAndAssessmentTimeId(TEST_USER_ID, TEST_ASSESSMENT_TIME_ID))
-                    .thenReturn(Optional.empty());
             when(assessmentAnswerRepository.existsByUserIdAndQuestionId(TEST_USER_ID, TEST_QUESTION_ID))
                     .thenReturn(false);
 
