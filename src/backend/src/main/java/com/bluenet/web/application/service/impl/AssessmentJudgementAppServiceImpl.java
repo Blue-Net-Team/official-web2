@@ -195,31 +195,32 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
             throw new BadRequest("确认最终评分前，您需要先对该答案发表个人评论");
         }
 
-        AssessmentJudgementVO judgement = AssessmentJudgementVO.builder()
-                .answerId(answer.getId())
-                .questionId(question.getId())
-                .assessmentTimeId(question.getAssessmentTimeId())
-                .userId(answer.getUserId())
-                .score(command.score())
-                .maxScore(question.getScore())
-                .status(JudgementStatus.JUDGED)
-                .source(JudgementSource.ADMIN_FINALIZED)
-                .reviewerId(currentUser.getId())
-                .reviewerType(resolveReviewerType(roleType))
-                .comment(command.comment())
-                .judgedAt(LocalDateTime.now())
-                .build();
-        AssessmentJudgementResult result = toResult(
-                assessmentJudgementDomainService.finalizeJudgement(judgement));
-
-        // Propagate finalized judgement to all team members
+        AssessmentJudgementResult result;
         if (answer.getTeamId() != null) {
-            propagateFinalizedJudgementToTeamMembers(
+            result = propagateFinalizedJudgementToTeamMembers(
                     answer.getTeamId(),
                     question,
                     command,
                     currentUser,
-                    roleType);
+                    roleType,
+                    answer.getUserId());
+        } else {
+            AssessmentJudgementVO judgement = AssessmentJudgementVO.builder()
+                    .answerId(answer.getId())
+                    .questionId(question.getId())
+                    .assessmentTimeId(question.getAssessmentTimeId())
+                    .userId(answer.getUserId())
+                    .score(command.score())
+                    .maxScore(question.getScore())
+                    .status(JudgementStatus.JUDGED)
+                    .source(JudgementSource.ADMIN_FINALIZED)
+                    .reviewerId(currentUser.getId())
+                    .reviewerType(resolveReviewerType(roleType))
+                    .comment(command.comment())
+                    .judgedAt(LocalDateTime.now())
+                    .build();
+            result = toResult(
+                    assessmentJudgementDomainService.finalizeJudgement(judgement));
         }
 
         return result;
@@ -751,18 +752,15 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
                 decision.getDecidedAt());
     }
 
-    private void propagateFinalizedJudgementToTeamMembers(Long teamId, AssessmentQuestion question,
+    private AssessmentJudgementResult propagateFinalizedJudgementToTeamMembers(Long teamId, AssessmentQuestion question,
             AssessmentJudgementCommands.FinalizeScoreCommand command,
-            UserVO currentUser, RoleType roleType) {
+            UserVO currentUser, RoleType roleType,
+            Long leaderUserId) {
         List<com.bluenet.web.domain.model.entity.AssessmentTeamMember> members = assessmentTeamRepository
                 .findMembersByTeamId(teamId);
         if (members.isEmpty()) {
-            return;
+            return null;
         }
-
-        List<Long> memberUserIds = members.stream()
-                .map(com.bluenet.web.domain.model.entity.AssessmentTeamMember::getUserId)
-                .toList();
 
         // Batch query all member answers for this question
         List<com.bluenet.web.domain.model.entity.AssessmentAnswer> memberAnswers = assessmentAnswerRepository
@@ -770,10 +768,8 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
 
         LocalDateTime now = LocalDateTime.now();
         List<com.bluenet.web.domain.model.entity.AssessmentJudgement> judgementsToInsert = new ArrayList<>();
+        Long leaderAnswerId = null;
         for (com.bluenet.web.domain.model.entity.AssessmentAnswer memberAnswer : memberAnswers) {
-            if (memberAnswer.getUserId().equals(currentUser.getId())) {
-                continue; // Skip leader, already handled
-            }
             com.bluenet.web.domain.model.entity.AssessmentJudgement memberJudgement = com.bluenet.web.domain.model.entity.AssessmentJudgement
                     .create(
                             memberAnswer.getId(),
@@ -792,6 +788,10 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
             memberJudgement.setCreatedAt(now);
             memberJudgement.setUpdatedAt(now);
             judgementsToInsert.add(memberJudgement);
+
+            if (memberAnswer.getUserId().equals(leaderUserId)) {
+                leaderAnswerId = memberAnswer.getId();
+            }
         }
 
         if (!judgementsToInsert.isEmpty()) {
@@ -802,5 +802,10 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
                     question.getId(),
                     judgementsToInsert.size());
         }
+
+        if (leaderAnswerId == null) {
+            return null;
+        }
+        return toResult(assessmentJudgementDomainService.getLatestByAnswerId(leaderAnswerId));
     }
 }

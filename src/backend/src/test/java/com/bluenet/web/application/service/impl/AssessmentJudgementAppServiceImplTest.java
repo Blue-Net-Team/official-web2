@@ -692,7 +692,7 @@ class AssessmentJudgementAppServiceImplTest {
             when(assessmentQuestionRepository.findById(QUESTION_ID))
                     .thenReturn(Optional.of(createQuestion(QuestionType.FILE_UPLOAD)));
             when(commentRepository.existsByAnswerIdAndUserId(ANSWER_ID, REVIEWER_ID)).thenReturn(true);
-            when(assessmentJudgementDomainService.finalizeJudgement(any(AssessmentJudgementVO.class)))
+            when(assessmentJudgementDomainService.getLatestByAnswerId(ANSWER_ID))
                     .thenReturn(createJudgementVO(JudgementSource.ADMIN_FINALIZED, ReviewerType.DIRECTION_ADMIN));
 
             Long memberId1 = 41L;
@@ -722,6 +722,15 @@ class AssessmentJudgementAppServiceImplTest {
                     .thenReturn(
                             List.of(
                                     AssessmentAnswer.reconstruct(
+                                            ANSWER_ID,
+                                            CANDIDATE_ID,
+                                            QUESTION_ID,
+                                            null,
+                                            null,
+                                            null,
+                                            null,
+                                            teamId),
+                                    AssessmentAnswer.reconstruct(
                                             memberAnswerId1,
                                             memberId1,
                                             QUESTION_ID,
@@ -749,7 +758,8 @@ class AssessmentJudgementAppServiceImplTest {
             ArgumentCaptor<List> captor = ArgumentCaptor.forClass(List.class);
             verify(assessmentJudgementRepository).batchInsert(captor.capture());
             List<com.bluenet.web.domain.model.entity.AssessmentJudgement> judgements = captor.getValue();
-            assertEquals(2, judgements.size());
+            assertEquals(3, judgements.size());
+            assertTrue(judgements.stream().anyMatch(j -> j.getUserId().equals(CANDIDATE_ID)));
             assertTrue(judgements.stream().anyMatch(j -> j.getUserId().equals(memberId1)));
             assertTrue(judgements.stream().anyMatch(j -> j.getUserId().equals(memberId2)));
             assertTrue(judgements.stream().allMatch(j -> j.getScore().compareTo(BigDecimal.valueOf(8)) == 0));
