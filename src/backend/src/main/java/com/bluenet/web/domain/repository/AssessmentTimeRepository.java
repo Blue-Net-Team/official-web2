@@ -144,4 +144,34 @@ public interface AssessmentTimeRepository {
      * @return 最大轮次；不存在时返回 Optional.empty()。
      */
     Optional<Integer> findMaxEpoch(Direction direction, Integer grade);
+
+    /**
+     * 判断同方向同轮次下是否存在与指定 grade 形式冲突的记录。 当 grade 为 null 时，查询是否存在 grade IS NOT NULL
+     * 的记录； 当 grade 不为 null 时，查询是否存在 grade IS NULL 的记录。
+     *
+     * @param direction
+     *            技术方向过滤条件。
+     * @param epoch
+     *            考核批次或轮次。
+     * @param grade
+     *            考核年级。
+     * @return 存在冲突记录时返回 true，否则返回 false。
+     */
+    boolean hasConflictingGradeByDirectionAndEpoch(Direction direction, Integer epoch, Integer grade);
+
+    /**
+     * 判断同方向同轮次下（排除自身）是否存在与指定 grade 形式冲突的记录。
+     *
+     * @param direction
+     *            技术方向过滤条件。
+     * @param epoch
+     *            考核批次或轮次。
+     * @param grade
+     *            考核年级。
+     * @param excludeId
+     *            需要排除的当前记录主键。
+     * @return 存在冲突记录时返回 true，否则返回 false。
+     */
+    boolean hasConflictingGradeByDirectionAndEpochAndIdNot(Direction direction, Integer epoch, Integer grade,
+            Long excludeId);
 }

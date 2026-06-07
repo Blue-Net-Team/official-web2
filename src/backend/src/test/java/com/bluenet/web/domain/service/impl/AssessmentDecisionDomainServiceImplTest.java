@@ -256,6 +256,36 @@ class AssessmentDecisionDomainServiceImplTest {
     }
 
     @Test
+    @DisplayName("在epoch1被淘汰（grade=null），查看epoch2同方向但grade=2024：应返回true（不限年级的淘汰限制所有年级）")
+    void isEliminatedFromPriorEpoch_eliminatedNullGrade_targetDifferentGrade_shouldReturnTrue() {
+        AssessmentDecisionVO decision = createDecisionVO(1L, false);
+        when(assessmentDecisionRepository.findEliminatedDecisionsByUserId(USER_ID))
+                .thenReturn(List.of(decision));
+        when(assessmentTimeRepository.findById(ASSESSMENT_TIME_ID))
+                .thenReturn(Optional.of(createAssessmentTime(1, Direction.COMPUTER_VISION, null)));
+
+        AssessmentTime targetTime = createAssessmentTime(2, Direction.COMPUTER_VISION, 2024);
+        boolean result = assessmentDecisionDomainService.isEliminatedFromPriorEpoch(USER_ID, targetTime);
+
+        assertTrue(result);
+    }
+
+    @Test
+    @DisplayName("在epoch1被淘汰（grade=null），查看全局考核grade=2024：应返回true（不限年级的淘汰限制所有年级）")
+    void isEliminatedFromPriorEpoch_eliminatedNullGrade_targetGlobalWithGrade_shouldReturnTrue() {
+        AssessmentDecisionVO decision = createDecisionVO(1L, false);
+        when(assessmentDecisionRepository.findEliminatedDecisionsByUserId(USER_ID))
+                .thenReturn(List.of(decision));
+        when(assessmentTimeRepository.findById(ASSESSMENT_TIME_ID))
+                .thenReturn(Optional.of(createAssessmentTime(1, Direction.COMPUTER_VISION, null)));
+
+        AssessmentTime targetTime = createAssessmentTime(0, null, 2024);
+        boolean result = assessmentDecisionDomainService.isEliminatedFromPriorEpoch(USER_ID, targetTime);
+
+        assertTrue(result);
+    }
+
+    @Test
     @DisplayName("在epoch1被淘汰，查看epoch2，不同方向：应返回false")
     void isEliminatedFromPriorEpoch_differentDirection_shouldReturnFalse() {
         AssessmentDecisionVO decision = createDecisionVO(1L, false);

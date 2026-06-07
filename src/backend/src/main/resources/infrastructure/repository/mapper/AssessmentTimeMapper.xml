@@ -106,4 +106,27 @@
         -- 淘汰过滤已移至应用层，SQL 仅保留方向/年级/答题关联过滤
         ORDER BY t.id DESC
     </select>
+
+    <select id="countConflictingGradeByDirectionAndEpoch" resultType="long">
+        SELECT COUNT(*)
+        FROM tb_assessment_time
+        WHERE direction = #{direction}
+          AND epoch = #{epoch}
+          AND <choose>
+                  <when test="grade != null">grade IS NULL</when>
+                  <otherwise>grade IS NOT NULL</otherwise>
+              </choose>
+    </select>
+
+    <select id="countConflictingGradeByDirectionAndEpochAndIdNot" resultType="long">
+        SELECT COUNT(*)
+        FROM tb_assessment_time
+        WHERE direction = #{direction}
+          AND epoch = #{epoch}
+          AND <choose>
+                  <when test="grade != null">grade IS NULL</when>
+                  <otherwise>grade IS NOT NULL</otherwise>
+              </choose>
+          AND id != #{excludeId}
+    </select>
 </mapper>

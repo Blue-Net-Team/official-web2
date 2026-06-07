@@ -59,6 +59,16 @@ public class AssessmentTimeAppServiceImpl implements AssessmentTimeAppService {
                 throw new IllegalArgumentException("该轮次的全局考核时间已存在");
             }
         } else {
+            // 同方向同轮次 grade 形式互斥校验
+            if (assessmentTimeRepository.hasConflictingGradeByDirectionAndEpoch(
+                    command.direction(),
+                    command.epoch(),
+                    command.grade())) {
+                String existingType = command.grade() == null ? "限年级" : "不限年级";
+                String newType = command.grade() == null ? "不限年级" : "限年级";
+                throw new DataConflict(
+                        "该方向轮次已存在" + existingType + "的考核时间，不能创建" + newType + "的考核时间");
+            }
             if (assessmentTimeRepository.existsByDirectionAndEpochAndGrade(
                     command.direction(),
                     command.epoch(),
@@ -128,6 +138,17 @@ public class AssessmentTimeAppServiceImpl implements AssessmentTimeAppService {
                 throw new IllegalArgumentException("该轮次的全局考核时间已存在");
             }
         } else {
+            // 同方向同轮次 grade 形式互斥校验
+            if (assessmentTimeRepository.hasConflictingGradeByDirectionAndEpochAndIdNot(
+                    newDirection,
+                    newEpoch,
+                    newGrade,
+                    command.id())) {
+                String existingType = newGrade == null ? "限年级" : "不限年级";
+                String newType = newGrade == null ? "不限年级" : "限年级";
+                throw new DataConflict(
+                        "该方向轮次已存在" + existingType + "的考核时间，不能更新为" + newType + "的考核时间");
+            }
             if (assessmentTimeRepository.existsByDirectionAndEpochAndGradeAndIdNot(
                     newDirection,
                     newEpoch,

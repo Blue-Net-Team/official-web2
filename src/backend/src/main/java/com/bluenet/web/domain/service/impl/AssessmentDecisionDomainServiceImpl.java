@@ -103,12 +103,9 @@ public class AssessmentDecisionDomainServiceImpl implements AssessmentDecisionDo
             if (eliminatedTime.getEpoch() == null || eliminatedTime.getEpoch() <= 0) {
                 return false;
             }
-            // grade 匹配：全局考核 grade=null 表示不限年级，匹配所有
-            if (targetTime.getGrade() == null) {
+            // grade 匹配：任一不限则全限
+            if (eliminatedTime.getGrade() == null || targetTime.getGrade() == null) {
                 return true;
-            }
-            if (eliminatedTime.getGrade() == null) {
-                return targetTime.getGrade() == null;
             }
             return eliminatedTime.getGrade().equals(targetTime.getGrade());
         }
@@ -119,12 +116,11 @@ public class AssessmentDecisionDomainServiceImpl implements AssessmentDecisionDo
                 : !eliminatedTime.getDirection().equals(targetTime.getDirection())) {
             return false;
         }
-        if (eliminatedTime.getGrade() == null
-                ? targetTime.getGrade() != null
-                : !eliminatedTime.getGrade().equals(targetTime.getGrade())) {
-            return false;
+        // grade 匹配：任一不限则全限
+        if (eliminatedTime.getGrade() == null || targetTime.getGrade() == null) {
+            return true;
         }
-        return true;
+        return eliminatedTime.getGrade().equals(targetTime.getGrade());
     }
 
     private boolean isPriorEpoch(Integer priorEpoch, Integer currentEpoch) {
