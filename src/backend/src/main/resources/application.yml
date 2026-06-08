@@ -35,7 +35,7 @@ spring:
     from: ${MAIL_USERNAME:}
     properties:
       mail:
-        debug: true
+        debug: false
         smtp:
           auth: true
           ssl:
