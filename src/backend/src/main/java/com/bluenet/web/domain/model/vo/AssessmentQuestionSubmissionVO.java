@@ -116,10 +116,6 @@ public class AssessmentQuestionSubmissionVO {
      */
     private ReviewerType reviewerType;
     /**
-     * 评审意见或扣分说明。
-     */
-    private String judgementComment;
-    /**
      * 评审完成时间。
      */
     private LocalDateTime judgedAt;

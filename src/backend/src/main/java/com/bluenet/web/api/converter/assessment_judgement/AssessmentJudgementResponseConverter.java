@@ -55,7 +55,6 @@ public class AssessmentJudgementResponseConverter {
                 .source(result.source())
                 .reviewerId(result.reviewerId())
                 .reviewerType(result.reviewerType())
-                .comment(result.comment())
                 .judgedAt(result.judgedAt())
                 .build();
     }
@@ -265,7 +264,6 @@ public class AssessmentJudgementResponseConverter {
                 .source(judgement.getSource())
                 .reviewerId(judgement.getReviewerId())
                 .reviewerType(judgement.getReviewerType())
-                .comment(judgement.getComment())
                 .judgedAt(judgement.getJudgedAt())
                 .build();
     }
@@ -305,7 +303,6 @@ public class AssessmentJudgementResponseConverter {
                 .source(vo.getSource())
                 .reviewerId(vo.getReviewerId())
                 .reviewerType(vo.getReviewerType())
-                .comment(vo.getJudgementComment())
                 .judgedAt(vo.getJudgedAt())
                 .build();
     }

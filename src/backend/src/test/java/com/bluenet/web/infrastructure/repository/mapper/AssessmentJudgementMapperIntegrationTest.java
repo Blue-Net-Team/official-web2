@@ -133,7 +133,6 @@ class AssessmentJudgementMapperIntegrationTest extends BaseIntegrationTest {
                 .source(JudgementSource.MANUAL)
                 .reviewerId(1L)
                 .reviewerType(ReviewerType.DIRECTION_ADMIN)
-                .comment("评分测试")
                 .judgedAt(LocalDateTime.now())
                 .build();
         assessmentJudgementMapper.insert(judgement);
@@ -226,7 +225,6 @@ class AssessmentJudgementMapperIntegrationTest extends BaseIntegrationTest {
                 .source(JudgementSource.MANUAL)
                 .reviewerId(1L)
                 .reviewerType(ReviewerType.DIRECTION_ADMIN)
-                .comment("全局考核评分")
                 .judgedAt(LocalDateTime.now())
                 .build();
         assessmentJudgementMapper.insert(judgement);
@@ -409,7 +407,6 @@ class AssessmentJudgementMapperIntegrationTest extends BaseIntegrationTest {
                 .source(JudgementSource.MANUAL)
                 .reviewerId(1L)
                 .reviewerType(ReviewerType.DIRECTION_ADMIN)
-                .comment("优秀")
                 .judgedAt(LocalDateTime.now())
                 .build();
         assessmentJudgementMapper.insert(leaderJudgement);
@@ -426,7 +423,6 @@ class AssessmentJudgementMapperIntegrationTest extends BaseIntegrationTest {
                 .source(JudgementSource.ADMIN_FINALIZED)
                 .reviewerId(1L)
                 .reviewerType(ReviewerType.DIRECTION_ADMIN)
-                .comment("全队同分")
                 .judgedAt(LocalDateTime.now())
                 .build();
         assessmentJudgementMapper.insert(m1Judgement);
@@ -443,7 +439,6 @@ class AssessmentJudgementMapperIntegrationTest extends BaseIntegrationTest {
                 .source(JudgementSource.ADMIN_FINALIZED)
                 .reviewerId(1L)
                 .reviewerType(ReviewerType.DIRECTION_ADMIN)
-                .comment("全队同分")
                 .judgedAt(LocalDateTime.now())
                 .build();
         assessmentJudgementMapper.insert(m2Judgement);

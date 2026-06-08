@@ -1,4 +1,4 @@
-## ADDED Requirements
+## MODIFIED Requirements
 
 ### Requirement: Direction administrator can finalize a score for file upload answers
 The system SHALL allow direction administrators or higher roles to set a final authoritative score for a file upload answer after reviewing all member comments.
@@ -20,11 +20,3 @@ The system SHALL allow direction administrators or higher roles to set a final a
 - **WHEN** a direction administrator finalizes a score for an answer that already has a `MANUAL` judgement
 - **THEN** the system SHALL insert a new `ADMIN_FINALIZED` judgement that becomes the latest record
 - **AND** the previous `MANUAL` judgement SHALL remain in history but not be displayed as the current score
-
-### Requirement: Finalized judgements are distinguishable from manual judgements
-The system SHALL track that a finalized judgement originates from a direction administrator's authoritative decision.
-
-#### Scenario: Scoreboard displays finalized judgement
-- **WHEN** the scoreboard queries the latest judgement for an answer
-- **THEN** the system SHALL return the `ADMIN_FINALIZED` record if present, otherwise the `MANUAL` record
-- **AND** the source field SHALL indicate whether the score is finalized or manual

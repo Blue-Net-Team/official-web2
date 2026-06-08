@@ -201,14 +201,6 @@ export default function QuestionSidebar({
                   </span>
                 </div>
               )}
-              {answer.judgement.comment && (
-                <div className="flex flex-col gap-1">
-                  <span className="text-[13px] text-white/45">评语</span>
-                  <span className="text-[13px] text-white/65 leading-relaxed">
-                    {answer.judgement.comment}
-                  </span>
-                </div>
-              )}
             </>
           )}
           {answer?.comments && answer.comments.length > 0 && (

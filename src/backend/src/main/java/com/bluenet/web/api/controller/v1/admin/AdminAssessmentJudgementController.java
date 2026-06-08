@@ -206,7 +206,7 @@ public class AdminAssessmentJudgementController {
     public ResponseMessage<AssessmentJudgementDTO> finalizeScore(
             @Valid @RequestBody FinalizeScoreRequestDTO request) {
         AssessmentJudgementCommands.FinalizeScoreCommand command = new AssessmentJudgementCommands.FinalizeScoreCommand(
-                request.getAnswerId(), request.getScore(), request.getComment());
+                request.getAnswerId(), request.getScore());
         AssessmentJudgementResult result = assessmentJudgementAppService.finalizeScore(command);
         return ResponseMessage.success(responseConverter.toDTO(result));
     }

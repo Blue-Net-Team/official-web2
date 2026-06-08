@@ -16,10 +16,10 @@ The system SHALL create judgements for all team members when an automatic or fin
 ## MODIFIED Requirements
 
 ### Requirement: Manual review for file upload answers
-The system SHALL allow users with team member or higher permission to score and comment on file upload answers, with support for team-wide or individual member scoring.
+The system SHALL allow users with team member or higher permission to score file upload answers, with support for team-wide or individual member scoring.
 
 #### Scenario: Member scores file upload answer
-- **WHEN** a team member submits a valid score and comment for a file upload answer
+- **WHEN** a team member submits a valid score for a file upload answer
 - **THEN** the system SHALL save a manual judgement and expose it in the answer review view
 - **AND** the system SHALL also save a comment record in `tb_comment` for multi-reviewer visibility
 

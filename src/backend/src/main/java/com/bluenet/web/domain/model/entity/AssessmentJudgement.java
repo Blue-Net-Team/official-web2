@@ -66,10 +66,6 @@ public class AssessmentJudgement {
      */
     private ReviewerType reviewerType;
     /**
-     * 评价、留言或审批备注内容。
-     */
-    private String comment;
-    /**
      * 评审完成时间。
      */
     private LocalDateTime judgedAt;
@@ -84,7 +80,7 @@ public class AssessmentJudgement {
 
     private AssessmentJudgement(Long id, Long answerId, Long questionId, Long assessmentTimeId, Long userId,
             BigDecimal score, BigDecimal maxScore, JudgementStatus status, ObjectiveResultCode resultCode,
-            JudgementSource source, Long reviewerId, ReviewerType reviewerType, String comment,
+            JudgementSource source, Long reviewerId, ReviewerType reviewerType,
             LocalDateTime judgedAt, LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
         this.answerId = answerId;
@@ -98,7 +94,6 @@ public class AssessmentJudgement {
         this.source = source;
         this.reviewerId = reviewerId;
         this.reviewerType = reviewerType;
-        this.comment = comment;
         this.judgedAt = judgedAt;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
@@ -129,18 +124,16 @@ public class AssessmentJudgement {
      *            评审人ID
      * @param reviewerType
      *            评审人类型
-     * @param comment
-     *            评论
      * @param judgedAt
      *            评审时间
      * @return 新的评判实体
      */
     public static AssessmentJudgement create(Long answerId, Long questionId, Long assessmentTimeId, Long userId,
             BigDecimal score, BigDecimal maxScore, JudgementStatus status, ObjectiveResultCode resultCode,
-            JudgementSource source, Long reviewerId, ReviewerType reviewerType, String comment,
+            JudgementSource source, Long reviewerId, ReviewerType reviewerType,
             LocalDateTime judgedAt) {
         return new AssessmentJudgement(null, answerId, questionId, assessmentTimeId, userId, score, maxScore, status,
-                resultCode, source, reviewerId, reviewerType, comment, judgedAt, null, null);
+                resultCode, source, reviewerId, reviewerType, judgedAt, null, null);
     }
 
     /**
@@ -170,8 +163,6 @@ public class AssessmentJudgement {
      *            评审人ID
      * @param reviewerType
      *            评审人类型
-     * @param comment
-     *            评论
      * @param judgedAt
      *            评审时间
      * @param createdAt
@@ -182,10 +173,10 @@ public class AssessmentJudgement {
      */
     public static AssessmentJudgement reconstruct(Long id, Long answerId, Long questionId, Long assessmentTimeId,
             Long userId, BigDecimal score, BigDecimal maxScore, JudgementStatus status, ObjectiveResultCode resultCode,
-            JudgementSource source, Long reviewerId, ReviewerType reviewerType, String comment,
+            JudgementSource source, Long reviewerId, ReviewerType reviewerType,
             LocalDateTime judgedAt, LocalDateTime createdAt, LocalDateTime updatedAt) {
         return new AssessmentJudgement(id, answerId, questionId, assessmentTimeId, userId, score, maxScore, status,
-                resultCode, source, reviewerId, reviewerType, comment, judgedAt, createdAt, updatedAt);
+                resultCode, source, reviewerId, reviewerType, judgedAt, createdAt, updatedAt);
     }
 
     /**
@@ -205,8 +196,6 @@ public class AssessmentJudgement {
      *            新评审人ID
      * @param newReviewerType
      *            新评审人类型
-     * @param newComment
-     *            新评论
      * @param newJudgedAt
      *            新评审时间
      * @param newUpdatedAt
@@ -214,7 +203,7 @@ public class AssessmentJudgement {
      */
     public void applyJudgementResult(BigDecimal newScore, BigDecimal newMaxScore, JudgementStatus newStatus,
             ObjectiveResultCode newResultCode, JudgementSource newSource, Long newReviewerId,
-            ReviewerType newReviewerType, String newComment, LocalDateTime newJudgedAt, LocalDateTime newUpdatedAt) {
+            ReviewerType newReviewerType, LocalDateTime newJudgedAt, LocalDateTime newUpdatedAt) {
         this.score = newScore;
         this.maxScore = newMaxScore;
         this.status = newStatus;
@@ -222,7 +211,6 @@ public class AssessmentJudgement {
         this.source = newSource;
         this.reviewerId = newReviewerId;
         this.reviewerType = newReviewerType;
-        this.comment = newComment;
         this.judgedAt = newJudgedAt;
         this.updatedAt = newUpdatedAt;
     }

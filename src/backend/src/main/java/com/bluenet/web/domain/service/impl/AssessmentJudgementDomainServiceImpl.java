@@ -120,7 +120,6 @@ public class AssessmentJudgementDomainServiceImpl implements AssessmentJudgement
                 judgement.getSource(),
                 judgement.getReviewerId(),
                 judgement.getReviewerType(),
-                judgement.getComment(),
                 judgement.getJudgedAt());
         entity.setId(judgement.getId());
         entity.setCreatedAt(judgement.getCreatedAt());
@@ -145,7 +144,6 @@ public class AssessmentJudgementDomainServiceImpl implements AssessmentJudgement
                 .source(entity.getSource())
                 .reviewerId(entity.getReviewerId())
                 .reviewerType(entity.getReviewerType())
-                .comment(entity.getComment())
                 .judgedAt(entity.getJudgedAt())
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())

@@ -27,7 +27,6 @@ class AssessmentJudgementTest {
                 null,
                 null,
                 null,
-                null,
                 null);
         judgement.setId(1L);
         LocalDateTime judgedAt = LocalDateTime.now().minusMinutes(1);
@@ -41,7 +40,6 @@ class AssessmentJudgementTest {
                 JudgementSource.AUTO,
                 10L,
                 ReviewerType.SYSTEM,
-                "ok",
                 judgedAt,
                 updatedAt);
 
@@ -52,7 +50,6 @@ class AssessmentJudgementTest {
         assertEquals(JudgementSource.AUTO, judgement.getSource());
         assertEquals(10L, judgement.getReviewerId());
         assertEquals(ReviewerType.SYSTEM, judgement.getReviewerType());
-        assertEquals("ok", judgement.getComment());
         assertEquals(judgedAt, judgement.getJudgedAt());
         assertEquals(updatedAt, judgement.getUpdatedAt());
     }

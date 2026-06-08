@@ -35,7 +35,6 @@ public class AssessmentJudgementRepositoryConverter {
                 .source(entity.getSource())
                 .reviewerId(entity.getReviewerId())
                 .reviewerType(entity.getReviewerType())
-                .comment(entity.getComment())
                 .judgedAt(entity.getJudgedAt())
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
@@ -62,7 +61,6 @@ public class AssessmentJudgementRepositoryConverter {
                 dataObject.getSource(),
                 dataObject.getReviewerId(),
                 dataObject.getReviewerType(),
-                dataObject.getComment(),
                 dataObject.getJudgedAt(),
                 dataObject.getCreatedAt(),
                 dataObject.getUpdatedAt());

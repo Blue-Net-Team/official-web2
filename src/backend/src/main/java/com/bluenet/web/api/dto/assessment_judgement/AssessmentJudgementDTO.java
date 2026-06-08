@@ -46,8 +46,6 @@ public class AssessmentJudgementDTO {
     private Long reviewerId;
     @Schema(description = "评判人类型")
     private ReviewerType reviewerType;
-    @Schema(description = "评判评论")
-    private String comment;
     @Schema(description = "完成评判时间")
     private LocalDateTime judgedAt;
 }

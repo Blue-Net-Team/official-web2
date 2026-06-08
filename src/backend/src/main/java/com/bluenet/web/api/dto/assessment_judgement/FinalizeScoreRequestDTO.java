@@ -14,5 +14,4 @@ public class FinalizeScoreRequestDTO {
     private Long answerId;
     @NotNull
     private BigDecimal score;
-    private String comment;
 }

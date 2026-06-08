@@ -445,8 +445,6 @@ export interface AssessmentJudgementDTO {
   status: string
   /** 评判来源 */
   source: string
-  /** 评论 */
-  comment: string | null
   /** 评判时间 */
   judgedAt: string | null
 }

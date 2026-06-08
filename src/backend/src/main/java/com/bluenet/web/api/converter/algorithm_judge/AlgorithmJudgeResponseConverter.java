@@ -85,7 +85,6 @@ public class AlgorithmJudgeResponseConverter {
                 .source(judgement.source())
                 .reviewerId(judgement.reviewerId())
                 .reviewerType(judgement.reviewerType())
-                .comment(judgement.comment())
                 .judgedAt(judgement.judgedAt())
                 .build();
     }

@@ -216,7 +216,6 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
                     .source(JudgementSource.ADMIN_FINALIZED)
                     .reviewerId(currentUser.getId())
                     .reviewerType(resolveReviewerType(roleType))
-                    .comment(command.comment())
                     .judgedAt(LocalDateTime.now())
                     .build();
             result = toResult(
@@ -716,7 +715,6 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
                 .source(row.getSource())
                 .reviewerId(row.getReviewerId())
                 .reviewerType(row.getReviewerType())
-                .comment(row.getJudgementComment())
                 .judgedAt(row.getJudgedAt())
                 .build();
     }
@@ -740,7 +738,6 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
                 judgement.getSource(),
                 judgement.getReviewerId(),
                 judgement.getReviewerType(),
-                judgement.getComment(),
                 judgement.getJudgedAt());
     }
 
@@ -789,7 +786,6 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
                             JudgementSource.ADMIN_FINALIZED,
                             currentUser.getId(),
                             resolveReviewerType(roleType),
-                            command.comment(),
                             now);
             memberJudgement.setCreatedAt(now);
             memberJudgement.setUpdatedAt(now);

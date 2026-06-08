@@ -52,8 +52,6 @@ public class AssessmentJudgementCommands {
             /** 答案ID */
             Long answerId,
             /** 最终分数 */
-            BigDecimal score,
-            /** 评语 */
-            String comment) {
+            BigDecimal score) {
     }
 }

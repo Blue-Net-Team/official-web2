@@ -16,7 +16,6 @@ import com.bluenet.web.domain.model.enumerate.JudgementStatus;
 import com.bluenet.web.domain.model.enumerate.ObjectiveResultCode;
 import com.bluenet.web.domain.model.enumerate.QuestionType;
 import com.bluenet.web.domain.model.enumerate.RoleType;
-import com.bluenet.web.domain.model.policy.RoleHierarchy;
 import com.bluenet.web.domain.model.vo.AssessmentJudgementVO;
 import com.bluenet.web.domain.model.entity.AssessmentQuestion;
 import com.bluenet.web.domain.model.entity.AssessmentTime;
@@ -301,37 +300,12 @@ public class AssessmentAnswerAppServiceImpl implements AssessmentAnswerAppServic
         AssessmentJudgementVO judgement = findLatestJudgement(answer);
         List<com.bluenet.web.domain.model.vo.CommentVO> comments = commentDomainService
                 .listCommentsByAnswerId(answer.getId());
-        List<com.bluenet.web.domain.model.vo.CommentVO> memberComments = filterMemberCommentsOnly(comments);
-        AssessmentAnswerResult result = toResult(answer, judgement, memberComments);
+        AssessmentAnswerResult result = toResult(answer, judgement, comments);
 
         if (question != null && question.getQuestionType().isChoiceQuestion()) {
             return result.withJudgementErased();
         }
         return result;
-    }
-
-    /**
-     * 过滤掉方向管理员及以上角色的评论，考生端仅展示普通成员的参考评语，并填充用户名。
-     */
-    private List<com.bluenet.web.domain.model.vo.CommentVO> filterMemberCommentsOnly(
-            List<com.bluenet.web.domain.model.vo.CommentVO> comments) {
-        if (comments == null || comments.isEmpty()) {
-            return java.util.Collections.emptyList();
-        }
-        return comments.stream()
-                .filter(c -> {
-                    Optional<UserVO> userOpt = userDomainService.getUser(c.getUserId());
-                    if (userOpt.isEmpty()) {
-                        return false;
-                    }
-                    RoleType role = RoleType.fromName(userOpt.get().getRoleName());
-                    return !RoleHierarchy.isDirectionAdminOrAbove(role);
-                })
-                .peek(c -> {
-                    Optional<UserVO> userOpt = userDomainService.getUser(c.getUserId());
-                    userOpt.ifPresent(u -> c.setUsername(u.getUsername()));
-                })
-                .toList();
     }
 
     private Long validateTeamLeaderForAnswer(Long userId, Long assessmentTimeId) {
@@ -505,7 +479,6 @@ public class AssessmentAnswerAppServiceImpl implements AssessmentAnswerAppServic
                 judgement.getSource(),
                 judgement.getReviewerId(),
                 judgement.getReviewerType(),
-                judgement.getComment(),
                 judgement.getJudgedAt());
     }
 

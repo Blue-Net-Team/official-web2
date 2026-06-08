@@ -579,7 +579,7 @@ class AssessmentJudgementAppServiceImplTest {
                     .thenReturn(createJudgementVO(JudgementSource.ADMIN_FINALIZED, ReviewerType.DIRECTION_ADMIN));
 
             AssessmentJudgementResult result = assessmentJudgementAppService.finalizeScore(
-                    new AssessmentJudgementCommands.FinalizeScoreCommand(ANSWER_ID, BigDecimal.valueOf(8), "最终评语"));
+                    new AssessmentJudgementCommands.FinalizeScoreCommand(ANSWER_ID, BigDecimal.valueOf(8)));
 
             assertEquals(JudgementSource.ADMIN_FINALIZED, result.source());
             ArgumentCaptor<AssessmentJudgementVO> captor = ArgumentCaptor.forClass(AssessmentJudgementVO.class);
@@ -601,7 +601,7 @@ class AssessmentJudgementAppServiceImplTest {
             assertThrows(
                     Forbidden.class,
                     () -> assessmentJudgementAppService.finalizeScore(
-                            new AssessmentJudgementCommands.FinalizeScoreCommand(ANSWER_ID, BigDecimal.ONE, null)));
+                            new AssessmentJudgementCommands.FinalizeScoreCommand(ANSWER_ID, BigDecimal.ONE)));
             verifyNoInteractions(assessmentJudgementDomainService);
         }
     }
@@ -621,7 +621,7 @@ class AssessmentJudgementAppServiceImplTest {
             assertThrows(
                     BadRequest.class,
                     () -> assessmentJudgementAppService.finalizeScore(
-                            new AssessmentJudgementCommands.FinalizeScoreCommand(ANSWER_ID, BigDecimal.ONE, null)));
+                            new AssessmentJudgementCommands.FinalizeScoreCommand(ANSWER_ID, BigDecimal.ONE)));
             verify(assessmentJudgementDomainService, never()).finalizeJudgement(any());
         }
     }
@@ -641,8 +641,7 @@ class AssessmentJudgementAppServiceImplTest {
             assertThrows(
                     BadRequest.class,
                     () -> assessmentJudgementAppService.finalizeScore(
-                            new AssessmentJudgementCommands.FinalizeScoreCommand(ANSWER_ID, BigDecimal.valueOf(11),
-                                    null)));
+                            new AssessmentJudgementCommands.FinalizeScoreCommand(ANSWER_ID, BigDecimal.valueOf(11))));
             verify(assessmentJudgementDomainService, never()).finalizeJudgement(any());
         }
     }
@@ -663,8 +662,7 @@ class AssessmentJudgementAppServiceImplTest {
             assertThrows(
                     BadRequest.class,
                     () -> assessmentJudgementAppService.finalizeScore(
-                            new AssessmentJudgementCommands.FinalizeScoreCommand(ANSWER_ID, BigDecimal.valueOf(8),
-                                    null)));
+                            new AssessmentJudgementCommands.FinalizeScoreCommand(ANSWER_ID, BigDecimal.valueOf(8))));
             verify(assessmentJudgementDomainService, never()).finalizeJudgement(any());
         }
     }
@@ -750,7 +748,7 @@ class AssessmentJudgementAppServiceImplTest {
                                             teamId)));
 
             AssessmentJudgementResult result = assessmentJudgementAppService.finalizeScore(
-                    new AssessmentJudgementCommands.FinalizeScoreCommand(ANSWER_ID, BigDecimal.valueOf(8), "评语"));
+                    new AssessmentJudgementCommands.FinalizeScoreCommand(ANSWER_ID, BigDecimal.valueOf(8)));
 
             assertNotNull(result);
             assertEquals(JudgementSource.ADMIN_FINALIZED, result.source());

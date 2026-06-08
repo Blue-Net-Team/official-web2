@@ -14,7 +14,6 @@
         <result column="source" property="source"/>
         <result column="reviewer_id" property="reviewerId"/>
         <result column="reviewer_type" property="reviewerType"/>
-        <result column="comment" property="comment"/>
         <result column="judged_at" property="judgedAt"/>
         <result column="created_at" property="createdAt"/>
         <result column="updated_at" property="updatedAt"/>
@@ -139,7 +138,6 @@
             dj.source,
             dj.reviewer_id,
             dj.reviewer_type,
-            dj.comment AS judgement_comment,
             dj.judged_at,
             t.id AS team_id,
             t.name AS team_name,
@@ -205,7 +203,6 @@
             j.source,
             j.reviewer_id,
             j.reviewer_type,
-            j.comment AS judgement_comment,
             j.judged_at,
             CASE WHEN j.display_rank = 1 THEN true ELSE false END AS selected_best
         FROM ranked_history j
@@ -278,7 +275,6 @@
             dj.source,
             dj.reviewer_id,
             dj.reviewer_type,
-            dj.comment AS judgement_comment,
             dj.judged_at,
             t.id AS team_id,
             t.name AS team_name,
@@ -308,14 +304,14 @@
         INSERT INTO tb_assessment_judgement (
             answer_id, question_id, assessment_time_id, user_id,
             score, max_score, status, result_code, source,
-            reviewer_id, reviewer_type, comment, judged_at,
+            reviewer_id, reviewer_type, judged_at,
             created_at, updated_at
         )
         VALUES
         <foreach collection="judgements" item="j" separator="," >
             (#{j.answerId}, #{j.questionId}, #{j.assessmentTimeId}, #{j.userId},
              #{j.score}, #{j.maxScore}, #{j.status}, #{j.resultCode}, #{j.source},
-             #{j.reviewerId}, #{j.reviewerType}, #{j.comment}, #{j.judgedAt},
+             #{j.reviewerId}, #{j.reviewerType}, #{j.judgedAt},
              #{j.createdAt}, #{j.updatedAt})
         </foreach>
     </insert>

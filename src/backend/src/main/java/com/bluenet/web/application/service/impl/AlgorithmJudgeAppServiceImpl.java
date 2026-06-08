@@ -293,7 +293,6 @@ public class AlgorithmJudgeAppServiceImpl implements AlgorithmJudgeAppService {
                     judgement.getSource(),
                     judgement.getReviewerId(),
                     judgement.getReviewerType(),
-                    judgement.getComment(),
                     judgement.getJudgedAt());
         } catch (DataNotFound ignored) {
             return null;

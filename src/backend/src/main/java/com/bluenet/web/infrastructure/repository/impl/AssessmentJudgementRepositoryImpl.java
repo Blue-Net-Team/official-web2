@@ -244,7 +244,6 @@ public class AssessmentJudgementRepositoryImpl implements AssessmentJudgementRep
                     .source(row.getSource())
                     .reviewerId(row.getReviewerId())
                     .reviewerType(row.getReviewerType())
-                    .comment(row.getJudgementComment())
                     .judgedAt(row.getJudgedAt())
                     .build();
         }
@@ -308,7 +307,6 @@ public class AssessmentJudgementRepositoryImpl implements AssessmentJudgementRep
                 .source(row.getSource())
                 .reviewerId(row.getReviewerId())
                 .reviewerType(row.getReviewerType())
-                .judgementComment(row.getJudgementComment())
                 .judgedAt(row.getJudgedAt())
                 .selectedBest(row.getSelectedBest())
                 .teamId(row.getTeamId())
@@ -345,7 +343,6 @@ public class AssessmentJudgementRepositoryImpl implements AssessmentJudgementRep
                 .source(row.getSource())
                 .reviewerId(row.getReviewerId())
                 .reviewerType(row.getReviewerType())
-                .judgementComment(row.getJudgementComment())
                 .judgedAt(row.getJudgedAt())
                 .teamId(row.getTeamId())
                 .teamName(row.getTeamName())

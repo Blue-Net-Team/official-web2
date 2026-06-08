@@ -194,7 +194,6 @@ class AssessmentJudgementDomainServiceImplTest {
                 null,
                 null,
                 null,
-                null,
                 null);
     }
 }

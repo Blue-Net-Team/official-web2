@@ -65,10 +65,6 @@ public class AssessmentJudgementVO {
      */
     private ReviewerType reviewerType;
     /**
-     * 评价、留言或审批备注内容。
-     */
-    private String comment;
-    /**
      * 评审完成时间。
      */
     private LocalDateTime judgedAt;

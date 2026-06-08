@@ -79,7 +79,7 @@ const buildWorkFilename = (params: {
 export default function AssessmentJudgementManagementPage() {
   const { message: messageApi } = App.useApp()
   const screens = Grid.useBreakpoint()
-  const [form] = Form.useForm<{ score: number; comment?: string }>()
+  const [form] = Form.useForm<{ score: number }>()
 
   const { userInfo } = useAuth()
   const isSuperAdmin = getRoleLevel(userInfo?.roleName || '') >= 3
@@ -391,7 +391,6 @@ export default function AssessmentJudgementManagementPage() {
     if (!reviewing) return
     form.setFieldsValue({
       score: Number(reviewing.latestJudgement?.score ?? 0),
-      comment: reviewing.latestJudgement?.comment ?? undefined,
     })
     fetchComments(reviewing.answerId)
   }, [reviewing, form])
@@ -472,7 +471,6 @@ export default function AssessmentJudgementManagementPage() {
       await adminAssessmentJudgementService.finalizeScore({
         answerId: reviewing.answerId,
         score: values.score,
-        comment: values.comment || undefined,
       })
       messageApi.success('最终评分已确认')
       setReviewing(null)
@@ -1557,9 +1555,6 @@ export default function AssessmentJudgementManagementPage() {
                     precision={1}
                     className="w-full"
                   />
-                </Form.Item>
-                <Form.Item name="comment" label="评语">
-                  <Input.TextArea rows={3} maxLength={500} showCount placeholder="输入评语" />
                 </Form.Item>
                 <div className="flex flex-col gap-2">
                   {isDecisionMaker && (

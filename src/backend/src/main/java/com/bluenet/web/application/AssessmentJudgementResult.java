@@ -39,8 +39,6 @@ public record AssessmentJudgementResult(
         Long reviewerId,
         /** 评审人类型 */
         ReviewerType reviewerType,
-        /** 评语 */
-        String comment,
         /** 评判时间 */
         LocalDateTime judgedAt) {
 }

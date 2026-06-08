@@ -202,7 +202,6 @@ class AssessmentStatisticsAppServiceImplTest {
                 null,
                 null,
                 null,
-                null,
                 null);
     }
 }

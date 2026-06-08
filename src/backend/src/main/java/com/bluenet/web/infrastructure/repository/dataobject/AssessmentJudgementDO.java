@@ -78,10 +78,6 @@ public class AssessmentJudgementDO {
      * 评审来源类型，例如人工评审或自动评测。
      */
     private ReviewerType reviewerType;
-    /**
-     * 评价、留言或审批备注内容。
-     */
-    private String comment;
 
     /**
      * 评审完成时间。
