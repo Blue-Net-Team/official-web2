@@ -8,6 +8,7 @@ import com.bluenet.web.application.service.UserInfoAppService;
 import com.bluenet.web.domain.exception.Unauthorized;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
 import com.bluenet.web.infrastructure.security.annotation.RequiresPermission;
+import com.bluenet.web.infrastructure.security.util.UserCTX;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
@@ -41,7 +42,8 @@ class UserInfoController {
     public ResponseMessage<UserInfo> getMyInfo() {
         // 调用应用层
         try {
-            return ResponseMessage.success(userInfoResponseConverter.toDTO(userInfoAppService.getMyInfo()));
+            Long userId = UserCTX.getCurrentUserId();
+            return ResponseMessage.success(userInfoResponseConverter.toDTO(userInfoAppService.getMyInfo(userId)));
         } catch (Unauthorized unauthorized) {
             return ResponseMessage.error(unauthorized);
         }

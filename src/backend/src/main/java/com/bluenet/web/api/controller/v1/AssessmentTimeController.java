@@ -11,6 +11,7 @@ import com.bluenet.web.application.service.AssessmentTimeAppService;
 import org.springframework.data.domain.Page;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
 import com.bluenet.web.infrastructure.security.annotation.RequiresPermission;
+import com.bluenet.web.infrastructure.security.util.UserCTX;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -46,7 +47,8 @@ public class AssessmentTimeController {
     public ResponseMessage<PageDTO<AssessmentTimeDTO>> listAssessmentTimes(
             @Parameter(description = "页码（从0开始，默认0）") @RequestParam(required = false, defaultValue = "0") Integer page,
             @Parameter(description = "每页大小（默认5）") @RequestParam(required = false, defaultValue = "5") Integer size) {
-        Page<AssessmentTimeResult> result = assessmentTimeAppService.listAssessmentTimesForUser(page, size);
+        Long userId = UserCTX.getCurrentUserId();
+        Page<AssessmentTimeResult> result = assessmentTimeAppService.listAssessmentTimesForUser(userId, page, size);
         return ResponseMessage.success(PageDTO.from(result.map(responseConverter::toDTO)));
     }
 
@@ -55,6 +57,8 @@ public class AssessmentTimeController {
     @GetMapping("/{id}/progress")
     public ResponseMessage<AssessmentProgressDTO> getAssessmentProgress(
             @Parameter(description = "考核时间ID") @PathVariable Long id) {
-        return ResponseMessage.success(responseConverter.toDTO(assessmentTimeAppService.getAssessmentProgress(id)));
+        Long userId = UserCTX.getCurrentUserId();
+        return ResponseMessage
+                .success(responseConverter.toDTO(assessmentTimeAppService.getAssessmentProgress(userId, id)));
     }
 }

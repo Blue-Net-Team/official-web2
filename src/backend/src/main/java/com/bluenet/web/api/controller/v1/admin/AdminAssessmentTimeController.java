@@ -15,6 +15,7 @@ import com.bluenet.web.application.service.AssessmentTimeAppService;
 import org.springframework.data.domain.Page;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
 import com.bluenet.web.infrastructure.security.annotation.RequiresPermission;
+import com.bluenet.web.infrastructure.security.util.UserCTX;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -54,9 +55,10 @@ public class AdminAssessmentTimeController {
     public ResponseMessage<AssessmentTimeDTO> createAssessmentTime(
             @Valid @RequestBody CreateAssessmentTimeRequestDTO request) {
         try {
+            Long userId = UserCTX.getCurrentUserId();
             AssessmentTimeCommands.CreateAssessmentTimeCommand command = assessmentTimeRequestConverter
                     .toCommand(request);
-            AssessmentTimeResult result = assessmentTimeAppService.createAssessmentTime(command);
+            AssessmentTimeResult result = assessmentTimeAppService.createAssessmentTime(userId, command);
             return ResponseMessage.success(responseConverter.toDTO(result));
         } catch (IllegalArgumentException e) {
             return ResponseMessage.error(400, e.getMessage());
@@ -75,9 +77,10 @@ public class AdminAssessmentTimeController {
             @Parameter(description = "考核时间ID", required = true) @PathVariable Long id,
             @Valid @RequestBody UpdateAssessmentTimeRequestDTO request) {
         try {
+            Long userId = UserCTX.getCurrentUserId();
             AssessmentTimeCommands.UpdateAssessmentTimeCommand command = assessmentTimeRequestConverter
                     .toCommand(id, request);
-            AssessmentTimeResult result = assessmentTimeAppService.updateAssessmentTime(command);
+            AssessmentTimeResult result = assessmentTimeAppService.updateAssessmentTime(userId, command);
             return ResponseMessage.success(responseConverter.toDTO(result));
         } catch (IllegalArgumentException e) {
             if (e.getMessage().contains("不存在")) {
@@ -98,7 +101,8 @@ public class AdminAssessmentTimeController {
     public ResponseMessage<Void> deleteAssessmentTime(
             @Parameter(description = "考核时间ID", required = true) @PathVariable Long id) {
         try {
-            assessmentTimeAppService.deleteAssessmentTime(id);
+            Long userId = UserCTX.getCurrentUserId();
+            assessmentTimeAppService.deleteAssessmentTime(userId, id);
             return ResponseMessage.success(null);
         } catch (IllegalArgumentException e) {
             return ResponseMessage.error(404, e.getMessage());
@@ -114,7 +118,8 @@ public class AdminAssessmentTimeController {
     public ResponseMessage<PageDTO<AssessmentTimeDTO>> listAssessmentTimes(
             @Parameter(description = "页码（从0开始，默认0）") @RequestParam(required = false, defaultValue = "0") Integer page,
             @Parameter(description = "每页大小（默认5）") @RequestParam(required = false, defaultValue = "5") Integer size) {
-        Page<AssessmentTimeResult> result = assessmentTimeAppService.listAssessmentTimes(page, size);
+        Long userId = UserCTX.getCurrentUserId();
+        Page<AssessmentTimeResult> result = assessmentTimeAppService.listAssessmentTimes(userId, page, size);
         return ResponseMessage.success(PageDTO.from(result.map(responseConverter::toDTO)));
     }
 }

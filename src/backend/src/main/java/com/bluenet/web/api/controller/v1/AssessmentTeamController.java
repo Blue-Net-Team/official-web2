@@ -6,7 +6,6 @@ import com.bluenet.web.api.dto.assessment_team.*;
 import com.bluenet.web.application.TeamPreviewResult;
 import com.bluenet.web.application.TeamResult;
 import com.bluenet.web.application.service.AssessmentTeamAppService;
-import com.bluenet.web.domain.model.vo.UserVO;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
 import com.bluenet.web.infrastructure.security.annotation.RequiresPermission;
 import com.bluenet.web.infrastructure.security.util.UserCTX;
@@ -47,11 +46,9 @@ public class AssessmentTeamController {
     @PostMapping
     public ResponseMessage<AssessmentTeamDTO> createTeam(
             @Valid @RequestBody CreateTeamRequestDTO request) {
-        UserVO currentUser = UserCTX.getCurrentUser();
-        if (currentUser == null) {
-            throw new SecurityException("未登录");
-        }
-        TeamResult result = assessmentTeamAppService.createTeam(request.getAssessmentTimeId(), request.getName());
+        Long userId = UserCTX.getCurrentUserId();
+        TeamResult result = assessmentTeamAppService
+                .createTeam(userId, request.getAssessmentTimeId(), request.getName());
         return ResponseMessage.success(responseConverter.toDTO(result));
     }
 
@@ -77,11 +74,8 @@ public class AssessmentTeamController {
     @PostMapping("/join")
     public ResponseMessage<AssessmentTeamDTO> joinTeam(
             @Valid @RequestBody JoinTeamRequestDTO request) {
-        UserVO currentUser = UserCTX.getCurrentUser();
-        if (currentUser == null) {
-            throw new SecurityException("未登录");
-        }
-        TeamResult result = assessmentTeamAppService.joinTeam(request.getInviteCode());
+        Long userId = UserCTX.getCurrentUserId();
+        TeamResult result = assessmentTeamAppService.joinTeam(userId, request.getInviteCode());
         return ResponseMessage.success(responseConverter.toDTO(result));
     }
 
@@ -94,11 +88,8 @@ public class AssessmentTeamController {
     @GetMapping("/my-team")
     public ResponseMessage<AssessmentTeamDTO> getMyTeam(
             @Parameter(description = "考核时间ID", required = true) @RequestParam Long assessmentTimeId) {
-        UserVO currentUser = UserCTX.getCurrentUser();
-        if (currentUser == null) {
-            throw new SecurityException("未登录");
-        }
-        TeamResult result = assessmentTeamAppService.getMyTeam(assessmentTimeId);
+        Long userId = UserCTX.getCurrentUserId();
+        TeamResult result = assessmentTeamAppService.getMyTeam(userId, assessmentTimeId);
         if (result == null) {
             return ResponseMessage.error(404, "未加入队伍");
         }
@@ -115,11 +106,8 @@ public class AssessmentTeamController {
     @PostMapping("/leave")
     public ResponseMessage<Void> leaveTeam(
             @Valid @RequestBody LeaveTeamRequestDTO request) {
-        UserVO currentUser = UserCTX.getCurrentUser();
-        if (currentUser == null) {
-            throw new SecurityException("未登录");
-        }
-        assessmentTeamAppService.leaveTeam(request.getTeamId());
+        Long userId = UserCTX.getCurrentUserId();
+        assessmentTeamAppService.leaveTeam(userId, request.getTeamId());
         return ResponseMessage.success();
     }
 
@@ -133,11 +121,9 @@ public class AssessmentTeamController {
     @PostMapping("/transfer")
     public ResponseMessage<AssessmentTeamDTO> transferLeader(
             @Valid @RequestBody TransferLeaderRequestDTO request) {
-        UserVO currentUser = UserCTX.getCurrentUser();
-        if (currentUser == null) {
-            throw new SecurityException("未登录");
-        }
-        TeamResult result = assessmentTeamAppService.transferLeader(request.getTeamId(), request.getNewLeaderId());
+        Long userId = UserCTX.getCurrentUserId();
+        TeamResult result = assessmentTeamAppService
+                .transferLeader(userId, request.getTeamId(), request.getNewLeaderId());
         return ResponseMessage.success(responseConverter.toDTO(result));
     }
 
@@ -150,11 +136,8 @@ public class AssessmentTeamController {
     @DeleteMapping("/{id}")
     public ResponseMessage<Void> disbandTeam(
             @Parameter(description = "队伍ID", required = true) @PathVariable Long id) {
-        UserVO currentUser = UserCTX.getCurrentUser();
-        if (currentUser == null) {
-            throw new SecurityException("未登录");
-        }
-        assessmentTeamAppService.disbandTeam(id);
+        Long userId = UserCTX.getCurrentUserId();
+        assessmentTeamAppService.disbandTeam(userId, id);
         return ResponseMessage.success();
     }
 

@@ -2,7 +2,6 @@ package com.bluenet.web.application.service.impl;
 
 import com.bluenet.web.BaseIntegrationTest;
 import com.bluenet.web.domain.model.enumerate.Direction;
-import com.bluenet.web.domain.model.vo.UserVO;
 import com.bluenet.web.domain.repository.AssessmentTimeRepository;
 import com.bluenet.web.domain.repository.UserRepository;
 import com.bluenet.web.infrastructure.job.EliminatedUserDisableJob;
@@ -10,17 +9,14 @@ import com.bluenet.web.infrastructure.repository.dataobject.UserDO;
 import com.bluenet.web.infrastructure.repository.mapper.AssessmentDecisionMapper;
 import com.bluenet.web.infrastructure.repository.mapper.AssessmentTimeMapper;
 import com.bluenet.web.infrastructure.repository.mapper.UserMapper;
-import com.bluenet.web.infrastructure.security.util.UserCTX;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.MockedStatic;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 
 import java.time.LocalDateTime;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.mockStatic;
 
 /**
  * 考核淘汰限制集成测试。
@@ -60,6 +56,7 @@ class EliminationRestrictionIntegrationTest extends BaseIntegrationTest {
         user.setEmail(studentId + "@example.com");
         user.setDirection(direction);
         user.setDisable(false);
+        user.setRoleId(4L); // CANDIDATE role id from Flyway V1
         userMapper.insert(user);
         return user.getId();
     }
@@ -96,43 +93,33 @@ class EliminationRestrictionIntegrationTest extends BaseIntegrationTest {
 
         createDecision(userId, epoch1TimeId, false, LocalDateTime.now());
 
-        try (MockedStatic<UserCTX> mocked = mockStatic(UserCTX.class)) {
-            UserVO userVO = UserVO.builder()
-                    .id(userId)
-                    .roleName("CANDIDATE")
-                    .direction(Direction.COMPUTER_VISION)
-                    .studentId("2024123456")
-                    .build();
-            mocked.when(UserCTX::getCurrentUser).thenReturn(userVO);
+        Page<com.bluenet.web.application.AssessmentTimeResult> result = assessmentTimeAppService
+                .listAssessmentTimesForUser(userId, 0, 10);
 
-            Page<com.bluenet.web.application.AssessmentTimeResult> result = assessmentTimeAppService
-                    .listAssessmentTimesForUser(0, 10);
+        assertEquals(
+                3,
+                result.getContent().size(),
+                "被淘汰考生应看到所有轮次，包括后续轮次和全局考核");
 
-            assertEquals(
-                    3,
-                    result.getContent().size(),
-                    "被淘汰考生应看到所有轮次，包括后续轮次和全局考核");
+        var epoch1 = result.getContent()
+                .stream()
+                .filter(r -> r.id().equals(epoch1TimeId))
+                .findFirst()
+                .orElseThrow();
+        var epoch2 = result.getContent()
+                .stream()
+                .filter(r -> r.id().equals(epoch2TimeId))
+                .findFirst()
+                .orElseThrow();
+        var globalResult = result.getContent()
+                .stream()
+                .filter(r -> r.id().equals(globalTimeId))
+                .findFirst()
+                .orElseThrow();
 
-            var epoch1 = result.getContent()
-                    .stream()
-                    .filter(r -> r.id().equals(epoch1TimeId))
-                    .findFirst()
-                    .orElseThrow();
-            var epoch2 = result.getContent()
-                    .stream()
-                    .filter(r -> r.id().equals(epoch2TimeId))
-                    .findFirst()
-                    .orElseThrow();
-            var globalResult = result.getContent()
-                    .stream()
-                    .filter(r -> r.id().equals(globalTimeId))
-                    .findFirst()
-                    .orElseThrow();
-
-            assertFalse(epoch1.eliminated(), "已参加的 epoch=1 不应标记 eliminated");
-            assertTrue(epoch2.eliminated(), "后续 epoch=2 应标记 eliminated");
-            assertTrue(globalResult.eliminated(), "全局考核 epoch=0 应标记 eliminated");
-        }
+        assertFalse(epoch1.eliminated(), "已参加的 epoch=1 不应标记 eliminated");
+        assertTrue(epoch2.eliminated(), "后续 epoch=2 应标记 eliminated");
+        assertTrue(globalResult.eliminated(), "全局考核 epoch=0 应标记 eliminated");
     }
 
     @Test
@@ -142,23 +129,13 @@ class EliminationRestrictionIntegrationTest extends BaseIntegrationTest {
         createAssessmentTime(Direction.COMPUTER_VISION, 1, 2024);
         createAssessmentTime(Direction.COMPUTER_VISION, 2, 2024);
 
-        try (MockedStatic<UserCTX> mocked = mockStatic(UserCTX.class)) {
-            UserVO userVO = UserVO.builder()
-                    .id(userId)
-                    .roleName("CANDIDATE")
-                    .direction(Direction.COMPUTER_VISION)
-                    .studentId("2024123457")
-                    .build();
-            mocked.when(UserCTX::getCurrentUser).thenReturn(userVO);
+        Page<com.bluenet.web.application.AssessmentTimeResult> result = assessmentTimeAppService
+                .listAssessmentTimesForUser(userId, 0, 10);
 
-            Page<com.bluenet.web.application.AssessmentTimeResult> result = assessmentTimeAppService
-                    .listAssessmentTimesForUser(0, 10);
-
-            assertEquals(
-                    2,
-                    result.getContent().size(),
-                    "非淘汰考生应看到所有相关考核");
-        }
+        assertEquals(
+                2,
+                result.getContent().size(),
+                "非淘汰考生应看到所有相关考核");
     }
 
     @Test

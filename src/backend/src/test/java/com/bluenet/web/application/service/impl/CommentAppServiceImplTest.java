@@ -3,13 +3,11 @@ package com.bluenet.web.application.service.impl;
 import com.bluenet.web.domain.model.vo.CommentVO;
 import com.bluenet.web.domain.model.vo.UserVO;
 import com.bluenet.web.domain.service.CommentDomainService;
-import com.bluenet.web.infrastructure.security.util.UserCTX;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
@@ -37,29 +35,15 @@ class CommentAppServiceImplTest {
     private CommentAppServiceImpl commentAppService;
 
     @Test
-    @DisplayName("添加评论：已登录用户应委托领域服务并返回结果")
-    void addComment_loggedIn_shouldDelegateAndReturnVO() {
-        try (MockedStatic<UserCTX> mockedUserCTX = mockStatic(UserCTX.class)) {
-            mockedUserCTX.when(UserCTX::getCurrentUser).thenReturn(createUser());
-            when(commentDomainService.addComment(ANSWER_ID, USER_ID, "内容", BigDecimal.valueOf(8)))
-                    .thenReturn(createCommentVO());
+    @DisplayName("添加评论：应委托领域服务并返回结果")
+    void addComment_shouldDelegateAndReturnVO() {
+        when(commentDomainService.addComment(ANSWER_ID, USER_ID, "内容", BigDecimal.valueOf(8)))
+                .thenReturn(createCommentVO());
 
-            CommentVO result = commentAppService.addComment(ANSWER_ID, "内容", BigDecimal.valueOf(8));
+        CommentVO result = commentAppService.addComment(USER_ID, ANSWER_ID, "内容", BigDecimal.valueOf(8));
 
-            assertEquals(COMMENT_ID, result.getId());
-            verify(commentDomainService).addComment(ANSWER_ID, USER_ID, "内容", BigDecimal.valueOf(8));
-        }
-    }
-
-    @Test
-    @DisplayName("添加评论：未登录应抛出安全异常")
-    void addComment_notLoggedIn_shouldThrowSecurityException() {
-        try (MockedStatic<UserCTX> mockedUserCTX = mockStatic(UserCTX.class)) {
-            mockedUserCTX.when(UserCTX::getCurrentUser).thenReturn(null);
-
-            assertThrows(SecurityException.class, () -> commentAppService.addComment(ANSWER_ID, "内容", BigDecimal.ONE));
-            verifyNoInteractions(commentDomainService);
-        }
+        assertEquals(COMMENT_ID, result.getId());
+        verify(commentDomainService).addComment(ANSWER_ID, USER_ID, "内容", BigDecimal.valueOf(8));
     }
 
     @Test
@@ -76,55 +60,25 @@ class CommentAppServiceImplTest {
     }
 
     @Test
-    @DisplayName("更新评论：已登录用户应委托领域服务并返回结果")
-    void updateComment_loggedIn_shouldDelegateAndReturnVO() {
-        try (MockedStatic<UserCTX> mockedUserCTX = mockStatic(UserCTX.class)) {
-            mockedUserCTX.when(UserCTX::getCurrentUser).thenReturn(createUser());
-            when(commentDomainService.updateComment(COMMENT_ID, USER_ID, "新内容", BigDecimal.valueOf(9)))
-                    .thenReturn(createCommentVO());
+    @DisplayName("更新评论：应委托领域服务并返回结果")
+    void updateComment_shouldDelegateAndReturnVO() {
+        when(commentDomainService.updateComment(COMMENT_ID, USER_ID, "新内容", BigDecimal.valueOf(9)))
+                .thenReturn(createCommentVO());
 
-            CommentVO result = commentAppService.updateComment(COMMENT_ID, "新内容", BigDecimal.valueOf(9));
+        CommentVO result = commentAppService.updateComment(USER_ID, COMMENT_ID, "新内容", BigDecimal.valueOf(9));
 
-            assertEquals(COMMENT_ID, result.getId());
-            verify(commentDomainService).updateComment(COMMENT_ID, USER_ID, "新内容", BigDecimal.valueOf(9));
-        }
+        assertEquals(COMMENT_ID, result.getId());
+        verify(commentDomainService).updateComment(COMMENT_ID, USER_ID, "新内容", BigDecimal.valueOf(9));
     }
 
     @Test
-    @DisplayName("更新评论：未登录应抛出安全异常")
-    void updateComment_notLoggedIn_shouldThrowSecurityException() {
-        try (MockedStatic<UserCTX> mockedUserCTX = mockStatic(UserCTX.class)) {
-            mockedUserCTX.when(UserCTX::getCurrentUser).thenReturn(null);
+    @DisplayName("删除评论：应委托领域服务")
+    void deleteComment_shouldDelegate() {
+        doNothing().when(commentDomainService).deleteComment(COMMENT_ID, USER_ID);
 
-            assertThrows(
-                    SecurityException.class,
-                    () -> commentAppService.updateComment(COMMENT_ID, "新内容", BigDecimal.ONE));
-            verifyNoInteractions(commentDomainService);
-        }
-    }
+        commentAppService.deleteComment(USER_ID, COMMENT_ID);
 
-    @Test
-    @DisplayName("删除评论：已登录用户应委托领域服务")
-    void deleteComment_loggedIn_shouldDelegate() {
-        try (MockedStatic<UserCTX> mockedUserCTX = mockStatic(UserCTX.class)) {
-            mockedUserCTX.when(UserCTX::getCurrentUser).thenReturn(createUser());
-            doNothing().when(commentDomainService).deleteComment(COMMENT_ID, USER_ID);
-
-            commentAppService.deleteComment(COMMENT_ID);
-
-            verify(commentDomainService).deleteComment(COMMENT_ID, USER_ID);
-        }
-    }
-
-    @Test
-    @DisplayName("删除评论：未登录应抛出安全异常")
-    void deleteComment_notLoggedIn_shouldThrowSecurityException() {
-        try (MockedStatic<UserCTX> mockedUserCTX = mockStatic(UserCTX.class)) {
-            mockedUserCTX.when(UserCTX::getCurrentUser).thenReturn(null);
-
-            assertThrows(SecurityException.class, () -> commentAppService.deleteComment(COMMENT_ID));
-            verifyNoInteractions(commentDomainService);
-        }
+        verify(commentDomainService).deleteComment(COMMENT_ID, USER_ID);
     }
 
     private UserVO createUser() {

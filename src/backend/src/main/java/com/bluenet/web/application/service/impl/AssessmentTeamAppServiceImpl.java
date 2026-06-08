@@ -15,7 +15,6 @@ import com.bluenet.web.domain.repository.AssessmentJudgementRepository;
 import com.bluenet.web.domain.repository.AssessmentTeamRepository;
 import com.bluenet.web.domain.repository.AssessmentTimeRepository;
 import com.bluenet.web.domain.service.UserDomainService;
-import com.bluenet.web.infrastructure.security.util.UserCTX;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -50,12 +49,7 @@ public class AssessmentTeamAppServiceImpl implements AssessmentTeamAppService {
 
     @Override
     @Transactional
-    public TeamResult createTeam(Long assessmentTimeId, String name) {
-        UserVO currentUser = UserCTX.getCurrentUser();
-        if (currentUser == null) {
-            throw new SecurityException("未登录");
-        }
-
+    public TeamResult createTeam(Long userId, Long assessmentTimeId, String name) {
         AssessmentTime assessmentTime = assessmentTimeRepository.findById(assessmentTimeId)
                 .orElseThrow(() -> new DataNotFound("考核时间不存在"));
 
@@ -65,11 +59,11 @@ public class AssessmentTeamAppServiceImpl implements AssessmentTeamAppService {
 
         validateTimeNotEnded(assessmentTime);
 
-        if (assessmentTeamRepository.existsByAssessmentTimeIdAndUserId(assessmentTimeId, currentUser.getId())) {
+        if (assessmentTeamRepository.existsByAssessmentTimeIdAndUserId(assessmentTimeId, userId)) {
             throw new BadRequest("您已加入该考核的队伍");
         }
 
-        if (hasPersonalAnswer(assessmentTimeId, currentUser.getId())) {
+        if (hasPersonalAnswer(assessmentTimeId, userId)) {
             throw new BadRequest("您已提交过个人答案，无法创建队伍");
         }
 
@@ -78,14 +72,14 @@ public class AssessmentTeamAppServiceImpl implements AssessmentTeamAppService {
             inviteCode = generateInviteCode();
         }
 
-        AssessmentTeam team = AssessmentTeam.create(assessmentTimeId, currentUser.getId(), name, inviteCode);
+        AssessmentTeam team = AssessmentTeam.create(assessmentTimeId, userId, name, inviteCode);
         assessmentTeamRepository.save(team);
 
         log.info(
                 "创建队伍成功，teamId: {}, assessmentTimeId: {}, leaderId: {}",
                 team.getId(),
                 assessmentTimeId,
-                currentUser.getId());
+                userId);
 
         return toTeamResult(team);
     }
@@ -129,12 +123,7 @@ public class AssessmentTeamAppServiceImpl implements AssessmentTeamAppService {
 
     @Override
     @Transactional
-    public TeamResult joinTeam(String inviteCode) {
-        UserVO currentUser = UserCTX.getCurrentUser();
-        if (currentUser == null) {
-            throw new SecurityException("未登录");
-        }
-
+    public TeamResult joinTeam(Long userId, String inviteCode) {
         AssessmentTeam team = assessmentTeamRepository.findByInviteCode(inviteCode)
                 .orElseThrow(() -> new DataNotFound("邀请码无效"));
 
@@ -148,21 +137,21 @@ public class AssessmentTeamAppServiceImpl implements AssessmentTeamAppService {
         validateTimeNotEnded(assessmentTime);
 
         if (assessmentTeamRepository
-                .existsByAssessmentTimeIdAndUserId(team.getAssessmentTimeId(), currentUser.getId())) {
+                .existsByAssessmentTimeIdAndUserId(team.getAssessmentTimeId(), userId)) {
             throw new BadRequest("您已加入该考核的队伍");
         }
 
-        if (hasPersonalAnswer(team.getAssessmentTimeId(), currentUser.getId())) {
+        if (hasPersonalAnswer(team.getAssessmentTimeId(), userId)) {
             throw new BadRequest("您已提交过个人答案，无法加入队伍");
         }
 
-        if (hasTeamAnswer(team.getAssessmentTimeId(), currentUser.getId())) {
+        if (hasTeamAnswer(team.getAssessmentTimeId(), userId)) {
             throw new BadRequest("您已有队伍答案，无法加入其他队伍");
         }
 
-        assessmentTeamRepository.addMember(team.getId(), currentUser.getId());
+        assessmentTeamRepository.addMember(team.getId(), userId);
 
-        log.info("用户加入队伍成功，teamId: {}, userId: {}", team.getId(), currentUser.getId());
+        log.info("用户加入队伍成功，teamId: {}, userId: {}", team.getId(), userId);
 
         AssessmentTeam updatedTeam = assessmentTeamRepository.findById(team.getId())
                 .orElseThrow(() -> new DataNotFound("队伍不存在"));
@@ -171,14 +160,9 @@ public class AssessmentTeamAppServiceImpl implements AssessmentTeamAppService {
 
     @Override
     @Transactional(readOnly = true)
-    public TeamResult getMyTeam(Long assessmentTimeId) {
-        UserVO currentUser = UserCTX.getCurrentUser();
-        if (currentUser == null) {
-            throw new SecurityException("未登录");
-        }
-
+    public TeamResult getMyTeam(Long userId, Long assessmentTimeId) {
         Optional<AssessmentTeam> teamOpt = assessmentTeamRepository
-                .findByAssessmentTimeIdAndUserId(assessmentTimeId, currentUser.getId());
+                .findByAssessmentTimeIdAndUserId(assessmentTimeId, userId);
         if (teamOpt.isEmpty()) {
             return null;
         }
@@ -188,12 +172,7 @@ public class AssessmentTeamAppServiceImpl implements AssessmentTeamAppService {
 
     @Override
     @Transactional
-    public void leaveTeam(Long teamId) {
-        UserVO currentUser = UserCTX.getCurrentUser();
-        if (currentUser == null) {
-            throw new SecurityException("未登录");
-        }
-
+    public void leaveTeam(Long userId, Long teamId) {
         AssessmentTeam team = assessmentTeamRepository.findById(teamId)
                 .orElseThrow(() -> new DataNotFound("队伍不存在"));
 
@@ -201,11 +180,11 @@ public class AssessmentTeamAppServiceImpl implements AssessmentTeamAppService {
             throw new BadRequest("该队伍已解散");
         }
 
-        if (team.isLeader(currentUser.getId())) {
+        if (team.isLeader(userId)) {
             throw new Forbidden("队长不能离开队伍，请先转让队长或解散队伍");
         }
 
-        if (!assessmentTeamRepository.isMember(teamId, currentUser.getId())) {
+        if (!assessmentTeamRepository.isMember(teamId, userId)) {
             throw new BadRequest("您不是该队伍的成员");
         }
 
@@ -213,19 +192,14 @@ public class AssessmentTeamAppServiceImpl implements AssessmentTeamAppService {
             throw new Forbidden("队伍已提交答案，无法退出");
         }
 
-        assessmentTeamRepository.removeMember(teamId, currentUser.getId());
+        assessmentTeamRepository.removeMember(teamId, userId);
 
-        log.info("用户离开队伍成功，teamId: {}, userId: {}", teamId, currentUser.getId());
+        log.info("用户离开队伍成功，teamId: {}, userId: {}", teamId, userId);
     }
 
     @Override
     @Transactional
-    public TeamResult transferLeader(Long teamId, Long newLeaderId) {
-        UserVO currentUser = UserCTX.getCurrentUser();
-        if (currentUser == null) {
-            throw new SecurityException("未登录");
-        }
-
+    public TeamResult transferLeader(Long userId, Long teamId, Long newLeaderId) {
         AssessmentTeam team = assessmentTeamRepository.findById(teamId)
                 .orElseThrow(() -> new DataNotFound("队伍不存在"));
 
@@ -233,7 +207,7 @@ public class AssessmentTeamAppServiceImpl implements AssessmentTeamAppService {
             throw new BadRequest("该队伍已解散");
         }
 
-        if (!team.isLeader(currentUser.getId())) {
+        if (!team.isLeader(userId)) {
             throw new Forbidden("只有队长可以转让队长");
         }
 
@@ -257,16 +231,11 @@ public class AssessmentTeamAppServiceImpl implements AssessmentTeamAppService {
 
     @Override
     @Transactional
-    public void disbandTeam(Long teamId) {
-        UserVO currentUser = UserCTX.getCurrentUser();
-        if (currentUser == null) {
-            throw new SecurityException("未登录");
-        }
-
+    public void disbandTeam(Long userId, Long teamId) {
         AssessmentTeam team = assessmentTeamRepository.findById(teamId)
                 .orElseThrow(() -> new DataNotFound("队伍不存在"));
 
-        if (!team.isLeader(currentUser.getId())) {
+        if (!team.isLeader(userId)) {
             throw new Forbidden("只有队长可以解散队伍");
         }
 
@@ -280,7 +249,7 @@ public class AssessmentTeamAppServiceImpl implements AssessmentTeamAppService {
         team.disband();
         assessmentTeamRepository.update(team);
 
-        log.info("解散队伍成功，teamId: {}, leaderId: {}", teamId, currentUser.getId());
+        log.info("解散队伍成功，teamId: {}, leaderId: {}", teamId, userId);
     }
 
     private String generateInviteCode() {

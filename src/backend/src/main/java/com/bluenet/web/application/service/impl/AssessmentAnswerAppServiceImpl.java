@@ -516,6 +516,7 @@ public class AssessmentAnswerAppServiceImpl implements AssessmentAnswerAppServic
                 .filter(id -> !id.equals(command.userId()))
                 .toList();
         if (memberUserIds.isEmpty()) {
+            log.warn("队伍 id {} 无成员", teamId);
             return;
         }
 

@@ -62,7 +62,7 @@ class UserInfoControllerTest {
                 null,
                 null);
 
-        when(userInfoAppService.getMyInfo()).thenReturn(expected);
+        when(userInfoAppService.getMyInfo(1L)).thenReturn(expected);
 
         mockMvc.perform(get("/api/v1/user/info/me").contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
@@ -71,13 +71,13 @@ class UserInfoControllerTest {
                 .andExpect(jsonPath("$.data.username").value("张三"))
                 .andExpect(jsonPath("$.data.roleName").value("MEMBER"));
 
-        verify(userInfoAppService).getMyInfo();
+        verify(userInfoAppService).getMyInfo(1L);
     }
 
     @Test
     @WithUserVO(permissions = "user:info:me")
     void getMyInfo_whenServiceThrowsUnauthorized_returnsErrorResponse() throws Exception {
-        when(userInfoAppService.getMyInfo()).thenThrow(new Unauthorized("未认证"));
+        when(userInfoAppService.getMyInfo(1L)).thenThrow(new Unauthorized("未认证"));
 
         mockMvc.perform(get("/api/v1/user/info/me").contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isUnauthorized()) // 控制器捕获异常后返回
@@ -85,6 +85,6 @@ class UserInfoControllerTest {
                 .andExpect(jsonPath("$.msg").value("未认证"))
                 .andExpect(jsonPath("$.data").isEmpty());
 
-        verify(userInfoAppService).getMyInfo();
+        verify(userInfoAppService).getMyInfo(1L);
     }
 }

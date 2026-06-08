@@ -14,24 +14,30 @@ public interface UserInfoAppService {
     /**
      * 获取当前用户信息。
      *
+     * @param userId
+     *            当前用户ID
      * @return 用户信息结果
      */
-    UserInfoResult getMyInfo();
+    UserInfoResult getMyInfo(Long userId);
 
     /**
      * 更新用户个人资料。
      *
+     * @param userId
+     *            当前用户ID
      * @param command
      *            更新个人资料命令
      */
-    void updateProfile(UserInfoCommands.UpdateProfileCommand command);
+    void updateProfile(Long userId, UserInfoCommands.UpdateProfileCommand command);
 
     /**
      * 获取当前用户各标签页计数。
      *
+     * @param userId
+     *            当前用户ID
      * @return 标签页计数结果
      */
-    UserInfoResult.TabCounts getTabCounts();
+    UserInfoResult.TabCounts getTabCounts(Long userId);
 
     /**
      * 发送邮箱验证码。
@@ -44,10 +50,12 @@ public interface UserInfoAppService {
     /**
      * 修改邮箱。
      *
+     * @param userId
+     *            当前用户ID
      * @param command
      *            修改邮箱命令
      */
-    void changeEmail(UserInfoCommands.ChangeEmailCommand command);
+    void changeEmail(Long userId, UserInfoCommands.ChangeEmailCommand command);
 
     /**
      * 校验当前密码。
@@ -69,8 +77,10 @@ public interface UserInfoAppService {
     /**
      * 更新用户头像。
      *
+     * @param userId
+     *            当前用户ID
      * @param command
      *            更新头像命令
      */
-    void updateAvatar(UserInfoCommands.UpdateAvatarCommand command);
+    void updateAvatar(Long userId, UserInfoCommands.UpdateAvatarCommand command);
 }

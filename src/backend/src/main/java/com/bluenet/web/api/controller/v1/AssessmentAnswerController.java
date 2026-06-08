@@ -7,7 +7,6 @@ import com.bluenet.web.api.dto.assessment_answer.CreateAnswerRequestDTO;
 import com.bluenet.web.application.AssessmentAnswerResult;
 import com.bluenet.web.api.converter.assessment_answer.AssessmentAnswerResponseConverter;
 import com.bluenet.web.application.service.AssessmentAnswerAppService;
-import com.bluenet.web.domain.model.vo.UserVO;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
 import com.bluenet.web.infrastructure.security.annotation.RequiresPermission;
 import com.bluenet.web.infrastructure.security.util.UserCTX;
@@ -44,12 +43,9 @@ public class AssessmentAnswerController {
     @PostMapping
     public ResponseMessage<AssessmentAnswerDTO> createAnswer(
             @Valid @RequestBody CreateAnswerRequestDTO request) {
-        UserVO currentUser = UserCTX.getCurrentUser();
-        if (currentUser == null) {
-            throw new SecurityException("未登录");
-        }
+        Long userId = UserCTX.getCurrentUserId();
         AssessmentAnswerResult result = assessmentAnswerAppService.createAnswer(
-                requestConverter.toCreateCommand(currentUser.getId(), request));
+                requestConverter.toCreateCommand(userId, request));
         return ResponseMessage.success(responseConverter.toDTO(result));
     }
 
@@ -62,12 +58,9 @@ public class AssessmentAnswerController {
     @PutMapping
     public ResponseMessage<AssessmentAnswerDTO> updateAnswer(
             @Valid @RequestBody CreateAnswerRequestDTO request) {
-        UserVO currentUser = UserCTX.getCurrentUser();
-        if (currentUser == null) {
-            throw new SecurityException("未登录");
-        }
+        Long userId = UserCTX.getCurrentUserId();
         AssessmentAnswerResult result = assessmentAnswerAppService.updateAnswer(
-                requestConverter.toUpdateCommand(currentUser.getId(), request));
+                requestConverter.toUpdateCommand(userId, request));
         return ResponseMessage.success(responseConverter.toDTO(result));
     }
 
@@ -80,11 +73,8 @@ public class AssessmentAnswerController {
     @GetMapping
     public ResponseMessage<AssessmentAnswerDTO> getMyAnswer(
             @Parameter(description = "题目ID", required = true) @RequestParam Long questionId) {
-        UserVO currentUser = UserCTX.getCurrentUser();
-        if (currentUser == null) {
-            throw new SecurityException("未登录");
-        }
-        AssessmentAnswerResult result = assessmentAnswerAppService.getMyAnswer(currentUser.getId(), questionId);
+        Long userId = UserCTX.getCurrentUserId();
+        AssessmentAnswerResult result = assessmentAnswerAppService.getMyAnswer(userId, questionId);
         if (result == null) {
             return ResponseMessage.error(404, "未找到答案");
         }

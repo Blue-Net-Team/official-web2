@@ -50,7 +50,8 @@ class UserProfileController {
     @GetMapping("/info")
     public ResponseMessage<UserInfo> getMyInfo() {
         try {
-            return ResponseMessage.success(userInfoResponseConverter.toDTO(userInfoAppService.getMyInfo()));
+            Long userId = UserCTX.getCurrentUserId();
+            return ResponseMessage.success(userInfoResponseConverter.toDTO(userInfoAppService.getMyInfo(userId)));
         } catch (GlobalException e) {
             return ResponseMessage.error(e);
         }
@@ -66,7 +67,8 @@ class UserProfileController {
     @PutMapping("/info")
     public ResponseMessage<Void> updateProfile(@RequestBody UpdateProfileRequestDTO request) {
         try {
-            userInfoAppService.updateProfile(requestConverter.toCommand(request));
+            Long userId = UserCTX.getCurrentUserId();
+            userInfoAppService.updateProfile(userId, requestConverter.toCommand(request));
             return ResponseMessage.success();
         } catch (GlobalException e) {
             return ResponseMessage.error(e);
@@ -83,7 +85,9 @@ class UserProfileController {
     @GetMapping("/tab-counts")
     public ResponseMessage<TabCountsDTO> getTabCounts() {
         try {
-            return ResponseMessage.success(userInfoResponseConverter.toTabCountsDTO(userInfoAppService.getTabCounts()));
+            Long userId = UserCTX.getCurrentUserId();
+            return ResponseMessage
+                    .success(userInfoResponseConverter.toTabCountsDTO(userInfoAppService.getTabCounts(userId)));
         } catch (GlobalException e) {
             return ResponseMessage.error(e);
         }
@@ -110,7 +114,8 @@ class UserProfileController {
     @PutMapping("/email")
     public ResponseMessage<Void> changeEmail(@Valid @RequestBody ChangeEmailRequestDTO request) {
         try {
-            userInfoAppService.changeEmail(requestConverter.toCommand(request));
+            Long userId = UserCTX.getCurrentUserId();
+            userInfoAppService.changeEmail(userId, requestConverter.toCommand(request));
             return ResponseMessage.success();
         } catch (GlobalException e) {
             return ResponseMessage.error(e);
@@ -151,7 +156,8 @@ class UserProfileController {
     @PutMapping("/avatar")
     public ResponseMessage<Void> updateAvatar(@Valid @RequestBody UpdateAvatarRequestDTO request) {
         try {
-            userInfoAppService.updateAvatar(requestConverter.toCommand(request));
+            Long userId = UserCTX.getCurrentUserId();
+            userInfoAppService.updateAvatar(userId, requestConverter.toCommand(request));
             return ResponseMessage.success();
         } catch (GlobalException e) {
             return ResponseMessage.error(e);

@@ -12,8 +12,17 @@ public interface CommentAppService {
 
     /**
      * 添加评论
+     *
+     * @param userId
+     *            当前用户ID
+     * @param answerId
+     *            答案ID
+     * @param content
+     *            评论内容
+     * @param score
+     *            评分
      */
-    CommentVO addComment(Long answerId, String content, BigDecimal score);
+    CommentVO addComment(Long userId, Long answerId, String content, BigDecimal score);
 
     /**
      * 按答案查询评论列表
@@ -22,11 +31,25 @@ public interface CommentAppService {
 
     /**
      * 更新评论
+     *
+     * @param userId
+     *            当前用户ID
+     * @param commentId
+     *            评论ID
+     * @param content
+     *            评论内容
+     * @param score
+     *            评分
      */
-    CommentVO updateComment(Long commentId, String content, BigDecimal score);
+    CommentVO updateComment(Long userId, Long commentId, String content, BigDecimal score);
 
     /**
      * 删除评论
+     *
+     * @param userId
+     *            当前用户ID
+     * @param commentId
+     *            评论ID
      */
-    void deleteComment(Long commentId);
+    void deleteComment(Long userId, Long commentId);
 }

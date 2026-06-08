@@ -25,7 +25,6 @@ import com.bluenet.web.application.message.template.EmailVerificationCodeTemplat
 import com.bluenet.web.application.message.template.VerificationCodeScene;
 import com.bluenet.web.infrastructure.security.auth.AuthTokenService;
 import com.bluenet.web.infrastructure.security.change.ChangePasswordStateService;
-import com.bluenet.web.infrastructure.security.util.UserCTX;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -53,23 +52,10 @@ public class UserInfoAppServiceImpl implements UserInfoAppService {
     private final ChangePasswordStateService changePasswordStateService;
     private final AuthTokenService authTokenService;
 
-    /**
-     * 获取当前用户信息。
-     *
-     * @return 当前用户信息结果
-     */
-    /**
-     * 获取当前用户信息。
-     *
-     * @return 当前用户信息结果
-     */
     @Override
-    public UserInfoResult getMyInfo() {
-        UserVO userVO = UserCTX.getCurrentUser();
-        if (userVO == null) {
-            log.warn("用户未认证，无法获取用户信息");
-            throw new Unauthorized("未认证");
-        }
+    public UserInfoResult getMyInfo(Long userId) {
+        UserVO userVO = userDomainService.getUser(userId)
+                .orElseThrow(() -> new Unauthorized("用户不存在"));
         String gradeLabel = GradeCalculator.getGradeLabel(userVO.getStudentId(), userVO.getAssessmentGradeYear());
         return new UserInfoResult(
                 userVO.getId(),
@@ -88,22 +74,10 @@ public class UserInfoAppServiceImpl implements UserInfoAppService {
                 userVO.getWechatQrcode());
     }
 
-    /**
-     * 更新用户个人资料。
-     *
-     * @param command
-     *            更新资料命令
-     */
-    /**
-     * 更新当前用户资料。
-     *
-     * @param command
-     *            更新资料命令
-     */
     @Override
-    public void updateProfile(UserInfoCommands.UpdateProfileCommand command) {
-        Long userId = getCurrentUserId();
-        UserVO currentUser = UserCTX.getCurrentUser();
+    public void updateProfile(Long userId, UserInfoCommands.UpdateProfileCommand command) {
+        UserVO currentUser = userDomainService.getUser(userId)
+                .orElseThrow(() -> new Unauthorized("用户不存在"));
         validateProfileUpdatePermission(currentUser, command);
         userDomainService.updateProfile(
                 userId,
@@ -117,19 +91,8 @@ public class UserInfoAppServiceImpl implements UserInfoAppService {
                 command.qrcodeFileId());
     }
 
-    /**
-     * 获取用户标签页计数。
-     *
-     * @return 标签页计数结果
-     */
-    /**
-     * 获取当前用户标签计数。
-     *
-     * @return 标签计数结果
-     */
     @Override
-    public UserInfoResult.TabCounts getTabCounts() {
-        Long userId = getCurrentUserId();
+    public UserInfoResult.TabCounts getTabCounts(Long userId) {
         TabCountsVO tabCountsVO = userDomainService.getTabCounts(userId);
         return new UserInfoResult.TabCounts(
                 tabCountsVO.getProjects(),
@@ -137,18 +100,6 @@ public class UserInfoAppServiceImpl implements UserInfoAppService {
                 tabCountsVO.getInternships());
     }
 
-    /**
-     * 发送邮箱验证码。
-     *
-     * @param command
-     *            发送验证码命令
-     */
-    /**
-     * 发送邮箱验证码。
-     *
-     * @param command
-     *            发送验证码命令
-     */
     @Override
     public void sendEmailVerificationCode(UserInfoCommands.SendEmailVerificationCodeCommand command) {
         String email = command.email();
@@ -167,22 +118,10 @@ public class UserInfoAppServiceImpl implements UserInfoAppService {
         log.info("修改邮箱验证码已发送 - email={}, scene={}", email, scene);
     }
 
-    /**
-     * 修改用户邮箱。
-     *
-     * @param command
-     *            修改邮箱命令
-     */
-    /**
-     * 修改邮箱。
-     *
-     * @param command
-     *            修改邮箱命令
-     */
     @Override
-    public void changeEmail(UserInfoCommands.ChangeEmailCommand command) {
-        Long userId = getCurrentUserId();
-        UserVO currentUser = UserCTX.getCurrentUser();
+    public void changeEmail(Long userId, UserInfoCommands.ChangeEmailCommand command) {
+        UserVO currentUser = userDomainService.getUser(userId)
+                .orElseThrow(() -> new Unauthorized("用户不存在"));
         userDomainService.changeEmail(
                 userId,
                 currentUser.getEmail(),
@@ -192,26 +131,10 @@ public class UserInfoAppServiceImpl implements UserInfoAppService {
         log.info("用户邮箱修改成功 - userId={}", userId);
     }
 
-    /**
-     * 验证当前密码。
-     *
-     * @param command
-     *            验证密码命令
-     * @return 验证令牌
-     */
-    /**
-     * 校验当前密码。
-     *
-     * @param command
-     *            校验密码命令
-     * @return 校验令牌
-     */
     @Override
     public String verifyCurrentPassword(UserInfoCommands.VerifyCurrentPasswordCommand command) {
-        UserVO user = UserCTX.getCurrentUser();
-        if (user == null) {
-            throw new Unauthorized("未认证");
-        }
+        UserVO user = userDomainService.getUser(command.userId())
+                .orElseThrow(() -> new Unauthorized("用户不存在"));
         if (!passwordEncoder.matches(command.currentPassword(), user.getPassword())) {
             throw new BadRequest("当前密码不正确");
         }
@@ -220,18 +143,6 @@ public class UserInfoAppServiceImpl implements UserInfoAppService {
         return token;
     }
 
-    /**
-     * 修改用户密码。
-     *
-     * @param command
-     *            修改密码命令
-     */
-    /**
-     * 修改密码。
-     *
-     * @param command
-     *            修改密码命令
-     */
     @Override
     @Transactional
     public void changePassword(UserInfoCommands.ChangePasswordCommand command) {
@@ -255,22 +166,9 @@ public class UserInfoAppServiceImpl implements UserInfoAppService {
         log.info("密码修改成功 - userId={}", command.userId());
     }
 
-    /**
-     * 更新用户头像。
-     *
-     * @param command
-     *            更新头像命令
-     */
-    /**
-     * 更新头像。
-     *
-     * @param command
-     *            更新头像命令
-     */
     @Override
     @Transactional
-    public void updateAvatar(UserInfoCommands.UpdateAvatarCommand command) {
-        Long userId = getCurrentUserId();
+    public void updateAvatar(Long userId, UserInfoCommands.UpdateAvatarCommand command) {
         FileVO fileVO = fileDomainService.getFileById(command.fileId());
         if (fileVO == null) {
             throw new DataNotFound("文件不存在");
@@ -280,15 +178,6 @@ public class UserInfoAppServiceImpl implements UserInfoAppService {
         }
         userDomainService.updateUserAvatar(userId, fileVO);
         log.info("用户头像更新成功 - userId={}, fileId={}", userId, command.fileId());
-    }
-
-    private Long getCurrentUserId() {
-        UserVO userVO = UserCTX.getCurrentUser();
-        if (userVO == null) {
-            log.warn("用户未认证");
-            throw new Unauthorized("未认证");
-        }
-        return userVO.getId();
     }
 
     private void validateProfileUpdatePermission(UserVO user, UserInfoCommands.UpdateProfileCommand command) {

@@ -7,6 +7,7 @@ import com.bluenet.web.application.service.AssessmentTimeAppService;
 import com.bluenet.web.domain.exception.DataConflict;
 import com.bluenet.web.domain.exception.DataNotFound;
 import com.bluenet.web.domain.exception.Forbidden;
+import com.bluenet.web.domain.exception.Unauthorized;
 import com.bluenet.web.domain.model.entity.AssessmentTime;
 import com.bluenet.web.domain.model.enumerate.Direction;
 import com.bluenet.web.domain.model.enumerate.RoleType;
@@ -16,17 +17,15 @@ import com.bluenet.web.domain.repository.AssessmentAnswerRepository;
 import com.bluenet.web.domain.repository.AssessmentQuestionRepository;
 import com.bluenet.web.domain.repository.AssessmentTimeRepository;
 import com.bluenet.web.domain.service.AssessmentDecisionDomainService;
+import com.bluenet.web.domain.service.UserDomainService;
 import com.bluenet.web.domain.util.GradeCalculator;
-import com.bluenet.web.infrastructure.security.util.UserCTX;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 /**
  * 考核时间应用服务实现。
@@ -41,18 +40,15 @@ public class AssessmentTimeAppServiceImpl implements AssessmentTimeAppService {
     private final AssessmentQuestionRepository assessmentQuestionRepository;
     private final AssessmentAnswerRepository assessmentAnswerRepository;
     private final AssessmentDecisionDomainService assessmentDecisionDomainService;
+    private final UserDomainService userDomainService;
 
-    /**
-     * 创建考核时间。
-     *
-     * @param command
-     *            创建考核时间命令
-     * @return 创建后的考核时间结果
-     */
     @Override
     @Transactional
-    public AssessmentTimeResult createAssessmentTime(AssessmentTimeCommands.CreateAssessmentTimeCommand command) {
-        validateDirectionPermission(command.direction());
+    public AssessmentTimeResult createAssessmentTime(Long userId,
+            AssessmentTimeCommands.CreateAssessmentTimeCommand command) {
+        UserVO currentUser = userDomainService.getUser(userId)
+                .orElseThrow(() -> new Unauthorized("用户不存在"));
+        validateDirectionPermission(currentUser, command.direction());
 
         if (command.direction() == null) {
             if (assessmentTimeRepository.countByEpochGrade(command.epoch(), command.grade()) > 0) {
@@ -91,19 +87,16 @@ public class AssessmentTimeAppServiceImpl implements AssessmentTimeAppService {
         return toResult(entity);
     }
 
-    /**
-     * 更新考核时间。
-     *
-     * @param command
-     *            更新考核时间命令
-     * @return 更新后的考核时间结果
-     */
     @Override
     @Transactional
-    public AssessmentTimeResult updateAssessmentTime(AssessmentTimeCommands.UpdateAssessmentTimeCommand command) {
+    public AssessmentTimeResult updateAssessmentTime(Long userId,
+            AssessmentTimeCommands.UpdateAssessmentTimeCommand command) {
         AssessmentTime existing = assessmentTimeRepository.findById(command.id())
                 .orElseThrow(() -> new DataNotFound("考核时间不存在"));
-        validateDirectionPermission(existing.getDirection());
+
+        UserVO currentUser = userDomainService.getUser(userId)
+                .orElseThrow(() -> new Unauthorized("用户不存在"));
+        validateDirectionPermission(currentUser, existing.getDirection());
 
         LocalDateTime now = LocalDateTime.now();
 
@@ -173,18 +166,15 @@ public class AssessmentTimeAppServiceImpl implements AssessmentTimeAppService {
         return toResult(existing);
     }
 
-    /**
-     * 删除考核时间。
-     *
-     * @param id
-     *            考核时间ID
-     */
     @Override
     @Transactional
-    public void deleteAssessmentTime(Long id) {
+    public void deleteAssessmentTime(Long userId, Long id) {
         AssessmentTime existing = assessmentTimeRepository.findById(id)
                 .orElseThrow(() -> new DataNotFound("考核时间不存在"));
-        validateDirectionPermission(existing.getDirection());
+
+        UserVO currentUser = userDomainService.getUser(userId)
+                .orElseThrow(() -> new Unauthorized("用户不存在"));
+        validateDirectionPermission(currentUser, existing.getDirection());
 
         if (assessmentTimeRepository.hasAssociatedQuestions(id)) {
             throw new DataConflict("存在关联的考核题目，需先删除相关题目");
@@ -197,11 +187,7 @@ public class AssessmentTimeAppServiceImpl implements AssessmentTimeAppService {
      * 校验 DIRECTION_ADMIN 方向权限：只能操作自己方向的考核时间；全局考核（targetDirection == null）仅
      * SUPER_ADMIN 可操作
      */
-    private void validateDirectionPermission(Direction targetDirection) {
-        UserVO currentUser = UserCTX.getCurrentUser();
-        if (currentUser == null)
-            return;
-
+    private void validateDirectionPermission(UserVO currentUser, Direction targetDirection) {
         RoleType roleType = RoleType.fromName(currentUser.getRoleName());
         if (roleType == RoleType.DIRECTION_ADMIN) {
             if (targetDirection == null) {
@@ -213,34 +199,24 @@ public class AssessmentTimeAppServiceImpl implements AssessmentTimeAppService {
         }
     }
 
-    /**
-     * 分页查询考核时间列表。
-     *
-     * @param page
-     *            页码
-     * @param size
-     *            每页大小
-     * @return 考核时间分页结果
-     */
     @Override
-    public Page<AssessmentTimeResult> listAssessmentTimes(Integer page, Integer size) {
+    public Page<AssessmentTimeResult> listAssessmentTimes(Long userId, Integer page, Integer size) {
         int pageNum = page != null ? page : 0;
         int pageSize = size != null ? size : 5;
 
-        UserVO currentUser = UserCTX.getCurrentUser();
+        UserVO currentUser = userDomainService.getUser(userId)
+                .orElseThrow(() -> new Unauthorized("用户不存在"));
         Direction direction = null;
         Integer grade = null;
 
-        if (currentUser != null) {
-            RoleType roleType = RoleType.fromName(currentUser.getRoleName());
-            if (roleType != null && !RoleHierarchy.isDirectionAdminOrAbove(roleType)) {
-                direction = currentUser.getDirection();
+        RoleType roleType = RoleType.fromName(currentUser.getRoleName());
+        if (roleType != null && !RoleHierarchy.isDirectionAdminOrAbove(roleType)) {
+            direction = currentUser.getDirection();
 
-                if (roleType == RoleType.CANDIDATE) {
-                    grade = GradeCalculator.resolveAssessmentYear(
-                            currentUser.getStudentId(),
-                            currentUser.getAssessmentGradeYear());
-                }
+            if (roleType == RoleType.CANDIDATE) {
+                grade = GradeCalculator.resolveAssessmentYear(
+                        currentUser.getStudentId(),
+                        currentUser.getAssessmentGradeYear());
             }
         }
 
@@ -251,26 +227,13 @@ public class AssessmentTimeAppServiceImpl implements AssessmentTimeAppService {
         return entityPage.map(entity -> toResult(entity, null, null));
     }
 
-    /**
-     * 分页查询用户考核时间列表。
-     *
-     * @param page
-     *            页码
-     * @param size
-     *            每页大小
-     * @return 用户考核时间分页结果
-     */
     @Override
-    public Page<AssessmentTimeResult> listAssessmentTimesForUser(Integer page, Integer size) {
+    public Page<AssessmentTimeResult> listAssessmentTimesForUser(Long userId, Integer page, Integer size) {
         int pageNum = page != null ? page : 0;
         int pageSize = size != null ? size : 5;
 
-        UserVO currentUser = UserCTX.getCurrentUser();
-        if (currentUser == null) {
-            Page<AssessmentTime> emptyPage = new PageImpl<>(
-                    List.of(), PageRequest.of(pageNum, pageSize), 0);
-            return emptyPage.map(entity -> toResult(entity, null, null, false));
-        }
+        UserVO currentUser = userDomainService.getUser(userId)
+                .orElseThrow(() -> new Unauthorized("用户不存在"));
 
         Integer enrollmentYear = GradeCalculator.resolveAssessmentYear(
                 currentUser.getStudentId(),
@@ -299,25 +262,14 @@ public class AssessmentTimeAppServiceImpl implements AssessmentTimeAppService {
         });
     }
 
-    /**
-     * 获取考核进度。
-     *
-     * @param assessmentTimeId
-     *            考核时间ID
-     * @return 考核进度DTO
-     */
     @Override
-    public AssessmentProgressResult getAssessmentProgress(Long assessmentTimeId) {
+    public AssessmentProgressResult getAssessmentProgress(Long userId, Long assessmentTimeId) {
         assessmentTimeRepository.findById(assessmentTimeId)
                 .orElseThrow(() -> new IllegalArgumentException("考核时间不存在"));
 
-        UserVO currentUser = UserCTX.getCurrentUser();
         int totalQuestions = assessmentQuestionRepository.countByAssessmentTimeId(assessmentTimeId);
-        int completedQuestions = 0;
-        if (currentUser != null) {
-            completedQuestions = assessmentAnswerRepository
-                    .countByUserIdAndAssessmentTimeId(currentUser.getId(), assessmentTimeId);
-        }
+        int completedQuestions = assessmentAnswerRepository
+                .countByUserIdAndAssessmentTimeId(userId, assessmentTimeId);
 
         return new AssessmentProgressResult(assessmentTimeId, totalQuestions, completedQuestions);
     }

@@ -8,6 +8,7 @@ import com.bluenet.web.application.service.CommentAppService;
 import com.bluenet.web.domain.model.vo.CommentVO;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
 import com.bluenet.web.infrastructure.security.annotation.RequiresPermission;
+import com.bluenet.web.infrastructure.security.util.UserCTX;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -34,8 +35,9 @@ public class AdminCommentController {
     @RequiresPermission(name = "添加考核评论", value = "assessment-comment:create", access = AccessLevel.PROTECTED)
     @PostMapping
     public ResponseMessage<CommentDTO> addComment(@Valid @RequestBody CommentRequestDTO request) {
+        Long userId = UserCTX.getCurrentUserId();
         CommentVO comment = commentAppService
-                .addComment(request.getAnswerId(), request.getContent(), request.getScore());
+                .addComment(userId, request.getAnswerId(), request.getContent(), request.getScore());
         return ResponseMessage.success(commentResponseConverter.toDTO(comment));
     }
 
@@ -57,7 +59,8 @@ public class AdminCommentController {
     public ResponseMessage<CommentDTO> updateComment(
             @Parameter(description = "评论ID", required = true) @PathVariable Long id,
             @Valid @RequestBody CommentRequestDTO request) {
-        CommentVO comment = commentAppService.updateComment(id, request.getContent(), request.getScore());
+        Long userId = UserCTX.getCurrentUserId();
+        CommentVO comment = commentAppService.updateComment(userId, id, request.getContent(), request.getScore());
         return ResponseMessage.success(commentResponseConverter.toDTO(comment));
     }
 
@@ -66,7 +69,8 @@ public class AdminCommentController {
     @DeleteMapping("/{id}")
     public ResponseMessage<Void> deleteComment(
             @Parameter(description = "评论ID", required = true) @PathVariable Long id) {
-        commentAppService.deleteComment(id);
+        Long userId = UserCTX.getCurrentUserId();
+        commentAppService.deleteComment(userId, id);
         return ResponseMessage.success();
     }
 }
