@@ -132,4 +132,16 @@ public class AssessmentQuestionSubmissionVO {
      * 该提交的评判历史记录。
      */
     private List<AssessmentQuestionSubmissionHistoryVO> histories;
+    /**
+     * 所属队伍标识，未组队时为 null。
+     */
+    private Long teamId;
+    /**
+     * 所属队伍名称，未组队时为 null。
+     */
+    private String teamName;
+    /**
+     * 是否为队伍队长。
+     */
+    private Boolean isLeader;
 }

@@ -120,4 +120,16 @@ public class AssessmentQuestionSubmissionQueryDO {
      * 该提交是否被选为当前题目的最佳或最终采用提交。
      */
     private Boolean selectedBest;
+    /**
+     * 所属队伍标识，未组队时为 null。
+     */
+    private Long teamId;
+    /**
+     * 所属队伍名称，未组队时为 null。
+     */
+    private String teamName;
+    /**
+     * 是否为队伍队长。
+     */
+    private Boolean isLeader;
 }

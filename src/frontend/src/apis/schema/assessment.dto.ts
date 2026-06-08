@@ -607,6 +607,12 @@ export interface AssessmentQuestionSubmissionDTO {
   latestJudgement: AssessmentJudgementDTO | null
   /** 历史评判记录，算法题用于展开查看所有提交评判 */
   histories: AssessmentQuestionSubmissionHistoryDTO[]
+  /** 所属队伍ID */
+  teamId: number | null
+  /** 所属队伍名称 */
+  teamName: string | null
+  /** 是否为队长 */
+  isLeader: boolean
 }
 
 /** 考生单题评分状态 */
@@ -655,6 +661,12 @@ export interface AssessmentCandidateScoreboardDTO {
   pendingJudgementCount: number
   /** 各题评分状态 */
   questionScores: AssessmentCandidateQuestionScoreDTO[]
+  /** 所属队伍ID */
+  teamId: number | null
+  /** 所属队伍名称 */
+  teamName: string | null
+  /** 是否为队长 */
+  isLeader: boolean
 }
 
 /** 录用决策统计 */

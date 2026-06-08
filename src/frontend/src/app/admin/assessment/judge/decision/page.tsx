@@ -189,7 +189,15 @@ export default function AssessmentJudgementManagementPage() {
       title: '候选人',
       render: (_, record) => (
         <div>
-          <div className="text-white/85">{record.username}</div>
+          <div className="flex items-center gap-1.5">
+            <span className="text-white/85">{record.username}</span>
+            {record.teamId && (
+              <Tag color={record.isLeader ? 'blue' : 'default'}>
+                {record.isLeader ? '👑' : ''}
+                {record.teamName}
+              </Tag>
+            )}
+          </div>
           <div className="text-xs text-white/35">{record.studentId}</div>
         </div>
       ),
@@ -344,6 +352,11 @@ export default function AssessmentJudgementManagementPage() {
                   </Descriptions.Item>
                   <Descriptions.Item label="状态">
                     {getDecisionTag(selectedDecisionCandidate)}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="队伍">
+                    {selectedDecisionCandidate.teamId
+                      ? `${selectedDecisionCandidate.teamName} ${selectedDecisionCandidate.isLeader ? '(队长)' : '(组员)'}`
+                      : '未组队'}
                   </Descriptions.Item>
                 </Descriptions>
                 <div className="flex flex-wrap gap-1.5">

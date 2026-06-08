@@ -99,4 +99,16 @@ public class AssessmentCandidateScoreQueryDO {
      * 评审完成时间。
      */
     private LocalDateTime judgedAt;
+    /**
+     * 所属队伍标识，未组队时为 null。
+     */
+    private Long teamId;
+    /**
+     * 所属队伍名称，未组队时为 null。
+     */
+    private String teamName;
+    /**
+     * 是否为队伍队长。
+     */
+    private Boolean isLeader;
 }

@@ -55,4 +55,10 @@ public class AssessmentQuestionSubmissionDTO {
     private AssessmentJudgementDTO latestJudgement;
     @Schema(description = "历史评判记录；算法题用于展开查看所有提交评判，并标记最佳记录")
     private List<AssessmentQuestionSubmissionHistoryDTO> histories;
+    @Schema(description = "所属队伍ID")
+    private Long teamId;
+    @Schema(description = "所属队伍名称")
+    private String teamName;
+    @Schema(description = "是否为队长")
+    private Boolean isLeader;
 }

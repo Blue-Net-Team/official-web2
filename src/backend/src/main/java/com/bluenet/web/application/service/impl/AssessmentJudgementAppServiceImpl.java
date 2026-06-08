@@ -612,6 +612,9 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
                             .judgedQuestionCount(judgedCount)
                             .pendingJudgementCount(pendingCount)
                             .questionScores(questionScores)
+                            .teamId(first.getTeamId())
+                            .teamName(first.getTeamName())
+                            .isLeader(Boolean.TRUE.equals(first.getIsLeader()))
                             .build());
         }
         return result;
@@ -638,6 +641,9 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
                 .decidedBy(decision == null ? null : decision.getDecidedBy())
                 .decidedAt(decision == null ? null : decision.getDecidedAt())
                 .questionScores(scoreboard.getQuestionScores())
+                .teamId(scoreboard.getTeamId())
+                .teamName(scoreboard.getTeamName())
+                .isLeader(scoreboard.getIsLeader())
                 .build();
     }
 

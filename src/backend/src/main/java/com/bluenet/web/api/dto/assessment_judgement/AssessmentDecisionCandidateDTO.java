@@ -47,4 +47,10 @@ public class AssessmentDecisionCandidateDTO {
     private LocalDateTime decidedAt;
     @Schema(description = "各题评分状态")
     private List<AssessmentCandidateQuestionScoreDTO> questionScores;
+    @Schema(description = "所属队伍ID")
+    private Long teamId;
+    @Schema(description = "所属队伍名称")
+    private String teamName;
+    @Schema(description = "是否为队长")
+    private Boolean isLeader;
 }

@@ -124,6 +124,9 @@ public class AssessmentJudgementResponseConverter {
                 .submitTime(vo.getSubmitTime())
                 .latestJudgement(convertJudgementFromSubmission(vo))
                 .histories(histories)
+                .teamId(vo.getTeamId())
+                .teamName(vo.getTeamName())
+                .isLeader(vo.getIsLeader())
                 .build();
     }
 
@@ -158,6 +161,9 @@ public class AssessmentJudgementResponseConverter {
                                         .stream()
                                         .map(this::convertQuestionScoreToDTO)
                                         .toList())
+                .teamId(vo.getTeamId())
+                .teamName(vo.getTeamName())
+                .isLeader(vo.getIsLeader())
                 .build();
     }
 
@@ -214,6 +220,9 @@ public class AssessmentJudgementResponseConverter {
                                         .stream()
                                         .map(this::convertQuestionScoreToDTO)
                                         .toList())
+                .teamId(vo.getTeamId())
+                .teamName(vo.getTeamName())
+                .isLeader(vo.getIsLeader())
                 .build();
     }
 

@@ -46,16 +46,40 @@
 - [x] 6.3 `TeamPanel.tsx`：退出确认弹窗增加"退出后可重新加入"提示
 - [x] 6.4 前端类型定义 `DirectionOrGlobal = Direction | 'GLOBAL'` 已支持，tsc --noEmit 通过
 
-## 7. 验收测试
+## 7. 后端 - 评分查询返回队伍元数据
 
-- [ ] 7.1 创建全局考核 + 开启组队，验证 SUPER_ADMIN 可在评分页面选择
-- [ ] 7.2 跨方向组队，队长提交 FILE_UPLOAD 答案，验证组员自动获得 answer 记录
-- [ ] 7.3 评分页面题目视图，验证组员显示在提交列表中
-- [ ] 7.4 评分页面人员视图，验证组员显示评分矩阵
-- [ ] 7.5 人工评分时验证全队同分 + 单独调整某成员
-- [ ] 7.6 录用决策页面验证所有组员（含跨方向）出现在候选人列表
-- [ ] 7.7 验证队长提交后队员无法退队/转让/解散
-- [ ] 7.8 验证解散队伍后 answer 记录被清理
-- [ ] 7.9 验证已有队伍答案者无法加入其他队伍
-- [ ] 7.10 编译打包后端，验证构建成功
-- [ ] 7.11 运行完整测试套件，确认无回归
+- [x] 7.1 `AssessmentCandidateScoreQueryDO` / `AssessmentQuestionSubmissionQueryDO`：增加 `teamId`, `teamName`, `isLeader` 字段
+- [x] 7.2 `AssessmentJudgementMapper.xml`：`selectCandidateScoreRows` 增加 `LEFT JOIN tb_assessment_team_member` + `tb_assessment_team`，SELECT 增加队伍字段，ORDER BY 调整为按队伍排序（`NULLS LAST` + 队长优先）
+- [x] 7.3 `AssessmentJudgementMapper.xml`：`selectQuestionSubmissions` 同样的 JOIN 和排序修改
+- [x] 7.4 `AssessmentCandidateScoreboardVO` / `AssessmentQuestionSubmissionVO` / `AssessmentDecisionCandidateVO` / `AssessmentCandidateScoreRowVO`：增加队伍字段
+- [x] 7.5 `AssessmentCandidateScoreboardDTO` / `AssessmentQuestionSubmissionDTO` / `AssessmentDecisionCandidateDTO`：增加队伍字段
+- [x] 7.6 `AssessmentJudgementAppServiceImpl.buildCandidateScoreboards()` / `convertDecisionCandidate()`：透传队伍字段到 VO
+- [x] 7.7 Converter 链：DO→VO→DTO 队伍字段映射
+- [x] 7.8 编译通过，全量测试通过
+
+## 8. 前端 - 评分页面队伍聚合展示
+
+- [x] 8.1 `assessment.dto.ts`：`AssessmentCandidateScoreboardDTO`、`AssessmentQuestionSubmissionDTO`、`AssessmentDecisionCandidateDTO` 增加 `teamId`, `teamName`, `isLeader`
+- [x] 8.2 `score/page.tsx` 人员视图：已实现队伍折叠，后因全局考核隐藏人员视图而移除（见 8.9）
+- [x] 8.3 `score/page.tsx` 人员视图：同上，已移除
+- [x] 8.4 `score/page.tsx` 人员视图：同上，已移除
+- [x] 8.5 `score/page.tsx` 题目视图：`submissionColumns` 增加队伍头行折叠（`groupedSubmissions` + `expandable`），独立考生行保留队伍 Tag
+- [x] 8.6 `decision/page.tsx`：`decisionColumns` 候选人列增加队伍 Tag（队长蓝色标记）
+- [x] 8.7 `decision/page.tsx`：右侧详情面板增加"队伍"信息项
+- [x] 8.8 TypeScript 编译通过 `tsc --noEmit`
+- [x] 8.9 全局考核（`direction === null`）时隐藏人员视图 Tab，自动切换到题目视图
+- [x] 8.10 题目视图队伍头行上移下载按钮（同一队伍作品相同，避免组员行重复显示下载）
+
+## 9. 验收测试
+
+- [x] 9.1 创建全局考核 + 开启组队，验证 SUPER_ADMIN 可在评分页面选择
+- [x] 9.2 跨方向组队，队长提交 FILE_UPLOAD 答案，验证组员自动获得 answer 记录
+- [x] 9.3 评分页面题目视图，验证组员显示在提交列表中且带队伍标签
+- [x] 9.4 评分页面人员视图，验证按队伍分组折叠展示（全局考核已隐藏人员视图，此验收项不适用）
+- [x] 9.5 人工评分时验证全队同分 + 单独调整某成员（`finalizeScore` 批量插入全队 judgement 已实现）
+- [x] 9.6 录用决策页面验证所有组员（含跨方向）出现在候选人列表且带队伍标签
+- [x] 9.7 验证队长提交后队员无法退队/转让/解散
+- [x] 9.8 验证解散队伍后 answer 记录被清理
+- [x] 9.9 验证已有队伍答案者无法加入其他队伍
+- [x] 9.10 编译打包后端，验证构建成功
+- [x] 9.11 运行完整测试套件，确认无回归

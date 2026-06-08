@@ -24,7 +24,7 @@ import {
   Timeline,
 } from 'antd'
 import type { TableColumnsType } from 'antd'
-import { DownloadOutlined } from '@ant-design/icons'
+import { DownloadOutlined, TeamOutlined } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import type {
   AssessmentCandidateQuestionScoreDTO,
@@ -102,6 +102,56 @@ export default function AssessmentJudgementManagementPage() {
   const [submissions, setSubmissions] = useState<AssessmentQuestionSubmissionDTO[]>([])
   const [selectedSubmissionIds, setSelectedSubmissionIds] = useState<number[]>([])
   const [candidateScores, setCandidateScores] = useState<AssessmentCandidateScoreboardDTO[]>([])
+
+  type SubmissionTeamHeader = {
+    type: 'team'
+    key: string
+    teamId: number
+    teamName: string
+    leaderName: string
+    memberCount: number
+    members: AssessmentQuestionSubmissionDTO[]
+  }
+  type SubmissionIndependentRow = {
+    type: 'independent'
+    key: string
+  } & AssessmentQuestionSubmissionDTO
+  type SubmissionRow = SubmissionTeamHeader | SubmissionIndependentRow
+
+  /** 题目视图：将提交列表按队伍分组，用于 expandable 渲染。 */
+  const groupedSubmissions = useMemo(() => {
+    const result: SubmissionRow[] = []
+    const teams = new Map<number, AssessmentQuestionSubmissionDTO[]>()
+    const independents: AssessmentQuestionSubmissionDTO[] = []
+
+    for (const s of submissions) {
+      if (s.teamId) {
+        if (!teams.has(s.teamId)) teams.set(s.teamId, [])
+        teams.get(s.teamId)!.push(s)
+      } else {
+        independents.push(s)
+      }
+    }
+
+    for (const [teamId, members] of teams) {
+      const leader = members.find((m) => m.isLeader)
+      result.push({
+        type: 'team',
+        key: `sub-team-${teamId}`,
+        teamId,
+        teamName: members[0].teamName!,
+        leaderName: leader?.username ?? '',
+        memberCount: members.length,
+        members,
+      })
+    }
+
+    for (const s of independents) {
+      result.push({ type: 'independent', key: `sub-ind-${s.answerId}`, ...s })
+    }
+
+    return result
+  }, [submissions])
 
   const [decisionKeyword, setDecisionKeyword] = useState('')
   const [decisionStatus, setDecisionStatus] = useState<
@@ -300,6 +350,13 @@ export default function AssessmentJudgementManagementPage() {
   useEffect(() => {
     setSelectedSubmissionIds([])
   }, [selectedQuestionId])
+
+  /** 全局考核（支持组队）下人员视图意义不大，自动切换到题目视图。 */
+  useEffect(() => {
+    if (currentAssessmentTime?.direction === null && scoreView === 'candidates') {
+      setScoreView('questions')
+    }
+  }, [currentAssessmentTime, scoreView])
 
   useEffect(() => {
     if (activeTab === 'score') {
@@ -538,8 +595,8 @@ export default function AssessmentJudgementManagementPage() {
     { title: '均分', dataIndex: 'averageScore', width: 70, render: formatScore },
   ]
 
-  /** 题目视图右侧提交列表列定义。 */
-  const submissionColumns: TableColumnsType<AssessmentQuestionSubmissionDTO> = [
+  /** 题目视图内嵌组员提交列表列定义（不含队伍头行逻辑）。 */
+  const submissionMemberColumns: TableColumnsType<AssessmentQuestionSubmissionDTO> = [
     {
       title: '考生',
       render: (_, record) => (
@@ -572,7 +629,6 @@ export default function AssessmentJudgementManagementPage() {
       render: (_, record) => {
         const resultCode = record.latestJudgement?.resultCode
         if (!resultCode) return <span className="text-white/35">-</span>
-        // 客观题主行直接展示判题结果，避免必须展开历史才能看到 AC/WA/TLE 等状态。
         return <Tag color={getResultColor(resultCode)}>{resultCode}</Tag>
       },
     },
@@ -582,11 +638,106 @@ export default function AssessmentJudgementManagementPage() {
       render: (_, record) =>
         record.latestJudgement ? <Tag color="green">已评分</Tag> : <Tag color="orange">待评分</Tag>,
     },
+  ]
+
+  /** 题目视图右侧提交列表列定义。 */
+  const submissionColumns: TableColumnsType<SubmissionRow> = [
+    {
+      title: '考生',
+      render: (_, record) => {
+        if (record.type === 'team') {
+          return (
+            <div className="flex items-center gap-2 font-medium">
+              <TeamOutlined />
+              <span>{record.teamName}</span>
+              <Tag>{record.members!.length}人</Tag>
+              <Tag color="blue">
+                队长: {(record.members ?? []).find((m) => m.isLeader)?.username ?? ''}
+              </Tag>
+            </div>
+          )
+        }
+        return (
+          <div>
+            <div className="flex items-center gap-1.5">
+              <span className="text-white/85">{record.username}</span>
+              {record.teamId && (
+                <Tag color={record.isLeader ? 'blue' : 'default'}>
+                  {record.isLeader ? '👑' : ''}
+                  {record.teamName}
+                </Tag>
+              )}
+            </div>
+            <div className="text-xs text-white/35">{record.studentId}</div>
+          </div>
+        )
+      },
+    },
+    {
+      title: '评判时间',
+      width: 150,
+      render: (_, record) =>
+        record.type === 'team' ? null : formatTime(record.latestJudgement?.judgedAt),
+    },
+    {
+      title: '得分',
+      width: 90,
+      render: (_, record) => {
+        if (record.type === 'team') return null
+        return record.latestJudgement ? (
+          <span>
+            {formatScore(record.latestJudgement.score)} / {formatScore(record.maxScore)}
+          </span>
+        ) : (
+          <Tag>待评分</Tag>
+        )
+      },
+    },
+    {
+      title: '结果',
+      width: 80,
+      render: (_, record) => {
+        if (record.type === 'team') return null
+        const resultCode = record.latestJudgement?.resultCode
+        if (!resultCode) return <span className="text-white/35">-</span>
+        return <Tag color={getResultColor(resultCode)}>{resultCode}</Tag>
+      },
+    },
+    {
+      title: '状态',
+      width: 90,
+      render: (_, record) => {
+        if (record.type === 'team') return null
+        return record.latestJudgement ? (
+          <Tag color="green">已评分</Tag>
+        ) : (
+          <Tag color="orange">待评分</Tag>
+        )
+      },
+    },
     {
       title: '操作',
-      width: 100,
-      render: (_, record) =>
-        record.fileId ? (
+      width: 120,
+      render: (_, record) => {
+        if (record.type === 'team') {
+          // 同一队伍作品相同，下载按钮上移到头行
+          const fileId =
+            record.members.find((m) => m.isLeader)?.fileId ??
+            record.members.find((m) => m.fileId)?.fileId
+          return fileId ? (
+            <Button
+              size="small"
+              icon={<DownloadOutlined />}
+              onClick={(e) => {
+                e.stopPropagation()
+                fileService.downloadFile(fileId)
+              }}
+            >
+              下载作品
+            </Button>
+          ) : null
+        }
+        return record.fileId ? (
           <Button
             size="small"
             icon={<DownloadOutlined />}
@@ -597,7 +748,8 @@ export default function AssessmentJudgementManagementPage() {
           >
             下载
           </Button>
-        ) : null,
+        ) : null
+      },
     },
   ]
 
@@ -911,29 +1063,51 @@ export default function AssessmentJudgementManagementPage() {
         <Spin spinning={loadingSubmissions}>
           <div className="overscroll-contain">
             <Table
-              rowKey="answerId"
+              rowKey="key"
               size="small"
               pagination={false}
               columns={submissionColumns}
-              dataSource={submissions}
+              dataSource={groupedSubmissions}
               rowSelection={
                 selectedQuestion?.questionType === 'FILE_UPLOAD'
                   ? {
                       type: 'checkbox',
                       selectedRowKeys: selectedSubmissionIds,
                       onChange: (keys) => setSelectedSubmissionIds(keys as number[]),
-                      getCheckboxProps: (record) => ({ disabled: !record.fileId }),
+                      getCheckboxProps: (record) => ({
+                        disabled: record.type === 'team' || !record.fileId,
+                      }),
                     }
                   : undefined
               }
               scroll={{ y: 'calc(100vh - 360px)' }}
               onRow={(record) => ({
-                onClick: () => setReviewing(record),
-                className: 'cursor-pointer',
+                onClick: () => {
+                  if (record.type === 'team') return
+                  setReviewing(record as AssessmentQuestionSubmissionDTO)
+                },
+                className: record.type === 'team' ? '' : 'cursor-pointer',
               })}
               expandable={{
-                expandedRowRender: renderSubmissionHistory,
-                rowExpandable: (record) => (record.histories?.length ?? 0) > 1,
+                expandedRowRender: (record) => {
+                  if (record.type !== 'team') return null
+                  return (
+                    <Table
+                      size="small"
+                      showHeader={false}
+                      pagination={false}
+                      columns={submissionMemberColumns}
+                      dataSource={record.members ?? []}
+                      rowKey="answerId"
+                      onRow={(m) => ({
+                        onClick: () => setReviewing(m),
+                        className: 'cursor-pointer',
+                      })}
+                    />
+                  )
+                },
+                rowExpandable: (record) => record.type === 'team',
+                defaultExpandAllRows: true,
               }}
               locale={{ emptyText: selectedQuestionId ? '暂无提交' : '请选择左侧题目查看提交' }}
             />
@@ -1005,10 +1179,14 @@ export default function AssessmentJudgementManagementPage() {
       <Tabs
         activeKey={scoreView}
         onChange={setScoreView}
-        items={[
-          { key: 'questions', label: '题目视图', children: renderQuestionView },
-          { key: 'candidates', label: '人员视图', children: renderCandidateView },
-        ]}
+        items={
+          currentAssessmentTime?.direction === null
+            ? [{ key: 'questions', label: '题目视图', children: renderQuestionView }]
+            : [
+                { key: 'questions', label: '题目视图', children: renderQuestionView },
+                { key: 'candidates', label: '人员视图', children: renderCandidateView },
+              ]
+        }
       />
     </div>
   )

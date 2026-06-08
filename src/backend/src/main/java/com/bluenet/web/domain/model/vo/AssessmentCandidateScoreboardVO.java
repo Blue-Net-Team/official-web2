@@ -25,4 +25,7 @@ public class AssessmentCandidateScoreboardVO {
     private Long judgedQuestionCount;
     private Long pendingJudgementCount;
     private List<AssessmentCandidateQuestionScoreVO> questionScores;
+    private Long teamId;
+    private String teamName;
+    private Boolean isLeader;
 }

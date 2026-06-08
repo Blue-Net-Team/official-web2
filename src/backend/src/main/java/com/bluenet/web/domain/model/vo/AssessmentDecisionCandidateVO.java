@@ -31,4 +31,7 @@ public class AssessmentDecisionCandidateVO {
     private Long decidedBy;
     private LocalDateTime decidedAt;
     private List<AssessmentCandidateQuestionScoreVO> questionScores;
+    private Long teamId;
+    private String teamName;
+    private Boolean isLeader;
 }

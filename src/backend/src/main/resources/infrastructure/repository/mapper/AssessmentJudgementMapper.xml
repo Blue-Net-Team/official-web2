@@ -140,10 +140,15 @@
             dj.reviewer_id,
             dj.reviewer_type,
             dj.comment AS judgement_comment,
-            dj.judged_at
+            dj.judged_at,
+            t.id AS team_id,
+            t.name AS team_name,
+            CASE WHEN t.leader_id = u.id THEN true ELSE false END AS is_leader
         FROM tb_assessment_answer a
         JOIN tb_assessment_question q ON q.id = a.question_id
         JOIN tb_user u ON u.id = a.user_id
+        LEFT JOIN tb_assessment_team_member tm ON tm.user_id = u.id
+        LEFT JOIN tb_assessment_team t ON t.id = tm.team_id AND t.assessment_time_id = q.assessment_time_id
         LEFT JOIN display_judgement dj ON dj.question_id = q.id AND dj.user_id = u.id
         WHERE a.question_id = #{questionId}
         <if test="keyword != null and keyword != ''">
@@ -157,7 +162,11 @@
         <if test="status != null and status == 'PENDING'">
             AND dj.id IS NULL
         </if>
-        ORDER BY u.student_id ASC, a.submit_time DESC, a.id DESC
+        ORDER BY t.id NULLS LAST,
+                 CASE WHEN t.leader_id = u.id THEN 0 ELSE 1 END,
+                 u.student_id ASC,
+                 a.submit_time DESC,
+                 a.id DESC
     </select>
 
     <select id="selectQuestionSubmissionHistories" resultType="com.bluenet.web.infrastructure.repository.dataobject.query.AssessmentQuestionSubmissionQueryDO">
@@ -270,12 +279,21 @@
             dj.reviewer_id,
             dj.reviewer_type,
             dj.comment AS judgement_comment,
-            dj.judged_at
+            dj.judged_at,
+            t.id AS team_id,
+            t.name AS team_name,
+            CASE WHEN t.leader_id = u.id THEN true ELSE false END AS is_leader
         FROM candidate_users u
         CROSS JOIN questions q
+        LEFT JOIN tb_assessment_team_member tm ON tm.user_id = u.id
+        LEFT JOIN tb_assessment_team t ON t.id = tm.team_id AND t.assessment_time_id = #{assessmentTimeId}
         LEFT JOIN tb_assessment_answer a ON a.user_id = u.id AND a.question_id = q.id
         LEFT JOIN display_judgement dj ON dj.user_id = u.id AND dj.question_id = q.id
-        ORDER BY u.student_id ASC, q.question_no ASC, q.id ASC
+        ORDER BY t.id NULLS LAST,
+                 CASE WHEN t.leader_id = u.id THEN 0 ELSE 1 END,
+                 u.student_id ASC,
+                 q.question_no ASC,
+                 q.id ASC
     </select>
 
     <delete id="deleteByAnswerIds">
