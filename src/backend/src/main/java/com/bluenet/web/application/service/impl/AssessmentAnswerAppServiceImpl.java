@@ -210,21 +210,23 @@ public class AssessmentAnswerAppServiceImpl implements AssessmentAnswerAppServic
             validateTeamLeaderForAnswer(command.userId(), timeVO.getId());
         }
 
-        if (command.fileId() != null) {
-            existing.setFileId(command.fileId());
-        }
-        if (command.content() != null) {
-            existing.setContent(command.content());
-        }
-        if (command.language() != null) {
-            existing.setLanguage(command.language());
-        }
-        existing.setSubmitTime(LocalDateTime.now());
-        assessmentAnswerRepository.update(existing);
-
-        // Synchronize team member answers when leader updates FILE_UPLOAD answer
+        // 组队场景下答案统一：队长代表整支队伍提交。
+        // 队长更新答案时，批量同步该题目下全队所有答案（含队长自己）。
         if (existing.getTeamId() != null) {
             syncTeamMemberAnswers(existing.getTeamId(), question, command);
+        } else {
+            // 非组队场景：仅更新当前用户自己的答案
+            if (command.fileId() != null) {
+                existing.setFileId(command.fileId());
+            }
+            if (command.content() != null) {
+                existing.setContent(command.content());
+            }
+            if (command.language() != null) {
+                existing.setLanguage(command.language());
+            }
+            existing.setSubmitTime(LocalDateTime.now());
+            assessmentAnswerRepository.update(existing);
         }
 
         AssessmentAnswer updated = assessmentAnswerRepository
@@ -507,6 +509,12 @@ public class AssessmentAnswerAppServiceImpl implements AssessmentAnswerAppServic
                 judgement.getJudgedAt());
     }
 
+    /**
+     * 为队员批量创建答案记录。
+     * <p>
+     * 组队场景下，队长首次提交答案时，为所有尚未有答案记录的队员创建同名答案。 已存在答案的队员会被跳过，避免覆盖。
+     * </p>
+     */
     private void createTeamMemberAnswers(Long teamId, AssessmentQuestion question,
             AssessmentAnswerCommands.CreateAssessmentAnswerCommand command) {
         List<com.bluenet.web.domain.model.entity.AssessmentTeamMember> members = assessmentTeamRepository
@@ -520,7 +528,7 @@ public class AssessmentAnswerAppServiceImpl implements AssessmentAnswerAppServic
             return;
         }
 
-        // Batch query: which members already have answers for this question
+        // 批量查询：哪些队员已经提交过该题目的答案（避免重复创建）
         List<Long> existingUserIds = assessmentAnswerRepository
                 .findExistingAnswerUserIds(memberUserIds, command.questionId());
 
@@ -550,11 +558,17 @@ public class AssessmentAnswerAppServiceImpl implements AssessmentAnswerAppServic
         }
     }
 
+    /**
+     * 批量同步队伍答案。
+     * <p>
+     * 组队场景下，队长更新答案时，通过 team_id + question_id 批量更新该队伍在该题目下的
+     * 所有答案记录（含队长自己），确保全队答案保持一致。
+     * </p>
+     */
     private void syncTeamMemberAnswers(Long teamId, AssessmentQuestion question,
             AssessmentAnswerCommands.UpdateAssessmentAnswerCommand command) {
         int updated = assessmentAnswerRepository.updateTeamMemberAnswers(
                 teamId,
-                command.userId(),
                 command.questionId(),
                 command.fileId(),
                 command.content(),
@@ -562,7 +576,7 @@ public class AssessmentAnswerAppServiceImpl implements AssessmentAnswerAppServic
                 LocalDateTime.now());
         if (updated > 0) {
             log.info(
-                    "批量同步组员答案，teamId: {}, questionId: {}, count: {}",
+                    "批量同步队伍答案，teamId: {}, questionId: {}, count: {}",
                     teamId,
                     command.questionId(),
                     updated);

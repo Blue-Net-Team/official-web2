@@ -18,7 +18,7 @@ public interface AssessmentAnswerRepository {
     int countByTeamId(Long teamId);
     List<Long> findAnswerIdsByTeamId(Long teamId);
     void batchInsert(List<AssessmentAnswer> answers);
-    int updateTeamMemberAnswers(Long teamId, Long leaderId, Long questionId, Long fileId,
+    int updateTeamMemberAnswers(Long teamId, Long questionId, Long fileId,
             String content, com.bluenet.web.domain.model.enumerate.ProgrammingLanguage language,
             java.time.LocalDateTime submitTime);
     List<Long> findExistingAnswerUserIds(List<Long> userIds, Long questionId);

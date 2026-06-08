@@ -525,13 +525,12 @@ class AssessmentAnswerAppServiceImplTest {
             when(
                     assessmentAnswerRepository.updateTeamMemberAnswers(
                             eq(teamId),
-                            eq(TEST_USER_ID),
                             eq(TEST_QUESTION_ID),
                             eq(TEST_FILE_ID),
                             eq("new content"),
                             isNull(),
                             any(LocalDateTime.class)))
-                                    .thenReturn(2);
+                                    .thenReturn(3);
 
             AssessmentAnswerCommands.UpdateAssessmentAnswerCommand command = new AssessmentAnswerCommands.UpdateAssessmentAnswerCommand(
                     TEST_USER_ID, TEST_QUESTION_ID, "new content", null, TEST_FILE_ID);
@@ -540,12 +539,12 @@ class AssessmentAnswerAppServiceImplTest {
             assertNotNull(result);
             verify(assessmentAnswerRepository).updateTeamMemberAnswers(
                     eq(teamId),
-                    eq(TEST_USER_ID),
                     eq(TEST_QUESTION_ID),
                     eq(TEST_FILE_ID),
                     eq("new content"),
                     isNull(),
                     any(LocalDateTime.class));
+            verify(assessmentAnswerRepository, never()).update(any(AssessmentAnswer.class));
         }
     }
 

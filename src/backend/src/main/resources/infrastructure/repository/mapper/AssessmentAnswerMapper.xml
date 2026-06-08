@@ -74,6 +74,7 @@
         </foreach>
     </insert>
 
+    <!-- 批量更新队伍答案：通过 team_id + question_id 更新该队伍在该题目下的所有答案（含队长） -->
     <update id="updateTeamMemberAnswers">
         UPDATE tb_assessment_answer
         SET
@@ -83,7 +84,6 @@
             submit_time = #{submitTime}
         WHERE team_id = #{teamId}
           AND question_id = #{questionId}
-          AND user_id != #{leaderId}
     </update>
 
     <select id="selectExistingAnswerUserIds" resultType="java.lang.Long">

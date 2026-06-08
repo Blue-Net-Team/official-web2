@@ -120,7 +120,7 @@ public interface AssessmentAnswerMapper extends BaseMapper<AssessmentAnswerDO> {
      *            提交时间。
      * @return 更新的记录数量。
      */
-    int updateTeamMemberAnswers(@Param("teamId") Long teamId, @Param("leaderId") Long leaderId,
+    int updateTeamMemberAnswers(@Param("teamId") Long teamId,
             @Param("questionId") Long questionId, @Param("fileId") Long fileId,
             @Param("content") String content,
             @Param("language") com.bluenet.web.domain.model.enumerate.ProgrammingLanguage language,

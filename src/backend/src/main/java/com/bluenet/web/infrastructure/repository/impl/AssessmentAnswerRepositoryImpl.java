@@ -103,12 +103,11 @@ public class AssessmentAnswerRepositoryImpl implements AssessmentAnswerRepositor
     }
 
     @Override
-    public int updateTeamMemberAnswers(Long teamId, Long leaderId, Long questionId, Long fileId,
+    public int updateTeamMemberAnswers(Long teamId, Long questionId, Long fileId,
             String content, com.bluenet.web.domain.model.enumerate.ProgrammingLanguage language,
             java.time.LocalDateTime submitTime) {
         return assessmentAnswerMapper.updateTeamMemberAnswers(
                 teamId,
-                leaderId,
                 questionId,
                 fileId,
                 content,
