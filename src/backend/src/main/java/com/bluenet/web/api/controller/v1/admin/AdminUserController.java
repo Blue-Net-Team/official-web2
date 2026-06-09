@@ -7,8 +7,6 @@ import com.bluenet.web.api.converter.adminuser.AdminUserRequestConverter;
 import com.bluenet.web.application.AdminUserResult;
 import com.bluenet.web.api.converter.adminuser.AdminUserResponseConverter;
 import com.bluenet.web.application.service.AdminUserAppService;
-import com.bluenet.web.domain.exception.BadRequest;
-import com.bluenet.web.domain.exception.DataNotFound;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
 import com.bluenet.web.infrastructure.security.annotation.RequiresPermission;
 import io.swagger.v3.oas.annotations.Operation;
@@ -60,12 +58,8 @@ public class AdminUserController {
     @GetMapping("/{id}")
     public ResponseMessage<AdminUserDetailResponseDTO> getUserDetail(
             @Parameter(description = "用户ID", required = true) @PathVariable Long id) {
-        try {
-            AdminUserResult.Detail detail = adminUserAppService.getUserDetail(id);
-            return ResponseMessage.success(responseConverter.toDetailDTO(detail));
-        } catch (DataNotFound e) {
-            return ResponseMessage.error(404, e.getMessage());
-        }
+        AdminUserResult.Detail detail = adminUserAppService.getUserDetail(id);
+        return ResponseMessage.success(responseConverter.toDetailDTO(detail));
     }
 
     @Operation(summary = "更新用户信息", description = "更新用户角色、方向、禁用状态等字段")
@@ -78,14 +72,8 @@ public class AdminUserController {
     public ResponseMessage<Void> updateUser(
             @Parameter(description = "用户ID", required = true) @PathVariable Long id,
             @Valid @RequestBody AdminUserUpdateRequestDTO request) {
-        try {
-            adminUserAppService.updateUser(requestConverter.toCommand(id, request));
-            return ResponseMessage.success();
-        } catch (DataNotFound e) {
-            return ResponseMessage.error(404, e.getMessage());
-        } catch (BadRequest e) {
-            return ResponseMessage.error(400, e.getMessage());
-        }
+        adminUserAppService.updateUser(requestConverter.toCommand(id, request));
+        return ResponseMessage.success();
     }
 
     @Operation(summary = "重置用户密码", description = "管理员直接重置用户密码，需二次确认")
@@ -99,14 +87,8 @@ public class AdminUserController {
     public ResponseMessage<Void> resetPassword(
             @Parameter(description = "用户ID", required = true) @PathVariable Long id,
             @Valid @RequestBody AdminUserResetPasswordRequestDTO request) {
-        try {
-            adminUserAppService.resetPassword(requestConverter.toCommand(id, request));
-            return ResponseMessage.success();
-        } catch (DataNotFound e) {
-            return ResponseMessage.error(404, e.getMessage());
-        } catch (IllegalArgumentException | BadRequest e) {
-            return ResponseMessage.error(400, e.getMessage());
-        }
+        adminUserAppService.resetPassword(requestConverter.toCommand(id, request));
+        return ResponseMessage.success();
     }
 
     @Operation(summary = "删除用户", description = "物理删除用户及关联数据")
@@ -119,14 +101,8 @@ public class AdminUserController {
     @DeleteMapping("/{id}")
     public ResponseMessage<Void> deleteUser(
             @Parameter(description = "用户ID", required = true) @PathVariable Long id) {
-        try {
-            adminUserAppService.deleteUser(id);
-            return ResponseMessage.success();
-        } catch (DataNotFound e) {
-            return ResponseMessage.error(404, e.getMessage());
-        } catch (BadRequest e) {
-            return ResponseMessage.error(400, e.getMessage());
-        }
+        adminUserAppService.deleteUser(id);
+        return ResponseMessage.success();
     }
 
     @Operation(summary = "批量删除用户", description = "批量物理删除用户及关联数据，最多50个")
@@ -138,12 +114,8 @@ public class AdminUserController {
     @PostMapping("/batch-delete")
     public ResponseMessage<Void> batchDelete(
             @Valid @RequestBody AdminUserBatchOperateRequestDTO request) {
-        try {
-            adminUserAppService.batchDelete(requestConverter.toCommand(request));
-            return ResponseMessage.success();
-        } catch (BadRequest e) {
-            return ResponseMessage.error(400, e.getMessage());
-        }
+        adminUserAppService.batchDelete(requestConverter.toCommand(request));
+        return ResponseMessage.success();
     }
 
     @Operation(summary = "批量禁用用户", description = "批量禁用用户，最多50个")
@@ -155,12 +127,8 @@ public class AdminUserController {
     @PostMapping("/batch-disable")
     public ResponseMessage<Void> batchDisable(
             @Valid @RequestBody AdminUserBatchOperateRequestDTO request) {
-        try {
-            adminUserAppService.batchDisable(requestConverter.toCommand(request), true);
-            return ResponseMessage.success();
-        } catch (BadRequest e) {
-            return ResponseMessage.error(400, e.getMessage());
-        }
+        adminUserAppService.batchDisable(requestConverter.toCommand(request), true);
+        return ResponseMessage.success();
     }
 
     @Operation(summary = "批量启用用户", description = "批量启用用户，最多50个")
@@ -172,12 +140,8 @@ public class AdminUserController {
     @PostMapping("/batch-enable")
     public ResponseMessage<Void> batchEnable(
             @Valid @RequestBody AdminUserBatchOperateRequestDTO request) {
-        try {
-            adminUserAppService.batchDisable(requestConverter.toCommand(request), false);
-            return ResponseMessage.success();
-        } catch (BadRequest e) {
-            return ResponseMessage.error(400, e.getMessage());
-        }
+        adminUserAppService.batchDisable(requestConverter.toCommand(request), false);
+        return ResponseMessage.success();
     }
 
     @Operation(summary = "批量更新用户角色", description = "批量修改用户角色，最多50个")
@@ -189,12 +153,8 @@ public class AdminUserController {
     @PostMapping("/batch-role")
     public ResponseMessage<Void> batchUpdateRole(
             @Valid @RequestBody AdminUserBatchUpdateRoleRequestDTO request) {
-        try {
-            adminUserAppService.batchUpdateRole(requestConverter.toCommand(request));
-            return ResponseMessage.success();
-        } catch (BadRequest e) {
-            return ResponseMessage.error(400, e.getMessage());
-        }
+        adminUserAppService.batchUpdateRole(requestConverter.toCommand(request));
+        return ResponseMessage.success();
     }
 
     @Operation(summary = "创建用户", description = "管理员手动创建用户账号，返回初始密码")
@@ -206,11 +166,7 @@ public class AdminUserController {
     @PostMapping
     public ResponseMessage<AdminUserCreateResponseDTO> createUser(
             @Valid @RequestBody AdminUserCreateRequestDTO request) {
-        try {
-            AdminUserResult.Created created = adminUserAppService.createUser(requestConverter.toCommand(request));
-            return ResponseMessage.success(responseConverter.toCreateResponseDTO(created));
-        } catch (BadRequest e) {
-            return ResponseMessage.error(400, e.getMessage());
-        }
+        AdminUserResult.Created created = adminUserAppService.createUser(requestConverter.toCommand(request));
+        return ResponseMessage.success(responseConverter.toCreateResponseDTO(created));
     }
 }

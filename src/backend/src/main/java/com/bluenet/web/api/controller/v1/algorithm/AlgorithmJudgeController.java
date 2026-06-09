@@ -1,4 +1,4 @@
-package com.bluenet.web.api.controller.v1;
+package com.bluenet.web.api.controller.v1.algorithm;
 
 import com.bluenet.web.api.dto.ResponseMessage;
 import com.bluenet.web.api.dto.algorithm_judge.AlgorithmRunRequestDTO;

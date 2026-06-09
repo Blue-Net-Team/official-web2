@@ -54,15 +54,11 @@ public class AdminAssessmentTimeController {
     @PostMapping
     public ResponseMessage<AssessmentTimeDTO> createAssessmentTime(
             @Valid @RequestBody CreateAssessmentTimeRequestDTO request) {
-        try {
-            Long userId = UserCTX.getCurrentUserId();
-            AssessmentTimeCommands.CreateAssessmentTimeCommand command = assessmentTimeRequestConverter
-                    .toCommand(request);
-            AssessmentTimeResult result = assessmentTimeAppService.createAssessmentTime(userId, command);
-            return ResponseMessage.success(responseConverter.toDTO(result));
-        } catch (IllegalArgumentException e) {
-            return ResponseMessage.error(400, e.getMessage());
-        }
+        Long userId = UserCTX.getCurrentUserId();
+        AssessmentTimeCommands.CreateAssessmentTimeCommand command = assessmentTimeRequestConverter
+                .toCommand(request);
+        AssessmentTimeResult result = assessmentTimeAppService.createAssessmentTime(userId, command);
+        return ResponseMessage.success(responseConverter.toDTO(result));
     }
 
     @Operation(summary = "更新考核时间", description = "更新考核时间配置")
@@ -76,18 +72,11 @@ public class AdminAssessmentTimeController {
     public ResponseMessage<AssessmentTimeDTO> updateAssessmentTime(
             @Parameter(description = "考核时间ID", required = true) @PathVariable Long id,
             @Valid @RequestBody UpdateAssessmentTimeRequestDTO request) {
-        try {
-            Long userId = UserCTX.getCurrentUserId();
-            AssessmentTimeCommands.UpdateAssessmentTimeCommand command = assessmentTimeRequestConverter
-                    .toCommand(id, request);
-            AssessmentTimeResult result = assessmentTimeAppService.updateAssessmentTime(userId, command);
-            return ResponseMessage.success(responseConverter.toDTO(result));
-        } catch (IllegalArgumentException e) {
-            if (e.getMessage().contains("不存在")) {
-                return ResponseMessage.error(404, e.getMessage());
-            }
-            return ResponseMessage.error(400, e.getMessage());
-        }
+        Long userId = UserCTX.getCurrentUserId();
+        AssessmentTimeCommands.UpdateAssessmentTimeCommand command = assessmentTimeRequestConverter
+                .toCommand(id, request);
+        AssessmentTimeResult result = assessmentTimeAppService.updateAssessmentTime(userId, command);
+        return ResponseMessage.success(responseConverter.toDTO(result));
     }
 
     @Operation(summary = "删除考核时间", description = "删除考核时间（如果存在关联题目则无法删除）")
@@ -100,13 +89,9 @@ public class AdminAssessmentTimeController {
     @DeleteMapping("/{id}")
     public ResponseMessage<Void> deleteAssessmentTime(
             @Parameter(description = "考核时间ID", required = true) @PathVariable Long id) {
-        try {
-            Long userId = UserCTX.getCurrentUserId();
-            assessmentTimeAppService.deleteAssessmentTime(userId, id);
-            return ResponseMessage.success(null);
-        } catch (IllegalArgumentException e) {
-            return ResponseMessage.error(404, e.getMessage());
-        }
+        Long userId = UserCTX.getCurrentUserId();
+        assessmentTimeAppService.deleteAssessmentTime(userId, id);
+        return ResponseMessage.success(null);
     }
 
     @Operation(summary = "查询考核时间列表", description = "分页查询考核时间，根据当前用户角色过滤")

@@ -1,4 +1,4 @@
-package com.bluenet.web.api.controller.v1;
+package com.bluenet.web.api.controller.v1.assessment;
 
 import com.bluenet.web.api.converter.assessment_answer.AssessmentAnswerRequestConverter;
 import com.bluenet.web.api.dto.ResponseMessage;

@@ -1,4 +1,4 @@
-package com.bluenet.web.api.controller.v1.enrollment;
+package com.bluenet.web.api.controller.v1.admin;
 
 import com.bluenet.web.api.dto.PageDTO;
 import com.bluenet.web.api.dto.ResponseMessage;
@@ -8,7 +8,6 @@ import com.bluenet.web.api.converter.enroll.EnrollResponseConverter;
 import com.bluenet.web.application.EnrollResult;
 import com.bluenet.web.application.command.enroll.EnrollCommands;
 import com.bluenet.web.application.service.EnrollAppService;
-import com.bluenet.web.domain.exception.DataNotFound;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
 import com.bluenet.web.infrastructure.security.annotation.RequiresPermission;
 import io.swagger.v3.oas.annotations.Operation;
@@ -23,7 +22,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "报名管理", description = "管理员报名相关接口，需要管理员权限")
@@ -64,12 +62,8 @@ public class AdminEnrollController {
     @GetMapping("/{id}")
     public ResponseMessage<EnrollmentDetailDTO> getEnrollmentDetail(
             @Parameter(description = "报名ID", required = true) @PathVariable Long id) {
-        try {
-            EnrollResult.Detail detail = enrollAppService.getEnrollmentDetail(id);
-            return ResponseMessage.success(enrollResponseConverter.toDetailDTO(detail));
-        } catch (DataNotFound e) {
-            return ResponseMessage.error(HttpStatus.NOT_FOUND.value(), e.getMessage());
-        }
+        EnrollResult.Detail detail = enrollAppService.getEnrollmentDetail(id);
+        return ResponseMessage.success(enrollResponseConverter.toDetailDTO(detail));
     }
 
     @Operation(summary = "通过报名", description = "管理员审核通过报名，系统将自动创建用户账号")
@@ -83,13 +77,9 @@ public class AdminEnrollController {
     public ResponseMessage<EnrollmentApprovalResultDTO> approveEnrollment(
             @Parameter(description = "报名ID", required = true) @PathVariable Long id,
             @Valid @RequestBody(required = false) ApproveEnrollmentRequestDTO request) {
-        try {
-            EnrollCommands.ApproveEnrollmentCommand command = enrollRequestConverter.toCommand(request);
-            EnrollResult.Approval result = enrollAppService.approveEnrollment(id, command);
-            return ResponseMessage.success("审核通过，账号已发放", enrollResponseConverter.toApprovalDTO(result));
-        } catch (DataNotFound e) {
-            return ResponseMessage.error(HttpStatus.NOT_FOUND.value(), e.getMessage());
-        }
+        EnrollCommands.ApproveEnrollmentCommand command = enrollRequestConverter.toCommand(request);
+        EnrollResult.Approval result = enrollAppService.approveEnrollment(id, command);
+        return ResponseMessage.success("审核通过，账号已发放", enrollResponseConverter.toApprovalDTO(result));
     }
 
     @Operation(summary = "拒绝报名", description = "管理员审核拒绝报名")
@@ -103,13 +93,9 @@ public class AdminEnrollController {
     public ResponseMessage<EnrollmentApprovalResultDTO> rejectEnrollment(
             @Parameter(description = "报名ID", required = true) @PathVariable Long id,
             @RequestBody(required = false) RejectEnrollmentRequestDTO request) {
-        try {
-            EnrollCommands.RejectEnrollmentCommand command = enrollRequestConverter.toCommand(request);
-            EnrollResult.Approval result = enrollAppService.rejectEnrollment(id, command);
-            return ResponseMessage.success("已拒绝", enrollResponseConverter.toApprovalDTO(result));
-        } catch (DataNotFound e) {
-            return ResponseMessage.error(HttpStatus.NOT_FOUND.value(), e.getMessage());
-        }
+        EnrollCommands.RejectEnrollmentCommand command = enrollRequestConverter.toCommand(request);
+        EnrollResult.Approval result = enrollAppService.rejectEnrollment(id, command);
+        return ResponseMessage.success("已拒绝", enrollResponseConverter.toApprovalDTO(result));
     }
 
     @Operation(summary = "报名统计", description = "获取报名统计数据，包括按状态和方向分组的人数")

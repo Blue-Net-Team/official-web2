@@ -46,11 +46,7 @@ public class LearningPathController {
     @GetMapping("/{slug}/learning-path")
     public ResponseMessage<DirectionLearningPathDTO> getLearningPath(
             @Parameter(description = "方向标识（cv/embed/struct）", required = true, example = "cv") @PathVariable String slug) {
-        try {
-            List<LearningPathResult> results = learningPathAppService.getLearningPath(slug);
-            return ResponseMessage.success(learningPathResponseConverter.toDirectionLearningPathDTO(slug, results));
-        } catch (IllegalArgumentException e) {
-            return ResponseMessage.error(404, e.getMessage());
-        }
+        List<LearningPathResult> results = learningPathAppService.getLearningPath(slug);
+        return ResponseMessage.success(learningPathResponseConverter.toDirectionLearningPathDTO(slug, results));
     }
 }

@@ -1,6 +1,6 @@
 package com.bluenet.web.application.service.impl;
 
-import com.bluenet.web.api.controller.v1.AssessmentStatisticsController;
+import com.bluenet.web.api.controller.v1.assessment.AssessmentStatisticsController;
 import com.bluenet.web.api.controller.v1.admin.AdminAssessmentStatisticsController;
 import com.bluenet.web.application.AssessmentStatisticsResult;
 import com.bluenet.web.application.service.AssessmentQuestionAppService;

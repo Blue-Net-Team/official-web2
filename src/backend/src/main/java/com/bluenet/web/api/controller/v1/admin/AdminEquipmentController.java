@@ -9,7 +9,6 @@ import com.bluenet.web.application.EquipmentResult;
 import com.bluenet.web.application.command.equipment.EquipmentCommands;
 import com.bluenet.web.api.converter.equipment.EquipmentResponseConverter;
 import com.bluenet.web.application.service.EquipmentAppService;
-import com.bluenet.web.domain.exception.DataNotFound;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
 import com.bluenet.web.infrastructure.security.annotation.RequiresPermission;
 import io.swagger.v3.oas.annotations.Operation;
@@ -40,13 +39,9 @@ public class AdminEquipmentController {
     @RequiresPermission(name = "创建设备", value = "equipment:create", access = AccessLevel.PROTECTED)
     @PostMapping
     public ResponseMessage<EquipmentDTO> createEquipment(@Valid @RequestBody CreateEquipmentRequestDTO request) {
-        try {
-            EquipmentCommands.CreateEquipmentCommand command = equipmentRequestConverter.toCommand(request);
-            EquipmentResult result = equipmentAppService.createEquipment(command);
-            return ResponseMessage.success(equipmentResponseConverter.toDTO(result));
-        } catch (IllegalArgumentException e) {
-            return ResponseMessage.error(400, e.getMessage());
-        }
+        EquipmentCommands.CreateEquipmentCommand command = equipmentRequestConverter.toCommand(request);
+        EquipmentResult result = equipmentAppService.createEquipment(command);
+        return ResponseMessage.success(equipmentResponseConverter.toDTO(result));
     }
 
     @Operation(summary = "更新设备", description = "更新设备信息")
@@ -55,15 +50,9 @@ public class AdminEquipmentController {
     public ResponseMessage<EquipmentDTO> updateEquipment(
             @Parameter(description = "设备ID", required = true) @PathVariable Long id,
             @Valid @RequestBody UpdateEquipmentRequestDTO request) {
-        try {
-            EquipmentCommands.UpdateEquipmentCommand command = equipmentRequestConverter.toCommand(id, request);
-            EquipmentResult result = equipmentAppService.updateEquipment(command);
-            return ResponseMessage.success(equipmentResponseConverter.toDTO(result));
-        } catch (DataNotFound e) {
-            return ResponseMessage.error(404, e.getMessage());
-        } catch (IllegalArgumentException e) {
-            return ResponseMessage.error(400, e.getMessage());
-        }
+        EquipmentCommands.UpdateEquipmentCommand command = equipmentRequestConverter.toCommand(id, request);
+        EquipmentResult result = equipmentAppService.updateEquipment(command);
+        return ResponseMessage.success(equipmentResponseConverter.toDTO(result));
     }
 
     @Operation(summary = "删除设备", description = "删除设备")
@@ -71,12 +60,8 @@ public class AdminEquipmentController {
     @DeleteMapping("/{id}")
     public ResponseMessage<Void> deleteEquipment(
             @Parameter(description = "设备ID", required = true) @PathVariable Long id) {
-        try {
-            equipmentAppService.deleteEquipment(id);
-            return ResponseMessage.success(null);
-        } catch (DataNotFound e) {
-            return ResponseMessage.error(404, e.getMessage());
-        }
+        equipmentAppService.deleteEquipment(id);
+        return ResponseMessage.success(null);
     }
 
     @Operation(summary = "更新设备图片", description = "更新设备图片")
@@ -85,11 +70,7 @@ public class AdminEquipmentController {
     public ResponseMessage<Void> updateEquipmentImage(
             @Parameter(description = "设备ID", required = true) @PathVariable Long id,
             @Parameter(description = "图片文件ID", required = true) @RequestParam Long imageFileId) {
-        try {
-            equipmentAppService.updateEquipmentImage(id, imageFileId);
-            return ResponseMessage.success(null);
-        } catch (DataNotFound e) {
-            return ResponseMessage.error(404, e.getMessage());
-        }
+        equipmentAppService.updateEquipmentImage(id, imageFileId);
+        return ResponseMessage.success(null);
     }
 }

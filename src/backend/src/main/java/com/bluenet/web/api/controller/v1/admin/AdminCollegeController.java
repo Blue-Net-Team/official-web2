@@ -10,7 +10,6 @@ import com.bluenet.web.application.CollegeResult;
 import com.bluenet.web.application.command.college.CollegeCommands;
 import com.bluenet.web.api.converter.college.CollegeResponseConverter;
 import com.bluenet.web.application.service.CollegeAppService;
-import com.bluenet.web.domain.exception.DataNotFound;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
 import com.bluenet.web.infrastructure.security.annotation.RequiresPermission;
 import io.swagger.v3.oas.annotations.Operation;
@@ -50,13 +49,9 @@ public class AdminCollegeController {
     @PostMapping
     public ResponseMessage<CollegeDTO> createCollege(
             @Valid @RequestBody CreateCollegeRequestDTO request) {
-        try {
-            CollegeCommands.CreateCollegeCommand command = collegeRequestConverter.toCommand(request);
-            CollegeResult result = collegeAppService.createCollege(command);
-            return ResponseMessage.success(collegeResponseConverter.toDTO(result));
-        } catch (IllegalArgumentException e) {
-            return ResponseMessage.error(400, e.getMessage());
-        }
+        CollegeCommands.CreateCollegeCommand command = collegeRequestConverter.toCommand(request);
+        CollegeResult result = collegeAppService.createCollege(command);
+        return ResponseMessage.success(collegeResponseConverter.toDTO(result));
     }
 
     @Operation(summary = "更新学院", description = "更新学院信息")
@@ -69,15 +64,9 @@ public class AdminCollegeController {
     public ResponseMessage<CollegeDTO> updateCollege(
             @Parameter(description = "学院ID", required = true) @PathVariable Long id,
             @Valid @RequestBody UpdateCollegeRequestDTO request) {
-        try {
-            CollegeCommands.UpdateCollegeCommand command = collegeRequestConverter.toCommand(id, request);
-            CollegeResult result = collegeAppService.updateCollege(command);
-            return ResponseMessage.success(collegeResponseConverter.toDTO(result));
-        } catch (DataNotFound e) {
-            return ResponseMessage.error(404, e.getMessage());
-        } catch (IllegalArgumentException e) {
-            return ResponseMessage.error(400, e.getMessage());
-        }
+        CollegeCommands.UpdateCollegeCommand command = collegeRequestConverter.toCommand(id, request);
+        CollegeResult result = collegeAppService.updateCollege(command);
+        return ResponseMessage.success(collegeResponseConverter.toDTO(result));
     }
 
     @Operation(summary = "删除学院", description = "删除学院（如果存在关联用户或报名记录则无法删除）")
@@ -89,13 +78,7 @@ public class AdminCollegeController {
     @DeleteMapping("/{id}")
     public ResponseMessage<Void> deleteCollege(
             @Parameter(description = "学院ID", required = true) @PathVariable Long id) {
-        try {
-            collegeAppService.deleteCollege(id);
-            return ResponseMessage.success(null);
-        } catch (DataNotFound e) {
-            return ResponseMessage.error(404, e.getMessage());
-        } catch (IllegalArgumentException e) {
-            return ResponseMessage.error(400, e.getMessage());
-        }
+        collegeAppService.deleteCollege(id);
+        return ResponseMessage.success(null);
     }
 }

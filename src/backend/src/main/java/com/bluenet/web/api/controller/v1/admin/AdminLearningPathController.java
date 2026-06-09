@@ -51,17 +51,10 @@ public class AdminLearningPathController {
     public ResponseMessage<LearningStepDTO> createStep(
             @Parameter(description = "方向标识（cv/embed/struct）", required = true, example = "cv") @PathVariable String slug,
             @Valid @RequestBody CreateLearningStepRequestDTO request) {
-        try {
-            LearningPathCommands.CreateLearningStepCommand command = learningPathRequestConverter
-                    .toCommand(slug, request);
-            LearningPathResult result = learningPathAppService.createStep(command);
-            return ResponseMessage.success(learningPathResponseConverter.toDTO(result));
-        } catch (IllegalArgumentException e) {
-            if (e.getMessage().contains("无效的方向标识")) {
-                return ResponseMessage.error(404, e.getMessage());
-            }
-            return ResponseMessage.error(400, e.getMessage());
-        }
+        LearningPathCommands.CreateLearningStepCommand command = learningPathRequestConverter
+                .toCommand(slug, request);
+        LearningPathResult result = learningPathAppService.createStep(command);
+        return ResponseMessage.success(learningPathResponseConverter.toDTO(result));
     }
 
     @Operation(summary = "更新学习步骤", description = "更新指定学习步骤的信息")
@@ -75,17 +68,10 @@ public class AdminLearningPathController {
     public ResponseMessage<LearningStepDTO> updateStep(
             @Parameter(description = "步骤ID", required = true, example = "1") @PathVariable Long id,
             @Valid @RequestBody UpdateLearningStepRequestDTO request) {
-        try {
-            LearningPathCommands.UpdateLearningStepCommand command = learningPathRequestConverter
-                    .toCommand(id, request);
-            LearningPathResult result = learningPathAppService.updateStep(command);
-            return ResponseMessage.success(learningPathResponseConverter.toDTO(result));
-        } catch (IllegalArgumentException e) {
-            if (e.getMessage().contains("不存在")) {
-                return ResponseMessage.error(404, e.getMessage());
-            }
-            return ResponseMessage.error(400, e.getMessage());
-        }
+        LearningPathCommands.UpdateLearningStepCommand command = learningPathRequestConverter
+                .toCommand(id, request);
+        LearningPathResult result = learningPathAppService.updateStep(command);
+        return ResponseMessage.success(learningPathResponseConverter.toDTO(result));
     }
 
     @Operation(summary = "删除学习步骤", description = "删除指定的学习步骤")
@@ -97,11 +83,7 @@ public class AdminLearningPathController {
     @DeleteMapping("/learning-steps/{id}")
     public ResponseMessage<Void> deleteStep(
             @Parameter(description = "步骤ID", required = true, example = "1") @PathVariable Long id) {
-        try {
-            learningPathAppService.deleteStep(id);
-            return ResponseMessage.success(null);
-        } catch (IllegalArgumentException e) {
-            return ResponseMessage.error(404, e.getMessage());
-        }
+        learningPathAppService.deleteStep(id);
+        return ResponseMessage.success(null);
     }
 }

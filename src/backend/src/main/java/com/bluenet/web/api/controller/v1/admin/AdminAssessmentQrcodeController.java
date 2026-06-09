@@ -9,7 +9,6 @@ import com.bluenet.web.api.converter.qrcode.QrcodeResponseConverter;
 import com.bluenet.web.application.QrcodeResult;
 import com.bluenet.web.application.command.qrcode.QrcodeCommands;
 import com.bluenet.web.application.service.QrcodeAppService;
-import com.bluenet.web.domain.exception.GlobalException;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
 import com.bluenet.web.infrastructure.security.annotation.RequiresPermission;
 import io.swagger.v3.oas.annotations.Operation;
@@ -48,12 +47,8 @@ public class AdminAssessmentQrcodeController {
     public ResponseMessage<List<AssessmentQrcodeDTO>> getAssessmentQrcodes(
             @Parameter(description = "方向") @RequestParam(required = false) String direction,
             @Parameter(description = "考核轮次") @RequestParam(required = false) Integer epoch) {
-        try {
-            List<QrcodeResult> results = qrcodeAppService.getAssessmentQrcodes(direction, epoch);
-            return ResponseMessage.success(qrcodeResponseConverter.toAssessmentDTOList(results));
-        } catch (GlobalException e) {
-            return ResponseMessage.error(e);
-        }
+        List<QrcodeResult> results = qrcodeAppService.getAssessmentQrcodes(direction, epoch);
+        return ResponseMessage.success(qrcodeResponseConverter.toAssessmentDTOList(results));
     }
 
     @Operation(summary = "创建考核群二维码", description = "通过已上传的fileId创建考核群二维码，文件类型必须为QRCODE")
@@ -67,14 +62,10 @@ public class AdminAssessmentQrcodeController {
     @PostMapping
     public ResponseMessage<Void> createAssessmentQrcode(
             @Valid @RequestBody CreateAssessmentQrcodeRequestDTO request) {
-        try {
-            QrcodeCommands.CreateAssessmentQrcodeCommand command = qrcodeRequestConverter
-                    .toCreateAssessmentCommand(request);
-            qrcodeAppService.createAssessmentQrcode(command);
-            return ResponseMessage.success();
-        } catch (GlobalException e) {
-            return ResponseMessage.error(e);
-        }
+        QrcodeCommands.CreateAssessmentQrcodeCommand command = qrcodeRequestConverter
+                .toCreateAssessmentCommand(request);
+        qrcodeAppService.createAssessmentQrcode(command);
+        return ResponseMessage.success();
     }
 
     @Operation(summary = "更新考核群二维码", description = "管理员更新考核群二维码")
@@ -84,14 +75,10 @@ public class AdminAssessmentQrcodeController {
     public ResponseMessage<Void> updateAssessmentQrcode(
             @PathVariable Long id,
             @Valid @RequestBody UpdateAssessmentQrcodeRequestDTO request) {
-        try {
-            QrcodeCommands.UpdateAssessmentQrcodeCommand command = qrcodeRequestConverter
-                    .toUpdateAssessmentCommand(id, request);
-            qrcodeAppService.updateAssessmentQrcode(command);
-            return ResponseMessage.success();
-        } catch (GlobalException e) {
-            return ResponseMessage.error(e);
-        }
+        QrcodeCommands.UpdateAssessmentQrcodeCommand command = qrcodeRequestConverter
+                .toUpdateAssessmentCommand(id, request);
+        qrcodeAppService.updateAssessmentQrcode(command);
+        return ResponseMessage.success();
     }
 
     @Operation(summary = "删除考核群二维码", description = "管理员删除考核群二维码")
@@ -99,12 +86,8 @@ public class AdminAssessmentQrcodeController {
     @SecurityRequirement(name = "cookie-auth")
     @DeleteMapping("/{id}")
     public ResponseMessage<Void> deleteAssessmentQrcode(@PathVariable Long id) {
-        try {
-            QrcodeCommands.DeleteAssessmentQrcodeCommand command = qrcodeRequestConverter.toDeleteAssessmentCommand(id);
-            qrcodeAppService.deleteAssessmentQrcode(command);
-            return ResponseMessage.success();
-        } catch (GlobalException e) {
-            return ResponseMessage.error(e);
-        }
+        QrcodeCommands.DeleteAssessmentQrcodeCommand command = qrcodeRequestConverter.toDeleteAssessmentCommand(id);
+        qrcodeAppService.deleteAssessmentQrcode(command);
+        return ResponseMessage.success();
     }
 }

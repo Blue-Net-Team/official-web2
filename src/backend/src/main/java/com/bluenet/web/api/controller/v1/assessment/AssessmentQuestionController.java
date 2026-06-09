@@ -1,4 +1,4 @@
-package com.bluenet.web.api.controller.v1;
+package com.bluenet.web.api.controller.v1.assessment;
 
 import com.bluenet.web.api.dto.ResponseMessage;
 import com.bluenet.web.api.dto.assessment_question.AssessmentQuestionDTO;
@@ -45,15 +45,9 @@ public class AssessmentQuestionController {
             @Parameter(description = "考核时间ID", required = true) @RequestParam Long assessmentTimeId,
             @Parameter(description = "页码（从0开始，默认0）") @RequestParam(required = false, defaultValue = "0") Integer page,
             @Parameter(description = "每页大小（默认10）") @RequestParam(required = false, defaultValue = "10") Integer size) {
-        try {
-            UserQuestionListResponse result = responseConverter
-                    .toResponse(assessmentQuestionAppService.listQuestionsForUser(assessmentTimeId, page, size));
-            return ResponseMessage.success(result);
-        } catch (IllegalArgumentException e) {
-            return ResponseMessage.error(404, e.getMessage());
-        } catch (SecurityException e) {
-            return ResponseMessage.error(403, e.getMessage());
-        }
+        UserQuestionListResponse result = responseConverter
+                .toResponse(assessmentQuestionAppService.listQuestionsForUser(assessmentTimeId, page, size));
+        return ResponseMessage.success(result);
     }
 
     @Operation(summary = "查询题目详情", description = "查询指定题目的完整详情（包含content）。考生只能查看自己方向和年级的题目。")
@@ -66,14 +60,8 @@ public class AssessmentQuestionController {
     @GetMapping("/{id}")
     public ResponseMessage<AssessmentQuestionDTO> getQuestionDetail(
             @Parameter(description = "题目ID", required = true) @PathVariable Long id) {
-        try {
-            AssessmentQuestionDTO result = responseConverter
-                    .toDTOForUser(assessmentQuestionAppService.getQuestionDetailForUser(id));
-            return ResponseMessage.success(result);
-        } catch (IllegalArgumentException e) {
-            return ResponseMessage.error(404, e.getMessage());
-        } catch (SecurityException e) {
-            return ResponseMessage.error(403, e.getMessage());
-        }
+        AssessmentQuestionDTO result = responseConverter
+                .toDTOForUser(assessmentQuestionAppService.getQuestionDetailForUser(id));
+        return ResponseMessage.success(result);
     }
 }

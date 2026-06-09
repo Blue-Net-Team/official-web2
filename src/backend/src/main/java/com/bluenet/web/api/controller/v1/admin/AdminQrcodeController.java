@@ -8,7 +8,6 @@ import com.bluenet.web.api.converter.qrcode.QrcodeResponseConverter;
 import com.bluenet.web.application.QrcodeResult;
 import com.bluenet.web.application.command.qrcode.QrcodeCommands;
 import com.bluenet.web.application.service.QrcodeAppService;
-import com.bluenet.web.domain.exception.GlobalException;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
 import com.bluenet.web.infrastructure.security.annotation.RequiresPermission;
 import io.swagger.v3.oas.annotations.Operation;
@@ -48,12 +47,8 @@ public class AdminQrcodeController {
     @SecurityRequirement(name = "cookie-auth")
     @GetMapping
     public ResponseMessage<List<ConsultationQrcodeDTO>> getConsultationQrcodes() {
-        try {
-            List<QrcodeResult> results = qrcodeAppService.getConsultationQrcodes();
-            return ResponseMessage.success(qrcodeResponseConverter.toConsultationDTOList(results));
-        } catch (GlobalException e) {
-            return ResponseMessage.error(e);
-        }
+        List<QrcodeResult> results = qrcodeAppService.getConsultationQrcodes();
+        return ResponseMessage.success(qrcodeResponseConverter.toConsultationDTOList(results));
     }
 
     @Operation(summary = "创建咨询群二维码", description = "通过已上传的 fileId 创建咨询群二维码，文件类型必须为 QRCODE")
@@ -67,13 +62,9 @@ public class AdminQrcodeController {
     @PostMapping
     public ResponseMessage<Void> createConsultationQrcode(
             @Parameter(description = "文件ID", required = true) @RequestParam("fileId") Long fileId) {
-        try {
-            QrcodeCommands.CreateConsultationQrcodeCommand command = qrcodeRequestConverter.toCreateCommand(fileId);
-            qrcodeAppService.createConsultationQrcode(command);
-            return ResponseMessage.success();
-        } catch (GlobalException e) {
-            return ResponseMessage.error(e);
-        }
+        QrcodeCommands.CreateConsultationQrcodeCommand command = qrcodeRequestConverter.toCreateCommand(fileId);
+        qrcodeAppService.createConsultationQrcode(command);
+        return ResponseMessage.success();
     }
 
     @Operation(summary = "更新咨询群二维码", description = "管理员更新咨询群二维码")
@@ -82,15 +73,11 @@ public class AdminQrcodeController {
     @PutMapping("/{id}")
     public ResponseMessage<Void> updateConsultationQrcode(@PathVariable Long id,
             @Valid @RequestBody UpdateConsultationQrcodeRequestDTO request) {
-        try {
-            QrcodeCommands.UpdateConsultationQrcodeCommand command = qrcodeRequestConverter.toUpdateCommand(
-                    id,
-                    request);
-            qrcodeAppService.updateConsultationQrcode(command);
-            return ResponseMessage.success();
-        } catch (GlobalException e) {
-            return ResponseMessage.error(e);
-        }
+        QrcodeCommands.UpdateConsultationQrcodeCommand command = qrcodeRequestConverter.toUpdateCommand(
+                id,
+                request);
+        qrcodeAppService.updateConsultationQrcode(command);
+        return ResponseMessage.success();
     }
 
     @Operation(summary = "删除咨询群二维码", description = "管理员删除咨询群二维码")
@@ -98,12 +85,8 @@ public class AdminQrcodeController {
     @SecurityRequirement(name = "cookie-auth")
     @DeleteMapping("/{id}")
     public ResponseMessage<Void> deleteConsultationQrcode(@PathVariable Long id) {
-        try {
-            QrcodeCommands.DeleteConsultationQrcodeCommand command = qrcodeRequestConverter.toDeleteCommand(id);
-            qrcodeAppService.deleteConsultationQrcode(command);
-            return ResponseMessage.success();
-        } catch (GlobalException e) {
-            return ResponseMessage.error(e);
-        }
+        QrcodeCommands.DeleteConsultationQrcodeCommand command = qrcodeRequestConverter.toDeleteCommand(id);
+        qrcodeAppService.deleteConsultationQrcode(command);
+        return ResponseMessage.success();
     }
 }

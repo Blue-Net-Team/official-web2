@@ -33,7 +33,7 @@ import java.util.List;
 @RequestMapping("/api/v1/admin/permissions")
 @RequiredArgsConstructor
 @SecurityRequirement(name = "bearer-jwt")
-public class PermissionAdminController {
+public class AdminPermissionController {
     private final PermissionAppService permissionAppService;
     private final RolePermissionManageAppService rolePermissionManageAppService;
     private final PermissionRequestConverter permissionRequestConverter;

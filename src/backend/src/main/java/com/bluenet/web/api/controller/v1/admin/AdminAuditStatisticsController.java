@@ -35,7 +35,7 @@ import java.util.List;
 @RequestMapping("/api/v1/admin/audit/statistics")
 @RequiredArgsConstructor
 @SecurityRequirement(name = "bearer-jwt")
-public class AuditStatisticsController {
+public class AdminAuditStatisticsController {
     private final AuditStatisticsAppService auditStatisticsAppService;
     private final AuditStatisticsRequestConverter requestConverter;
     private final AuditStatisticsResponseConverter responseConverter;

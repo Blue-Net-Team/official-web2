@@ -1,4 +1,4 @@
-package com.bluenet.web.api.controller.v1;
+package com.bluenet.web.api.controller.v1.equipment;
 
 import com.bluenet.web.api.dto.ResponseMessage;
 import com.bluenet.web.api.dto.equipment.EquipmentDTO;

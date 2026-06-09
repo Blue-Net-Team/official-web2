@@ -7,7 +7,6 @@ import com.bluenet.web.api.dto.experience.UpdateExperienceRequestDTO;
 import com.bluenet.web.api.converter.userexperience.UserExperienceRequestConverter;
 import com.bluenet.web.api.converter.userexperience.UserExperienceResponseConverter;
 import com.bluenet.web.application.service.UserExperienceAppService;
-import com.bluenet.web.domain.exception.GlobalException;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
 import com.bluenet.web.infrastructure.security.annotation.RequiresPermission;
 import io.swagger.v3.oas.annotations.Operation;
@@ -19,7 +18,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -46,11 +44,7 @@ class UserExperienceController {
     @GetMapping
     public ResponseMessage<List<ExperienceDTO>> getExperiences(
             @Parameter(description = "经历类型：PROJECT/COMPETITION/INTERNSHIP") @RequestParam(required = false) String type) {
-        try {
-            return ResponseMessage.success(responseConverter.toDTOList(userExperienceAppService.getExperiences(type)));
-        } catch (GlobalException e) {
-            return ResponseMessage.error(e);
-        }
+        return ResponseMessage.success(responseConverter.toDTOList(userExperienceAppService.getExperiences(type)));
     }
 
     @Operation(summary = "创建经历", description = "创建新的经历记录（项目/竞赛/实习）。需要MEMBER及以上角色权限。")
@@ -64,15 +58,9 @@ class UserExperienceController {
     @RequiresPermission(name = "创建用户经历", value = "user:experience:create", access = AccessLevel.PROTECTED)
     @PostMapping
     public ResponseMessage<ExperienceDTO> createExperience(@RequestBody CreateExperienceRequestDTO request) {
-        try {
-            return ResponseMessage.success(
-                    responseConverter.toDTO(
-                            userExperienceAppService.createExperience(requestConverter.toCommand(request))));
-        } catch (GlobalException e) {
-            return ResponseMessage.error(e);
-        } catch (IllegalArgumentException e) {
-            return ResponseMessage.error(HttpStatus.BAD_REQUEST.value(), e.getMessage());
-        }
+        return ResponseMessage.success(
+                responseConverter.toDTO(
+                        userExperienceAppService.createExperience(requestConverter.toCommand(request))));
     }
 
     @Operation(summary = "更新经历", description = "更新指定的经历记录。需要MEMBER及以上角色权限。")
@@ -88,15 +76,9 @@ class UserExperienceController {
     public ResponseMessage<ExperienceDTO> updateExperience(
             @Parameter(description = "经历ID") @PathVariable Long id,
             @RequestBody UpdateExperienceRequestDTO request) {
-        try {
-            return ResponseMessage.success(
-                    responseConverter.toDTO(
-                            userExperienceAppService.updateExperience(requestConverter.toCommand(id, request))));
-        } catch (GlobalException e) {
-            return ResponseMessage.error(e);
-        } catch (IllegalArgumentException e) {
-            return ResponseMessage.error(HttpStatus.NOT_FOUND.value(), e.getMessage());
-        }
+        return ResponseMessage.success(
+                responseConverter.toDTO(
+                        userExperienceAppService.updateExperience(requestConverter.toCommand(id, request))));
     }
 
     @Operation(summary = "删除经历", description = "删除指定的经历记录。需要MEMBER及以上角色权限。")
@@ -111,13 +93,7 @@ class UserExperienceController {
     @DeleteMapping("/{id}")
     public ResponseMessage<Void> deleteExperience(
             @Parameter(description = "经历ID") @PathVariable Long id) {
-        try {
-            userExperienceAppService.deleteExperience(id);
-            return ResponseMessage.success();
-        } catch (GlobalException e) {
-            return ResponseMessage.error(e);
-        } catch (IllegalArgumentException e) {
-            return ResponseMessage.error(HttpStatus.NOT_FOUND.value(), e.getMessage());
-        }
+        userExperienceAppService.deleteExperience(id);
+        return ResponseMessage.success();
     }
 }

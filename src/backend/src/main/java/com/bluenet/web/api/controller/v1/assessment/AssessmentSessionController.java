@@ -1,4 +1,4 @@
-package com.bluenet.web.api.controller.v1;
+package com.bluenet.web.api.controller.v1.assessment;
 
 import com.bluenet.web.api.dto.ResponseMessage;
 import com.bluenet.web.api.dto.assessment_session.AssessmentSessionDTO;
@@ -48,16 +48,9 @@ public class AssessmentSessionController {
     public ResponseMessage<AssessmentSessionDTO> getSession(
             @Parameter(description = "考核时间ID", required = true) @PathVariable Long assessmentTimeId) {
         Long userId = UserCTX.getCurrentUserId();
-        if (userId == null) {
-            return ResponseMessage.error(401, "未登录");
-        }
-        try {
-            AssessmentSessionCommands.GetOrCreateSessionCommand command = assessmentSessionRequestConverter
-                    .toCommand(userId, assessmentTimeId);
-            AssessmentSessionResult result = assessmentSessionAppService.getOrCreateSession(command);
-            return ResponseMessage.success(assessmentSessionResponseConverter.toDTO(result));
-        } catch (IllegalArgumentException e) {
-            return ResponseMessage.error(404, e.getMessage());
-        }
+        AssessmentSessionCommands.GetOrCreateSessionCommand command = assessmentSessionRequestConverter
+                .toCommand(userId, assessmentTimeId);
+        AssessmentSessionResult result = assessmentSessionAppService.getOrCreateSession(command);
+        return ResponseMessage.success(assessmentSessionResponseConverter.toDTO(result));
     }
 }

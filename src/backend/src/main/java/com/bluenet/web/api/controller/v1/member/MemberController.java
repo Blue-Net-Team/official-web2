@@ -13,7 +13,6 @@ import com.bluenet.web.api.converter.userexperience.UserExperienceResponseConver
 import com.bluenet.web.application.MemberResult;
 import com.bluenet.web.application.command.member.MemberCommands;
 import com.bluenet.web.application.service.MemberAppService;
-import com.bluenet.web.domain.exception.GlobalException;
 import com.bluenet.web.domain.model.enumerate.Direction;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
 import com.bluenet.web.infrastructure.security.annotation.RequiresPermission;
@@ -70,12 +69,8 @@ public class MemberController {
     @GetMapping("/{id}")
     public ResponseMessage<MemberDetailDTO> getMemberById(
             @Parameter(description = "成员ID") @PathVariable Long id) {
-        try {
-            MemberResult result = memberAppService.getMemberById(id);
-            return ResponseMessage.success(memberResponseConverter.toDetailDTO(result));
-        } catch (GlobalException e) {
-            return ResponseMessage.error(e);
-        }
+        MemberResult result = memberAppService.getMemberById(id);
+        return ResponseMessage.success(memberResponseConverter.toDetailDTO(result));
     }
 
     @Operation(summary = "获取方向负责人", description = "获取各方向的负责人信息")
@@ -99,12 +94,8 @@ public class MemberController {
     public ResponseMessage<List<ExperienceDTO>> getMemberExperiences(
             @Parameter(description = "成员ID") @PathVariable Long memberId,
             @Parameter(description = "经历类型：PROJECT/COMPETITION/INTERNSHIP") @RequestParam(required = false) String type) {
-        try {
-            return ResponseMessage.success(
-                    userExperienceResponseConverter
-                            .toDTOListFromVO(memberAppService.getMemberExperiences(memberId, type)));
-        } catch (GlobalException e) {
-            return ResponseMessage.error(e);
-        }
+        return ResponseMessage.success(
+                userExperienceResponseConverter
+                        .toDTOListFromVO(memberAppService.getMemberExperiences(memberId, type)));
     }
 }

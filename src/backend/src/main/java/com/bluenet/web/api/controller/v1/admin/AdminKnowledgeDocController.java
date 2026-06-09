@@ -11,7 +11,6 @@ import com.bluenet.web.application.knowledge.KnowledgeDocResult;
 import com.bluenet.web.application.knowledge.KnowledgeTagResult;
 import com.bluenet.web.application.service.KnowledgeBaseAppService;
 import com.bluenet.web.application.service.KnowledgeDocQueryService;
-import com.bluenet.web.domain.exception.DataNotFound;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
 import com.bluenet.web.infrastructure.security.annotation.RequiresPermission;
 import io.swagger.v3.oas.annotations.Operation;
@@ -36,7 +35,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/v1/admin/knowledge")
 @RequiredArgsConstructor
 @SecurityRequirement(name = "bearer-jwt")
-public class KnowledgeDocController {
+public class AdminKnowledgeDocController {
 
     private final KnowledgeBaseAppService knowledgeBaseAppService;
     private final KnowledgeDocQueryService knowledgeDocQueryService;
@@ -67,12 +66,8 @@ public class KnowledgeDocController {
     @PostMapping("/docs/{id}/reparse")
     public ResponseMessage<Void> reparseDocument(
             @Parameter(description = "文档ID", required = true) @PathVariable Long id) {
-        try {
-            knowledgeBaseAppService.reparse(new KnowledgeCommands.ReparseDocumentCommand(id));
-            return ResponseMessage.success();
-        } catch (DataNotFound e) {
-            return ResponseMessage.error(404, e.getMessage());
-        }
+        knowledgeBaseAppService.reparse(new KnowledgeCommands.ReparseDocumentCommand(id));
+        return ResponseMessage.success();
     }
 
     @Operation(summary = "取消解析文档", description = "取消待解析或解析中的文档")
@@ -85,14 +80,8 @@ public class KnowledgeDocController {
     @PostMapping("/docs/{id}/cancel")
     public ResponseMessage<Void> cancelParse(
             @Parameter(description = "文档ID", required = true) @PathVariable Long id) {
-        try {
-            knowledgeBaseAppService.cancelParse(new KnowledgeCommands.CancelParseCommand(id));
-            return ResponseMessage.success();
-        } catch (DataNotFound e) {
-            return ResponseMessage.error(404, e.getMessage());
-        } catch (IllegalArgumentException e) {
-            return ResponseMessage.error(400, e.getMessage());
-        }
+        knowledgeBaseAppService.cancelParse(new KnowledgeCommands.CancelParseCommand(id));
+        return ResponseMessage.success();
     }
 
     @Operation(summary = "删除知识库文档", description = "删除文档及其关联文件、分段")
@@ -104,12 +93,8 @@ public class KnowledgeDocController {
     @DeleteMapping("/docs/{id}")
     public ResponseMessage<Void> deleteDocument(
             @Parameter(description = "文档ID", required = true) @PathVariable Long id) {
-        try {
-            knowledgeBaseAppService.deleteDocument(new KnowledgeCommands.DeleteDocumentCommand(id));
-            return ResponseMessage.success();
-        } catch (DataNotFound e) {
-            return ResponseMessage.error(404, e.getMessage());
-        }
+        knowledgeBaseAppService.deleteDocument(new KnowledgeCommands.DeleteDocumentCommand(id));
+        return ResponseMessage.success();
     }
 
     @Operation(summary = "查询文档列表", description = "分页查询所有知识库文档")
@@ -168,11 +153,7 @@ public class KnowledgeDocController {
     public ResponseMessage<Void> updateTagDescription(
             @Parameter(description = "标签ID", required = true) @PathVariable Long id,
             @Valid @RequestBody UpdateTagDescriptionRequestDTO request) {
-        try {
-            knowledgeBaseAppService.updateTagDescription(id, request.description());
-            return ResponseMessage.success();
-        } catch (DataNotFound e) {
-            return ResponseMessage.error(404, e.getMessage());
-        }
+        knowledgeBaseAppService.updateTagDescription(id, request.description());
+        return ResponseMessage.success();
     }
 }

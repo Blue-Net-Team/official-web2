@@ -11,7 +11,6 @@ import com.bluenet.web.application.command.assessment_question.AssessmentQuestio
 import com.bluenet.web.api.converter.assessment_question.AssessmentQuestionRequestConverter;
 import com.bluenet.web.api.converter.assessment_question.AssessmentQuestionResponseConverter;
 import com.bluenet.web.application.service.AssessmentQuestionAppService;
-import com.bluenet.web.domain.exception.GlobalException;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
 import com.bluenet.web.infrastructure.security.annotation.RequiresPermission;
 import io.swagger.v3.oas.annotations.Operation;
@@ -52,15 +51,11 @@ public class AdminAssessmentQuestionController {
     @PostMapping
     public ResponseMessage<AssessmentQuestionDTO> createQuestion(
             @Valid @RequestBody CreateQuestionRequestDTO request) {
-        try {
-            AssessmentQuestionCommands.CreateAssessmentQuestionCommand command = assessmentQuestionRequestConverter
-                    .toCommand(request);
-            AssessmentQuestionDTO created = responseConverter
-                    .toDTO(assessmentQuestionAppService.createQuestion(command));
-            return ResponseMessage.success(created);
-        } catch (IllegalArgumentException e) {
-            return ResponseMessage.error(400, e.getMessage());
-        }
+        AssessmentQuestionCommands.CreateAssessmentQuestionCommand command = assessmentQuestionRequestConverter
+                .toCommand(request);
+        AssessmentQuestionDTO created = responseConverter
+                .toDTO(assessmentQuestionAppService.createQuestion(command));
+        return ResponseMessage.success(created);
     }
 
     @Operation(summary = "更新考题", description = "更新考题信息")
@@ -74,18 +69,11 @@ public class AdminAssessmentQuestionController {
     public ResponseMessage<AssessmentQuestionDTO> updateQuestion(
             @Parameter(description = "考题ID", required = true) @PathVariable Long id,
             @Valid @RequestBody UpdateQuestionRequestDTO request) {
-        try {
-            AssessmentQuestionCommands.UpdateAssessmentQuestionCommand command = assessmentQuestionRequestConverter
-                    .toCommand(id, request);
-            AssessmentQuestionDTO updated = responseConverter
-                    .toDTO(assessmentQuestionAppService.updateQuestion(command));
-            return ResponseMessage.success(updated);
-        } catch (IllegalArgumentException e) {
-            if (e.getMessage().contains("不存在")) {
-                return ResponseMessage.error(404, e.getMessage());
-            }
-            return ResponseMessage.error(400, e.getMessage());
-        }
+        AssessmentQuestionCommands.UpdateAssessmentQuestionCommand command = assessmentQuestionRequestConverter
+                .toCommand(id, request);
+        AssessmentQuestionDTO updated = responseConverter
+                .toDTO(assessmentQuestionAppService.updateQuestion(command));
+        return ResponseMessage.success(updated);
     }
 
     @Operation(summary = "删除考题", description = "删除考题")
@@ -97,12 +85,8 @@ public class AdminAssessmentQuestionController {
     @DeleteMapping("/{id}")
     public ResponseMessage<Void> deleteQuestion(
             @Parameter(description = "考题ID", required = true) @PathVariable Long id) {
-        try {
-            assessmentQuestionAppService.deleteQuestion(id);
-            return ResponseMessage.success(null);
-        } catch (IllegalArgumentException e) {
-            return ResponseMessage.error(404, e.getMessage());
-        }
+        assessmentQuestionAppService.deleteQuestion(id);
+        return ResponseMessage.success(null);
     }
 
     @Operation(summary = "分页查询考题列表", description = "管理端分页查询指定考核时间下的考题列表")
@@ -128,11 +112,7 @@ public class AdminAssessmentQuestionController {
     public ResponseMessage<Void> updateAttachment(
             @Parameter(description = "考题ID", required = true) @PathVariable Long id,
             @Parameter(description = "文件ID", required = true) @RequestParam("fileId") Long fileId) {
-        try {
-            assessmentQuestionAppService.updateAttachment(id, fileId);
-            return ResponseMessage.success();
-        } catch (GlobalException e) {
-            return ResponseMessage.error(e);
-        }
+        assessmentQuestionAppService.updateAttachment(id, fileId);
+        return ResponseMessage.success();
     }
 }

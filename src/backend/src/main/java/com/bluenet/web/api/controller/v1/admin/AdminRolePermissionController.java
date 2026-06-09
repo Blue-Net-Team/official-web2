@@ -25,7 +25,7 @@ import java.util.List;
 @RequestMapping("/api/v1/admin/roles")
 @RequiredArgsConstructor
 @SecurityRequirement(name = "bearer-jwt")
-public class RolePermissionAdminController {
+public class AdminRolePermissionController {
 
     private final RolePermissionManageAppService rolePermissionManageAppService;
     private final RolePermissionManageRequestConverter rolePermissionManageRequestConverter;

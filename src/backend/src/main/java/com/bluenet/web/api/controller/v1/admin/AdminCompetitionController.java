@@ -38,13 +38,9 @@ public class AdminCompetitionController {
     @PostMapping
     public ResponseMessage<CompetitionResponseDTO> createCompetition(
             @Valid @RequestBody CompetitionRequestDTO request) {
-        try {
-            CompetitionResult result = competitionAppService.createCompetition(
-                    competitionRequestConverter.toCreateCommand(request));
-            return ResponseMessage.success(toResponseDTO(result));
-        } catch (IllegalArgumentException e) {
-            return ResponseMessage.error(400, e.getMessage());
-        }
+        CompetitionResult result = competitionAppService.createCompetition(
+                competitionRequestConverter.toCreateCommand(request));
+        return ResponseMessage.success(toResponseDTO(result));
     }
 
     @Operation(summary = "更新竞赛", description = "更新竞赛信息")
@@ -56,13 +52,9 @@ public class AdminCompetitionController {
     public ResponseMessage<CompetitionResponseDTO> updateCompetition(
             @Parameter(description = "竞赛ID", required = true) @PathVariable Long id,
             @Valid @RequestBody CompetitionRequestDTO request) {
-        try {
-            CompetitionResult result = competitionAppService.updateCompetition(
-                    competitionRequestConverter.toUpdateCommand(id, request));
-            return ResponseMessage.success(toResponseDTO(result));
-        } catch (IllegalArgumentException e) {
-            return ResponseMessage.error(404, e.getMessage());
-        }
+        CompetitionResult result = competitionAppService.updateCompetition(
+                competitionRequestConverter.toUpdateCommand(id, request));
+        return ResponseMessage.success(toResponseDTO(result));
     }
 
     @Operation(summary = "删除竞赛", description = "删除竞赛")
@@ -73,12 +65,8 @@ public class AdminCompetitionController {
     @DeleteMapping("/{id}")
     public ResponseMessage<Void> deleteCompetition(
             @Parameter(description = "竞赛ID", required = true) @PathVariable Long id) {
-        try {
-            competitionAppService.deleteCompetition(id);
-            return ResponseMessage.success(null);
-        } catch (IllegalArgumentException e) {
-            return ResponseMessage.error(404, e.getMessage());
-        }
+        competitionAppService.deleteCompetition(id);
+        return ResponseMessage.success(null);
     }
 
     @Operation(summary = "批量调整竞赛排序", description = "批量更新竞赛的排序号，数值越小越靠前")
@@ -89,17 +77,13 @@ public class AdminCompetitionController {
     @PutMapping("/sort")
     public ResponseMessage<Void> batchUpdateSortOrder(
             @Valid @RequestBody BatchSortRequestDTO request) {
-        try {
-            CompetitionCommands.BatchUpdateSortOrderCommand command = new CompetitionCommands.BatchUpdateSortOrderCommand(
-                    request.getItems()
-                            .stream()
-                            .map(item -> new CompetitionCommands.SortItemCommand(item.getId(), item.getSortOrder()))
-                            .toList());
-            competitionAppService.batchUpdateSortOrder(command);
-            return ResponseMessage.success(null);
-        } catch (IllegalArgumentException e) {
-            return ResponseMessage.error(404, e.getMessage());
-        }
+        CompetitionCommands.BatchUpdateSortOrderCommand command = new CompetitionCommands.BatchUpdateSortOrderCommand(
+                request.getItems()
+                        .stream()
+                        .map(item -> new CompetitionCommands.SortItemCommand(item.getId(), item.getSortOrder()))
+                        .toList());
+        competitionAppService.batchUpdateSortOrder(command);
+        return ResponseMessage.success(null);
     }
 
     @Operation(summary = "移动竞赛排序", description = "将竞赛上移或下移一位，与相邻竞赛交换排序号")
@@ -112,16 +96,8 @@ public class AdminCompetitionController {
     public ResponseMessage<Void> moveCompetition(
             @Parameter(description = "竞赛ID", required = true) @PathVariable Long id,
             @Valid @RequestBody MoveCompetitionRequestDTO request) {
-        try {
-            competitionAppService.moveCompetition(competitionRequestConverter.toCommand(id, request));
-            return ResponseMessage.success(null);
-        } catch (IllegalArgumentException e) {
-            String msg = e.getMessage();
-            if ("竞赛不存在".equals(msg)) {
-                return ResponseMessage.error(404, msg);
-            }
-            return ResponseMessage.error(400, msg);
-        }
+        competitionAppService.moveCompetition(competitionRequestConverter.toCommand(id, request));
+        return ResponseMessage.success(null);
     }
 
     private CompetitionResponseDTO toResponseDTO(CompetitionResult result) {

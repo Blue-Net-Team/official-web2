@@ -9,7 +9,6 @@ import com.bluenet.web.application.VenueResult;
 import com.bluenet.web.application.command.venue.VenueCommands;
 import com.bluenet.web.api.converter.venue.VenueResponseConverter;
 import com.bluenet.web.application.service.VenueAppService;
-import com.bluenet.web.domain.exception.DataNotFound;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
 import com.bluenet.web.infrastructure.security.annotation.RequiresPermission;
 import io.swagger.v3.oas.annotations.Operation;
@@ -40,13 +39,9 @@ public class AdminVenueController {
     @RequiresPermission(name = "创建场地", value = "venue:create", access = AccessLevel.PROTECTED)
     @PostMapping
     public ResponseMessage<VenueDTO> createVenue(@Valid @RequestBody CreateVenueRequestDTO request) {
-        try {
-            VenueCommands.CreateVenueCommand command = venueRequestConverter.toCommand(request);
-            VenueResult result = venueAppService.createVenue(command);
-            return ResponseMessage.success(venueResponseConverter.toDTO(result));
-        } catch (IllegalArgumentException e) {
-            return ResponseMessage.error(400, e.getMessage());
-        }
+        VenueCommands.CreateVenueCommand command = venueRequestConverter.toCommand(request);
+        VenueResult result = venueAppService.createVenue(command);
+        return ResponseMessage.success(venueResponseConverter.toDTO(result));
     }
 
     @Operation(summary = "更新场地", description = "更新场地信息")
@@ -55,15 +50,9 @@ public class AdminVenueController {
     public ResponseMessage<VenueDTO> updateVenue(
             @Parameter(description = "场地ID", required = true) @PathVariable Long id,
             @Valid @RequestBody UpdateVenueRequestDTO request) {
-        try {
-            VenueCommands.UpdateVenueCommand command = venueRequestConverter.toCommand(id, request);
-            VenueResult result = venueAppService.updateVenue(command);
-            return ResponseMessage.success(venueResponseConverter.toDTO(result));
-        } catch (DataNotFound e) {
-            return ResponseMessage.error(404, e.getMessage());
-        } catch (IllegalArgumentException e) {
-            return ResponseMessage.error(400, e.getMessage());
-        }
+        VenueCommands.UpdateVenueCommand command = venueRequestConverter.toCommand(id, request);
+        VenueResult result = venueAppService.updateVenue(command);
+        return ResponseMessage.success(venueResponseConverter.toDTO(result));
     }
 
     @Operation(summary = "删除场地", description = "删除场地")
@@ -71,12 +60,8 @@ public class AdminVenueController {
     @DeleteMapping("/{id}")
     public ResponseMessage<Void> deleteVenue(
             @Parameter(description = "场地ID", required = true) @PathVariable Long id) {
-        try {
-            venueAppService.deleteVenue(id);
-            return ResponseMessage.success(null);
-        } catch (DataNotFound e) {
-            return ResponseMessage.error(404, e.getMessage());
-        }
+        venueAppService.deleteVenue(id);
+        return ResponseMessage.success(null);
     }
 
     @Operation(summary = "更新场地图片", description = "更新场地图片")
@@ -85,11 +70,7 @@ public class AdminVenueController {
     public ResponseMessage<Void> updateVenueImage(
             @Parameter(description = "场地ID", required = true) @PathVariable Long id,
             @Parameter(description = "图片文件ID", required = true) @RequestParam Long imageFileId) {
-        try {
-            venueAppService.updateVenueImage(id, imageFileId);
-            return ResponseMessage.success(null);
-        } catch (DataNotFound e) {
-            return ResponseMessage.error(404, e.getMessage());
-        }
+        venueAppService.updateVenueImage(id, imageFileId);
+        return ResponseMessage.success(null);
     }
 }
