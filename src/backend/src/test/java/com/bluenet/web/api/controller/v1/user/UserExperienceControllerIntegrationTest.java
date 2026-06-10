@@ -474,6 +474,53 @@ class UserExperienceControllerIntegrationTest extends BaseIntegrationTest {
     }
 
     /**
+     * 成功更新实习经历（通过 company 字段）
+     */
+    @Test
+    void updateExperience_whenInternshipByCompany_updatesSuccessfully() {
+        AuthCookies auth = loginAndGetCookies();
+
+        // 先创建实习经历
+        CreateExperienceRequestDTO createRequest = new CreateExperienceRequestDTO();
+        createRequest.setType("INTERNSHIP");
+        createRequest.setCompany("原公司名");
+        createRequest.setPosition("后端实习生");
+        createRequest.setStartDate("2024.03");
+        createRequest.setStatus("ACTIVE");
+
+        ResponseEntity<ResponseMessage<ExperienceDTO>> createResponse = restTemplate.exchange(
+                "/api/v1/user/experiences",
+                HttpMethod.POST,
+                withAuthAndCsrf(auth, createRequest),
+                new ParameterizedTypeReference<ResponseMessage<ExperienceDTO>>() {
+                });
+
+        String experienceId = createResponse.getBody().getData().getId();
+
+        // 通过 company 字段更新实习经历
+        UpdateExperienceRequestDTO updateRequest = new UpdateExperienceRequestDTO();
+        updateRequest.setCompany("更新后的公司名");
+        updateRequest.setPosition("算法实习生");
+        updateRequest.setDescription("更新后的描述");
+
+        ResponseEntity<ResponseMessage<ExperienceDTO>> updateResponse = restTemplate.exchange(
+                "/api/v1/user/experiences/" + experienceId,
+                HttpMethod.PUT,
+                withAuthAndCsrf(auth, updateRequest),
+                new ParameterizedTypeReference<ResponseMessage<ExperienceDTO>>() {
+                });
+
+        assertEquals(HttpStatus.OK, updateResponse.getStatusCode());
+        assertNotNull(updateResponse.getBody());
+        assertEquals(200, updateResponse.getBody().getCode());
+
+        ExperienceDTO updated = updateResponse.getBody().getData();
+        assertEquals("更新后的公司名", updated.getName());
+        assertEquals("更新后的公司名", updated.getCompany());
+        assertEquals("算法实习生", updated.getPosition());
+    }
+
+    /**
      * 更新不存在的经历应返回错误
      */
     @Test

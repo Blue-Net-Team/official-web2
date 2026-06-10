@@ -50,6 +50,9 @@ public class UpdateExperienceRequestDTO {
     private String certificateUrl;
 
     // 实习字段
+    @Schema(description = "公司名称（实习类型），与 name 同义")
+    private String company;
+
     @Schema(description = "实习岗位（实习类型）")
     private String position;
 
