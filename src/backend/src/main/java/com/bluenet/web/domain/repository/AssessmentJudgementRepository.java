@@ -165,4 +165,15 @@ public interface AssessmentJudgementRepository {
      *            评审结果实体列表。
      */
     void batchInsert(List<com.bluenet.web.domain.model.entity.AssessmentJudgement> judgements);
+
+    /**
+     * 插入或更新 ADMIN_FINALIZED 评审结果。
+     * <p>
+     * 利用数据库唯一索引实现原子性的 upsert，避免并发场景下重复插入。
+     * </p>
+     *
+     * @param judgement
+     *            评审结果实体。
+     */
+    void upsertAdminFinalized(AssessmentJudgement judgement);
 }

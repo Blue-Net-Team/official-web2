@@ -251,6 +251,16 @@ public class AssessmentJudgementRepositoryImpl implements AssessmentJudgementRep
         }
         List<AssessmentJudgementDO> dataObjects = converter.toDataObjectList(judgements);
         assessmentJudgementMapper.batchInsert(dataObjects);
+        // 回写主键到实体（PostgreSQL foreach 批量插入可能只回写部分，驱动支持时生效）
+        for (int i = 0; i < dataObjects.size(); i++) {
+            judgements.get(i).setId(dataObjects.get(i).getId());
+        }
+    }
+
+    @Override
+    public void upsertAdminFinalized(AssessmentJudgement judgement) {
+        AssessmentJudgementDO dataObject = converter.toDataObject(judgement);
+        assessmentJudgementMapper.upsertAdminFinalized(dataObject);
     }
 
     /**

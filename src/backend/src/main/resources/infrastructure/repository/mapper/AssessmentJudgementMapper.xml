@@ -316,7 +316,7 @@
         </foreach>
     </delete>
 
-    <insert id="batchInsert">
+    <insert id="batchInsert" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO tb_assessment_judgement (
             answer_id, question_id, assessment_time_id, user_id,
             score, max_score, status, result_code, source,
@@ -330,5 +330,29 @@
              #{j.reviewerId}, #{j.reviewerType}, #{j.judgedAt},
              #{j.createdAt}, #{j.updatedAt})
         </foreach>
+    </insert>
+
+    <insert id="upsertAdminFinalized">
+        INSERT INTO tb_assessment_judgement (
+            answer_id, question_id, assessment_time_id, user_id,
+            score, max_score, status, result_code, source,
+            reviewer_id, reviewer_type, judged_at,
+            created_at, updated_at
+        )
+        VALUES (
+            #{judgement.answerId}, #{judgement.questionId}, #{judgement.assessmentTimeId}, #{judgement.userId},
+            #{judgement.score}, #{judgement.maxScore}, #{judgement.status}, #{judgement.resultCode}, #{judgement.source},
+            #{judgement.reviewerId}, #{judgement.reviewerType}, #{judgement.judgedAt},
+            #{judgement.createdAt}, #{judgement.updatedAt}
+        )
+        ON CONFLICT (answer_id, source) WHERE source = 'ADMIN_FINALIZED' DO UPDATE
+        SET score = EXCLUDED.score,
+            max_score = EXCLUDED.max_score,
+            status = EXCLUDED.status,
+            result_code = EXCLUDED.result_code,
+            reviewer_id = EXCLUDED.reviewer_id,
+            reviewer_type = EXCLUDED.reviewer_type,
+            judged_at = EXCLUDED.judged_at,
+            updated_at = EXCLUDED.updated_at
     </insert>
 </mapper>

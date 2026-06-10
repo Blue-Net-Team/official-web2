@@ -153,4 +153,17 @@ public interface AssessmentJudgementMapper extends BaseMapper<AssessmentJudgemen
      */
     int batchInsert(
             @Param("judgements") List<com.bluenet.web.infrastructure.repository.dataobject.AssessmentJudgementDO> judgements);
+
+    /**
+     * 插入或更新 ADMIN_FINALIZED 评审结果数据行。
+     * <p>
+     * 利用 PostgreSQL ON CONFLICT 实现原子性 upsert。
+     * </p>
+     *
+     * @param judgement
+     *            评审结果数据对象。
+     * @return 影响的记录数量。
+     */
+    int upsertAdminFinalized(
+            @Param("judgement") com.bluenet.web.infrastructure.repository.dataobject.AssessmentJudgementDO judgement);
 }

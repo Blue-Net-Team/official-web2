@@ -198,6 +198,7 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
         }
 
         AssessmentJudgementResult result;
+        LocalDateTime now = LocalDateTime.now();
         if (answer.getTeamId() != null) {
             // 组队场景：根据是否已有 ADMIN_FINALIZED 判断首次/再次评分
             boolean hasExistingFinalized = assessmentJudgementRepository
@@ -205,7 +206,7 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
                     .isPresent();
             if (hasExistingFinalized) {
                 // 再次评分 → 只更新当前答案（队长或队员）
-                result = finalizeSingleAnswer(answer, question, command, currentUser, roleType);
+                result = finalizeSingleAnswer(answer, question, command, currentUser, roleType, now);
             } else {
                 // 首次评分 → 判断是否为队长
                 AssessmentTeam team = assessmentTeamRepository.findById(answer.getTeamId())
@@ -213,11 +214,11 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
                 if (team.isLeader(answer.getUserId())) {
                     result = finalizeTeamFirstTime(answer, question, command, currentUser, roleType, team);
                 } else {
-                    result = finalizeSingleAnswer(answer, question, command, currentUser, roleType);
+                    result = finalizeSingleAnswer(answer, question, command, currentUser, roleType, now);
                 }
             }
         } else {
-            result = finalizeSingleAnswer(answer, question, command, currentUser, roleType);
+            result = finalizeSingleAnswer(answer, question, command, currentUser, roleType, now);
         }
 
         return result;
@@ -231,7 +232,8 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
             AssessmentQuestion question,
             AssessmentJudgementCommands.FinalizeScoreCommand command,
             UserVO currentUser,
-            RoleType roleType) {
+            RoleType roleType,
+            LocalDateTime judgedAt) {
         AssessmentJudgementVO judgement = AssessmentJudgementVO.builder()
                 .answerId(answer.getId())
                 .questionId(question.getId())
@@ -243,13 +245,13 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
                 .source(JudgementSource.ADMIN_FINALIZED)
                 .reviewerId(currentUser.getId())
                 .reviewerType(resolveReviewerType(roleType))
-                .judgedAt(LocalDateTime.now())
+                .judgedAt(judgedAt)
                 .build();
         return toResult(assessmentJudgementDomainService.finalizeJudgement(judgement));
     }
 
     /**
-     * 队长首次评分：更新队长记录，并批量传播给尚无 ADMIN_FINALIZED 的队员。
+     * 队长首次评分：统一批量插入所有尚无 ADMIN_FINALIZED 的成员（包括队长）。
      */
     private AssessmentJudgementResult finalizeTeamFirstTime(
             AssessmentAnswer leaderAnswer,
@@ -258,38 +260,31 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
             UserVO currentUser,
             RoleType roleType,
             AssessmentTeam team) {
-        // 1. 更新队长的评判记录
-        AssessmentJudgementResult leaderResult = finalizeSingleAnswer(
-                leaderAnswer,
-                question,
-                command,
-                currentUser,
-                roleType);
+        LocalDateTime now = LocalDateTime.now();
 
-        // 2. 查询全队所有答案
-        List<AssessmentAnswer> memberAnswers = assessmentAnswerRepository
+        // 1. 查询全队所有答案
+        List<AssessmentAnswer> allAnswers = assessmentAnswerRepository
                 .findByTeamIdAndQuestionId(team.getId(), question.getId());
 
-        // 3. 批量查询哪些队员已有 ADMIN_FINALIZED
-        List<Long> allAnswerIds = memberAnswers.stream()
+        // 2. 批量查询已有 ADMIN_FINALIZED 的 answerIds
+        List<Long> allAnswerIds = allAnswers.stream()
                 .map(AssessmentAnswer::getId)
                 .toList();
         List<Long> finalizedAnswerIds = assessmentJudgementRepository
                 .findAnswerIdsBySource(allAnswerIds, JudgementSource.ADMIN_FINALIZED);
         Set<Long> finalizedAnswerIdSet = new java.util.HashSet<>(finalizedAnswerIds);
 
-        // 4. 过滤出尚无 ADMIN_FINALIZED 的队员答案，批量插入
-        LocalDateTime now = LocalDateTime.now();
+        // 3. 统一构建所有需要插入的 judgement（包括队长和队员）
         List<AssessmentJudgement> judgementsToInsert = new ArrayList<>();
-        for (AssessmentAnswer memberAnswer : memberAnswers) {
-            if (finalizedAnswerIdSet.contains(memberAnswer.getId())) {
-                continue; // 跳过已有 ADMIN_FINALIZED 的队员
+        for (AssessmentAnswer answer : allAnswers) {
+            if (finalizedAnswerIdSet.contains(answer.getId())) {
+                continue; // 跳过已有 ADMIN_FINALIZED 的成员
             }
-            AssessmentJudgement memberJudgement = AssessmentJudgement.create(
-                    memberAnswer.getId(),
+            AssessmentJudgement judgement = AssessmentJudgement.create(
+                    answer.getId(),
                     question.getId(),
                     question.getAssessmentTimeId(),
-                    memberAnswer.getUserId(),
+                    answer.getUserId(),
                     command.score(),
                     question.getScore(),
                     JudgementStatus.JUDGED,
@@ -298,11 +293,12 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
                     currentUser.getId(),
                     resolveReviewerType(roleType),
                     now);
-            memberJudgement.setCreatedAt(now);
-            memberJudgement.setUpdatedAt(now);
-            judgementsToInsert.add(memberJudgement);
+            judgement.setCreatedAt(now);
+            judgement.setUpdatedAt(now);
+            judgementsToInsert.add(judgement);
         }
 
+        // 4. 统一批量插入
         if (!judgementsToInsert.isEmpty()) {
             assessmentJudgementRepository.batchInsert(judgementsToInsert);
             log.info(
@@ -312,7 +308,11 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
                     judgementsToInsert.size());
         }
 
-        return leaderResult;
+        // 5. 查询队长最新记录并返回
+        AssessmentJudgement leaderEntity = assessmentJudgementRepository
+                .findLatestByAnswerIdAndSource(leaderAnswer.getId(), JudgementSource.ADMIN_FINALIZED)
+                .orElseThrow(() -> new com.bluenet.web.domain.exception.GlobalException("队长评分记录创建失败"));
+        return entityToResult(leaderEntity);
     }
 
     /**
@@ -829,6 +829,26 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
                 judgement.getReviewerId(),
                 judgement.getReviewerType(),
                 judgement.getJudgedAt());
+    }
+
+    private AssessmentJudgementResult entityToResult(AssessmentJudgement entity) {
+        if (entity == null) {
+            return null;
+        }
+        return new AssessmentJudgementResult(
+                entity.getId(),
+                entity.getAnswerId(),
+                entity.getQuestionId(),
+                entity.getAssessmentTimeId(),
+                entity.getUserId(),
+                entity.getScore(),
+                entity.getMaxScore(),
+                entity.getStatus(),
+                entity.getResultCode(),
+                entity.getSource(),
+                entity.getReviewerId(),
+                entity.getReviewerType(),
+                entity.getJudgedAt());
     }
 
     private AssessmentDecisionResult toDecisionResult(AssessmentDecisionVO decision) {
