@@ -9,6 +9,7 @@ import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
+import java.util.Objects;
 
 /**
  * GitHub Webhook 签名验证器。
@@ -69,8 +70,11 @@ public class GitHubWebhookVerifier {
     String computeSignature(String payload) {
         try {
             Mac mac = Mac.getInstance(HMAC_ALGORITHM);
+            String secret = Objects.requireNonNull(
+                    properties.getWebhookSecret(),
+                    "GitHub Webhook Secret 未配置");
             SecretKeySpec secretKey = new SecretKeySpec(
-                    properties.getWebhookSecret().getBytes(StandardCharsets.UTF_8),
+                    secret.getBytes(StandardCharsets.UTF_8),
                     HMAC_ALGORITHM);
             mac.init(secretKey);
             byte[] signatureBytes = mac.doFinal(payload.getBytes(StandardCharsets.UTF_8));

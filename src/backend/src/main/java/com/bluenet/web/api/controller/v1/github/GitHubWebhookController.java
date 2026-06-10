@@ -11,14 +11,16 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 
 /**
  * GitHub Webhook 控制器。
  * <p>
- * 接收 GitHub 发送的 Webhook 事件，处理 Issue 状态变更和反向同步。 此端点不使用
- * {@code @RequiresPermission}，由 HMAC-SHA256 签名验证保护。
+ * 接收 GitHub 发送的 Webhook 事件，处理 Issue 状态变更和反向同步。 使用
+ * {@code @RequiresPermission(access = AccessLevel.PUBLIC)} 满足权限扫描规范，实际访问控制由
+ * HMAC-SHA256 签名验证完成。
  * </p>
  */
 @Hidden
@@ -38,6 +40,10 @@ public class GitHubWebhookController {
      * 接收 GitHub Webhook 事件。
      * <p>
      * 仅处理 {@code issues} 类型事件，其他类型事件被忽略。 签名验证失败返回 401，业务处理异常始终返回 200（避免 GitHub 重试）。
+     * </p>
+     * <p>
+     * 注意：此端点返回 {@link ResponseEntity} 而非 {@code ResponseMessage}，因为 GitHub Webhook
+     * 调用方只关心 HTTP 状态码，不解析响应体。
      * </p>
      *
      * @param request
@@ -88,13 +94,8 @@ public class GitHubWebhookController {
     }
 
     String readBody(HttpServletRequest request) throws IOException {
-        StringBuilder sb = new StringBuilder();
-        try (BufferedReader reader = request.getReader()) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                sb.append(line);
-            }
+        try (InputStream is = request.getInputStream()) {
+            return new String(is.readAllBytes(), StandardCharsets.UTF_8);
         }
-        return sb.toString();
     }
 }

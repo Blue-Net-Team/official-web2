@@ -13,9 +13,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
+import jakarta.servlet.ReadListener;
+import jakarta.servlet.ServletInputStream;
 import jakarta.servlet.http.HttpServletRequest;
-import java.io.BufferedReader;
-import java.io.StringReader;
+import java.io.ByteArrayInputStream;
+import java.nio.charset.StandardCharsets;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -41,6 +43,30 @@ class GitHubWebhookControllerTest {
         // controller 通过 @InjectMocks 自动创建
     }
 
+    private ServletInputStream createServletInputStream(String payload) {
+        ByteArrayInputStream bis = new ByteArrayInputStream(payload.getBytes(StandardCharsets.UTF_8));
+        return new ServletInputStream() {
+            @Override
+            public int read() {
+                return bis.read();
+            }
+
+            @Override
+            public boolean isFinished() {
+                return bis.available() == 0;
+            }
+
+            @Override
+            public boolean isReady() {
+                return true;
+            }
+
+            @Override
+            public void setReadListener(ReadListener readListener) {
+            }
+        };
+    }
+
     @Nested
     @DisplayName("receiveWebhook 方法测试")
     class ReceiveWebhookTest {
@@ -52,7 +78,7 @@ class GitHubWebhookControllerTest {
 
             when(request.getHeader("X-GitHub-Event")).thenReturn("issues");
             when(request.getHeader("X-Hub-Signature-256")).thenReturn("sha256=valid-signature");
-            when(request.getReader()).thenReturn(new BufferedReader(new StringReader(payload)));
+            when(request.getInputStream()).thenReturn(createServletInputStream(payload));
             doNothing().when(webhookVerifier).verify(payload, "sha256=valid-signature");
             doNothing().when(webhookService).processIssuesEvent(payload);
 
@@ -70,7 +96,7 @@ class GitHubWebhookControllerTest {
 
             when(request.getHeader("X-GitHub-Event")).thenReturn("issues");
             when(request.getHeader("X-Hub-Signature-256")).thenReturn("sha256=invalid-signature");
-            when(request.getReader()).thenReturn(new BufferedReader(new StringReader(payload)));
+            when(request.getInputStream()).thenReturn(createServletInputStream(payload));
             doThrow(new IllegalArgumentException("签名验证失败"))
                     .when(webhookVerifier)
                     .verify(payload, "sha256=invalid-signature");
@@ -88,7 +114,7 @@ class GitHubWebhookControllerTest {
 
             when(request.getHeader("X-GitHub-Event")).thenReturn("pull_request");
             when(request.getHeader("X-Hub-Signature-256")).thenReturn("sha256=valid-signature");
-            when(request.getReader()).thenReturn(new BufferedReader(new StringReader(payload)));
+            when(request.getInputStream()).thenReturn(createServletInputStream(payload));
             doNothing().when(webhookVerifier).verify(payload, "sha256=valid-signature");
 
             ResponseEntity<Void> response = controller.receiveWebhook(request);
@@ -104,7 +130,7 @@ class GitHubWebhookControllerTest {
 
             when(request.getHeader("X-GitHub-Event")).thenReturn(null);
             when(request.getHeader("X-Hub-Signature-256")).thenReturn("sha256=valid-signature");
-            when(request.getReader()).thenReturn(new BufferedReader(new StringReader(payload)));
+            when(request.getInputStream()).thenReturn(createServletInputStream(payload));
             doNothing().when(webhookVerifier).verify(payload, "sha256=valid-signature");
 
             ResponseEntity<Void> response = controller.receiveWebhook(request);
@@ -120,7 +146,7 @@ class GitHubWebhookControllerTest {
 
             when(request.getHeader("X-GitHub-Event")).thenReturn("issues");
             when(request.getHeader("X-Hub-Signature-256")).thenReturn("sha256=valid-signature");
-            when(request.getReader()).thenReturn(new BufferedReader(new StringReader(payload)));
+            when(request.getInputStream()).thenReturn(createServletInputStream(payload));
             doNothing().when(webhookVerifier).verify(payload, "sha256=valid-signature");
             doThrow(new RuntimeException("模拟业务异常")).when(webhookService).processIssuesEvent(payload);
 

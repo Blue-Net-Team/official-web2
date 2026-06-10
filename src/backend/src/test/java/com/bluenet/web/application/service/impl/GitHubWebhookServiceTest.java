@@ -241,15 +241,14 @@ class GitHubWebhookServiceTest {
 
     private String createIssuePayload(String action, int number, String title, String body, String htmlUrl) {
         try {
-            return "{"
-                    + "\"action\":\"" + action + "\","
-                    + "\"issue\":{"
-                    + "\"number\":" + number + ","
-                    + "\"title\":\"" + title + "\","
-                    + "\"body\":\"" + body + "\","
-                    + "\"html_url\":\"" + htmlUrl + "\""
-                    + "}"
-                    + "}";
+            com.fasterxml.jackson.databind.node.ObjectNode root = objectMapper.createObjectNode();
+            root.put("action", action);
+            com.fasterxml.jackson.databind.node.ObjectNode issue = root.putObject("issue");
+            issue.put("number", number);
+            issue.put("title", title);
+            issue.put("body", body);
+            issue.put("html_url", htmlUrl);
+            return objectMapper.writeValueAsString(root);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

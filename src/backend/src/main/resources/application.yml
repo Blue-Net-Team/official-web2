@@ -144,6 +144,7 @@ github:
     owner: ${GITHUB_APP_OWNER:}
     repo: ${GITHUB_APP_REPO:}
     app-base-url: ${GITHUB_APP_APP_BASE_URL:http://localhost:8080}
+    webhook-secret: ${GITHUB_APP_WEBHOOK_SECRET:}
 
 # CORS 配置
 cors:

@@ -106,13 +106,8 @@ public class GitHubWebhookService {
             return;
         }
 
-        String description = issueNode.path("body").asText(null);
+        String description = body.isBlank() ? title : body;
         String htmlUrl = issueNode.path("html_url").asText(null);
-
-        // 如果 description 为空，使用 title 作为降级
-        if (description == null || description.isBlank()) {
-            description = title;
-        }
 
         BugReport bugReport = BugReport.reconstruct(
                 null,
@@ -143,7 +138,8 @@ public class GitHubWebhookService {
         }
 
         // 如果状态没有变化，跳过
-        if (bugReport.getStatus() == newStatus) {
+        BugReportStatus oldStatus = bugReport.getStatus();
+        if (oldStatus == newStatus) {
             log.debug("Bug 报告 {} 状态已经是 {}，无需更新", bugReport.getId(), newStatus);
             return;
         }
@@ -153,7 +149,7 @@ public class GitHubWebhookService {
         log.info(
                 "Bug 报告 {} 状态自动更新: {} → {} (triggered by GitHub issues.{})",
                 bugReport.getId(),
-                bugReport.getStatus(),
+                oldStatus,
                 newStatus,
                 action);
     }
