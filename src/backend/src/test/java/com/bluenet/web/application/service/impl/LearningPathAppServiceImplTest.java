@@ -16,6 +16,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.bluenet.web.application.LearningPathResult;
 import com.bluenet.web.application.command.learningpath.LearningPathCommands;
+import com.bluenet.web.domain.exception.DataNotFound;
 import com.bluenet.web.domain.model.entity.DirectionLearningStep;
 import com.bluenet.web.domain.model.enumerate.Direction;
 import com.bluenet.web.domain.repository.LearningPathRepository;
@@ -65,7 +66,7 @@ class LearningPathAppServiceImplTest {
     @Test
     @DisplayName("获取学习路径：无效slug应抛出异常")
     void getLearningPath_invalidSlug_shouldThrowException() {
-        assertThrows(IllegalArgumentException.class, () -> learningPathAppService.getLearningPath("invalid"));
+        assertThrows(DataNotFound.class, () -> learningPathAppService.getLearningPath("invalid"));
     }
 
     // ==================== createStep ====================

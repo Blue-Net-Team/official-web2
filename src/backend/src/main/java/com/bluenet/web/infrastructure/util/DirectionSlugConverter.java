@@ -1,5 +1,6 @@
 package com.bluenet.web.infrastructure.util;
 
+import com.bluenet.web.domain.exception.DataNotFound;
 import com.bluenet.web.domain.model.enumerate.Direction;
 
 /**
@@ -17,6 +18,8 @@ public class DirectionSlugConverter {
      *            前端slug（cv/embed/struct）
      * @return Direction枚举
      * @throws IllegalArgumentException
+     *             如果slug为空或null
+     * @throws DataNotFound
      *             如果slug无效
      */
     public static Direction fromSlug(String slug) {
@@ -28,7 +31,7 @@ public class DirectionSlugConverter {
             case "cv" -> Direction.COMPUTER_VISION;
             case "embed" -> Direction.EMBEDDED;
             case "struct" -> Direction.STRUCTURAL_DESIGN;
-            default -> throw new IllegalArgumentException("无效的方向标识: " + slug);
+            default -> throw new DataNotFound("无效的方向标识: " + slug);
         };
     }
 

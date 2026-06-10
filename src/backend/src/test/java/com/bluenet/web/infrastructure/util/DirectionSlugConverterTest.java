@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import com.bluenet.web.domain.exception.DataNotFound;
 import com.bluenet.web.domain.model.enumerate.Direction;
 
 /**
@@ -69,8 +70,8 @@ class DirectionSlugConverterTest {
     @DisplayName("fromSlug: 无效slug应抛出异常")
     void fromSlug_invalidSlug_shouldThrowException() {
         // 执行 & 验证
-        IllegalArgumentException exception = assertThrows(
-                IllegalArgumentException.class,
+        DataNotFound exception = assertThrows(
+                DataNotFound.class,
                 () -> DirectionSlugConverter.fromSlug("invalid"));
 
         assertTrue(exception.getMessage().contains("无效的方向标识"));
