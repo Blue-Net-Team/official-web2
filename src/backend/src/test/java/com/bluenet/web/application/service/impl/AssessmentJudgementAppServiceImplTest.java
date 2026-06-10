@@ -11,6 +11,8 @@ import com.bluenet.web.domain.model.enumerate.QuestionType;
 import com.bluenet.web.domain.model.enumerate.ReviewerType;
 import com.bluenet.web.domain.model.enumerate.RoleType;
 import com.bluenet.web.domain.model.entity.AssessmentAnswer;
+import com.bluenet.web.domain.model.entity.AssessmentJudgement;
+import com.bluenet.web.domain.model.entity.AssessmentTeam;
 import com.bluenet.web.domain.model.vo.AssessmentCandidateScoreRowVO;
 import com.bluenet.web.domain.model.vo.AssessmentCandidateScoreboardVO;
 import com.bluenet.web.domain.model.vo.AssessmentDecisionCandidateVO;
@@ -668,11 +670,11 @@ class AssessmentJudgementAppServiceImplTest {
     }
 
     /**
-     * 验证队长确认最终评分后，评分会同步到所有组员。
+     * 验证队长首次确认最终评分时，会统一批量插入所有无评分的成员（包括队长）。
      */
     @Test
-    @DisplayName("确认最终评分：队伍答案应同步到所有组员")
-    void finalizeScore_teamAnswer_shouldPropagateToMembers() {
+    @DisplayName("确认最终评分：队长首次评分应统一批量插入全队无评分成员")
+    void finalizeScore_teamLeaderFirstTime_shouldPropagateToMembersWithoutFinalized() {
         try (MockedStatic<UserCTX> mockedUserCTX = mockStatic(UserCTX.class)) {
             mockedUserCTX.when(UserCTX::getCurrentUser).thenReturn(createUser(RoleType.DIRECTION_ADMIN));
 
@@ -690,44 +692,32 @@ class AssessmentJudgementAppServiceImplTest {
             when(assessmentQuestionRepository.findById(QUESTION_ID))
                     .thenReturn(Optional.of(createQuestion(QuestionType.FILE_UPLOAD)));
             when(commentRepository.existsByAnswerIdAndUserId(ANSWER_ID, REVIEWER_ID)).thenReturn(true);
-            when(assessmentJudgementDomainService.getLatestByAnswerId(ANSWER_ID))
-                    .thenReturn(createJudgementVO(JudgementSource.ADMIN_FINALIZED, ReviewerType.DIRECTION_ADMIN));
+
+            // 首次评分：无现有 ADMIN_FINALIZED
+            when(
+                    assessmentJudgementRepository
+                            .findLatestByAnswerIdAndSource(ANSWER_ID, JudgementSource.ADMIN_FINALIZED))
+                                    .thenReturn(Optional.empty());
+
+            // 队伍存在，当前用户是队长
+            AssessmentTeam team = AssessmentTeam.reconstruct(
+                    teamId,
+                    ASSESSMENT_TIME_ID,
+                    CANDIDATE_ID,
+                    "team",
+                    "code",
+                    AssessmentTeam.TeamStatus.ACTIVE,
+                    LocalDateTime.now());
+            when(assessmentTeamRepository.findById(teamId)).thenReturn(Optional.of(team));
 
             Long memberId1 = 41L;
             Long memberId2 = 42L;
-            when(assessmentTeamRepository.findMembersByTeamId(teamId))
-                    .thenReturn(
-                            List.of(
-                                    com.bluenet.web.domain.model.entity.AssessmentTeamMember.reconstruct(
-                                            1L,
-                                            teamId,
-                                            CANDIDATE_ID,
-                                            LocalDateTime.now()),
-                                    com.bluenet.web.domain.model.entity.AssessmentTeamMember.reconstruct(
-                                            2L,
-                                            teamId,
-                                            memberId1,
-                                            LocalDateTime.now()),
-                                    com.bluenet.web.domain.model.entity.AssessmentTeamMember.reconstruct(
-                                            3L,
-                                            teamId,
-                                            memberId2,
-                                            LocalDateTime.now())));
-
             Long memberAnswerId1 = 101L;
             Long memberAnswerId2 = 102L;
             when(assessmentAnswerRepository.findByTeamIdAndQuestionId(teamId, QUESTION_ID))
                     .thenReturn(
                             List.of(
-                                    AssessmentAnswer.reconstruct(
-                                            ANSWER_ID,
-                                            CANDIDATE_ID,
-                                            QUESTION_ID,
-                                            null,
-                                            null,
-                                            null,
-                                            null,
-                                            teamId),
+                                    leaderAnswer,
                                     AssessmentAnswer.reconstruct(
                                             memberAnswerId1,
                                             memberId1,
@@ -747,12 +737,42 @@ class AssessmentJudgementAppServiceImplTest {
                                             null,
                                             teamId)));
 
+            // 全队均无 ADMIN_FINALIZED
+            when(assessmentJudgementRepository.findAnswerIdsBySource(any(), eq(JudgementSource.ADMIN_FINALIZED)))
+                    .thenReturn(List.of());
+
+            AssessmentJudgement leaderEntity = AssessmentJudgement.reconstruct(
+                    100L,
+                    ANSWER_ID,
+                    QUESTION_ID,
+                    ASSESSMENT_TIME_ID,
+                    CANDIDATE_ID,
+                    BigDecimal.valueOf(8),
+                    BigDecimal.TEN,
+                    JudgementStatus.JUDGED,
+                    null,
+                    JudgementSource.ADMIN_FINALIZED,
+                    REVIEWER_ID,
+                    ReviewerType.DIRECTION_ADMIN,
+                    LocalDateTime.now(),
+                    LocalDateTime.now(),
+                    LocalDateTime.now());
+            when(
+                    assessmentJudgementRepository
+                            .findLatestByAnswerIdAndSource(ANSWER_ID, JudgementSource.ADMIN_FINALIZED))
+                                    .thenReturn(Optional.empty())
+                                    .thenReturn(Optional.of(leaderEntity));
+
             AssessmentJudgementResult result = assessmentJudgementAppService.finalizeScore(
                     new AssessmentJudgementCommands.FinalizeScoreCommand(ANSWER_ID, BigDecimal.valueOf(8)));
 
             assertNotNull(result);
             assertEquals(JudgementSource.ADMIN_FINALIZED, result.source());
 
+            // 不调用 finalizeJudgement，统一通过 batchInsert
+            verify(assessmentJudgementDomainService, never()).finalizeJudgement(any());
+
+            // 统一批量插入，包含队长和 2 个队员
             ArgumentCaptor<List> captor = ArgumentCaptor.forClass(List.class);
             verify(assessmentJudgementRepository).batchInsert(captor.capture());
             List<com.bluenet.web.domain.model.entity.AssessmentJudgement> judgements = captor.getValue();
@@ -760,11 +780,224 @@ class AssessmentJudgementAppServiceImplTest {
             assertTrue(judgements.stream().anyMatch(j -> j.getUserId().equals(CANDIDATE_ID)));
             assertTrue(judgements.stream().anyMatch(j -> j.getUserId().equals(memberId1)));
             assertTrue(judgements.stream().anyMatch(j -> j.getUserId().equals(memberId2)));
-            assertTrue(judgements.stream().allMatch(j -> j.getScore().compareTo(BigDecimal.valueOf(8)) == 0));
-            assertTrue(
-                    judgements.stream()
-                            .allMatch(
-                                    j -> j.getSource() == JudgementSource.ADMIN_FINALIZED));
+        }
+    }
+
+    /**
+     * 验证队长再次确认最终评分时，只更新自己，不再传播。
+     */
+    @Test
+    @DisplayName("确认最终评分：队长再次评分只更新自己")
+    void finalizeScore_teamLeaderReFinalize_shouldUpdateLeaderOnly() {
+        try (MockedStatic<UserCTX> mockedUserCTX = mockStatic(UserCTX.class)) {
+            mockedUserCTX.when(UserCTX::getCurrentUser).thenReturn(createUser(RoleType.DIRECTION_ADMIN));
+
+            Long teamId = 60L;
+            AssessmentAnswer leaderAnswer = AssessmentAnswer.reconstruct(
+                    ANSWER_ID,
+                    CANDIDATE_ID,
+                    QUESTION_ID,
+                    null,
+                    null,
+                    null,
+                    null,
+                    teamId);
+            when(assessmentAnswerRepository.findById(ANSWER_ID)).thenReturn(Optional.of(leaderAnswer));
+            when(assessmentQuestionRepository.findById(QUESTION_ID))
+                    .thenReturn(Optional.of(createQuestion(QuestionType.FILE_UPLOAD)));
+            when(commentRepository.existsByAnswerIdAndUserId(ANSWER_ID, REVIEWER_ID)).thenReturn(true);
+
+            // 再次评分：已有 ADMIN_FINALIZED
+            when(
+                    assessmentJudgementRepository
+                            .findLatestByAnswerIdAndSource(ANSWER_ID, JudgementSource.ADMIN_FINALIZED))
+                                    .thenReturn(
+                                            Optional.of(
+                                                    mock(
+                                                            com.bluenet.web.domain.model.entity.AssessmentJudgement.class)));
+
+            when(assessmentJudgementDomainService.finalizeJudgement(any(AssessmentJudgementVO.class)))
+                    .thenReturn(createJudgementVO(JudgementSource.ADMIN_FINALIZED, ReviewerType.DIRECTION_ADMIN));
+
+            AssessmentJudgementResult result = assessmentJudgementAppService.finalizeScore(
+                    new AssessmentJudgementCommands.FinalizeScoreCommand(ANSWER_ID, BigDecimal.valueOf(9)));
+
+            assertNotNull(result);
+            assertEquals(JudgementSource.ADMIN_FINALIZED, result.source());
+
+            // 只调用 finalizeJudgement，不调用 batchInsert
+            verify(assessmentJudgementDomainService).finalizeJudgement(any(AssessmentJudgementVO.class));
+            verify(assessmentJudgementRepository, never()).batchInsert(any());
+        }
+    }
+
+    /**
+     * 验证给队员单独评分时，只更新该队员。
+     */
+    @Test
+    @DisplayName("确认最终评分：队员单独评分只更新自己")
+    void finalizeScore_teamMemberIndividual_shouldUpdateMemberOnly() {
+        try (MockedStatic<UserCTX> mockedUserCTX = mockStatic(UserCTX.class)) {
+            mockedUserCTX.when(UserCTX::getCurrentUser).thenReturn(createUser(RoleType.DIRECTION_ADMIN));
+
+            Long teamId = 60L;
+            Long memberId = 41L;
+            Long memberAnswerId = 101L;
+            AssessmentAnswer memberAnswer = AssessmentAnswer.reconstruct(
+                    memberAnswerId,
+                    memberId,
+                    QUESTION_ID,
+                    null,
+                    null,
+                    null,
+                    null,
+                    teamId);
+            when(assessmentAnswerRepository.findById(memberAnswerId)).thenReturn(Optional.of(memberAnswer));
+            when(assessmentQuestionRepository.findById(QUESTION_ID))
+                    .thenReturn(Optional.of(createQuestion(QuestionType.FILE_UPLOAD)));
+            when(commentRepository.existsByAnswerIdAndUserId(memberAnswerId, REVIEWER_ID)).thenReturn(true);
+
+            // 首次评分（对该队员而言）
+            when(
+                    assessmentJudgementRepository.findLatestByAnswerIdAndSource(
+                            memberAnswerId,
+                            JudgementSource.ADMIN_FINALIZED))
+                                    .thenReturn(Optional.empty());
+
+            // 不是队长
+            AssessmentTeam team = AssessmentTeam.reconstruct(
+                    teamId,
+                    ASSESSMENT_TIME_ID,
+                    CANDIDATE_ID,
+                    "team",
+                    "code",
+                    AssessmentTeam.TeamStatus.ACTIVE,
+                    LocalDateTime.now());
+            when(assessmentTeamRepository.findById(teamId)).thenReturn(Optional.of(team));
+
+            when(assessmentJudgementDomainService.finalizeJudgement(any(AssessmentJudgementVO.class)))
+                    .thenReturn(createJudgementVO(JudgementSource.ADMIN_FINALIZED, ReviewerType.DIRECTION_ADMIN));
+
+            AssessmentJudgementResult result = assessmentJudgementAppService.finalizeScore(
+                    new AssessmentJudgementCommands.FinalizeScoreCommand(memberAnswerId, BigDecimal.valueOf(7)));
+
+            assertNotNull(result);
+            assertEquals(JudgementSource.ADMIN_FINALIZED, result.source());
+
+            // 只调用 finalizeJudgement，不调用 batchInsert
+            verify(assessmentJudgementDomainService).finalizeJudgement(any(AssessmentJudgementVO.class));
+            verify(assessmentJudgementRepository, never()).batchInsert(any());
+        }
+    }
+
+    /**
+     * 验证队长首次评分时，已有评分的队员不会被覆盖。
+     */
+    @Test
+    @DisplayName("确认最终评分：队长首次评分时跳过已有评分的队员")
+    void finalizeScore_teamLeaderFirstTime_someMembersFinalized_shouldSkipFinalizedMembers() {
+        try (MockedStatic<UserCTX> mockedUserCTX = mockStatic(UserCTX.class)) {
+            mockedUserCTX.when(UserCTX::getCurrentUser).thenReturn(createUser(RoleType.DIRECTION_ADMIN));
+
+            Long teamId = 60L;
+            AssessmentAnswer leaderAnswer = AssessmentAnswer.reconstruct(
+                    ANSWER_ID,
+                    CANDIDATE_ID,
+                    QUESTION_ID,
+                    null,
+                    null,
+                    null,
+                    null,
+                    teamId);
+            when(assessmentAnswerRepository.findById(ANSWER_ID)).thenReturn(Optional.of(leaderAnswer));
+            when(assessmentQuestionRepository.findById(QUESTION_ID))
+                    .thenReturn(Optional.of(createQuestion(QuestionType.FILE_UPLOAD)));
+            when(commentRepository.existsByAnswerIdAndUserId(ANSWER_ID, REVIEWER_ID)).thenReturn(true);
+
+            // 首次评分：无现有 ADMIN_FINALIZED
+            when(
+                    assessmentJudgementRepository
+                            .findLatestByAnswerIdAndSource(ANSWER_ID, JudgementSource.ADMIN_FINALIZED))
+                                    .thenReturn(Optional.empty());
+
+            // 队伍存在，当前用户是队长
+            AssessmentTeam team = AssessmentTeam.reconstruct(
+                    teamId,
+                    ASSESSMENT_TIME_ID,
+                    CANDIDATE_ID,
+                    "team",
+                    "code",
+                    AssessmentTeam.TeamStatus.ACTIVE,
+                    LocalDateTime.now());
+            when(assessmentTeamRepository.findById(teamId)).thenReturn(Optional.of(team));
+
+            Long memberId1 = 41L;
+            Long memberId2 = 42L;
+            Long memberAnswerId1 = 101L;
+            Long memberAnswerId2 = 102L;
+            when(assessmentAnswerRepository.findByTeamIdAndQuestionId(teamId, QUESTION_ID))
+                    .thenReturn(
+                            List.of(
+                                    leaderAnswer,
+                                    AssessmentAnswer.reconstruct(
+                                            memberAnswerId1,
+                                            memberId1,
+                                            QUESTION_ID,
+                                            null,
+                                            null,
+                                            null,
+                                            null,
+                                            teamId),
+                                    AssessmentAnswer.reconstruct(
+                                            memberAnswerId2,
+                                            memberId2,
+                                            QUESTION_ID,
+                                            null,
+                                            null,
+                                            null,
+                                            null,
+                                            teamId)));
+
+            // member1 已有 ADMIN_FINALIZED，队长和 member2 没有
+            when(assessmentJudgementRepository.findAnswerIdsBySource(any(), eq(JudgementSource.ADMIN_FINALIZED)))
+                    .thenReturn(List.of(memberAnswerId1));
+
+            AssessmentJudgement leaderEntity = AssessmentJudgement.reconstruct(
+                    100L,
+                    ANSWER_ID,
+                    QUESTION_ID,
+                    ASSESSMENT_TIME_ID,
+                    CANDIDATE_ID,
+                    BigDecimal.valueOf(8),
+                    BigDecimal.TEN,
+                    JudgementStatus.JUDGED,
+                    null,
+                    JudgementSource.ADMIN_FINALIZED,
+                    REVIEWER_ID,
+                    ReviewerType.DIRECTION_ADMIN,
+                    LocalDateTime.now(),
+                    LocalDateTime.now(),
+                    LocalDateTime.now());
+            when(
+                    assessmentJudgementRepository
+                            .findLatestByAnswerIdAndSource(ANSWER_ID, JudgementSource.ADMIN_FINALIZED))
+                                    .thenReturn(Optional.empty())
+                                    .thenReturn(Optional.of(leaderEntity));
+
+            AssessmentJudgementResult result = assessmentJudgementAppService.finalizeScore(
+                    new AssessmentJudgementCommands.FinalizeScoreCommand(ANSWER_ID, BigDecimal.valueOf(8)));
+
+            assertNotNull(result);
+
+            // 统一批量插入：队长 + member2（member1 已存在故跳过）
+            verify(assessmentJudgementDomainService, never()).finalizeJudgement(any());
+            ArgumentCaptor<List> captor = ArgumentCaptor.forClass(List.class);
+            verify(assessmentJudgementRepository).batchInsert(captor.capture());
+            List<com.bluenet.web.domain.model.entity.AssessmentJudgement> judgements = captor.getValue();
+            assertEquals(2, judgements.size());
+            assertTrue(judgements.stream().anyMatch(j -> j.getUserId().equals(CANDIDATE_ID)));
+            assertTrue(judgements.stream().anyMatch(j -> j.getUserId().equals(memberId2)));
+            assertTrue(judgements.stream().noneMatch(j -> j.getUserId().equals(memberId1)));
         }
     }
 

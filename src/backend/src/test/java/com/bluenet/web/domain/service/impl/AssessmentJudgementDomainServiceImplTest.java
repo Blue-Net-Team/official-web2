@@ -149,18 +149,44 @@ class AssessmentJudgementDomainServiceImplTest {
             AssessmentJudgement entity = invocation.getArgument(0);
             entity.setId(JUDGEMENT_ID);
             return null;
-        }).when(assessmentJudgementRepository).save(any(AssessmentJudgement.class));
-        when(assessmentJudgementRepository.findById(JUDGEMENT_ID)).thenReturn(Optional.of(savedEntity));
+        }).when(assessmentJudgementRepository).upsertAdminFinalized(any(AssessmentJudgement.class));
+        when(assessmentJudgementRepository.findLatestByAnswerIdAndSource(ANSWER_ID, JudgementSource.ADMIN_FINALIZED))
+                .thenReturn(Optional.of(savedEntity));
 
         AssessmentJudgementVO result = assessmentJudgementDomainService.finalizeJudgement(request);
 
         assertEquals(JUDGEMENT_ID, result.getId());
         assertEquals(JudgementSource.ADMIN_FINALIZED, result.getSource());
-        ArgumentCaptor<AssessmentJudgement> captor = ArgumentCaptor.forClass(AssessmentJudgement.class);
-        verify(assessmentJudgementRepository).save(captor.capture());
-        assertNotNull(captor.getValue().getJudgedAt());
-        assertNotNull(captor.getValue().getCreatedAt());
-        assertNotNull(captor.getValue().getUpdatedAt());
+        verify(assessmentJudgementRepository).upsertAdminFinalized(any(AssessmentJudgement.class));
+        verify(assessmentJudgementRepository).findLatestByAnswerIdAndSource(ANSWER_ID, JudgementSource.ADMIN_FINALIZED);
+    }
+
+    @Test
+    @DisplayName("确认最终评分：同一答案多次finalize应覆盖更新")
+    void finalizeJudgement_existingAdminFinalized_shouldUpdateInsteadOfInsert() {
+        AssessmentJudgementVO request = createJudgementVO(null, ObjectiveResultCode.AC);
+        request.setSource(JudgementSource.ADMIN_FINALIZED);
+        request.setScore(BigDecimal.valueOf(95));
+
+        AssessmentJudgement updatedEntity = createJudgementEntity(JUDGEMENT_ID, ObjectiveResultCode.AC);
+        updatedEntity.setSource(JudgementSource.ADMIN_FINALIZED);
+        updatedEntity.setScore(BigDecimal.valueOf(95));
+
+        doAnswer(invocation -> {
+            AssessmentJudgement entity = invocation.getArgument(0);
+            entity.setId(JUDGEMENT_ID);
+            return null;
+        }).when(assessmentJudgementRepository).upsertAdminFinalized(any(AssessmentJudgement.class));
+        when(assessmentJudgementRepository.findLatestByAnswerIdAndSource(ANSWER_ID, JudgementSource.ADMIN_FINALIZED))
+                .thenReturn(Optional.of(updatedEntity));
+
+        AssessmentJudgementVO result = assessmentJudgementDomainService.finalizeJudgement(request);
+
+        assertEquals(JUDGEMENT_ID, result.getId());
+        assertEquals(BigDecimal.valueOf(95), result.getScore());
+        assertEquals(JudgementSource.ADMIN_FINALIZED, result.getSource());
+        verify(assessmentJudgementRepository).upsertAdminFinalized(any(AssessmentJudgement.class));
+        verify(assessmentJudgementRepository).findLatestByAnswerIdAndSource(ANSWER_ID, JudgementSource.ADMIN_FINALIZED);
     }
 
     private AssessmentJudgementVO createJudgementVO(Long id, ObjectiveResultCode resultCode) {

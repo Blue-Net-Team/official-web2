@@ -16,6 +16,8 @@ import com.bluenet.web.domain.model.enumerate.QuestionType;
 import com.bluenet.web.domain.model.enumerate.ReviewerType;
 import com.bluenet.web.domain.model.enumerate.RoleType;
 import com.bluenet.web.domain.model.entity.AssessmentAnswer;
+import com.bluenet.web.domain.model.entity.AssessmentJudgement;
+import com.bluenet.web.domain.model.entity.AssessmentTeam;
 import com.bluenet.web.domain.model.vo.AssessmentCandidateScoreRowVO;
 import com.bluenet.web.domain.model.vo.AssessmentCandidateScoreboardVO;
 import com.bluenet.web.domain.model.vo.AssessmentCandidateQuestionScoreVO;
@@ -196,33 +198,121 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
         }
 
         AssessmentJudgementResult result;
+        LocalDateTime now = LocalDateTime.now();
         if (answer.getTeamId() != null) {
-            result = propagateFinalizedJudgementToTeamMembers(
-                    answer.getTeamId(),
-                    question,
-                    command,
-                    currentUser,
-                    roleType,
-                    answer.getUserId());
+            // 组队场景：根据是否已有 ADMIN_FINALIZED 判断首次/再次评分
+            boolean hasExistingFinalized = assessmentJudgementRepository
+                    .findLatestByAnswerIdAndSource(answer.getId(), JudgementSource.ADMIN_FINALIZED)
+                    .isPresent();
+            if (hasExistingFinalized) {
+                // 再次评分 → 只更新当前答案（队长或队员）
+                result = finalizeSingleAnswer(answer, question, command, currentUser, roleType, now);
+            } else {
+                // 首次评分 → 判断是否为队长
+                AssessmentTeam team = assessmentTeamRepository.findById(answer.getTeamId())
+                        .orElseThrow(() -> new DataNotFound("队伍不存在，ID: " + answer.getTeamId()));
+                if (team.isLeader(answer.getUserId())) {
+                    result = finalizeTeamFirstTime(answer, question, command, currentUser, roleType, team);
+                } else {
+                    result = finalizeSingleAnswer(answer, question, command, currentUser, roleType, now);
+                }
+            }
         } else {
-            AssessmentJudgementVO judgement = AssessmentJudgementVO.builder()
-                    .answerId(answer.getId())
-                    .questionId(question.getId())
-                    .assessmentTimeId(question.getAssessmentTimeId())
-                    .userId(answer.getUserId())
-                    .score(command.score())
-                    .maxScore(question.getScore())
-                    .status(JudgementStatus.JUDGED)
-                    .source(JudgementSource.ADMIN_FINALIZED)
-                    .reviewerId(currentUser.getId())
-                    .reviewerType(resolveReviewerType(roleType))
-                    .judgedAt(LocalDateTime.now())
-                    .build();
-            result = toResult(
-                    assessmentJudgementDomainService.finalizeJudgement(judgement));
+            result = finalizeSingleAnswer(answer, question, command, currentUser, roleType, now);
         }
 
         return result;
+    }
+
+    /**
+     * 为单个答案确认最终评分。
+     */
+    private AssessmentJudgementResult finalizeSingleAnswer(
+            AssessmentAnswer answer,
+            AssessmentQuestion question,
+            AssessmentJudgementCommands.FinalizeScoreCommand command,
+            UserVO currentUser,
+            RoleType roleType,
+            LocalDateTime judgedAt) {
+        AssessmentJudgementVO judgement = AssessmentJudgementVO.builder()
+                .answerId(answer.getId())
+                .questionId(question.getId())
+                .assessmentTimeId(question.getAssessmentTimeId())
+                .userId(answer.getUserId())
+                .score(command.score())
+                .maxScore(question.getScore())
+                .status(JudgementStatus.JUDGED)
+                .source(JudgementSource.ADMIN_FINALIZED)
+                .reviewerId(currentUser.getId())
+                .reviewerType(resolveReviewerType(roleType))
+                .judgedAt(judgedAt)
+                .build();
+        return toResult(assessmentJudgementDomainService.finalizeJudgement(judgement));
+    }
+
+    /**
+     * 队长首次评分：统一批量插入所有尚无 ADMIN_FINALIZED 的成员（包括队长）。
+     */
+    private AssessmentJudgementResult finalizeTeamFirstTime(
+            AssessmentAnswer leaderAnswer,
+            AssessmentQuestion question,
+            AssessmentJudgementCommands.FinalizeScoreCommand command,
+            UserVO currentUser,
+            RoleType roleType,
+            AssessmentTeam team) {
+        LocalDateTime now = LocalDateTime.now();
+
+        // 1. 查询全队所有答案
+        List<AssessmentAnswer> allAnswers = assessmentAnswerRepository
+                .findByTeamIdAndQuestionId(team.getId(), question.getId());
+
+        // 2. 批量查询已有 ADMIN_FINALIZED 的 answerIds
+        List<Long> allAnswerIds = allAnswers.stream()
+                .map(AssessmentAnswer::getId)
+                .toList();
+        List<Long> finalizedAnswerIds = assessmentJudgementRepository
+                .findAnswerIdsBySource(allAnswerIds, JudgementSource.ADMIN_FINALIZED);
+        Set<Long> finalizedAnswerIdSet = new java.util.HashSet<>(finalizedAnswerIds);
+
+        // 3. 统一构建所有需要插入的 judgement（包括队长和队员）
+        List<AssessmentJudgement> judgementsToInsert = new ArrayList<>();
+        for (AssessmentAnswer answer : allAnswers) {
+            if (finalizedAnswerIdSet.contains(answer.getId())) {
+                continue; // 跳过已有 ADMIN_FINALIZED 的成员
+            }
+            AssessmentJudgement judgement = AssessmentJudgement.create(
+                    answer.getId(),
+                    question.getId(),
+                    question.getAssessmentTimeId(),
+                    answer.getUserId(),
+                    command.score(),
+                    question.getScore(),
+                    JudgementStatus.JUDGED,
+                    null,
+                    JudgementSource.ADMIN_FINALIZED,
+                    currentUser.getId(),
+                    resolveReviewerType(roleType),
+                    now);
+            judgement.setCreatedAt(now);
+            judgement.setUpdatedAt(now);
+            judgementsToInsert.add(judgement);
+        }
+
+        // 4. 统一批量插入
+        if (!judgementsToInsert.isEmpty()) {
+            assessmentJudgementRepository.batchInsert(judgementsToInsert);
+            log.info(
+                    "队长首次评分批量传播，teamId: {}, questionId: {}, count: {}",
+                    team.getId(),
+                    question.getId(),
+                    judgementsToInsert.size());
+        }
+
+        // 5. 查询队长最新记录并返回
+        AssessmentJudgement leaderEntity = assessmentJudgementRepository
+                .findLatestByAnswerIdAndSource(leaderAnswer.getId(), JudgementSource.ADMIN_FINALIZED)
+                .orElseThrow(() -> new com.bluenet.web.domain.exception.GlobalException("队长评分记录创建失败"));
+        return entityToResult(leaderEntity);
     }
 
     /**
@@ -741,6 +831,26 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
                 judgement.getJudgedAt());
     }
 
+    private AssessmentJudgementResult entityToResult(AssessmentJudgement entity) {
+        if (entity == null) {
+            return null;
+        }
+        return new AssessmentJudgementResult(
+                entity.getId(),
+                entity.getAnswerId(),
+                entity.getQuestionId(),
+                entity.getAssessmentTimeId(),
+                entity.getUserId(),
+                entity.getScore(),
+                entity.getMaxScore(),
+                entity.getStatus(),
+                entity.getResultCode(),
+                entity.getSource(),
+                entity.getReviewerId(),
+                entity.getReviewerType(),
+                entity.getJudgedAt());
+    }
+
     private AssessmentDecisionResult toDecisionResult(AssessmentDecisionVO decision) {
         if (decision == null) {
             return null;
@@ -755,59 +865,4 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
                 decision.getDecidedAt());
     }
 
-    private AssessmentJudgementResult propagateFinalizedJudgementToTeamMembers(Long teamId, AssessmentQuestion question,
-            AssessmentJudgementCommands.FinalizeScoreCommand command,
-            UserVO currentUser, RoleType roleType,
-            Long leaderUserId) {
-        List<com.bluenet.web.domain.model.entity.AssessmentTeamMember> members = assessmentTeamRepository
-                .findMembersByTeamId(teamId);
-        if (members.isEmpty()) {
-            return null;
-        }
-
-        // Batch query all member answers for this question
-        List<com.bluenet.web.domain.model.entity.AssessmentAnswer> memberAnswers = assessmentAnswerRepository
-                .findByTeamIdAndQuestionId(teamId, question.getId());
-
-        LocalDateTime now = LocalDateTime.now();
-        List<com.bluenet.web.domain.model.entity.AssessmentJudgement> judgementsToInsert = new ArrayList<>();
-        Long leaderAnswerId = null;
-        for (com.bluenet.web.domain.model.entity.AssessmentAnswer memberAnswer : memberAnswers) {
-            com.bluenet.web.domain.model.entity.AssessmentJudgement memberJudgement = com.bluenet.web.domain.model.entity.AssessmentJudgement
-                    .create(
-                            memberAnswer.getId(),
-                            question.getId(),
-                            question.getAssessmentTimeId(),
-                            memberAnswer.getUserId(),
-                            command.score(),
-                            question.getScore(),
-                            JudgementStatus.JUDGED,
-                            null,
-                            JudgementSource.ADMIN_FINALIZED,
-                            currentUser.getId(),
-                            resolveReviewerType(roleType),
-                            now);
-            memberJudgement.setCreatedAt(now);
-            memberJudgement.setUpdatedAt(now);
-            judgementsToInsert.add(memberJudgement);
-
-            if (memberAnswer.getUserId().equals(leaderUserId)) {
-                leaderAnswerId = memberAnswer.getId();
-            }
-        }
-
-        if (!judgementsToInsert.isEmpty()) {
-            assessmentJudgementRepository.batchInsert(judgementsToInsert);
-            log.info(
-                    "批量创建组员最终评分，teamId: {}, questionId: {}, count: {}",
-                    teamId,
-                    question.getId(),
-                    judgementsToInsert.size());
-        }
-
-        if (leaderAnswerId == null) {
-            return null;
-        }
-        return toResult(assessmentJudgementDomainService.getLatestByAnswerId(leaderAnswerId));
-    }
 }

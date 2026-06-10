@@ -2,6 +2,7 @@ package com.bluenet.web.infrastructure.repository.impl;
 
 import com.bluenet.web.domain.exception.GlobalException;
 import com.bluenet.web.domain.model.entity.AssessmentJudgement;
+import com.bluenet.web.domain.model.enumerate.JudgementSource;
 import com.bluenet.web.domain.model.enumerate.QuestionType;
 import com.bluenet.web.domain.model.vo.AssessmentCandidateScoreRowVO;
 import com.bluenet.web.domain.model.vo.AssessmentJudgementVO;
@@ -83,6 +84,38 @@ public class AssessmentJudgementRepositoryImpl implements AssessmentJudgementRep
     public Optional<AssessmentJudgement> findLatestByAnswerId(Long answerId) {
         AssessmentJudgementDO dataObject = assessmentJudgementMapper.selectLatestByAnswerId(answerId);
         return Optional.ofNullable(converter.toEntity(dataObject));
+    }
+
+    /**
+     * 查询指定作答的指定来源最新评审结果。
+     *
+     * @param answerId
+     *            考核作答主键。
+     * @param source
+     *            评判来源。
+     * @return 查询到的考核评审结果 实体；不存在时为空。
+     */
+    @Override
+    public Optional<AssessmentJudgement> findLatestByAnswerIdAndSource(Long answerId, JudgementSource source) {
+        AssessmentJudgementDO dataObject = assessmentJudgementMapper.selectLatestByAnswerIdAndSource(answerId, source);
+        return Optional.ofNullable(converter.toEntity(dataObject));
+    }
+
+    /**
+     * 批量查询哪些作答已有指定来源的评审结果。
+     *
+     * @param answerIds
+     *            作答主键集合。
+     * @param source
+     *            评判来源。
+     * @return 已有指定来源评审结果的作答主键集合。
+     */
+    @Override
+    public List<Long> findAnswerIdsBySource(List<Long> answerIds, JudgementSource source) {
+        if (answerIds == null || answerIds.isEmpty()) {
+            return List.of();
+        }
+        return assessmentJudgementMapper.selectAnswerIdsBySource(answerIds, source);
     }
 
     /**
@@ -218,6 +251,16 @@ public class AssessmentJudgementRepositoryImpl implements AssessmentJudgementRep
         }
         List<AssessmentJudgementDO> dataObjects = converter.toDataObjectList(judgements);
         assessmentJudgementMapper.batchInsert(dataObjects);
+        // 回写主键到实体（PostgreSQL foreach 批量插入可能只回写部分，驱动支持时生效）
+        for (int i = 0; i < dataObjects.size(); i++) {
+            judgements.get(i).setId(dataObjects.get(i).getId());
+        }
+    }
+
+    @Override
+    public void upsertAdminFinalized(AssessmentJudgement judgement) {
+        AssessmentJudgementDO dataObject = converter.toDataObject(judgement);
+        assessmentJudgementMapper.upsertAdminFinalized(dataObject);
     }
 
     /**

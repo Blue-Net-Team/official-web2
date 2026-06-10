@@ -3,6 +3,7 @@ package com.bluenet.web.domain.service.impl;
 import com.bluenet.web.domain.exception.DataNotFound;
 import com.bluenet.web.domain.exception.GlobalException;
 import com.bluenet.web.domain.model.entity.AssessmentJudgement;
+import com.bluenet.web.domain.model.enumerate.JudgementSource;
 import com.bluenet.web.domain.model.vo.AssessmentJudgementVO;
 import com.bluenet.web.domain.repository.AssessmentJudgementRepository;
 import com.bluenet.web.domain.service.AssessmentJudgementDomainService;
@@ -94,17 +95,22 @@ public class AssessmentJudgementDomainServiceImpl implements AssessmentJudgement
                 "finalize judgement for answer {}, question {}",
                 judgement.getAnswerId(),
                 judgement.getQuestionId());
+
         AssessmentJudgement entity = convertToEntity(judgement);
         LocalDateTime now = LocalDateTime.now();
+
+        // 利用数据库唯一索引 + ON CONFLICT 实现原子性 upsert，消除并发竞态
         entity.setCreatedAt(now);
         entity.setUpdatedAt(now);
         if (entity.getJudgedAt() == null) {
             entity.setJudgedAt(now);
         }
-        assessmentJudgementRepository.save(entity);
+        assessmentJudgementRepository.upsertAdminFinalized(entity);
+
         return convertToVO(
-                assessmentJudgementRepository.findById(entity.getId())
-                        .orElseThrow(() -> new GlobalException("创建最终评定记录失败")));
+                assessmentJudgementRepository
+                        .findLatestByAnswerIdAndSource(entity.getAnswerId(), JudgementSource.ADMIN_FINALIZED)
+                        .orElseThrow(() -> new GlobalException("创建或更新最终评定记录失败")));
     }
 
     private AssessmentJudgement convertToEntity(AssessmentJudgementVO judgement) {
