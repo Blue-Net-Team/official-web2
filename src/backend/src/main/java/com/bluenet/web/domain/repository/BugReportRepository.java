@@ -60,4 +60,13 @@ public interface BugReportRepository {
      * @return 数据库受影响行数
      */
     int updateGithubIssueInfo(Long id, String githubIssueUrl, Integer githubIssueNumber);
+
+    /**
+     * 按 GitHub Issue 编号查询 Bug 报告。
+     *
+     * @param githubIssueNumber
+     *            GitHub Issue 编号
+     * @return 查询到的 Bug 报告；不存在时为空
+     */
+    Optional<BugReport> findByGithubIssueNumber(Integer githubIssueNumber);
 }

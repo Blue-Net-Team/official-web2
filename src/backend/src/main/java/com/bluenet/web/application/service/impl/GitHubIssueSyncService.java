@@ -113,6 +113,8 @@ public class GitHubIssueSyncService {
             }
         }
 
+        sb.append("\n\n<!-- bluenet-bug-report -->");
+
         return sb.toString();
     }
 }

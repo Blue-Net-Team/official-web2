@@ -106,4 +106,17 @@ public class BugReportRepositoryImpl implements BugReportRepository {
         log.info("更新 Bug 报告 GitHub Issue: id={}, issueNumber={}, influence={}", id, githubIssueNumber, influence);
         return influence;
     }
+
+    @Override
+    public Optional<BugReport> findByGithubIssueNumber(Integer githubIssueNumber) {
+        QueryWrapper<BugReportDO> wrapper = new QueryWrapper<>();
+        wrapper.eq("github_issue_number", githubIssueNumber);
+        BugReportDO dataObject = bugReportMapper.selectOne(wrapper);
+        if (dataObject == null) {
+            return Optional.empty();
+        }
+        List<BugReportImage> images = converter.toImageEntityList(
+                bugReportImageMapper.selectByBugReportId(dataObject.getId()));
+        return Optional.ofNullable(converter.toEntity(dataObject, images));
+    }
 }

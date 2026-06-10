@@ -222,5 +222,68 @@ class GitHubIssueSyncServiceTest {
             verify(gitHubIssueClient).createIssue(titleCaptor.capture(), anyString());
             assertEquals("这是一个没有 title 的历史 Bug 描述", titleCaptor.getValue());
         }
+
+        @Test
+        @DisplayName("TC-017: 同步后的 Issue body 应包含隐藏标记")
+        void sync_shouldIncludeBluenetMarkerInBody() {
+            when(gitHubAppProperties.isEnabled()).thenReturn(true);
+
+            BugReport bugReport = BugReport.create(
+                    "标记测试",
+                    "标记测试描述",
+                    "/page",
+                    "{}",
+                    null,
+                    java.util.List.of());
+
+            GitHubIssueCreateResult mockResult = new GitHubIssueCreateResult(1, "https://github.com/test/issues/1",
+                    "标记测试");
+            when(gitHubIssueClient.createIssue(anyString(), anyString())).thenReturn(mockResult);
+
+            service.sync(bugReport);
+
+            ArgumentCaptor<String> bodyCaptor = ArgumentCaptor.forClass(String.class);
+            verify(gitHubIssueClient).createIssue(anyString(), bodyCaptor.capture());
+            String body = bodyCaptor.getValue();
+
+            assertTrue(body.contains("<!-- bluenet-bug-report -->"), "Issue body 应包含隐藏标记");
+        }
+
+        @Test
+        @DisplayName("TC-018: 隐藏标记不影响现有 body 结构")
+        void sync_markerShouldNotBreakBodyStructure() {
+            when(gitHubAppProperties.isEnabled()).thenReturn(true);
+            when(gitHubAppProperties.getAppBaseUrl()).thenReturn("https://api.example.com");
+
+            BugReport bugReport = BugReport.create(
+                    "结构测试",
+                    "结构测试描述",
+                    "/dashboard",
+                    "{\"browser\":\"Chrome\"}",
+                    "user@example.com",
+                    java.util.List.of(101L));
+
+            GitHubIssueCreateResult mockResult = new GitHubIssueCreateResult(1, "https://github.com/test/issues/1",
+                    "结构测试");
+            when(gitHubIssueClient.createIssue(anyString(), anyString())).thenReturn(mockResult);
+
+            service.sync(bugReport);
+
+            ArgumentCaptor<String> bodyCaptor = ArgumentCaptor.forClass(String.class);
+            verify(gitHubIssueClient).createIssue(anyString(), bodyCaptor.capture());
+            String body = bodyCaptor.getValue();
+
+            // 验证原有结构完整
+            assertTrue(body.contains("## 描述"), "应包含描述标题");
+            assertTrue(body.contains("结构测试描述"), "应包含描述内容");
+            assertTrue(body.contains("## 页面 URL"), "应包含页面 URL 标题");
+            assertTrue(body.contains("/dashboard"), "应包含页面 URL");
+            assertTrue(body.contains("## 环境信息"), "应包含环境信息标题");
+            assertTrue(body.contains("## 报告者邮箱"), "应包含报告者邮箱标题");
+            assertTrue(body.contains("## 截图"), "应包含截图标题");
+            assertTrue(body.contains("![截图 101]"), "应包含截图链接");
+            // 验证标记在末尾
+            assertTrue(body.endsWith("\n\n<!-- bluenet-bug-report -->"), "标记应在 body 末尾");
+        }
     }
 }
