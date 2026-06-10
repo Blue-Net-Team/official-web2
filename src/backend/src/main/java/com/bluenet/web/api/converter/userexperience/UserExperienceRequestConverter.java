@@ -36,9 +36,10 @@ public class UserExperienceRequestConverter {
     }
 
     public UserExperienceCommands.UpdateExperienceCommand toCommand(Long id, UpdateExperienceRequestDTO dto) {
+        String name = dto.getCompany() != null ? dto.getCompany() : dto.getName();
         return new UserExperienceCommands.UpdateExperienceCommand(
                 id,
-                dto.getName(),
+                name,
                 dto.getRole(),
                 dto.getStartDate(),
                 dto.getEndDate(),

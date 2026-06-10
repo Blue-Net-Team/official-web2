@@ -57,6 +57,7 @@ export interface UpdateExperienceRequestDTO {
   award?: string
   teamSize?: number
   certificateUrl?: string
+  company?: string
   position?: string
   status?: InternshipStatus
   achievements?: string[]

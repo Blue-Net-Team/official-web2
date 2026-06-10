@@ -68,7 +68,7 @@ public class UserExperience {
             throw new IllegalArgumentException("经历类型不能为空");
         }
         if (title == null || title.isBlank()) {
-            throw new IllegalArgumentException("标题不能为空");
+            throw new IllegalArgumentException("名称不能为空");
         }
         return new UserExperience(null, userId, type, title.trim(), content, startTime, endTime);
     }
@@ -86,7 +86,7 @@ public class UserExperience {
      */
     public void updateDetails(String title, String content, LocalDateTime startTime, LocalDateTime endTime) {
         if (title == null || title.isBlank()) {
-            throw new IllegalArgumentException("标题不能为空");
+            throw new IllegalArgumentException("名称不能为空");
         }
         this.title = title.trim();
         this.content = content;
