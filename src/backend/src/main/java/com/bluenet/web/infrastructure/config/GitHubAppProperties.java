@@ -25,6 +25,12 @@ public class GitHubAppProperties {
     /** Webhook Secret，用于验证 GitHub Webhook 请求的 HMAC-SHA256 签名 */
     private String webhookSecret;
 
+    /** 是否启用定时轮询同步。默认 true */
+    private Boolean pollingEnabled = true;
+
+    /** 轮询回溯天数。默认 7 天 */
+    private Integer pollingSinceDays = 7;
+
     /**
      * 是否启用 GitHub Issue 同步。 当 appId 和 privateKeyPath 都配置时自动启用。
      */
@@ -40,5 +46,12 @@ public class GitHubAppProperties {
      */
     public boolean isWebhookEnabled() {
         return webhookSecret != null && !webhookSecret.isBlank();
+    }
+
+    /**
+     * 是否启用定时轮询同步。当 pollingEnabled 为 true 且 GitHub App 基本配置完整时启用。
+     */
+    public boolean isPollingEnabled() {
+        return Boolean.TRUE.equals(pollingEnabled) && isEnabled();
     }
 }

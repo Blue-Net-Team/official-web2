@@ -86,6 +86,8 @@ job:
     cron: "${ORPHAN_FILE_CLEANUP_CRON:0 0 2 * * *}"
   eliminated-user-disable:
     cron: "${ELIMINATED_USER_DISABLE_CRON:0 0 3 * * *}"
+  github-issue-sync:
+    cron: "${GITHUB_ISSUE_SYNC_CRON:0 0 3 * * *}"
 
 # Judge assets use an isolated bucket and must not be exposed through candidate file APIs.
 judge:
@@ -145,6 +147,8 @@ github:
     repo: ${GITHUB_APP_REPO:}
     app-base-url: ${GITHUB_APP_APP_BASE_URL:http://localhost:8080}
     webhook-secret: ${GITHUB_APP_WEBHOOK_SECRET:}
+    polling-enabled: ${GITHUB_APP_POLLING_ENABLED:true}
+    polling-since-days: ${GITHUB_APP_POLLING_SINCE_DAYS:7}
 
 # CORS 配置
 cors:
