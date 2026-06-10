@@ -154,6 +154,11 @@ type: description
 - **禁止**在提交消息中使用 `fixes #<issue号>`、`fix #<issue号>`、`close #<issue号>`、`closes #<issue号>`，因为这些关键字会自动关闭 issue
 - 只有在你**明确确认**该 issue 已完全解决、且**经过用户同意**后，才允许使用 `fixes` 或 `close` 关键字
 
+**PR 合并规则**：
+
+- **禁止**使用 `gh` 工具直接合并 PR（如 `gh pr merge`），该操作必须由用户手动执行
+- 你只能创建 PR（如 `gh pr create`），合并权限完全交由用户掌控
+
 ## 常见问题与排障
 
 ### PermissionScanner 启动失败
