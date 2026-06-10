@@ -26,6 +26,22 @@
         LIMIT 1
     </select>
 
+    <select id="selectLatestByAnswerIdAndSource" resultMap="BaseResultMap">
+        SELECT * FROM tb_assessment_judgement
+        WHERE answer_id = #{answerId} AND source = #{source}
+        ORDER BY updated_at DESC, id DESC
+        LIMIT 1
+    </select>
+
+    <select id="selectAnswerIdsBySource" resultType="java.lang.Long">
+        SELECT DISTINCT answer_id FROM tb_assessment_judgement
+        WHERE answer_id IN
+        <foreach collection="answerIds" item="answerId" open="(" separator="," close=")">
+            #{answerId}
+        </foreach>
+        AND source = #{source}
+    </select>
+
     <select id="selectLatestByQuestionIdAndUserId" resultMap="BaseResultMap">
         SELECT * FROM tb_assessment_judgement
         WHERE question_id = #{questionId} AND user_id = #{userId}

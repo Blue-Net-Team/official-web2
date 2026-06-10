@@ -1,6 +1,7 @@
 package com.bluenet.web.infrastructure.repository.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.bluenet.web.domain.model.enumerate.JudgementSource;
 import com.bluenet.web.domain.model.enumerate.QuestionType;
 import com.bluenet.web.infrastructure.repository.dataobject.AssessmentJudgementDO;
 import com.bluenet.web.infrastructure.repository.dataobject.query.AssessmentCandidateScoreQueryDO;
@@ -21,6 +22,30 @@ public interface AssessmentJudgementMapper extends BaseMapper<AssessmentJudgemen
      * @return 匹配条件的考核评审结果 数据行；不存在时为 null。
      */
     AssessmentJudgementDO selectLatestByAnswerId(@Param("answerId") Long answerId);
+
+    /**
+     * 查询指定作答的指定来源最新评审结果。
+     *
+     * @param answerId
+     *            考核作答主键。
+     * @param source
+     *            评判来源。
+     * @return 匹配条件的考核评审结果 数据行；不存在时为 null。
+     */
+    AssessmentJudgementDO selectLatestByAnswerIdAndSource(@Param("answerId") Long answerId,
+            @Param("source") JudgementSource source);
+
+    /**
+     * 批量查询哪些作答已有指定来源的评审结果。
+     *
+     * @param answerIds
+     *            作答主键集合。
+     * @param source
+     *            评判来源。
+     * @return 已有指定来源评审结果的作答主键列表。
+     */
+    List<Long> selectAnswerIdsBySource(@Param("answerIds") List<Long> answerIds,
+            @Param("source") JudgementSource source);
 
     /**
      * 查询考核评审结果 数据行。

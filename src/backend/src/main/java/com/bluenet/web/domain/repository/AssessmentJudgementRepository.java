@@ -1,6 +1,7 @@
 package com.bluenet.web.domain.repository;
 
 import com.bluenet.web.domain.model.entity.AssessmentJudgement;
+import com.bluenet.web.domain.model.enumerate.JudgementSource;
 import com.bluenet.web.domain.model.enumerate.QuestionType;
 import com.bluenet.web.domain.model.vo.AssessmentCandidateScoreRowVO;
 import com.bluenet.web.domain.model.vo.AssessmentQuestionScoreboardVO;
@@ -48,6 +49,28 @@ public interface AssessmentJudgementRepository {
      * @return 查询到的考核评审结果 实体；不存在时为空。
      */
     Optional<AssessmentJudgement> findLatestByAnswerId(Long answerId);
+
+    /**
+     * 查询指定作答的指定来源最新评审结果。
+     *
+     * @param answerId
+     *            考核作答主键。
+     * @param source
+     *            评判来源。
+     * @return 查询到的考核评审结果 实体；不存在时为空。
+     */
+    Optional<AssessmentJudgement> findLatestByAnswerIdAndSource(Long answerId, JudgementSource source);
+
+    /**
+     * 批量查询哪些作答已有指定来源的评审结果。
+     *
+     * @param answerIds
+     *            作答主键集合。
+     * @param source
+     *            评判来源。
+     * @return 已有指定来源评审结果的作答主键集合。
+     */
+    List<Long> findAnswerIdsBySource(List<Long> answerIds, JudgementSource source);
 
     /**
      * 查询用户在指定题目上的最新评审结果。

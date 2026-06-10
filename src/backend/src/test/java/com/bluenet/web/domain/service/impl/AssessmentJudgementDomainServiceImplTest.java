@@ -163,6 +163,34 @@ class AssessmentJudgementDomainServiceImplTest {
         assertNotNull(captor.getValue().getUpdatedAt());
     }
 
+    @Test
+    @DisplayName("确认最终评分：同一答案多次finalize应覆盖更新")
+    void finalizeJudgement_existingAdminFinalized_shouldUpdateInsteadOfInsert() {
+        AssessmentJudgementVO request = createJudgementVO(null, ObjectiveResultCode.AC);
+        request.setSource(JudgementSource.ADMIN_FINALIZED);
+        request.setScore(BigDecimal.valueOf(95));
+
+        AssessmentJudgement existingEntity = createJudgementEntity(JUDGEMENT_ID, ObjectiveResultCode.AC);
+        existingEntity.setSource(JudgementSource.ADMIN_FINALIZED);
+        existingEntity.setScore(BigDecimal.valueOf(80));
+
+        AssessmentJudgement updatedEntity = createJudgementEntity(JUDGEMENT_ID, ObjectiveResultCode.AC);
+        updatedEntity.setSource(JudgementSource.ADMIN_FINALIZED);
+        updatedEntity.setScore(BigDecimal.valueOf(95));
+
+        when(assessmentJudgementRepository.findLatestByAnswerIdAndSource(ANSWER_ID, JudgementSource.ADMIN_FINALIZED))
+                .thenReturn(Optional.of(existingEntity));
+        when(assessmentJudgementRepository.findById(JUDGEMENT_ID)).thenReturn(Optional.of(updatedEntity));
+
+        AssessmentJudgementVO result = assessmentJudgementDomainService.finalizeJudgement(request);
+
+        assertEquals(JUDGEMENT_ID, result.getId());
+        assertEquals(BigDecimal.valueOf(95), result.getScore());
+        assertEquals(JudgementSource.ADMIN_FINALIZED, result.getSource());
+        verify(assessmentJudgementRepository, never()).save(any());
+        verify(assessmentJudgementRepository).update(any(AssessmentJudgement.class));
+    }
+
     private AssessmentJudgementVO createJudgementVO(Long id, ObjectiveResultCode resultCode) {
         return AssessmentJudgementVO.builder()
                 .id(id)

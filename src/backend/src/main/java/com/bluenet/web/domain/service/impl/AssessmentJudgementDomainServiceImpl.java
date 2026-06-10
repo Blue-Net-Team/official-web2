@@ -3,6 +3,7 @@ package com.bluenet.web.domain.service.impl;
 import com.bluenet.web.domain.exception.DataNotFound;
 import com.bluenet.web.domain.exception.GlobalException;
 import com.bluenet.web.domain.model.entity.AssessmentJudgement;
+import com.bluenet.web.domain.model.enumerate.JudgementSource;
 import com.bluenet.web.domain.model.vo.AssessmentJudgementVO;
 import com.bluenet.web.domain.repository.AssessmentJudgementRepository;
 import com.bluenet.web.domain.service.AssessmentJudgementDomainService;
@@ -13,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @Slf4j
@@ -94,17 +96,39 @@ public class AssessmentJudgementDomainServiceImpl implements AssessmentJudgement
                 "finalize judgement for answer {}, question {}",
                 judgement.getAnswerId(),
                 judgement.getQuestionId());
+
         AssessmentJudgement entity = convertToEntity(judgement);
         LocalDateTime now = LocalDateTime.now();
-        entity.setCreatedAt(now);
-        entity.setUpdatedAt(now);
-        if (entity.getJudgedAt() == null) {
-            entity.setJudgedAt(now);
+
+        // 查询该答案是否已有 ADMIN_FINALIZED 记录，存在则覆盖更新
+        Optional<AssessmentJudgement> existing = assessmentJudgementRepository
+                .findLatestByAnswerIdAndSource(entity.getAnswerId(), JudgementSource.ADMIN_FINALIZED);
+
+        if (existing.isPresent()) {
+            AssessmentJudgement existingEntity = existing.get();
+            existingEntity.setScore(entity.getScore());
+            existingEntity.setMaxScore(entity.getMaxScore());
+            existingEntity.setStatus(entity.getStatus());
+            existingEntity.setResultCode(entity.getResultCode());
+            existingEntity.setReviewerId(entity.getReviewerId());
+            existingEntity.setReviewerType(entity.getReviewerType());
+            existingEntity.setJudgedAt(entity.getJudgedAt() != null ? entity.getJudgedAt() : now);
+            existingEntity.setUpdatedAt(now);
+            assessmentJudgementRepository.update(existingEntity);
+            return convertToVO(
+                    assessmentJudgementRepository.findById(existingEntity.getId())
+                            .orElseThrow(() -> new GlobalException("更新最终评定记录失败")));
+        } else {
+            entity.setCreatedAt(now);
+            entity.setUpdatedAt(now);
+            if (entity.getJudgedAt() == null) {
+                entity.setJudgedAt(now);
+            }
+            assessmentJudgementRepository.save(entity);
+            return convertToVO(
+                    assessmentJudgementRepository.findById(entity.getId())
+                            .orElseThrow(() -> new GlobalException("创建最终评定记录失败")));
         }
-        assessmentJudgementRepository.save(entity);
-        return convertToVO(
-                assessmentJudgementRepository.findById(entity.getId())
-                        .orElseThrow(() -> new GlobalException("创建最终评定记录失败")));
     }
 
     private AssessmentJudgement convertToEntity(AssessmentJudgementVO judgement) {
