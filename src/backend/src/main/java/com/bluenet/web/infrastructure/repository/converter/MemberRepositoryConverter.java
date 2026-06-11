@@ -17,7 +17,7 @@ public class MemberRepositoryConverter {
     /**
      * 根据 User 及相关联数据构建 Member 实体
      */
-    public Member toEntity(User user, String collegeName, String wechatQrCodeUrl,
+    public Member toEntity(User user, String collegeName, Long qrcodeFileId,
             String roleName, Integer enrollmentYear) {
         if (user == null) {
             return null;
@@ -38,7 +38,7 @@ public class MemberRepositoryConverter {
                 roleName,
                 user.getBio(),
                 user.getGithubUsername(),
-                wechatQrCodeUrl,
+                qrcodeFileId,
                 enrollmentYear,
                 user.getAssessmentGradeYear());
     }

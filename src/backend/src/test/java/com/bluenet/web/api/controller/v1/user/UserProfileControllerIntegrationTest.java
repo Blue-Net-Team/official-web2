@@ -215,8 +215,8 @@ class UserProfileControllerIntegrationTest extends BaseIntegrationTest {
         assertEquals("测试用户", userInfo.getUsername());
         assertEquals("测试昵称", userInfo.getNickname());
         assertEquals("原个人简介", userInfo.getBio());
-        // wechatQrcode 字段应存在（未设置时为 null）
-        assertNull(userInfo.getWechatQrcode());
+        // qrcodeFileId 字段应存在（未设置时为 null）
+        assertNull(userInfo.getQrcodeFileId());
     }
 
     @Test

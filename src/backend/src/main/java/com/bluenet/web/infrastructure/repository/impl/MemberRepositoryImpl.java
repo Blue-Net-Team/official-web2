@@ -1,9 +1,7 @@
 package com.bluenet.web.infrastructure.repository.impl;
 
 import com.bluenet.web.domain.model.entity.College;
-import com.bluenet.web.domain.model.entity.File;
 import com.bluenet.web.domain.model.entity.Member;
-import com.bluenet.web.domain.model.entity.Qrcode;
 import com.bluenet.web.domain.model.entity.Role;
 import com.bluenet.web.domain.model.entity.User;
 import com.bluenet.web.domain.model.enumerate.Direction;
@@ -158,21 +156,15 @@ public class MemberRepositoryImpl implements MemberRepository {
             collegeName = college != null ? college.getName() : null;
         }
 
-        String wechatQrCodeUrl = null;
-        if (user.getQrcodeId() != null) {
-            Qrcode qrcode = qrcodeConverter.toEntity(qrcodeMapper.selectById(user.getQrcodeId()));
-            if (qrcode != null && qrcode.getFileId() != null) {
-                File wechatQrCode = fileConverter.toEntity(fileMapper.selectById(qrcode.getFileId()));
-                wechatQrCodeUrl = wechatQrCode != null ? wechatQrCode.getUrl() : null;
-            }
-        }
+        // 微信二维码（qrcode_id 直接关联 tb_file，非 tb_qrcode）
+        Long wechatQrcodeFileId = user.getQrcodeId();
 
         Integer enrollmentYear = GradeCalculator.resolveAssessmentYear(
                 user.getStudentId(),
                 user.getAssessmentGradeYear());
         String roleName = user.getRoleId() != null ? roleIdToNameMap.get(user.getRoleId()) : null;
 
-        return converter.toEntity(user, collegeName, wechatQrCodeUrl, roleName, enrollmentYear);
+        return converter.toEntity(user, collegeName, wechatQrcodeFileId, roleName, enrollmentYear);
     }
 
     private User toUser(UserDO dataObject) {

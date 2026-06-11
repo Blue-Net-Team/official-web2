@@ -373,14 +373,14 @@ export default function ProfileInfo({ profile, onUpdate }: ProfileInfoProps) {
               </div>
               <div className="text-sm text-white">{profile.bio || '-'}</div>
             </div>
-            {profile.wechatQrcode && (
+            {profile.qrcodeFileId != null && (
               <div className="flex flex-col gap-1.5 col-span-full">
                 <div className="text-xs font-medium text-[rgba(140,140,141,1)] uppercase tracking-[0.5px]">
                   微信二维码
                 </div>
                 <div className="w-[120px] h-[120px] rounded-[10px] bg-white/[0.02] p-2 overflow-hidden">
                   <Image
-                    src={profile.wechatQrcode}
+                    src={`${API_BASE_URL}/file/download/${profile.qrcodeFileId}`}
                     alt="微信二维码"
                     width={120}
                     height={120}

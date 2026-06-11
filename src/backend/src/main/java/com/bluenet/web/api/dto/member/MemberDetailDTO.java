@@ -60,6 +60,6 @@ public class MemberDetailDTO {
     @Schema(description = "GitHub用户名", example = "zhangsan")
     private String githubUsername;
 
-    @Schema(description = "微信二维码URL", example = "/api/v1/files/789")
-    private String wechatQrcode;
+    @Schema(description = "微信二维码文件ID", example = "789")
+    private Long qrcodeFileId;
 }

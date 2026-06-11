@@ -66,7 +66,7 @@ class MemberAppServiceImplTest {
                 "MEMBER",
                 "热爱编程",
                 "zhangsan",
-                "/api/v1/files/456",
+                456L,
                 TEST_ENROLLMENT_YEAR,
                 null);
     }

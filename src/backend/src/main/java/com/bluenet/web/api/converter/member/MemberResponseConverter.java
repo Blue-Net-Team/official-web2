@@ -56,7 +56,7 @@ public class MemberResponseConverter {
                 .role(result.role())
                 .bio(result.bio())
                 .githubUsername(result.githubUsername())
-                .wechatQrcode(result.wechatQrcode())
+                .qrcodeFileId(result.wechatQrcode())
                 .build();
     }
 

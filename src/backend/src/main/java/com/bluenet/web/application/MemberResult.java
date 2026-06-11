@@ -39,8 +39,8 @@ public record MemberResult(
         String bio,
         /** GitHub用户名 */
         String githubUsername,
-        /** 微信二维码 */
-        String wechatQrcode,
+        /** 微信二维码文件ID */
+        Long wechatQrcode,
         /** 入学年份 */
         Integer enrollmentYear,
         /** 考核年级 */

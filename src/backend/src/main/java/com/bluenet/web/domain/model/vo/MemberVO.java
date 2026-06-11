@@ -64,9 +64,9 @@ public class MemberVO {
      */
     private String githubUsername;
     /**
-     * 用户微信二维码视图。
+     * 用户微信二维码文件ID。
      */
-    private String wechatQrcode;
+    private Long wechatQrcode;
     /**
      * 用户入学年份。
      */

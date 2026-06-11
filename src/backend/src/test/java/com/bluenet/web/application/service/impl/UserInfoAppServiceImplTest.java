@@ -271,7 +271,7 @@ class UserInfoAppServiceImplTest {
                 .roleName(TEST_ROLE_NAME)
                 .college("计算机学院")
                 .major("软件工程")
-                .wechatQrcode("https://minio.example.com/qrcode/123.jpg")
+                .wechatQrcode(123L)
                 .build();
 
         when(userDomainService.getUser(TEST_USER_ID)).thenReturn(Optional.of(userVO));
@@ -279,7 +279,7 @@ class UserInfoAppServiceImplTest {
         var result = userInfoAppService.getMyInfo(TEST_USER_ID);
 
         assertNotNull(result);
-        assertEquals("https://minio.example.com/qrcode/123.jpg", result.wechatQrcode());
+        assertEquals(123L, result.wechatQrcode());
     }
 
     @Test

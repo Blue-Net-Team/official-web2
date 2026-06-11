@@ -66,8 +66,6 @@ export interface UserInfo {
   githubUsername: string | null
   /** 微信二维码文件ID */
   qrcodeFileId: number | null
-  /** 微信二维码URL */
-  wechatQrcode: string | null
 }
 
 /**
@@ -433,8 +431,8 @@ export interface MemberDetailDTO {
   role: string
   /** 个人简介 */
   bio: string | null
-  /** 微信二维码URL */
-  wechatQrcode: string | null
+  /** 微信二维码文件ID */
+  qrcodeFileId: number | null
 }
 
 /**

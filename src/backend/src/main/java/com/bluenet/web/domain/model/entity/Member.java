@@ -31,14 +31,14 @@ public class Member {
     private String roleName;
     private String bio;
     private String githubUsername;
-    private String wechatQrcode;
+    private Long wechatQrcode;
     private Integer enrollmentYear;
     private Integer assessmentGradeYear;
 
     private Member(Long id, String studentId, String username, String nickname,
             Direction direction, String job, Long avatarFileId, String college,
             String major, Gender gender, RoleType role, String roleName,
-            String bio, String githubUsername, String wechatQrcode,
+            String bio, String githubUsername, Long wechatQrcode,
             Integer enrollmentYear, Integer assessmentGradeYear) {
         this.id = id;
         this.studentId = studentId;
@@ -66,7 +66,7 @@ public class Member {
             Direction direction, String job, Long avatarFileId,
             String college, String major, Gender gender,
             RoleType role, String roleName, String bio,
-            String githubUsername, String wechatQrcode,
+            String githubUsername, Long wechatQrcode,
             Integer enrollmentYear, Integer assessmentGradeYear) {
         if (username == null || username.isBlank()) {
             throw new IllegalArgumentException("用户名不能为空");
@@ -83,7 +83,7 @@ public class Member {
             String nickname, Direction direction, String job,
             Long avatarFileId, String college, String major,
             Gender gender, RoleType role, String roleName,
-            String bio, String githubUsername, String wechatQrcode,
+            String bio, String githubUsername, Long wechatQrcode,
             Integer enrollmentYear, Integer assessmentGradeYear) {
         return new Member(id, studentId, username, nickname, direction, job,
                 avatarFileId, college, major, gender, role, roleName, bio,

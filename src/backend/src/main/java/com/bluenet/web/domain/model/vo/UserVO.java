@@ -88,9 +88,9 @@ public class UserVO {
     private Long avatarFileId;
 
     /**
-     * 微信二维码
+     * 微信二维码文件ID
      */
-    private String wechatQrcode;
+    private Long wechatQrcode;
 
     /**
      * GitHub用户名

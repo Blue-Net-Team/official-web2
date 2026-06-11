@@ -32,7 +32,7 @@ public class UserInfoResponseConverter {
                 .gender(result.gender())
                 .bio(result.bio())
                 .githubUsername(result.githubUsername())
-                .wechatQrcode(result.wechatQrcode())
+                .qrcodeFileId(result.wechatQrcode())
                 .build();
     }
 

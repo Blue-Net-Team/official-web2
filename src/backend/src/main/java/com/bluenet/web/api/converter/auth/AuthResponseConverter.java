@@ -58,6 +58,7 @@ public class AuthResponseConverter {
                 .roleName(userVO.getRoleName())
                 .bio(userVO.getBio())
                 .githubUsername(userVO.getGithubUsername())
+                .qrcodeFileId(userVO.getWechatQrcode())
                 .build();
     }
 }

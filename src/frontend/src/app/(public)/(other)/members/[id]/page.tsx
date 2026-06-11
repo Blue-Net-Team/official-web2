@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { memberService } from '@/apis/services/member.service'
+import { API_BASE_URL } from '@/apis/config'
 import { MemberDetailDTO, TabCounts, UserExperience } from '@/apis/schema/type'
 import type { ExperienceType } from '@/apis/schema/enumerate'
 import {
@@ -27,7 +28,8 @@ function adaptToSidebarProfile(member: MemberDetailDTO): SidebarProfile {
     grade: member.grade,
     bio: member.bio || '',
     avatarFileId: member.avatarFileId,
-    wechatQrcode: member.wechatQrcode,
+    wechatQrcode:
+      member.qrcodeFileId != null ? `${API_BASE_URL}/file/download/${member.qrcodeFileId}` : null,
     roleName: member.role,
     direction: member.direction,
   }
@@ -45,7 +47,8 @@ function adaptToDisplayData(member: MemberDetailDTO): ProfileDisplayData {
     gender: member.gender,
     roleName: member.role,
     bio: member.bio,
-    wechatQrcode: member.wechatQrcode,
+    wechatQrcode:
+      member.qrcodeFileId != null ? `${API_BASE_URL}/file/download/${member.qrcodeFileId}` : null,
   }
 }
 

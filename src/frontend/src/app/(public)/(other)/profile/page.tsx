@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import type { TabName } from '@/types/profile'
-import type { TabCounts } from '@/apis/schema/type'
+import type { TabCounts, UserInfo } from '@/apis/schema/type'
 import type { ExperienceType } from '@/apis/schema/enumerate'
 import { useProfileData, useExperienceActions } from '@/hooks'
 import {
@@ -19,6 +19,7 @@ import {
   AssessmentList,
   ExperienceSection,
 } from '@/components/Profile'
+import { API_BASE_URL } from '@/apis/config'
 import { Spin } from 'antd'
 import styles from './styles.module.css'
 
@@ -83,12 +84,26 @@ export default function ProfilePage() {
     )
   }
 
+  const sidebarProfile = {
+    username: profile.username,
+    nickname: profile.nickname,
+    college: profile.college,
+    major: profile.major,
+    grade: profile.grade,
+    bio: profile.bio || '',
+    avatarFileId: profile.avatarFileId,
+    wechatQrcode:
+      profile.qrcodeFileId != null ? `${API_BASE_URL}/file/download/${profile.qrcodeFileId}` : null,
+    roleName: profile.roleName,
+    direction: profile.direction,
+  }
+
   return (
     <div className="w-full min-h-screen bg-[#0a0a0a] text-white relative overflow-x-hidden">
       <div className={`fixed w-full h-full pointer-events-none z-0 ${styles.pageBg}`} />
 
       <main className="flex max-w-[1400px] mx-auto pt-[104px] px-16 pb-10 gap-8 relative z-[1] flex-row max-lg:flex-col md:px-6 max-sm:pt-20 max-sm:px-4 max-sm:pb-6">
-        <ProfileSidebar profile={profile} onAvatarUpdate={refresh} />
+        <ProfileSidebar profile={sidebarProfile} onAvatarUpdate={refresh} />
 
         <div className="flex-1 min-w-0">
           <ProfileTabs

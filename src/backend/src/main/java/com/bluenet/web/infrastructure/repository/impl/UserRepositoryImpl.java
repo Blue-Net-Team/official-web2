@@ -501,17 +501,8 @@ public class UserRepositoryImpl implements UserRepository {
             log.warn("user {} has no collegeId", user.getId());
         }
 
-        // 微信二维码
-        String wechatQrCodeUrl = null;
-        if (user.getQrcodeId() != null) {
-            Qrcode qrcode = qrcodeConverter.toEntity(qrcodeMapper.selectById(user.getQrcodeId()));
-            if (qrcode != null && qrcode.getFileId() != null) {
-                File wechatQrCode = fileConverter.toEntity(fileMapper.selectById(qrcode.getFileId()));
-                wechatQrCodeUrl = wechatQrCode != null ? wechatQrCode.getUrl() : null;
-            }
-        } else {
-            log.warn("user {} has no qrcodeId", user.getId());
-        }
+        // 微信二维码（qrcode_id 直接关联 tb_file，非 tb_qrcode）
+        Long wechatQrcodeFileId = user.getQrcodeId();
 
         // 权限列表
         Set<String> permissions = new HashSet<>();
@@ -545,7 +536,7 @@ public class UserRepositoryImpl implements UserRepository {
                 .direction(user.getDirection())
                 .gender(user.getGender())
                 .major(user.getMajor())
-                .wechatQrcode(wechatQrCodeUrl)
+                .wechatQrcode(wechatQrcodeFileId)
                 .avatarFileId(user.getAvatarId())
                 .githubUsername(user.getGithubUsername())
                 .bio(user.getBio())
