@@ -18,8 +18,8 @@ import java.util.List;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class BugReport {
 
-    private static final int MAX_TITLE_LENGTH = 100;
-    private static final int MAX_DESCRIPTION_LENGTH = 2000;
+    public static final int MAX_TITLE_LENGTH = 100;
+    public static final int MAX_DESCRIPTION_LENGTH = 2000;
     private static final int MAX_IMAGES = 3;
 
     private Long id;

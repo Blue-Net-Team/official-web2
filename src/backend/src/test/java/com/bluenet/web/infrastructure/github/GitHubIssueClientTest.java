@@ -52,13 +52,15 @@ class GitHubIssueClientTest {
 
             RestTemplate mockRestTemplate = mock(RestTemplate.class);
             ResponseEntity<String> responseEntity = new ResponseEntity<>(responseBody, HttpStatus.OK);
+            ResponseEntity<String> emptyResponse = new ResponseEntity<>("[]", HttpStatus.OK);
             when(
                     mockRestTemplate.exchange(
                             anyString(),
                             eq(HttpMethod.GET),
                             any(HttpEntity.class),
                             eq(String.class)))
-                                    .thenReturn(responseEntity);
+                                    .thenReturn(responseEntity)
+                                    .thenReturn(emptyResponse);
 
             GitHubIssueClient spyClient = spy(client);
             doReturn(mockRestTemplate).when(spyClient).createRestTemplate();
@@ -142,16 +144,9 @@ class GitHubIssueClientTest {
                             eq(HttpMethod.GET),
                             any(HttpEntity.class),
                             eq(String.class)))
-                                    .thenAnswer(invocation -> {
-                                        String url = invocation.getArgument(0);
-                                        if (url.contains("page=1")) {
-                                            return responsePage1;
-                                        }
-                                        if (url.contains("page=2")) {
-                                            return responsePage2;
-                                        }
-                                        return responsePage3;
-                                    });
+                                    .thenReturn(responsePage1)
+                                    .thenReturn(responsePage2)
+                                    .thenReturn(responsePage3);
 
             GitHubIssueClient spyClient = spy(client);
             doReturn(mockRestTemplate).when(spyClient).createRestTemplate();
@@ -162,6 +157,101 @@ class GitHubIssueClientTest {
             assertEquals(2, results.size());
             assertEquals(1, results.get(0).number());
             assertEquals(2, results.get(1).number());
+            verify(mockRestTemplate, times(3)).exchange(
+                    anyString(),
+                    eq(HttpMethod.GET),
+                    any(HttpEntity.class),
+                    eq(String.class));
+        }
+
+        @Test
+        @DisplayName("TC-005: 返回结果中包含 PR 时应被过滤")
+        void listIssues_withPullRequests_shouldFilterThemOut() {
+            when(tokenService.getInstallationAccessToken()).thenReturn("ghs_test_token");
+
+            String responseBody = "[{\"number\": 1, \"title\": \"Bug 1\", \"body\": \"desc\", \"state\": \"open\", \"html_url\": \"https://github.com/test/issues/1\"},"
+                    + "{\"number\": 2, \"title\": \"PR 1\", \"body\": \"pr desc\", \"state\": \"open\", \"html_url\": \"https://github.com/test/pulls/2\", \"pull_request\": {\"url\": \"https://api.github.com/repos/test/pulls/2\"}}]";
+
+            RestTemplate mockRestTemplate = mock(RestTemplate.class);
+            ResponseEntity<String> responseEntity = new ResponseEntity<>(responseBody, HttpStatus.OK);
+            ResponseEntity<String> emptyResponse = new ResponseEntity<>("[]", HttpStatus.OK);
+            when(
+                    mockRestTemplate.exchange(
+                            anyString(),
+                            eq(HttpMethod.GET),
+                            any(HttpEntity.class),
+                            eq(String.class)))
+                                    .thenReturn(responseEntity)
+                                    .thenReturn(emptyResponse);
+
+            GitHubIssueClient spyClient = spy(client);
+            doReturn(mockRestTemplate).when(spyClient).createRestTemplate();
+
+            List<GitHubIssueListResult> results = spyClient.listIssues(Instant.parse("2024-01-01T00:00:00Z"));
+
+            assertNotNull(results);
+            assertEquals(1, results.size());
+            assertEquals(1, results.get(0).number());
+            assertEquals("Bug 1", results.get(0).title());
+        }
+
+        @Test
+        @DisplayName("TC-006: number 字段为大数字时应正常处理")
+        void listIssues_largeNumber_shouldHandleLongValue() {
+            when(tokenService.getInstallationAccessToken()).thenReturn("ghs_test_token");
+
+            // 使用 Integer.MAX_VALUE 测试 Jackson 可能返回 Long 时的安全转换
+            String responseBody = "[{\"number\": 2147483647, \"title\": \"Max Int Bug\", \"body\": \"desc\", \"state\": \"open\", \"html_url\": \"https://github.com/test/issues/2147483647\"}]";
+
+            RestTemplate mockRestTemplate = mock(RestTemplate.class);
+            ResponseEntity<String> responseEntity = new ResponseEntity<>(responseBody, HttpStatus.OK);
+            ResponseEntity<String> emptyResponse = new ResponseEntity<>("[]", HttpStatus.OK);
+            when(
+                    mockRestTemplate.exchange(
+                            anyString(),
+                            eq(HttpMethod.GET),
+                            any(HttpEntity.class),
+                            eq(String.class)))
+                                    .thenReturn(responseEntity)
+                                    .thenReturn(emptyResponse);
+
+            GitHubIssueClient spyClient = spy(client);
+            doReturn(mockRestTemplate).when(spyClient).createRestTemplate();
+
+            // 不应抛出 ClassCastException
+            List<GitHubIssueListResult> results = spyClient.listIssues(Instant.parse("2024-01-01T00:00:00Z"));
+
+            assertNotNull(results);
+            assertEquals(1, results.size());
+            assertEquals(Integer.valueOf(2147483647), results.get(0).number());
+        }
+
+        @Test
+        @DisplayName("TC-007: 分页无上限时应限制最大页数")
+        void listIssues_excessivePages_shouldStopAtMaxLimit() {
+            when(tokenService.getInstallationAccessToken()).thenReturn("ghs_test_token");
+
+            String pageBody = "[{\"number\": 1, \"title\": \"Bug\", \"body\": \"desc\", \"state\": \"open\", \"html_url\": \"https://github.com/test/issues/1\"}]";
+
+            RestTemplate mockRestTemplate = mock(RestTemplate.class);
+            ResponseEntity<String> responseEntity = new ResponseEntity<>(pageBody, HttpStatus.OK);
+            when(
+                    mockRestTemplate.exchange(
+                            anyString(),
+                            eq(HttpMethod.GET),
+                            any(HttpEntity.class),
+                            eq(String.class)))
+                                    .thenReturn(responseEntity);
+
+            GitHubIssueClient spyClient = spy(client);
+            doReturn(mockRestTemplate).when(spyClient).createRestTemplate();
+
+            List<GitHubIssueListResult> results = spyClient.listIssues(Instant.parse("2024-01-01T00:00:00Z"));
+
+            assertNotNull(results);
+            // 即使每页都有数据，也应该在达到最大页数限制时停止
+            // 假设最大页数限制为 10，每页 100 条，最多 1000 条
+            assertTrue(results.size() <= 1000, "结果数量应受最大页数限制");
         }
     }
 

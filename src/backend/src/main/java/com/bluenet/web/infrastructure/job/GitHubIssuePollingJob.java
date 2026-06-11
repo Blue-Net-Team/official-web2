@@ -89,6 +89,10 @@ public class GitHubIssuePollingJob {
 
     private SyncResult processSingleIssue(GitHubIssueListResult issue) {
         Integer issueNumber = issue.number();
+        if (issueNumber == null) {
+            log.warn("GitHub Issue number 为空，跳过处理: title={}", issue.title());
+            return SyncResult.SKIPPED;
+        }
         Optional<BugReport> existing = bugReportRepository.findByGithubIssueNumber(issueNumber);
 
         if (existing.isPresent()) {
@@ -105,12 +109,13 @@ public class GitHubIssuePollingJob {
             return SyncResult.SKIPPED;
         }
 
+        BugReportStatus oldStatus = bugReport.getStatus();
         bugReport.updateStatus(expectedStatus);
         bugReportRepository.updateStatus(bugReport.getId(), expectedStatus);
         log.info(
                 "Bug 报告 {} 状态更新: {} → {} (source=polling, issueNumber={})",
                 bugReport.getId(),
-                bugReport.getStatus(),
+                oldStatus,
                 expectedStatus,
                 issue.number());
         return SyncResult.UPDATED;
@@ -130,8 +135,17 @@ public class GitHubIssuePollingJob {
             log.warn("GitHub Issue {} 标题为空，无法反向同步", issue.number());
             return SyncResult.SKIPPED;
         }
+        if (title.length() > BugReport.MAX_TITLE_LENGTH) {
+            log.warn("GitHub Issue {} 标题超长，已截断到 {} 字符", issue.number(), BugReport.MAX_TITLE_LENGTH);
+            title = title.substring(0, BugReport.MAX_TITLE_LENGTH);
+        }
 
         String description = body.isBlank() ? title : body;
+        if (description.length() > BugReport.MAX_DESCRIPTION_LENGTH) {
+            log.warn("GitHub Issue {} 描述超长，已截断到 {} 字符", issue.number(), BugReport.MAX_DESCRIPTION_LENGTH);
+            description = description.substring(0, BugReport.MAX_DESCRIPTION_LENGTH);
+        }
+
         BugReportStatus status = mapStateToStatus(issue.state());
 
         BugReport bugReport = BugReport.reconstruct(

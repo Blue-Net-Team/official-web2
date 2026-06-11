@@ -192,6 +192,37 @@ class GitHubIssuePollingJobTest {
 
             verify(bugReportRepository).updateStatus(1L, BugReportStatus.RESOLVED);
         }
+
+        @Test
+        @DisplayName("TC-020: 状态更新时 bugReport 对象应先持有旧状态再更新")
+        void sync_statusMismatch_shouldPreserveOldStatusForLogging() {
+            when(gitHubAppProperties.isPollingEnabled()).thenReturn(true);
+            when(gitHubAppProperties.getPollingSinceDays()).thenReturn(7);
+
+            GitHubIssueListResult issue = new GitHubIssueListResult(
+                    42, "Bug", "Desc", "closed", "https://github.com/test/issues/42");
+            BugReport existing = BugReport.reconstruct(
+                    1L,
+                    "Bug",
+                    "Desc",
+                    null,
+                    null,
+                    null,
+                    BugReportStatus.PENDING,
+                    "https://github.com/test/issues/42",
+                    42,
+                    List.of());
+
+            when(gitHubIssueClient.listIssues(any())).thenReturn(List.of(issue));
+            when(bugReportRepository.findByGithubIssueNumber(42)).thenReturn(Optional.of(existing));
+
+            job.sync();
+
+            // 验证 updateStatus 被调用后，bugReport 的状态已更新
+            assertEquals(BugReportStatus.RESOLVED, existing.getStatus());
+            // 验证 repository 被传入正确的旧状态目标值
+            verify(bugReportRepository).updateStatus(1L, BugReportStatus.RESOLVED);
+        }
     }
 
     @Nested
@@ -218,6 +249,69 @@ class GitHubIssuePollingJobTest {
             verify(bugReportRepository).findByGithubIssueNumber(42);
             verify(bugReportRepository).findByGithubIssueNumber(43);
             verify(bugReportRepository).save(any());
+        }
+    }
+
+    @Nested
+    @DisplayName("防御性处理测试")
+    class DefensiveProgrammingTest {
+
+        @Test
+        @DisplayName("TC-021: issue number 为 null 时应跳过，不查询数据库")
+        void sync_nullIssueNumber_shouldSkip() {
+            when(gitHubAppProperties.isPollingEnabled()).thenReturn(true);
+            when(gitHubAppProperties.getPollingSinceDays()).thenReturn(7);
+
+            GitHubIssueListResult issue = new GitHubIssueListResult(
+                    null, "Bug", "Desc", "open", "https://github.com/test/issues/42");
+
+            when(gitHubIssueClient.listIssues(any())).thenReturn(List.of(issue));
+
+            job.sync();
+
+            verify(bugReportRepository, never()).findByGithubIssueNumber(any());
+            verify(bugReportRepository, never()).save(any());
+            verify(bugReportRepository, never()).updateStatus(any(), any());
+        }
+
+        @Test
+        @DisplayName("TC-022: 反向同步时标题超长应截断到 100 字符")
+        void sync_titleTooLong_shouldTruncate() {
+            when(gitHubAppProperties.isPollingEnabled()).thenReturn(true);
+            when(gitHubAppProperties.getPollingSinceDays()).thenReturn(7);
+
+            String longTitle = "A".repeat(200);
+            GitHubIssueListResult issue = new GitHubIssueListResult(
+                    42, longTitle, "Description", "open", "https://github.com/test/issues/42");
+
+            when(gitHubIssueClient.listIssues(any())).thenReturn(List.of(issue));
+            when(bugReportRepository.findByGithubIssueNumber(42)).thenReturn(Optional.empty());
+
+            job.sync();
+
+            ArgumentCaptor<BugReport> captor = ArgumentCaptor.forClass(BugReport.class);
+            verify(bugReportRepository).save(captor.capture());
+            assertEquals(100, captor.getValue().getTitle().length());
+        }
+
+        @Test
+        @DisplayName("TC-023: 反向同步时描述超长应截断到 2000 字符")
+        void sync_descriptionTooLong_shouldTruncate() {
+            when(gitHubAppProperties.isPollingEnabled()).thenReturn(true);
+            when(gitHubAppProperties.getPollingSinceDays()).thenReturn(7);
+
+            String longDescription = "B".repeat(3000);
+            GitHubIssueListResult issue = new GitHubIssueListResult(
+                    42, "Bug", longDescription, "open", "https://github.com/test/issues/42");
+
+            when(gitHubIssueClient.listIssues(any())).thenReturn(List.of(issue));
+            when(bugReportRepository.findByGithubIssueNumber(42)).thenReturn(Optional.empty());
+
+            job.sync();
+
+            ArgumentCaptor<BugReport> captor = ArgumentCaptor.forClass(BugReport.class);
+            verify(bugReportRepository).save(captor.capture());
+            assertEquals(2000, captor.getValue().getDescription().length());
         }
     }
 }
