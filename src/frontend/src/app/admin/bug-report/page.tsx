@@ -27,9 +27,6 @@ export default function BugReportManagementPage() {
   // Detail drawer state
   const [detailOpen, setDetailOpen] = useState(false)
 
-  // Update status loading
-  const [updatingId, setUpdatingId] = useState<number | null>(null)
-
   // Fetch page with filters
   const fetchPage = useCallback(
     (page: number, pageSize: number) => {
@@ -68,24 +65,6 @@ export default function BugReportManagementPage() {
     }
   }
 
-  // Update status
-  const handleStatusChange = async (id: number, status: BugReportStatus) => {
-    setUpdatingId(id)
-    try {
-      const res = await adminBugReportService.updateStatus(id, { status })
-      if (res.code === 200) {
-        messageApi.success('状态更新成功')
-        refresh()
-      } else {
-        messageApi.error(res.msg || '状态更新失败')
-      }
-    } catch {
-      messageApi.error('状态更新失败')
-    } finally {
-      setUpdatingId(null)
-    }
-  }
-
   // Parse environment info
   const parsedEnvironment = useMemo(() => {
     if (!detailData?.environmentJson) return null
@@ -117,17 +96,8 @@ export default function BugReportManagementPage() {
       title: '状态',
       dataIndex: 'status',
       width: 100,
-      render: (status: BugReportStatus, record: BugReportListItemDTO) => (
-        <Select
-          size="small"
-          value={status}
-          options={STATUS_OPTIONS}
-          loading={updatingId === record.id}
-          onClick={(e) => e.stopPropagation()}
-          onChange={(value) => handleStatusChange(record.id, value as BugReportStatus)}
-          style={{ width: 90 }}
-          variant="borderless"
-        />
+      render: (status: BugReportStatus) => (
+        <Tag color={BUG_REPORT_STATUS_COLORS[status]}>{BUG_REPORT_STATUS_LABELS[status]}</Tag>
       ),
     },
     {

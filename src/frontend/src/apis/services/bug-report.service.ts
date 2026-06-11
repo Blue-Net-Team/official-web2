@@ -5,7 +5,6 @@ import type {
   BugReportCreatedDTO,
   BugReportListItemDTO,
   BugReportDetailDTO,
-  UpdateBugReportStatusRequestDTO,
   BugReportListQueryDTO,
 } from '../schema/bug-report.dto'
 
@@ -45,21 +44,6 @@ export const adminBugReportService = {
   async getDetail(id: number): Promise<ResponseMessage<BugReportDetailDTO>> {
     const response = await apiClient.get<ResponseMessage<BugReportDetailDTO>>(
       `/admin/bug-reports/${id}`
-    )
-    return response.data
-  },
-
-  /**
-   * 管理端更新 Bug 报告状态
-   * 对应后端 PUT /api/v1/admin/bug-reports/{id}/status
-   */
-  async updateStatus(
-    id: number,
-    data: UpdateBugReportStatusRequestDTO
-  ): Promise<ResponseMessage<BugReportDetailDTO>> {
-    const response = await apiClient.put<ResponseMessage<BugReportDetailDTO>>(
-      `/admin/bug-reports/${id}/status`,
-      data
     )
     return response.data
   },

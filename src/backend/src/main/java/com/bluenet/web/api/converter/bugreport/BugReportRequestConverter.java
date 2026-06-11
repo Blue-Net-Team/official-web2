@@ -2,7 +2,6 @@ package com.bluenet.web.api.converter.bugreport;
 
 import com.bluenet.web.api.dto.bugreport.BugReportListQueryDTO;
 import com.bluenet.web.api.dto.bugreport.CreateBugReportRequestDTO;
-import com.bluenet.web.api.dto.bugreport.UpdateBugReportStatusRequestDTO;
 import com.bluenet.web.application.command.bugreport.BugReportCommands;
 import org.springframework.stereotype.Component;
 
@@ -36,12 +35,5 @@ public class BugReportRequestConverter {
                 dto.getPage(),
                 dto.getSize(),
                 dto.getStatus());
-    }
-
-    /**
-     * 将更新状态请求 DTO 转换为命令
-     */
-    public BugReportCommands.UpdateBugReportStatusCommand toCommand(Long id, UpdateBugReportStatusRequestDTO dto) {
-        return new BugReportCommands.UpdateBugReportStatusCommand(id, dto.getStatus());
     }
 }

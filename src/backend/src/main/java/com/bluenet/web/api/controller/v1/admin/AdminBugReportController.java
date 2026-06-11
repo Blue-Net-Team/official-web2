@@ -5,7 +5,6 @@ import com.bluenet.web.api.dto.ResponseMessage;
 import com.bluenet.web.api.dto.bugreport.BugReportBriefDTO;
 import com.bluenet.web.api.dto.bugreport.BugReportDetailDTO;
 import com.bluenet.web.api.dto.bugreport.BugReportListQueryDTO;
-import com.bluenet.web.api.dto.bugreport.UpdateBugReportStatusRequestDTO;
 import com.bluenet.web.api.converter.bugreport.BugReportRequestConverter;
 import com.bluenet.web.application.BugReportResult;
 import com.bluenet.web.api.converter.bugreport.BugReportResponseConverter;
@@ -69,19 +68,4 @@ public class AdminBugReportController {
         return ResponseMessage.success(responseConverter.toDetailDTO(detail));
     }
 
-    @Operation(summary = "更新 Bug 报告状态", description = "将指定 Bug 报告更新为新的处理状态")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "更新成功"),
-            @ApiResponse(responseCode = "404", description = "报告不存在", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseMessage.class))),
-            @ApiResponse(responseCode = "403", description = "无权限", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseMessage.class)))
-    })
-    @RequiresPermission(value = "bug-report:update", name = "更新 Bug 报告状态", access = AccessLevel.PROTECTED)
-    @PutMapping("/{id}/status")
-    public ResponseMessage<BugReportDetailDTO> updateBugReportStatus(
-            @Parameter(description = "报告 ID", required = true) @PathVariable Long id,
-            @Valid @RequestBody UpdateBugReportStatusRequestDTO requestDTO) {
-        BugReportResult.Detail detail = bugReportAdminAppService.updateStatus(
-                requestConverter.toCommand(id, requestDTO));
-        return ResponseMessage.success(responseConverter.toDetailDTO(detail));
-    }
 }

@@ -8,12 +8,10 @@ import com.bluenet.web.domain.model.entity.BugReport;
 import com.bluenet.web.domain.model.entity.BugReportImage;
 import com.bluenet.web.domain.repository.BugReportRepository;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -21,7 +19,6 @@ import java.util.List;
  * Bug 报告管理应用服务实现（管理端）。
  */
 @Service
-@Slf4j
 @RequiredArgsConstructor
 public class BugReportAdminAppServiceImpl implements BugReportAdminAppService {
 
@@ -41,19 +38,6 @@ public class BugReportAdminAppServiceImpl implements BugReportAdminAppService {
     public BugReportResult.Detail getBugReportDetail(Long id) {
         BugReport bugReport = bugReportRepository.findById(id)
                 .orElseThrow(() -> new DataNotFound("Bug 报告不存在"));
-        return toDetailResult(bugReport);
-    }
-
-    @Override
-    @Transactional
-    public BugReportResult.Detail updateStatus(BugReportCommands.UpdateBugReportStatusCommand command) {
-        BugReport bugReport = bugReportRepository.findById(command.id())
-                .orElseThrow(() -> new DataNotFound("Bug 报告不存在"));
-
-        bugReport.updateStatus(command.status());
-        bugReportRepository.updateStatus(command.id(), command.status());
-
-        log.info("更新 Bug 报告状态: id={}, status={}", command.id(), command.status());
         return toDetailResult(bugReport);
     }
 

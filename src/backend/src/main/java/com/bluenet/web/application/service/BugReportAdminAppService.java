@@ -30,12 +30,4 @@ public interface BugReportAdminAppService {
      */
     BugReportResult.Detail getBugReportDetail(Long id);
 
-    /**
-     * 更新 Bug 报告状态
-     *
-     * @param command
-     *            更新状态命令
-     * @return 更新后的报告详情
-     */
-    BugReportResult.Detail updateStatus(BugReportCommands.UpdateBugReportStatusCommand command);
 }

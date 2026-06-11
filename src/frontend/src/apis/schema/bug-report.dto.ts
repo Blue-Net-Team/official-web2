@@ -83,14 +83,6 @@ export interface BugReportDetailDTO {
 }
 
 /**
- * 更新 Bug 报告状态请求
- * 对应后端 UpdateBugReportStatusRequestDTO
- */
-export interface UpdateBugReportStatusRequestDTO {
-  status: BugReportStatus
-}
-
-/**
  * Bug 报告列表查询参数
  */
 export interface BugReportListQueryDTO {

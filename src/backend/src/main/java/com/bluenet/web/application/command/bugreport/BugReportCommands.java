@@ -65,17 +65,4 @@ public class BugReportCommands {
             /** 状态筛选 */
             BugReportStatus status) {
     }
-
-    /**
-     * 更新 Bug 报告状态命令。
-     * <p>
-     * 用于管理员更新 Bug 报告处理状态。
-     * </p>
-     */
-    public record UpdateBugReportStatusCommand(
-            /** Bug 报告 ID */
-            Long id,
-            /** 新状态 */
-            BugReportStatus status) {
-    }
 }
