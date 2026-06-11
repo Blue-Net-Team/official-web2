@@ -73,7 +73,7 @@ export default function BugReportManagementPage() {
     } catch {
       return null
     }
-  }, [detailData?.environmentJson])
+  }, [detailData])
 
   // Table columns
   const columns: ColumnsType<BugReportListItemDTO> = [
