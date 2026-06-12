@@ -2,7 +2,7 @@
 # 构建上下文应为项目根目录
 
 # ==================== 构建阶段 ====================
-FROM node:20-alpine AS builder
+FROM node:20-slim AS builder
 
 # 构建时参数：后端公网地址（用于 SSR 预渲染时访问后端 API）
 # 在 CI/CD 中构建时传入，例如：--build-arg BUILD_BACKEND_HOST=api.example.com
@@ -31,8 +31,9 @@ RUN pnpm install --frozen-lockfile
 ARG CACHE_BUST
 RUN echo "Cache bust: ${CACHE_BUST}" > /dev/null
 
-# 复制源代码
+# 复制源代码（宿主机 node_modules 即使被 dockerignore 忽略也做一次清理，确保使用容器内安装的依赖）
 COPY src/frontend/ ./
+RUN rm -rf /app/node_modules && pnpm install --frozen-lockfile
 
 # 设置构建时的环境变量并构建应用
 ENV BACKEND_HOST=${BUILD_BACKEND_HOST}
@@ -44,7 +45,7 @@ ENV NEXT_PUBLIC_SSL_ENABLED=${NEXT_PUBLIC_SSL_ENABLED}
 RUN pnpm build
 
 # ==================== 运行阶段 ====================
-FROM node:20-alpine AS runner
+FROM node:20-slim AS runner
 LABEL authors="IVEN"
 LABEL description="BlueNet Frontend Service"
 
