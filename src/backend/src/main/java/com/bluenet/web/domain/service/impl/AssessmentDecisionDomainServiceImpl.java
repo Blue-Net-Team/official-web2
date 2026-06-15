@@ -96,9 +96,7 @@ public class AssessmentDecisionDomainServiceImpl implements AssessmentDecisionDo
     private boolean isSameDirectionAndGrade(AssessmentTime eliminatedTime, AssessmentTime targetTime) {
         // 目标考核是全局最终考核（direction=null, epoch=0）
         // 任何方向考核（epoch>0）的淘汰决策都限制它
-        if (targetTime.getDirection() == null
-                && targetTime.getEpoch() != null
-                && targetTime.getEpoch() == 0) {
+        if (targetTime.isGlobalFinalAssessment()) {
             // 决策考核必须是方向考核（epoch>0），全局考核的淘汰不影响其他
             if (eliminatedTime.getEpoch() == null || eliminatedTime.getEpoch() <= 0) {
                 return false;

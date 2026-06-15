@@ -135,17 +135,6 @@ public interface AssessmentTimeRepository {
     long countByEpochGrade(Integer epoch, Integer grade);
 
     /**
-     * 查询最大考核轮次，支持方向/年级为 null。
-     *
-     * @param direction
-     *            技术方向过滤条件（可为 null）。
-     * @param grade
-     *            考核年级（可为 null）。
-     * @return 最大轮次；不存在时返回 Optional.empty()。
-     */
-    Optional<Integer> findMaxEpoch(Direction direction, Integer grade);
-
-    /**
      * 判断同方向同轮次下是否存在与指定 grade 形式冲突的记录。 当 grade 为 null 时，查询是否存在 grade IS NOT NULL
      * 的记录； 当 grade 不为 null 时，查询是否存在 grade IS NULL 的记录。
      *

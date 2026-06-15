@@ -496,11 +496,7 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
                     ? assessmentTime.getDirection().getDescription()
                     : "全局";
             int epoch = assessmentTime.getEpoch() != null ? assessmentTime.getEpoch() : 0;
-
-            Integer maxEpoch = assessmentTimeRepository.findMaxEpoch(
-                    assessmentTime.getDirection(),
-                    assessmentTime.getGrade()).orElse(null);
-            boolean isFinalRound = maxEpoch != null && maxEpoch.equals(assessmentTime.getEpoch());
+            boolean isFinalRound = assessmentTime.isGlobalFinalAssessment();
 
             String resultText;
             if (isFinalRound) {

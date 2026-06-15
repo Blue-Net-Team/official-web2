@@ -49,17 +49,6 @@
         ORDER BY id DESC
     </select>
 
-    <select id="selectMaxEpoch" resultType="java.lang.Integer">
-        SELECT MAX(epoch)
-        FROM tb_assessment_time
-        <where>
-            <if test="direction != null">AND direction = #{direction}</if>
-            <if test="direction == null">AND direction IS NULL</if>
-            <if test="grade != null">AND grade = #{grade}</if>
-            <if test="grade == null">AND grade IS NULL</if>
-        </where>
-    </select>
-
     <select id="countByEpochGrade" resultType="long">
         SELECT COUNT(*)
         FROM tb_assessment_time

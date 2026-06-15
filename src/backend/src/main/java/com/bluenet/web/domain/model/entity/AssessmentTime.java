@@ -170,4 +170,18 @@ public class AssessmentTime {
     public boolean hasStarted() {
         return this.startTime != null && !this.startTime.isAfter(LocalDateTime.now());
     }
+
+    /**
+     * 是否为全局最终考核（direction=null 且 epoch=0）。
+     * <p>
+     * 全局最终考核是跨方向的综合团队考核，只有通过后才发送「录取」邮件， 淘汰则发送「淘汰」邮件；方向考核无论第几轮均使用「通过 / 未通过」文案。
+     * </p>
+     *
+     * @return 当前考核是否为全局最终考核
+     */
+    public boolean isGlobalFinalAssessment() {
+        return this.direction == null
+                && this.epoch != null
+                && this.epoch == 0;
+    }
 }

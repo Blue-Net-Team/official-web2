@@ -454,6 +454,113 @@ class AssessmentJudgementAppServiceImplTest {
     }
 
     /**
+     * 验证方向第二轮通过后发送「通过」而非「录取」。 修复 issue #48：之前按同 direction+grade 下最大 epoch 判断最终轮次，
+     * 导致方向第二轮被误当成最终轮次而发送「录取」邮件。
+     */
+    @Test
+    @DisplayName("发布决策：方向第二轮通过应发送『通过』")
+    void publishDecisions_directionEpoch2Passed_shouldSendPassedNotAdmitted() {
+        try (MockedStatic<UserCTX> mockedUserCTX = mockStatic(UserCTX.class)) {
+            mockedUserCTX.when(UserCTX::getCurrentUser).thenReturn(createUser(RoleType.DIRECTION_ADMIN));
+            AssessmentTime directionEpoch2 = createTime(2);
+            when(assessmentTimeRepository.findById(ASSESSMENT_TIME_ID)).thenReturn(Optional.of(directionEpoch2));
+            when(assessmentDecisionRepository.findByAssessmentTimeId(ASSESSMENT_TIME_ID))
+                    .thenReturn(List.of(createDecisionVOForUser(CANDIDATE_ID, true)));
+            when(userDomainService.getUser(CANDIDATE_ID))
+                    .thenReturn(Optional.of(createUserWithEmail(CANDIDATE_ID, "a@test.com")));
+            mockAssessmentDecisionNotificationTemplate();
+
+            assessmentJudgementAppService.publishDecisions(ASSESSMENT_TIME_ID);
+
+            ArgumentCaptor<MessageRequest> messageCaptor = ArgumentCaptor.forClass(MessageRequest.class);
+            verify(messageDispatcher).dispatchAsync(messageCaptor.capture());
+            String htmlContent = messageCaptor.getValue().content();
+            assertNotNull(htmlContent);
+            assertTrue(htmlContent.contains("通过"), "方向考核通过邮件应包含『通过』");
+            assertFalse(htmlContent.contains("录取"), "方向考核通过邮件不应包含『录取』");
+        }
+    }
+
+    /**
+     * 验证方向第二轮淘汰后发送「未通过」而非「淘汰」。
+     */
+    @Test
+    @DisplayName("发布决策：方向第二轮淘汰应发送『未通过』")
+    void publishDecisions_directionEpoch2Eliminated_shouldSendNotPassedNotEliminated() {
+        try (MockedStatic<UserCTX> mockedUserCTX = mockStatic(UserCTX.class)) {
+            mockedUserCTX.when(UserCTX::getCurrentUser).thenReturn(createUser(RoleType.DIRECTION_ADMIN));
+            AssessmentTime directionEpoch2 = createTime(2);
+            when(assessmentTimeRepository.findById(ASSESSMENT_TIME_ID)).thenReturn(Optional.of(directionEpoch2));
+            when(assessmentDecisionRepository.findByAssessmentTimeId(ASSESSMENT_TIME_ID))
+                    .thenReturn(List.of(createDecisionVOForUser(CANDIDATE_ID, false)));
+            when(userDomainService.getUser(CANDIDATE_ID))
+                    .thenReturn(Optional.of(createUserWithEmail(CANDIDATE_ID, "a@test.com")));
+            mockAssessmentDecisionNotificationTemplate();
+
+            assessmentJudgementAppService.publishDecisions(ASSESSMENT_TIME_ID);
+
+            ArgumentCaptor<MessageRequest> messageCaptor = ArgumentCaptor.forClass(MessageRequest.class);
+            verify(messageDispatcher).dispatchAsync(messageCaptor.capture());
+            String htmlContent = messageCaptor.getValue().content();
+            assertNotNull(htmlContent);
+            assertTrue(htmlContent.contains("未通过"), "方向考核淘汰邮件应包含『未通过』");
+            assertFalse(htmlContent.contains("淘汰"), "方向考核淘汰邮件不应包含『淘汰』");
+        }
+    }
+
+    /**
+     * 验证全局最终考核通过后发送「录取」。
+     */
+    @Test
+    @DisplayName("发布决策：全局最终考核通过应发送『录取』")
+    void publishDecisions_globalFinalPassed_shouldSendAdmitted() {
+        try (MockedStatic<UserCTX> mockedUserCTX = mockStatic(UserCTX.class)) {
+            mockedUserCTX.when(UserCTX::getCurrentUser).thenReturn(createUser(RoleType.DIRECTION_ADMIN));
+            AssessmentTime globalFinal = createGlobalFinalTime();
+            when(assessmentTimeRepository.findById(ASSESSMENT_TIME_ID)).thenReturn(Optional.of(globalFinal));
+            when(assessmentDecisionRepository.findByAssessmentTimeId(ASSESSMENT_TIME_ID))
+                    .thenReturn(List.of(createDecisionVOForUser(CANDIDATE_ID, true)));
+            when(userDomainService.getUser(CANDIDATE_ID))
+                    .thenReturn(Optional.of(createUserWithEmail(CANDIDATE_ID, "a@test.com")));
+            mockAssessmentDecisionNotificationTemplate();
+
+            assessmentJudgementAppService.publishDecisions(ASSESSMENT_TIME_ID);
+
+            ArgumentCaptor<MessageRequest> messageCaptor = ArgumentCaptor.forClass(MessageRequest.class);
+            verify(messageDispatcher).dispatchAsync(messageCaptor.capture());
+            String htmlContent = messageCaptor.getValue().content();
+            assertNotNull(htmlContent);
+            assertTrue(htmlContent.contains("录取"), "全局最终考核通过邮件应包含『录取』");
+        }
+    }
+
+    /**
+     * 验证全局最终考核淘汰后发送「淘汰」。
+     */
+    @Test
+    @DisplayName("发布决策：全局最终考核淘汰应发送『淘汰』")
+    void publishDecisions_globalFinalEliminated_shouldSendEliminated() {
+        try (MockedStatic<UserCTX> mockedUserCTX = mockStatic(UserCTX.class)) {
+            mockedUserCTX.when(UserCTX::getCurrentUser).thenReturn(createUser(RoleType.DIRECTION_ADMIN));
+            AssessmentTime globalFinal = createGlobalFinalTime();
+            when(assessmentTimeRepository.findById(ASSESSMENT_TIME_ID)).thenReturn(Optional.of(globalFinal));
+            when(assessmentDecisionRepository.findByAssessmentTimeId(ASSESSMENT_TIME_ID))
+                    .thenReturn(List.of(createDecisionVOForUser(CANDIDATE_ID, false)));
+            when(userDomainService.getUser(CANDIDATE_ID))
+                    .thenReturn(Optional.of(createUserWithEmail(CANDIDATE_ID, "a@test.com")));
+            mockAssessmentDecisionNotificationTemplate();
+
+            assessmentJudgementAppService.publishDecisions(ASSESSMENT_TIME_ID);
+
+            ArgumentCaptor<MessageRequest> messageCaptor = ArgumentCaptor.forClass(MessageRequest.class);
+            verify(messageDispatcher).dispatchAsync(messageCaptor.capture());
+            String htmlContent = messageCaptor.getValue().content();
+            assertNotNull(htmlContent);
+            assertTrue(htmlContent.contains("淘汰"), "全局最终考核淘汰邮件应包含『淘汰』");
+        }
+    }
+
+    /**
      * 验证无已决策考生时返回 0 且不发送邮件。
      */
     @Test
@@ -1105,6 +1212,25 @@ class AssessmentJudgementAppServiceImplTest {
                 null,
                 null,
                 false);
+    }
+
+    private AssessmentTime createGlobalFinalTime() {
+        return AssessmentTime.reconstruct(
+                ASSESSMENT_TIME_ID,
+                null,
+                0,
+                2026,
+                null,
+                null,
+                false,
+                null,
+                null,
+                false);
+    }
+
+    private void mockAssessmentDecisionNotificationTemplate() {
+        when(messageTemplateRegistry.getTemplateContent("ASSESSMENT_DECISION_NOTIFICATION"))
+                .thenReturn("<p style=\"color: {{color}};\">{{resultText}}</p>");
     }
 
     private AssessmentQuestionSubmissionVO createSubmissionVO(boolean judged) {
