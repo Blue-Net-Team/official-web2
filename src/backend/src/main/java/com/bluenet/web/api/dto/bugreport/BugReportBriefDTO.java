@@ -37,4 +37,7 @@ public class BugReportBriefDTO {
 
     @Schema(description = "GitHub Issue URL")
     private String githubIssueUrl;
+
+    @Schema(description = "GitHub Issue 编号")
+    private Integer githubIssueNumber;
 }

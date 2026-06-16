@@ -73,6 +73,8 @@ public final class BugReportResult {
             /** 关联图片数量 */
             int imageCount,
             /** GitHub Issue URL */
-            String githubIssueUrl) {
+            String githubIssueUrl,
+            /** GitHub Issue 编号 */
+            Integer githubIssueNumber) {
     }
 }

@@ -56,7 +56,8 @@ public class BugReportAdminAppServiceImpl implements BugReportAdminAppService {
                 bugReport.getReporterEmail(),
                 bugReport.getStatus(),
                 imageCount,
-                bugReport.getGithubIssueUrl());
+                bugReport.getGithubIssueUrl(),
+                bugReport.getGithubIssueNumber());
     }
 
     private BugReportResult.Detail toDetailResult(BugReport bugReport) {

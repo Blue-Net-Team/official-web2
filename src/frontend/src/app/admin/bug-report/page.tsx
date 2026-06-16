@@ -75,6 +75,23 @@ export default function BugReportManagementPage() {
     }
   }, [detailData])
 
+  // Render text with max 3 lines
+  const renderMultiline = (text: string) => (
+    <div
+      style={{
+        display: '-webkit-box',
+        WebkitLineClamp: 3,
+        WebkitBoxOrient: 'vertical',
+        overflow: 'hidden',
+        lineHeight: '1.5em',
+        maxHeight: '4.5em',
+      }}
+      title={text}
+    >
+      {text}
+    </div>
+  )
+
   // Table columns
   const columns: ColumnsType<BugReportListItemDTO> = [
     {
@@ -83,14 +100,36 @@ export default function BugReportManagementPage() {
       width: 60,
     },
     {
+      title: 'Issue',
+      key: 'issue',
+      width: 80,
+      align: 'center',
+      render: (_, record: BugReportListItemDTO) =>
+        record.githubIssueNumber ? (
+          <a
+            href={record.githubIssueUrl ?? undefined}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-400 hover:text-blue-300"
+            onClick={(e) => e.stopPropagation()}
+          >
+            #{record.githubIssueNumber}
+          </a>
+        ) : (
+          <span className="text-white/20">-</span>
+        ),
+    },
+    {
       title: '标题',
       dataIndex: 'title',
-      ellipsis: { showTitle: true },
+      width: 180,
+      render: (title: string) => renderMultiline(title),
     },
     {
       title: '描述',
       dataIndex: 'description',
-      ellipsis: { showTitle: true },
+      width: 240,
+      render: (description: string) => renderMultiline(description),
     },
     {
       title: '状态',
@@ -103,7 +142,7 @@ export default function BugReportManagementPage() {
     {
       title: '页面 URL',
       dataIndex: 'pageUrl',
-      width: 180,
+      width: 160,
       ellipsis: { showTitle: true },
       render: (v: string) =>
         v ? (

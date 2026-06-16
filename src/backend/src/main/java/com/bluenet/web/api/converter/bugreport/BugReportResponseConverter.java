@@ -51,6 +51,7 @@ public class BugReportResponseConverter {
                 .status(result.status())
                 .imageCount(result.imageCount())
                 .githubIssueUrl(result.githubIssueUrl())
+                .githubIssueNumber(result.githubIssueNumber())
                 .build();
     }
 

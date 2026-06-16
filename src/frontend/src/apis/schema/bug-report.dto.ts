@@ -63,6 +63,7 @@ export interface BugReportListItemDTO {
   pageUrl: string
   reporterEmail: string | null
   githubIssueUrl: string | null
+  githubIssueNumber: number | null
 }
 
 /**
