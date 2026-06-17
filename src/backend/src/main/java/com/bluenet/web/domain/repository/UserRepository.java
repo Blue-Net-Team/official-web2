@@ -3,6 +3,7 @@ package com.bluenet.web.domain.repository;
 import com.bluenet.web.domain.model.entity.User;
 import com.bluenet.web.domain.model.enumerate.Direction;
 import com.bluenet.web.domain.model.enumerate.Gender;
+import com.bluenet.web.domain.model.enumerate.RoleType;
 import com.bluenet.web.domain.model.vo.FileVO;
 import com.bluenet.web.domain.model.vo.QrcodeVO;
 import com.bluenet.web.domain.model.vo.TabCountsVO;
@@ -278,6 +279,16 @@ public interface UserRepository {
      *            角色ID
      */
     void batchUpdateRole(List<Long> userIds, Long roleId);
+
+    /**
+     * 批量更新角色（按角色枚举）
+     *
+     * @param userIds
+     *            用户ID列表
+     * @param roleType
+     *            角色枚举
+     */
+    void batchUpdateRole(List<Long> userIds, RoleType roleType);
 
     /**
      * 统计用户关联数据数量

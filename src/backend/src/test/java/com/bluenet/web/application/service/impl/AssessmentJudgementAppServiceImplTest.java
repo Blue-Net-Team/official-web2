@@ -34,11 +34,8 @@ import com.bluenet.web.domain.service.AssessmentDecisionDomainService;
 import com.bluenet.web.domain.service.AssessmentJudgementDomainService;
 import com.bluenet.web.domain.repository.AssessmentQuestionRepository;
 import com.bluenet.web.domain.repository.AssessmentTimeRepository;
+import com.bluenet.web.application.service.assessment.AssessmentDecisionPublicationService;
 import com.bluenet.web.domain.service.UserDomainService;
-import com.bluenet.web.domain.model.enumerate.MessageChannel;
-import com.bluenet.web.domain.model.enumerate.MessageContentType;
-import com.bluenet.web.application.message.MessageDispatcher;
-import com.bluenet.web.application.message.MessageRequest;
 import com.bluenet.web.infrastructure.security.util.UserCTX;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -94,10 +91,7 @@ class AssessmentJudgementAppServiceImplTest {
     private UserDomainService userDomainService;
 
     @Mock
-    private MessageDispatcher messageDispatcher;
-
-    @Mock
-    private com.bluenet.web.application.message.MessageTemplateRegistry messageTemplateRegistry;
+    private AssessmentDecisionPublicationService publicationService;
 
     @Mock
     private CommentRepository commentRepository;
@@ -418,150 +412,57 @@ class AssessmentJudgementAppServiceImplTest {
         }
     }
 
-    // ========== 发布决策邮件测试 ==========
+    // ========== 发布决策测试 ==========
 
     /**
-     * 验证发布决策会向已决策考生发送邮件并返回发送数量。
+     * 验证发布决策会遍历每个已决策考生并调用发布服务。
      */
     @Test
-    @DisplayName("发布决策：应向已决策考生发送邮件")
-    void publishDecisions_withDecidedCandidates_shouldSendEmails() {
+    @DisplayName("发布决策：应遍历调用发布服务")
+    void publishDecisions_withDecidedCandidates_shouldCallPublicationService() {
         try (MockedStatic<UserCTX> mockedUserCTX = mockStatic(UserCTX.class)) {
             mockedUserCTX.when(UserCTX::getCurrentUser).thenReturn(createUser(RoleType.DIRECTION_ADMIN));
-            when(assessmentTimeRepository.findById(ASSESSMENT_TIME_ID)).thenReturn(Optional.of(createTime()));
+            AssessmentTime assessmentTime = createTime();
+            when(assessmentTimeRepository.findById(ASSESSMENT_TIME_ID)).thenReturn(Optional.of(assessmentTime));
+            AssessmentDecisionVO decision1 = createDecisionVOForUser(CANDIDATE_ID, true);
+            AssessmentDecisionVO decision2 = createDecisionVOForUser(41L, false);
             when(assessmentDecisionRepository.findByAssessmentTimeId(ASSESSMENT_TIME_ID))
-                    .thenReturn(
-                            List.of(
-                                    createDecisionVOForUser(CANDIDATE_ID, true),
-                                    createDecisionVOForUser(41L, false)));
-            when(userDomainService.getUser(CANDIDATE_ID))
-                    .thenReturn(Optional.of(createUserWithEmail(CANDIDATE_ID, "a@test.com")));
-            when(userDomainService.getUser(41L))
-                    .thenReturn(Optional.of(createUserWithEmail(41L, "b@test.com")));
+                    .thenReturn(List.of(decision1, decision2));
 
             int result = assessmentJudgementAppService.publishDecisions(ASSESSMENT_TIME_ID);
 
             assertEquals(2, result);
-            ArgumentCaptor<MessageRequest> messageCaptor = ArgumentCaptor.forClass(MessageRequest.class);
-            verify(messageDispatcher, times(2)).dispatchAsync(messageCaptor.capture());
-            assertTrue(
-                    messageCaptor.getAllValues()
-                            .stream()
-                            .allMatch(
-                                    request -> request.channel() == MessageChannel.EMAIL
-                                            && request.contentType() == MessageContentType.HTML));
+            verify(publicationService).publish(decision1, assessmentTime);
+            verify(publicationService).publish(decision2, assessmentTime);
         }
     }
 
     /**
-     * 验证方向第二轮通过后发送「通过」而非「录取」。 修复 issue #48：之前按同 direction+grade 下最大 epoch 判断最终轮次，
-     * 导致方向第二轮被误当成最终轮次而发送「录取」邮件。
+     * 验证单个考生发布失败时继续处理其余考生。
      */
     @Test
-    @DisplayName("发布决策：方向第二轮通过应发送『通过』")
-    void publishDecisions_directionEpoch2Passed_shouldSendPassedNotAdmitted() {
+    @DisplayName("发布决策：单个考生失败应继续处理其余")
+    void publishDecisions_publicationFailure_shouldContinue() {
         try (MockedStatic<UserCTX> mockedUserCTX = mockStatic(UserCTX.class)) {
             mockedUserCTX.when(UserCTX::getCurrentUser).thenReturn(createUser(RoleType.DIRECTION_ADMIN));
-            AssessmentTime directionEpoch2 = createTime(2);
-            when(assessmentTimeRepository.findById(ASSESSMENT_TIME_ID)).thenReturn(Optional.of(directionEpoch2));
+            AssessmentTime assessmentTime = createTime();
+            when(assessmentTimeRepository.findById(ASSESSMENT_TIME_ID)).thenReturn(Optional.of(assessmentTime));
+            AssessmentDecisionVO decision1 = createDecisionVOForUser(CANDIDATE_ID, true);
+            AssessmentDecisionVO decision2 = createDecisionVOForUser(41L, false);
             when(assessmentDecisionRepository.findByAssessmentTimeId(ASSESSMENT_TIME_ID))
-                    .thenReturn(List.of(createDecisionVOForUser(CANDIDATE_ID, true)));
-            when(userDomainService.getUser(CANDIDATE_ID))
-                    .thenReturn(Optional.of(createUserWithEmail(CANDIDATE_ID, "a@test.com")));
-            mockAssessmentDecisionNotificationTemplate();
+                    .thenReturn(List.of(decision1, decision2));
+            doThrow(new RuntimeException("publish error")).when(publicationService).publish(decision1, assessmentTime);
 
-            assessmentJudgementAppService.publishDecisions(ASSESSMENT_TIME_ID);
+            int result = assessmentJudgementAppService.publishDecisions(ASSESSMENT_TIME_ID);
 
-            ArgumentCaptor<MessageRequest> messageCaptor = ArgumentCaptor.forClass(MessageRequest.class);
-            verify(messageDispatcher).dispatchAsync(messageCaptor.capture());
-            String htmlContent = messageCaptor.getValue().content();
-            assertNotNull(htmlContent);
-            assertTrue(htmlContent.contains("通过"), "方向考核通过邮件应包含『通过』");
-            assertFalse(htmlContent.contains("录取"), "方向考核通过邮件不应包含『录取』");
+            assertEquals(1, result);
+            verify(publicationService).publish(decision1, assessmentTime);
+            verify(publicationService).publish(decision2, assessmentTime);
         }
     }
 
     /**
-     * 验证方向第二轮淘汰后发送「未通过」而非「淘汰」。
-     */
-    @Test
-    @DisplayName("发布决策：方向第二轮淘汰应发送『未通过』")
-    void publishDecisions_directionEpoch2Eliminated_shouldSendNotPassedNotEliminated() {
-        try (MockedStatic<UserCTX> mockedUserCTX = mockStatic(UserCTX.class)) {
-            mockedUserCTX.when(UserCTX::getCurrentUser).thenReturn(createUser(RoleType.DIRECTION_ADMIN));
-            AssessmentTime directionEpoch2 = createTime(2);
-            when(assessmentTimeRepository.findById(ASSESSMENT_TIME_ID)).thenReturn(Optional.of(directionEpoch2));
-            when(assessmentDecisionRepository.findByAssessmentTimeId(ASSESSMENT_TIME_ID))
-                    .thenReturn(List.of(createDecisionVOForUser(CANDIDATE_ID, false)));
-            when(userDomainService.getUser(CANDIDATE_ID))
-                    .thenReturn(Optional.of(createUserWithEmail(CANDIDATE_ID, "a@test.com")));
-            mockAssessmentDecisionNotificationTemplate();
-
-            assessmentJudgementAppService.publishDecisions(ASSESSMENT_TIME_ID);
-
-            ArgumentCaptor<MessageRequest> messageCaptor = ArgumentCaptor.forClass(MessageRequest.class);
-            verify(messageDispatcher).dispatchAsync(messageCaptor.capture());
-            String htmlContent = messageCaptor.getValue().content();
-            assertNotNull(htmlContent);
-            assertTrue(htmlContent.contains("未通过"), "方向考核淘汰邮件应包含『未通过』");
-            assertFalse(htmlContent.contains("淘汰"), "方向考核淘汰邮件不应包含『淘汰』");
-        }
-    }
-
-    /**
-     * 验证全局最终考核通过后发送「录取」。
-     */
-    @Test
-    @DisplayName("发布决策：全局最终考核通过应发送『录取』")
-    void publishDecisions_globalFinalPassed_shouldSendAdmitted() {
-        try (MockedStatic<UserCTX> mockedUserCTX = mockStatic(UserCTX.class)) {
-            mockedUserCTX.when(UserCTX::getCurrentUser).thenReturn(createUser(RoleType.DIRECTION_ADMIN));
-            AssessmentTime globalFinal = createGlobalFinalTime();
-            when(assessmentTimeRepository.findById(ASSESSMENT_TIME_ID)).thenReturn(Optional.of(globalFinal));
-            when(assessmentDecisionRepository.findByAssessmentTimeId(ASSESSMENT_TIME_ID))
-                    .thenReturn(List.of(createDecisionVOForUser(CANDIDATE_ID, true)));
-            when(userDomainService.getUser(CANDIDATE_ID))
-                    .thenReturn(Optional.of(createUserWithEmail(CANDIDATE_ID, "a@test.com")));
-            mockAssessmentDecisionNotificationTemplate();
-
-            assessmentJudgementAppService.publishDecisions(ASSESSMENT_TIME_ID);
-
-            ArgumentCaptor<MessageRequest> messageCaptor = ArgumentCaptor.forClass(MessageRequest.class);
-            verify(messageDispatcher).dispatchAsync(messageCaptor.capture());
-            String htmlContent = messageCaptor.getValue().content();
-            assertNotNull(htmlContent);
-            assertTrue(htmlContent.contains("录取"), "全局最终考核通过邮件应包含『录取』");
-        }
-    }
-
-    /**
-     * 验证全局最终考核淘汰后发送「淘汰」。
-     */
-    @Test
-    @DisplayName("发布决策：全局最终考核淘汰应发送『淘汰』")
-    void publishDecisions_globalFinalEliminated_shouldSendEliminated() {
-        try (MockedStatic<UserCTX> mockedUserCTX = mockStatic(UserCTX.class)) {
-            mockedUserCTX.when(UserCTX::getCurrentUser).thenReturn(createUser(RoleType.DIRECTION_ADMIN));
-            AssessmentTime globalFinal = createGlobalFinalTime();
-            when(assessmentTimeRepository.findById(ASSESSMENT_TIME_ID)).thenReturn(Optional.of(globalFinal));
-            when(assessmentDecisionRepository.findByAssessmentTimeId(ASSESSMENT_TIME_ID))
-                    .thenReturn(List.of(createDecisionVOForUser(CANDIDATE_ID, false)));
-            when(userDomainService.getUser(CANDIDATE_ID))
-                    .thenReturn(Optional.of(createUserWithEmail(CANDIDATE_ID, "a@test.com")));
-            mockAssessmentDecisionNotificationTemplate();
-
-            assessmentJudgementAppService.publishDecisions(ASSESSMENT_TIME_ID);
-
-            ArgumentCaptor<MessageRequest> messageCaptor = ArgumentCaptor.forClass(MessageRequest.class);
-            verify(messageDispatcher).dispatchAsync(messageCaptor.capture());
-            String htmlContent = messageCaptor.getValue().content();
-            assertNotNull(htmlContent);
-            assertTrue(htmlContent.contains("淘汰"), "全局最终考核淘汰邮件应包含『淘汰』");
-        }
-    }
-
-    /**
-     * 验证无已决策考生时返回 0 且不发送邮件。
+     * 验证无已决策考生时返回 0 且不调用发布服务。
      */
     @Test
     @DisplayName("发布决策：无已决策考生时应返回0")
@@ -575,7 +476,7 @@ class AssessmentJudgementAppServiceImplTest {
             int result = assessmentJudgementAppService.publishDecisions(ASSESSMENT_TIME_ID);
 
             assertEquals(0, result);
-            verifyNoInteractions(messageDispatcher);
+            verifyNoInteractions(publicationService);
         }
     }
 
@@ -592,7 +493,7 @@ class AssessmentJudgementAppServiceImplTest {
             assertThrows(
                     com.bluenet.web.domain.exception.DataNotFound.class,
                     () -> assessmentJudgementAppService.publishDecisions(999L));
-            verifyNoInteractions(messageDispatcher);
+            verifyNoInteractions(publicationService);
         }
     }
 
@@ -608,68 +509,9 @@ class AssessmentJudgementAppServiceImplTest {
             assertThrows(
                     Forbidden.class,
                     () -> assessmentJudgementAppService.publishDecisions(ASSESSMENT_TIME_ID));
-            verifyNoInteractions(messageDispatcher);
+            verifyNoInteractions(publicationService);
         }
     }
-
-    /**
-     * 验证用户无邮箱时跳过发送。
-     */
-    @Test
-    @DisplayName("发布决策：无邮箱用户应跳过")
-    void publishDecisions_userWithoutEmail_shouldSkip() {
-        try (MockedStatic<UserCTX> mockedUserCTX = mockStatic(UserCTX.class)) {
-            mockedUserCTX.when(UserCTX::getCurrentUser).thenReturn(createUser(RoleType.DIRECTION_ADMIN));
-            when(assessmentTimeRepository.findById(ASSESSMENT_TIME_ID)).thenReturn(Optional.of(createTime()));
-            when(assessmentDecisionRepository.findByAssessmentTimeId(ASSESSMENT_TIME_ID))
-                    .thenReturn(
-                            List.of(
-                                    createDecisionVOForUser(CANDIDATE_ID, true),
-                                    createDecisionVOForUser(41L, false)));
-            when(userDomainService.getUser(CANDIDATE_ID))
-                    .thenReturn(Optional.of(createUserWithEmail(CANDIDATE_ID, null)));
-            when(userDomainService.getUser(41L))
-                    .thenReturn(Optional.of(createUserWithEmail(41L, "b@test.com")));
-
-            int result = assessmentJudgementAppService.publishDecisions(ASSESSMENT_TIME_ID);
-
-            assertEquals(1, result);
-            ArgumentCaptor<MessageRequest> messageCaptor = ArgumentCaptor.forClass(MessageRequest.class);
-            verify(messageDispatcher, times(1)).dispatchAsync(messageCaptor.capture());
-            assertEquals("b@test.com", messageCaptor.getValue().recipient());
-            assertEquals(MessageChannel.EMAIL, messageCaptor.getValue().channel());
-            assertEquals(MessageContentType.HTML, messageCaptor.getValue().contentType());
-        }
-    }
-
-    /**
-     * 验证邮件发送失败时记录日志并继续发送其余邮件。
-     */
-    @Test
-    @DisplayName("发布决策：单封邮件失败应继续发送其余")
-    void publishDecisions_emailFailure_shouldContinueSending() {
-        try (MockedStatic<UserCTX> mockedUserCTX = mockStatic(UserCTX.class)) {
-            mockedUserCTX.when(UserCTX::getCurrentUser).thenReturn(createUser(RoleType.DIRECTION_ADMIN));
-            when(assessmentTimeRepository.findById(ASSESSMENT_TIME_ID)).thenReturn(Optional.of(createTime()));
-            when(assessmentDecisionRepository.findByAssessmentTimeId(ASSESSMENT_TIME_ID))
-                    .thenReturn(
-                            List.of(
-                                    createDecisionVOForUser(CANDIDATE_ID, true),
-                                    createDecisionVOForUser(41L, false)));
-            when(userDomainService.getUser(CANDIDATE_ID))
-                    .thenReturn(Optional.of(createUserWithEmail(CANDIDATE_ID, "a@test.com")));
-            when(userDomainService.getUser(41L))
-                    .thenReturn(Optional.of(createUserWithEmail(41L, "b@test.com")));
-            doThrow(new RuntimeException("SMTP error")).when(messageDispatcher)
-                    .dispatchAsync(argThat(request -> "a@test.com".equals(request.recipient())));
-
-            int result = assessmentJudgementAppService.publishDecisions(ASSESSMENT_TIME_ID);
-
-            assertEquals(1, result);
-            verify(messageDispatcher).dispatchAsync(argThat(request -> "b@test.com".equals(request.recipient())));
-        }
-    }
-
     // ========== 确认最终评分测试 ==========
 
     /**
@@ -1226,11 +1068,6 @@ class AssessmentJudgementAppServiceImplTest {
                 null,
                 null,
                 false);
-    }
-
-    private void mockAssessmentDecisionNotificationTemplate() {
-        when(messageTemplateRegistry.getTemplateContent("ASSESSMENT_DECISION_NOTIFICATION"))
-                .thenReturn("<p style=\"color: {{color}};\">{{resultText}}</p>");
     }
 
     private AssessmentQuestionSubmissionVO createSubmissionVO(boolean judged) {

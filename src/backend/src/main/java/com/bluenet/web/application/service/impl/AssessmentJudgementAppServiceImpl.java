@@ -3,8 +3,7 @@ package com.bluenet.web.application.service.impl;
 import com.bluenet.web.application.AssessmentDecisionResult;
 import com.bluenet.web.application.AssessmentJudgementResult;
 import com.bluenet.web.application.command.assessment_judgement.AssessmentJudgementCommands;
-import com.bluenet.web.application.message.MessageTemplateRegistry;
-import com.bluenet.web.application.message.template.AssessmentDecisionNotificationTemplate;
+import com.bluenet.web.application.service.assessment.AssessmentDecisionPublicationService;
 import com.bluenet.web.application.service.assessment.AssessmentJudgementAccessGuard;
 import com.bluenet.web.application.service.AssessmentJudgementAppService;
 import com.bluenet.web.domain.exception.BadRequest;
@@ -42,9 +41,6 @@ import com.bluenet.web.domain.repository.CommentRepository;
 import com.bluenet.web.domain.service.AssessmentDecisionDomainService;
 import com.bluenet.web.domain.service.AssessmentJudgementDomainService;
 import com.bluenet.web.domain.service.UserDomainService;
-import com.bluenet.web.application.message.MessageDispatcher;
-import com.bluenet.web.domain.model.enumerate.MessageChannel;
-import com.bluenet.web.application.message.MessageRequest;
 import com.bluenet.web.domain.model.policy.RoleHierarchy;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -80,9 +76,8 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
     private final AssessmentDecisionRepository assessmentDecisionRepository;
     private final AssessmentTeamRepository assessmentTeamRepository;
     private final UserDomainService userDomainService;
-    private final MessageDispatcher messageDispatcher;
     private final AssessmentJudgementAccessGuard accessGuard;
-    private final AssessmentDecisionNotificationTemplate notificationTemplate;
+    private final AssessmentDecisionPublicationService publicationService;
     private final CommentRepository commentRepository;
 
     /**
@@ -106,10 +101,10 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
      *            考核队伍仓储
      * @param userDomainService
      *            用户领域服务
-     * @param messageDispatcher
-     *            消息分发器
-     * @param messageTemplateRegistry
-     *            消息模板注册表
+     * @param publicationService
+     *            决策发布服务
+     * @param commentRepository
+     *            评论仓储
      */
     public AssessmentJudgementAppServiceImpl(
             AssessmentJudgementDomainService assessmentJudgementDomainService,
@@ -121,8 +116,7 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
             AssessmentDecisionRepository assessmentDecisionRepository,
             AssessmentTeamRepository assessmentTeamRepository,
             UserDomainService userDomainService,
-            MessageDispatcher messageDispatcher,
-            MessageTemplateRegistry messageTemplateRegistry,
+            AssessmentDecisionPublicationService publicationService,
             CommentRepository commentRepository) {
         this.assessmentJudgementDomainService = assessmentJudgementDomainService;
         this.assessmentDecisionDomainService = assessmentDecisionDomainService;
@@ -133,9 +127,8 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
         this.assessmentDecisionRepository = assessmentDecisionRepository;
         this.assessmentTeamRepository = assessmentTeamRepository;
         this.userDomainService = userDomainService;
-        this.messageDispatcher = messageDispatcher;
         this.accessGuard = new AssessmentJudgementAccessGuard(assessmentTimeRepository);
-        this.notificationTemplate = new AssessmentDecisionNotificationTemplate(messageTemplateRegistry);
+        this.publicationService = publicationService;
         this.commentRepository = commentRepository;
     }
 
@@ -462,11 +455,11 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
     }
 
     /**
-     * 发布指定考核轮次的决策结果邮件通知。
+     * 发布指定考核轮次的决策结果邮件通知，并在全局最终考核通过时升级考生角色。
      *
      * @param assessmentTimeId
      *            考核时间ID
-     * @return 成功发送的邮件数量
+     * @return 成功发布的考生数量
      */
     @Override
     public int publishDecisions(Long assessmentTimeId) {
@@ -486,33 +479,11 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
                 .toList();
         int sentCount = 0;
         for (AssessmentDecisionVO decision : decisions) {
-            UserVO user = userDomainService.getUser(decision.getUserId()).orElse(null);
-            if (user == null || user.getEmail() == null || user.getEmail().isBlank()) {
-                log.warn("跳过无邮箱用户：userId={}", decision.getUserId());
-                continue;
-            }
-            String subject = "[蓝网] 考核结果通知";
-            String directionLabel = assessmentTime.getDirection() != null
-                    ? assessmentTime.getDirection().getDescription()
-                    : "全局";
-            int epoch = assessmentTime.getEpoch() != null ? assessmentTime.getEpoch() : 0;
-            boolean isFinalRound = assessmentTime.isGlobalFinalAssessment();
-
-            String resultText;
-            if (isFinalRound) {
-                resultText = Boolean.TRUE.equals(decision.getPassed()) ? "录取" : "淘汰";
-            } else {
-                resultText = Boolean.TRUE.equals(decision.getPassed()) ? "通过" : "未通过";
-            }
-
-            String nickname = user.getNickname() != null ? user.getNickname() : user.getUsername();
-            String htmlContent = notificationTemplate.buildHtml(nickname, directionLabel, epoch, resultText);
             try {
-                messageDispatcher.dispatchAsync(
-                        MessageRequest.html(MessageChannel.EMAIL, user.getEmail(), subject, htmlContent));
+                publicationService.publish(decision, assessmentTime);
                 sentCount++;
             } catch (Exception e) {
-                log.error("发送决策邮件失败：userId={}, email={}", decision.getUserId(), user.getEmail(), e);
+                log.error("发布单个考生决策失败：userId={}", decision.getUserId(), e);
             }
         }
         return sentCount;

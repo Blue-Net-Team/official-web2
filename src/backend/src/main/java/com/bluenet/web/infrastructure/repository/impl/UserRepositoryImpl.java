@@ -12,6 +12,7 @@ import com.bluenet.web.domain.model.entity.*;
 import com.bluenet.web.domain.model.enumerate.Direction;
 import com.bluenet.web.domain.model.enumerate.ExperienceType;
 import com.bluenet.web.domain.model.enumerate.Gender;
+import com.bluenet.web.domain.model.enumerate.RoleType;
 import com.bluenet.web.domain.model.vo.FileVO;
 import com.bluenet.web.domain.model.vo.QrcodeVO;
 import com.bluenet.web.domain.model.vo.TabCountsVO;
@@ -467,6 +468,25 @@ public class UserRepositoryImpl implements UserRepository {
             userMapper.updateById(userDO);
         }
         log.info("Batch updated roleId={} for {} users", roleId, userIds.size());
+    }
+
+    @Override
+    @Transactional
+    public void batchUpdateRole(List<Long> userIds, RoleType roleType) {
+        if (userIds == null || userIds.isEmpty()) {
+            return;
+        }
+        RoleDO role = roleMapper.selectByName(roleType.getName());
+        if (role == null) {
+            throw new GlobalException("角色不存在: " + roleType.getName());
+        }
+        for (Long userId : userIds) {
+            UserDO userDO = new UserDO();
+            userDO.setId(userId);
+            userDO.setRoleId(role.getId());
+            userMapper.updateById(userDO);
+        }
+        log.info("Batch updated role={} for {} users", roleType.getName(), userIds.size());
     }
 
     @Override
