@@ -49,8 +49,13 @@ export const DIRECTION_LABELS: Record<Direction, string> = {
 
 /**
  * 软件资源方向（包含通用）
+ * 对应后端 SoftwareResourceDirection.java
  */
-export type SoftwareResourceDirection = Direction | 'GENERAL'
+export type SoftwareResourceDirection =
+  | 'COMPUTER_VISION'
+  | 'STRUCTURAL_DESIGN'
+  | 'EMBEDDED'
+  | 'GENERAL'
 
 /**
  * 软件资源方向标签

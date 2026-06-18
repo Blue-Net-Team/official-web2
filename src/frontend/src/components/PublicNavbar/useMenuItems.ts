@@ -16,6 +16,10 @@ export const getMenuItems = (roleLevel: number): MenuItem[] => {
       label: '团队成员',
       key: 'members',
     },
+    {
+      label: '资源库',
+      key: 'resources',
+    },
   ]
 
   switch (roleLevel) {

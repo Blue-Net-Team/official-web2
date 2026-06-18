@@ -1,6 +1,6 @@
 package com.bluenet.web.api.dto.softwareresource;
 
-import com.bluenet.web.domain.model.enumerate.Direction;
+import com.bluenet.web.domain.model.enumerate.SoftwareResourceDirection;
 import com.bluenet.web.domain.model.enumerate.SoftwareResourceStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
@@ -25,7 +25,7 @@ public class SoftwareResourceDTO {
     private String name;
 
     @Schema(description = "所属方向")
-    private Direction direction;
+    private SoftwareResourceDirection direction;
 
     @Schema(description = "分类")
     private String category;

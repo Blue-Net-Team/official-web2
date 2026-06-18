@@ -1,7 +1,7 @@
 package com.bluenet.web.domain.repository;
 
 import com.bluenet.web.domain.model.entity.SoftwareResource;
-import com.bluenet.web.domain.model.enumerate.Direction;
+import com.bluenet.web.domain.model.enumerate.SoftwareResourceDirection;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -33,7 +33,7 @@ public interface SoftwareResourceRepository {
      *            分页参数。
      * @return 分页的软件资源实体。
      */
-    Page<SoftwareResource> findActiveByDirection(Direction direction, Pageable pageable);
+    Page<SoftwareResource> findActiveByDirection(SoftwareResourceDirection direction, Pageable pageable);
 
     /**
      * 保存新的软件资源记录。

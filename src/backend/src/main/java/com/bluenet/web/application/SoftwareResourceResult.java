@@ -1,6 +1,6 @@
 package com.bluenet.web.application;
 
-import com.bluenet.web.domain.model.enumerate.Direction;
+import com.bluenet.web.domain.model.enumerate.SoftwareResourceDirection;
 import com.bluenet.web.domain.model.enumerate.SoftwareResourceStatus;
 
 /**
@@ -9,7 +9,7 @@ import com.bluenet.web.domain.model.enumerate.SoftwareResourceStatus;
 public record SoftwareResourceResult(
         Long id,
         String name,
-        Direction direction,
+        SoftwareResourceDirection direction,
         String category,
         String description,
         String externalUrl,

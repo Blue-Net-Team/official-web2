@@ -8,7 +8,7 @@ import com.bluenet.web.api.converter.softwareresource.SoftwareResourceRequestCon
 import com.bluenet.web.api.converter.softwareresource.SoftwareResourceResponseConverter;
 import com.bluenet.web.application.SoftwareResourceResult;
 import com.bluenet.web.application.service.SoftwareResourceAppService;
-import com.bluenet.web.domain.model.enumerate.Direction;
+import com.bluenet.web.domain.model.enumerate.SoftwareResourceDirection;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
 import com.bluenet.web.infrastructure.security.annotation.RequiresPermission;
 import io.swagger.v3.oas.annotations.Operation;
@@ -40,7 +40,7 @@ public class SoftwareResourceController {
     @GetMapping
     public ResponseMessage<PageDTO<SoftwareResourceDTO>> listSoftwareResources(
             @Valid @ModelAttribute SoftwareResourceListRequestDTO request) {
-        Direction direction = requestConverter.toDirection(request);
+        SoftwareResourceDirection direction = requestConverter.toDirection(request);
         Pageable pageable = requestConverter.toPageable(request);
         Page<SoftwareResourceResult> resultPage = softwareResourceAppService.listActiveResources(direction, pageable);
         return ResponseMessage.success(responseConverter.toPageDTO(resultPage));

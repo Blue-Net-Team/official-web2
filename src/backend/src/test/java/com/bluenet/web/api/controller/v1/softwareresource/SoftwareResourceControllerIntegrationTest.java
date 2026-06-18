@@ -4,7 +4,7 @@ import com.bluenet.web.BaseIntegrationTest;
 import com.bluenet.web.api.dto.PageDTO;
 import com.bluenet.web.api.dto.ResponseMessage;
 import com.bluenet.web.api.dto.softwareresource.SoftwareResourceDTO;
-import com.bluenet.web.domain.model.enumerate.Direction;
+import com.bluenet.web.domain.model.enumerate.SoftwareResourceDirection;
 import com.bluenet.web.domain.model.enumerate.SoftwareResourceStatus;
 import com.bluenet.web.infrastructure.repository.dataobject.SoftwareResourceDO;
 import com.bluenet.web.infrastructure.repository.mapper.SoftwareResourceMapper;
@@ -42,13 +42,14 @@ class SoftwareResourceControllerIntegrationTest extends BaseIntegrationTest {
 
     @BeforeEach
     void setUpTestData() {
-        insertResource("CV Tool", Direction.COMPUTER_VISION, 1, SoftwareResourceStatus.ACTIVE);
-        insertResource("CV Disabled", Direction.COMPUTER_VISION, 2, SoftwareResourceStatus.DISABLED);
-        insertResource("General Tool", Direction.GENERAL, 3, SoftwareResourceStatus.ACTIVE);
-        insertResource("Embed Tool", Direction.EMBEDDED, 4, SoftwareResourceStatus.ACTIVE);
+        insertResource("CV Tool", SoftwareResourceDirection.COMPUTER_VISION, 1, SoftwareResourceStatus.ACTIVE);
+        insertResource("CV Disabled", SoftwareResourceDirection.COMPUTER_VISION, 2, SoftwareResourceStatus.DISABLED);
+        insertResource("General Tool", SoftwareResourceDirection.GENERAL, 3, SoftwareResourceStatus.ACTIVE);
+        insertResource("Embed Tool", SoftwareResourceDirection.EMBEDDED, 4, SoftwareResourceStatus.ACTIVE);
     }
 
-    private void insertResource(String name, Direction direction, int sortOrder, SoftwareResourceStatus status) {
+    private void insertResource(String name, SoftwareResourceDirection direction, int sortOrder,
+            SoftwareResourceStatus status) {
         SoftwareResourceDO resource = SoftwareResourceDO.builder()
                 .name(name)
                 .direction(direction)
@@ -62,8 +63,8 @@ class SoftwareResourceControllerIntegrationTest extends BaseIntegrationTest {
     }
 
     @Test
-    @DisplayName("集成测试：按方向查询已启用资源")
-    void list_byDirection_shouldReturnActiveResources() {
+    @DisplayName("集成测试：按方向查询已启用资源应同时包含通用资源")
+    void list_byDirection_shouldReturnActiveResourcesIncludingGeneral() {
         ResponseEntity<ResponseMessage<PageDTO<SoftwareResourceDTO>>> response = restTemplate.exchange(
                 "/api/v1/software-resources?direction=COMPUTER_VISION&page=0&size=10",
                 HttpMethod.GET,
@@ -75,8 +76,9 @@ class SoftwareResourceControllerIntegrationTest extends BaseIntegrationTest {
         assertNotNull(response.getBody());
         assertEquals(200, response.getBody().getCode());
         PageDTO<SoftwareResourceDTO> page = response.getBody().getData();
-        assertEquals(1, page.getTotalElements());
-        assertEquals("CV Tool", page.getContent().get(0).getName());
+        assertEquals(2, page.getTotalElements());
+        assertTrue(page.getContent().stream().anyMatch(r -> "CV Tool".equals(r.getName())));
+        assertTrue(page.getContent().stream().anyMatch(r -> "General Tool".equals(r.getName())));
     }
 
     @Test

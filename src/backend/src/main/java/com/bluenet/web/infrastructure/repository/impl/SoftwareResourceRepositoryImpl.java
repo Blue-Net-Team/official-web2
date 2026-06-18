@@ -3,7 +3,8 @@ package com.bluenet.web.infrastructure.repository.impl;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bluenet.web.domain.model.entity.SoftwareResource;
-import com.bluenet.web.domain.model.enumerate.Direction;
+import com.bluenet.web.domain.model.enumerate.SoftwareResourceDirection;
+import com.bluenet.web.domain.model.enumerate.SoftwareResourceStatus;
 import com.bluenet.web.domain.repository.SoftwareResourceRepository;
 import com.bluenet.web.infrastructure.repository.converter.SoftwareResourceRepositoryConverter;
 import com.bluenet.web.infrastructure.repository.dataobject.SoftwareResourceDO;
@@ -36,10 +37,17 @@ public class SoftwareResourceRepositoryImpl implements SoftwareResourceRepositor
     }
 
     @Override
-    public org.springframework.data.domain.Page<SoftwareResource> findActiveByDirection(Direction direction,
+    public org.springframework.data.domain.Page<SoftwareResource> findActiveByDirection(
+            SoftwareResourceDirection direction,
             Pageable pageable) {
         Page<SoftwareResourceDO> page = new Page<>(pageable.getPageNumber() + 1, pageable.getPageSize());
-        IPage<SoftwareResourceDO> result = softwareResourceMapper.selectActiveByDirection(page, direction);
+        List<SoftwareResourceDirection> directions = direction == null
+                ? null
+                : List.of(direction, SoftwareResourceDirection.GENERAL);
+        IPage<SoftwareResourceDO> result = softwareResourceMapper.selectActiveByDirection(
+                page,
+                directions,
+                SoftwareResourceStatus.ACTIVE);
         List<SoftwareResource> content = converter.toEntityList(result.getRecords());
         return new PageImpl<>(content, pageable, result.getTotal());
     }

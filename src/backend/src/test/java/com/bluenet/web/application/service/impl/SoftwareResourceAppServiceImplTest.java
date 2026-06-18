@@ -4,7 +4,7 @@ import com.bluenet.web.application.SoftwareResourceResult;
 import com.bluenet.web.application.command.softwareresource.SoftwareResourceCommands;
 import com.bluenet.web.domain.exception.DataNotFound;
 import com.bluenet.web.domain.model.entity.SoftwareResource;
-import com.bluenet.web.domain.model.enumerate.Direction;
+import com.bluenet.web.domain.model.enumerate.SoftwareResourceDirection;
 import com.bluenet.web.domain.model.enumerate.SoftwareResourceStatus;
 import com.bluenet.web.domain.repository.SoftwareResourceRepository;
 import org.junit.jupiter.api.DisplayName;
@@ -41,7 +41,7 @@ class SoftwareResourceAppServiceImplTest {
         return SoftwareResource.reconstruct(
                 1L,
                 "VS Code",
-                Direction.GENERAL,
+                SoftwareResourceDirection.GENERAL,
                 "IDE",
                 "编辑器",
                 "https://code.visualstudio.com/",
@@ -54,10 +54,11 @@ class SoftwareResourceAppServiceImplTest {
     void listActiveResources_byDirection_success() {
         Pageable pageable = PageRequest.of(0, 10);
         SoftwareResource resource = createTestResource();
-        when(softwareResourceRepository.findActiveByDirection(Direction.COMPUTER_VISION, pageable))
+        when(softwareResourceRepository.findActiveByDirection(SoftwareResourceDirection.COMPUTER_VISION, pageable))
                 .thenReturn(new PageImpl<>(List.of(resource), pageable, 1));
 
-        var result = softwareResourceAppService.listActiveResources(Direction.COMPUTER_VISION, pageable);
+        var result = softwareResourceAppService
+                .listActiveResources(SoftwareResourceDirection.COMPUTER_VISION, pageable);
 
         assertEquals(1, result.getTotalElements());
         assertEquals("VS Code", result.getContent().get(0).name());
@@ -68,7 +69,7 @@ class SoftwareResourceAppServiceImplTest {
     void createSoftwareResource_success() {
         SoftwareResourceCommands.CreateSoftwareResourceCommand command = new SoftwareResourceCommands.CreateSoftwareResourceCommand(
                 "VS Code",
-                Direction.GENERAL,
+                SoftwareResourceDirection.GENERAL,
                 "IDE",
                 "编辑器",
                 "https://code.visualstudio.com/",
@@ -78,7 +79,7 @@ class SoftwareResourceAppServiceImplTest {
 
         assertNotNull(result);
         assertEquals("VS Code", result.name());
-        assertEquals(Direction.GENERAL, result.direction());
+        assertEquals(SoftwareResourceDirection.GENERAL, result.direction());
         assertEquals(SoftwareResourceStatus.ACTIVE, result.status());
         verify(softwareResourceRepository).save(any(SoftwareResource.class));
     }
@@ -91,7 +92,7 @@ class SoftwareResourceAppServiceImplTest {
         SoftwareResourceCommands.UpdateSoftwareResourceCommand command = new SoftwareResourceCommands.UpdateSoftwareResourceCommand(
                 id,
                 "Updated VS Code",
-                Direction.EMBEDDED,
+                SoftwareResourceDirection.EMBEDDED,
                 "Tool",
                 "updated desc",
                 "https://updated.example.com/",
@@ -103,7 +104,7 @@ class SoftwareResourceAppServiceImplTest {
         SoftwareResourceResult result = softwareResourceAppService.updateSoftwareResource(command);
 
         assertEquals("Updated VS Code", result.name());
-        assertEquals(Direction.EMBEDDED, result.direction());
+        assertEquals(SoftwareResourceDirection.EMBEDDED, result.direction());
         assertEquals(SoftwareResourceStatus.DISABLED, result.status());
         assertEquals(20, result.sortOrder());
         verify(softwareResourceRepository).update(any(SoftwareResource.class));
@@ -116,7 +117,7 @@ class SoftwareResourceAppServiceImplTest {
         SoftwareResourceCommands.UpdateSoftwareResourceCommand command = new SoftwareResourceCommands.UpdateSoftwareResourceCommand(
                 id,
                 "Tool",
-                Direction.GENERAL,
+                SoftwareResourceDirection.GENERAL,
                 "tool",
                 "desc",
                 "https://example.com/",

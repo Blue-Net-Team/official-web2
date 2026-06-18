@@ -2,7 +2,7 @@ package com.bluenet.web.infrastructure.repository.impl;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bluenet.web.domain.model.entity.SoftwareResource;
-import com.bluenet.web.domain.model.enumerate.Direction;
+import com.bluenet.web.domain.model.enumerate.SoftwareResourceDirection;
 import com.bluenet.web.domain.model.enumerate.SoftwareResourceStatus;
 import com.bluenet.web.infrastructure.repository.converter.SoftwareResourceRepositoryConverter;
 import com.bluenet.web.infrastructure.repository.dataobject.SoftwareResourceDO;
@@ -40,7 +40,7 @@ class SoftwareResourceRepositoryImplTest {
     @InjectMocks
     private SoftwareResourceRepositoryImpl softwareResourceRepository;
 
-    private SoftwareResourceDO createTestDO(Long id, String name, Direction direction, int sortOrder,
+    private SoftwareResourceDO createTestDO(Long id, String name, SoftwareResourceDirection direction, int sortOrder,
             SoftwareResourceStatus status) {
         return SoftwareResourceDO.builder()
                 .id(id)
@@ -60,7 +60,7 @@ class SoftwareResourceRepositoryImplTest {
         SoftwareResourceDO dataObject = createTestDO(
                 1L,
                 "Tool",
-                Direction.GENERAL,
+                SoftwareResourceDirection.GENERAL,
                 1,
                 SoftwareResourceStatus.ACTIVE);
         when(softwareResourceMapper.selectById(1L)).thenReturn(dataObject);
@@ -81,17 +81,28 @@ class SoftwareResourceRepositoryImplTest {
                         createTestDO(
                                 1L,
                                 "Tool",
-                                Direction.COMPUTER_VISION,
+                                SoftwareResourceDirection.COMPUTER_VISION,
                                 1,
                                 SoftwareResourceStatus.ACTIVE)));
-        when(softwareResourceMapper.selectActiveByDirection(any(Page.class), eq(Direction.COMPUTER_VISION)))
-                .thenReturn(mpPage);
+        List<SoftwareResourceDirection> expectedDirections = List.of(
+                SoftwareResourceDirection.COMPUTER_VISION,
+                SoftwareResourceDirection.GENERAL);
+        when(
+                softwareResourceMapper.selectActiveByDirection(
+                        any(Page.class),
+                        eq(expectedDirections),
+                        eq(SoftwareResourceStatus.ACTIVE)))
+                                .thenReturn(mpPage);
 
-        var result = softwareResourceRepository.findActiveByDirection(Direction.COMPUTER_VISION, pageable);
+        var result = softwareResourceRepository
+                .findActiveByDirection(SoftwareResourceDirection.COMPUTER_VISION, pageable);
 
         assertEquals(1, result.getTotalElements());
         assertEquals(0, result.getNumber());
-        verify(softwareResourceMapper).selectActiveByDirection(any(Page.class), eq(Direction.COMPUTER_VISION));
+        verify(softwareResourceMapper).selectActiveByDirection(
+                any(Page.class),
+                eq(expectedDirections),
+                eq(SoftwareResourceStatus.ACTIVE));
     }
 
     @Test
@@ -99,7 +110,7 @@ class SoftwareResourceRepositoryImplTest {
     void save_shouldSetEntityId() {
         SoftwareResource resource = SoftwareResource.create(
                 "Tool",
-                Direction.GENERAL,
+                SoftwareResourceDirection.GENERAL,
                 "tool",
                 "desc",
                 "https://example.com",

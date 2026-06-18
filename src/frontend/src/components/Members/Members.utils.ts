@@ -5,11 +5,9 @@ import { MemberBriefDTO } from '@/apis/schema/type'
 export function computeFilterTabs(members: MemberBriefDTO[]): FilterTab[] {
   const allCount = members.length
 
-  const directionCounts: Record<Direction, number> = {
-    COMPUTER_VISION: 0,
-    STRUCTURAL_DESIGN: 0,
-    EMBEDDED: 0,
-  }
+  const directionCounts: Record<Direction, number> = Object.fromEntries(
+    (Object.keys(DIRECTION_LABELS) as Direction[]).map((key) => [key, 0])
+  ) as Record<Direction, number>
 
   members.forEach((member: MemberBriefDTO) => {
     if (member.direction in directionCounts) {

@@ -1,6 +1,6 @@
 package com.bluenet.web.domain.model.entity;
 
-import com.bluenet.web.domain.model.enumerate.Direction;
+import com.bluenet.web.domain.model.enumerate.SoftwareResourceDirection;
 import com.bluenet.web.domain.model.enumerate.SoftwareResourceStatus;
 import org.junit.jupiter.api.Test;
 
@@ -13,14 +13,14 @@ class SoftwareResourceTest {
     void create_shouldInitializeFields() {
         SoftwareResource resource = SoftwareResource.create(
                 "VS Code",
-                Direction.GENERAL,
+                SoftwareResourceDirection.GENERAL,
                 "IDE",
                 "轻量级编辑器",
                 "https://code.visualstudio.com/",
                 10);
 
         assertEquals("VS Code", resource.getName());
-        assertEquals(Direction.GENERAL, resource.getDirection());
+        assertEquals(SoftwareResourceDirection.GENERAL, resource.getDirection());
         assertEquals("IDE", resource.getCategory());
         assertEquals("https://code.visualstudio.com/", resource.getExternalUrl());
         assertEquals(10, resource.getSortOrder());
@@ -31,7 +31,7 @@ class SoftwareResourceTest {
     void create_withNullSortOrder_shouldDefaultToZero() {
         SoftwareResource resource = SoftwareResource.create(
                 "Clion",
-                Direction.COMPUTER_VISION,
+                SoftwareResourceDirection.COMPUTER_VISION,
                 "IDE",
                 "C++ IDE",
                 "https://www.jetbrains.com/clion/",
@@ -46,7 +46,7 @@ class SoftwareResourceTest {
                 IllegalArgumentException.class,
                 () -> SoftwareResource.create(
                         "  ",
-                        Direction.GENERAL,
+                        SoftwareResourceDirection.GENERAL,
                         "IDE",
                         "desc",
                         "https://example.com",
@@ -74,7 +74,7 @@ class SoftwareResourceTest {
                 IllegalArgumentException.class,
                 () -> SoftwareResource.create(
                         "Tool",
-                        Direction.GENERAL,
+                        SoftwareResourceDirection.GENERAL,
                         "tool",
                         "desc",
                         "   ",
@@ -86,7 +86,7 @@ class SoftwareResourceTest {
     void update_shouldChangeFields() {
         SoftwareResource resource = SoftwareResource.create(
                 "Old",
-                Direction.GENERAL,
+                SoftwareResourceDirection.GENERAL,
                 "tool",
                 "desc",
                 "https://old.example.com",
@@ -94,7 +94,7 @@ class SoftwareResourceTest {
 
         resource.update(
                 "New",
-                Direction.EMBEDDED,
+                SoftwareResourceDirection.EMBEDDED,
                 "IDE",
                 "new desc",
                 "https://new.example.com",
@@ -102,7 +102,7 @@ class SoftwareResourceTest {
                 SoftwareResourceStatus.DISABLED);
 
         assertEquals("New", resource.getName());
-        assertEquals(Direction.EMBEDDED, resource.getDirection());
+        assertEquals(SoftwareResourceDirection.EMBEDDED, resource.getDirection());
         assertEquals("IDE", resource.getCategory());
         assertEquals("new desc", resource.getDescription());
         assertEquals("https://new.example.com", resource.getExternalUrl());
@@ -114,7 +114,7 @@ class SoftwareResourceTest {
     void update_withNullStatus_shouldKeepCurrentStatus() {
         SoftwareResource resource = SoftwareResource.create(
                 "Tool",
-                Direction.GENERAL,
+                SoftwareResourceDirection.GENERAL,
                 "tool",
                 "desc",
                 "https://example.com",
@@ -122,7 +122,7 @@ class SoftwareResourceTest {
 
         resource.update(
                 "Tool",
-                Direction.GENERAL,
+                SoftwareResourceDirection.GENERAL,
                 "tool",
                 "desc",
                 "https://example.com",
@@ -136,7 +136,7 @@ class SoftwareResourceTest {
     void changeStatus_shouldToggleStatus() {
         SoftwareResource resource = SoftwareResource.create(
                 "Tool",
-                Direction.GENERAL,
+                SoftwareResourceDirection.GENERAL,
                 "tool",
                 "desc",
                 "https://example.com",

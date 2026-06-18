@@ -1,7 +1,7 @@
 package com.bluenet.web.infrastructure.repository.mapper;
 
 import com.bluenet.web.BaseIntegrationTest;
-import com.bluenet.web.domain.model.enumerate.Direction;
+import com.bluenet.web.domain.model.enumerate.SoftwareResourceDirection;
 import com.bluenet.web.domain.model.enumerate.SoftwareResourceStatus;
 import com.bluenet.web.infrastructure.repository.dataobject.SoftwareResourceDO;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -24,7 +24,7 @@ class SoftwareResourceMapperIntegrationTest extends BaseIntegrationTest {
     void insert_shouldPersistAndReadBack() {
         SoftwareResourceDO resource = SoftwareResourceDO.builder()
                 .name("VS Code")
-                .direction(Direction.GENERAL)
+                .direction(SoftwareResourceDirection.GENERAL)
                 .category("IDE")
                 .description("编辑器")
                 .externalUrl("https://code.visualstudio.com/")
@@ -38,34 +38,44 @@ class SoftwareResourceMapperIntegrationTest extends BaseIntegrationTest {
         SoftwareResourceDO read = softwareResourceMapper.selectById(resource.getId());
         assertThat(read).isNotNull();
         assertThat(read.getName()).isEqualTo("VS Code");
-        assertThat(read.getDirection()).isEqualTo(Direction.GENERAL);
+        assertThat(read.getDirection()).isEqualTo(SoftwareResourceDirection.GENERAL);
         assertThat(read.getStatus()).isEqualTo(SoftwareResourceStatus.ACTIVE);
     }
 
     @Test
-    @DisplayName("selectActiveByDirection: 应只返回指定方向且已启用的资源")
-    void selectActiveByDirection_shouldReturnActiveResourcesForDirection() {
-        insertResource("CV Tool", Direction.COMPUTER_VISION, 1, SoftwareResourceStatus.ACTIVE);
-        insertResource("CV Disabled", Direction.COMPUTER_VISION, 2, SoftwareResourceStatus.DISABLED);
-        insertResource("General Tool", Direction.GENERAL, 3, SoftwareResourceStatus.ACTIVE);
+    @DisplayName("selectActiveByDirection: 应返回指定方向及通用方向且已启用的资源")
+    void selectActiveByDirection_shouldReturnActiveResourcesForDirectionAndGeneral() {
+        insertResource("CV Tool", SoftwareResourceDirection.COMPUTER_VISION, 1, SoftwareResourceStatus.ACTIVE);
+        insertResource("CV Disabled", SoftwareResourceDirection.COMPUTER_VISION, 2, SoftwareResourceStatus.DISABLED);
+        insertResource("General Tool", SoftwareResourceDirection.GENERAL, 3, SoftwareResourceStatus.ACTIVE);
 
         Page<SoftwareResourceDO> page = new Page<>(1, 10);
-        var result = softwareResourceMapper.selectActiveByDirection(page, Direction.COMPUTER_VISION);
+        List<SoftwareResourceDirection> directions = List.of(
+                SoftwareResourceDirection.COMPUTER_VISION,
+                SoftwareResourceDirection.GENERAL);
+        var result = softwareResourceMapper.selectActiveByDirection(
+                page,
+                directions,
+                SoftwareResourceStatus.ACTIVE);
 
         List<SoftwareResourceDO> records = result.getRecords();
-        assertThat(records).hasSize(1);
-        assertThat(records.get(0).getName()).isEqualTo("CV Tool");
+        assertThat(records).hasSize(2);
+        assertThat(records).extracting(SoftwareResourceDO::getName)
+                .containsExactlyInAnyOrder("CV Tool", "General Tool");
     }
 
     @Test
     @DisplayName("selectActiveByDirection: direction 为 null 时应返回所有已启用资源")
     void selectActiveByDirection_nullDirection_shouldReturnAllActive() {
-        insertResource("CV Tool", Direction.COMPUTER_VISION, 1, SoftwareResourceStatus.ACTIVE);
-        insertResource("General Tool", Direction.GENERAL, 2, SoftwareResourceStatus.ACTIVE);
-        insertResource("Disabled Tool", Direction.EMBEDDED, 3, SoftwareResourceStatus.DISABLED);
+        insertResource("CV Tool", SoftwareResourceDirection.COMPUTER_VISION, 1, SoftwareResourceStatus.ACTIVE);
+        insertResource("General Tool", SoftwareResourceDirection.GENERAL, 2, SoftwareResourceStatus.ACTIVE);
+        insertResource("Disabled Tool", SoftwareResourceDirection.EMBEDDED, 3, SoftwareResourceStatus.DISABLED);
 
         Page<SoftwareResourceDO> page = new Page<>(1, 10);
-        var result = softwareResourceMapper.selectActiveByDirection(page, null);
+        var result = softwareResourceMapper.selectActiveByDirection(
+                page,
+                null,
+                SoftwareResourceStatus.ACTIVE);
 
         List<SoftwareResourceDO> records = result.getRecords();
         assertThat(records).hasSize(2);
@@ -76,8 +86,8 @@ class SoftwareResourceMapperIntegrationTest extends BaseIntegrationTest {
     @Test
     @DisplayName("selectAllForAdmin: 应返回所有资源并按 sort_order 排序")
     void selectAllForAdmin_shouldReturnAllOrdered() {
-        insertResource("B", Direction.GENERAL, 2, SoftwareResourceStatus.ACTIVE);
-        insertResource("A", Direction.GENERAL, 1, SoftwareResourceStatus.DISABLED);
+        insertResource("B", SoftwareResourceDirection.GENERAL, 2, SoftwareResourceStatus.ACTIVE);
+        insertResource("A", SoftwareResourceDirection.GENERAL, 1, SoftwareResourceStatus.DISABLED);
 
         Page<SoftwareResourceDO> page = new Page<>(1, 10);
         var result = softwareResourceMapper.selectAllForAdmin(page);
@@ -87,7 +97,7 @@ class SoftwareResourceMapperIntegrationTest extends BaseIntegrationTest {
         assertThat(result.getRecords().get(1).getName()).isEqualTo("B");
     }
 
-    private void insertResource(String name, Direction direction, int sortOrder,
+    private void insertResource(String name, SoftwareResourceDirection direction, int sortOrder,
             SoftwareResourceStatus status) {
         SoftwareResourceDO resource = SoftwareResourceDO.builder()
                 .name(name)

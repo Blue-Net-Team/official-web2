@@ -13,11 +13,11 @@ const PAGE_SIZE = 16
 
 export const Members: React.FC<MembersProps> = ({ initialPage = 0 }) => {
   const [activeFilter, setActiveFilter] = useState<Direction | 'ALL'>('ALL')
-  const [directionCounts, setDirectionCounts] = useState<Record<Direction, number>>({
-    COMPUTER_VISION: 0,
-    STRUCTURAL_DESIGN: 0,
-    EMBEDDED: 0,
-  })
+  const [directionCounts, setDirectionCounts] = useState<Record<Direction, number>>(
+    Object.fromEntries(
+      (Object.keys(DIRECTION_LABELS) as Direction[]).map((key) => [key, 0])
+    ) as Record<Direction, number>
+  )
 
   const {
     data: members,
@@ -43,11 +43,9 @@ export const Members: React.FC<MembersProps> = ({ initialPage = 0 }) => {
         const response = await memberService.getMemberList({ size: 1000 })
         if (response.code !== 200 || !response.data) return
         const allMembers = response.data
-        const counts: Record<Direction, number> = {
-          COMPUTER_VISION: 0,
-          STRUCTURAL_DESIGN: 0,
-          EMBEDDED: 0,
-        }
+        const counts: Record<Direction, number> = Object.fromEntries(
+          (Object.keys(DIRECTION_LABELS) as Direction[]).map((key) => [key, 0])
+        ) as Record<Direction, number>
         allMembers.content.forEach((member) => {
           if (member.direction in counts) {
             counts[member.direction as Direction]++

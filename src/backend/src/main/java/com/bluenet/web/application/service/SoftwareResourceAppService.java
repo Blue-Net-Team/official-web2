@@ -2,7 +2,7 @@ package com.bluenet.web.application.service;
 
 import com.bluenet.web.application.SoftwareResourceResult;
 import com.bluenet.web.application.command.softwareresource.SoftwareResourceCommands;
-import com.bluenet.web.domain.model.enumerate.Direction;
+import com.bluenet.web.domain.model.enumerate.SoftwareResourceDirection;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -20,7 +20,7 @@ public interface SoftwareResourceAppService {
      *            分页参数。
      * @return 分页的软件资源结果。
      */
-    Page<SoftwareResourceResult> listActiveResources(Direction direction, Pageable pageable);
+    Page<SoftwareResourceResult> listActiveResources(SoftwareResourceDirection direction, Pageable pageable);
 
     /**
      * 分页查询所有软件资源（管理后台）。

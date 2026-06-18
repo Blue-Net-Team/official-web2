@@ -1,5 +1,8 @@
 package com.bluenet.web.application.command.softwareresource;
 
+import com.bluenet.web.domain.model.enumerate.SoftwareResourceDirection;
+import com.bluenet.web.domain.model.enumerate.SoftwareResourceStatus;
+
 /**
  * 软件资源聚合的命令对象集合。
  */
@@ -13,7 +16,7 @@ public class SoftwareResourceCommands {
      */
     public record CreateSoftwareResourceCommand(
             String name,
-            com.bluenet.web.domain.model.enumerate.Direction direction,
+            SoftwareResourceDirection direction,
             String category,
             String description,
             String externalUrl,
@@ -34,12 +37,12 @@ public class SoftwareResourceCommands {
     public record UpdateSoftwareResourceCommand(
             Long id,
             String name,
-            com.bluenet.web.domain.model.enumerate.Direction direction,
+            SoftwareResourceDirection direction,
             String category,
             String description,
             String externalUrl,
             Integer sortOrder,
-            com.bluenet.web.domain.model.enumerate.SoftwareResourceStatus status) {
+            SoftwareResourceStatus status) {
         public UpdateSoftwareResourceCommand {
             if (name != null) {
                 name = name.trim();

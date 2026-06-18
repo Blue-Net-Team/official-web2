@@ -1,6 +1,6 @@
 package com.bluenet.web.domain.model.entity;
 
-import com.bluenet.web.domain.model.enumerate.Direction;
+import com.bluenet.web.domain.model.enumerate.SoftwareResourceDirection;
 import com.bluenet.web.domain.model.enumerate.SoftwareResourceStatus;
 import lombok.AccessLevel;
 import lombok.Data;
@@ -29,7 +29,7 @@ public class SoftwareResource {
     /**
      * 所属方向。
      */
-    private Direction direction;
+    private SoftwareResourceDirection direction;
 
     /**
      * 分类，如 IDE、工具链、库等。
@@ -56,8 +56,8 @@ public class SoftwareResource {
      */
     private SoftwareResourceStatus status;
 
-    private SoftwareResource(Long id, String name, Direction direction, String category, String description,
-            String externalUrl, Integer sortOrder, SoftwareResourceStatus status) {
+    private SoftwareResource(Long id, String name, SoftwareResourceDirection direction, String category,
+            String description, String externalUrl, Integer sortOrder, SoftwareResourceStatus status) {
         this.id = id;
         this.name = name;
         this.direction = direction;
@@ -71,8 +71,8 @@ public class SoftwareResource {
     /**
      * 构造新软件资源聚合根 —— 带领域校验。
      */
-    public static SoftwareResource create(String name, Direction direction, String category, String description,
-            String externalUrl, Integer sortOrder) {
+    public static SoftwareResource create(String name, SoftwareResourceDirection direction, String category,
+            String description, String externalUrl, Integer sortOrder) {
         if (name == null || name.isBlank()) {
             throw new IllegalArgumentException("软件名称不能为空");
         }
@@ -89,15 +89,15 @@ public class SoftwareResource {
     /**
      * 从数据库重建 —— 跳过创建校验。
      */
-    public static SoftwareResource reconstruct(Long id, String name, Direction direction, String category,
-            String description, String externalUrl, Integer sortOrder, SoftwareResourceStatus status) {
+    public static SoftwareResource reconstruct(Long id, String name, SoftwareResourceDirection direction,
+            String category, String description, String externalUrl, Integer sortOrder, SoftwareResourceStatus status) {
         return new SoftwareResource(id, name, direction, category, description, externalUrl, sortOrder, status);
     }
 
     /**
      * 更新软件资源信息。
      */
-    public void update(String name, Direction direction, String category, String description,
+    public void update(String name, SoftwareResourceDirection direction, String category, String description,
             String externalUrl, Integer sortOrder, SoftwareResourceStatus status) {
         if (name == null || name.isBlank()) {
             throw new IllegalArgumentException("软件名称不能为空");

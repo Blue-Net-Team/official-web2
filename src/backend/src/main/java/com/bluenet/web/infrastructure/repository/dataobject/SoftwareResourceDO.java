@@ -3,7 +3,7 @@ package com.bluenet.web.infrastructure.repository.dataobject;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.bluenet.web.domain.model.enumerate.Direction;
+import com.bluenet.web.domain.model.enumerate.SoftwareResourceDirection;
 import com.bluenet.web.domain.model.enumerate.SoftwareResourceStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -33,7 +33,7 @@ public class SoftwareResourceDO {
     /**
      * 所属方向。
      */
-    private Direction direction;
+    private SoftwareResourceDirection direction;
 
     /**
      * 分类。

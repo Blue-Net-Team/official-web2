@@ -13,6 +13,7 @@ import com.bluenet.web.domain.model.entity.Role;
 import com.bluenet.web.domain.model.entity.RolePermission;
 import com.bluenet.web.domain.model.entity.User;
 import com.bluenet.web.domain.model.enumerate.Direction;
+import com.bluenet.web.domain.model.enumerate.SoftwareResourceDirection;
 import com.bluenet.web.domain.model.enumerate.SoftwareResourceStatus;
 import com.bluenet.web.infrastructure.repository.dataobject.PermissionDO;
 import com.bluenet.web.infrastructure.repository.dataobject.RolePermissionDO;
@@ -166,7 +167,7 @@ class AdminSoftwareResourceControllerIntegrationTest extends BaseIntegrationTest
     void create_shouldSucceed() {
         CreateSoftwareResourceRequestDTO request = CreateSoftwareResourceRequestDTO.builder()
                 .name("New Tool")
-                .direction(Direction.GENERAL)
+                .direction(SoftwareResourceDirection.GENERAL)
                 .category("tool")
                 .description("desc")
                 .externalUrl("https://example.com/new")
@@ -194,7 +195,7 @@ class AdminSoftwareResourceControllerIntegrationTest extends BaseIntegrationTest
     void create_withoutAuth_shouldReturn401() {
         CreateSoftwareResourceRequestDTO request = CreateSoftwareResourceRequestDTO.builder()
                 .name("New Tool")
-                .direction(Direction.GENERAL)
+                .direction(SoftwareResourceDirection.GENERAL)
                 .externalUrl("https://example.com/new")
                 .build();
 
@@ -215,7 +216,7 @@ class AdminSoftwareResourceControllerIntegrationTest extends BaseIntegrationTest
     void update_shouldSucceed() {
         SoftwareResourceDO existing = SoftwareResourceDO.builder()
                 .name("Old Tool")
-                .direction(Direction.GENERAL)
+                .direction(SoftwareResourceDirection.GENERAL)
                 .externalUrl("https://example.com/old")
                 .sortOrder(1)
                 .status(SoftwareResourceStatus.ACTIVE)
@@ -224,7 +225,7 @@ class AdminSoftwareResourceControllerIntegrationTest extends BaseIntegrationTest
 
         UpdateSoftwareResourceRequestDTO request = UpdateSoftwareResourceRequestDTO.builder()
                 .name("Updated Tool")
-                .direction(Direction.EMBEDDED)
+                .direction(SoftwareResourceDirection.EMBEDDED)
                 .category("IDE")
                 .description("updated")
                 .externalUrl("https://example.com/updated")
@@ -245,7 +246,7 @@ class AdminSoftwareResourceControllerIntegrationTest extends BaseIntegrationTest
         assertEquals(HttpStatus.OK, response.getStatusCode());
         SoftwareResourceDTO updated = response.getBody().getData();
         assertEquals("Updated Tool", updated.getName());
-        assertEquals(Direction.EMBEDDED, updated.getDirection());
+        assertEquals(SoftwareResourceDirection.EMBEDDED, updated.getDirection());
         assertEquals(SoftwareResourceStatus.DISABLED, updated.getStatus());
     }
 
@@ -254,7 +255,7 @@ class AdminSoftwareResourceControllerIntegrationTest extends BaseIntegrationTest
     void delete_shouldSucceed() {
         SoftwareResourceDO existing = SoftwareResourceDO.builder()
                 .name("To Delete")
-                .direction(Direction.GENERAL)
+                .direction(SoftwareResourceDirection.GENERAL)
                 .externalUrl("https://example.com/del")
                 .sortOrder(1)
                 .status(SoftwareResourceStatus.ACTIVE)
@@ -280,7 +281,7 @@ class AdminSoftwareResourceControllerIntegrationTest extends BaseIntegrationTest
     void listAdmin_shouldSucceed() {
         SoftwareResourceDO existing = SoftwareResourceDO.builder()
                 .name("Admin List")
-                .direction(Direction.GENERAL)
+                .direction(SoftwareResourceDirection.GENERAL)
                 .externalUrl("https://example.com/list")
                 .sortOrder(1)
                 .status(SoftwareResourceStatus.ACTIVE)

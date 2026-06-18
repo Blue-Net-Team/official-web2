@@ -4,7 +4,7 @@ import com.bluenet.web.api.dto.softwareresource.CreateSoftwareResourceRequestDTO
 import com.bluenet.web.api.dto.softwareresource.SoftwareResourceListRequestDTO;
 import com.bluenet.web.api.dto.softwareresource.UpdateSoftwareResourceRequestDTO;
 import com.bluenet.web.application.command.softwareresource.SoftwareResourceCommands;
-import com.bluenet.web.domain.model.enumerate.Direction;
+import com.bluenet.web.domain.model.enumerate.SoftwareResourceDirection;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
@@ -18,11 +18,15 @@ public class SoftwareResourceRequestConverter {
     /**
      * 将列表查询 DTO 转换为方向枚举。
      */
-    public Direction toDirection(SoftwareResourceListRequestDTO dto) {
+    public SoftwareResourceDirection toDirection(SoftwareResourceListRequestDTO dto) {
         if (dto == null || dto.getDirection() == null || dto.getDirection().isBlank()) {
             return null;
         }
-        return Direction.valueOf(dto.getDirection().toUpperCase());
+        try {
+            return SoftwareResourceDirection.valueOf(dto.getDirection().toUpperCase(java.util.Locale.ROOT));
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
     }
 
     /**

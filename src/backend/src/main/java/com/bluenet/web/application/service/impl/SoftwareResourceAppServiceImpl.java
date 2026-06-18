@@ -5,7 +5,7 @@ import com.bluenet.web.application.command.softwareresource.SoftwareResourceComm
 import com.bluenet.web.application.service.SoftwareResourceAppService;
 import com.bluenet.web.domain.exception.DataNotFound;
 import com.bluenet.web.domain.model.entity.SoftwareResource;
-import com.bluenet.web.domain.model.enumerate.Direction;
+import com.bluenet.web.domain.model.enumerate.SoftwareResourceDirection;
 import com.bluenet.web.domain.repository.SoftwareResourceRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -23,7 +23,7 @@ public class SoftwareResourceAppServiceImpl implements SoftwareResourceAppServic
     private final SoftwareResourceRepository softwareResourceRepository;
 
     @Override
-    public Page<SoftwareResourceResult> listActiveResources(Direction direction, Pageable pageable) {
+    public Page<SoftwareResourceResult> listActiveResources(SoftwareResourceDirection direction, Pageable pageable) {
         return softwareResourceRepository.findActiveByDirection(direction, pageable)
                 .map(this::toResult);
     }
@@ -70,8 +70,9 @@ public class SoftwareResourceAppServiceImpl implements SoftwareResourceAppServic
     @Override
     @Transactional
     public void deleteSoftwareResource(Long id) {
-        SoftwareResource softwareResource = softwareResourceRepository.findById(id)
-                .orElseThrow(() -> new DataNotFound("软件资源不存在"));
+        if (!softwareResourceRepository.findById(id).isPresent()) {
+            throw new DataNotFound("软件资源不存在");
+        }
         softwareResourceRepository.deleteById(id);
     }
 

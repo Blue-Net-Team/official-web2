@@ -6,6 +6,8 @@ import com.bluenet.web.application.SoftwareResourceResult;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
 
+import java.util.Objects;
+
 /**
  * 软件资源响应转换器。
  */
@@ -35,7 +37,8 @@ public class SoftwareResourceResponseConverter {
      * 将分页结果转换为 PageDTO。
      */
     public PageDTO<SoftwareResourceDTO> toPageDTO(Page<SoftwareResourceResult> page) {
-        Page<SoftwareResourceDTO> dtoPage = page.map(this::toDTO);
+        Page<SoftwareResourceDTO> dtoPage = page
+                .map(result -> Objects.requireNonNullElse(toDTO(result), new SoftwareResourceDTO()));
         return PageDTO.from(dtoPage);
     }
 }

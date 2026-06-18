@@ -1,6 +1,6 @@
 package com.bluenet.web.api.dto.softwareresource;
 
-import com.bluenet.web.domain.model.enumerate.Direction;
+import com.bluenet.web.domain.model.enumerate.SoftwareResourceDirection;
 import com.bluenet.web.domain.model.enumerate.SoftwareResourceStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
@@ -26,7 +26,7 @@ public class UpdateSoftwareResourceRequestDTO {
 
     @Schema(description = "所属方向")
     @NotNull(message = "方向不能为空")
-    private Direction direction;
+    private SoftwareResourceDirection direction;
 
     @Schema(description = "分类")
     private String category;

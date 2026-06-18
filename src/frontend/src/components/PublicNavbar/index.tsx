@@ -55,6 +55,9 @@ const NavBar = () => {
       case 'members':
         router.push('/members')
         return
+      case 'resources':
+        router.push('/resources')
+        return
       case 'enroll':
         router.push('/enroll')
         return
