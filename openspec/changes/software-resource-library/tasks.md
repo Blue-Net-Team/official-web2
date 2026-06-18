@@ -49,8 +49,8 @@
 ## 6. 验证与收尾
 
 - [x] 6.1 后端编译打包通过（`mvnw clean compile package`）。
-- [ ] 6.2 Docker 镜像构建并启动（`bluenet-api-service:latest`）。
-- [ ] 6.3 启动基础设施（PostgreSQL、Redis 等）。
-- [ ] 6.4 Playwright 端到端验证：公开页 Tab 切换、后台 CRUD 流程。
-- [ ] 6.5 更新相关文档（数据库设计、接口总览）。
-- [ ] 6.6 提交代码并按规范填写 commit message。
+- [x] 6.2 Docker 镜像构建并启动（`bluenet-api-service:latest`）。
+- [x] 6.3 启动基础设施（PostgreSQL、Redis 等）。
+- [x] 6.4 Playwright 端到端验证：公开页 Tab 切换、后台 CRUD 流程。
+- [x] 6.5 更新相关文档（数据库设计、接口总览）。
+- [x] 6.6 提交代码并按规范填写 commit message。
