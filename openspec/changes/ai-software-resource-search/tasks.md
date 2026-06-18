@@ -28,4 +28,4 @@
 - [x] 4.1 后端执行 `./mvnw clean compile` 与相关测试
 - [x] 4.2 AI Service 执行 `uv run pytest` 或等效命令
 - [x] 4.3 本地/容器启动后，通过 AI Service chat 接口测试软件资源相关提问（工具层 E2E 已验证；chat HTTP 接口中文解析受容器 locale 影响，为既有问题）
-- [ ] 4.4 提交变更并推送
+- [x] 4.4 提交变更并推送
