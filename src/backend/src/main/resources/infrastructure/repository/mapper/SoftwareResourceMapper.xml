@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bluenet.web.infrastructure.repository.mapper.SoftwareResourceMapper">
+    <resultMap id="BaseResultMap" type="com.bluenet.web.infrastructure.repository.dataobject.SoftwareResourceDO">
+        <id column="id" property="id"/>
+        <result column="name" property="name"/>
+        <result column="direction" property="direction"
+                typeHandler="com.bluenet.web.infrastructure.repository.handler.ValueEnumTypeHandler"/>
+        <result column="category" property="category"/>
+        <result column="description" property="description"/>
+        <result column="external_url" property="externalUrl"/>
+        <result column="sort_order" property="sortOrder"/>
+        <result column="status" property="status"
+                typeHandler="com.bluenet.web.infrastructure.repository.handler.ValueEnumTypeHandler"/>
+    </resultMap>
+
+    <select id="selectActiveByDirection" resultMap="BaseResultMap">
+        SELECT
+            id,
+            name,
+            direction,
+            category,
+            description,
+            external_url,
+            sort_order,
+            status
+        FROM tb_software_resource
+        WHERE status = 'active'
+        <if test="direction != null">
+            AND direction = #{direction, typeHandler=com.bluenet.web.infrastructure.repository.handler.ValueEnumTypeHandler}
+        </if>
+        ORDER BY sort_order ASC, id ASC
+    </select>
+
+    <select id="selectAllForAdmin" resultMap="BaseResultMap">
+        SELECT
+            id,
+            name,
+            direction,
+            category,
+            description,
+            external_url,
+            sort_order,
+            status
+        FROM tb_software_resource
+        ORDER BY sort_order ASC, id ASC
+    </select>
+</mapper>

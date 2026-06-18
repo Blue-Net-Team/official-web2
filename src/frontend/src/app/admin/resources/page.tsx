@@ -1,0 +1,344 @@
+'use client'
+
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { App, Button, Form, Input, Modal, Select, Switch, Table } from 'antd'
+import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons'
+import type { ColumnsType } from 'antd/es/table'
+import type { SoftwareResourceDTO } from '@/apis/schema/type'
+import {
+  SOFTWARE_RESOURCE_DIRECTION_LABELS,
+  SOFTWARE_RESOURCE_STATUS_LABELS,
+  type SoftwareResourceDirection,
+} from '@/apis/schema/enumerate'
+import { adminSoftwareResourceService } from '@/apis/services/admin-software-resource.service'
+
+const PAGE_SIZE = 20
+
+interface FormValues {
+  name: string
+  direction: SoftwareResourceDirection
+  category?: string
+  description?: string
+  externalUrl: string
+  sortOrder?: number
+  status: 'ACTIVE' | 'DISABLED'
+}
+
+export default function SoftwareResourceManagementPage() {
+  const { message: messageApi } = App.useApp()
+  const [form] = Form.useForm<FormValues>()
+
+  const [resources, setResources] = useState<SoftwareResourceDTO[]>([])
+  const [loading, setLoading] = useState(false)
+  const [total, setTotal] = useState(0)
+  const [page, setPage] = useState(0)
+
+  const [modalOpen, setModalOpen] = useState(false)
+  const [modalMode, setModalMode] = useState<'create' | 'edit'>('create')
+  const [editingResource, setEditingResource] = useState<SoftwareResourceDTO | null>(null)
+
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false)
+  const [deletingResource, setDeletingResource] = useState<SoftwareResourceDTO | null>(null)
+
+  const fetchResources = useCallback(
+    async (currentPage: number) => {
+      setLoading(true)
+      try {
+        const res = await adminSoftwareResourceService.list(currentPage, PAGE_SIZE)
+        if (res.code === 200 && res.data) {
+          setResources(res.data.content)
+          setTotal(res.data.totalElements)
+        } else {
+          messageApi.error(res.msg || '获取资源列表失败')
+        }
+      } catch {
+        messageApi.error('获取资源列表失败')
+      } finally {
+        setLoading(false)
+      }
+    },
+    [messageApi]
+  )
+
+  useEffect(() => {
+    fetchResources(page)
+  }, [fetchResources, page])
+
+  const openCreateModal = () => {
+    setModalMode('create')
+    setEditingResource(null)
+    form.resetFields()
+    form.setFieldsValue({ status: 'ACTIVE', sortOrder: 0 })
+    setModalOpen(true)
+  }
+
+  const openEditModal = (resource: SoftwareResourceDTO) => {
+    setModalMode('edit')
+    setEditingResource(resource)
+    form.setFieldsValue({
+      name: resource.name,
+      direction: resource.direction,
+      category: resource.category ?? undefined,
+      description: resource.description ?? undefined,
+      externalUrl: resource.externalUrl,
+      sortOrder: resource.sortOrder,
+      status: resource.status,
+    })
+    setModalOpen(true)
+  }
+
+  const handleModalSubmit = async () => {
+    try {
+      const values = await form.validateFields()
+      const payload = {
+        name: values.name,
+        direction: values.direction,
+        category: values.category,
+        description: values.description,
+        externalUrl: values.externalUrl,
+        sortOrder: values.sortOrder ?? 0,
+      }
+
+      if (modalMode === 'create') {
+        const res = await adminSoftwareResourceService.create(payload)
+        if (res.code === 200) {
+          messageApi.success('创建成功')
+          setModalOpen(false)
+          fetchResources(page)
+        } else {
+          messageApi.error(res.msg || '创建失败')
+        }
+      } else if (editingResource) {
+        const res = await adminSoftwareResourceService.update(editingResource.id, {
+          ...payload,
+          status: values.status,
+        })
+        if (res.code === 200) {
+          messageApi.success('更新成功')
+          setModalOpen(false)
+          fetchResources(page)
+        } else {
+          messageApi.error(res.msg || '更新失败')
+        }
+      }
+    } catch {
+      // validation failed
+    }
+  }
+
+  const handleDeleteClick = (resource: SoftwareResourceDTO) => {
+    setDeletingResource(resource)
+    setDeleteModalOpen(true)
+  }
+
+  const handleDeleteConfirm = async () => {
+    if (!deletingResource) return
+    try {
+      const res = await adminSoftwareResourceService.delete(deletingResource.id)
+      if (res.code === 200) {
+        messageApi.success('删除成功')
+        setDeleteModalOpen(false)
+        fetchResources(page)
+      } else {
+        messageApi.error(res.msg || '删除失败')
+      }
+    } catch {
+      messageApi.error('删除失败')
+    }
+  }
+
+  const handleToggleStatus = async (resource: SoftwareResourceDTO, checked: boolean) => {
+    try {
+      const res = await adminSoftwareResourceService.update(resource.id, {
+        name: resource.name,
+        direction: resource.direction,
+        category: resource.category ?? undefined,
+        description: resource.description ?? undefined,
+        externalUrl: resource.externalUrl,
+        sortOrder: resource.sortOrder,
+        status: checked ? 'ACTIVE' : 'DISABLED',
+      })
+      if (res.code === 200) {
+        messageApi.success(checked ? '已启用' : '已禁用')
+        fetchResources(page)
+      } else {
+        messageApi.error(res.msg || '操作失败')
+      }
+    } catch {
+      messageApi.error('操作失败')
+    }
+  }
+
+  const directionOptions = useMemo(
+    () =>
+      Object.entries(SOFTWARE_RESOURCE_DIRECTION_LABELS).map(([value, label]) => ({
+        value,
+        label,
+      })),
+    []
+  )
+
+  const columns: ColumnsType<SoftwareResourceDTO> = useMemo(
+    () => [
+      {
+        title: '名称',
+        dataIndex: 'name',
+        key: 'name',
+        ellipsis: true,
+      },
+      {
+        title: '方向',
+        dataIndex: 'direction',
+        key: 'direction',
+        width: 120,
+        render: (direction: SoftwareResourceDirection) =>
+          SOFTWARE_RESOURCE_DIRECTION_LABELS[direction] || direction,
+      },
+      {
+        title: '分类',
+        dataIndex: 'category',
+        key: 'category',
+        width: 120,
+        render: (category: string | null) => category || '-',
+      },
+      {
+        title: '排序',
+        dataIndex: 'sortOrder',
+        key: 'sortOrder',
+        width: 80,
+      },
+      {
+        title: '状态',
+        dataIndex: 'status',
+        key: 'status',
+        width: 100,
+        render: (status: 'ACTIVE' | 'DISABLED', record: SoftwareResourceDTO) => (
+          <Switch
+            checked={status === 'ACTIVE'}
+            onChange={(checked) => handleToggleStatus(record, checked)}
+            checkedChildren="启用"
+            unCheckedChildren="禁用"
+          />
+        ),
+      },
+      {
+        title: '操作',
+        key: 'actions',
+        width: 160,
+        render: (_, record) => (
+          <div className="flex gap-2">
+            <Button
+              type="link"
+              size="small"
+              icon={<EditOutlined />}
+              onClick={() => openEditModal(record)}
+            >
+              编辑
+            </Button>
+            <Button
+              type="link"
+              size="small"
+              danger
+              icon={<DeleteOutlined />}
+              onClick={() => handleDeleteClick(record)}
+            >
+              删除
+            </Button>
+          </div>
+        ),
+      },
+    ],
+    [page]
+  )
+
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-medium text-white/90 m-0">软件资源管理</h2>
+        <Button type="primary" icon={<PlusOutlined />} onClick={openCreateModal}>
+          新增资源
+        </Button>
+      </div>
+
+      <Table
+        dataSource={resources}
+        columns={columns}
+        rowKey={(record) => String(record.id)}
+        size="small"
+        loading={loading}
+        pagination={{
+          current: page + 1,
+          pageSize: PAGE_SIZE,
+          total,
+          onChange: (p) => setPage(p - 1),
+        }}
+        locale={{ emptyText: '暂无资源数据' }}
+        scroll={{ x: 'max-content' }}
+      />
+
+      <Modal
+        title={modalMode === 'create' ? '新增资源' : '编辑资源'}
+        open={modalOpen}
+        onOk={handleModalSubmit}
+        onCancel={() => setModalOpen(false)}
+        okText="保存"
+        cancelText="取消"
+      >
+        <Form form={form} layout="vertical">
+          <Form.Item
+            label="软件名称"
+            name="name"
+            rules={[{ required: true, message: '请输入软件名称' }]}
+          >
+            <Input placeholder="例如：VS Code" />
+          </Form.Item>
+          <Form.Item
+            label="方向"
+            name="direction"
+            rules={[{ required: true, message: '请选择方向' }]}
+          >
+            <Select placeholder="请选择方向" options={directionOptions} />
+          </Form.Item>
+          <Form.Item label="分类" name="category">
+            <Input placeholder="例如：IDE、工具链" />
+          </Form.Item>
+          <Form.Item label="描述" name="description">
+            <Input.TextArea rows={3} placeholder="简要描述用途或安装说明" />
+          </Form.Item>
+          <Form.Item
+            label="外部下载链接"
+            name="externalUrl"
+            rules={[{ required: true, message: '请输入外部下载链接' }]}
+          >
+            <Input placeholder="https://..." />
+          </Form.Item>
+          <Form.Item label="排序权重" name="sortOrder">
+            <Input type="number" placeholder="数值越小越靠前" />
+          </Form.Item>
+          {modalMode === 'edit' && (
+            <Form.Item label="状态" name="status" rules={[{ required: true }]}>
+              <Select
+                options={[
+                  { value: 'ACTIVE', label: SOFTWARE_RESOURCE_STATUS_LABELS.ACTIVE },
+                  { value: 'DISABLED', label: SOFTWARE_RESOURCE_STATUS_LABELS.DISABLED },
+                ]}
+              />
+            </Form.Item>
+          )}
+        </Form>
+      </Modal>
+
+      <Modal
+        title="确认删除"
+        open={deleteModalOpen}
+        onOk={handleDeleteConfirm}
+        onCancel={() => setDeleteModalOpen(false)}
+        okText="确认删除"
+        cancelText="取消"
+        okButtonProps={{ danger: true }}
+      >
+        <p>确认删除资源「{deletingResource?.name}」？此操作不可撤销。</p>
+      </Modal>
+    </div>
+  )
+}

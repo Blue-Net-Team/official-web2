@@ -922,3 +922,55 @@ export interface AdminUserCreateResponseDTO {
   username: string
   roleId: number
 }
+
+/**
+ * 软件资源信息
+ * 对应后端 SoftwareResourceDTO.java
+ */
+export interface SoftwareResourceDTO {
+  id: number
+  name: string
+  direction: import('./enumerate').SoftwareResourceDirection
+  category: string | null
+  description: string | null
+  externalUrl: string
+  sortOrder: number
+  status: import('./enumerate').SoftwareResourceStatus
+}
+
+/**
+ * 软件资源列表查询参数
+ * 对应后端 SoftwareResourceListRequestDTO.java
+ */
+export interface SoftwareResourceListRequestDTO {
+  direction?: string
+  page?: number
+  size?: number
+}
+
+/**
+ * 创建软件资源请求
+ * 对应后端 CreateSoftwareResourceRequestDTO.java
+ */
+export interface CreateSoftwareResourceRequestDTO {
+  name: string
+  direction: import('./enumerate').SoftwareResourceDirection
+  category?: string
+  description?: string
+  externalUrl: string
+  sortOrder?: number
+}
+
+/**
+ * 更新软件资源请求
+ * 对应后端 UpdateSoftwareResourceRequestDTO.java
+ */
+export interface UpdateSoftwareResourceRequestDTO {
+  name: string
+  direction: import('./enumerate').SoftwareResourceDirection
+  category?: string
+  description?: string
+  externalUrl: string
+  sortOrder?: number
+  status: import('./enumerate').SoftwareResourceStatus
+}

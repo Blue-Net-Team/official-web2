@@ -25,6 +25,7 @@ import {
   QrcodeOutlined,
   BookOutlined,
   TagOutlined,
+  CloudDownloadOutlined,
 } from '@ant-design/icons'
 import type { MenuProps } from 'antd'
 
@@ -216,6 +217,13 @@ export const menuConfig: MenuItemConfig[] = [
         minLevel: 3,
       },
     ],
+  },
+  {
+    key: 'softwareResource',
+    label: '资源库管理',
+    path: '/admin/resources',
+    icon: <CloudDownloadOutlined />,
+    minLevel: 2,
   },
   {
     key: 'qa',

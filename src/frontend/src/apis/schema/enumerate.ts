@@ -48,6 +48,33 @@ export const DIRECTION_LABELS: Record<Direction, string> = {
 }
 
 /**
+ * 软件资源方向（包含通用）
+ */
+export type SoftwareResourceDirection = Direction | 'GENERAL'
+
+/**
+ * 软件资源方向标签
+ */
+export const SOFTWARE_RESOURCE_DIRECTION_LABELS: Record<SoftwareResourceDirection, string> = {
+  ...DIRECTION_LABELS,
+  GENERAL: '通用',
+}
+
+/**
+ * 软件资源状态枚举
+ * 对应后端 SoftwareResourceStatus.java
+ */
+export type SoftwareResourceStatus = 'ACTIVE' | 'DISABLED'
+
+/**
+ * 软件资源状态标签
+ */
+export const SOFTWARE_RESOURCE_STATUS_LABELS: Record<SoftwareResourceStatus, string> = {
+  ACTIVE: '已启用',
+  DISABLED: '已禁用',
+}
+
+/**
  * 性别枚举
  * 对应后端 Gender.java
  */

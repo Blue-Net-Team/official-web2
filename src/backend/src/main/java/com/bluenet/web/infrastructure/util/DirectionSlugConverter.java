@@ -53,6 +53,7 @@ public class DirectionSlugConverter {
             case COMPUTER_VISION -> "cv";
             case EMBEDDED -> "embed";
             case STRUCTURAL_DESIGN -> "struct";
+            case GENERAL -> "general";
         };
     }
 }
