@@ -803,8 +803,8 @@ jobs:
 
     - name: Wait for ai-service health check
       run: |
-        PROTOCOL="${{ vars.SSL_ENABLED == 'true' && 'https' || 'http' }}"
-        URL="${PROTOCOL}://${{ vars.AI_HOST }}:${{ vars.AI_PORT }}/ai/v1/health"
+        PROTOCOL="${{ vars.AI_SERVICE_SSL_ENABLED == 'true' && 'https' || 'http' }}"
+        URL="${PROTOCOL}://${{ vars.AI_SERVICE_HOST }}:${{ vars.AI_SERVICE_PORT }}/ai/v1/health"
         echo "Waiting for ai-service at $URL to be healthy..."
 
         for i in {1..30}; do
