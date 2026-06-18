@@ -225,14 +225,6 @@ export const menuConfig: MenuItemConfig[] = [
     icon: <CloudDownloadOutlined />,
     minLevel: 2,
   },
-  {
-    key: 'qa',
-    label: 'QA管理',
-    icon: <QuestionCircleOutlined />,
-    path: '/admin/qa',
-    minLevel: 1,
-    disabled: true,
-  },
 ]
 
 /** 按当前角色等级过滤后台导航菜单。 */
