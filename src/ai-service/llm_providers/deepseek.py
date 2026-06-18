@@ -11,7 +11,7 @@ from typing import Iterator
 from openai import OpenAI
 from loguru import logger
 
-from .base import LLMProvider, LLMResponse
+from .base import LLMProvider, LLMResponse, StreamEvent
 
 API_BASE_URL = "https://api.deepseek.com/v1"
 
@@ -158,13 +158,13 @@ class DeepSeekLLM(LLMProvider):
                 yield delta.content
         logger.info("流式 LLM 响应结束")
 
-    def stream_with_tools(self, messages: list[dict], tools: list[dict]) -> Iterator[LLMResponse]:
+    def stream_with_tools(self, messages: list[dict], tools: list[dict]) -> Iterator[StreamEvent]:
+        """支持 function calling 的流式调用，逐片段 yield 思考过程、内容和工具调用。"""
         logger.info(f"流式 LLM 请求(含工具), messages={len(messages)}, tools={len(tools)}, model={self._model}")
         openai_msgs = self._to_openai_messages(messages)
 
-        full_content = ""
-        full_reasoning = ""
-        tool_calls_buffer = []
+        tool_calls_agg: dict[int, dict] = {}
+        has_emitted_tool_calls = False
 
         for chunk in self._client.chat.completions.create(
             model=self._model,
@@ -174,43 +174,66 @@ class DeepSeekLLM(LLMProvider):
             stream=True,
         ):
             delta = chunk.choices[0].delta
-            if delta.content:
-                full_content += delta.content
+            finish_reason = chunk.choices[0].finish_reason
+
             if hasattr(delta, "reasoning_content") and delta.reasoning_content:
-                full_reasoning += delta.reasoning_content
-            if hasattr(delta, "tool_calls") and delta.tool_calls:
+                yield StreamEvent(type="reasoning", delta=delta.reasoning_content)
+
+            if delta.content:
+                yield StreamEvent(type="content", delta=delta.content)
+
+            if delta.tool_calls:
                 for tc in delta.tool_calls:
-                    tool_calls_buffer.append(tc)
+                    idx = tc.index
+                    if idx not in tool_calls_agg:
+                        tool_calls_agg[idx] = {"id": "", "name": "", "args": ""}
+                    if tc.id:
+                        tool_calls_agg[idx]["id"] = tc.id
+                    if tc.function and tc.function.name:
+                        tool_calls_agg[idx]["name"] = tc.function.name
+                    if tc.function and tc.function.arguments:
+                        tool_calls_agg[idx]["args"] += tc.function.arguments
 
-        # 流式 tool_calls 需要聚合
-        aggregated_tool_calls = []
-        if tool_calls_buffer:
-            # OpenAI 流式 tool_calls 是按字段分片的，需要聚合
-            tc_dict = {}
-            for tc in tool_calls_buffer:
-                idx = tc.index
-                if idx not in tc_dict:
-                    tc_dict[idx] = {"id": "", "name": "", "args": ""}
-                if tc.id:
-                    tc_dict[idx]["id"] = tc.id
-                if tc.function and tc.function.name:
-                    tc_dict[idx]["name"] = tc.function.name
-                if tc.function and tc.function.arguments:
-                    tc_dict[idx]["args"] += tc.function.arguments
+            if finish_reason == "tool_calls" and not has_emitted_tool_calls:
+                for idx in sorted(tool_calls_agg.keys()):
+                    tc = tool_calls_agg[idx]
+                    args_str = tc["args"]
+                    try:
+                        args = json.loads(args_str) if isinstance(args_str, str) and args_str else {}
+                    except json.JSONDecodeError:
+                        args = {}
+                    yield StreamEvent(
+                        type="tool_call",
+                        tool_call_id=tc["id"],
+                        tool_name=tc["name"],
+                        tool_args=args,
+                    )
+                has_emitted_tool_calls = True
+                tool_calls_agg.clear()
 
-            for idx in sorted(tc_dict.keys()):
-                tc = tc_dict[idx]
+            if finish_reason in ("tool_calls", "stop"):
+                yield StreamEvent(type="done")
+
+        # 兜底：流正常结束但 finish_reason 未明确标记 tool_calls 时，如果还有聚合中的 tool_call 则发出
+        if tool_calls_agg and not has_emitted_tool_calls:
+            for idx in sorted(tool_calls_agg.keys()):
+                tc = tool_calls_agg[idx]
                 args_str = tc["args"]
                 try:
-                    args = json.loads(args_str) if isinstance(args_str, str) else args_str
+                    args = json.loads(args_str) if isinstance(args_str, str) and args_str else {}
                 except json.JSONDecodeError:
                     args = {}
-                aggregated_tool_calls.append({
-                    "id": tc["id"],
-                    "name": tc["name"],
-                    "args": args,
-                    "type": "function",
-                })
-
-        yield LLMResponse(content=full_content, tool_calls=aggregated_tool_calls, reasoning_content=full_reasoning)
-        logger.info(f"流式 LLM 响应结束, content_len={len(full_content)}, reasoning_len={len(full_reasoning)}, tool_calls={len(aggregated_tool_calls)}")
+                yield StreamEvent(
+                    type="tool_call",
+                    tool_call_id=tc["id"],
+                    tool_name=tc["name"],
+                    tool_args=args,
+                )
+            yield StreamEvent(type="done")
+            logger.info(f"流式 LLM 响应结束, tool_calls={len(tool_calls_agg)} (兜底发出)")
+        elif not has_emitted_tool_calls:
+            # 如果正常结束且未发出过 done，兜底发出一次
+            yield StreamEvent(type="done")
+            logger.info("流式 LLM 响应结束")
+        else:
+            logger.info("流式 LLM 响应结束")

@@ -7,7 +7,7 @@ import httpx
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from loguru import logger
 
-from .base import EmbeddingProvider, LLMProvider, LLMResponse, RerankResult, RerankerProvider
+from .base import EmbeddingProvider, LLMProvider, LLMResponse, RerankResult, RerankerProvider, StreamEvent
 
 API_BASE_URL = "https://api.siliconflow.cn/v1"
 
@@ -138,22 +138,23 @@ class SiliconFlowLLM(LLMProvider):
                 yield text
         logger.info("流式 LLM 响应结束")
 
-    def stream_with_tools(self, messages: list[dict], tools: list[dict]) -> Iterator[LLMResponse]:
+    def stream_with_tools(self, messages: list[dict], tools: list[dict]) -> Iterator[StreamEvent]:
+        """支持 function calling 的流式调用接口（内部仍按非流式聚合，再包装为事件流）。"""
         logger.info(f"流式 LLM 请求(含工具), messages={len(messages)}, tools={len(tools)}, model={self._llm.model_name}")
-        lc_messages = self._build_messages(messages)
-        llm_with_tools = self._llm.bind_tools(tools)
+        resp = self.invoke_with_tools(messages, tools)
 
-        full_content = ""
-        tool_calls_buffer = []
-
-        for chunk in llm_with_tools.stream(lc_messages):
-            delta = chunk.content if hasattr(chunk, "content") else ""
-            if delta:
-                full_content += delta
-
-            if hasattr(chunk, "tool_calls") and chunk.tool_calls:
-                for tc in chunk.tool_calls:
-                    tool_calls_buffer.append(tc)
-
-        yield LLMResponse(content=full_content, tool_calls=tool_calls_buffer)
-        logger.info(f"流式 LLM 响应结束, content_len={len(full_content)}, tool_calls={len(tool_calls_buffer)}")
+        # 硅基流动当前不处理 reasoning_content，按现有行为保持为空；
+        # 为统一接口，仍保留事件序列结构。
+        if resp.reasoning_content:
+            yield StreamEvent(type="reasoning", delta=resp.reasoning_content)
+        if resp.content:
+            yield StreamEvent(type="content", delta=resp.content)
+        for tc in resp.tool_calls:
+            yield StreamEvent(
+                type="tool_call",
+                tool_call_id=tc.get("id"),
+                tool_name=tc.get("name"),
+                tool_args=tc.get("args", {}),
+            )
+        yield StreamEvent(type="done")
+        logger.info(f"流式 LLM 响应结束, content_len={len(resp.content)}, tool_calls={len(resp.tool_calls)}")

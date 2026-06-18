@@ -4,7 +4,7 @@ from typing import Iterator
 
 from loguru import logger
 
-from llm_providers.base import LLMProvider, LLMResponse
+from llm_providers.base import LLMProvider, LLMResponse, StreamEvent
 from llm_providers.factory import LLMFactory
 from tools import ToolRegistry
 from tools.tag_search_detailed import tag_search_detailed
@@ -72,7 +72,7 @@ class RagAgent:
         self._tag_rounds = 0
         self._chunk_rounds = 0
 
-        # 阶段 1：工具调用循环（非流式，收集结果）
+        # 阶段 1：流式工具调用循环
         max_total = _MAX_TAG_ROUNDS + _MAX_CHUNK_ROUNDS + 1
         for turn in range(max_total):
             # 最后一轮前提示模型
@@ -82,53 +82,67 @@ class RagAgent:
                     "content": "【系统提示】工具调用即将达到上限，这是你最后的机会。请基于已获取的所有检索信息，直接生成最终答案，不要再调用任何工具。"
                 })
 
-            llm_response = self._llm.invoke_with_tools(messages, self._tool_specs)
+            full_reasoning = ""
+            full_content = ""
+            pending_tool_calls: list[dict] = []
 
-            # 透出思考过程
-            if llm_response.reasoning_content:
-                _log.info(f"Agent 思考: {llm_response.reasoning_content}")
-                yield StreamChunk(type="reasoning", content=llm_response.reasoning_content)
+            for event in self._llm.stream_with_tools(messages, self._tool_specs):
+                if event.type == "reasoning":
+                    _log.info(f"Agent 思考片段: {event.delta[:50]}...")
+                    yield StreamChunk(type="reasoning", content=event.delta)
+                    full_reasoning += event.delta
+                elif event.type == "content":
+                    full_content += event.delta
+                elif event.type == "tool_call":
+                    pending_tool_calls.append({
+                        "id": event.tool_call_id or "",
+                        "name": event.tool_name,
+                        "args": event.tool_args or {},
+                        "type": "function",
+                    })
+                elif event.type == "done":
+                    break
 
-            if not llm_response.tool_calls:
+            if pending_tool_calls:
+                _log.info(
+                    f"流式-工具调用第 {turn + 1} 轮: "
+                    f"{[tc['name'] for tc in pending_tool_calls]}"
+                    f"(tag={self._tag_rounds}, chunk={self._chunk_rounds})"
+                )
+
+                # 添加 assistant 消息（包含 tool_calls 和 reasoning_content）
+                assistant_msg = {
+                    "role": "assistant",
+                    "content": full_content,
+                    "tool_calls": pending_tool_calls,
+                }
+                if full_reasoning:
+                    assistant_msg["reasoning_content"] = full_reasoning
+                messages.append(assistant_msg)
+
+                # 执行工具
+                for tc in pending_tool_calls:
+                    yield StreamChunk(
+                        type="tool_call",
+                        tool_name=tc.get("name"),
+                        tool_args=tc.get("args", {}),
+                    )
+                    result = self._handle_tool_call_with_limit(tc, messages)
+                    if result is not None:
+                        yield StreamChunk(
+                            type="tool_result",
+                            content=result,
+                            tool_name=tc.get("name"),
+                        )
+                        tool_call_id = tc.get("id", "")
+                        messages.append({
+                            "role": "tool",
+                            "content": result,
+                            "tool_call_id": tool_call_id
+                        })
+            else:
                 # 没有工具调用了，进入阶段 2 流式输出最终答案
                 break
-
-            _log.info(
-                f"流式-工具调用第 {turn + 1} 轮: "
-                f"{[tc['name'] for tc in llm_response.tool_calls]}"
-                f"(tag={self._tag_rounds}, chunk={self._chunk_rounds})"
-            )
-
-            # 添加 assistant 消息（包含 tool_calls 和 reasoning_content）
-            assistant_msg = {
-                "role": "assistant",
-                "content": llm_response.content,
-                "tool_calls": llm_response.tool_calls,
-            }
-            if llm_response.reasoning_content:
-                assistant_msg["reasoning_content"] = llm_response.reasoning_content
-            messages.append(assistant_msg)
-
-            # 执行工具
-            for tc in llm_response.tool_calls:
-                yield StreamChunk(
-                    type="tool_call",
-                    tool_name=tc.get("name"),
-                    tool_args=tc.get("args", {}),
-                )
-                result = self._handle_tool_call_with_limit(tc, messages)
-                if result is not None:
-                    yield StreamChunk(
-                        type="tool_result",
-                        content=result,
-                        tool_name=tc.get("name"),
-                    )
-                    tool_call_id = tc.get("id", "")
-                    messages.append({
-                        "role": "tool",
-                        "content": result,
-                        "tool_call_id": tool_call_id
-                    })
         else:
             # 达到上限，强制让模型基于已有信息生成答案
             _log.warning(f"工具调用已达上限 {max_total} 轮，强制生成答案")

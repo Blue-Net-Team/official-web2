@@ -2,7 +2,7 @@
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Iterator
+from typing import Iterator, Literal
 
 
 @dataclass
@@ -21,6 +21,27 @@ class LLMResponse:
     content: str
     tool_calls: list[dict] = field(default_factory=list)
     reasoning_content: str = ""
+
+
+@dataclass
+class StreamEvent:
+    """LLM 流式事件。
+
+    由 ``LLMProvider.stream_with_tools()`` 逐片段 yield，统一不同 provider 的流式输出。
+
+    type 取值：
+        reasoning - 模型思考过程片段，``delta`` 为本次新增的文本
+        content   - 模型生成内容片段，``delta`` 为本次新增的文本
+        tool_call - 完整工具调用事件（provider 内部已聚合完成），
+                    包含 ``tool_call_id`` / ``tool_name`` / ``tool_args``
+        done      - 当前轮次流式结束标记
+    """
+
+    type: Literal["reasoning", "content", "tool_call", "done"]
+    delta: str = ""
+    tool_call_id: str | None = None
+    tool_name: str | None = None
+    tool_args: dict | None = None
 
 
 class EmbeddingProvider(ABC):
@@ -81,13 +102,16 @@ class LLMProvider(ABC):
         ...
 
     @abstractmethod
-    def stream_with_tools(self, messages: list[dict], tools: list[dict]) -> Iterator[LLMResponse]:
+    def stream_with_tools(self, messages: list[dict], tools: list[dict]) -> Iterator[StreamEvent]:
         """支持 function calling 的流式调用。
 
-        每轮对话 yield 一个 LLMResponse：
-        - 如果 LLM 输出文本，yield LLMResponse(content="文本", tool_calls=[])
-        - 如果 LLM 发起 tool_calls，yield LLMResponse(content="", tool_calls=[...])
-        - 调用方执行工具后，将结果追加到 messages，继续 stream
+        逐片段 yield ``StreamEvent``：
+        - ``reasoning`` / ``content`` 为文本增量片段
+        - ``tool_call`` 必须是 provider 内部聚合完整后的工具调用事件，
+          包含 ``tool_name`` 和 ``tool_args``
+        - ``done`` 表示当前轮次流式输出结束且没有更多 tool_call
+
+        调用方执行工具后，将结果追加到 messages，继续调用本方法进入下一轮。
 
         Args:
             messages: OpenAI 格式消息列表。
