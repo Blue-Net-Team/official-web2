@@ -1,6 +1,5 @@
 """RagAgent 流式对话事件序列测试。"""
 
-from unittest.mock import MagicMock
 
 import pytest
 

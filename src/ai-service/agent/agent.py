@@ -4,7 +4,7 @@ from typing import Iterator
 
 from loguru import logger
 
-from llm_providers.base import LLMProvider, LLMResponse, StreamEvent
+from llm_providers.base import LLMProvider, LLMResponse
 from llm_providers.factory import LLMFactory
 from tools import ToolRegistry
 from tools.tag_search_detailed import tag_search_detailed

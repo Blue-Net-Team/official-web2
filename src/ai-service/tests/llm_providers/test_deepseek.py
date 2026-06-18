@@ -2,9 +2,7 @@
 
 from unittest.mock import MagicMock
 
-import pytest
 
-from llm_providers.base import StreamEvent
 from llm_providers.deepseek import DeepSeekLLM
 
 
