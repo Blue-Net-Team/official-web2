@@ -25,15 +25,18 @@ public interface SoftwareResourceRepository {
     Optional<SoftwareResource> findById(Long id);
 
     /**
-     * 分页查询指定方向下已启用的软件资源。
+     * 分页查询指定方向下已启用的软件资源，支持关键字搜索。
      *
      * @param direction
      *            方向；为 null 时查询所有方向。
+     * @param keyword
+     *            搜索关键词；为 null 或空时忽略。
      * @param pageable
      *            分页参数。
      * @return 分页的软件资源实体。
      */
-    Page<SoftwareResource> findActiveByDirection(SoftwareResourceDirection direction, Pageable pageable);
+    Page<SoftwareResource> findActiveByDirection(SoftwareResourceDirection direction, String keyword,
+            Pageable pageable);
 
     /**
      * 保存新的软件资源记录。

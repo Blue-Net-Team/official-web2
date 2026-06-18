@@ -32,6 +32,13 @@
                 #{direction, typeHandler=com.bluenet.web.infrastructure.repository.handler.ValueEnumTypeHandler}
             </foreach>
         </if>
+        <if test="keyword != null and keyword != ''">
+            AND (
+                LOWER(name) LIKE CONCAT('%', LOWER(#{keyword}), '%')
+                OR LOWER(category) LIKE CONCAT('%', LOWER(#{keyword}), '%')
+                OR LOWER(description) LIKE CONCAT('%', LOWER(#{keyword}), '%')
+            )
+        </if>
         ORDER BY sort_order ASC, id ASC
     </select>
 

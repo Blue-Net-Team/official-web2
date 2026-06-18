@@ -8,6 +8,7 @@ from .base import TagSearchResult, ToolDefinition
 from .chunk_search import chunk_search
 from .chunk_search_by_tags import chunk_search_by_tags
 from .registry import ToolRegistry
+from .software_resource_search import software_resource_search as _software_resource_search_handler
 from .tag_search import tag_generate, tag_search
 from .tag_search_detailed import tag_search_detailed
 
@@ -100,6 +101,24 @@ ToolRegistry.register(ToolDefinition(
     },
     required_params=["query", "tags"],
     handler=chunk_search_by_tags,
+))
+
+# --- 注册 software_resource_search ---
+ToolRegistry.register(ToolDefinition(
+    name="software_resource_search",
+    description="查询蓝网软件资源库，获取方向相关的软件下载地址。当用户询问软件下载、安装工具、某个方向需要什么软件时调用",
+    parameters={
+        "query": {
+            "type": "string",
+            "description": "搜索关键词，如软件名称、分类或描述中的关键词",
+        },
+        "direction": {
+            "type": "string",
+            "description": "可选方向：计算机视觉/视觉方向/COMPUTER_VISION、结构设计/结构方向/STRUCTURAL_DESIGN、嵌入式开发/电控方向/EMBEDDED、通用/GENERAL",
+        },
+    },
+    required_params=["query"],
+    handler=_software_resource_search_handler,
 ))
 
 __all__ = [

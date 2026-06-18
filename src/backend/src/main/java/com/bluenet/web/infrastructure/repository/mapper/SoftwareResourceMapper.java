@@ -20,7 +20,8 @@ public interface SoftwareResourceMapper extends BaseMapper<SoftwareResourceDO> {
     /**
      * 分页查询指定方向下已启用的软件资源。
      * <p>
-     * 当 {@code directions} 不为空时，返回方向在列表中的资源；为 null 或空时查询所有方向。
+     * 当 {@code directions} 不为空时，返回方向在列表中的资源；为 null 或空时查询所有方向。 当 {@code keyword}
+     * 不为空时，按名称、分类、描述做不区分大小写模糊匹配。
      * </p>
      *
      * @param page
@@ -29,11 +30,14 @@ public interface SoftwareResourceMapper extends BaseMapper<SoftwareResourceDO> {
      *            方向列表；为 null 或空时查询所有方向。
      * @param activeStatus
      *            启用状态值。
+     * @param keyword
+     *            搜索关键词；为 null 或空时忽略。
      * @return 分页后的软件资源。
      */
     IPage<SoftwareResourceDO> selectActiveByDirection(Page<SoftwareResourceDO> page,
             @Param("directions") List<SoftwareResourceDirection> directions,
-            @Param("activeStatus") SoftwareResourceStatus activeStatus);
+            @Param("activeStatus") SoftwareResourceStatus activeStatus,
+            @Param("keyword") String keyword);
 
     /**
      * 分页查询所有软件资源（管理后台）。

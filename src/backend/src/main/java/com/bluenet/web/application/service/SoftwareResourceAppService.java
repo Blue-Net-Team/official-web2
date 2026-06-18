@@ -12,15 +12,18 @@ import org.springframework.data.domain.Pageable;
 public interface SoftwareResourceAppService {
 
     /**
-     * 分页查询已启用的软件资源。
+     * 分页查询已启用的软件资源，支持关键字搜索。
      *
      * @param direction
      *            方向；为 null 时查询所有方向。
+     * @param keyword
+     *            搜索关键词；为 null 或空时忽略。
      * @param pageable
      *            分页参数。
      * @return 分页的软件资源结果。
      */
-    Page<SoftwareResourceResult> listActiveResources(SoftwareResourceDirection direction, Pageable pageable);
+    Page<SoftwareResourceResult> listActiveResources(SoftwareResourceDirection direction, String keyword,
+            Pageable pageable);
 
     /**
      * 分页查询所有软件资源（管理后台）。

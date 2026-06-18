@@ -23,8 +23,9 @@ public class SoftwareResourceAppServiceImpl implements SoftwareResourceAppServic
     private final SoftwareResourceRepository softwareResourceRepository;
 
     @Override
-    public Page<SoftwareResourceResult> listActiveResources(SoftwareResourceDirection direction, Pageable pageable) {
-        return softwareResourceRepository.findActiveByDirection(direction, pageable)
+    public Page<SoftwareResourceResult> listActiveResources(SoftwareResourceDirection direction, String keyword,
+            Pageable pageable) {
+        return softwareResourceRepository.findActiveByDirection(direction, keyword, pageable)
                 .map(this::toResult);
     }
 

@@ -111,16 +111,67 @@ class SoftwareResourceControllerIntegrationTest extends BaseIntegrationTest {
     }
 
     @Test
-    @DisplayName("集成测试：已禁用资源不返回")
-    void list_shouldExcludeDisabled() {
+    @DisplayName("集成测试：按关键字搜索应匹配名称、分类或描述")
+    void list_byKeyword_shouldReturnMatchingResources() {
         ResponseEntity<ResponseMessage<PageDTO<SoftwareResourceDTO>>> response = restTemplate.exchange(
-                "/api/v1/software-resources?direction=COMPUTER_VISION&page=0&size=10",
+                "/api/v1/software-resources?keyword=Tool&page=0&size=10",
                 HttpMethod.GET,
                 null,
                 new ParameterizedTypeReference<ResponseMessage<PageDTO<SoftwareResourceDTO>>>() {
                 });
 
+        assertEquals(HttpStatus.OK, response.getStatusCode());
         PageDTO<SoftwareResourceDTO> page = response.getBody().getData();
-        assertTrue(page.getContent().stream().noneMatch(r -> "CV Disabled".equals(r.getName())));
+        assertEquals(3, page.getTotalElements());
+        assertTrue(page.getContent().stream().anyMatch(r -> "CV Tool".equals(r.getName())));
+        assertTrue(page.getContent().stream().anyMatch(r -> "General Tool".equals(r.getName())));
+        assertTrue(page.getContent().stream().anyMatch(r -> "Embed Tool".equals(r.getName())));
+    }
+
+    @Test
+    @DisplayName("集成测试：按方向加关键字组合搜索应同时包含通用资源")
+    void list_byDirectionAndKeyword_shouldReturnDirectionAndGeneralResources() {
+        ResponseEntity<ResponseMessage<PageDTO<SoftwareResourceDTO>>> response = restTemplate.exchange(
+                "/api/v1/software-resources?direction=COMPUTER_VISION&keyword=Tool&page=0&size=10",
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<ResponseMessage<PageDTO<SoftwareResourceDTO>>>() {
+                });
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        PageDTO<SoftwareResourceDTO> page = response.getBody().getData();
+        assertEquals(2, page.getTotalElements());
+        assertTrue(page.getContent().stream().anyMatch(r -> "CV Tool".equals(r.getName())));
+        assertTrue(page.getContent().stream().anyMatch(r -> "General Tool".equals(r.getName())));
+    }
+
+    @Test
+    @DisplayName("集成测试：关键字为空时应忽略并返回所有已启用资源")
+    void list_withBlankKeyword_shouldIgnoreKeyword() {
+        ResponseEntity<ResponseMessage<PageDTO<SoftwareResourceDTO>>> response = restTemplate.exchange(
+                "/api/v1/software-resources?keyword=&page=0&size=10",
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<ResponseMessage<PageDTO<SoftwareResourceDTO>>>() {
+                });
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        PageDTO<SoftwareResourceDTO> page = response.getBody().getData();
+        assertEquals(3, page.getTotalElements());
+    }
+
+    @Test
+    @DisplayName("集成测试：外部链接不应参与关键字匹配")
+    void list_keywordInExternalUrl_shouldNotMatch() {
+        ResponseEntity<ResponseMessage<PageDTO<SoftwareResourceDTO>>> response = restTemplate.exchange(
+                "/api/v1/software-resources?keyword=example.com%2FCV&page=0&size=10",
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<ResponseMessage<PageDTO<SoftwareResourceDTO>>>() {
+                });
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        PageDTO<SoftwareResourceDTO> page = response.getBody().getData();
+        assertEquals(0, page.getTotalElements());
     }
 }

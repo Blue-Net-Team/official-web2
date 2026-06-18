@@ -54,14 +54,32 @@ class SoftwareResourceAppServiceImplTest {
     void listActiveResources_byDirection_success() {
         Pageable pageable = PageRequest.of(0, 10);
         SoftwareResource resource = createTestResource();
-        when(softwareResourceRepository.findActiveByDirection(SoftwareResourceDirection.COMPUTER_VISION, pageable))
-                .thenReturn(new PageImpl<>(List.of(resource), pageable, 1));
+        when(
+                softwareResourceRepository
+                        .findActiveByDirection(SoftwareResourceDirection.COMPUTER_VISION, "git", pageable))
+                                .thenReturn(new PageImpl<>(List.of(resource), pageable, 1));
 
         var result = softwareResourceAppService
-                .listActiveResources(SoftwareResourceDirection.COMPUTER_VISION, pageable);
+                .listActiveResources(SoftwareResourceDirection.COMPUTER_VISION, "git", pageable);
 
         assertEquals(1, result.getTotalElements());
         assertEquals("VS Code", result.getContent().get(0).name());
+    }
+
+    @Test
+    @DisplayName("TC-001a: 查询已启用资源列表（按方向无关键字）")
+    void listActiveResources_byDirectionWithoutKeyword_success() {
+        Pageable pageable = PageRequest.of(0, 10);
+        SoftwareResource resource = createTestResource();
+        when(
+                softwareResourceRepository
+                        .findActiveByDirection(SoftwareResourceDirection.COMPUTER_VISION, null, pageable))
+                                .thenReturn(new PageImpl<>(List.of(resource), pageable, 1));
+
+        var result = softwareResourceAppService
+                .listActiveResources(SoftwareResourceDirection.COMPUTER_VISION, null, pageable);
+
+        assertEquals(1, result.getTotalElements());
     }
 
     @Test

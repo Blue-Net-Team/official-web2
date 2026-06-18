@@ -91,18 +91,45 @@ class SoftwareResourceRepositoryImplTest {
                 softwareResourceMapper.selectActiveByDirection(
                         any(Page.class),
                         eq(expectedDirections),
-                        eq(SoftwareResourceStatus.ACTIVE)))
+                        eq(SoftwareResourceStatus.ACTIVE),
+                        eq("git")))
                                 .thenReturn(mpPage);
 
         var result = softwareResourceRepository
-                .findActiveByDirection(SoftwareResourceDirection.COMPUTER_VISION, pageable);
+                .findActiveByDirection(SoftwareResourceDirection.COMPUTER_VISION, "git", pageable);
 
         assertEquals(1, result.getTotalElements());
         assertEquals(0, result.getNumber());
         verify(softwareResourceMapper).selectActiveByDirection(
                 any(Page.class),
                 eq(expectedDirections),
-                eq(SoftwareResourceStatus.ACTIVE));
+                eq(SoftwareResourceStatus.ACTIVE),
+                eq("git"));
+    }
+
+    @Test
+    @DisplayName("findActiveByDirection: 无关键字时应传递 null")
+    void findActiveByDirection_nullKeyword_shouldPassNull() {
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<SoftwareResourceDO> mpPage = new Page<>(1, 10, 0);
+        mpPage.setRecords(List.of());
+        when(
+                softwareResourceMapper.selectActiveByDirection(
+                        any(Page.class),
+                        eq(List.of(SoftwareResourceDirection.COMPUTER_VISION, SoftwareResourceDirection.GENERAL)),
+                        eq(SoftwareResourceStatus.ACTIVE),
+                        eq(null)))
+                                .thenReturn(mpPage);
+
+        var result = softwareResourceRepository
+                .findActiveByDirection(SoftwareResourceDirection.COMPUTER_VISION, null, pageable);
+
+        assertEquals(0, result.getTotalElements());
+        verify(softwareResourceMapper).selectActiveByDirection(
+                any(Page.class),
+                eq(List.of(SoftwareResourceDirection.COMPUTER_VISION, SoftwareResourceDirection.GENERAL)),
+                eq(SoftwareResourceStatus.ACTIVE),
+                eq(null));
     }
 
     @Test

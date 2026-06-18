@@ -39,6 +39,7 @@ public class SoftwareResourceRepositoryImpl implements SoftwareResourceRepositor
     @Override
     public org.springframework.data.domain.Page<SoftwareResource> findActiveByDirection(
             SoftwareResourceDirection direction,
+            String keyword,
             Pageable pageable) {
         Page<SoftwareResourceDO> page = new Page<>(pageable.getPageNumber() + 1, pageable.getPageSize());
         List<SoftwareResourceDirection> directions = direction == null
@@ -47,7 +48,8 @@ public class SoftwareResourceRepositoryImpl implements SoftwareResourceRepositor
         IPage<SoftwareResourceDO> result = softwareResourceMapper.selectActiveByDirection(
                 page,
                 directions,
-                SoftwareResourceStatus.ACTIVE);
+                SoftwareResourceStatus.ACTIVE,
+                keyword);
         List<SoftwareResource> content = converter.toEntityList(result.getRecords());
         return new PageImpl<>(content, pageable, result.getTotal());
     }

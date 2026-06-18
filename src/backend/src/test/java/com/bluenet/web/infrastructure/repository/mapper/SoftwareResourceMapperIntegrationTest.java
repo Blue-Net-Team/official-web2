@@ -56,7 +56,28 @@ class SoftwareResourceMapperIntegrationTest extends BaseIntegrationTest {
         var result = softwareResourceMapper.selectActiveByDirection(
                 page,
                 directions,
-                SoftwareResourceStatus.ACTIVE);
+                SoftwareResourceStatus.ACTIVE,
+                null);
+
+        List<SoftwareResourceDO> records = result.getRecords();
+        assertThat(records).hasSize(2);
+        assertThat(records).extracting(SoftwareResourceDO::getName)
+                .containsExactlyInAnyOrder("CV Tool", "General Tool");
+    }
+
+    @Test
+    @DisplayName("selectActiveByDirection: 关键字应匹配名称、分类或描述")
+    void selectActiveByDirection_withKeyword_shouldMatchNameCategoryOrDescription() {
+        insertResource("CV Tool", SoftwareResourceDirection.COMPUTER_VISION, 1, SoftwareResourceStatus.ACTIVE);
+        insertResource("CV Disabled", SoftwareResourceDirection.COMPUTER_VISION, 2, SoftwareResourceStatus.DISABLED);
+        insertResource("General Tool", SoftwareResourceDirection.GENERAL, 3, SoftwareResourceStatus.ACTIVE);
+
+        Page<SoftwareResourceDO> page = new Page<>(1, 10);
+        var result = softwareResourceMapper.selectActiveByDirection(
+                page,
+                null,
+                SoftwareResourceStatus.ACTIVE,
+                "tool");
 
         List<SoftwareResourceDO> records = result.getRecords();
         assertThat(records).hasSize(2);
@@ -75,7 +96,8 @@ class SoftwareResourceMapperIntegrationTest extends BaseIntegrationTest {
         var result = softwareResourceMapper.selectActiveByDirection(
                 page,
                 null,
-                SoftwareResourceStatus.ACTIVE);
+                SoftwareResourceStatus.ACTIVE,
+                null);
 
         List<SoftwareResourceDO> records = result.getRecords();
         assertThat(records).hasSize(2);

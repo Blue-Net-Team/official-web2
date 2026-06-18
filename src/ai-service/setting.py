@@ -62,6 +62,9 @@ class Settings(BaseSettings):
     RABBITMQ_USERNAME: str = "admin"
     RABBITMQ_PASSWORD: str = "bluenet123"
 
+    # 后端 API 地址（供工具调用）
+    BACKEND_API_URL: str = "http://localhost:8080"
+
     class Config:
         env_file = ".env"
         env_prefix = "TBD_RAG_"

@@ -35,14 +35,16 @@ public class SoftwareResourceController {
     private final SoftwareResourceRequestConverter requestConverter;
     private final SoftwareResourceResponseConverter responseConverter;
 
-    @Operation(summary = "获取软件资源列表", description = "按方向分页查询已启用的软件资源，方向为空时查询全部")
+    @Operation(summary = "获取软件资源列表", description = "按方向、关键字分页查询已启用的软件资源，方向为空时查询全部")
     @RequiresPermission(value = "software-resource:list", name = "获取软件资源列表", access = AccessLevel.PUBLIC)
     @GetMapping
     public ResponseMessage<PageDTO<SoftwareResourceDTO>> listSoftwareResources(
             @Valid @ModelAttribute SoftwareResourceListRequestDTO request) {
         SoftwareResourceDirection direction = requestConverter.toDirection(request);
+        String keyword = request.getKeyword();
         Pageable pageable = requestConverter.toPageable(request);
-        Page<SoftwareResourceResult> resultPage = softwareResourceAppService.listActiveResources(direction, pageable);
+        Page<SoftwareResourceResult> resultPage = softwareResourceAppService
+                .listActiveResources(direction, keyword, pageable);
         return ResponseMessage.success(responseConverter.toPageDTO(resultPage));
     }
 }

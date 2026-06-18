@@ -3,6 +3,7 @@ package com.bluenet.web.api.dto.softwareresource;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -20,6 +21,10 @@ public class SoftwareResourceListRequestDTO {
 
     @Schema(description = "方向值；为空时查询全部")
     private String direction;
+
+    @Schema(description = "搜索关键词；匹配资源名称、分类、描述，为空时忽略")
+    @Size(max = 100, message = "搜索关键词长度不能超过 100 字符")
+    private String keyword;
 
     @Schema(description = "页码，从 0 开始", example = "0")
     @Min(0)

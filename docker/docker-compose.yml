@@ -249,6 +249,8 @@ services:
       # API 密钥（从 .env 注入，不在 Dockerfile 中写死）
       TBD_RAG_SILICONFLOW_API_KEY: ${TBD_RAG_SILICONFLOW_API_KEY:-}
       TBD_RAG_DEEPSEEK_API_KEY: ${TBD_RAG_DEEPSEEK_API_KEY:-}
+      # Backend API（AI 工具调用后端接口）
+      TBD_RAG_BACKEND_API_URL: ${TBD_RAG_BACKEND_API_URL:-http://api-service:8080}
       # RabbitMQ
       TBD_RAG_RABBITMQ_HOST: ${RABBITMQ_HOST:-rabbitmq}
       TBD_RAG_RABBITMQ_PORT: ${RABBITMQ_PORT:-5672}
