@@ -10,12 +10,7 @@ export default function BugReportFloatButton() {
 
   return (
     <>
-      <FloatButton
-        icon={<BugOutlined />}
-        tooltip="反馈问题"
-        onClick={() => setModalOpen(true)}
-        style={{ backgroundColor: '#fa8c1620' }}
-      />
+      <FloatButton icon={<BugOutlined />} tooltip="反馈问题" onClick={() => setModalOpen(true)} />
       <BugReportModal open={modalOpen} onClose={() => setModalOpen(false)} />
     </>
   )

@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import { AntdRegistry } from '@ant-design/nextjs-registry'
 import ThemeProvider from '@/components/ThemeProvider'
 import AuthProvider from '@/components/AuthProvider'
-import { BugReportFloatButton } from '@/components/BugReport'
+import GlobalFloatActions from '@/components/GlobalFloatActions'
 import { App } from 'antd'
 import './globals.css'
 
@@ -31,7 +31,7 @@ export default function RootLayout({
             <AuthProvider>
               <App>
                 {children}
-                <BugReportFloatButton />
+                <GlobalFloatActions />
               </App>
             </AuthProvider>
           </ThemeProvider>

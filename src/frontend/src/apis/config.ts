@@ -18,4 +18,18 @@ const getApiBaseUrl = () => {
   return `${protocol}://${host}:${port}${API_PREFIX}`
 }
 
+const AI_SERVICE_HOST = process.env.NEXT_PUBLIC_AI_SERVICE_HOST || 'localhost'
+const AI_SERVICE_PORT = process.env.NEXT_PUBLIC_AI_SERVICE_PORT || '8000'
+const AI_SERVICE_SSL_ENABLED = process.env.NEXT_PUBLIC_AI_SERVICE_SSL_ENABLED === 'true'
+const AI_SERVICE_PREFIX = process.env.NEXT_PUBLIC_AI_SERVICE_PREFIX || '/ai/v1'
+
+const getAiChatBaseUrl = () => {
+  const host = AI_SERVICE_HOST
+  const port = AI_SERVICE_PORT
+  const ssl = AI_SERVICE_SSL_ENABLED
+  const protocol = ssl ? 'https' : 'http'
+  return `${protocol}://${host}:${port}${AI_SERVICE_PREFIX}`
+}
+
 export const API_BASE_URL = getApiBaseUrl()
+export const AI_CHAT_BASE_URL = getAiChatBaseUrl()
