@@ -147,26 +147,40 @@
 }
 
 /* Admin 侧边栏滚动条样式 */
-.admin-sider::-webkit-scrollbar {
+.admin-sider .ant-layout-sider-children::-webkit-scrollbar {
   width: 6px;
 }
 
-.admin-sider::-webkit-scrollbar-track {
+.admin-sider .ant-layout-sider-children::-webkit-scrollbar-track {
   background: transparent;
 }
 
-.admin-sider::-webkit-scrollbar-thumb {
+.admin-sider .ant-layout-sider-children::-webkit-scrollbar-thumb {
   background-color: rgba(255, 255, 255, 0.3);
   border-radius: 3px;
 }
 
-.admin-sider::-webkit-scrollbar-thumb:hover {
+.admin-sider .ant-layout-sider-children::-webkit-scrollbar-thumb:hover {
   background-color: rgba(255, 255, 255, 0.5);
 }
 
 .admin-sider {
+  overflow: hidden !important;
+}
+
+/* 让菜单内容区独立滚动，并为底部固定 trigger 留出空间 */
+.admin-sider .ant-layout-sider-children {
+  height: calc(100% - 48px) !important;
+  overflow-y: auto !important;
+  padding-bottom: 48px;
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+}
+
+/* 折叠按钮固定在 Sider 底部，不随菜单滚动 */
+.admin-sider.ant-layout-sider .ant-layout-sider-trigger {
+  position: absolute !important;
+  bottom: 0 !important;
 }
 
 @keyframes fadeInUp {
