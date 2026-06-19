@@ -246,6 +246,10 @@ services:
       - "8000:8000"
     environment:
       <<: *shared-env
+      # 编码设置：强制 UTF-8，避免中文请求/响应解析异常
+      LANG: C.UTF-8
+      LC_ALL: C.UTF-8
+      PYTHONUTF8: "1"
       # API 密钥（从 .env 注入，不在 Dockerfile 中写死）
       TBD_RAG_SILICONFLOW_API_KEY: ${TBD_RAG_SILICONFLOW_API_KEY:-}
       TBD_RAG_DEEPSEEK_API_KEY: ${TBD_RAG_DEEPSEEK_API_KEY:-}

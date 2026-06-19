@@ -29,6 +29,12 @@ LABEL description="BlueNet AI Service"
 
 RUN apk add --no-cache curl
 
+# 确保容器内使用 UTF-8 编码，避免中文请求/响应出现 400 或乱码
+# Alpine + musl 原生支持 C.UTF-8，无需额外安装 locale 包
+ENV LANG=C.UTF-8
+ENV LC_ALL=C.UTF-8
+ENV PYTHONUTF8=1
+
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
 WORKDIR /app
