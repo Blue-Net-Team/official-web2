@@ -10,6 +10,7 @@ import com.bluenet.web.domain.model.vo.RoleVO;
 import com.bluenet.web.domain.repository.PermissionRepository;
 import com.bluenet.web.domain.repository.RolePermissionRepository;
 import com.bluenet.web.domain.repository.RoleRepository;
+import com.bluenet.web.infrastructure.security.cache.PermissionCache;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,6 +30,7 @@ public class RolePermissionManageAppServiceImpl implements RolePermissionManageA
     private final RoleRepository roleRepository;
     private final PermissionRepository permissionRepository;
     private final RolePermissionRepository rolePermissionRepository;
+    private final PermissionCache permissionCache;
 
     /**
      * 查询角色权限。
@@ -65,6 +67,7 @@ public class RolePermissionManageAppServiceImpl implements RolePermissionManageA
         RoleVO role = resolveRole(command.roleName());
         List<Long> validatedIds = resolvePermissionIds(command.permissionIds());
         int count = rolePermissionRepository.batchAssignPermissionsToRole(role.getId(), validatedIds);
+        permissionCache.refresh();
         List<String> currentValues = resolvePermissionValues(
                 rolePermissionRepository.findPermissionIdsByRoleId(role.getId()));
         return RolePermissionManageResult.ofPermissions(count, currentValues);
@@ -84,6 +87,7 @@ public class RolePermissionManageAppServiceImpl implements RolePermissionManageA
         RoleVO role = resolveRole(command.roleName());
         List<Long> validatedIds = resolvePermissionIds(command.permissionIds());
         int count = rolePermissionRepository.batchRemovePermissionsFromRole(role.getId(), validatedIds);
+        permissionCache.refresh();
         List<String> currentValues = resolvePermissionValues(
                 rolePermissionRepository.findPermissionIdsByRoleId(role.getId()));
         return RolePermissionManageResult.ofPermissions(count, currentValues);
