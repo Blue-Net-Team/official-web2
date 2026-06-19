@@ -164,14 +164,14 @@ export const menuConfig: MenuItemConfig[] = [
         label: '考核时间',
         path: '/admin/assessment/time',
         icon: <ClockCircleOutlined />,
-        minLevel: 2,
+        minLevel: 1,
       },
       {
         key: 'assessmentQuestion',
         label: '考核题目',
         path: '/admin/assessment/question',
         icon: <FileTextOutlined />,
-        minLevel: 2,
+        minLevel: 1,
       },
       {
         key: 'assessmentJudgeScore',
@@ -185,7 +185,7 @@ export const menuConfig: MenuItemConfig[] = [
         label: '录用决策',
         path: '/admin/assessment/judge/decision',
         icon: <TeamOutlined />,
-        minLevel: 2,
+        minLevel: 1,
       },
     ],
   },
@@ -223,7 +223,7 @@ export const menuConfig: MenuItemConfig[] = [
     label: '资源库管理',
     path: '/admin/resources',
     icon: <CloudDownloadOutlined />,
-    minLevel: 2,
+    minLevel: 1,
   },
 ]
 
