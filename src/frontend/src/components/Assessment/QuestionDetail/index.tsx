@@ -48,7 +48,7 @@ import JudgeResultPanel from './JudgeResultPanel'
 import QuestionSidebar from './QuestionSidebar'
 import CountdownSection from './CountdownSection'
 import TeamPanel from './TeamPanel'
-import styles from '@/app/(public)/(other)/assessment/[timeId]/questions/[questionId]/styles.module.css'
+import DarkVeil from '@/components/Reactbits/DarkVeil'
 import { getStatusInfo, formatFileSize, getUploadPhase } from './utils'
 import { LANGUAGE_LABELS } from './constants'
 import type { UploadedFileInfo } from './types'
@@ -624,7 +624,9 @@ export default function QuestionDetailPage() {
   if (!isAuthenticated || loading) {
     return (
       <div className="min-h-screen bg-[#0a0a0a] relative flex flex-col">
-        <div className={`${styles.bg} top-0 left-0 w-full h-full z-0 pointer-events-none fixed`} />
+        <div className="fixed inset-0 z-0">
+          <DarkVeil hueShift={40} speed={0.6} offsetY={0.2} />
+        </div>
         <div className="flex flex-col justify-center items-center min-h-[300px] relative z-10">
           <Spin size="large" />
         </div>
@@ -635,7 +637,9 @@ export default function QuestionDetailPage() {
   if (!question) {
     return (
       <div className="min-h-screen bg-[#0a0a0a] relative flex flex-col">
-        <div className={`${styles.bg} top-0 left-0 w-full h-full z-0 pointer-events-none fixed`} />
+        <div className="fixed inset-0 z-0">
+          <DarkVeil hueShift={40} speed={0.6} offsetY={0.2} />
+        </div>
         <div className="flex flex-col justify-center items-center min-h-[300px] relative z-10">
           <p className="text-white/50 mb-4">题目不存在或无权查看</p>
           <Button onClick={() => router.push(`/assessment/${timeId}/questions`)}>
@@ -734,7 +738,9 @@ export default function QuestionDetailPage() {
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] relative flex flex-col">
-      <div className={`${styles.bg} top-0 left-0 w-full h-full z-0 pointer-events-none fixed`} />
+      <div className="fixed inset-0 z-0">
+        <DarkVeil hueShift={40} speed={0.6} offsetY={0.2} />
+      </div>
 
       {isExpired && (
         <div className="relative z-[2] flex items-center justify-center px-6 py-3 bg-[#ff4d4f]/[0.12] border-b border-[#ff4d4f]/[0.25] text-[#ff4d4f] text-sm font-semibold backdrop-blur-[8px]">

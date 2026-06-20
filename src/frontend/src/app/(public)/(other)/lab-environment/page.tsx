@@ -5,7 +5,7 @@ import { VenueService } from '@/apis/services/venue.service'
 import { EquipmentService } from '@/apis/services/equipment.service'
 import type { VenueDTO, EquipmentDTO } from '@/apis/schema/type'
 import { API_BASE_URL } from '@/apis/config'
-import BackgroundDecorations from './BackgroundDecorations'
+import DarkVeil from '@/components/Reactbits/DarkVeil'
 
 export const revalidate = 3600
 
@@ -147,7 +147,9 @@ export const metadata = {
 export default function LabEnvironmentPage() {
   return (
     <div className="min-h-screen bg-[#0a0a0f] flex flex-col relative overflow-hidden">
-      <BackgroundDecorations />
+      <div className="fixed inset-0 z-0">
+        <DarkVeil hueShift={40} speed={0.6} offsetY={0.2} />
+      </div>
 
       <section className="flex flex-col items-center gap-4 py-[100px] px-[120px] max-xl:px-12 max-md:px-6 max-md:py-[60px] max-md:gap-3 relative z-1">
         <h1 className="text-[56px] max-md:text-[42px] max-sm:text-[32px] font-semibold text-white m-0 font-['Inter'] text-center">

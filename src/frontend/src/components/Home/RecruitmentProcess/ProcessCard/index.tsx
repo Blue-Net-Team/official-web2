@@ -9,7 +9,7 @@ interface ProcessCardProps {
 
 const ProcessCard = ({ icon, title, description, btn }: ProcessCardProps) => {
   return (
-    <div className="w-full max-w-[80%] h-fit lg:min-h-[320px] flex flex-col justify-start items-start gap-[9px] p-[32px_28px] box-border border border-[rgba(232,104,53,1)] rounded-card">
+    <div className="w-full max-w-[80%] h-fit lg:min-h-[320px] flex flex-col justify-start items-start gap-[9px] p-[32px_28px] box-border border border-[rgba(232,104,53,1)] rounded-card bg-black">
       <div className="flex flex-row items-center gap-[10px] sm:gap-[13px] mb-[9px]">
         <Image
           src={icon}

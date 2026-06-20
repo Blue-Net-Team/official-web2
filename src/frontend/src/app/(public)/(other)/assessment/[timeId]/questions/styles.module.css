@@ -1,8 +1,0 @@
-/* Assessment Questions Page Styles - 仅保留复杂渐变背景样式 */
-
-.bg {
-  background:
-    radial-gradient(ellipse 80% 50% at 20% 40%, rgba(102, 119, 255, 0.15) 0%, transparent 50%),
-    radial-gradient(ellipse 60% 40% at 80% 60%, rgba(255, 107, 53, 0.1) 0%, transparent 50%),
-    radial-gradient(ellipse 50% 30% at 50% 100%, rgba(47, 39, 176, 0.2) 0%, transparent 50%);
-}

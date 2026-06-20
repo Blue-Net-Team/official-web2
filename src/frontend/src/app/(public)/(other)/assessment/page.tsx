@@ -5,6 +5,7 @@ import { Spin } from 'antd'
 import { CalendarOutlined } from '@ant-design/icons'
 import { useRouter } from 'next/navigation'
 import { useAuth, useApi } from '@/hooks'
+import DarkVeil from '@/components/Reactbits/DarkVeil'
 import { assessmentTimeService } from '@/apis/services/assessment-time.service'
 import { AssessmentCard } from '@/components/Assessment'
 import { DIRECTION_LABELS as DirectionLabels } from '@/apis/schema/enumerate'
@@ -42,8 +43,10 @@ export default function AssessmentPage() {
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-[#0a0a0a] p-10 max-sm:p-6 relative overflow-x-hidden">
-        <div className="fixed top-0 left-0 w-full h-full bg-[radial-gradient(ellipse_80%_50%_at_20%_40%,rgba(102,119,255,0.15)_0%,transparent_50%),radial-gradient(ellipse_60%_40%_at_80%_60%,rgba(255,107,53,0.1)_0%,transparent_50%),radial-gradient(ellipse_50%_30%_at_50%_100%,rgba(47,39,176,0.2)_0%,transparent_50%)] z-0 pointer-events-none" />
-        <div className="flex justify-center items-center min-h-[300px]">
+        <div className="fixed inset-0 z-0">
+          <DarkVeil hueShift={40} speed={0.6} offsetY={0.2} />
+        </div>
+        <div className="flex justify-center items-center min-h-[300px] relative z-1">
           <Spin size="large" />
         </div>
       </div>
@@ -52,7 +55,9 @@ export default function AssessmentPage() {
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] p-10 max-sm:p-6 relative overflow-x-hidden">
-      <div className="fixed top-0 left-0 w-full h-full bg-[radial-gradient(ellipse_80%_50%_at_20%_40%,rgba(102,119,255,0.15)_0%,transparent_50%),radial-gradient(ellipse_60%_40%_at_80%_60%,rgba(255,107,53,0.1)_0%,transparent_50%),radial-gradient(ellipse_50%_30%_at_50%_100%,rgba(47,39,176,0.2)_0%,transparent_50%)] z-0 pointer-events-none" />
+      <div className="fixed inset-0 z-0">
+        <DarkVeil hueShift={40} speed={0.6} offsetY={0.2} />
+      </div>
       <div className="max-w-[960px] mx-auto relative z-1">
         <div className="mb-10">
           <h1 className="text-[28px] max-sm:text-[22px] font-bold text-white m-0 mb-2 bg-gradient-to-br from-white to-white/70 bg-clip-text text-transparent">

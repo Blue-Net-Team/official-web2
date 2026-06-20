@@ -2,6 +2,7 @@
 
 import React, { Suspense } from 'react'
 import { ConfigProvider, Spin } from 'antd'
+import DarkVeil from '@/components/Reactbits/DarkVeil'
 import DirectionSidebar from '@/components/Enroll/DirectionSidebar'
 import EnrollForm from '@/components/Enroll/EnrollForm'
 import ConsultationQrcode from '@/components/Enroll/ConsultationQrcode'
@@ -29,7 +30,9 @@ const EnrollPageContent: React.FC = () => {
   return (
     <div className="w-full min-h-screen bg-[#0a0a0a] text-white relative overflow-x-hidden">
       <ConfigProvider theme={customTheme}>
-        <div className="fixed top-0 left-0 w-full h-full bg-[radial-gradient(ellipse_80%_50%_at_20%_40%,rgba(102,119,255,0.15)_0%,transparent_50%),radial-gradient(ellipse_60%_40%_at_80%_60%,rgba(255,107,53,0.1)_0%,transparent_50%),radial-gradient(ellipse_50%_30%_at_50%_100%,rgba(47,39,176,0.2)_0%,transparent_50%)] z-0 pointer-events-none" />
+        <div className="fixed inset-0 z-0">
+          <DarkVeil hueShift={40} speed={0.6} offsetY={0.2} />
+        </div>
 
         <main className="w-full min-h-screen flex justify-center items-start pt-[100px] max-lg:pt-[100px] px-10 max-lg:px-5 pb-[60px] gap-[30px] max-lg:flex-col max-lg:items-center relative z-1">
           <div className="flex flex-col gap-6 shrink-0 w-[220px] max-lg:hidden animate-[fadeInLeft_0.8s_cubic-bezier(0.4,0,0.2,1)_0.2s_both]">

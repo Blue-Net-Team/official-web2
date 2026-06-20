@@ -21,7 +21,7 @@ import {
 } from '@/components/Profile'
 import { API_BASE_URL } from '@/apis/config'
 import { Spin } from 'antd'
-import styles from './styles.module.css'
+import DarkVeil from '@/components/Reactbits/DarkVeil'
 
 const DEFAULT_TAB: TabName = 'profile'
 
@@ -100,9 +100,11 @@ export default function ProfilePage() {
 
   return (
     <div className="w-full min-h-screen bg-[#0a0a0a] text-white relative overflow-x-hidden">
-      <div className={`fixed w-full h-full pointer-events-none z-0 ${styles.pageBg}`} />
+      <div className="fixed inset-0 z-0">
+        <DarkVeil hueShift={40} speed={0.6} offsetY={0.2} />
+      </div>
 
-      <main className="flex max-w-[1400px] mx-auto pt-[104px] px-16 pb-10 gap-8 relative z-[1] flex-row max-lg:flex-col md:px-6 max-sm:pt-20 max-sm:px-4 max-sm:pb-6">
+      <main className="flex max-w-[1400px] mx-auto pt-[104px] px-16 pb-10 gap-8 relative z-1 flex-row max-lg:flex-col md:px-6 max-sm:pt-20 max-sm:px-4 max-sm:pb-6">
         <ProfileSidebar profile={sidebarProfile} onAvatarUpdate={refresh} />
 
         <div className="flex-1 min-w-0">

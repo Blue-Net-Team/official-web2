@@ -4,8 +4,8 @@ import { useRef } from 'react'
 import { Spin, Empty, Pagination } from 'antd'
 import { competitionService } from '@/apis/services/competition.service'
 import { CompetitionResponseDTO } from '@/apis/schema/type'
+import DarkVeil from '@/components/Reactbits/DarkVeil'
 import CompetitionCard from '@/components/CompetitionCard'
-import BackgroundDecorations from './BackgroundDecorations'
 import { usePagination } from '@/hooks'
 
 const PAGE_SIZE = 10
@@ -54,7 +54,9 @@ export default function CompetitionsPage() {
 
   return (
     <div className="min-h-screen bg-black px-[147px] max-md:px-12 max-sm:px-6 py-20 max-md:py-[60px] max-sm:py-10 flex flex-col gap-12 max-sm:gap-8 relative overflow-hidden">
-      <BackgroundDecorations />
+      <div className="fixed inset-0 z-0">
+        <DarkVeil hueShift={40} speed={0.6} offsetY={0.2} />
+      </div>
       <header
         ref={headerRef}
         className="competitions-header flex flex-col gap-4 max-sm:gap-3 relative z-1"

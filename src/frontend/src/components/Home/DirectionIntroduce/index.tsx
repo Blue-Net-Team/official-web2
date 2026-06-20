@@ -45,7 +45,7 @@ const DirectionIntroduce = () => {
           专业的工作区分，为团队<span className="text-[#6677ff]">高效工作</span>提供保障
         </h1>
 
-        <div className="h-fit md:h-[75%] w-full box-border flex flex-col justify-between items-start p-5 sm:p-6 md:p-[27px_39px] rounded-[24px] bg-[linear-gradient(0deg,rgba(53,91,205,0.48)_33.337%,rgba(30,61,154,0)_83.842%)]">
+        <div className="h-fit md:h-[75%] w-full box-border flex flex-col justify-between items-start p-5 sm:p-6 md:p-[27px_39px] rounded-[24px] bg-[linear-gradient(0deg,rgba(38,58,140,1)_33.337%,rgba(30,61,154,0)_83.842%)]">
           <div className="max-w-[726px] text-white text-base sm:text-lg md:text-xl font-normal leading-[1.5] sm:leading-[1.44] md:leading-[26px] text-left sm:max-w-full">
             团队分为
             <span className="text-[36px] sm:text-[28px] md:text-[36px] text-[rgba(102,119,255,0.85)]">

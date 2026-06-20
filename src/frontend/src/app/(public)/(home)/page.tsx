@@ -1,7 +1,6 @@
-import bg1 from '@/assets/bg1.png'
-import bg2 from '@/assets/bg2.png'
 import { Flex } from 'antd'
 import TopContent from '@/components/Home/TopContent'
+import HomeBackground from './HomeBackground'
 import { competitionService } from '@/apis/services/competition.service'
 import { CompetitionResponseDTO } from '@/apis/schema/type'
 import AchievementAndResources from '@/components/Home/AchievementAndResources'
@@ -29,15 +28,11 @@ async function CompetitionsTable() {
 export default function Home() {
   return (
     <>
+      <HomeBackground />
       <Flex
         vertical
         align="center"
-        className="relative min-h-screen w-full max-w-full overflow-x-hidden bg-no-repeat bg-blend-screen bg-[position:right_-15%,right_30%] bg-[size:100%_auto,100%_auto] max-lg:bg-[position:right_-5%,right_35%] max-md:bg-[position:right_-3%,right_30%] max-md:bg-[size:120%_auto,150%_auto]"
-        style={
-          {
-            backgroundImage: `url(${bg1.src}), url(${bg2.src})`,
-          } as React.CSSProperties
-        }
+        className="relative z-10 min-h-screen w-full max-w-full overflow-x-hidden"
       >
         <TopContent />
         <Suspense fallback={<CompetitionsSkeleton />}>

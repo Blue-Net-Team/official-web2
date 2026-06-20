@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { Masonry, Spin, Empty, Pagination } from 'antd'
+import DarkVeil from '@/components/Reactbits/DarkVeil'
 import AchievementCard from '@/components/Achievements/AchievementCard'
 import AchievementStats from '@/components/Achievements/AchievementStats'
 import AchievementFilter from '@/components/Achievements/AchievementFilter'
@@ -80,7 +81,9 @@ export default function AchievementsPage() {
 
   return (
     <div className="w-full min-h-screen bg-[#0a0a0a] text-white relative overflow-x-hidden">
-      <div className="fixed top-0 left-0 w-full h-full bg-[radial-gradient(ellipse_80%_50%_at_20%_40%,rgba(102,119,255,0.15)_0%,transparent_50%),radial-gradient(ellipse_60%_40%_at_80%_60%,rgba(255,107,53,0.1)_0%,transparent_50%),radial-gradient(ellipse_50%_30%_at_50%_100%,rgba(47,39,176,0.2)_0%,transparent_50%)] z-0 pointer-events-none" />
+      <div className="fixed inset-0 z-0">
+        <DarkVeil hueShift={40} speed={0.6} offsetY={0.2} />
+      </div>
       <main className="flex flex-col items-center w-full min-h-screen py-8 px-[147px] max-lg:px-10 max-md:px-4 box-border relative z-1">
         <section className="text-center mb-8 w-full pt-8">
           <h1 className="text-5xl max-md:text-4xl max-sm:text-[28px] font-bold text-white mb-4 bg-gradient-to-br from-white to-white/80 bg-clip-text text-transparent">
