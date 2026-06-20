@@ -185,7 +185,7 @@ export const menuConfig: MenuItemConfig[] = [
         label: '录用决策',
         path: '/admin/assessment/judge/decision',
         icon: <TeamOutlined />,
-        minLevel: 1,
+        minLevel: 2,
       },
     ],
   },
