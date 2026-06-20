@@ -11,6 +11,7 @@ import {
 } from '@ant-design/icons'
 import { useRouter } from 'next/navigation'
 import { AxiosError } from 'axios'
+import DarkVeil from '@/components/Reactbits/DarkVeil'
 import { userService } from '@/apis/services/user.service'
 import { hashPassword } from '@/utils/passwordHash'
 import { useAuth } from '@/hooks'
@@ -151,15 +152,12 @@ export default function ChangePasswordPage() {
 
   return (
     <ConfigProvider theme={stepTheme}>
-      <div className="min-h-screen bg-[#0a0a0a] flex flex-col">
+      <div className="min-h-screen bg-[#0a0a0a] flex flex-col relative overflow-hidden">
+        <div className="fixed inset-0 z-0">
+          <DarkVeil hueShift={40} speed={0.6} offsetY={0.2} />
+        </div>
         {/* Content */}
-        <div
-          className="flex-1 flex items-center justify-center px-10 py-12"
-          style={{
-            background:
-              'radial-gradient(ellipse 120% 80% at 30% 40%, rgba(102, 119, 255, 0.08), transparent)',
-          }}
-        >
+        <div className="flex-1 flex items-center justify-center px-10 py-12 relative z-1">
           <div
             className="w-full max-w-[480px] rounded-xl p-10 pb-8"
             style={{

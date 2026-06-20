@@ -28,7 +28,7 @@ import type {
 import { QuestionTypeLabels } from '@/types/assessment'
 import { DIRECTION_LABELS as DirectionLabels } from '@/apis/schema/enumerate'
 import type { Direction } from '@/apis/schema/enumerate'
-import styles from './styles.module.css'
+import DarkVeil from '@/components/Reactbits/DarkVeil'
 
 /** 获取状态显示文本 */
 function getStatusText(
@@ -272,8 +272,10 @@ export default function QuestionsPage() {
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-[#0a0a0a] px-6 py-10 pb-20 relative overflow-x-hidden">
-        <div className={`${styles.bg} top-0 left-0 w-full h-full z-0 pointer-events-none fixed`} />
-        <div className="flex justify-center items-center min-h-[300px]">
+        <div className="fixed inset-0 z-0">
+          <DarkVeil hueShift={40} speed={0.6} offsetY={0.2} />
+        </div>
+        <div className="flex justify-center items-center min-h-[300px] relative z-1">
           <Spin size="large" />
         </div>
       </div>
@@ -296,7 +298,9 @@ export default function QuestionsPage() {
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] px-6 py-10 pb-20 relative overflow-x-hidden">
-      <div className={`${styles.bg} top-0 left-0 w-full h-full z-0 pointer-events-none fixed`} />
+      <div className="fixed inset-0 z-0">
+        <DarkVeil hueShift={40} speed={0.6} offsetY={0.2} />
+      </div>
       <div className="max-w-[960px] mx-auto relative z-10">
         <div className="mb-8">
           <button
