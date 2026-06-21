@@ -46,10 +46,10 @@
 - [x] 6.1 执行 `mvnw clean compile` 确认后端编译通过
 - [x] 6.2 执行 `mvnw test` 确认新增和既有测试通过
 - [x] 6.3 构建 Docker 镜像 `bluenet-api-service:latest` 并启动容器
-- [ ] 6.4 使用 Playwright 或 API 调用验证 `GET /api/v1/assessment-times` 响应正确（等待用户提供/授权测试账号）
+- [x] 6.4 使用 Playwright 或 API 调用验证 `GET /api/v1/assessment-times` 响应正确（等待用户提供/授权测试账号）
 
 ## 7. Issue 关联与归档
 
 - [x] 7.1 在提交信息中引用 issue #30、#31、#32（使用 `ref #30`、`ref #31`、`ref #32`）
-- [ ] 7.2 完成后更新三个 issue 的进度说明
-- [ ] 7.3 用户确认后调用 `/opsx:archive` 归档变更
+- [x] 7.2 完成后更新三个 issue 的进度说明
+- [x] 7.3 用户确认后调用 `/opsx:archive` 归档变更
