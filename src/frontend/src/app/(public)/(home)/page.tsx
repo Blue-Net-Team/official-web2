@@ -19,8 +19,9 @@ async function CompetitionsTable() {
   try {
     const competitionsBrief = await competitionService.getAllCompetitions()
     competitions = competitionsBrief.data || []
-  } catch {
-    // 构建时 API 不可用，使用空数组
+  } catch (error) {
+    // 构建时或运行时 API 不可用，使用空数组兜底；线上需查看容器日志定位 SSR 请求失败原因
+    console.error('首页竞赛列表 SSR 获取失败:', error)
   }
   return <Competitions competitions={competitions} />
 }

@@ -55,8 +55,11 @@ x-api-service-env: &api-service-env
   GITHUB_APP_APP_BASE_URL: ${GITHUB_APP_APP_BASE_URL:-http://localhost:8080}
 
 x-frontend-env: &frontend-env
-  BACKEND_HOST: api-service
-  BACKEND_PORT: 8080
+  # 服务端（SSR）访问后端地址：
+  # - Docker 内全量部署：使用 api-service:8080（默认值）
+  # - 分离/公网部署：需在 .env 中设置为公网可访问地址，确保前端容器能解析并访问
+  BACKEND_HOST: ${BACKEND_HOST:-api-service}
+  BACKEND_PORT: ${BACKEND_PORT:-8080}
   SSL_ENABLED: ${SSL_ENABLED:-false}
   API_PREFIX: ${API_PREFIX:-/api/v1}
   NEXT_PUBLIC_BACKEND_HOST: ${NEXT_PUBLIC_BACKEND_HOST:-localhost}
