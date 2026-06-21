@@ -7,6 +7,8 @@ import com.bluenet.web.infrastructure.repository.dataobject.AssessmentTimeDO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import java.util.List;
+
 @Mapper
 public interface AssessmentTimeMapper extends BaseMapper<AssessmentTimeDO> {
     /**
@@ -47,6 +49,15 @@ public interface AssessmentTimeMapper extends BaseMapper<AssessmentTimeDO> {
      * @return 匹配条件的考核场次 数据行；不存在时为 null。
      */
     int clearTimeLimitMinutesById(@Param("id") Long id);
+
+    /**
+     * 按主键列表批量查询考核场次数据行。
+     *
+     * @param ids
+     *            业务记录主键列表。
+     * @return 匹配条件的考核场次 数据行列表；不存在时为空列表。
+     */
+    List<AssessmentTimeDO> selectByIds(@Param("ids") List<Long> ids);
 
     /**
      * 查询考核场次 数据行。

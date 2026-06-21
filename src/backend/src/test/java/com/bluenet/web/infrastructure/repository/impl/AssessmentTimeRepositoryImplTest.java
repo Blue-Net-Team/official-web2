@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -87,6 +88,48 @@ class AssessmentTimeRepositoryImplTest {
                             (AssessmentTimeDO dataObject) -> dataObject.getId().equals(1L)
                                     && Boolean.FALSE.equals(dataObject.getTimeLimit())));
             verify(assessmentTimeMapper).clearTimeLimitMinutesById(1L);
+        }
+    }
+
+    @Nested
+    @DisplayName("findAllById 方法测试")
+    class FindAllByIdTests {
+
+        @Test
+        @DisplayName("空列表：应返回空列表")
+        void findAllById_emptyList_shouldReturnEmptyList() {
+            List<AssessmentTime> result = assessmentTimeRepository.findAllById(Collections.emptyList());
+
+            assertTrue(result.isEmpty());
+            verify(assessmentTimeMapper, never()).selectByIds(anyList());
+        }
+
+        @Test
+        @DisplayName("部分命中：应返回存在的实体")
+        void findAllById_partialHits_shouldReturnExistingEntities() {
+            AssessmentTime at1 = createTestEntity(1L, Direction.COMPUTER_VISION, 1, 2024);
+            AssessmentTime at2 = createTestEntity(2L, Direction.COMPUTER_VISION, 2, 2024);
+            when(assessmentTimeMapper.selectByIds(List.of(1L, 2L, 3L)))
+                    .thenReturn(List.of(toDataObject(at1), toDataObject(at2)));
+
+            List<AssessmentTime> result = assessmentTimeRepository.findAllById(List.of(1L, 2L, 3L));
+
+            assertEquals(2, result.size());
+            assertEquals(1L, result.get(0).getId());
+            assertEquals(2L, result.get(1).getId());
+        }
+
+        @Test
+        @DisplayName("全部命中：应返回所有实体")
+        void findAllById_allHits_shouldReturnAllEntities() {
+            AssessmentTime at1 = createTestEntity(1L, Direction.COMPUTER_VISION, 1, 2024);
+            AssessmentTime at2 = createTestEntity(2L, Direction.COMPUTER_VISION, 2, 2024);
+            when(assessmentTimeMapper.selectByIds(List.of(1L, 2L)))
+                    .thenReturn(List.of(toDataObject(at1), toDataObject(at2)));
+
+            List<AssessmentTime> result = assessmentTimeRepository.findAllById(List.of(1L, 2L));
+
+            assertEquals(2, result.size());
         }
     }
 

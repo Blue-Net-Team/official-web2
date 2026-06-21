@@ -4,6 +4,8 @@ import com.bluenet.web.domain.model.entity.AssessmentQuestion;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public interface AssessmentQuestionRepository {
@@ -49,6 +51,15 @@ public interface AssessmentQuestionRepository {
      * @return 满足条件的记录数量。
      */
     int countByAssessmentTimeId(Long assessmentTimeId);
+
+    /**
+     * 按考核场次主键批量统计题目数量。
+     *
+     * @param assessmentTimeIds
+     *            考核场次主键列表。
+     * @return 考核场次主键到题目数量的映射；缺失主键视为 0。
+     */
+    Map<Long, Integer> countByAssessmentTimeIds(List<Long> assessmentTimeIds);
     /**
      * 查询指定考核场次下的全部题目视图。
      *

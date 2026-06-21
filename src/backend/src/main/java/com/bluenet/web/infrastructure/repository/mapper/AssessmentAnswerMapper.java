@@ -1,6 +1,7 @@
 package com.bluenet.web.infrastructure.repository.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.bluenet.web.infrastructure.repository.dataobject.AssessmentAnswerCountResult;
 import com.bluenet.web.infrastructure.repository.dataobject.AssessmentAnswerDO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -20,6 +21,18 @@ public interface AssessmentAnswerMapper extends BaseMapper<AssessmentAnswerDO> {
      */
     int countByUserIdAndAssessmentTimeId(@Param("userId") Long userId,
             @Param("assessmentTimeId") Long assessmentTimeId);
+
+    /**
+     * 按用户和考核场次主键批量统计已提交的作答数量。
+     *
+     * @param userId
+     *            用户主键，用于限定用户范围。
+     * @param assessmentTimeIds
+     *            考核场次主键列表。
+     * @return 每个考核场次的已完成答题数量结果列表。
+     */
+    List<AssessmentAnswerCountResult> countByUserIdAndAssessmentTimeIds(@Param("userId") Long userId,
+            @Param("assessmentTimeIds") List<Long> assessmentTimeIds);
 
     /**
      * 统计用户对指定题目的作答数量。

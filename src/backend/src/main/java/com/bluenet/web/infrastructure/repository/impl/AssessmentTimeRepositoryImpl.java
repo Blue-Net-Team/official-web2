@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -33,6 +34,22 @@ public class AssessmentTimeRepositoryImpl implements AssessmentTimeRepository {
     public Optional<AssessmentTime> findById(Long id) {
         AssessmentTimeDO dataObject = assessmentTimeMapper.selectById(id);
         return Optional.ofNullable(converter.toEntity(dataObject));
+    }
+
+    /**
+     * 按主键列表批量查询考核场次记录。
+     *
+     * @param ids
+     *            业务记录主键列表。
+     * @return 查询到的考核场次实体列表；不存在的主键被忽略。
+     */
+    @Override
+    public List<AssessmentTime> findAllById(List<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return Collections.emptyList();
+        }
+        List<AssessmentTimeDO> dataObjects = assessmentTimeMapper.selectByIds(ids);
+        return converter.toEntityList(dataObjects);
     }
 
     @Override

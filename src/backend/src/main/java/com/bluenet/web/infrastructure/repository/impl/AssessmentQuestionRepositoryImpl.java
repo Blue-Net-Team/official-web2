@@ -1,6 +1,7 @@
 package com.bluenet.web.infrastructure.repository.impl;
 
 import com.bluenet.web.infrastructure.repository.converter.AssessmentQuestionRepositoryConverter;
+import com.bluenet.web.infrastructure.repository.dataobject.AssessmentQuestionCountResult;
 import com.bluenet.web.infrastructure.repository.dataobject.AssessmentQuestionDO;
 
 import com.bluenet.web.domain.exception.GlobalException;
@@ -12,8 +13,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Repository
 @Slf4j
@@ -110,6 +114,26 @@ public class AssessmentQuestionRepositoryImpl implements AssessmentQuestionRepos
     @Override
     public int countByAssessmentTimeId(Long assessmentTimeId) {
         return Math.toIntExact(assessmentQuestionMapper.countByAssessmentTimeId(assessmentTimeId));
+    }
+
+    /**
+     * 按考核场次主键批量统计题目数量。
+     *
+     * @param assessmentTimeIds
+     *            考核场次主键列表。
+     * @return 考核场次主键到题目数量的映射；缺失主键视为 0。
+     */
+    @Override
+    public Map<Long, Integer> countByAssessmentTimeIds(List<Long> assessmentTimeIds) {
+        if (assessmentTimeIds == null || assessmentTimeIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        return assessmentQuestionMapper.countByAssessmentTimeIds(assessmentTimeIds)
+                .stream()
+                .collect(
+                        Collectors.toMap(
+                                AssessmentQuestionCountResult::assessmentTimeId,
+                                result -> Math.toIntExact(result.count())));
     }
 
     /**

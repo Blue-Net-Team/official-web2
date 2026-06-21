@@ -10,6 +10,7 @@ import com.bluenet.web.domain.model.entity.AssessmentTime;
 import com.bluenet.web.domain.model.enumerate.Direction;
 import com.bluenet.web.domain.model.vo.UserVO;
 import com.bluenet.web.domain.repository.AssessmentAnswerRepository;
+import com.bluenet.web.domain.repository.AssessmentDecisionRepository;
 import com.bluenet.web.domain.repository.AssessmentQuestionRepository;
 import com.bluenet.web.domain.repository.AssessmentTimeRepository;
 import com.bluenet.web.domain.service.AssessmentDecisionDomainService;
@@ -23,7 +24,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -48,6 +51,9 @@ class AssessmentTimeAppServiceImplTest {
 
     @Mock
     private AssessmentAnswerRepository assessmentAnswerRepository;
+
+    @Mock
+    private AssessmentDecisionRepository assessmentDecisionRepository;
 
     @Mock
     private AssessmentDecisionDomainService assessmentDecisionDomainService;
@@ -458,7 +464,8 @@ class AssessmentTimeAppServiceImplTest {
             when(userDomainService.getUser(TEST_USER_ID))
                     .thenReturn(Optional.of(createUser("CANDIDATE", Direction.COMPUTER_VISION, "2024123456")));
 
-            List<AssessmentTime> entityList = List.of(createTestEntity());
+            AssessmentTime entity = createTestEntity();
+            List<AssessmentTime> entityList = List.of(entity);
             Page<AssessmentTime> entityPage = new PageImpl<>(entityList);
             when(
                     assessmentTimeRepository.findByUserParticipation(
@@ -468,9 +475,16 @@ class AssessmentTimeAppServiceImplTest {
                             any()))
                                     .thenReturn(entityPage);
 
-            when(assessmentQuestionRepository.countByAssessmentTimeId(TEST_ID)).thenReturn(8);
-            when(assessmentAnswerRepository.countByUserIdAndAssessmentTimeId(TEST_USER_ID, TEST_ID)).thenReturn(5);
-            when(assessmentDecisionDomainService.isEliminatedFromPriorEpoch(eq(TEST_USER_ID), any())).thenReturn(false);
+            when(assessmentQuestionRepository.countByAssessmentTimeIds(List.of(TEST_ID)))
+                    .thenReturn(Map.of(TEST_ID, 8));
+            when(assessmentAnswerRepository.countByUserIdAndAssessmentTimeIds(TEST_USER_ID, List.of(TEST_ID)))
+                    .thenReturn(Map.of(TEST_ID, 5));
+            when(assessmentDecisionRepository.findEliminatedDecisionsByUserId(TEST_USER_ID))
+                    .thenReturn(Collections.emptyList());
+            when(assessmentTimeRepository.findAllById(Collections.emptyList()))
+                    .thenReturn(Collections.emptyList());
+            when(assessmentDecisionDomainService.isEliminatedFromPriorEpoch(eq(entity), anyList(), anyMap()))
+                    .thenReturn(false);
 
             Page<AssessmentTimeResult> result = assessmentTimeAppService.listAssessmentTimesForUser(TEST_USER_ID, 0, 5);
 
@@ -484,6 +498,8 @@ class AssessmentTimeAppServiceImplTest {
                     eq(Direction.COMPUTER_VISION),
                     eq(2024),
                     any());
+            verify(assessmentQuestionRepository).countByAssessmentTimeIds(List.of(TEST_ID));
+            verify(assessmentAnswerRepository).countByUserIdAndAssessmentTimeIds(TEST_USER_ID, List.of(TEST_ID));
         }
 
         @Test
@@ -492,7 +508,8 @@ class AssessmentTimeAppServiceImplTest {
             when(userDomainService.getUser(TEST_USER_ID))
                     .thenReturn(Optional.of(createUser("CANDIDATE", Direction.COMPUTER_VISION, "2024123456")));
 
-            List<AssessmentTime> entityList = List.of(createTestEntity());
+            AssessmentTime entity = createTestEntity();
+            List<AssessmentTime> entityList = List.of(entity);
             Page<AssessmentTime> entityPage = new PageImpl<>(entityList);
             when(
                     assessmentTimeRepository.findByUserParticipation(
@@ -502,9 +519,16 @@ class AssessmentTimeAppServiceImplTest {
                             any()))
                                     .thenReturn(entityPage);
 
-            when(assessmentQuestionRepository.countByAssessmentTimeId(TEST_ID)).thenReturn(8);
-            when(assessmentAnswerRepository.countByUserIdAndAssessmentTimeId(TEST_USER_ID, TEST_ID)).thenReturn(5);
-            when(assessmentDecisionDomainService.isEliminatedFromPriorEpoch(eq(TEST_USER_ID), any())).thenReturn(true);
+            when(assessmentQuestionRepository.countByAssessmentTimeIds(List.of(TEST_ID)))
+                    .thenReturn(Map.of(TEST_ID, 8));
+            when(assessmentAnswerRepository.countByUserIdAndAssessmentTimeIds(TEST_USER_ID, List.of(TEST_ID)))
+                    .thenReturn(Map.of(TEST_ID, 5));
+            when(assessmentDecisionRepository.findEliminatedDecisionsByUserId(TEST_USER_ID))
+                    .thenReturn(Collections.emptyList());
+            when(assessmentTimeRepository.findAllById(Collections.emptyList()))
+                    .thenReturn(Collections.emptyList());
+            when(assessmentDecisionDomainService.isEliminatedFromPriorEpoch(eq(entity), anyList(), anyMap()))
+                    .thenReturn(true);
 
             Page<AssessmentTimeResult> result = assessmentTimeAppService.listAssessmentTimesForUser(TEST_USER_ID, 0, 5);
 

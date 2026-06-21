@@ -2,9 +2,12 @@ package com.bluenet.web.infrastructure.repository.mapper;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.bluenet.web.infrastructure.repository.dataobject.AssessmentQuestionCountResult;
 import com.bluenet.web.infrastructure.repository.dataobject.AssessmentQuestionDO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
+
+import java.util.List;
 
 @Mapper
 public interface AssessmentQuestionMapper extends BaseMapper<AssessmentQuestionDO> {
@@ -16,6 +19,16 @@ public interface AssessmentQuestionMapper extends BaseMapper<AssessmentQuestionD
      * @return 满足条件的记录数量。
      */
     long countByAssessmentTimeId(@Param("assessmentTimeId") Long assessmentTimeId);
+
+    /**
+     * 按考核场次主键批量统计题目数量。
+     *
+     * @param assessmentTimeIds
+     *            考核场次主键列表。
+     * @return 每个考核场次的题目数量结果列表。
+     */
+    List<AssessmentQuestionCountResult> countByAssessmentTimeIds(
+            @Param("assessmentTimeIds") List<Long> assessmentTimeIds);
 
     /**
      * 查询考核题目 数据行。

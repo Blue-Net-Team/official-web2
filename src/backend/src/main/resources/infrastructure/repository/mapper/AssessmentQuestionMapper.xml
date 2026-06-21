@@ -18,6 +18,16 @@
         WHERE assessment_time_id = #{assessmentTimeId}
     </select>
 
+    <select id="countByAssessmentTimeIds" resultType="com.bluenet.web.infrastructure.repository.dataobject.AssessmentQuestionCountResult">
+        SELECT assessment_time_id AS assessmentTimeId, COUNT(*) AS count
+        FROM tb_assessment_question
+        WHERE assessment_time_id IN
+        <foreach collection="assessmentTimeIds" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        GROUP BY assessment_time_id
+    </select>
+
     <select id="selectPageByAssessmentTimeId" resultMap="BaseResultMap">
         SELECT *
         FROM tb_assessment_question

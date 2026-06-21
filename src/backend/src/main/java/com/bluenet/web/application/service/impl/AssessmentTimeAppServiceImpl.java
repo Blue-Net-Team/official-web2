@@ -12,8 +12,10 @@ import com.bluenet.web.domain.model.entity.AssessmentTime;
 import com.bluenet.web.domain.model.enumerate.Direction;
 import com.bluenet.web.domain.model.enumerate.RoleType;
 import com.bluenet.web.domain.model.policy.RoleHierarchy;
+import com.bluenet.web.domain.model.vo.AssessmentDecisionVO;
 import com.bluenet.web.domain.model.vo.UserVO;
 import com.bluenet.web.domain.repository.AssessmentAnswerRepository;
+import com.bluenet.web.domain.repository.AssessmentDecisionRepository;
 import com.bluenet.web.domain.repository.AssessmentQuestionRepository;
 import com.bluenet.web.domain.repository.AssessmentTimeRepository;
 import com.bluenet.web.domain.service.AssessmentDecisionDomainService;
@@ -26,6 +28,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * 考核时间应用服务实现。
@@ -39,6 +44,7 @@ public class AssessmentTimeAppServiceImpl implements AssessmentTimeAppService {
     private final AssessmentTimeRepository assessmentTimeRepository;
     private final AssessmentQuestionRepository assessmentQuestionRepository;
     private final AssessmentAnswerRepository assessmentAnswerRepository;
+    private final AssessmentDecisionRepository assessmentDecisionRepository;
     private final AssessmentDecisionDomainService assessmentDecisionDomainService;
     private final UserDomainService userDomainService;
 
@@ -249,14 +255,34 @@ public class AssessmentTimeAppServiceImpl implements AssessmentTimeAppService {
         RoleType roleType = RoleType.fromName(currentUser.getRoleName());
         boolean isCandidate = roleType == RoleType.CANDIDATE;
 
+        List<Long> assessmentTimeIds = entityPage.getContent()
+                .stream()
+                .map(AssessmentTime::getId)
+                .toList();
+
+        Map<Long, Integer> totalQuestionCounts = assessmentQuestionRepository
+                .countByAssessmentTimeIds(assessmentTimeIds);
+        Map<Long, Integer> completedQuestionCounts = assessmentAnswerRepository
+                .countByUserIdAndAssessmentTimeIds(currentUser.getId(), assessmentTimeIds);
+
+        List<AssessmentDecisionVO> eliminatedDecisions = isCandidate
+                ? assessmentDecisionRepository.findEliminatedDecisionsByUserId(currentUser.getId())
+                : List.of();
+        List<Long> decisionTimeIds = eliminatedDecisions.stream()
+                .map(AssessmentDecisionVO::getAssessmentTimeId)
+                .distinct()
+                .toList();
+        Map<Long, AssessmentTime> decisionTimeMap = assessmentTimeRepository.findAllById(decisionTimeIds)
+                .stream()
+                .collect(Collectors.toMap(AssessmentTime::getId, time -> time));
+
         return entityPage.map(entity -> {
-            int totalQuestions = assessmentQuestionRepository.countByAssessmentTimeId(entity.getId());
-            int completedQuestions = assessmentAnswerRepository
-                    .countByUserIdAndAssessmentTimeId(currentUser.getId(), entity.getId());
+            int totalQuestions = totalQuestionCounts.getOrDefault(entity.getId(), 0);
+            int completedQuestions = completedQuestionCounts.getOrDefault(entity.getId(), 0);
             boolean eliminated = false;
             if (isCandidate) {
                 eliminated = assessmentDecisionDomainService
-                        .isEliminatedFromPriorEpoch(currentUser.getId(), entity);
+                        .isEliminatedFromPriorEpoch(entity, eliminatedDecisions, decisionTimeMap);
             }
             return toResult(entity, totalQuestions, completedQuestions, eliminated);
         });

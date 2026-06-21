@@ -10,7 +10,9 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -53,6 +55,53 @@ class AssessmentQuestionRepositoryImplTest {
                 null,
                 null,
                 BigDecimal.TEN);
+    }
+
+    @Nested
+    @DisplayName("countByAssessmentTimeIds 方法测试")
+    class CountByAssessmentTimeIdsTests {
+
+        @Test
+        @DisplayName("空列表：应返回空映射")
+        void countByAssessmentTimeIds_emptyList_shouldReturnEmptyMap() {
+            Map<Long, Integer> result = assessmentQuestionRepository.countByAssessmentTimeIds(Collections.emptyList());
+
+            assertTrue(result.isEmpty());
+            verify(assessmentQuestionMapper, never()).countByAssessmentTimeIds(anyList());
+        }
+
+        @Test
+        @DisplayName("部分命中：应返回对应计数")
+        void countByAssessmentTimeIds_partialHits_shouldReturnCounts() {
+            when(assessmentQuestionMapper.countByAssessmentTimeIds(List.of(1L, 2L, 3L)))
+                    .thenReturn(
+                            List.of(
+                                    new AssessmentQuestionCountResult(1L, 5L),
+                                    new AssessmentQuestionCountResult(3L, 8L)));
+
+            Map<Long, Integer> result = assessmentQuestionRepository.countByAssessmentTimeIds(List.of(1L, 2L, 3L));
+
+            assertEquals(2, result.size());
+            assertEquals(5, result.get(1L));
+            assertEquals(8, result.get(3L));
+            assertNull(result.get(2L));
+        }
+
+        @Test
+        @DisplayName("全部命中：应返回所有计数")
+        void countByAssessmentTimeIds_allHits_shouldReturnAllCounts() {
+            when(assessmentQuestionMapper.countByAssessmentTimeIds(List.of(1L, 2L)))
+                    .thenReturn(
+                            List.of(
+                                    new AssessmentQuestionCountResult(1L, 5L),
+                                    new AssessmentQuestionCountResult(2L, 10L)));
+
+            Map<Long, Integer> result = assessmentQuestionRepository.countByAssessmentTimeIds(List.of(1L, 2L));
+
+            assertEquals(2, result.size());
+            assertEquals(5, result.get(1L));
+            assertEquals(10, result.get(2L));
+        }
     }
 
     @Nested

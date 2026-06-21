@@ -4,14 +4,18 @@ import com.bluenet.web.domain.exception.GlobalException;
 import com.bluenet.web.domain.model.entity.AssessmentAnswer;
 import com.bluenet.web.domain.repository.AssessmentAnswerRepository;
 import com.bluenet.web.infrastructure.repository.converter.AssessmentAnswerRepositoryConverter;
+import com.bluenet.web.infrastructure.repository.dataobject.AssessmentAnswerCountResult;
 import com.bluenet.web.infrastructure.repository.dataobject.AssessmentAnswerDO;
 import com.bluenet.web.infrastructure.repository.mapper.AssessmentAnswerMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Repository
 @Slf4j
@@ -57,6 +61,28 @@ public class AssessmentAnswerRepositoryImpl implements AssessmentAnswerRepositor
     @Override
     public int countByUserIdAndAssessmentTimeId(Long userId, Long assessmentTimeId) {
         return assessmentAnswerMapper.countByUserIdAndAssessmentTimeId(userId, assessmentTimeId);
+    }
+
+    /**
+     * 按用户和考核场次主键批量统计已提交的作答数量。
+     *
+     * @param userId
+     *            用户主键。
+     * @param assessmentTimeIds
+     *            考核场次主键列表。
+     * @return 考核场次主键到已完成答题数量的映射；缺失主键视为 0。
+     */
+    @Override
+    public Map<Long, Integer> countByUserIdAndAssessmentTimeIds(Long userId, List<Long> assessmentTimeIds) {
+        if (userId == null || assessmentTimeIds == null || assessmentTimeIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        return assessmentAnswerMapper.countByUserIdAndAssessmentTimeIds(userId, assessmentTimeIds)
+                .stream()
+                .collect(
+                        Collectors.toMap(
+                                AssessmentAnswerCountResult::assessmentTimeId,
+                                result -> Math.toIntExact(result.count())));
     }
 
     @Override

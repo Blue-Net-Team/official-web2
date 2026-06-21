@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @Slf4j
@@ -79,9 +80,24 @@ public class AssessmentDecisionDomainServiceImpl implements AssessmentDecisionDo
         if (eliminatedDecisions.isEmpty()) {
             return false;
         }
+        List<Long> decisionTimeIds = eliminatedDecisions.stream()
+                .map(AssessmentDecisionVO::getAssessmentTimeId)
+                .distinct()
+                .toList();
+        Map<Long, AssessmentTime> decisionTimeMap = assessmentTimeRepository.findAllById(decisionTimeIds)
+                .stream()
+                .collect(java.util.stream.Collectors.toMap(AssessmentTime::getId, time -> time));
+        return isEliminatedFromPriorEpoch(targetTime, eliminatedDecisions, decisionTimeMap);
+    }
+
+    @Override
+    public boolean isEliminatedFromPriorEpoch(AssessmentTime targetTime, List<AssessmentDecisionVO> eliminatedDecisions,
+            Map<Long, AssessmentTime> decisionTimeMap) {
+        if (eliminatedDecisions == null || eliminatedDecisions.isEmpty()) {
+            return false;
+        }
         for (AssessmentDecisionVO decision : eliminatedDecisions) {
-            AssessmentTime decisionTime = assessmentTimeRepository.findById(decision.getAssessmentTimeId())
-                    .orElse(null);
+            AssessmentTime decisionTime = decisionTimeMap.get(decision.getAssessmentTimeId());
             if (decisionTime == null) {
                 continue;
             }

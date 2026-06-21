@@ -5,6 +5,7 @@ import com.bluenet.web.domain.model.enumerate.Direction;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -22,6 +23,15 @@ public interface AssessmentTimeRepository {
      * @return 查询到的考核场次实体；不存在时为 Optional.empty()。
      */
     Optional<AssessmentTime> findById(Long id);
+
+    /**
+     * 按主键列表批量查询考核场次记录。
+     *
+     * @param ids
+     *            业务记录主键列表。
+     * @return 查询到的考核场次实体列表；不存在的主键被忽略。
+     */
+    List<AssessmentTime> findAllById(List<Long> ids);
 
     /**
      * 保存新的考核场次记录。
