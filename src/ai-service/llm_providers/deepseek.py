@@ -117,6 +117,7 @@ class DeepSeekLLM(LLMProvider):
             messages=openai_msgs,
             temperature=self._temperature,
             tools=tools,
+            parallel_tool_calls=False,
         )
         msg = resp.choices[0].message
 
@@ -175,6 +176,7 @@ class DeepSeekLLM(LLMProvider):
             temperature=self._temperature,
             tools=tools,
             stream=True,
+            parallel_tool_calls=False,
         ):
             delta = chunk.choices[0].delta
             finish_reason = chunk.choices[0].finish_reason

@@ -147,7 +147,9 @@ def agent_node(
                 "type": "function",
             }
             pending_tool_calls.append(tool_call)
-            if writer is not None:
+            # 为了实现 "reasoning → tool_call → reasoning → tool_call" 的流式结构，
+            # 每轮 LLM 调用只保留并执行第一个 tool_call，剩余调用在下一轮重新决策。
+            if len(pending_tool_calls) == 1 and writer is not None:
                 writer({
                     "type": "tool_call",
                     "tool_name": event.tool_name,
@@ -155,6 +157,13 @@ def agent_node(
                 })
         elif event.type == "done":
             break
+
+    if len(pending_tool_calls) > 1:
+        _log.warning(
+            f"LLM 一次返回 {len(pending_tool_calls)} 个 tool_calls，"
+            "仅保留第一个以支持顺序推理，其余将在下一轮重新决策"
+        )
+        pending_tool_calls = [pending_tool_calls[0]]
 
     assistant_msg: dict = {
         "role": "assistant",

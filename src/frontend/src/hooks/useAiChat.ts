@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useRef, useState } from 'react'
-import { ChatMessage } from '@/apis/schema/ai-chat.dto'
+import { ChatMessage, ToolCallItem } from '@/apis/schema/ai-chat.dto'
 import { streamChat } from '@/apis/services/ai-chat.service'
 
 function generateId(): string {
@@ -64,6 +64,7 @@ export function useAiChat(): UseAiChatReturn {
         content: '',
         reasoning: '',
         toolCalls: [],
+        blocks: [],
         isStreaming: true,
       }
 
@@ -93,20 +94,29 @@ export function useAiChat(): UseAiChatReturn {
             switch (chunk.type) {
               case 'reasoning':
                 updated.reasoning = (updated.reasoning ?? '') + (chunk.content ?? '')
+                updated.blocks = appendOrUpdateReasoning(updated.blocks, chunk.content ?? '')
                 break
               case 'content':
                 updated.reasoningDone = true
                 updated.content = (updated.content ?? '') + (chunk.content ?? '')
+                updated.blocks = markLastReasoningDone(updated.blocks)
+                updated.blocks = appendOrUpdateContent(updated.blocks, chunk.content ?? '')
                 break
               case 'tool_call': {
                 updated.reasoningDone = true
                 const toolCalls = updated.toolCalls ? [...updated.toolCalls] : []
-                toolCalls.push({
+                const newToolCall: ToolCallItem = {
                   id: generateId(),
                   name: chunk.tool_name ?? 'unknown',
                   args: chunk.tool_args,
-                })
+                }
+                toolCalls.push(newToolCall)
                 updated.toolCalls = toolCalls
+                updated.blocks = markLastReasoningDone(updated.blocks)
+                updated.blocks = [
+                  ...(updated.blocks ?? []),
+                  { type: 'tool_call', toolCall: newToolCall },
+                ]
                 break
               }
               case 'tool_result': {
@@ -122,16 +132,23 @@ export function useAiChat(): UseAiChatReturn {
                   }
                 }
                 updated.toolCalls = toolCalls
+                updated.blocks = updateToolResult(
+                  updated.blocks,
+                  chunk.tool_name ?? 'unknown',
+                  chunk.content ?? ''
+                )
                 break
               }
               case 'done':
                 updated.reasoningDone = true
                 updated.isStreaming = false
+                updated.blocks = markAllReasoningDone(updated.blocks)
                 break
               case 'error':
                 updated.reasoningDone = true
                 updated.error = chunk.content ?? '流式响应出错'
                 updated.isStreaming = false
+                updated.blocks = markAllReasoningDone(updated.blocks)
                 break
               default:
                 break
@@ -167,4 +184,62 @@ export function useAiChat(): UseAiChatReturn {
     reset,
     cancel,
   }
+}
+
+function appendOrUpdateReasoning(
+  blocks: ChatMessage['blocks'],
+  delta: string
+): ChatMessage['blocks'] {
+  if (!blocks || blocks.length === 0) {
+    return [{ type: 'reasoning', content: delta, done: false }]
+  }
+  const last = blocks[blocks.length - 1]
+  if (last.type === 'reasoning') {
+    return [...blocks.slice(0, -1), { ...last, content: last.content + delta, done: false }]
+  }
+  return [...blocks, { type: 'reasoning', content: delta, done: false }]
+}
+
+function markLastReasoningDone(blocks: ChatMessage['blocks']): ChatMessage['blocks'] {
+  if (!blocks || blocks.length === 0) return blocks
+  const last = blocks[blocks.length - 1]
+  if (last.type === 'reasoning') {
+    return [...blocks.slice(0, -1), { ...last, done: true }]
+  }
+  return blocks
+}
+
+function markAllReasoningDone(blocks: ChatMessage['blocks']): ChatMessage['blocks'] {
+  if (!blocks) return blocks
+  return blocks.map((b) => (b.type === 'reasoning' ? { ...b, done: true } : b))
+}
+
+function appendOrUpdateContent(
+  blocks: ChatMessage['blocks'],
+  delta: string
+): ChatMessage['blocks'] {
+  if (!blocks || blocks.length === 0) {
+    return [{ type: 'content', content: delta }]
+  }
+  const last = blocks[blocks.length - 1]
+  if (last.type === 'content') {
+    return [...blocks.slice(0, -1), { ...last, content: last.content + delta }]
+  }
+  return [...blocks, { type: 'content', content: delta }]
+}
+
+function updateToolResult(
+  blocks: ChatMessage['blocks'],
+  toolName: string,
+  result: string
+): ChatMessage['blocks'] {
+  if (!blocks) return blocks
+  for (let i = blocks.length - 1; i >= 0; i--) {
+    const b = blocks[i]
+    if (b.type === 'tool_call' && b.toolCall.name === toolName && b.toolCall.result === undefined) {
+      const updated = { ...b, toolCall: { ...b.toolCall, result } }
+      return [...blocks.slice(0, i), updated, ...blocks.slice(i + 1)]
+    }
+  }
+  return blocks
 }

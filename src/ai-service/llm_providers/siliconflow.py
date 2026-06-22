@@ -118,7 +118,7 @@ class SiliconFlowLLM(LLMProvider):
     def invoke_with_tools(self, messages: list[dict], tools: list[dict]) -> LLMResponse:
         logger.info(f"发送 LLM 请求(含工具), messages={len(messages)}, tools={len(tools)}, model={self._llm.model_name}")
         lc_messages = self._build_messages(messages)
-        llm_with_tools = self._llm.bind_tools(tools)
+        llm_with_tools = self._llm.bind_tools(tools, parallel_tool_calls=False)
         result = llm_with_tools.invoke(lc_messages)
 
         tool_calls = []
