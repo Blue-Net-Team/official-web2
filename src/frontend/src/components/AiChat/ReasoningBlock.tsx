@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Button } from 'antd'
 import { CaretRightOutlined, LoadingOutlined } from '@ant-design/icons'
 
@@ -11,6 +11,14 @@ interface ReasoningBlockProps {
 
 export default function ReasoningBlock({ reasoning = '', done = false }: ReasoningBlockProps) {
   const [expanded, setExpanded] = useState(!done)
+  const prevDoneRef = useRef(done)
+
+  useEffect(() => {
+    if (done && !prevDoneRef.current) {
+      setExpanded(false)
+    }
+    prevDoneRef.current = done
+  }, [done])
 
   if (!reasoning.trim()) {
     return null
