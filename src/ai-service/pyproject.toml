@@ -24,6 +24,7 @@ dependencies = [
     "fastapi>=0.115.0",
     "uvicorn[standard]>=0.32.0",
     "aio-pika>=9.5.0",
+    "langgraph>=1.1.8",
 ]
 
 [project.scripts]
