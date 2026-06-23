@@ -27,9 +27,7 @@ interface FormValues {
 
 export default function SoftwareResourceManagementPage() {
   const { message: messageApi } = App.useApp()
-  const { userInfo } = useAuth()
-  const roleLevel = getRoleLevel(userInfo?.roleName || '')
-  const isAdmin = roleLevel >= 2
+  const { isAdmin } = useAuth()
   const [form] = Form.useForm<FormValues>()
 
   const [resources, setResources] = useState<SoftwareResourceDTO[]>([])
