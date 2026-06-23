@@ -1,25 +1,30 @@
 package com.bluenet.web.api.controller.v1.wps;
 
 import com.bluenet.web.api.dto.ResponseMessage;
-import com.bluenet.web.api.dto.wps.WpsCallbackRequestDTO;
+import com.bluenet.web.api.dto.wps.WpsBindCallbackRequest;
+import com.bluenet.web.api.dto.wps.WpsCallbackRequest;
+import com.bluenet.web.api.dto.wps.WpsCreateAnswerCallbackRequest;
+import com.bluenet.web.api.dto.wps.WpsProbeCallbackRequest;
 import com.bluenet.web.api.dto.wps.WpsResponseMessage;
 import com.bluenet.web.application.service.WpsFormAppService;
-import com.bluenet.web.domain.exception.DataConflict;
 import com.bluenet.web.domain.exception.Unauthorized;
 import com.bluenet.web.domain.model.vo.wps.WpsFormField;
 import com.bluenet.web.infrastructure.config.properties.WpsProperties;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
 import com.bluenet.web.infrastructure.security.annotation.RateLimit;
 import com.bluenet.web.infrastructure.security.annotation.RequiresPermission;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.util.StringUtils;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 import java.util.Map;
@@ -28,8 +33,7 @@ import java.util.stream.Collectors;
 /**
  * WPS 智能表单回调控制器。
  * <p>
- * 接收 WPS 表单的数据推送事件（bind / create_answer），
- * 将表单提交数据解析为系统用户并自动创建账号。
+ * 接收 WPS 表单的数据推送事件（bind / create_answer）， 将表单提交数据解析为系统用户并自动创建账号。
  * </p>
  */
 @Tag(name = "WPS表单回调", description = "WPS智能表单数据推送回调接口，公开访问")
@@ -43,7 +47,6 @@ public class WpsCallbackController {
 
     private final WpsFormAppService wpsFormAppService;
     private final WpsProperties wpsProperties;
-    private final ObjectMapper objectMapper;
 
     @Operation(summary = "WPS表单回调", description = "接收WPS表单数据推送事件（bind/create_answer），bind返回验证码，create_answer自动创建用户")
     @RequiresPermission(value = "wps:callback", name = "WPS表单回调", access = AccessLevel.PUBLIC, audit = true)
@@ -51,87 +54,68 @@ public class WpsCallbackController {
     @PostMapping(value = "/callback", produces = MediaType.APPLICATION_JSON_VALUE)
     public Object handleCallback(
             @RequestParam(value = "bind_code", required = false) String bindCodeFromQuery,
-            @RequestBody String rawBody,
+            @RequestBody WpsCallbackRequest request,
             HttpServletRequest httpRequest) {
 
         // 1. bind_code 来自查询参数（?bind_code=xxx）
-        if (bindCodeFromQuery != null && !bindCodeFromQuery.isBlank()) {
+        if (StringUtils.hasText(bindCodeFromQuery)) {
             log.info("WPS 表单绑定验证(查询参数): bind_code={}", bindCodeFromQuery);
             return new WpsResponseMessage(bindCodeFromQuery);
         }
 
-        JsonNode bodyNode;
-        try {
-            bodyNode = objectMapper.readTree(rawBody);
-        } catch (Exception e) {
-            log.warn("WPS 回调请求体 JSON 解析失败");
-            return ResponseMessage.error(400, "无效的请求体 JSON");
-        }
-
-        // 2. bind_code 来自请求体（WPS 绑定验证会 POST: {"bind_code":"..."}）
-        if (bodyNode.has("bind_code")) {
-            String bindCode = bodyNode.get("bind_code").asText();
-            log.info("WPS 表单绑定验证(请求体): bind_code={}", bindCode);
-            return new WpsResponseMessage(bindCode);
+        // 2. bind_code 来自请求体（WPS 绑定验证会 POST: {"bind_code":"..."}），无 event 字段
+        if (request instanceof WpsProbeCallbackRequest probe && StringUtils.hasText(probe.getBindCode())) {
+            log.info("WPS 表单绑定验证(请求体): bind_code={}", probe.getBindCode());
+            return new WpsResponseMessage(probe.getBindCode());
         }
 
         // 3. 验证 API Secret（如果已配置）
+        validateSecret(httpRequest);
+
+        // 4. 按事件类型分发
+        return switch (request) {
+            case WpsBindCallbackRequest bind -> handleBind(bind);
+            case WpsCreateAnswerCallbackRequest create -> {
+                handleCreateAnswer(create);
+                yield ResponseMessage.success();
+            }
+            case null, default -> {
+                log.warn("WPS 回调收到无效请求（无 event 字段，未配置 bind_code）");
+                yield ResponseMessage.error(400, "无效的 WPS 回调请求");
+            }
+        };
+    }
+
+    private void validateSecret(HttpServletRequest httpRequest) {
         String secret = wpsProperties.getWebhook().getSecret();
-        if (!secret.isBlank()) {
-            String providedSecret = httpRequest.getHeader(SECRET_HEADER);
-            if (!secret.equals(providedSecret)) {
-                log.warn("WPS 回调 Secret 验证失败");
-                throw new Unauthorized("WPS 回调 Secret 验证失败");
-            }
+        if (!StringUtils.hasText(secret)) {
+            return;
         }
-
-        // 4. 有 event 字段，按事件类型处理
-        if (bodyNode.has("event")) {
-            WpsCallbackRequestDTO request;
-            try {
-                request = objectMapper.treeToValue(bodyNode, WpsCallbackRequestDTO.class);
-            } catch (Exception e) {
-                log.warn("WPS 回调请求体转换失败", e);
-                return ResponseMessage.error(400, "无效的请求体格式");
-            }
-
-            log.info("收到 WPS 表单回调: event={}, rid={}, formTitle={}",
-                    request.getEvent(), request.getRid(), request.getFormTitle());
-
-            String event = request.getEvent();
-            if ("bind".equals(event)) {
-                String bindCode = !wpsProperties.getBindCode().isBlank()
-                        ? wpsProperties.getBindCode()
-                        : request.getRid();
-                log.info("WPS 表单绑定验证(event=bind): bind_code={}", bindCode);
-                return new WpsResponseMessage(bindCode);
-            } else if ("create_answer".equals(event)) {
-                handleCreateAnswer(request);
-                return ResponseMessage.success();
-            } else {
-                log.info("忽略 WPS 表单非目标事件类型: {}", event);
-                return ResponseMessage.success();
-            }
+        String providedSecret = httpRequest.getHeader(SECRET_HEADER);
+        if (!secret.equals(providedSecret)) {
+            log.warn("WPS 回调 Secret 验证失败");
+            throw new Unauthorized("WPS 回调 Secret 验证失败");
         }
+    }
 
-        // 5. 无 event 字段 → 返回配置的绑定验证码（WPS 探针测试）
-        String bindCode = wpsProperties.getBindCode();
-        if (!bindCode.isBlank()) {
-            log.info("WPS 表单绑定验证(默认配置): bind_code={}", bindCode);
-            return new WpsResponseMessage(bindCode);
-        }
-
-        // 6. 没有 event 也没有配置 → 恶意请求
-        log.warn("WPS 回调收到无效请求（无 event 字段，未配置 bind_code）");
-        return ResponseMessage.error(400, "无效的 WPS 回调请求");
+    private WpsResponseMessage handleBind(WpsBindCallbackRequest request) {
+        String bindCode = StringUtils.hasText(wpsProperties.getBindCode())
+                ? wpsProperties.getBindCode()
+                : request.getRid();
+        log.info("WPS 表单绑定验证(event=bind): bind_code={}", bindCode);
+        return new WpsResponseMessage(bindCode);
     }
 
     /**
      * 将 WPS 返回值转为字符串，处理字符串和数组两种类型（如多选返回 ["a","b"]）。
      */
     private static String valueToString(Object value) {
-        if (value == null) return null;
-        if (value instanceof String s) return s;
+        if (value == null) {
+            return null;
+        }
+        if (value instanceof String s) {
+            return s;
+        }
         if (value instanceof List<?> list) {
             return list.stream().map(Object::toString).collect(Collectors.joining(","));
         }
@@ -141,8 +125,8 @@ public class WpsCallbackController {
     /**
      * 处理 create_answer 事件：解析表单字段并创建用户。
      */
-    private void handleCreateAnswer(WpsCallbackRequestDTO request) {
-        List<WpsCallbackRequestDTO.AnswerContent> answers = request.getAnswerContents();
+    private void handleCreateAnswer(WpsCreateAnswerCallbackRequest request) {
+        List<WpsCreateAnswerCallbackRequest.AnswerContent> answers = request.getAnswerContents();
         if (answers == null || answers.isEmpty()) {
             log.warn("WPS 表单 create_answer 无回答内容，跳过");
             return;
@@ -150,10 +134,11 @@ public class WpsCallbackController {
 
         Map<String, String> fieldMap = answers.stream()
                 .filter(a -> a.getTitle() != null && a.getValue() != null)
-                .collect(Collectors.toMap(
-                        WpsCallbackRequestDTO.AnswerContent::getTitle,
-                        a -> valueToString(a.getValue()),
-                        (a, b) -> a));
+                .collect(
+                        Collectors.toMap(
+                                WpsCreateAnswerCallbackRequest.AnswerContent::getTitle,
+                                a -> valueToString(a.getValue()),
+                                (a, b) -> a));
 
         String studentId = fieldMap.get(WpsFormField.STUDENT_ID);
         String username = fieldMap.get(WpsFormField.USERNAME);
@@ -163,29 +148,31 @@ public class WpsCallbackController {
         String collegeText = fieldMap.get(WpsFormField.COLLEGE);
         String genderText = fieldMap.get(WpsFormField.GENDER);
 
-        if (studentId == null || studentId.isBlank()) {
+        if (!StringUtils.hasText(studentId)) {
             log.warn("WPS 表单缺少必填字段: {}", WpsFormField.STUDENT_ID);
             return;
         }
-        if (username == null || username.isBlank()) {
+        if (!StringUtils.hasText(username)) {
             log.warn("WPS 表单缺少必填字段: {}", WpsFormField.USERNAME);
             return;
         }
-        if (email == null || email.isBlank()) {
+        if (!StringUtils.hasText(email)) {
             log.warn("WPS 表单缺少必填字段: {}", WpsFormField.EMAIL);
             return;
         }
-        if (directionText == null || directionText.isBlank()) {
+        if (!StringUtils.hasText(directionText)) {
             log.warn("WPS 表单缺少必填字段: {}", WpsFormField.DIRECTION);
             return;
         }
 
-        try {
-            wpsFormAppService.createUserFromWpsForm(studentId, username, email, directionText,
-                    major, collegeText, genderText);
-            log.info("WPS 表单创建用户成功: studentId={}, username={}, email={}", studentId, username, email);
-        } catch (DataConflict e) {
-            log.warn("WPS 表单创建用户跳过（已有用户）: {}", e.getMessage());
-        }
+        wpsFormAppService.createUserFromWpsForm(
+                studentId,
+                username,
+                email,
+                directionText,
+                major,
+                collegeText,
+                genderText);
+        log.info("WPS 表单创建用户成功: studentId={}, username={}, email={}", studentId, username, email);
     }
 }

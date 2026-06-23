@@ -6,6 +6,7 @@ import com.bluenet.web.domain.model.enumerate.Direction;
 import com.bluenet.web.domain.model.enumerate.Gender;
 import com.bluenet.web.domain.model.enumerate.RoleType;
 import com.bluenet.web.domain.model.vo.RoleVO;
+import com.bluenet.web.domain.model.vo.UserVO;
 import com.bluenet.web.domain.repository.RoleRepository;
 import com.bluenet.web.domain.repository.UserRepository;
 import com.bluenet.web.domain.util.HashUtils;
@@ -17,11 +18,12 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Optional;
+
 /**
  * 用户入职领域服务。
  * <p>
- * 封装"创建新用户并发放初始凭据"的完整流程，
- * 供 WPS 表单和报名审批等多个入口复用。
+ * 封装"创建新用户并发放初始凭据"的完整流程， 供 WPS 表单和报名审批等多个入口复用。
  * </p>
  */
 @Slf4j
@@ -39,7 +41,8 @@ public class UserOnboardingService {
     /**
      * 创建用户，系统自动生成初始密码。
      *
-     * @param request 创建用户请求
+     * @param request
+     *            创建用户请求
      * @return 创建结果（含生成的初始密码）
      */
     @Transactional
@@ -51,20 +54,22 @@ public class UserOnboardingService {
     /**
      * 创建用户，使用外部提供的初始密码。
      *
-     * @param request         创建用户请求
-     * @param initialPassword 初始密码（明文）
+     * @param request
+     *            创建用户请求
+     * @param initialPassword
+     *            初始密码（明文）
      * @return 创建结果
      */
     @Transactional
     public UserOnboardingResult createUser(CreateUserRequest request, String initialPassword) {
         // 检查学号是否已存在
-        var existingStudent = userRepository.findByStudentId(request.studentId());
+        Optional<UserVO> existingStudent = userRepository.findByStudentId(request.studentId());
         if (existingStudent.isPresent()) {
             throw new DataConflict("学号 " + request.studentId() + " 对应的用户已存在");
         }
 
         // 检查邮箱是否已存在
-        var existingEmail = userRepository.findByEmail(request.email());
+        Optional<UserVO> existingEmail = userRepository.findByEmail(request.email());
         if (existingEmail.isPresent()) {
             throw new DataConflict("邮箱 " + request.email() + " 对应的用户已存在");
         }
@@ -94,8 +99,11 @@ public class UserOnboardingService {
                 null);
 
         userRepository.save(user);
-        log.info("用户创建成功: userId={}, studentId={}, referralCode={}",
-                user.getId(), user.getStudentId(), referralCode);
+        log.info(
+                "用户创建成功: userId={}, studentId={}, referralCode={}",
+                user.getId(),
+                user.getStudentId(),
+                referralCode);
 
         return new UserOnboardingResult(user.getId(), initialPassword, referralCode);
     }
