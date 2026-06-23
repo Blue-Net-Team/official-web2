@@ -23,7 +23,7 @@ x-shared-env: &shared-env
 x-api-service-env: &api-service-env
   <<: *shared-env
   MAIL_USERNAME: ${MAIL_USERNAME:-gdou_bluenet@163.com}
-  MAIL_PASSWORD: ${MAIL_PASSWORD:-WUxwy9YxyMW3DzA6}
+  MAIL_PASSWORD: ${MAIL_PASSWORD:-HMacFRMsgAY4E3ue}
   STORAGE_BUCKET: ${STORAGE_BUCKET:-bluenet}
   MINIO_PUBLIC_URL: ${MINIO_PUBLIC_URL:-http://host.docker.internal:7000}
   REDIS_HOST: ${REDIS_HOST:-redis}
@@ -40,6 +40,9 @@ x-api-service-env: &api-service-env
   CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-*}
 
   # GitHub OAuth 配置
+  # WPS 表单绑定验证码
+  WPS_BIND_CODE: ${WPS_BIND_CODE:-}
+
   GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID:-}
   GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET:-}
   GITHUB_OAUTH_CALLBACK_BASE_URL: ${GITHUB_OAUTH_CALLBACK_BASE_URL:-http://localhost:8080}
@@ -76,7 +79,7 @@ services:
     image: ${API_SERVICE_IMAGE:-bluenet-api-service:latest}
     build:
       context: ..
-      dockerfile: api-service.Dockerfile
+      dockerfile: docker/api-service.Dockerfile
     container_name: bluenet-api-service
     ports:
       - "8080:8080"
@@ -104,7 +107,7 @@ services:
     image: ${FRONTEND_IMAGE:-bluenet-frontend:latest}
     build:
       context: ..
-      dockerfile: frontend.Dockerfile
+      dockerfile: docker/frontend.Dockerfile
       args:
         BUILD_BACKEND_HOST: ${BACKEND_HOST:-api-service}
         BUILD_BACKEND_PORT: ${BACKEND_PORT:-8080}

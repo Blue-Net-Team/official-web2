@@ -69,8 +69,9 @@ public class WpsCallbackRequestDTO {
     /**
      * 答卷内容列表，每项对应一个表单题目
      */
+    @Valid
     @NotEmpty(message = "answerContents 不能为空", groups = {CreateAnswerValidation.class})
-    private List<AnswerContent> answerContents;
+    private List<@Valid AnswerContent> answerContents;
 
     /**
      * create_answer 事件专用验证组
@@ -99,6 +100,7 @@ public class WpsCallbackRequestDTO {
         /**
          * 题目标题（中文，如"学号"、"姓名"）
          */
+        @NotBlank(message = "题目 title 不能为空")
         private String title;
 
         /**
