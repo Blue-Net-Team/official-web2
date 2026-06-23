@@ -1,10 +1,10 @@
 package com.bluenet.web.api.controller.v1.wps;
 
 import com.bluenet.web.api.dto.ResponseMessage;
-import com.bluenet.web.api.dto.wps.WpsBindCallbackRequest;
-import com.bluenet.web.api.dto.wps.WpsCallbackRequest;
-import com.bluenet.web.api.dto.wps.WpsCreateAnswerCallbackRequest;
-import com.bluenet.web.api.dto.wps.WpsProbeCallbackRequest;
+import com.bluenet.web.api.dto.wps.WpsBindCallbackRequestDTO;
+import com.bluenet.web.api.dto.wps.WpsCallbackRequestDTO;
+import com.bluenet.web.api.dto.wps.WpsCreateAnswerCallbackRequestDTO;
+import com.bluenet.web.api.dto.wps.WpsProbeCallbackRequestDTO;
 import com.bluenet.web.api.dto.wps.WpsResponseMessage;
 import com.bluenet.web.application.service.WpsFormAppService;
 import com.bluenet.web.domain.exception.Unauthorized;
@@ -54,7 +54,7 @@ public class WpsCallbackController {
     @PostMapping(value = "/callback", produces = MediaType.APPLICATION_JSON_VALUE)
     public Object handleCallback(
             @RequestParam(value = "bind_code", required = false) String bindCodeFromQuery,
-            @RequestBody WpsCallbackRequest request,
+            @RequestBody WpsCallbackRequestDTO request,
             HttpServletRequest httpRequest) {
 
         // 1. bind_code 来自查询参数（?bind_code=xxx）
@@ -64,7 +64,7 @@ public class WpsCallbackController {
         }
 
         // 2. bind_code 来自请求体（WPS 绑定验证会 POST: {"bind_code":"..."}），无 event 字段
-        if (request instanceof WpsProbeCallbackRequest probe && StringUtils.hasText(probe.getBindCode())) {
+        if (request instanceof WpsProbeCallbackRequestDTO probe && StringUtils.hasText(probe.getBindCode())) {
             log.info("WPS 表单绑定验证(请求体): bind_code={}", probe.getBindCode());
             return new WpsResponseMessage(probe.getBindCode());
         }
@@ -74,8 +74,8 @@ public class WpsCallbackController {
 
         // 4. 按事件类型分发
         return switch (request) {
-            case WpsBindCallbackRequest bind -> handleBind(bind);
-            case WpsCreateAnswerCallbackRequest create -> {
+            case WpsBindCallbackRequestDTO bind -> handleBind(bind);
+            case WpsCreateAnswerCallbackRequestDTO create -> {
                 handleCreateAnswer(create);
                 yield ResponseMessage.success();
             }
@@ -98,7 +98,7 @@ public class WpsCallbackController {
         }
     }
 
-    private WpsResponseMessage handleBind(WpsBindCallbackRequest request) {
+    private WpsResponseMessage handleBind(WpsBindCallbackRequestDTO request) {
         String bindCode = StringUtils.hasText(wpsProperties.getBindCode())
                 ? wpsProperties.getBindCode()
                 : request.getRid();
@@ -125,8 +125,8 @@ public class WpsCallbackController {
     /**
      * 处理 create_answer 事件：解析表单字段并创建用户。
      */
-    private void handleCreateAnswer(WpsCreateAnswerCallbackRequest request) {
-        List<WpsCreateAnswerCallbackRequest.AnswerContent> answers = request.getAnswerContents();
+    private void handleCreateAnswer(WpsCreateAnswerCallbackRequestDTO request) {
+        List<WpsCreateAnswerCallbackRequestDTO.AnswerContent> answers = request.getAnswerContents();
         if (answers == null || answers.isEmpty()) {
             log.warn("WPS 表单 create_answer 无回答内容，跳过");
             return;
@@ -136,7 +136,7 @@ public class WpsCallbackController {
                 .filter(a -> a.getTitle() != null && a.getValue() != null)
                 .collect(
                         Collectors.toMap(
-                                WpsCreateAnswerCallbackRequest.AnswerContent::getTitle,
+                                WpsCreateAnswerCallbackRequestDTO.AnswerContent::getTitle,
                                 a -> valueToString(a.getValue()),
                                 (a, b) -> a));
 

@@ -12,7 +12,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class WpsBindCallbackRequest extends WpsCallbackRequest {
+public class WpsBindCallbackRequestDTO extends WpsCallbackRequestDTO {
 
     private static final String EVENT = "bind";
 

@@ -13,15 +13,15 @@ import lombok.Setter;
  * 字段自动反序列化为对应的子类，避免 Controller 手动分发。
  * </p>
  */
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.EXISTING_PROPERTY, property = "event", visible = true, defaultImpl = WpsProbeCallbackRequest.class)
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.EXISTING_PROPERTY, property = "event", visible = true, defaultImpl = WpsProbeCallbackRequestDTO.class)
 @JsonSubTypes({
-        @JsonSubTypes.Type(value = WpsBindCallbackRequest.class, name = "bind"),
-        @JsonSubTypes.Type(value = WpsCreateAnswerCallbackRequest.class, name = "create_answer")
+        @JsonSubTypes.Type(value = WpsBindCallbackRequestDTO.class, name = "bind"),
+        @JsonSubTypes.Type(value = WpsCreateAnswerCallbackRequestDTO.class, name = "create_answer")
 })
 @Getter
 @Setter
 @NoArgsConstructor
-public abstract class WpsCallbackRequest {
+public abstract class WpsCallbackRequestDTO {
 
     /**
      * 答卷 ID

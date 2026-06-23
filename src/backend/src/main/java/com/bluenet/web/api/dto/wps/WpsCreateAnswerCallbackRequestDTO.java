@@ -19,7 +19,7 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class WpsCreateAnswerCallbackRequest extends WpsCallbackRequest {
+public class WpsCreateAnswerCallbackRequestDTO extends WpsCallbackRequestDTO {
 
     private static final String EVENT = "create_answer";
 
