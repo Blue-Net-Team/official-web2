@@ -13,6 +13,18 @@ export interface AiStreamChunk {
   tool_args?: Record<string, unknown>
 }
 
+export interface ToolCallItem {
+  id: string
+  name: string
+  args?: Record<string, unknown>
+  result?: string
+}
+
+export type ChatBlock =
+  | { type: 'reasoning'; content: string; done?: boolean }
+  | { type: 'tool_call'; toolCall: ToolCallItem }
+  | { type: 'content'; content: string }
+
 export interface ChatMessage {
   id: string
   role: 'user' | 'assistant' | 'system'
@@ -20,15 +32,9 @@ export interface ChatMessage {
   reasoning?: string
   reasoningDone?: boolean
   toolCalls?: ToolCallItem[]
+  blocks?: ChatBlock[]
   isStreaming?: boolean
   error?: string
-}
-
-export interface ToolCallItem {
-  id: string
-  name: string
-  args?: Record<string, unknown>
-  result?: string
 }
 
 export interface ChatRequest {

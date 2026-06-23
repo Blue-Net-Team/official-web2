@@ -117,6 +117,7 @@ class DeepSeekLLM(LLMProvider):
             messages=openai_msgs,
             temperature=self._temperature,
             tools=tools,
+            parallel_tool_calls=False,
         )
         msg = resp.choices[0].message
 
@@ -142,7 +143,11 @@ class DeepSeekLLM(LLMProvider):
         return LLMResponse(content=content, tool_calls=tool_calls, reasoning_content=reasoning)
 
     def stream(self, messages: list[dict]) -> Iterator[str]:
-        """流式调用，同时 yield 思考过程和内容。"""
+        """流式调用，仅 yield 最终答案内容（不含 reasoning_content）。
+
+        思考过程已在 ``stream_with_tools`` 阶段通过 ``reasoning_content`` 单独输出，
+        最终生成阶段只需返回正式回复内容，避免推理片段混入答案。
+        """
         logger.info(f"流式 LLM 请求, messages={len(messages)}, model={self._model}")
         openai_msgs = self._to_openai_messages(messages)
         for chunk in self._client.chat.completions.create(
@@ -152,8 +157,7 @@ class DeepSeekLLM(LLMProvider):
             stream=True,
         ):
             delta = chunk.choices[0].delta
-            if hasattr(delta, "reasoning_content") and delta.reasoning_content:
-                yield delta.reasoning_content
+            # 最终生成阶段不输出 reasoning_content，只输出正式内容
             if delta.content:
                 yield delta.content
         logger.info("流式 LLM 响应结束")
@@ -172,6 +176,7 @@ class DeepSeekLLM(LLMProvider):
             temperature=self._temperature,
             tools=tools,
             stream=True,
+            parallel_tool_calls=False,
         ):
             delta = chunk.choices[0].delta
             finish_reason = chunk.choices[0].finish_reason

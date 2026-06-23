@@ -1,63 +1,70 @@
+"""基于 LangGraph StateGraph 的 RAG Agent。"""
+
 from __future__ import annotations
 
+import uuid
 from typing import Iterator
 
+from langgraph.checkpoint.memory import MemorySaver
 from loguru import logger
 
-from llm_providers.base import LLMProvider, LLMResponse
+from llm_providers.base import LLMProvider
 from llm_providers.factory import LLMFactory
 from tools import ToolRegistry
-from tools.tag_search_detailed import tag_search_detailed
-from tools.tag_search import tag_generate
 
 from .conversation import Conversation
+from .graph import build_rag_graph
 from .prompts import TAG_RETRIEVAL_SYSTEM_PROMPT
 from .types import AgentResponse, StreamChunk
 
 _log = logger.bind(module="RagAgent")
 
-_MAX_TAG_ROUNDS = 4
-_MAX_CHUNK_ROUNDS = 3
-_MAX_FALLBACK_ROUNDS = 1  # chunk_search 兜底最多 1 轮
-
 
 class RagAgent:
+    """RAG Agent：使用 LangGraph StateGraph 实现多轮检索与答案生成。
+
+    同步对话（``chat``）与流式对话（``chat_stream``）复用同一个状态图，
+    仅在输出层区分完整响应与 SSE 事件流。
+    """
+
     def __init__(
         self,
         system_prompt: str = "",
         llm: LLMProvider | None = None,
+        thread_id: str | None = None,
     ):
         self._llm = llm or LLMFactory.create()
-
         self._tool_specs = ToolRegistry.get_function_calling_specs()
 
         system_prompt = system_prompt or TAG_RETRIEVAL_SYSTEM_PROMPT
         self.conversation = Conversation(system_prompt=system_prompt)
 
-        self._tag_rounds = 0
-        self._chunk_rounds = 0
-        self._fallback_rounds = 0
+        self._thread_id = thread_id or str(uuid.uuid4())
+        self._checkpointer = MemorySaver()
+        builder = build_rag_graph(self._llm, self._tool_specs)
+        self._graph = builder.compile(checkpointer=self._checkpointer)
 
         tool_names = [t["function"]["name"] for t in self._tool_specs]
-        _log.info(f"Agent 初始化完成, tools={tool_names}")
+        _log.info(f"Agent 初始化完成, tools={tool_names}, thread_id={self._thread_id}")
 
     # ------------------------------------------------------------------
     # 同步对话
     # ------------------------------------------------------------------
 
     def chat(self, user_input: str) -> AgentResponse:
-        enriched_input = self._pre_disclosure(user_input)
-        self.conversation.add_user_message(enriched_input)
+        self.conversation.add_user_message(user_input)
         messages = self.conversation.get_messages()
 
-        self._tag_rounds = 0
-        self._chunk_rounds = 0
-        llm_response = self._run_two_stage_loop(messages)
-        final_text = llm_response.content or ""
-        reasoning = llm_response.reasoning_content or ""
+        result = self._run_graph(messages)
+        final_text = result["final_content"] or ""
+        reasoning = result["final_reasoning"] or ""
 
-        self.conversation.add_assistant_message(final_text)
-        _log.info(f"Agent 响应完成, 长度={len(final_text)}, reasoning_len={len(reasoning)}, tag_rounds={self._tag_rounds}, chunk_rounds={self._chunk_rounds}")
+        # 把图执行期间产生的中间消息（含 tool_calls / reasoning_content）同步回 conversation
+        final_messages = list(result["messages"])
+        final_messages.append({"role": "assistant", "content": final_text})
+        self.conversation.messages = final_messages
+
+        _log.info(f"Agent 响应完成, 长度={len(final_text)}, reasoning_len={len(reasoning)}")
         return AgentResponse(content=final_text, reasoning=reasoning)
 
     # ------------------------------------------------------------------
@@ -65,245 +72,70 @@ class RagAgent:
     # ------------------------------------------------------------------
 
     def chat_stream(self, user_input: str) -> Iterator[StreamChunk]:
-        enriched_input = self._pre_disclosure(user_input)
-        self.conversation.add_user_message(enriched_input)
+        self.conversation.add_user_message(user_input)
         messages = self.conversation.get_messages()
 
-        self._tag_rounds = 0
-        self._chunk_rounds = 0
+        for chunk in self._run_graph_stream(messages):
+            yield chunk
 
-        # 阶段 1：流式工具调用循环
-        max_total = _MAX_TAG_ROUNDS + _MAX_CHUNK_ROUNDS + 1
-        for turn in range(max_total):
-            # 最后一轮前提示模型
-            if turn == max_total - 1:
-                messages.append({
-                    "role": "user",
-                    "content": "【系统提示】工具调用即将达到上限，这是你最后的机会。请基于已获取的所有检索信息，直接生成最终答案，不要再调用任何工具。"
-                })
+        # 从 checkpointer 获取最终状态，同步中间消息与最终答案
+        config = self._build_config()
+        final_state = self._graph.get_state(config)
+        final_messages = list(final_state.values["messages"])
+        final_content = final_state.values["final_content"] or ""
+        final_messages.append({"role": "assistant", "content": final_content})
+        self.conversation.messages = final_messages
 
-            full_reasoning = ""
-            full_content = ""
-            pending_tool_calls: list[dict] = []
-
-            for event in self._llm.stream_with_tools(messages, self._tool_specs):
-                if event.type == "reasoning":
-                    _log.info(f"Agent 思考片段: {event.delta[:50]}...")
-                    yield StreamChunk(type="reasoning", content=event.delta)
-                    full_reasoning += event.delta
-                elif event.type == "content":
-                    full_content += event.delta
-                elif event.type == "tool_call":
-                    pending_tool_calls.append({
-                        "id": event.tool_call_id or "",
-                        "name": event.tool_name,
-                        "args": event.tool_args or {},
-                        "type": "function",
-                    })
-                elif event.type == "done":
-                    break
-
-            if pending_tool_calls:
-                _log.info(
-                    f"流式-工具调用第 {turn + 1} 轮: "
-                    f"{[tc['name'] for tc in pending_tool_calls]}"
-                    f"(tag={self._tag_rounds}, chunk={self._chunk_rounds})"
-                )
-
-                # 添加 assistant 消息（包含 tool_calls 和 reasoning_content）
-                assistant_msg = {
-                    "role": "assistant",
-                    "content": full_content,
-                    "tool_calls": pending_tool_calls,
-                }
-                if full_reasoning:
-                    assistant_msg["reasoning_content"] = full_reasoning
-                messages.append(assistant_msg)
-
-                # 执行工具
-                for tc in pending_tool_calls:
-                    yield StreamChunk(
-                        type="tool_call",
-                        tool_name=tc.get("name"),
-                        tool_args=tc.get("args", {}),
-                    )
-                    result = self._handle_tool_call_with_limit(tc, messages)
-                    if result is not None:
-                        yield StreamChunk(
-                            type="tool_result",
-                            content=result,
-                            tool_name=tc.get("name"),
-                        )
-                        tool_call_id = tc.get("id", "")
-                        messages.append({
-                            "role": "tool",
-                            "content": result,
-                            "tool_call_id": tool_call_id
-                        })
-            else:
-                # 没有工具调用了，进入阶段 2 流式输出最终答案
-                break
-        else:
-            # 达到上限，强制让模型基于已有信息生成答案
-            _log.warning(f"工具调用已达上限 {max_total} 轮，强制生成答案")
-            messages.append({
-                "role": "user",
-                "content": "【系统提示】工具调用次数已达上限。请基于已获取的所有检索结果，直接给出完整准确的最终答案，不要调用任何工具。"
-            })
-
-        # 阶段 2：流式输出最终答案（纯文本，无 tools）
-        full_content = ""
-        for chunk in self._llm.stream(messages):
-            if chunk:
-                full_content += chunk
-                yield StreamChunk(type="content", content=chunk)
-
-        self.conversation.add_assistant_message(full_content)
-        _log.info(f"Agent 流式响应完成, 长度={len(full_content)}")
+        _log.info(f"Agent 流式响应完成, 长度={len(final_content)}")
         yield StreamChunk(type="done")
 
     # ------------------------------------------------------------------
     # 内部方法
     # ------------------------------------------------------------------
 
-    def _pre_disclosure(self, user_input: str) -> str:
-        _log.info("预披露阶段: 自动生成初始标签并检索")
-        try:
-            pre_tags = tag_generate(user_input)
-            _log.info(f"初始标签: {pre_tags}")
-        except Exception as e:
-            _log.warning(f"标签生成失败: {e}")
-            pre_tags = []
-
-        pre_tag_results = []
-        if pre_tags:
-            try:
-                pre_tag_results = tag_search_detailed(" ".join(pre_tags), top_k=10)
-                _log.info(f"初始标签检索结果: {len(pre_tag_results)} 项")
-            except Exception as e:
-                _log.warning(f"标签检索失败: {e}")
-
-        lines = [f"用户问题: {user_input}", ""]
-        if pre_tag_results:
-            lines.append("=== 初始标签检索结果 ===")
-            if pre_tags:
-                lines.append(f"自动生成的标签: {', '.join(pre_tags)}")
-                lines.append("")
-            for i, r in enumerate(pre_tag_results, 1):
-                desc = f" - {r.tag_description[:60]}" if r.tag_description else ""
-                lines.append(f"  [{i}] {r.tag_name:<12} score={r.relevance_score:.4f}  docs={r.chunks_count}{desc}")
-        else:
-            lines.append("未找到相关标签，请尝试搜索。")
-
-        lines.append("")
-        lines.append("请按两阶段工作流执行：")
-        lines.append("  1. 如果标签不充分，调用 tag_search_detailed 扩展（最多3轮）")
-        lines.append("  2. 标签充分后，选择标签子集")
-        lines.append("  3. 调用 chunk_search_by_tags 检索分片（最多3轮）")
-        lines.append("  4. 如果 chunk_search_by_tags 诊断显示'标签均不在库中'，调用 chunk_search(query) 进行兜底语义搜索（最多1轮）")
-        lines.append("  5. 基于结果生成答案")
-        return "\n".join(lines)
-
-    def _run_two_stage_loop(self, messages: list[dict]) -> LLMResponse:
-        max_total = _MAX_TAG_ROUNDS + _MAX_CHUNK_ROUNDS + 1
-        for turn in range(max_total):
-            # 最后一轮前提示模型
-            if turn == max_total - 1:
-                messages.append({
-                    "role": "user",
-                    "content": "【系统提示】工具调用即将达到上限，这是你最后的机会。请基于已获取的所有检索信息，直接生成最终答案，不要再调用任何工具。"
-                })
-
-            llm_response = self._llm.invoke_with_tools(messages, self._tool_specs)
-
-            # 透出思考过程到日志
-            if llm_response.reasoning_content:
-                _log.info(f"Agent 思考: {llm_response.reasoning_content}")
-
-            if not llm_response.tool_calls:
-                return llm_response
-
-            _log.info(
-                f"工具调用第 {turn + 1} 轮: "
-                f"{[tc['name'] for tc in llm_response.tool_calls]}"
-                f"(tag={self._tag_rounds}, chunk={self._chunk_rounds})"
-            )
-
-            # 添加 assistant 消息（包含 tool_calls 和 reasoning_content）
-            assistant_msg = {
-                "role": "assistant",
-                "content": llm_response.content,
-                "tool_calls": llm_response.tool_calls,
+    def _build_config(self) -> dict:
+        """构建 LangGraph 调用配置。"""
+        return {
+            "configurable": {
+                "thread_id": self._thread_id,
+                "llm": self._llm,
+                "tool_specs": self._tool_specs,
             }
-            if llm_response.reasoning_content:
-                assistant_msg["reasoning_content"] = llm_response.reasoning_content
-            messages.append(assistant_msg)
+        }
 
-            for tc in llm_response.tool_calls:
-                result = self._handle_tool_call_with_limit(tc, messages)
-                if result is not None:
-                    tool_call_id = tc.get("id", "")
-                    messages.append({
-                        "role": "tool",
-                        "content": result,
-                        "tool_call_id": tool_call_id
-                    })
+    def _build_initial_state(self, messages: list[dict]) -> dict:
+        """构建状态图初始状态。"""
+        return {
+            "messages": messages,
+            "tag_rounds": 0,
+            "chunk_rounds": 0,
+            "fallback_rounds": 0,
+            "final_content": "",
+            "final_reasoning": "",
+        }
 
-        # 达到上限，强制让模型基于已有信息生成答案
-        _log.warning(f"工具调用已达上限 {max_total} 轮，强制生成答案")
-        messages.append({
-            "role": "user",
-            "content": "【系统提示】工具调用次数已达上限。请基于已获取的所有检索结果，直接给出完整准确的最终答案，不要调用任何工具。"
-        })
-        return self._llm.invoke(messages)
+    def _run_graph(self, messages: list[dict]) -> dict:
+        """同步调用状态图。"""
+        config = self._build_config()
+        initial_state = self._build_initial_state(messages)
+        return self._graph.invoke(initial_state, config)
 
-    def _handle_tool_call_with_limit(self, tc: dict, messages: list[dict]) -> str | None:
-        tool_name = tc["name"]
-        tool_args = tc.get("args", {})
+    def _run_graph_stream(self, messages: list[dict]) -> Iterator[StreamChunk]:
+        """流式调用状态图，将 writer 事件转译为 ``StreamChunk``。"""
+        config = self._build_config()
+        initial_state = self._build_initial_state(messages)
 
-        if tool_name == "tag_search_detailed":
-            self._tag_rounds += 1
-            if self._tag_rounds > _MAX_TAG_ROUNDS:
-                msg = f"标签搜索已达上限 {_MAX_TAG_ROUNDS} 轮，请直接基于已有标签进入选择阶段"
-                _log.warning(msg)
-                return msg
-            if self._tag_rounds == _MAX_TAG_ROUNDS:
-                _log.info("标签搜索剩余 1 次机会")
-
-        if tool_name == "chunk_search_by_tags":
-            self._chunk_rounds += 1
-            if self._chunk_rounds > _MAX_CHUNK_ROUNDS:
-                msg = f"分片检索已达上限 {_MAX_CHUNK_ROUNDS} 轮，请基于已有检索结果生成答案"
-                _log.warning(msg)
-                return msg
-            if self._chunk_rounds == _MAX_CHUNK_ROUNDS:
-                _log.info("分片检索剩余 1 次机会")
-
-        if tool_name == "chunk_search":
-            self._fallback_rounds += 1
-            if self._fallback_rounds > _MAX_FALLBACK_ROUNDS:
-                msg = f"兜底语义搜索已达上限 {_MAX_FALLBACK_ROUNDS} 轮，请基于已有检索结果生成答案"
-                _log.warning(msg)
-                return msg
-
-        return ToolRegistry.execute(tool_name, **tool_args)
+        for event in self._graph.stream(initial_state, config, stream_mode="custom"):
+            if isinstance(event, dict) and "type" in event:
+                yield StreamChunk(
+                    type=event["type"],
+                    content=event.get("content", ""),
+                    tool_name=event.get("tool_name"),
+                    tool_args=event.get("tool_args") if "tool_args" in event else {},
+                )
+            else:
+                _log.warning(f"未知自定义事件: {event}")
 
     def reset_conversation(self) -> None:
         self.conversation.clear()
-        self._tag_rounds = 0
-        self._chunk_rounds = 0
-        self._fallback_rounds = 0
         _log.info("对话历史已重置")
-
-
-def test() -> None:
-    agent = RagAgent()
-    response = agent.chat("3个方向应该怎么选")
-    print(response.content)
-    if response.reasoning:
-        print(f"\n[思考过程]\n{response.reasoning}")
-
-
-if __name__ == "__main__":
-    test()
-# end main
