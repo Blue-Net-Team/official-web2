@@ -5,8 +5,7 @@ import java.util.List;
 /**
  * WPS 表单字段映射常量。
  * <p>
- * 定义 WPS 表单题目标题与系统字段的映射关系，
- * 属于 WPS 表单协议 / 解析逻辑的领域知识。
+ * 定义 WPS 表单题目标题与系统字段的映射关系， 属于 WPS 表单协议 / 解析逻辑的领域知识。
  * </p>
  */
 public final class WpsFormField {
@@ -33,5 +32,11 @@ public final class WpsFormField {
      * 所有需要匹配的字段列表，用于从 WPS answerContents 中提取数据。
      */
     public static final List<String> ALL = List.of(
-            STUDENT_ID, USERNAME, EMAIL, DIRECTION, MAJOR, COLLEGE, GENDER);
+            STUDENT_ID,
+            USERNAME,
+            EMAIL,
+            DIRECTION,
+            MAJOR,
+            COLLEGE,
+            GENDER);
 }

@@ -9,8 +9,8 @@ import lombok.NoArgsConstructor;
 /**
  * WPS 回调响应消息。
  * <p>
- * WPS 平台要求特定的响应格式（如 bind 事件需精确返回 {"bind_code":"xxx"}），
- * 不能使用通用的 {@link com.bluenet.web.api.dto.ResponseMessage} 包装。
+ * WPS 平台要求特定的响应格式（如 bind 事件需精确返回 {"bind_code":"xxx"}）， 不能使用通用的
+ * {@link com.bluenet.web.api.dto.ResponseMessage} 包装。
  * </p>
  */
 @Data

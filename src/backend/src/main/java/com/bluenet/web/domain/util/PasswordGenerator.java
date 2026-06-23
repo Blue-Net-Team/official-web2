@@ -24,8 +24,10 @@ public final class PasswordGenerator {
     /**
      * 生成随机密码。
      *
-     * @param length         密码长度
-     * @param includeSpecial 是否包含特殊字符
+     * @param length
+     *            密码长度
+     * @param includeSpecial
+     *            是否包含特殊字符
      * @return 随机密码字符串
      */
     public static String generate(int length, boolean includeSpecial) {

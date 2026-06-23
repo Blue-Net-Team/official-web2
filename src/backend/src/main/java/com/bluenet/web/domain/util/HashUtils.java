@@ -16,7 +16,8 @@ public final class HashUtils {
     /**
      * 对输入字符串进行 SHA-256 哈希，返回十六进制字符串。
      *
-     * @param input 输入字符串
+     * @param input
+     *            输入字符串
      * @return 十六进制哈希字符串
      */
     public static String sha256(String input) {
