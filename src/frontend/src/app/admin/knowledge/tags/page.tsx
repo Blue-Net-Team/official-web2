@@ -6,9 +6,11 @@ import { EditOutlined } from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
 import type { KnowledgeTagDTO } from '@/apis/services/knowledge.service'
 import { knowledgeService } from '@/apis/services/knowledge.service'
+import { useAuth } from '@/hooks'
 
 export default function KnowledgeTagsPage() {
   const { message: messageApi } = App.useApp()
+  const { isAdmin } = useAuth()
 
   const [tags, setTags] = useState<KnowledgeTagDTO[]>([])
   const [loading, setLoading] = useState(false)
@@ -88,21 +90,25 @@ export default function KnowledgeTagsPage() {
       key: 'chunksCount',
       width: 120,
     },
-    {
-      title: '操作',
-      key: 'actions',
-      width: 120,
-      render: (_, record) => (
-        <Button
-          type="link"
-          size="small"
-          icon={<EditOutlined />}
-          onClick={() => handleEditClick(record)}
-        >
-          编辑描述
-        </Button>
-      ),
-    },
+    ...(isAdmin
+      ? [
+          {
+            title: '操作' as const,
+            key: 'actions',
+            width: 120,
+            render: (_: unknown, record: KnowledgeTagDTO) => (
+              <Button
+                type="link"
+                size="small"
+                icon={<EditOutlined />}
+                onClick={() => handleEditClick(record)}
+              >
+                编辑描述
+              </Button>
+            ),
+          },
+        ]
+      : []),
   ]
 
   return (

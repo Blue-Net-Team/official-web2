@@ -11,6 +11,7 @@ import {
   type SoftwareResourceDirection,
 } from '@/apis/schema/enumerate'
 import { adminSoftwareResourceService } from '@/apis/services/admin-software-resource.service'
+import { useAuth } from '@/hooks'
 
 const PAGE_SIZE = 20
 
@@ -26,6 +27,7 @@ interface FormValues {
 
 export default function SoftwareResourceManagementPage() {
   const { message: messageApi } = App.useApp()
+  const { isAdmin } = useAuth()
   const [form] = Form.useForm<FormValues>()
 
   const [resources, setResources] = useState<SoftwareResourceDTO[]>([])
@@ -212,52 +214,62 @@ export default function SoftwareResourceManagementPage() {
         dataIndex: 'status',
         key: 'status',
         width: 100,
-        render: (status: 'ACTIVE' | 'DISABLED', record: SoftwareResourceDTO) => (
-          <Switch
-            checked={status === 'ACTIVE'}
-            onChange={(checked) => handleToggleStatus(record, checked)}
-            checkedChildren="启用"
-            unCheckedChildren="禁用"
-          />
-        ),
+        render: isAdmin
+          ? (status: 'ACTIVE' | 'DISABLED', record: SoftwareResourceDTO) => (
+              <Switch
+                checked={status === 'ACTIVE'}
+                onChange={(checked) => handleToggleStatus(record, checked)}
+                checkedChildren="启用"
+                unCheckedChildren="禁用"
+              />
+            )
+          : (status: 'ACTIVE' | 'DISABLED') => (
+              <span>{SOFTWARE_RESOURCE_STATUS_LABELS[status] || status}</span>
+            ),
       },
-      {
-        title: '操作',
-        key: 'actions',
-        width: 160,
-        render: (_, record) => (
-          <div className="flex gap-2">
-            <Button
-              type="link"
-              size="small"
-              icon={<EditOutlined />}
-              onClick={() => openEditModal(record)}
-            >
-              编辑
-            </Button>
-            <Button
-              type="link"
-              size="small"
-              danger
-              icon={<DeleteOutlined />}
-              onClick={() => handleDeleteClick(record)}
-            >
-              删除
-            </Button>
-          </div>
-        ),
-      },
+      ...(isAdmin
+        ? [
+            {
+              title: '操作',
+              key: 'actions',
+              width: 160,
+              render: (_: unknown, record: SoftwareResourceDTO) => (
+                <div className="flex gap-2">
+                  <Button
+                    type="link"
+                    size="small"
+                    icon={<EditOutlined />}
+                    onClick={() => openEditModal(record)}
+                  >
+                    编辑
+                  </Button>
+                  <Button
+                    type="link"
+                    size="small"
+                    danger
+                    icon={<DeleteOutlined />}
+                    onClick={() => handleDeleteClick(record)}
+                  >
+                    删除
+                  </Button>
+                </div>
+              ),
+            },
+          ]
+        : []),
     ],
-    [page]
+    [page, isAdmin]
   )
 
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-medium text-white/90 m-0">软件资源管理</h2>
-        <Button type="primary" icon={<PlusOutlined />} onClick={openCreateModal}>
-          新增资源
-        </Button>
+        {isAdmin && (
+          <Button type="primary" icon={<PlusOutlined />} onClick={openCreateModal}>
+            新增资源
+          </Button>
+        )}
       </div>
 
       <Table
