@@ -12,7 +12,6 @@ import {
 } from '@/apis/schema/enumerate'
 import { adminSoftwareResourceService } from '@/apis/services/admin-software-resource.service'
 import { useAuth } from '@/hooks'
-import { getRoleLevel } from '@/utils/RoleUtils'
 
 const PAGE_SIZE = 20
 

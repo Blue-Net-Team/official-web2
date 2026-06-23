@@ -12,6 +12,7 @@ import {
 import type { ColumnsType } from 'antd/es/table'
 import type { KnowledgeDocDTO, DocParseStatus } from '@/apis/services/knowledge.service'
 import { knowledgeService } from '@/apis/services/knowledge.service'
+import { useAuth } from '@/hooks'
 import { useRouter } from 'next/navigation'
 
 const STATUS_MAP: Record<DocParseStatus, { label: string; color: string }> = {
@@ -25,6 +26,7 @@ const STATUS_MAP: Record<DocParseStatus, { label: string; color: string }> = {
 
 export default function KnowledgeDocsPage() {
   const { message: messageApi } = App.useApp()
+  const { isAdmin } = useAuth()
   const router = useRouter()
 
   const [docs, setDocs] = useState<KnowledgeDocDTO[]>([])
@@ -208,7 +210,7 @@ export default function KnowledgeDocsPage() {
             >
               分段
             </Button>
-            {(record.status === 'COMPLETED' ||
+            {isAdmin && (record.status === 'COMPLETED' ||
               record.status === 'FAILED' ||
               record.status === 'CANCELED') && (
               <Button
@@ -220,7 +222,7 @@ export default function KnowledgeDocsPage() {
                 重解析
               </Button>
             )}
-            {(record.status === 'PENDING' || record.status === 'PARSING') && (
+            {isAdmin && (record.status === 'PENDING' || record.status === 'PARSING') && (
               <Button
                 type="link"
                 size="small"
@@ -231,15 +233,17 @@ export default function KnowledgeDocsPage() {
                 取消
               </Button>
             )}
-            <Button
-              type="link"
-              size="small"
-              danger
-              icon={<DeleteOutlined />}
-              onClick={() => handleDeleteClick(record)}
-            >
-              删除
-            </Button>
+            {isAdmin && (
+              <Button
+                type="link"
+                size="small"
+                danger
+                icon={<DeleteOutlined />}
+                onClick={() => handleDeleteClick(record)}
+              >
+                删除
+              </Button>
+            )}
           </div>
         ),
       },
@@ -251,11 +255,13 @@ export default function KnowledgeDocsPage() {
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-medium text-white/90 m-0">知识库文档管理</h2>
-        <Upload beforeUpload={handleUpload} showUploadList={false} accept=".md">
-          <Button type="primary" icon={<UploadOutlined />} loading={uploading}>
-            上传文档
-          </Button>
-        </Upload>
+        {isAdmin && (
+          <Upload beforeUpload={handleUpload} showUploadList={false} accept=".md">
+            <Button type="primary" icon={<UploadOutlined />} loading={uploading}>
+              上传文档
+            </Button>
+          </Upload>
+        )}
       </div>
 
       <Spin spinning={loading}>
