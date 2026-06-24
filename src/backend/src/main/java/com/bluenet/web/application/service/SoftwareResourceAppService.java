@@ -59,4 +59,12 @@ public interface SoftwareResourceAppService {
      *            资源 ID。
      */
     void deleteSoftwareResource(Long id);
+
+    /**
+     * 批量调整软件资源排序。
+     *
+     * @param command
+     *            批量排序命令。
+     */
+    void batchUpdateSortOrder(SoftwareResourceCommands.BatchUpdateSortOrderCommand command);
 }

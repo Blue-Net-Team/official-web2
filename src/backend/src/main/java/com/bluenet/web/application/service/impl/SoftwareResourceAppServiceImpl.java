@@ -13,6 +13,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 /**
  * 软件资源应用服务实现。
  */
@@ -75,6 +77,21 @@ public class SoftwareResourceAppServiceImpl implements SoftwareResourceAppServic
             throw new DataNotFound("软件资源不存在");
         }
         softwareResourceRepository.deleteById(id);
+    }
+
+    @Override
+    @Transactional
+    public void batchUpdateSortOrder(SoftwareResourceCommands.BatchUpdateSortOrderCommand command) {
+        List<SoftwareResourceRepository.SortItem> sortItems = command.items()
+                .stream()
+                .map(item -> new SoftwareResourceRepository.SortItem(item.id(), item.sortOrder()))
+                .toList();
+        sortItems.forEach(item -> {
+            if (!softwareResourceRepository.existsById(item.id())) {
+                throw new IllegalArgumentException("软件资源不存在: " + item.id());
+            }
+        });
+        softwareResourceRepository.batchUpdateSortOrder(sortItems);
     }
 
     private SoftwareResourceResult toResult(SoftwareResource softwareResource) {

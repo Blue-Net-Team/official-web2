@@ -24,6 +24,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -172,5 +174,36 @@ class SoftwareResourceAppServiceImplTest {
                 DataNotFound.class,
                 () -> softwareResourceAppService.deleteSoftwareResource(id));
         assertEquals("软件资源不存在", exception.getMessage());
+    }
+
+    @Test
+    @DisplayName("TC-007: 批量排序（正常场景）")
+    void batchUpdateSortOrder_success() {
+        SoftwareResourceCommands.BatchUpdateSortOrderCommand command = new SoftwareResourceCommands.BatchUpdateSortOrderCommand(
+                List.of(
+                        new SoftwareResourceCommands.SortItemCommand(1L, 1),
+                        new SoftwareResourceCommands.SortItemCommand(2L, 2)));
+        when(softwareResourceRepository.existsById(1L)).thenReturn(true);
+        when(softwareResourceRepository.existsById(2L)).thenReturn(true);
+
+        softwareResourceAppService.batchUpdateSortOrder(command);
+
+        verify(softwareResourceRepository).batchUpdateSortOrder(anyList());
+    }
+
+    @Test
+    @DisplayName("TC-008: 批量排序中某 id 不存在应抛异常且不更新")
+    void batchUpdateSortOrder_unknownId_shouldThrowAndNotUpdate() {
+        SoftwareResourceCommands.BatchUpdateSortOrderCommand command = new SoftwareResourceCommands.BatchUpdateSortOrderCommand(
+                List.of(
+                        new SoftwareResourceCommands.SortItemCommand(1L, 1),
+                        new SoftwareResourceCommands.SortItemCommand(999L, 2)));
+        when(softwareResourceRepository.existsById(1L)).thenReturn(true);
+        when(softwareResourceRepository.existsById(999L)).thenReturn(false);
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> softwareResourceAppService.batchUpdateSortOrder(command));
+        verify(softwareResourceRepository, never()).batchUpdateSortOrder(anyList());
     }
 }

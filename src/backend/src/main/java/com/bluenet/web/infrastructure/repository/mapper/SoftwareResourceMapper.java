@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bluenet.web.domain.model.enumerate.SoftwareResourceDirection;
 import com.bluenet.web.domain.model.enumerate.SoftwareResourceStatus;
+import com.bluenet.web.domain.repository.SoftwareResourceRepository;
 import com.bluenet.web.infrastructure.repository.dataobject.SoftwareResourceDO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -47,4 +48,15 @@ public interface SoftwareResourceMapper extends BaseMapper<SoftwareResourceDO> {
      * @return 分页后的软件资源。
      */
     IPage<SoftwareResourceDO> selectAllForAdmin(Page<SoftwareResourceDO> page);
+
+    /**
+     * 批量更新软件资源的排序号。
+     * <p>
+     * 使用单条 {@code CASE WHEN} SQL 一次性更新多条记录的排序号，避免逐条循环执行 SQL。
+     * </p>
+     *
+     * @param items
+     *            排序项列表（id 与目标排序号）。
+     */
+    void batchUpdateSortOrder(@Param("items") List<SoftwareResourceRepository.SortItem> items);
 }

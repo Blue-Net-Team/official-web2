@@ -3,6 +3,8 @@ package com.bluenet.web.application.command.softwareresource;
 import com.bluenet.web.domain.model.enumerate.SoftwareResourceDirection;
 import com.bluenet.web.domain.model.enumerate.SoftwareResourceStatus;
 
+import java.util.List;
+
 /**
  * 软件资源聚合的命令对象集合。
  */
@@ -51,5 +53,17 @@ public class SoftwareResourceCommands {
                 externalUrl = externalUrl.trim();
             }
         }
+    }
+
+    /**
+     * 单个排序项命令。
+     */
+    public record SortItemCommand(Long id, Integer sortOrder) {
+    }
+
+    /**
+     * 批量调整软件资源排序命令。
+     */
+    public record BatchUpdateSortOrderCommand(List<SortItemCommand> items) {
     }
 }

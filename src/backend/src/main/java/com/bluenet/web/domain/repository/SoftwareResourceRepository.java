@@ -5,6 +5,7 @@ import com.bluenet.web.domain.model.enumerate.SoftwareResourceDirection;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -71,4 +72,27 @@ public interface SoftwareResourceRepository {
      * @return 分页的软件资源实体。
      */
     Page<SoftwareResource> findAllForAdmin(Pageable pageable);
+
+    /**
+     * 判断指定主键的软件资源是否存在。
+     *
+     * @param id
+     *            业务记录主键。
+     * @return 存在返回 true，否则 false。
+     */
+    boolean existsById(Long id);
+
+    /**
+     * 批量更新软件资源排序号。
+     *
+     * @param sortItems
+     *            排序项列表（id 与目标排序号）。
+     */
+    void batchUpdateSortOrder(List<SortItem> sortItems);
+
+    /**
+     * 排序项：软件资源主键及其目标排序号。
+     */
+    record SortItem(Long id, Integer sortOrder) {
+    }
 }

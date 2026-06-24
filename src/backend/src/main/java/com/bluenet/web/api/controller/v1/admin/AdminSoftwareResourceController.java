@@ -2,6 +2,7 @@ package com.bluenet.web.api.controller.v1.admin;
 
 import com.bluenet.web.api.dto.PageDTO;
 import com.bluenet.web.api.dto.ResponseMessage;
+import com.bluenet.web.api.dto.softwareresource.BatchSortRequestDTO;
 import com.bluenet.web.api.dto.softwareresource.CreateSoftwareResourceRequestDTO;
 import com.bluenet.web.api.dto.softwareresource.SoftwareResourceDTO;
 import com.bluenet.web.api.dto.softwareresource.UpdateSoftwareResourceRequestDTO;
@@ -78,6 +79,19 @@ public class AdminSoftwareResourceController {
     public ResponseMessage<Void> deleteSoftwareResource(
             @Parameter(description = "资源ID", required = true) @PathVariable Long id) {
         softwareResourceAppService.deleteSoftwareResource(id);
+        return ResponseMessage.success(null);
+    }
+
+    @Operation(summary = "批量调整软件资源排序", description = "批量更新软件资源的排序号")
+    @RequiresPermission(value = "software-resource:sort", name = "调整软件资源排序", access = AccessLevel.PROTECTED)
+    @PutMapping("/sort")
+    public ResponseMessage<Void> batchUpdateSortOrder(@Valid @RequestBody BatchSortRequestDTO request) {
+        SoftwareResourceCommands.BatchUpdateSortOrderCommand command = new SoftwareResourceCommands.BatchUpdateSortOrderCommand(
+                request.getItems()
+                        .stream()
+                        .map(item -> new SoftwareResourceCommands.SortItemCommand(item.getId(), item.getSortOrder()))
+                        .toList());
+        softwareResourceAppService.batchUpdateSortOrder(command);
         return ResponseMessage.success(null);
     }
 }

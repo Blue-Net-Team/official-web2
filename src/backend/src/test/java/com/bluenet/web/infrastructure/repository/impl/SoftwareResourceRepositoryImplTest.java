@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bluenet.web.domain.model.entity.SoftwareResource;
 import com.bluenet.web.domain.model.enumerate.SoftwareResourceDirection;
 import com.bluenet.web.domain.model.enumerate.SoftwareResourceStatus;
+import com.bluenet.web.domain.repository.SoftwareResourceRepository;
 import com.bluenet.web.infrastructure.repository.converter.SoftwareResourceRepositoryConverter;
 import com.bluenet.web.infrastructure.repository.dataobject.SoftwareResourceDO;
 import com.bluenet.web.infrastructure.repository.mapper.SoftwareResourceMapper;
@@ -21,9 +22,12 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -152,5 +156,43 @@ class SoftwareResourceRepositoryImplTest {
 
         assertEquals(100L, id);
         assertEquals(100L, resource.getId());
+    }
+
+    @Test
+    @DisplayName("existsById: 记录存在时返回 true")
+    void existsById_present_shouldReturnTrue() {
+        when(softwareResourceMapper.selectById(1L)).thenReturn(
+                createTestDO(1L, "Tool", SoftwareResourceDirection.GENERAL, 1, SoftwareResourceStatus.ACTIVE));
+
+        assertTrue(softwareResourceRepository.existsById(1L));
+    }
+
+    @Test
+    @DisplayName("existsById: 记录不存在时返回 false")
+    void existsById_absent_shouldReturnFalse() {
+        when(softwareResourceMapper.selectById(999L)).thenReturn(null);
+
+        assertFalse(softwareResourceRepository.existsById(999L));
+    }
+
+    @Test
+    @DisplayName("batchUpdateSortOrder: 应以单条 SQL 批量更新排序号")
+    void batchUpdateSortOrder_shouldUpdateInSingleBatch() {
+        List<SoftwareResourceRepository.SortItem> sortItems = List.of(
+                new SoftwareResourceRepository.SortItem(1L, 1),
+                new SoftwareResourceRepository.SortItem(2L, 2),
+                new SoftwareResourceRepository.SortItem(3L, 3));
+
+        softwareResourceRepository.batchUpdateSortOrder(sortItems);
+
+        verify(softwareResourceMapper).batchUpdateSortOrder(sortItems);
+    }
+
+    @Test
+    @DisplayName("batchUpdateSortOrder: 列表为空时不调用 mapper")
+    void batchUpdateSortOrder_emptyList_shouldNotCallMapper() {
+        softwareResourceRepository.batchUpdateSortOrder(List.of());
+
+        verify(softwareResourceMapper, never()).batchUpdateSortOrder(anyList());
     }
 }

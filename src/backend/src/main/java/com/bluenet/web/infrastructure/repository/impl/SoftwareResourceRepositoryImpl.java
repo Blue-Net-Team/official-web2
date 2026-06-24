@@ -80,4 +80,17 @@ public class SoftwareResourceRepositoryImpl implements SoftwareResourceRepositor
         List<SoftwareResource> content = converter.toEntityList(result.getRecords());
         return new PageImpl<>(content, pageable, result.getTotal());
     }
+
+    @Override
+    public boolean existsById(Long id) {
+        return softwareResourceMapper.selectById(id) != null;
+    }
+
+    @Override
+    public void batchUpdateSortOrder(List<SortItem> sortItems) {
+        if (sortItems.isEmpty()) {
+            return;
+        }
+        softwareResourceMapper.batchUpdateSortOrder(sortItems);
+    }
 }

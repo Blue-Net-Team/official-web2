@@ -3,6 +3,7 @@ package com.bluenet.web.infrastructure.repository.mapper;
 import com.bluenet.web.BaseIntegrationTest;
 import com.bluenet.web.domain.model.enumerate.SoftwareResourceDirection;
 import com.bluenet.web.domain.model.enumerate.SoftwareResourceStatus;
+import com.bluenet.web.domain.repository.SoftwareResourceRepository;
 import com.bluenet.web.infrastructure.repository.dataobject.SoftwareResourceDO;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.junit.jupiter.api.DisplayName;
@@ -119,9 +120,43 @@ class SoftwareResourceMapperIntegrationTest extends BaseIntegrationTest {
         assertThat(result.getRecords().get(1).getName()).isEqualTo("B");
     }
 
-    private void insertResource(String name, SoftwareResourceDirection direction, int sortOrder,
+    @Test
+    @DisplayName("batchUpdateSortOrder: 应以单条 SQL 批量更新多条记录的排序号")
+    void batchUpdateSortOrder_shouldUpdateMultipleRowsInSingleStatement() {
+        SoftwareResourceDO first = buildResource(
+                "Git",
+                SoftwareResourceDirection.GENERAL,
+                1,
+                SoftwareResourceStatus.ACTIVE);
+        SoftwareResourceDO second = buildResource(
+                "PyCharm",
+                SoftwareResourceDirection.GENERAL,
+                2,
+                SoftwareResourceStatus.ACTIVE);
+        SoftwareResourceDO third = buildResource(
+                "SolidWorks",
+                SoftwareResourceDirection.STRUCTURAL_DESIGN,
+                3,
+                SoftwareResourceStatus.ACTIVE);
+        softwareResourceMapper.insert(first);
+        softwareResourceMapper.insert(second);
+        softwareResourceMapper.insert(third);
+
+        List<SoftwareResourceRepository.SortItem> sortItems = List.of(
+                new SoftwareResourceRepository.SortItem(first.getId(), 30),
+                new SoftwareResourceRepository.SortItem(second.getId(), 10),
+                new SoftwareResourceRepository.SortItem(third.getId(), 20));
+
+        softwareResourceMapper.batchUpdateSortOrder(sortItems);
+
+        assertThat(softwareResourceMapper.selectById(first.getId()).getSortOrder()).isEqualTo(30);
+        assertThat(softwareResourceMapper.selectById(second.getId()).getSortOrder()).isEqualTo(10);
+        assertThat(softwareResourceMapper.selectById(third.getId()).getSortOrder()).isEqualTo(20);
+    }
+
+    private SoftwareResourceDO buildResource(String name, SoftwareResourceDirection direction, int sortOrder,
             SoftwareResourceStatus status) {
-        SoftwareResourceDO resource = SoftwareResourceDO.builder()
+        return SoftwareResourceDO.builder()
                 .name(name)
                 .direction(direction)
                 .category("tool")
@@ -130,6 +165,10 @@ class SoftwareResourceMapperIntegrationTest extends BaseIntegrationTest {
                 .sortOrder(sortOrder)
                 .status(status)
                 .build();
-        softwareResourceMapper.insert(resource);
+    }
+
+    private void insertResource(String name, SoftwareResourceDirection direction, int sortOrder,
+            SoftwareResourceStatus status) {
+        softwareResourceMapper.insert(buildResource(name, direction, sortOrder, status));
     }
 }
