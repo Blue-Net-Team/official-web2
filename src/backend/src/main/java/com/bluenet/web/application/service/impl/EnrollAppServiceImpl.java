@@ -15,6 +15,7 @@ import com.bluenet.web.domain.model.enumerate.EnrollStatus;
 import com.bluenet.web.domain.model.enumerate.FileType;
 import com.bluenet.web.domain.model.enumerate.MessageChannel;
 import com.bluenet.web.domain.model.vo.EnrollStatisticsVO;
+import com.bluenet.web.domain.model.vo.UserOnboardingCreateUserRequest;
 import com.bluenet.web.domain.model.vo.UserOnboardingResult;
 import com.bluenet.web.domain.model.vo.UserVO;
 import com.bluenet.web.domain.repository.EnrollRepository;
@@ -309,7 +310,7 @@ public class EnrollAppServiceImpl implements EnrollAppService {
     }
 
     private UserOnboardingResult createUserFromEnrollment(Enroll enroll, Integer assessmentGradeYear) {
-        com.bluenet.web.domain.model.vo.UserOnboardingCreateUserRequest request = com.bluenet.web.domain.model.vo.UserOnboardingCreateUserRequest
+        UserOnboardingCreateUserRequest request = UserOnboardingCreateUserRequest
                 .builder()
                 .studentId(enroll.getStudentId())
                 .email(enroll.getEmail())
