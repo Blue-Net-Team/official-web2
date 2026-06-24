@@ -11,32 +11,24 @@ import com.bluenet.web.domain.exception.DataNotFound;
 import com.bluenet.web.domain.exception.GlobalException;
 import com.bluenet.web.domain.model.entity.Enroll;
 import com.bluenet.web.domain.model.entity.File;
-import com.bluenet.web.domain.model.entity.User;
 import com.bluenet.web.domain.model.enumerate.EnrollStatus;
 import com.bluenet.web.domain.model.enumerate.FileType;
-import com.bluenet.web.domain.model.enumerate.Gender;
 import com.bluenet.web.domain.model.enumerate.MessageChannel;
-import com.bluenet.web.domain.model.enumerate.RoleType;
 import com.bluenet.web.domain.model.vo.EnrollStatisticsVO;
-import com.bluenet.web.domain.model.vo.RoleVO;
+import com.bluenet.web.domain.model.vo.UserOnboardingResult;
 import com.bluenet.web.domain.model.vo.UserVO;
 import com.bluenet.web.domain.repository.EnrollRepository;
 import com.bluenet.web.domain.repository.FileRepository;
-import com.bluenet.web.domain.repository.RoleRepository;
 import com.bluenet.web.domain.repository.UserRepository;
-import com.bluenet.web.domain.service.ReferralCodeGenerator;
+import com.bluenet.web.domain.service.UserOnboardingService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Optional;
 
@@ -54,15 +46,12 @@ public class EnrollAppServiceImpl implements EnrollAppService {
     private final EnrollRepository enrollRepository;
     private final UserRepository userRepository;
     private final FileRepository fileRepository;
-    private final RoleRepository roleRepository;
-    private final ReferralCodeGenerator referralCodeGenerator;
-    private final PasswordEncoder passwordEncoder;
+    private final UserOnboardingService userOnboardingService;
     private final MessageDispatcher messageDispatcher;
     private final com.bluenet.web.application.message.template.EnrollmentApprovalCredentialTemplate enrollmentApprovalCredentialTemplate;
     private final com.bluenet.web.application.message.template.EnrollmentRejectionTemplate enrollmentRejectionTemplate;
 
     private static final int ENROLL_PASSWORD_LENGTH = 10;
-    private static final int APPROVAL_INITIAL_PASSWORD_LENGTH = 8;
     private static final String APPROVAL_EMAIL_SUBJECT = "蓝网报名审核通过通知";
     private static final String REJECTION_EMAIL_SUBJECT = "蓝网报名审核未通过通知";
 
@@ -239,9 +228,9 @@ public class EnrollAppServiceImpl implements EnrollAppService {
         boolean newUserCreated = false;
 
         if (existingUser.isEmpty()) {
-            CreatedUserCredential credential = createUserFromEnrollment(enroll, assessmentGradeYear);
-            createdUserId = credential.userId();
-            initialPassword = credential.initialPassword();
+            UserOnboardingResult result = createUserFromEnrollment(enroll, assessmentGradeYear);
+            createdUserId = result.userId();
+            initialPassword = result.initialPassword();
             newUserCreated = true;
         } else {
             log.info("学号 {} 对应的用户已存在，跳过创建", enroll.getStudentId());
@@ -319,38 +308,21 @@ public class EnrollAppServiceImpl implements EnrollAppService {
         }
     }
 
-    private CreatedUserCredential createUserFromEnrollment(Enroll enroll, Integer assessmentGradeYear) {
-        RoleVO candidateRole = roleRepository.findByName(RoleType.CANDIDATE.getName())
-                .orElseThrow(() -> new GlobalException("CANDIDATE 角色不存在，请先初始化角色数据"));
-
-        String initialPassword = enroll.getPassword();
-        String hashedPassword = sha256Hash(initialPassword);
-        String encodedPassword = passwordEncoder.encode(hashedPassword);
-        String referralCode = referralCodeGenerator.generate();
-
-        User user = User.create(
-                enroll.getStudentId(),
-                enroll.getEmail(),
-                candidateRole.getId(),
-                encodedPassword,
-                enroll.getUsername(),
-                null,
-                enroll.getCollegeId(),
-                enroll.getMajor(),
-                assessmentGradeYear,
-                enroll.getDirection(),
-                enroll.getGender() != null ? enroll.getGender() : Gender.UNKNOWN,
-                null,
-                enroll.getAvatarId(),
-                null,
-                null,
-                null,
-                referralCode,
-                null);
-
-        userRepository.save(user);
-        log.info("创建新用户 {}, 学号: {}, 内推码: {}", user.getId(), user.getStudentId(), referralCode);
-        return new CreatedUserCredential(user.getId(), initialPassword);
+    private UserOnboardingResult createUserFromEnrollment(Enroll enroll, Integer assessmentGradeYear) {
+        com.bluenet.web.domain.model.vo.UserOnboardingCreateUserRequest request = com.bluenet.web.domain.model.vo.UserOnboardingCreateUserRequest
+                .builder()
+                .studentId(enroll.getStudentId())
+                .email(enroll.getEmail())
+                .roleId(userOnboardingService.getCandidateRole().getId())
+                .username(enroll.getUsername())
+                .collegeId(enroll.getCollegeId())
+                .major(enroll.getMajor())
+                .assessmentGradeYear(assessmentGradeYear)
+                .direction(enroll.getDirection())
+                .gender(enroll.getGender())
+                .avatarId(enroll.getAvatarId())
+                .build();
+        return userOnboardingService.createUser(request, enroll.getPassword());
     }
 
     private String generateRandomPassword(int length) {
@@ -361,24 +333,6 @@ public class EnrollAppServiceImpl implements EnrollAppService {
             sb.append(chars.charAt(random.nextInt(chars.length())));
         }
         return sb.toString();
-    }
-
-    private String sha256Hash(String input) {
-        try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            byte[] hash = digest.digest(input.getBytes(StandardCharsets.UTF_8));
-            StringBuilder hexString = new StringBuilder();
-            for (byte b : hash) {
-                String hex = Integer.toHexString(0xff & b);
-                if (hex.length() == 1) {
-                    hexString.append('0');
-                }
-                hexString.append(hex);
-            }
-            return hexString.toString();
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException("SHA-256 algorithm not available", e);
-        }
     }
 
     private void sendApprovalCredentialMessage(Enroll enroll, String initialPassword) {
@@ -468,8 +422,5 @@ public class EnrollAppServiceImpl implements EnrollAppService {
                 enroll.getIntroduction(),
                 enroll.getInternalReferralCode(),
                 enroll.getReferralUserName());
-    }
-
-    private record CreatedUserCredential(Long userId, String initialPassword) {
     }
 }
