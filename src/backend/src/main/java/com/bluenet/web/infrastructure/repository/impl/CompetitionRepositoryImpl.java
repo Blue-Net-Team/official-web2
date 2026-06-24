@@ -80,7 +80,10 @@ public class CompetitionRepositoryImpl implements CompetitionRepository {
 
     @Override
     public void batchUpdateSortOrder(List<CompetitionRepository.SortItem> sortItems) {
-        sortItems.forEach(item -> competitionMapper.updateSortOrderById(item.id(), item.sortOrder()));
+        if (sortItems.isEmpty()) {
+            return;
+        }
+        competitionMapper.batchUpdateSortOrder(sortItems);
     }
 
     @Override
