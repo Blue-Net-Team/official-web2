@@ -54,15 +54,11 @@ public class WpsFormRequestConverter {
      * 将 WPS 返回值转为字符串，处理字符串和数组两种类型（如多选返回 ["a","b"]）。
      */
     private static String valueToString(Object value) {
-        if (value == null) {
-            return null;
-        }
-        if (value instanceof String s) {
-            return s;
-        }
-        if (value instanceof List<?> list) {
-            return list.stream().map(Object::toString).collect(Collectors.joining(","));
-        }
-        return value.toString();
+        return switch (value) {
+            case null -> null;
+            case String s -> s;
+            case List<?> list -> list.stream().map(Object::toString).collect(Collectors.joining(","));
+            default -> value.toString();
+        };
     }
 }
