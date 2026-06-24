@@ -9,6 +9,8 @@ import com.bluenet.web.domain.model.enumerate.Direction;
 import com.bluenet.web.domain.model.enumerate.Gender;
 import com.bluenet.web.domain.model.enumerate.MessageChannel;
 import com.bluenet.web.domain.model.vo.RoleVO;
+import com.bluenet.web.domain.model.vo.UserOnboardingCreateUserRequest;
+import com.bluenet.web.domain.model.vo.UserOnboardingResult;
 import com.bluenet.web.domain.service.UserOnboardingService;
 import com.bluenet.web.domain.service.WpsFormDirectionResolver;
 import com.bluenet.web.infrastructure.config.properties.WpsProperties;
@@ -73,7 +75,7 @@ public class WpsFormAppServiceImpl implements WpsFormAppService {
 
         RoleVO role = userOnboardingService.getMemberRole();
 
-        UserOnboardingService.CreateUserRequest request = UserOnboardingService.CreateUserRequest.builder()
+        UserOnboardingCreateUserRequest request = UserOnboardingCreateUserRequest.builder()
                 .studentId(command.studentId())
                 .username(command.username())
                 .email(command.email())
@@ -84,7 +86,7 @@ public class WpsFormAppServiceImpl implements WpsFormAppService {
                 .gender(gender)
                 .build();
 
-        UserOnboardingService.UserOnboardingResult result = userOnboardingService
+        UserOnboardingResult result = userOnboardingService
                 .createUserWithGeneratedPassword(request);
         log.info("WPS 表单创建新用户 {}, 学号: {}, 内推码: {}", result.userId(), command.studentId(), result.referralCode());
 
