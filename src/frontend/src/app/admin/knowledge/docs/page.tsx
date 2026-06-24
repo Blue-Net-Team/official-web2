@@ -210,18 +210,19 @@ export default function KnowledgeDocsPage() {
             >
               分段
             </Button>
-            {isAdmin && (record.status === 'COMPLETED' ||
-              record.status === 'FAILED' ||
-              record.status === 'CANCELED') && (
-              <Button
-                type="link"
-                size="small"
-                icon={<ReloadOutlined />}
-                onClick={() => handleReparse(record)}
-              >
-                重解析
-              </Button>
-            )}
+            {isAdmin &&
+              (record.status === 'COMPLETED' ||
+                record.status === 'FAILED' ||
+                record.status === 'CANCELED') && (
+                <Button
+                  type="link"
+                  size="small"
+                  icon={<ReloadOutlined />}
+                  onClick={() => handleReparse(record)}
+                >
+                  重解析
+                </Button>
+              )}
             {isAdmin && (record.status === 'PENDING' || record.status === 'PARSING') && (
               <Button
                 type="link"

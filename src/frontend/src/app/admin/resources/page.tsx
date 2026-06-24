@@ -50,7 +50,6 @@ interface FormValues {
   category?: string
   description?: string
   externalUrl: string
-  sortOrder?: number
   status: 'ACTIVE' | 'DISABLED'
 }
 
@@ -114,7 +113,7 @@ export default function SoftwareResourceManagementPage() {
     setModalMode('create')
     setEditingResource(null)
     form.resetFields()
-    form.setFieldsValue({ status: 'ACTIVE', sortOrder: 0 })
+    form.setFieldsValue({ status: 'ACTIVE' })
     setModalOpen(true)
   }
 
@@ -127,7 +126,6 @@ export default function SoftwareResourceManagementPage() {
       category: resource.category ?? undefined,
       description: resource.description ?? undefined,
       externalUrl: resource.externalUrl,
-      sortOrder: resource.sortOrder,
       status: resource.status,
     })
     setModalOpen(true)
@@ -142,7 +140,6 @@ export default function SoftwareResourceManagementPage() {
         category: values.category,
         description: values.description,
         externalUrl: values.externalUrl,
-        sortOrder: values.sortOrder ?? 0,
       }
 
       if (modalMode === 'create') {
@@ -293,12 +290,6 @@ export default function SoftwareResourceManagementPage() {
         render: (category: string | null) => category || '-',
       },
       {
-        title: '排序',
-        dataIndex: 'sortOrder',
-        key: 'sortOrder',
-        width: 80,
-      },
-      {
         title: '状态',
         dataIndex: 'status',
         key: 'status',
@@ -446,9 +437,6 @@ export default function SoftwareResourceManagementPage() {
             rules={[{ required: true, message: '请输入外部下载链接' }]}
           >
             <Input placeholder="https://..." />
-          </Form.Item>
-          <Form.Item label="排序权重" name="sortOrder">
-            <Input type="number" placeholder="数值越小越靠前" />
           </Form.Item>
           {modalMode === 'edit' && (
             <Form.Item label="状态" name="status" rules={[{ required: true }]}>

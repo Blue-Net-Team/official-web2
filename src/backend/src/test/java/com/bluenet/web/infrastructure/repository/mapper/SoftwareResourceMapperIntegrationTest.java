@@ -154,6 +154,18 @@ class SoftwareResourceMapperIntegrationTest extends BaseIntegrationTest {
         assertThat(softwareResourceMapper.selectById(third.getId()).getSortOrder()).isEqualTo(20);
     }
 
+    @Test
+    @DisplayName("selectMaxSortOrder: 无记录时返回 null，有记录时返回最大排序号")
+    void selectMaxSortOrder_shouldReturnMax() {
+        assertThat(softwareResourceMapper.selectMaxSortOrder()).isNull();
+
+        insertResource("A", SoftwareResourceDirection.GENERAL, 3, SoftwareResourceStatus.ACTIVE);
+        insertResource("B", SoftwareResourceDirection.GENERAL, 8, SoftwareResourceStatus.ACTIVE);
+        insertResource("C", SoftwareResourceDirection.GENERAL, 5, SoftwareResourceStatus.DISABLED);
+
+        assertThat(softwareResourceMapper.selectMaxSortOrder()).isEqualTo(8);
+    }
+
     private SoftwareResourceDO buildResource(String name, SoftwareResourceDirection direction, int sortOrder,
             SoftwareResourceStatus status) {
         return SoftwareResourceDO.builder()

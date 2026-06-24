@@ -85,7 +85,7 @@ class SoftwareResourceAppServiceImplTest {
     }
 
     @Test
-    @DisplayName("TC-002: 创建软件资源（正常场景）")
+    @DisplayName("TC-002: 创建软件资源（排在末尾：max+1）")
     void createSoftwareResource_success() {
         SoftwareResourceCommands.CreateSoftwareResourceCommand command = new SoftwareResourceCommands.CreateSoftwareResourceCommand(
                 "VS Code",
@@ -93,7 +93,8 @@ class SoftwareResourceAppServiceImplTest {
                 "IDE",
                 "编辑器",
                 "https://code.visualstudio.com/",
-                10);
+                null);
+        when(softwareResourceRepository.findMaxSortOrder()).thenReturn(10);
 
         SoftwareResourceResult result = softwareResourceAppService.createSoftwareResource(command);
 
@@ -101,6 +102,25 @@ class SoftwareResourceAppServiceImplTest {
         assertEquals("VS Code", result.name());
         assertEquals(SoftwareResourceDirection.GENERAL, result.direction());
         assertEquals(SoftwareResourceStatus.ACTIVE, result.status());
+        assertEquals(11, result.sortOrder());
+        verify(softwareResourceRepository).save(any(SoftwareResource.class));
+    }
+
+    @Test
+    @DisplayName("TC-002b: 首条资源排序号从 1 开始")
+    void createSoftwareResource_whenEmpty_shouldStartFromOne() {
+        SoftwareResourceCommands.CreateSoftwareResourceCommand command = new SoftwareResourceCommands.CreateSoftwareResourceCommand(
+                "VS Code",
+                SoftwareResourceDirection.GENERAL,
+                "IDE",
+                "编辑器",
+                "https://code.visualstudio.com/",
+                null);
+        when(softwareResourceRepository.findMaxSortOrder()).thenReturn(null);
+
+        SoftwareResourceResult result = softwareResourceAppService.createSoftwareResource(command);
+
+        assertEquals(1, result.sortOrder());
         verify(softwareResourceRepository).save(any(SoftwareResource.class));
     }
 

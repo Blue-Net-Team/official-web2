@@ -83,6 +83,13 @@ public interface SoftwareResourceRepository {
     boolean existsById(Long id);
 
     /**
+     * 查询当前最大的排序号。
+     *
+     * @return 最大排序号；无记录时返回 null。
+     */
+    Integer findMaxSortOrder();
+
+    /**
      * 批量更新软件资源排序号。
      *
      * @param sortItems

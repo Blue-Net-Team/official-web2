@@ -41,13 +41,16 @@ public class SoftwareResourceAppServiceImpl implements SoftwareResourceAppServic
     @Transactional
     public SoftwareResourceResult createSoftwareResource(
             SoftwareResourceCommands.CreateSoftwareResourceCommand command) {
+        // 新增资源默认排在末尾：取当前最大排序号 +1，无记录时从 1 开始。
+        Integer maxSortOrder = softwareResourceRepository.findMaxSortOrder();
+        Integer sortOrder = maxSortOrder != null ? maxSortOrder + 1 : 1;
         SoftwareResource softwareResource = SoftwareResource.create(
                 command.name(),
                 command.direction(),
                 command.category(),
                 command.description(),
                 command.externalUrl(),
-                command.sortOrder());
+                sortOrder);
         softwareResourceRepository.save(softwareResource);
         return toResult(softwareResource);
     }

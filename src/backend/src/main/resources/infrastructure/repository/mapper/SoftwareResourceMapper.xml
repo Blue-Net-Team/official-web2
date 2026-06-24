@@ -56,6 +56,10 @@
         ORDER BY sort_order ASC, id ASC
     </select>
 
+    <select id="selectMaxSortOrder" resultType="java.lang.Integer">
+        SELECT MAX(sort_order) FROM tb_software_resource
+    </select>
+
     <update id="batchUpdateSortOrder">
         UPDATE tb_software_resource
         SET sort_order = CASE id

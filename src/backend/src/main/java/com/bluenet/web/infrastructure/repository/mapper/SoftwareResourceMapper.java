@@ -50,6 +50,13 @@ public interface SoftwareResourceMapper extends BaseMapper<SoftwareResourceDO> {
     IPage<SoftwareResourceDO> selectAllForAdmin(Page<SoftwareResourceDO> page);
 
     /**
+     * 查询当前最大的排序号。
+     *
+     * @return 最大排序号；无记录时返回 null。
+     */
+    Integer selectMaxSortOrder();
+
+    /**
      * 批量更新软件资源的排序号。
      * <p>
      * 使用单条 {@code CASE WHEN} SQL 一次性更新多条记录的排序号，避免逐条循环执行 SQL。

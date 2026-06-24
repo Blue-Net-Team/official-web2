@@ -111,6 +111,28 @@ class SoftwareResourceTest {
     }
 
     @Test
+    void update_withNullSortOrder_shouldKeepCurrentSortOrder() {
+        SoftwareResource resource = SoftwareResource.create(
+                "Tool",
+                SoftwareResourceDirection.GENERAL,
+                "tool",
+                "desc",
+                "https://example.com",
+                5);
+
+        resource.update(
+                "Tool",
+                SoftwareResourceDirection.GENERAL,
+                "tool",
+                "desc",
+                "https://example.com",
+                null,
+                SoftwareResourceStatus.ACTIVE);
+
+        assertEquals(5, resource.getSortOrder());
+    }
+
+    @Test
     void update_withNullStatus_shouldKeepCurrentStatus() {
         SoftwareResource resource = SoftwareResource.create(
                 "Tool",

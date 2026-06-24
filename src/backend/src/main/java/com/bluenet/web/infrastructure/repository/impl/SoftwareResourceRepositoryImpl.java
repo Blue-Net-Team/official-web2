@@ -87,6 +87,11 @@ public class SoftwareResourceRepositoryImpl implements SoftwareResourceRepositor
     }
 
     @Override
+    public Integer findMaxSortOrder() {
+        return softwareResourceMapper.selectMaxSortOrder();
+    }
+
+    @Override
     public void batchUpdateSortOrder(List<SortItem> sortItems) {
         if (sortItems.isEmpty()) {
             return;

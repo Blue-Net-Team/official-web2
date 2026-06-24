@@ -195,4 +195,15 @@ class SoftwareResourceRepositoryImplTest {
 
         verify(softwareResourceMapper, never()).batchUpdateSortOrder(anyList());
     }
+
+    @Test
+    @DisplayName("findMaxSortOrder: 应委托 mapper 查询最大排序号")
+    void findMaxSortOrder_shouldDelegateToMapper() {
+        when(softwareResourceMapper.selectMaxSortOrder()).thenReturn(7);
+
+        Integer max = softwareResourceRepository.findMaxSortOrder();
+
+        assertEquals(7, max);
+        verify(softwareResourceMapper).selectMaxSortOrder();
+    }
 }
