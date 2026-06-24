@@ -180,8 +180,35 @@ public class AssessmentTime {
      * @return 当前考核是否为全局最终考核
      */
     public boolean isGlobalFinalAssessment() {
-        return this.direction == null
-                && this.epoch != null
-                && this.epoch == 0;
+        return getScope().isGlobalFinal();
+    }
+
+    /**
+     * 获取当前考核的范围值对象。
+     *
+     * @return 当前考核的范围
+     */
+    public AssessmentScope getScope() {
+        return new AssessmentScope(this.direction, this.epoch);
+    }
+
+    /**
+     * 判断当前考核与目标考核的年级是否匹配。
+     * <p>
+     * 规则：任一考核的 grade 为 null（不限年级）则匹配；否则必须精确相等。
+     * </p>
+     *
+     * @param other
+     *            目标考核
+     * @return 年级是否匹配
+     */
+    public boolean matchesGrade(AssessmentTime other) {
+        if (other == null) {
+            return false;
+        }
+        if (this.grade == null || other.grade == null) {
+            return true;
+        }
+        return this.grade.equals(other.grade);
     }
 }

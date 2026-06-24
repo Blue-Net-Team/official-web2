@@ -3,6 +3,7 @@ package com.bluenet.web.domain.service.impl;
 import com.bluenet.web.domain.exception.DataNotFound;
 import com.bluenet.web.domain.exception.GlobalException;
 import com.bluenet.web.domain.model.entity.AssessmentDecision;
+import com.bluenet.web.domain.model.entity.AssessmentScope;
 import com.bluenet.web.domain.model.entity.AssessmentTime;
 import com.bluenet.web.domain.model.vo.AssessmentDecisionVO;
 import com.bluenet.web.domain.repository.AssessmentDecisionRepository;
@@ -102,7 +103,7 @@ public class AssessmentDecisionDomainServiceImpl implements AssessmentDecisionDo
                 continue;
             }
             if (isSameDirectionAndGrade(decisionTime, targetTime)
-                    && isPriorEpoch(decisionTime.getEpoch(), targetTime.getEpoch())) {
+                    && isPriorEpoch(decisionTime, targetTime)) {
                 return true;
             }
         }
@@ -110,44 +111,21 @@ public class AssessmentDecisionDomainServiceImpl implements AssessmentDecisionDo
     }
 
     private boolean isSameDirectionAndGrade(AssessmentTime eliminatedTime, AssessmentTime targetTime) {
-        // 目标考核是全局最终考核（direction=null, epoch=0）
-        // 任何方向考核（epoch>0）的淘汰决策都限制它
-        if (targetTime.isGlobalFinalAssessment()) {
-            // 决策考核必须是方向考核（epoch>0），全局考核的淘汰不影响其他
-            if (eliminatedTime.getEpoch() == null || eliminatedTime.getEpoch() <= 0) {
-                return false;
-            }
-            // grade 匹配：任一不限则全限
-            if (eliminatedTime.getGrade() == null || targetTime.getGrade() == null) {
-                return true;
-            }
-            return eliminatedTime.getGrade().equals(targetTime.getGrade());
-        }
-
-        // 普通情况：direction 和 grade 都必须一致
-        if (eliminatedTime.getDirection() == null
-                ? targetTime.getDirection() != null
-                : !eliminatedTime.getDirection().equals(targetTime.getDirection())) {
-            return false;
-        }
-        // grade 匹配：任一不限则全限
-        if (eliminatedTime.getGrade() == null || targetTime.getGrade() == null) {
-            return true;
-        }
-        return eliminatedTime.getGrade().equals(targetTime.getGrade());
+        return eliminatedTime.getScope().matches(targetTime.getScope())
+                && eliminatedTime.matchesGrade(targetTime);
     }
 
-    private boolean isPriorEpoch(Integer priorEpoch, Integer currentEpoch) {
-        if (priorEpoch == null || currentEpoch == null) {
+    private boolean isPriorEpoch(AssessmentTime priorTime, AssessmentTime currentTime) {
+        AssessmentScope priorScope = priorTime.getScope();
+        if (!priorScope.isValidDirectionalEpoch()) {
             return false;
         }
-        if (priorEpoch <= 0) {
-            return false;
-        }
-        if (currentEpoch == 0) {
+        AssessmentScope currentScope = currentTime.getScope();
+        if (currentScope.isFinalRound()) {
             return true;
         }
-        return priorEpoch < currentEpoch;
+        Integer currentEpoch = currentTime.getEpoch();
+        return currentEpoch != null && priorTime.getEpoch() < currentEpoch;
     }
 
     private AssessmentDecision convertToEntity(AssessmentDecisionVO decision) {

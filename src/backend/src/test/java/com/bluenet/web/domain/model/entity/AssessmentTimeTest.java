@@ -75,4 +75,92 @@ class AssessmentTimeTest {
 
         assertFalse(time.isGlobalFinalAssessment());
     }
+
+    @Test
+    void getScope_globalFinal_shouldReturnGlobalFinalScope() {
+        AssessmentTime time = AssessmentTime.reconstruct(
+                1L,
+                null,
+                0,
+                2026,
+                null,
+                null,
+                false,
+                null,
+                null,
+                false);
+
+        AssessmentScope scope = time.getScope();
+        assertTrue(scope.isGlobalFinal());
+        assertFalse(scope.isDirectional());
+    }
+
+    @Test
+    void getScope_directional_shouldReturnDirectionalScope() {
+        AssessmentTime time = AssessmentTime.reconstruct(
+                1L,
+                Direction.COMPUTER_VISION,
+                2,
+                2026,
+                null,
+                null,
+                false,
+                null,
+                null,
+                false);
+
+        AssessmentScope scope = time.getScope();
+        assertFalse(scope.isGlobalFinal());
+        assertTrue(scope.isDirectional());
+        assertTrue(scope.matches(new AssessmentScope(Direction.COMPUTER_VISION, 3)));
+    }
+
+    @Test
+    void matchesGrade_bothNull_shouldReturnTrue() {
+        AssessmentTime eliminatedTime = createAssessmentTime(Direction.COMPUTER_VISION, 1, null);
+        AssessmentTime targetTime = createAssessmentTime(Direction.COMPUTER_VISION, 2, null);
+        assertTrue(eliminatedTime.matchesGrade(targetTime));
+    }
+
+    @Test
+    void matchesGrade_eliminatedNull_shouldReturnTrue() {
+        AssessmentTime eliminatedTime = createAssessmentTime(Direction.COMPUTER_VISION, 1, null);
+        AssessmentTime targetTime = createAssessmentTime(Direction.COMPUTER_VISION, 2, 2024);
+        assertTrue(eliminatedTime.matchesGrade(targetTime));
+    }
+
+    @Test
+    void matchesGrade_targetNull_shouldReturnTrue() {
+        AssessmentTime eliminatedTime = createAssessmentTime(Direction.COMPUTER_VISION, 1, 2024);
+        AssessmentTime targetTime = createAssessmentTime(Direction.COMPUTER_VISION, 2, null);
+        assertTrue(eliminatedTime.matchesGrade(targetTime));
+    }
+
+    @Test
+    void matchesGrade_sameGrade_shouldReturnTrue() {
+        AssessmentTime eliminatedTime = createAssessmentTime(Direction.COMPUTER_VISION, 1, 2024);
+        AssessmentTime targetTime = createAssessmentTime(Direction.COMPUTER_VISION, 2, 2024);
+        assertTrue(eliminatedTime.matchesGrade(targetTime));
+    }
+
+    @Test
+    void matchesGrade_differentGrade_shouldReturnFalse() {
+        AssessmentTime eliminatedTime = createAssessmentTime(Direction.COMPUTER_VISION, 1, 2024);
+        AssessmentTime targetTime = createAssessmentTime(Direction.COMPUTER_VISION, 2, 2023);
+        assertFalse(eliminatedTime.matchesGrade(targetTime));
+    }
+
+    private AssessmentTime createAssessmentTime(Direction direction, int epoch, Integer grade) {
+        return AssessmentTime.reconstruct(
+                1L,
+                direction,
+                epoch,
+                grade,
+                null,
+                null,
+                false,
+                null,
+                null,
+                false);
+    }
 }
