@@ -40,6 +40,12 @@ public class CollegeRepositoryImpl implements CollegeRepository {
     }
 
     @Override
+    public Optional<College> findByName(String name) {
+        CollegeDO collegeDO = collegeMapper.selectByName(name);
+        return Optional.ofNullable(converter.toEntity(collegeDO));
+    }
+
+    @Override
     public void save(College college) {
         CollegeDO dataObject = converter.toDataObject(college);
         collegeMapper.insert(dataObject);

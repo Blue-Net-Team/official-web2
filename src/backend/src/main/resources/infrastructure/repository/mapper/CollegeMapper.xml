@@ -18,4 +18,9 @@
         WHERE name = #{name}
           AND id != #{excludeId}
     </select>
+    <select id="selectByName" resultType="com.bluenet.web.infrastructure.repository.dataobject.CollegeDO">
+        SELECT *
+        FROM tb_college
+        WHERE name = #{name}
+    </select>
 </mapper>

@@ -1,6 +1,7 @@
 package com.bluenet.web.application.service;
 
 import com.bluenet.web.application.command.wpsform.WpsFormCommands;
+import jakarta.validation.Valid;
 
 /**
  * WPS 智能表单应用服务接口。
@@ -25,5 +26,5 @@ public interface WpsFormAppService {
      * @param command
      *            创建用户命令
      */
-    void createUserFromWpsForm(WpsFormCommands.CreateUserFromWpsFormCommand command);
+    void createUserFromWpsForm(@Valid WpsFormCommands.CreateUserFromWpsFormCommand command);
 }

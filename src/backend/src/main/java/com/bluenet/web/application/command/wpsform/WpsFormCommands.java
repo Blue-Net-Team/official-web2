@@ -1,5 +1,7 @@
 package com.bluenet.web.application.command.wpsform;
 
+import jakarta.validation.constraints.NotBlank;
+
 /**
  * WPS 智能表单聚合的命令对象集合。
  * <p>
@@ -16,13 +18,13 @@ public final class WpsFormCommands {
      */
     public record CreateUserFromWpsFormCommand(
             /** 学号 */
-            String studentId,
+            @NotBlank(message = "学号不能为空") String studentId,
             /** 姓名 */
-            String username,
+            @NotBlank(message = "姓名不能为空") String username,
             /** 邮箱 */
-            String email,
+            @NotBlank(message = "邮箱不能为空") String email,
             /** 方向（中文，如"视觉"、"计算机视觉"） */
-            String directionText,
+            @NotBlank(message = "方向不能为空") String directionText,
             /** 专业 */
             String major,
             /** 学院（中文文本） */

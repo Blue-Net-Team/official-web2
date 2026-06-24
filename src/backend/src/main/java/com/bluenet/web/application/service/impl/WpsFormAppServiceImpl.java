@@ -5,20 +5,25 @@ import com.bluenet.web.application.message.MessageDispatcher;
 import com.bluenet.web.application.message.MessageRequest;
 import com.bluenet.web.application.message.template.EnrollmentApprovalCredentialTemplate;
 import com.bluenet.web.application.service.WpsFormAppService;
+import com.bluenet.web.domain.exception.BadRequest;
+import com.bluenet.web.domain.model.entity.College;
 import com.bluenet.web.domain.model.enumerate.Direction;
 import com.bluenet.web.domain.model.enumerate.Gender;
 import com.bluenet.web.domain.model.enumerate.MessageChannel;
 import com.bluenet.web.domain.model.vo.RoleVO;
 import com.bluenet.web.domain.model.vo.UserOnboardingCreateUserRequest;
 import com.bluenet.web.domain.model.vo.UserOnboardingResult;
+import com.bluenet.web.domain.repository.CollegeRepository;
 import com.bluenet.web.domain.service.UserOnboardingService;
 import com.bluenet.web.domain.service.WpsFormDirectionResolver;
 import com.bluenet.web.infrastructure.config.properties.WpsProperties;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+import org.springframework.validation.annotation.Validated;
 
 /**
  * WPS 智能表单应用服务实现。
@@ -28,6 +33,7 @@ import org.springframework.util.StringUtils;
  */
 @Service
 @Slf4j
+@Validated
 @RequiredArgsConstructor
 public class WpsFormAppServiceImpl implements WpsFormAppService {
 
@@ -37,6 +43,7 @@ public class WpsFormAppServiceImpl implements WpsFormAppService {
     private final UserOnboardingService userOnboardingService;
     private final WpsFormDirectionResolver directionResolver;
     private final MessageDispatcher messageDispatcher;
+    private final CollegeRepository collegeRepository;
     private final EnrollmentApprovalCredentialTemplate enrollmentApprovalCredentialTemplate;
 
     @Override
@@ -46,32 +53,14 @@ public class WpsFormAppServiceImpl implements WpsFormAppService {
 
     @Override
     @Transactional
-    public void createUserFromWpsForm(WpsFormCommands.CreateUserFromWpsFormCommand command) {
-        if (!StringUtils.hasText(command.studentId())) {
-            log.warn("WPS 表单缺少必填字段: studentId");
-            return;
-        }
-        if (!StringUtils.hasText(command.username())) {
-            log.warn("WPS 表单缺少必填字段: username");
-            return;
-        }
-        if (!StringUtils.hasText(command.email())) {
-            log.warn("WPS 表单缺少必填字段: email");
-            return;
-        }
-        if (!StringUtils.hasText(command.directionText())) {
-            log.warn("WPS 表单缺少必填字段: direction");
-            return;
-        }
-
-        Direction direction = directionResolver.resolve(command.directionText());
-        if (direction == null) {
-            log.warn("WPS 表单方向字段值无效: {}", command.directionText());
-            return;
-        }
+    public void createUserFromWpsForm(@Valid WpsFormCommands.CreateUserFromWpsFormCommand command) {
+        Direction direction = Optional.ofNullable(directionResolver.resolve(command.directionText()))
+                .orElseThrow(() -> new BadRequest("方向字段值无效: " + command.directionText()));
 
         Gender gender = Gender.fromDescription(command.genderText());
-        Long collegeId = null; // TODO: 学院字段目前按文本记录，未建 College 映射；后续补充 CollegeResolver
+        // 从文本找collegeId
+        College college = collegeRepository.findByName(command.collegeText())
+                .orElseThrow(() -> new BadRequest("学院" + command.collegeText() + "不存在"));
 
         RoleVO role = userOnboardingService.getMemberRole();
 
@@ -82,7 +71,7 @@ public class WpsFormAppServiceImpl implements WpsFormAppService {
                 .roleId(role.getId())
                 .direction(direction)
                 .major(command.major())
-                .collegeId(collegeId)
+                .collegeId(college.getId())
                 .gender(gender)
                 .build();
 

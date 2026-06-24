@@ -2,6 +2,7 @@ package com.bluenet.web.api.converter.wpsform;
 
 import com.bluenet.web.api.dto.wps.WpsCreateAnswerCallbackRequestDTO;
 import com.bluenet.web.application.command.wpsform.WpsFormCommands;
+import com.bluenet.web.domain.exception.BadRequest;
 import com.bluenet.web.domain.model.vo.wps.WpsFormField;
 import org.springframework.stereotype.Component;
 
@@ -28,7 +29,7 @@ public class WpsFormRequestConverter {
     public WpsFormCommands.CreateUserFromWpsFormCommand toCreateUserCommand(WpsCreateAnswerCallbackRequestDTO request) {
         List<WpsCreateAnswerCallbackRequestDTO.AnswerContent> answers = request.getAnswerContents();
         if (answers == null || answers.isEmpty()) {
-            return null;
+            throw new BadRequest("WPS 表单 create_answer 回调缺少回答内容");
         }
 
         Map<String, String> fieldMap = answers.stream()

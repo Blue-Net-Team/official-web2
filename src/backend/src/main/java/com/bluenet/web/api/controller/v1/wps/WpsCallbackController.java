@@ -93,11 +93,6 @@ public class WpsCallbackController {
 
     private ResponseMessage<Void> handleCreateAnswer(WpsCreateAnswerCallbackRequestDTO request) {
         WpsFormCommands.CreateUserFromWpsFormCommand command = wpsFormRequestConverter.toCreateUserCommand(request);
-        if (command == null) {
-            log.warn("WPS 表单 create_answer 无回答内容，跳过");
-            return ResponseMessage.success();
-        }
-
         wpsFormAppService.createUserFromWpsForm(command);
         log.info("WPS 表单创建用户请求已处理: rid={}", request.getRid());
         return ResponseMessage.success();
