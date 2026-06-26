@@ -10,13 +10,11 @@ import {
   RightOutlined,
   TeamOutlined,
 } from '@ant-design/icons'
-import type { Assessment } from '@/types/profile'
 import type { AssessmentTimeDTO, AssessmentStatus } from '@/apis/schema/assessment.dto'
 import { DIRECTION_LABELS } from '@/apis/schema/enumerate'
 
 interface AssessmentCardProps {
-  assessment: Assessment | AssessmentTimeDTO
-  status?: AssessmentStatus
+  assessment: AssessmentTimeDTO
 }
 
 function formatDate(dateStr: string): string {
@@ -31,10 +29,6 @@ function getEpochLabel(epoch: number): string {
   return `第${chineseNumbers[epoch - 1] || epoch}轮考核`
 }
 
-function isAssessmentTimeDTO(data: Assessment | AssessmentTimeDTO): data is AssessmentTimeDTO {
-  return 'timeLimit' in data
-}
-
 function getAssessmentStatus(startTime: string, endTime: string): AssessmentStatus {
   const now = new Date().getTime()
   const start = new Date(startTime).getTime()
@@ -44,39 +38,24 @@ function getAssessmentStatus(startTime: string, endTime: string): AssessmentStat
   return 'IN_PROGRESS'
 }
 
-function extractEpochFromTitle(title: string): number {
-  const match = title.match(/第 ([\u4e00-\u4e9a\d]+) 轮/)
-  if (match) {
-    const chineseNumbers = ['一', '二', '三', '四', '五', '六', '七', '八', '九', '十']
-    const index = chineseNumbers.indexOf(match[1])
-    return index >= 0 ? index + 1 : parseInt(match[1]) || 1
-  }
-  return 1
-}
-
-export default function AssessmentCard({ assessment, status }: AssessmentCardProps) {
+export default function AssessmentCard({ assessment }: AssessmentCardProps) {
   const router = useRouter()
-
-  const isDTO = isAssessmentTimeDTO(assessment)
 
   const total = assessment.totalQuestions ?? 0
   const completed = assessment.completedQuestions ?? 0
   const progressPercent = total > 0 ? Math.round((completed / total) * 100) : 0
 
-  const actualStatus =
-    status ??
-    (isDTO ? getAssessmentStatus(assessment.startTime, assessment.endTime) : assessment.status)
-
-  const eliminated = isDTO ? assessment.eliminated : false
+  const actualStatus = getAssessmentStatus(assessment.startTime, assessment.endTime)
+  const eliminated = !!assessment.eliminated
   const isInProgress = actualStatus === 'IN_PROGRESS' && !eliminated
   const isEnded = actualStatus === 'ENDED' && !eliminated
   const isNotStarted = actualStatus === 'NOT_STARTED'
 
-  const epoch = isDTO ? assessment.epoch : extractEpochFromTitle(assessment.title)
-  const direction = isDTO ? assessment.direction : null
-  const timeLimit = isDTO ? assessment.timeLimit : false
-  const timeLimitMinutes = isDTO ? assessment.timeLimitMinutes : undefined
-  const allowTeam = isDTO ? assessment.allowTeam : false
+  const epoch = assessment.epoch
+  const direction = assessment.direction
+  const timeLimit = assessment.timeLimit
+  const timeLimitMinutes = assessment.timeLimitMinutes
+  const allowTeam = assessment.allowTeam
 
   return (
     <div
@@ -121,7 +100,7 @@ export default function AssessmentCard({ assessment, status }: AssessmentCardPro
           <div className="flex flex-col gap-1">
             <span className="text-base font-semibold text-white">{getEpochLabel(epoch)}</span>
             <span className="text-[13px] text-white/45">
-              {direction ? DIRECTION_LABELS[direction] : isDTO ? '全局' : assessment.round}
+              {direction ? DIRECTION_LABELS[direction] : '全局'}
             </span>
           </div>
         </div>
@@ -150,8 +129,7 @@ export default function AssessmentCard({ assessment, status }: AssessmentCardPro
         <div className="flex items-center gap-[6px] text-[13px] text-white/50">
           <CalendarOutlined className="text-sm" />
           <span>
-            {formatDate(isDTO ? assessment.startTime : assessment.startDate)} —{' '}
-            {formatDate(isDTO ? assessment.endTime : assessment.endDate)}
+            {formatDate(assessment.startTime)} — {formatDate(assessment.endTime)}
           </span>
         </div>
         {timeLimit && timeLimitMinutes ? (
@@ -209,8 +187,7 @@ export default function AssessmentCard({ assessment, status }: AssessmentCardPro
           }`}
           onClick={() => {
             if (isNotStarted || eliminated) return
-            const assessmentId = isDTO ? assessment.id.toString() : assessment.id
-            router.push(`/assessment/${assessmentId}/questions`)
+            router.push(`/assessment/${assessment.id.toString()}/questions`)
           }}
         >
           {eliminated

@@ -11,12 +11,12 @@
  *
  * @author BlueNet Team
  */
-import type { Assessment } from '@/types/profile'
+import type { AssessmentTimeDTO } from '@/apis/schema/assessment.dto'
 import { FileTextOutlined } from '@ant-design/icons'
 import { AssessmentCard } from '@/components/Assessment'
 
 interface AssessmentListProps {
-  assessments: Assessment[]
+  assessments: AssessmentTimeDTO[]
 }
 
 export default function AssessmentList({ assessments }: AssessmentListProps) {
