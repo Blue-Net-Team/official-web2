@@ -1,5 +1,6 @@
 'use client'
 
+import type { ReactNode } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   ClockCircleOutlined,
@@ -15,6 +16,92 @@ import { DIRECTION_LABELS } from '@/apis/schema/enumerate'
 
 interface AssessmentCardProps {
   assessment: AssessmentTimeDTO
+}
+
+/** 卡片视觉状态：按优先级 eliminated > inProgress > ended > notStarted 派生 */
+type VisualState = 'eliminated' | 'inProgress' | 'ended' | 'notStarted'
+
+/** 单一视觉状态对应的完整视觉规格 */
+interface VisualStyle {
+  /** 卡片边框 + 悬浮效果 */
+  border: string
+  /** 左上角图标底色 */
+  iconBg: string
+  /** 左上角图标元素 */
+  icon: ReactNode
+  /** 状态徽章底色 */
+  badgeClass: string
+  /** 状态徽章文案 */
+  badgeText: string
+  /** 操作按钮样式 */
+  buttonClass: string
+  /** 操作按钮文案 */
+  buttonText: string
+  /** 答题进度条填充色 */
+  progressBar: string
+  /** 顶部高光线渐变（null 表示不渲染） */
+  topLine: string | null
+  /** 是否可点击进入答题页 */
+  clickable: boolean
+}
+
+/** 四态视觉映射表：新增状态时 Record 会强制补齐全部字段，杜绝遗漏导致的不一致 */
+const STYLES: Record<VisualState, VisualStyle> = {
+  eliminated: {
+    border: 'border-white/[0.04] opacity-70',
+    iconBg: 'bg-[rgba(140,140,141,0.08)] text-[#8c8c8d]/50',
+    icon: <InboxOutlined />,
+    badgeClass: 'bg-[rgba(255,77,79,0.1)] text-[#ff4d4f] border border-[rgba(255,77,79,0.15)]',
+    badgeText: '已被淘汰',
+    buttonClass: 'bg-[rgba(140,140,141,0.1)] text-[#8c8c8d]/70 cursor-not-allowed',
+    buttonText: '已被淘汰',
+    progressBar: 'bg-[rgba(140,140,141,0.3)]',
+    topLine: null,
+    clickable: false,
+  },
+  inProgress: {
+    border:
+      'border-[rgba(102,119,255,0.2)] shadow-[0_0_20px_rgba(102,119,255,0.06),inset_0_1px_0_rgba(102,119,255,0.1)] hover:-translate-y-0.5 hover:bg-white/[0.06] hover:shadow-[0_8px_32px_rgba(102,119,255,0.12),inset_0_1px_0_rgba(102,119,255,0.15)] hover:border-[rgba(102,119,255,0.3)]',
+    iconBg: 'bg-[rgba(102,119,255,0.15)] text-[#6677ff] shadow-[0_0_16px_rgba(102,119,255,0.15)]',
+    icon: <FieldTimeOutlined />,
+    badgeClass: 'bg-[rgba(102,119,255,0.15)] text-[#6677ff] border border-[rgba(102,119,255,0.2)]',
+    badgeText: '进行中',
+    buttonClass:
+      'bg-gradient-to-br from-[#6677ff] to-[#2f27b0] text-white shadow-[0_4px_16px_rgba(102,119,255,0.3)] hover:shadow-[0_6px_24px_rgba(102,119,255,0.4)]',
+    buttonText: '继续答题',
+    progressBar:
+      'bg-gradient-to-r from-[#6677ff] to-[#2f27b0] shadow-[0_0_8px_rgba(102,119,255,0.3)]',
+    topLine: 'bg-gradient-to-r from-transparent via-[rgba(102,119,255,0.3)] to-transparent',
+    clickable: true,
+  },
+  ended: {
+    border:
+      'border-[rgba(7,193,96,0.2)] shadow-[0_0_20px_rgba(7,193,96,0.06),inset_0_1px_0_rgba(7,193,96,0.1)] hover:-translate-y-0.5 hover:bg-white/[0.06] hover:shadow-[0_8px_32px_rgba(7,193,96,0.12),inset_0_1px_0_rgba(7,193,96,0.15)] hover:border-[rgba(7,193,96,0.3)]',
+    iconBg: 'bg-[rgba(7,193,96,0.15)] text-[#07c160] shadow-[0_0_16px_rgba(7,193,96,0.15)]',
+    icon: <DesktopOutlined />,
+    badgeClass: 'bg-[rgba(7,193,96,0.15)] text-[#07c160] border border-[rgba(7,193,96,0.2)]',
+    badgeText: '已结束',
+    buttonClass:
+      'bg-gradient-to-br from-[#07c160] to-[#05a34e] text-white shadow-[0_4px_16px_rgba(7,193,96,0.3)] hover:shadow-[0_6px_24px_rgba(7,193,96,0.4)]',
+    buttonText: '查看详情',
+    progressBar: 'bg-gradient-to-r from-[#07c160] to-[#05a34e] shadow-[0_0_8px_rgba(7,193,96,0.3)]',
+    topLine: 'bg-gradient-to-r from-transparent via-[rgba(7,193,96,0.3)] to-transparent',
+    clickable: true,
+  },
+  notStarted: {
+    border:
+      'border-white/[0.06] hover:-translate-y-0.5 hover:bg-white/[0.06] hover:shadow-[0_4px_16px_rgba(255,255,255,0.04)]',
+    iconBg: 'bg-[rgba(140,140,141,0.1)] text-[#8c8c8d]',
+    icon: <InboxOutlined />,
+    badgeClass: 'bg-[rgba(140,140,141,0.1)] text-[#8c8c8d] border border-[rgba(140,140,141,0.15)]',
+    badgeText: '未开始',
+    buttonClass:
+      'bg-[rgba(140,140,141,0.15)] text-[#8c8c8d] cursor-not-allowed border border-[rgba(140,140,141,0.15)]',
+    buttonText: '暂不可进入',
+    progressBar: 'bg-[rgba(140,140,141,0.3)]',
+    topLine: null,
+    clickable: false,
+  },
 }
 
 function formatDate(dateStr: string): string {
@@ -47,9 +134,14 @@ export default function AssessmentCard({ assessment }: AssessmentCardProps) {
 
   const actualStatus = getAssessmentStatus(assessment.startTime, assessment.endTime)
   const eliminated = !!assessment.eliminated
-  const isInProgress = actualStatus === 'IN_PROGRESS' && !eliminated
-  const isEnded = actualStatus === 'ENDED' && !eliminated
-  const isNotStarted = actualStatus === 'NOT_STARTED'
+  const visualState: VisualState = eliminated
+    ? 'eliminated'
+    : actualStatus === 'IN_PROGRESS'
+      ? 'inProgress'
+      : actualStatus === 'ENDED'
+        ? 'ended'
+        : 'notStarted'
+  const cardStyle = STYLES[visualState]
 
   const epoch = assessment.epoch
   const direction = assessment.direction
@@ -59,43 +151,20 @@ export default function AssessmentCard({ assessment }: AssessmentCardProps) {
 
   return (
     <div
-      className={`relative bg-white/[0.04] border rounded-2xl p-6 max-sm:p-[18px] backdrop-blur-[24px] transition-all overflow-hidden ${
-        eliminated
-          ? 'border-white/[0.04] opacity-70'
-          : isInProgress
-            ? 'border-[rgba(102,119,255,0.2)] shadow-[0_0_20px_rgba(102,119,255,0.06),inset_0_1px_0_rgba(102,119,255,0.1)] hover:-translate-y-0.5 hover:bg-white/[0.06] hover:shadow-[0_8px_32px_rgba(102,119,255,0.12),inset_0_1px_0_rgba(102,119,255,0.15)] hover:border-[rgba(102,119,255,0.3)]'
-            : isEnded
-              ? 'border-[rgba(7,193,96,0.2)] shadow-[0_0_20px_rgba(7,193,96,0.06),inset_0_1px_0_rgba(7,193,96,0.1)] hover:-translate-y-0.5 hover:bg-white/[0.06] hover:shadow-[0_8px_32px_rgba(7,193,96,0.12),inset_0_1px_0_rgba(7,193,96,0.15)] hover:border-[rgba(7,193,96,0.3)]'
-              : 'border-white/[0.06] hover:-translate-y-0.5 hover:bg-white/[0.06] hover:shadow-[0_4px_16px_rgba(255,255,255,0.04)]'
-      }`}
+      className={`relative bg-white/[0.04] border rounded-2xl p-6 max-sm:p-[18px] backdrop-blur-[24px] transition-all overflow-hidden ${cardStyle.border}`}
     >
-      {isInProgress && (
-        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[rgba(102,119,255,0.3)] to-transparent pointer-events-none" />
-      )}
-      {isEnded && (
-        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[rgba(7,193,96,0.3)] to-transparent pointer-events-none" />
+      {cardStyle.topLine && (
+        <div
+          className={`absolute top-0 left-0 right-0 h-px ${cardStyle.topLine} pointer-events-none`}
+        />
       )}
 
       <div className="flex justify-between items-start mb-5">
         <div className="flex items-center gap-[14px]">
           <div
-            className={`w-11 h-11 rounded-xl flex items-center justify-center text-xl shrink-0 backdrop-blur-[8px] ${
-              eliminated
-                ? 'bg-[rgba(140,140,141,0.08)] text-[#8c8c8d]/50'
-                : isInProgress
-                  ? 'bg-[rgba(102,119,255,0.15)] text-[#6677ff] shadow-[0_0_16px_rgba(102,119,255,0.15)]'
-                  : isEnded
-                    ? 'bg-[rgba(7,193,96,0.15)] text-[#07c160] shadow-[0_0_16px_rgba(7,193,96,0.15)]'
-                    : 'bg-[rgba(140,140,141,0.1)] text-[#8c8c8d]'
-            }`}
+            className={`w-11 h-11 rounded-xl flex items-center justify-center text-xl shrink-0 backdrop-blur-[8px] ${cardStyle.iconBg}`}
           >
-            {isEnded ? (
-              <DesktopOutlined />
-            ) : isInProgress ? (
-              <FieldTimeOutlined />
-            ) : (
-              <InboxOutlined />
-            )}
+            {cardStyle.icon}
           </div>
           <div className="flex flex-col gap-1">
             <span className="text-base font-semibold text-white">{getEpochLabel(epoch)}</span>
@@ -105,23 +174,9 @@ export default function AssessmentCard({ assessment }: AssessmentCardProps) {
           </div>
         </div>
         <span
-          className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap shrink-0 backdrop-blur-[8px] ${
-            eliminated
-              ? 'bg-[rgba(255,77,79,0.1)] text-[#ff4d4f] border border-[rgba(255,77,79,0.15)]'
-              : isInProgress
-                ? 'bg-[rgba(102,119,255,0.15)] text-[#6677ff] border border-[rgba(102,119,255,0.2)]'
-                : isEnded
-                  ? 'bg-[rgba(7,193,96,0.15)] text-[#07c160] border border-[rgba(7,193,96,0.2)]'
-                  : 'bg-[rgba(140,140,141,0.1)] text-[#8c8c8d] border border-[rgba(140,140,141,0.15)]'
-          }`}
+          className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap shrink-0 backdrop-blur-[8px] ${cardStyle.badgeClass}`}
         >
-          {eliminated
-            ? '已被淘汰'
-            : actualStatus === 'ENDED'
-              ? '已结束'
-              : actualStatus === 'IN_PROGRESS'
-                ? '进行中'
-                : '未开始'}
+          {cardStyle.badgeText}
         </span>
       </div>
 
@@ -161,13 +216,7 @@ export default function AssessmentCard({ assessment }: AssessmentCardProps) {
           </div>
           <div className="h-[6px] bg-white/[0.06] rounded-[3px] overflow-hidden">
             <div
-              className={`h-full rounded-[3px] transition-[width] duration-300 ${
-                isInProgress
-                  ? 'bg-gradient-to-r from-[#6677ff] to-[#2f27b0] shadow-[0_0_8px_rgba(102,119,255,0.3)]'
-                  : isEnded
-                    ? 'bg-gradient-to-r from-[#07c160] to-[#05a34e] shadow-[0_0_8px_rgba(7,193,96,0.3)]'
-                    : 'bg-[rgba(140,140,141,0.3)]'
-              }`}
+              className={`h-full rounded-[3px] transition-[width] duration-300 ${cardStyle.progressBar}`}
               style={{ width: `${progressPercent}%` }}
             />
           </div>
@@ -176,28 +225,14 @@ export default function AssessmentCard({ assessment }: AssessmentCardProps) {
 
       <div className="flex justify-end">
         <button
-          className={`inline-flex items-center gap-[6px] px-5 py-2 rounded-lg text-[13px] font-medium border-none cursor-pointer transition-all backdrop-blur-[8px] ${
-            eliminated
-              ? 'bg-[rgba(140,140,141,0.1)] text-[#8c8c8d]/70 cursor-not-allowed'
-              : isInProgress
-                ? 'bg-gradient-to-br from-[#6677ff] to-[#2f27b0] text-white shadow-[0_4px_16px_rgba(102,119,255,0.3)] hover:shadow-[0_6px_24px_rgba(102,119,255,0.4)]'
-                : isEnded
-                  ? 'bg-gradient-to-br from-[#07c160] to-[#05a34e] text-white shadow-[0_4px_16px_rgba(7,193,96,0.3)] hover:shadow-[0_6px_24px_rgba(7,193,96,0.4)]'
-                  : 'bg-[rgba(140,140,141,0.15)] text-[#8c8c8d] cursor-not-allowed border border-[rgba(140,140,141,0.15)]'
-          }`}
+          className={`inline-flex items-center gap-[6px] px-5 py-2 rounded-lg text-[13px] font-medium border-none cursor-pointer transition-all backdrop-blur-[8px] ${cardStyle.buttonClass}`}
           onClick={() => {
-            if (isNotStarted || eliminated) return
+            if (!cardStyle.clickable) return
             router.push(`/assessment/${assessment.id.toString()}/questions`)
           }}
         >
-          {eliminated
-            ? '已被淘汰'
-            : isInProgress
-              ? '继续答题'
-              : isEnded
-                ? '查看详情'
-                : '暂不可进入'}
-          {!isNotStarted && !eliminated && <RightOutlined className="text-xs" />}
+          {cardStyle.buttonText}
+          {cardStyle.clickable && <RightOutlined className="text-xs" />}
         </button>
       </div>
     </div>
