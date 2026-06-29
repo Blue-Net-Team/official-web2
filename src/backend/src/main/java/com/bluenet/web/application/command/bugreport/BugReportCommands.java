@@ -36,18 +36,14 @@ public class BugReportCommands {
             /** 关联图片文件 ID 列表 */
             List<Long> fileIds) {
         public CreateBugReportCommand {
-            if (title != null) {
-                title = title.trim();
-            }
-            if (description != null) {
-                description = description.trim();
-            }
-            if (pageUrl != null) {
-                pageUrl = pageUrl.trim();
-            }
-            if (reporterEmail != null) {
-                reporterEmail = reporterEmail.trim();
-            }
+            title = trimIfPresent(title);
+            description = trimIfPresent(description);
+            pageUrl = trimIfPresent(pageUrl);
+            reporterEmail = trimIfPresent(reporterEmail);
+        }
+
+        private static String trimIfPresent(String value) {
+            return value != null ? value.trim() : null;
         }
     }
 

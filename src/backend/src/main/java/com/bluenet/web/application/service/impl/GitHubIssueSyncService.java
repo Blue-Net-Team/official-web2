@@ -1,5 +1,6 @@
 package com.bluenet.web.application.service.impl;
 
+import com.bluenet.web.common.util.StringUtils;
 import com.bluenet.web.domain.model.entity.BugReport;
 import com.bluenet.web.domain.repository.BugReportRepository;
 import com.bluenet.web.infrastructure.config.GitHubAppProperties;
@@ -16,8 +17,6 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class GitHubIssueSyncService {
-
-    private static final int MAX_TITLE_LENGTH = 100;
 
     private final GitHubIssueClient gitHubIssueClient;
     private final BugReportRepository bugReportRepository;
@@ -67,10 +66,7 @@ public class GitHubIssueSyncService {
         if (title == null || title.isBlank()) {
             return "Bug Report";
         }
-        if (title.length() <= MAX_TITLE_LENGTH) {
-            return title;
-        }
-        return title.substring(0, MAX_TITLE_LENGTH) + "...";
+        return StringUtils.truncateWithEllipsis(title, BugReport.MAX_TITLE_LENGTH);
     }
 
     private String buildBody(BugReport bugReport) {

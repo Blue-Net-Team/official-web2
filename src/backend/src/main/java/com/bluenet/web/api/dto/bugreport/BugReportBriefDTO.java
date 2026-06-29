@@ -20,7 +20,7 @@ public class BugReportBriefDTO {
     @Schema(description = "Bug 标题", example = "提交按钮无响应")
     private String title;
 
-    @Schema(description = "Bug 描述摘要", example = "点击提交按钮后页面无响应...")
+    @Schema(description = "Bug 描述", example = "点击提交按钮后页面无响应")
     private String description;
 
     @Schema(description = "发生页面的 URL", example = "/home")

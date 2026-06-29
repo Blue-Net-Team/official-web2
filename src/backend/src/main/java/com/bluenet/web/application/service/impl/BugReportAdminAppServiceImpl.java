@@ -43,15 +43,11 @@ public class BugReportAdminAppServiceImpl implements BugReportAdminAppService {
 
     private BugReportResult.Brief toBriefResult(BugReport bugReport) {
         int imageCount = bugReport.getImages() != null ? bugReport.getImages().size() : 0;
-        String description = bugReport.getDescription();
-        if (description != null && description.length() > 100) {
-            description = description.substring(0, 100) + "...";
-        }
 
         return new BugReportResult.Brief(
                 bugReport.getId(),
                 bugReport.getTitle(),
-                description,
+                bugReport.getDescription(),
                 bugReport.getPageUrl(),
                 bugReport.getReporterEmail(),
                 bugReport.getStatus(),
