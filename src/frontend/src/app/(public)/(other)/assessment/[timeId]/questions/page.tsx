@@ -273,7 +273,7 @@ export default function QuestionsPage() {
     return (
       <div className="min-h-screen bg-[#0a0a0a] px-6 py-10 pb-20 relative overflow-x-hidden">
         <div className="fixed inset-0 z-0">
-          <DarkVeil hueShift={40} speed={0.6} offsetY={0.2} />
+          <DarkVeil hueShift={-130} speed={0.6} offsetY={0.2} />
         </div>
         <div className="flex justify-center items-center min-h-[300px] relative z-1">
           <Spin size="large" />
@@ -299,7 +299,7 @@ export default function QuestionsPage() {
   return (
     <div className="min-h-screen bg-[#0a0a0a] px-6 py-10 pb-20 relative overflow-x-hidden">
       <div className="fixed inset-0 z-0">
-        <DarkVeil hueShift={40} speed={0.6} offsetY={0.2} />
+        <DarkVeil hueShift={-130} speed={0.6} offsetY={0.2} />
       </div>
       <div className="max-w-[960px] mx-auto relative z-10">
         <div className="mb-8">

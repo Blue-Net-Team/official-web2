@@ -625,7 +625,7 @@ export default function QuestionDetailPage() {
     return (
       <div className="min-h-screen bg-[#0a0a0a] relative flex flex-col">
         <div className="fixed inset-0 z-0">
-          <DarkVeil hueShift={40} speed={0.6} offsetY={0.2} />
+          <DarkVeil hueShift={-130} speed={0.6} offsetY={0.2} />
         </div>
         <div className="flex flex-col justify-center items-center min-h-[300px] relative z-10">
           <Spin size="large" />
@@ -638,7 +638,7 @@ export default function QuestionDetailPage() {
     return (
       <div className="min-h-screen bg-[#0a0a0a] relative flex flex-col">
         <div className="fixed inset-0 z-0">
-          <DarkVeil hueShift={40} speed={0.6} offsetY={0.2} />
+          <DarkVeil hueShift={-130} speed={0.6} offsetY={0.2} />
         </div>
         <div className="flex flex-col justify-center items-center min-h-[300px] relative z-10">
           <p className="text-white/50 mb-4">题目不存在或无权查看</p>
@@ -739,7 +739,7 @@ export default function QuestionDetailPage() {
   return (
     <div className="min-h-screen bg-[#0a0a0a] relative flex flex-col">
       <div className="fixed inset-0 z-0">
-        <DarkVeil hueShift={40} speed={0.6} offsetY={0.2} />
+        <DarkVeil hueShift={-130} speed={0.6} offsetY={0.2} />
       </div>
 
       {isExpired && (

@@ -31,7 +31,7 @@ const EnrollPageContent: React.FC = () => {
     <div className="w-full min-h-screen bg-[#0a0a0a] text-white relative overflow-x-hidden">
       <ConfigProvider theme={customTheme}>
         <div className="fixed inset-0 z-0">
-          <DarkVeil hueShift={40} speed={0.6} offsetY={0.2} />
+          <DarkVeil hueShift={-130} speed={0.6} offsetY={0.2} />
         </div>
 
         <main className="w-full min-h-screen flex justify-center items-start pt-[100px] max-lg:pt-[100px] px-10 max-lg:px-5 pb-[60px] gap-[30px] max-lg:flex-col max-lg:items-center relative z-1">

@@ -214,7 +214,7 @@ export default function MemberProfilePage() {
     return (
       <div className="w-full min-h-screen bg-[#0a0a0a] relative overflow-x-hidden">
         <div className="fixed inset-0 z-0">
-          <DarkVeil hueShift={40} speed={0.6} offsetY={0.2} />
+          <DarkVeil hueShift={-130} speed={0.6} offsetY={0.2} />
         </div>
         <div className="flex items-center justify-center min-h-[400px] relative z-1">
           <Spin size="large" />
@@ -227,7 +227,7 @@ export default function MemberProfilePage() {
     return (
       <div className="w-full min-h-screen bg-[#0a0a0a] relative overflow-x-hidden">
         <div className="fixed inset-0 z-0">
-          <DarkVeil hueShift={40} speed={0.6} offsetY={0.2} />
+          <DarkVeil hueShift={-130} speed={0.6} offsetY={0.2} />
         </div>
         <div className="flex flex-col items-center justify-center min-h-[400px] text-center relative z-1">
           <div className="w-16 h-16 rounded-2xl bg-red-500/10 flex items-center justify-center mb-4 text-[#ef4444] [&_svg]:w-8 [&_svg]:h-8">
@@ -270,7 +270,7 @@ export default function MemberProfilePage() {
   return (
     <div className="w-full min-h-screen bg-[#0a0a0a] relative overflow-x-hidden">
       <div className="fixed inset-0 z-0">
-        <DarkVeil hueShift={40} speed={0.6} offsetY={0.2} />
+        <DarkVeil hueShift={-130} speed={0.6} offsetY={0.2} />
       </div>
       <main className="flex max-w-[1400px] mx-auto px-16 py-10 gap-8 relative z-1 max-[1024px]:flex-col max-[1024px]:p-6 max-md:p-4">
         <ProfileSidebar

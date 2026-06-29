@@ -148,7 +148,7 @@ export default function LabEnvironmentPage() {
   return (
     <div className="min-h-screen bg-[#0a0a0f] flex flex-col relative overflow-hidden">
       <div className="fixed inset-0 z-0">
-        <DarkVeil hueShift={40} speed={0.6} offsetY={0.2} />
+        <DarkVeil hueShift={-130} speed={0.6} offsetY={0.2} />
       </div>
 
       <section className="flex flex-col items-center gap-4 py-[100px] px-[120px] max-xl:px-12 max-md:px-6 max-md:py-[60px] max-md:gap-3 relative z-1">
