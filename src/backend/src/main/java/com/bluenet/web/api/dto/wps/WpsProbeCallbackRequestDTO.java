@@ -1,5 +1,6 @@
 package com.bluenet.web.api.dto.wps;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -21,6 +22,7 @@ public class WpsProbeCallbackRequestDTO extends WpsCallbackRequestDTO {
     /**
      * 绑定验证码
      */
+    @JsonProperty("bind_code")
     private String bindCode;
 
     @Override
