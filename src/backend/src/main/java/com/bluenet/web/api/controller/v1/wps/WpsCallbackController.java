@@ -1,12 +1,11 @@
 package com.bluenet.web.api.controller.v1.wps;
 
 import com.bluenet.web.api.converter.wpsform.WpsFormRequestConverter;
-import com.bluenet.web.api.dto.ResponseMessage;
 import com.bluenet.web.api.dto.wps.WpsBindCallbackRequestDTO;
 import com.bluenet.web.api.dto.wps.WpsCallbackRequestDTO;
 import com.bluenet.web.api.dto.wps.WpsCreateAnswerCallbackRequestDTO;
 import com.bluenet.web.api.dto.wps.WpsProbeCallbackRequestDTO;
-import com.bluenet.web.api.dto.wps.WpsResponseMessage;
+import com.bluenet.web.api.dto.wps.WpsBindResponseDTO;
 import com.bluenet.web.application.command.wpsform.WpsFormCommands;
 import com.bluenet.web.application.service.WpsFormAppService;
 import com.bluenet.web.domain.exception.BadRequest;
@@ -49,7 +48,7 @@ public class WpsCallbackController {
     @Operation(summary = "WPS表单回调", description = "接收WPS表单数据推送事件（bind/create_answer），bind返回验证码，create_answer自动创建用户")
     @RequiresPermission(value = "wps:callback", name = "WPS表单回调", access = AccessLevel.PUBLIC, audit = true)
     @PostMapping(value = "/callback", produces = MediaType.APPLICATION_JSON_VALUE)
-    public Object handleCallback(
+    public WpsBindResponseDTO handleCallback(
             @RequestParam(value = "bind_code", required = false) String bindCodeFromQuery,
             @RequestBody(required = false) WpsCallbackRequestDTO request,
             HttpServletRequest httpRequest) {
@@ -57,13 +56,13 @@ public class WpsCallbackController {
         // 1. bind_code 来自查询参数（?bind_code=xxx）
         if (StringUtils.hasText(bindCodeFromQuery)) {
             log.info("WPS 表单绑定验证(查询参数): bind_code={}", bindCodeFromQuery);
-            return new WpsResponseMessage(bindCodeFromQuery);
+            return new WpsBindResponseDTO(bindCodeFromQuery);
         }
 
         // 2. bind_code 来自请求体（WPS 绑定验证会 POST: {"bind_code":"..."}），无 event 字段
         if (request instanceof WpsProbeCallbackRequestDTO probe && StringUtils.hasText(probe.getBindCode())) {
             log.info("WPS 表单绑定验证(请求体): bind_code={}", probe.getBindCode());
-            return new WpsResponseMessage(probe.getBindCode());
+            return new WpsBindResponseDTO(probe.getBindCode());
         }
 
         // 3. 验证 API Secret（如果已配置）
@@ -71,7 +70,7 @@ public class WpsCallbackController {
 
         // 4. 按事件类型分发
         return switch (request) {
-            case WpsBindCallbackRequestDTO bind -> new WpsResponseMessage(wpsFormAppService.resolveBindCode(bind.getRid()));
+            case WpsBindCallbackRequestDTO bind -> new WpsBindResponseDTO(wpsFormAppService.resolveBindCode(bind.getRid()));
             case WpsCreateAnswerCallbackRequestDTO create -> handleCreateAnswer(create);
             case null, default -> {
                 throw new BadRequest("无效的 WPS 回调请求");
@@ -91,10 +90,10 @@ public class WpsCallbackController {
         }
     }
 
-    private ResponseMessage<Void> handleCreateAnswer(WpsCreateAnswerCallbackRequestDTO request) {
+    private WpsBindResponseDTO handleCreateAnswer(WpsCreateAnswerCallbackRequestDTO request) {
         WpsFormCommands.CreateUserFromWpsFormCommand command = wpsFormRequestConverter.toCreateUserCommand(request);
         wpsFormAppService.createUserFromWpsForm(command);
         log.info("WPS 表单创建用户请求已处理: rid={}", request.getRid());
-        return ResponseMessage.success();
+        return new WpsBindResponseDTO(null);
     }
 }
