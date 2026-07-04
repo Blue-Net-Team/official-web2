@@ -26,4 +26,13 @@ public interface CollegeMapper extends BaseMapper<CollegeDO> {
      * @return 满足条件的记录数量。
      */
     long countByNameAndIdNot(@Param("name") String name, @Param("excludeId") Long excludeId);
+
+    /**
+     * 通过学院名查找学院数据
+     *
+     * @param name
+     *            学院名
+     * @return 学院数据类
+     */
+    CollegeDO selectByName(@Param("name") String name);
 }

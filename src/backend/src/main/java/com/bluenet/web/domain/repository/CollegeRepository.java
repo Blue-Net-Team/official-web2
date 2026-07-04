@@ -29,6 +29,15 @@ public interface CollegeRepository {
     Optional<College> findById(Long id);
 
     /**
+     * 按名称查询学院记录。
+     *
+     * @param name
+     *            学院名。
+     * @return 查询到的学院实体；不存在时为 Optional.empty()。
+     */
+    Optional<College> findByName(String name);
+
+    /**
      * 保存学院记录。
      *
      * @param college
