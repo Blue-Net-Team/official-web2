@@ -17,7 +17,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class WpsResponseMessage {
+public class WpsBindResponseDTO {
 
     /**
      * 绑定验证码（仅在 bind 事件返回，WPS 要求精确的 bind_code 字段名）

@@ -2,6 +2,7 @@ package com.bluenet.web.api.dto;
 
 import java.util.Objects;
 
+import com.bluenet.web.api.dto.wps.WpsBindResponseDTO;
 import org.springframework.core.MethodParameter;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -59,6 +60,11 @@ public class ApiResponseAdvice implements ResponseBodyAdvice<Object> {
         String path = request.getURI().getPath();
         if (path != null && (path.contains("/v3/api-docs") || path.startsWith("/swagger-ui"))) {
             return body;
+        }
+
+        // 放行wps绑定请求
+        if (body instanceof WpsBindResponseDTO responseDTO) {
+            return responseDTO;
         }
 
         if (response instanceof ServletServerHttpResponse servletResponse) {
