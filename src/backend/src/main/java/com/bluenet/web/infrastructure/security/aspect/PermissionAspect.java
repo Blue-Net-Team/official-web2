@@ -38,7 +38,7 @@ public class PermissionAspect {
         HttpServletRequest request = getCurrentRequest();
 
         if (request == null) {
-            logger.warn("Cannot get current request, denying access");
+            logger.error("Cannot get current request in @RequiresPermission check, denying access");
             throw new Forbidden("Access denied");
         }
 

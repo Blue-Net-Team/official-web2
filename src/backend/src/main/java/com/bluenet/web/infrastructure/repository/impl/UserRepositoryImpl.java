@@ -26,7 +26,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.bluenet.web.domain.model.vo.UserVO;
 import com.bluenet.web.domain.repository.FileRepository;
 import com.bluenet.web.domain.repository.UserRepository;
 
@@ -476,64 +475,4 @@ public class UserRepositoryImpl implements UserRepository {
         return new UserStatistics(expCount, achCount, ansCount, cmtCount);
     }
 
-    /**
-     * 在用户 的持久层对象、领域对象和视图对象之间转换。
-     *
-     * @param user
-     *            用户领域对象。
-     * @return 转换后的目标模型对象。
-     */
-    private UserVO convertToVO(User user) {
-        // 学院
-        String collegeName = null;
-        if (user.getCollegeId() != null) {
-            College college = collegeConverter.toEntity(collegeMapper.selectById(user.getCollegeId()));
-            collegeName = college != null ? college.getName() : null;
-        } else {
-            log.warn("user {} has no collegeId", user.getId());
-        }
-
-        // 微信二维码（qrcode_id 直接关联 tb_file，非 tb_qrcode）
-        Long wechatQrcodeFileId = user.getQrcodeId();
-
-        // 权限列表
-        Set<String> permissions = new HashSet<>();
-        if (user.getRoleId() != null) {
-            permissions = permissionCache.getPermissionsByRole(user.getRoleId());
-        } else {
-            log.warn("user {} has no roleId", user.getId());
-        }
-
-        // 角色
-        String roleName;
-        if (user.getRoleId() != null) {
-            Role roleOptional = roleConverter.toEntity(roleMapper.selectById(user.getRoleId()));
-            roleName = roleOptional != null ? roleOptional.getName() : null;
-        } else {
-            log.warn("user {} has no roleId", user.getId());
-            roleName = null;
-        }
-
-        return UserVO.builder()
-                .id(user.getId())
-                .roleName(roleName)
-                .studentId(user.getStudentId())
-                .email(user.getEmail())
-                .college(collegeName)
-                .password(user.getPassword())
-                .username(user.getUsername())
-                .nickname(user.getNickname())
-                .assessmentGradeYear(user.getAssessmentGradeYear())
-                .job(user.getJob())
-                .direction(user.getDirection())
-                .gender(user.getGender())
-                .major(user.getMajor())
-                .wechatQrcode(wechatQrcodeFileId)
-                .avatarFileId(user.getAvatarId())
-                .githubUsername(user.getGithubUsername())
-                .bio(user.getBio())
-                .disabled(user.getDisable())
-                .permissions(permissions)
-                .build();
-    }
 }

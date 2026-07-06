@@ -61,6 +61,9 @@ public class UserInfoAppServiceImpl implements UserInfoAppService {
 
     @Override
     public UserInfoResult getMyInfo(Long userId) {
+        if (userId == null) {
+            throw new Unauthorized("用户不存在");
+        }
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new Unauthorized("用户不存在"));
         String gradeLabel = GradeCalculator.getGradeLabel(user.getStudentId(), user.getAssessmentGradeYear());

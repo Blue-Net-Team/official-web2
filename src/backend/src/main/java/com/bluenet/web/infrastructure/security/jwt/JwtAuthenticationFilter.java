@@ -1,6 +1,5 @@
 package com.bluenet.web.infrastructure.security.jwt;
 
-import com.bluenet.web.domain.exception.GlobalException;
 import com.bluenet.web.domain.exception.Unauthorized;
 import com.bluenet.web.domain.model.entity.User;
 import com.bluenet.web.domain.repository.UserRepository;
@@ -65,7 +64,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         Optional<User> userOpt = userRepository.findById(userId.get());
                         if (userOpt.isEmpty()) {
                             log.warn("User not found for userId: {}", userId.get());
-                            failAuthEntryPoint.commence(request, response, new GlobalException("用户不存在"));
+                            failAuthEntryPoint.commence(request, response, new Unauthorized("用户不存在"));
                             return; // 校验失败后直接返回
                         }
 
