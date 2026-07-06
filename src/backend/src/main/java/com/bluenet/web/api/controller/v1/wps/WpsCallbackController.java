@@ -4,7 +4,6 @@ import com.bluenet.web.api.converter.wpsform.WpsFormRequestConverter;
 import com.bluenet.web.api.dto.wps.WpsBindCallbackRequestDTO;
 import com.bluenet.web.api.dto.wps.WpsCallbackRequestDTO;
 import com.bluenet.web.api.dto.wps.WpsCreateAnswerCallbackRequestDTO;
-import com.bluenet.web.api.dto.wps.WpsProbeCallbackRequestDTO;
 import com.bluenet.web.api.dto.wps.WpsBindResponseDTO;
 import com.bluenet.web.application.command.wpsform.WpsFormCommands;
 import com.bluenet.web.application.service.WpsFormAppService;
@@ -23,13 +22,13 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
  * WPS 智能表单回调控制器。
  * <p>
- * 接收 WPS 表单的数据推送事件（bind / create_answer），将表单提交数据解析为系统用户并自动创建账号。
+ * 接收 WPS 表单的绑定验证请求（?bind_code=xxx 或 event=bind）与数据推送事件（create_answer），
+ * 将表单提交数据解析为系统用户并自动创建账号。
  * </p>
  */
 @Tag(name = "WPS表单回调", description = "WPS智能表单数据推送回调接口，公开访问")
@@ -45,37 +44,27 @@ public class WpsCallbackController {
     private final WpsFormRequestConverter wpsFormRequestConverter;
     private final WpsProperties wpsProperties;
 
-    @Operation(summary = "WPS表单回调", description = "接收WPS表单数据推送事件（bind/create_answer），bind返回验证码，create_answer自动创建用户")
+    @Operation(summary = "WPS表单回调", description = "接收WPS表单绑定验证(?bind_code=xxx/event=bind)与数据推送事件(create_answer)，create_answer自动创建用户")
     @RequiresPermission(value = "wps:callback", name = "WPS表单回调", access = AccessLevel.PUBLIC, audit = true)
     @PostMapping(value = "/callback", produces = MediaType.APPLICATION_JSON_VALUE)
     public WpsBindResponseDTO handleCallback(
-            @RequestParam(value = "bind_code", required = false) String bindCodeFromQuery,
-            @RequestBody(required = false) WpsCallbackRequestDTO request,
+            @RequestBody() WpsCallbackRequestDTO request,
             HttpServletRequest httpRequest) {
 
-        // 1. bind_code 来自查询参数（?bind_code=xxx）
-        if (StringUtils.hasText(bindCodeFromQuery)) {
-            log.info("WPS 表单绑定验证(查询参数): bind_code={}", bindCodeFromQuery);
-            return new WpsBindResponseDTO(bindCodeFromQuery);
+        // 1. request 中没有表单id说明是绑定
+        if (request.getFormId().isBlank() || request instanceof WpsBindCallbackRequestDTO) {
+            return new WpsBindResponseDTO(wpsFormAppService.resolveBindCode(request.getRid()));
         }
 
-        // 2. bind_code 来自请求体（WPS 绑定验证会 POST: {"bind_code":"..."}），无 event 字段
-        if (request instanceof WpsProbeCallbackRequestDTO probe && StringUtils.hasText(probe.getBindCode())) {
-            log.info("WPS 表单绑定验证(请求体): bind_code={}", probe.getBindCode());
-            return new WpsBindResponseDTO(probe.getBindCode());
-        }
-
-        // 3. 验证 API Secret（如果已配置）
+        // 4. 数据推送事件需要校验 API Secret（如果已配置）
         validateSecret(httpRequest);
 
-        // 4. 按事件类型分发
-        return switch (request) {
-            case WpsBindCallbackRequestDTO bind -> new WpsBindResponseDTO(wpsFormAppService.resolveBindCode(bind.getRid()));
-            case WpsCreateAnswerCallbackRequestDTO create -> handleCreateAnswer(create);
-            case null, default -> {
-                throw new BadRequest("无效的 WPS 回调请求");
-            }
-        };
+        // 5. 按事件类型分发
+        if (request instanceof WpsCreateAnswerCallbackRequestDTO create) {
+            return handleCreateAnswer(create);
+        }
+
+        throw new BadRequest("无效的 WPS 回调请求");
     }
 
     private void validateSecret(HttpServletRequest httpRequest) {

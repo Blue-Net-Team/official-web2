@@ -17,7 +17,7 @@ public final class PasswordGenerator {
     private static final String LOWERCASE = "abcdefghijklmnopqrstuvwxyz";
     private static final String UPPERCASE = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     private static final String DIGITS = "0123456789";
-    private static final String SPECIAL = "!@#$%^&*";
+    private static final String SPECIAL = "!@#%^&*";
     private static final String ALL_CHARS = LOWERCASE + UPPERCASE + DIGITS + SPECIAL;
     private static final String ALL_CHARS_NO_SPECIAL = LOWERCASE + UPPERCASE + DIGITS;
 

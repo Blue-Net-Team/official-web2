@@ -28,16 +28,7 @@ public class WpsFormDirectionResolverImpl implements WpsFormDirectionResolver {
                 return d;
             }
         }
-
-        // 再尝试匹配 WPS 表单短名称
-        return switch (trimmed) {
-            case "结构" -> Direction.STRUCTURAL_DESIGN;
-            case "电控" -> Direction.EMBEDDED;
-            case "视觉" -> Direction.COMPUTER_VISION;
-            default -> {
-                log.warn("未找到匹配的方向描述: {}", description);
-                yield null;
-            }
-        };
+        log.warn("未找到匹配的方向描述: {}", description);
+        return null;
     }
 }

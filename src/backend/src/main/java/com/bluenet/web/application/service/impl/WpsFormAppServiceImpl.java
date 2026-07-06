@@ -22,7 +22,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
 import org.springframework.validation.annotation.Validated;
 
 import java.util.Optional;
@@ -50,7 +49,7 @@ public class WpsFormAppServiceImpl implements WpsFormAppService {
 
     @Override
     public String resolveBindCode(String rid) {
-        return StringUtils.hasText(wpsProperties.getBindCode()) ? wpsProperties.getBindCode() : rid;
+        return !wpsProperties.getBindCode().isBlank() ? wpsProperties.getBindCode() : rid;
     }
 
     @Override
