@@ -26,7 +26,7 @@ Bug 报告模块当前在多处手写字符串截断与字段校验：
 
 ## Decisions
 
-### 1. 通用截断工具放在 `com.bluenet.web.common.util.StringUtils`
+### 1. 通用截断工具放在 `com.bluenet.web.infrastructure.util.StringUtils`
 
 项目已有 `domain.util`（领域工具）和 `infrastructure.util`（基础设施工具），通用字符串操作不属于任何一层，因此新增 `common.util` 包。
 

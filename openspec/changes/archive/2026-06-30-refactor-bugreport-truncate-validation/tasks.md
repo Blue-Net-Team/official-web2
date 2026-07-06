@@ -1,6 +1,6 @@
 ## 1. 新增通用字符串工具类及测试
 
-- [x] 1.1 创建 `com.bluenet.web.common.util.StringUtils`，实现 `truncateWithEllipsis(String, int)`
+- [x] 1.1 创建 `com.bluenet.web.infrastructure.util.StringUtils`，实现 `truncateWithEllipsis(String, int)`
 - [x] 1.2 创建 `StringUtilsTest`，覆盖 null、空串、短串、正好长度、超长、`maxLength <= 3`、负数等边界
 
 ## 2. 重构 BugReport 领域校验

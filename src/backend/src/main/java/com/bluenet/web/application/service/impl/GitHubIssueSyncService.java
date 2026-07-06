@@ -1,6 +1,6 @@
 package com.bluenet.web.application.service.impl;
 
-import com.bluenet.web.common.util.StringUtils;
+import com.bluenet.web.infrastructure.util.StringUtils;
 import com.bluenet.web.domain.model.entity.BugReport;
 import com.bluenet.web.domain.repository.BugReportRepository;
 import com.bluenet.web.infrastructure.config.GitHubAppProperties;

@@ -1,4 +1,4 @@
-package com.bluenet.web.common.util;
+package com.bluenet.web.infrastructure.util;
 
 /**
  * 通用字符串工具类。
