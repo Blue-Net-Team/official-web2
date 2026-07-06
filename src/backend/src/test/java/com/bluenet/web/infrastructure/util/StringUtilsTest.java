@@ -1,6 +1,5 @@
-package com.bluenet.web.common.util;
+package com.bluenet.web.infrastructure.util;
 
-import com.bluenet.web.infrastructure.util.StringUtils;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
