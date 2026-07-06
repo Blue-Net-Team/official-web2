@@ -7,8 +7,9 @@ import com.bluenet.web.domain.exception.Forbidden;
 import com.bluenet.web.domain.model.enumerate.RoleType;
 import com.bluenet.web.domain.model.policy.RoleHierarchy;
 import com.bluenet.web.domain.model.entity.AssessmentTime;
-import com.bluenet.web.domain.model.vo.UserVO;
+import com.bluenet.web.domain.model.entity.User;
 import com.bluenet.web.domain.repository.AssessmentTimeRepository;
+import com.bluenet.web.infrastructure.security.principal.RoleTypeResolver;
 import com.bluenet.web.infrastructure.security.util.UserCTX;
 
 import lombok.RequiredArgsConstructor;
@@ -21,14 +22,15 @@ import org.springframework.stereotype.Component;
 @Component
 public class AssessmentJudgementAccessGuard {
     private final AssessmentTimeRepository assessmentTimeRepository;
+    private final RoleTypeResolver roleTypeResolver;
 
     /**
      * 获取当前登录用户，未登录时抛出安全异常。
      *
-     * @return 当前登录用户 VO。
+     * @return 当前登录用户实体。
      */
-    public UserVO requireCurrentUser() {
-        UserVO currentUser = UserCTX.getCurrentUser();
+    public User requireCurrentUser() {
+        User currentUser = UserCTX.getCurrentUser();
         if (currentUser == null) {
             throw new SecurityException("未登录");
         }
@@ -39,11 +41,11 @@ public class AssessmentJudgementAccessGuard {
      * 解析用户角色类型，角色无效时抛出权限异常。
      *
      * @param user
-     *            用户 VO。
+     *            用户实体。
      * @return 角色类型枚举。
      */
-    public RoleType requireRole(UserVO user) {
-        RoleType roleType = RoleType.fromName(user.getRoleName());
+    public RoleType requireRole(User user) {
+        RoleType roleType = roleTypeResolver.resolve(user.getRoleId());
         if (roleType == null) {
             throw new Forbidden("当前用户角色无效");
         }
@@ -57,7 +59,7 @@ public class AssessmentJudgementAccessGuard {
      *            考核时间ID。
      */
     public void requireMemberScope(Long assessmentTimeId) {
-        UserVO currentUser = requireCurrentUser();
+        User currentUser = requireCurrentUser();
         RoleType roleType = requireRole(currentUser);
         if (!RoleHierarchy.isMemberOrAbove(roleType)) {
             throw new Forbidden("只有团队成员及以上权限可以查看考核评判");
@@ -72,7 +74,7 @@ public class AssessmentJudgementAccessGuard {
      *            考核时间ID。
      */
     public void requireDecisionScope(Long assessmentTimeId) {
-        UserVO currentUser = requireCurrentUser();
+        User currentUser = requireCurrentUser();
         RoleType roleType = requireRole(currentUser);
         if (!RoleHierarchy.isDirectionAdminOrAbove(roleType)) {
             throw new Forbidden("只有方向管理员及以上权限可以查看录用决策");
@@ -80,7 +82,7 @@ public class AssessmentJudgementAccessGuard {
         assertAssessmentTimeScope(assessmentTimeId, currentUser, roleType);
     }
 
-    private void assertAssessmentTimeScope(Long assessmentTimeId, UserVO currentUser, RoleType roleType) {
+    private void assertAssessmentTimeScope(Long assessmentTimeId, User currentUser, RoleType roleType) {
         AssessmentTime assessmentTime = assessmentTimeRepository.findById(assessmentTimeId)
                 .orElseThrow(() -> new DataNotFound("考核时间不存在，ID: " + assessmentTimeId));
         if (roleType == RoleType.DIRECTION_ADMIN

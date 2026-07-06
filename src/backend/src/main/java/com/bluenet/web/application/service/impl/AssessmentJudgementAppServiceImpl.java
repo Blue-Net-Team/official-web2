@@ -30,7 +30,8 @@ import com.bluenet.web.domain.model.vo.AssessmentQuestionSubmissionHistoryVO;
 import com.bluenet.web.domain.model.vo.AssessmentQuestionSubmissionVO;
 import com.bluenet.web.domain.model.entity.AssessmentQuestion;
 import com.bluenet.web.domain.model.entity.AssessmentTime;
-import com.bluenet.web.domain.model.vo.UserVO;
+import com.bluenet.web.domain.model.entity.User;
+import com.bluenet.web.infrastructure.security.principal.RoleTypeResolver;
 import com.bluenet.web.domain.repository.AssessmentAnswerRepository;
 import com.bluenet.web.domain.repository.AssessmentDecisionRepository;
 import com.bluenet.web.domain.repository.AssessmentJudgementRepository;
@@ -38,9 +39,9 @@ import com.bluenet.web.domain.repository.AssessmentQuestionRepository;
 import com.bluenet.web.domain.repository.AssessmentTeamRepository;
 import com.bluenet.web.domain.repository.AssessmentTimeRepository;
 import com.bluenet.web.domain.repository.CommentRepository;
+import com.bluenet.web.domain.repository.UserRepository;
 import com.bluenet.web.domain.service.AssessmentDecisionDomainService;
 import com.bluenet.web.domain.service.AssessmentJudgementDomainService;
-import com.bluenet.web.domain.service.UserDomainService;
 import com.bluenet.web.domain.model.policy.RoleHierarchy;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -75,10 +76,11 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
     private final AssessmentJudgementRepository assessmentJudgementRepository;
     private final AssessmentDecisionRepository assessmentDecisionRepository;
     private final AssessmentTeamRepository assessmentTeamRepository;
-    private final UserDomainService userDomainService;
+    private final UserRepository userRepository;
     private final AssessmentJudgementAccessGuard accessGuard;
     private final AssessmentDecisionPublicationService publicationService;
     private final CommentRepository commentRepository;
+    private final RoleTypeResolver roleTypeResolver;
 
     /**
      * 保留原应用服务依赖入口，内部组合访问 guard 和通知模板，降低调用方和单测构造成本。
@@ -99,8 +101,8 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
      *            考核决策仓储
      * @param assessmentTeamRepository
      *            考核队伍仓储
-     * @param userDomainService
-     *            用户领域服务
+     * @param userRepository
+     *            用户仓储
      * @param publicationService
      *            决策发布服务
      * @param commentRepository
@@ -115,9 +117,10 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
             AssessmentJudgementRepository assessmentJudgementRepository,
             AssessmentDecisionRepository assessmentDecisionRepository,
             AssessmentTeamRepository assessmentTeamRepository,
-            UserDomainService userDomainService,
+            UserRepository userRepository,
             AssessmentDecisionPublicationService publicationService,
-            CommentRepository commentRepository) {
+            CommentRepository commentRepository,
+            RoleTypeResolver roleTypeResolver) {
         this.assessmentJudgementDomainService = assessmentJudgementDomainService;
         this.assessmentDecisionDomainService = assessmentDecisionDomainService;
         this.assessmentAnswerRepository = assessmentAnswerRepository;
@@ -126,10 +129,11 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
         this.assessmentJudgementRepository = assessmentJudgementRepository;
         this.assessmentDecisionRepository = assessmentDecisionRepository;
         this.assessmentTeamRepository = assessmentTeamRepository;
-        this.userDomainService = userDomainService;
-        this.accessGuard = new AssessmentJudgementAccessGuard(assessmentTimeRepository);
+        this.userRepository = userRepository;
+        this.accessGuard = new AssessmentJudgementAccessGuard(assessmentTimeRepository, roleTypeResolver);
         this.publicationService = publicationService;
         this.commentRepository = commentRepository;
+        this.roleTypeResolver = roleTypeResolver;
     }
 
     /**
@@ -169,7 +173,7 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
     @Override
     @Transactional
     public AssessmentJudgementResult finalizeScore(AssessmentJudgementCommands.FinalizeScoreCommand command) {
-        UserVO currentUser = accessGuard.requireCurrentUser();
+        User currentUser = accessGuard.requireCurrentUser();
         RoleType roleType = accessGuard.requireRole(currentUser);
         if (!RoleHierarchy.isDirectionAdminOrAbove(roleType)) {
             throw new Forbidden("只有方向管理员及以上权限可以确认最终评分");
@@ -224,7 +228,7 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
             AssessmentAnswer answer,
             AssessmentQuestion question,
             AssessmentJudgementCommands.FinalizeScoreCommand command,
-            UserVO currentUser,
+            User currentUser,
             RoleType roleType,
             LocalDateTime judgedAt) {
         AssessmentJudgementVO judgement = AssessmentJudgementVO.builder()
@@ -250,7 +254,7 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
             AssessmentAnswer leaderAnswer,
             AssessmentQuestion question,
             AssessmentJudgementCommands.FinalizeScoreCommand command,
-            UserVO currentUser,
+            User currentUser,
             RoleType roleType,
             AssessmentTeam team) {
         LocalDateTime now = LocalDateTime.now();
@@ -318,7 +322,7 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
     @Override
     @Transactional
     public AssessmentDecisionResult decideAssessment(AssessmentJudgementCommands.DecideAssessmentCommand command) {
-        UserVO currentUser = accessGuard.requireCurrentUser();
+        User currentUser = accessGuard.requireCurrentUser();
         RoleType roleType = accessGuard.requireRole(currentUser);
         if (!RoleHierarchy.isDirectionAdminOrAbove(roleType)) {
             throw new Forbidden("只有方向管理员及以上权限可以设置最终通过决策");

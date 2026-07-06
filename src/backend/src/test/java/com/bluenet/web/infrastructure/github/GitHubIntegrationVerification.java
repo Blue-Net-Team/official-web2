@@ -2,6 +2,7 @@ package com.bluenet.web.infrastructure.github;
 
 import com.bluenet.web.infrastructure.config.GitHubAppProperties;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -15,6 +16,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * 验证完成后请删除创建的测试 Issue。
  */
 @Slf4j
+@Disabled("Requires real GitHub App credentials and network access; run manually for integration verification.")
 class GitHubIntegrationVerification {
 
     @Test

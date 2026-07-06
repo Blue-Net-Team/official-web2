@@ -1,6 +1,7 @@
 package com.bluenet.web.infrastructure.security.jwt;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.Optional;
 
 import org.junit.jupiter.api.AfterEach;
@@ -13,7 +14,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -21,10 +24,15 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-import com.bluenet.web.domain.model.vo.UserVO;
+import com.bluenet.web.domain.model.entity.User;
+import com.bluenet.web.domain.model.enumerate.RoleType;
 import com.bluenet.web.domain.repository.UserRepository;
+import com.bluenet.web.infrastructure.config.CookieProperties;
 import com.bluenet.web.infrastructure.config.FailAuthEntryPoint;
 import com.bluenet.web.infrastructure.security.auth.AuthTokenService;
+import com.bluenet.web.infrastructure.security.cache.PermissionCache;
+import com.bluenet.web.infrastructure.security.principal.RoleTypeResolver;
+import com.bluenet.web.infrastructure.security.principal.SecurityPrincipal;
 import com.bluenet.web.infrastructure.security.util.UserCTX;
 
 import jakarta.servlet.FilterChain;
@@ -52,6 +60,15 @@ class JwtAuthenticationFilterTest {
     private FailAuthEntryPoint failAuthEntryPoint;
 
     @Mock
+    private CookieProperties cookieProperties;
+
+    @Mock
+    private PermissionCache permissionCache;
+
+    @Mock
+    private RoleTypeResolver roleTypeResolver;
+
+    @Mock
     private HttpServletRequest request;
 
     @Mock
@@ -72,6 +89,8 @@ class JwtAuthenticationFilterTest {
     void setUp() {
         SecurityContextHolder.clearContext();
         UserCTX.clear();
+        lenient().when(roleTypeResolver.resolve(anyLong())).thenReturn(RoleType.CANDIDATE);
+        lenient().when(permissionCache.getPermissionsByRole(anyLong())).thenReturn(Collections.emptySet());
     }
 
     @AfterEach
@@ -98,13 +117,17 @@ class JwtAuthenticationFilterTest {
         when(jwtUtil.parseToken(TEST_TOKEN)).thenReturn(payload);
         when(authTokenService.validateToken(TEST_JTI)).thenReturn(Optional.of(TEST_USER_ID));
 
-        UserVO userVO = UserVO.builder().id(TEST_USER_ID).username("testUser").build();
+        User userVO = User.reconstruct(TEST_USER_ID, "password");
+        userVO.setUsername("testUser");
+        ;
         when(userRepository.findById(TEST_USER_ID)).thenReturn(Optional.of(userVO));
 
         // 模拟 filterChain 执行时的行为，确保在执行 doFilter 时 SecurityContext 已设置
         doAnswer(invocation -> {
             assertNotNull(SecurityContextHolder.getContext().getAuthentication());
-            assertEquals(userVO, SecurityContextHolder.getContext().getAuthentication().getPrincipal());
+            Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            assertNotNull(principal);
+            assertEquals(userVO, ((SecurityPrincipal) principal).user());
             return null;
         }).when(filterChain).doFilter(request, response);
 
@@ -238,7 +261,7 @@ class JwtAuthenticationFilterTest {
         when(request.getHeader(HttpHeaders.AUTHORIZATION)).thenReturn(BEARER_TOKEN);
         when(jwtUtil.parseToken(TEST_TOKEN)).thenReturn(payload);
         when(authTokenService.validateToken(TEST_JTI)).thenReturn(Optional.of(TEST_USER_ID));
-        when(userRepository.findById(TEST_USER_ID)).thenReturn(Optional.of(UserVO.builder().id(TEST_USER_ID).build()));
+        when(userRepository.findById(TEST_USER_ID)).thenReturn(Optional.of(User.reconstruct(TEST_USER_ID, "password")));
 
         // 执行
         jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);

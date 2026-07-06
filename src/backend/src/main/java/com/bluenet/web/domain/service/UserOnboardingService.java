@@ -1,6 +1,6 @@
 package com.bluenet.web.domain.service;
 
-import com.bluenet.web.domain.model.vo.RoleVO;
+import com.bluenet.web.domain.model.entity.Role;
 import com.bluenet.web.domain.model.vo.UserOnboardingCreateUserRequest;
 import com.bluenet.web.domain.model.vo.UserOnboardingResult;
 
@@ -35,14 +35,14 @@ public interface UserOnboardingService {
     /**
      * 查找 MEMBER 角色，失败时抛出异常。
      *
-     * @return MEMBER 角色 VO
+     * @return MEMBER 角色实体
      */
-    RoleVO getMemberRole();
+    Role getMemberRole();
 
     /**
      * 查找 CANDIDATE 角色，失败时抛出异常。
      *
-     * @return CANDIDATE 角色 VO
+     * @return CANDIDATE 角色实体
      */
-    RoleVO getCandidateRole();
+    Role getCandidateRole();
 }

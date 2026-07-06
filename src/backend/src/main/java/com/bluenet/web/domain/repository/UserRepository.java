@@ -7,8 +7,6 @@ import com.bluenet.web.domain.model.enumerate.RoleType;
 import com.bluenet.web.domain.model.vo.FileVO;
 import com.bluenet.web.domain.model.vo.QrcodeVO;
 import com.bluenet.web.domain.model.vo.TabCountsVO;
-import com.bluenet.web.domain.model.vo.UserVO;
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -31,7 +29,7 @@ public interface UserRepository {
      *            业务记录主键。
      * @return 查询到的用户 结果；不存在时为空。
      */
-    Optional<UserVO> findById(Long id);
+    Optional<User> findById(Long id);
     /**
      * 按邮箱查询用户视图。
      *
@@ -39,7 +37,7 @@ public interface UserRepository {
      *            邮箱地址，用于定位用户或验证码。
      * @return 查询到的用户 结果；不存在时为空。
      */
-    Optional<UserVO> findByEmail(String email);
+    Optional<User> findByEmail(String email);
     /**
      * 按学号查询用户或报名申请。
      *
@@ -47,7 +45,7 @@ public interface UserRepository {
      *            学生学号，用于定位用户或报名申请。
      * @return 查询到的用户 结果；不存在时为空。
      */
-    Optional<UserVO> findByStudentId(String studentId);
+    Optional<User> findByStudentId(String studentId);
     /**
      * 更新用户头像文件关联。
      *
@@ -57,7 +55,7 @@ public interface UserRepository {
      *            文件领域对象或文件视图对象。
      * @return 数据库受影响行数。
      */
-    int updateAvatar(UserVO user, FileVO file);
+    int updateAvatar(User user, FileVO file);
     /**
      * 更新用户头像文件关联。
      *
@@ -77,7 +75,7 @@ public interface UserRepository {
      *            二维码领域对象或视图对象。
      * @return 数据库受影响行数。
      */
-    int updateQrcode(UserVO user, QrcodeVO qrcode);
+    int updateQrcode(User user, QrcodeVO qrcode);
 
     /**
      * 更新用户个人资料字段。
@@ -130,7 +128,7 @@ public interface UserRepository {
      *            GitHub 用户唯一标识。
      * @return 查询到的用户 结果；不存在时为空。
      */
-    Optional<UserVO> findByGithubId(String githubId);
+    Optional<User> findByGithubId(String githubId);
 
     /**
      * 保存用户与 GitHub 账号的绑定信息。
@@ -207,7 +205,9 @@ public interface UserRepository {
      *            用户ID
      * @return 用户实体
      */
-    Optional<User> findEntityById(Long id);
+    default Optional<User> findEntityById(Long id) {
+        return findById(id);
+    }
 
     /**
      * 更新用户管理员可修改字段

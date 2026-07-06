@@ -1,7 +1,7 @@
 package com.bluenet.web.application.service.impl;
 
 import com.bluenet.web.domain.model.vo.CommentVO;
-import com.bluenet.web.domain.model.vo.UserVO;
+import com.bluenet.web.domain.model.entity.User;
 import com.bluenet.web.domain.service.CommentDomainService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -81,11 +81,10 @@ class CommentAppServiceImplTest {
         verify(commentDomainService).deleteComment(COMMENT_ID, USER_ID);
     }
 
-    private UserVO createUser() {
-        return UserVO.builder()
-                .id(USER_ID)
-                .username("测试用户")
-                .build();
+    private User createUser() {
+        User user = User.reconstruct(USER_ID, "password");
+        user.setUsername("测试用户");
+        return user;
     }
 
     private CommentVO createCommentVO() {

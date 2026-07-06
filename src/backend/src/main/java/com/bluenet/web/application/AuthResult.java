@@ -1,7 +1,5 @@
 package com.bluenet.web.application;
 
-import com.bluenet.web.domain.model.vo.UserVO;
-
 /**
  * 认证聚合的应用层结果对象。
  * <p>
@@ -18,10 +16,10 @@ public final class AuthResult {
      * 登录结果。
      */
     public record Login(
+            /** 登录用户ID */
+            Long userId,
             /** CSRF令牌 */
-            String csrfToken,
-            /** 用户信息 */
-            UserVO user) {
+            String csrfToken) {
     }
 
     /**
@@ -30,8 +28,6 @@ public final class AuthResult {
     public record AuthMe(
             /** 是否已认证 */
             boolean authenticated,
-            /** 用户信息 */
-            UserVO user,
             /** CSRF令牌 */
             String csrfToken) {
     }

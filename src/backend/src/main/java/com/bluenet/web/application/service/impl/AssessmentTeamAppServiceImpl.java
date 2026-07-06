@@ -9,12 +9,12 @@ import com.bluenet.web.domain.exception.Forbidden;
 import com.bluenet.web.domain.model.entity.AssessmentTeam;
 import com.bluenet.web.domain.model.entity.AssessmentTeamMember;
 import com.bluenet.web.domain.model.entity.AssessmentTime;
-import com.bluenet.web.domain.model.vo.UserVO;
+import com.bluenet.web.domain.model.entity.User;
 import com.bluenet.web.domain.repository.AssessmentAnswerRepository;
 import com.bluenet.web.domain.repository.AssessmentJudgementRepository;
 import com.bluenet.web.domain.repository.AssessmentTeamRepository;
 import com.bluenet.web.domain.repository.AssessmentTimeRepository;
-import com.bluenet.web.domain.service.UserDomainService;
+import com.bluenet.web.domain.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -41,7 +41,7 @@ public class AssessmentTeamAppServiceImpl implements AssessmentTeamAppService {
     private final AssessmentTimeRepository assessmentTimeRepository;
     private final AssessmentAnswerRepository assessmentAnswerRepository;
     private final AssessmentJudgementRepository assessmentJudgementRepository;
-    private final UserDomainService userDomainService;
+    private final UserRepository userRepository;
 
     private static final String INVITE_CODE_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
     private static final int INVITE_CODE_LENGTH = 6;
@@ -100,7 +100,7 @@ public class AssessmentTeamAppServiceImpl implements AssessmentTeamAppService {
         String leaderUsername = "";
 
         for (AssessmentTeamMember member : members) {
-            Optional<UserVO> userOpt = userDomainService.getUser(member.getUserId());
+            Optional<User> userOpt = userRepository.findById(member.getUserId());
             if (userOpt.isPresent()) {
                 String username = userOpt.get().getUsername();
                 memberUsernames.add(username);
@@ -292,11 +292,11 @@ public class AssessmentTeamAppServiceImpl implements AssessmentTeamAppService {
         List<TeamResult.TeamMemberResult> memberResults = new ArrayList<>();
 
         for (AssessmentTeamMember member : members) {
-            Optional<UserVO> userOpt = userDomainService.getUser(member.getUserId());
-            String username = userOpt.map(UserVO::getUsername).orElse("未知用户");
+            Optional<User> userOpt = userRepository.findById(member.getUserId());
+            String username = userOpt.map(User::getUsername).orElse("未知用户");
             String direction = userOpt.map(u -> u.getDirection() != null ? u.getDirection().getDescription() : null)
                     .orElse(null);
-            Long avatarFileId = userOpt.map(UserVO::getAvatarFileId).orElse(null);
+            Long avatarFileId = userOpt.map(User::getAvatarId).orElse(null);
 
             memberResults.add(
                     new TeamResult.TeamMemberResult(

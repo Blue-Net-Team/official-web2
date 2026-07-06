@@ -6,6 +6,7 @@ import com.bluenet.web.domain.model.entity.AssessmentAnswer;
 import com.bluenet.web.domain.model.entity.AssessmentQuestion;
 import com.bluenet.web.domain.model.entity.AssessmentTime;
 import com.bluenet.web.domain.model.entity.File;
+import com.bluenet.web.domain.model.entity.User;
 import com.bluenet.web.domain.model.enumerate.FileStatus;
 import com.bluenet.web.domain.model.enumerate.FileType;
 import com.bluenet.web.domain.model.enumerate.RoleType;
@@ -13,7 +14,7 @@ import com.bluenet.web.domain.model.policy.RoleHierarchy;
 import com.bluenet.web.domain.model.vo.ConfirmUploadVO;
 import com.bluenet.web.domain.model.vo.FileVO;
 import com.bluenet.web.domain.model.vo.PresignedUploadVO;
-import com.bluenet.web.domain.model.vo.UserVO;
+import com.bluenet.web.infrastructure.security.principal.RoleTypeResolver;
 import com.bluenet.web.domain.repository.AssessmentAnswerRepository;
 import com.bluenet.web.domain.repository.AssessmentQuestionRepository;
 import com.bluenet.web.domain.repository.AssessmentTimeRepository;
@@ -49,6 +50,7 @@ public class FileDomainServiceImpl implements FileDomainService {
     private final PresignedUploadTokenService presignedUploadTokenService;
     private final FileMagicChecker fileMagicChecker;
     private final StorageProperties storageProperties;
+    private final RoleTypeResolver roleTypeResolver;
 
     @Override
     public FileVO getFileById(Long fileId) {
@@ -248,7 +250,7 @@ public class FileDomainServiceImpl implements FileDomainService {
     }
 
     @Override
-    public void checkDownloadPermission(FileVO fileVO, UserVO currentUser) {
+    public void checkDownloadPermission(FileVO fileVO, User currentUser) {
         FileType fileType = fileVO.getType();
 
         switch (fileType) {
@@ -265,7 +267,7 @@ public class FileDomainServiceImpl implements FileDomainService {
         }
     }
 
-    private void checkWorkPermission(FileVO fileVO, UserVO currentUser) {
+    private void checkWorkPermission(FileVO fileVO, User currentUser) {
         if (currentUser == null) {
             log.warn("User not authenticated for WORK file download");
             throw new Forbidden("需要登录才能下载作品文件");
@@ -283,7 +285,7 @@ public class FileDomainServiceImpl implements FileDomainService {
         }
     }
 
-    private void checkAssessmentAttachmentPermission(FileVO fileVO, UserVO currentUser) {
+    private void checkAssessmentAttachmentPermission(FileVO fileVO, User currentUser) {
         if (currentUser == null) {
             log.warn("User not authenticated for ASSESSMENT_ATTACHMENT file download");
             throw new Forbidden("需要登录才能下载考题附件");
@@ -305,14 +307,9 @@ public class FileDomainServiceImpl implements FileDomainService {
         }
     }
 
-    private boolean hasRoleAtLeast(UserVO user, RoleType minRole) {
-        String userRoleName = user.getRoleName();
-        if (userRoleName == null || minRole == null) {
-            return false;
-        }
-
-        RoleType userRole = RoleType.fromName(userRoleName);
-        if (userRole == null) {
+    private boolean hasRoleAtLeast(User user, RoleType minRole) {
+        RoleType userRole = roleTypeResolver.resolve(user.getRoleId());
+        if (userRole == null || minRole == null) {
             return false;
         }
 

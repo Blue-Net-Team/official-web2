@@ -10,7 +10,6 @@ import com.bluenet.web.application.service.ResetPasswordAppService;
 import com.bluenet.web.domain.exception.BadRequest;
 import com.bluenet.web.domain.model.entity.User;
 import com.bluenet.web.domain.model.enumerate.MessageChannel;
-import com.bluenet.web.domain.model.vo.UserVO;
 import com.bluenet.web.domain.model.vo.VerifyCodeVO;
 import com.bluenet.web.domain.repository.UserRepository;
 import com.bluenet.web.domain.repository.VerificationCodeRepository;
@@ -61,12 +60,12 @@ public class ResetPasswordAppServiceImpl implements ResetPasswordAppService {
      */
     @Override
     public ResetPasswordResult.VerifyStudent verifyStudent(ResetPasswordCommands.VerifyStudentCommand command) {
-        Optional<UserVO> userOpt = userRepository.findByStudentId(command.studentId());
+        Optional<User> userOpt = userRepository.findByStudentId(command.studentId());
         if (userOpt.isEmpty()) {
             throw new BadRequest("学号不存在");
         }
 
-        UserVO user = userOpt.get();
+        User user = userOpt.get();
         String resetToken = stateService.create(command.studentId(), user.getId());
         log.info("Password reset initiated for student: {}", command.studentId());
         return new ResetPasswordResult.VerifyStudent(resetToken);
@@ -84,12 +83,12 @@ public class ResetPasswordAppServiceImpl implements ResetPasswordAppService {
         validateToken(command.resetToken(), 1);
 
         String studentId = stateService.getField(command.resetToken(), "studentId");
-        Optional<UserVO> userOpt = userRepository.findByStudentId(studentId);
+        Optional<User> userOpt = userRepository.findByStudentId(studentId);
         if (userOpt.isEmpty()) {
             throw new BadRequest("用户不存在");
         }
 
-        UserVO user = userOpt.get();
+        User user = userOpt.get();
         if (!command.email().equals(user.getEmail())) {
             throw new BadRequest("邮箱与学号不匹配");
         }
@@ -187,9 +186,8 @@ public class ResetPasswordAppServiceImpl implements ResetPasswordAppService {
         }
 
         Long userId = Long.parseLong(userIdStr);
-        UserVO userVO = userRepository.findById(userId)
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BadRequest("用户不存在"));
-        User user = User.reconstruct(userVO.getId(), userVO.getPassword());
         user.changePassword(passwordEncoder.encode(command.newPassword()));
         userRepository.updatePassword(user.getId(), user.getPassword());
 

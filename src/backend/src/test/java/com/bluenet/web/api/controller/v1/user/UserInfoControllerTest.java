@@ -5,7 +5,7 @@ import com.bluenet.web.application.service.UserInfoAppService;
 import com.bluenet.web.domain.exception.Unauthorized;
 import com.bluenet.web.domain.model.enumerate.Direction;
 import com.bluenet.web.domain.model.enumerate.Gender;
-import com.bluenet.web.infrastructure.security.WithUserVO;
+import com.bluenet.web.infrastructure.security.principal.WithSecurityPrincipal;
 import com.bluenet.web.infrastructure.security.util.UserCTX;
 import com.bluenet.web.testcontainers.TestcontainersConfiguration;
 import org.junit.jupiter.api.AfterEach;
@@ -44,7 +44,7 @@ class UserInfoControllerTest {
     }
 
     @Test
-    @WithUserVO(userId = 1L, studentId = "2024001001", username = "张三", roleName = "MEMBER", permissions = "user:info:me")
+    @WithSecurityPrincipal(userId = 1L, studentId = "2024001001", username = "张三", roleType = "MEMBER", permissions = "user:info:me")
     void getMyInfo_whenAuthenticated_returnsUserInfo() throws Exception {
         UserInfoResult expected = new UserInfoResult(
                 1L,
@@ -75,7 +75,7 @@ class UserInfoControllerTest {
     }
 
     @Test
-    @WithUserVO(permissions = "user:info:me")
+    @WithSecurityPrincipal(permissions = "user:info:me")
     void getMyInfo_whenServiceThrowsUnauthorized_returnsErrorResponse() throws Exception {
         when(userInfoAppService.getMyInfo(1L)).thenThrow(new Unauthorized("未认证"));
 

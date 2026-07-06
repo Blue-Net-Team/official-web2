@@ -3,7 +3,7 @@ package com.bluenet.web.api.controller.v1.file;
 import com.bluenet.web.BaseIntegrationTest;
 import com.bluenet.web.domain.model.enumerate.FileStatus;
 import com.bluenet.web.infrastructure.repository.mapper.FileMapper;
-import com.bluenet.web.infrastructure.security.WithUserVO;
+import com.bluenet.web.infrastructure.security.principal.WithSecurityPrincipal;
 import com.bluenet.web.infrastructure.security.util.UserCTX;
 import com.bluenet.web.infrastructure.storage.ObjectStorage;
 import com.bluenet.web.infrastructure.storage.StorageObjectMetadata;
@@ -78,7 +78,7 @@ class PresignedUploadFlowIntegrationTest extends BaseIntegrationTest {
 
         @Test
         @DisplayName("prepare → confirm 成功，文件状态变为 ACTIVE")
-        @WithUserVO(userId = 1L, studentId = "2024001001", username = "测试用户", roleName = "MEMBER")
+        @WithSecurityPrincipal(userId = 1L, studentId = "2024001001", username = "测试用户", roleType = "MEMBER")
         void prepareThenConfirm_success_shouldReturnActive() throws Exception {
             // mock 预签名 URL 和 OSS HEAD 元数据
             when(objectStorage.getPresignedUploadUrl(any(), anyString(), anyString(), anyLong(), any()))
@@ -147,7 +147,7 @@ class PresignedUploadFlowIntegrationTest extends BaseIntegrationTest {
 
         @Test
         @DisplayName("prepare → confirm MD5 不匹配，文件状态变为 REJECTED")
-        @WithUserVO(userId = 2L, studentId = "2024001002", username = "测试用户", roleName = "MEMBER")
+        @WithSecurityPrincipal(userId = 2L, studentId = "2024001002", username = "测试用户", roleType = "MEMBER")
         void prepareThenConfirm_md5Mismatch_shouldReturnRejected() throws Exception {
             when(objectStorage.getPresignedUploadUrl(any(), anyString(), anyString(), anyLong(), any()))
                     .thenReturn("http://minio.test/presigned-put-url");
@@ -203,7 +203,7 @@ class PresignedUploadFlowIntegrationTest extends BaseIntegrationTest {
 
         @Test
         @DisplayName("confirm 时 OSS 对象不存在，文件状态变为 REJECTED")
-        @WithUserVO(userId = 3L, studentId = "2024001003", username = "测试用户", roleName = "MEMBER")
+        @WithSecurityPrincipal(userId = 3L, studentId = "2024001003", username = "测试用户", roleType = "MEMBER")
         void confirm_objectNotFound_shouldReturnRejected() throws Exception {
             when(objectStorage.getPresignedUploadUrl(any(), anyString(), anyString(), anyLong(), any()))
                     .thenReturn("http://minio.test/presigned-put-url");
@@ -258,7 +258,7 @@ class PresignedUploadFlowIntegrationTest extends BaseIntegrationTest {
 
         @Test
         @DisplayName("confirm 时 callbackToken 无效应返回403")
-        @WithUserVO(userId = 4L, studentId = "2024001004", username = "测试用户", roleName = "MEMBER")
+        @WithSecurityPrincipal(userId = 4L, studentId = "2024001004", username = "测试用户", roleType = "MEMBER")
         void confirm_invalidCallbackToken_shouldReturn403() throws Exception {
             when(objectStorage.getPresignedUploadUrl(any(), anyString(), anyString(), anyLong(), any()))
                     .thenReturn("http://minio.test/presigned-put-url");

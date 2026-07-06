@@ -1,5 +1,7 @@
 package com.bluenet.web.application.service.impl;
 
+import com.bluenet.web.domain.model.enumerate.RoleType;
+
 import com.bluenet.web.application.AlgorithmJudgeResult;
 import com.bluenet.web.application.command.algorithm_judge.AlgorithmJudgeCommands;
 import com.bluenet.web.domain.exception.BadRequest;
@@ -19,7 +21,7 @@ import com.bluenet.web.domain.model.entity.AssessmentAnswer;
 import com.bluenet.web.domain.model.vo.AssessmentJudgementVO;
 import com.bluenet.web.domain.model.entity.AssessmentQuestion;
 import com.bluenet.web.domain.model.entity.AssessmentTime;
-import com.bluenet.web.domain.model.vo.UserVO;
+import com.bluenet.web.domain.model.entity.User;
 import com.bluenet.web.domain.model.vo.evaluation.AlgorithmContent;
 import com.bluenet.web.domain.repository.AlgorithmJudgeCaseResultRepository;
 import com.bluenet.web.domain.repository.AlgorithmJudgeJobRepository;
@@ -289,12 +291,11 @@ class AlgorithmJudgeAppServiceImplTest {
         }).when(algorithmJudgeJobRepository).save(any(AlgorithmJudgeJob.class));
     }
 
-    private UserVO createUser(Long userId) {
-        return UserVO.builder()
-                .id(userId)
-                .roleName("CANDIDATE")
-                .direction(Direction.COMPUTER_VISION)
-                .build();
+    private User createUser(Long userId) {
+        User user = User.reconstruct(userId, "password");
+        user.setRoleId((long) RoleType.CANDIDATE.getLevel());
+        user.setDirection(Direction.COMPUTER_VISION);
+        return user;
     }
 
     private AssessmentQuestion createAlgorithmQuestion() {

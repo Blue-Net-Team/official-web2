@@ -1,9 +1,8 @@
 package com.bluenet.web.infrastructure.security.aspect;
 
-import com.bluenet.web.domain.model.vo.UserVO;
-import com.bluenet.web.infrastructure.security.util.UserCTX;
-import com.bluenet.web.domain.model.enumerate.RoleType;
 import com.bluenet.web.domain.model.policy.RoleHierarchy;
+import com.bluenet.web.infrastructure.security.principal.SecurityPrincipal;
+import com.bluenet.web.infrastructure.security.util.UserCTX;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -16,11 +15,8 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 import com.bluenet.web.domain.exception.Forbidden;
 import com.bluenet.web.domain.exception.Unauthorized;
 import com.bluenet.web.infrastructure.security.annotation.RequiresPermission;
-import com.bluenet.web.infrastructure.security.cache.PermissionCache;
 
 import jakarta.servlet.http.HttpServletRequest;
-
-import java.util.Set;
 
 /**
  * 权限切面 拦截所有带@RequiresPermission注解的方法，执行权限校验
@@ -31,10 +27,7 @@ public class PermissionAspect {
 
     private static final Logger logger = LoggerFactory.getLogger(PermissionAspect.class);
 
-    private final PermissionCache permissionCache;
-
-    public PermissionAspect(PermissionCache permissionCache) {
-        this.permissionCache = permissionCache;
+    public PermissionAspect() {
     }
 
     /**
@@ -106,37 +99,27 @@ public class PermissionAspect {
      * 检查是否有权限
      */
     private boolean hasPermission(String permissionValue) {
-        // 取出用户
-        UserVO user = UserCTX.getCurrentUser();
-
-        // 取出权限
-        Set<String> userPermissions = user.getPermissions();
-
-        // 权限验证
-        return userPermissions.contains(permissionValue);
+        SecurityPrincipal principal = UserCTX.getPrincipal();
+        if (principal == null) {
+            return false;
+        }
+        return principal.hasPermission(permissionValue);
     }
 
     /**
      * 检查是否是超级管理员
      */
     private boolean isSuperAdmin() {
-        UserVO user = UserCTX.getCurrentUser();
-        if (user == null || user.getRoleName() == null) {
-            logger.debug("isSuperAdmin: user or roleName is null");
+        SecurityPrincipal principal = UserCTX.getPrincipal();
+        if (principal == null || principal.roleType() == null) {
+            logger.debug("isSuperAdmin: principal or roleType is null");
             return false;
         }
-        String roleName = user.getRoleName().trim().toUpperCase();
-        RoleType roleType = RoleType.fromName(roleName);
-        if (roleType == null) {
-            logger.debug("isSuperAdmin: RoleType.fromName returned null for roleName: {}", roleName);
-            return false;
-        }
-        boolean isSuperAdmin = RoleHierarchy.isSuperAdmin(roleType);
+        boolean isSuperAdmin = RoleHierarchy.isSuperAdmin(principal.roleType());
         logger.debug(
-                "isSuperAdmin: user roleName={}, normalized={}, roleType={}, isSuperAdmin={}",
-                user.getRoleName(),
-                roleName,
-                roleType,
+                "isSuperAdmin: userId={}, roleType={}, isSuperAdmin={}",
+                principal.userId(),
+                principal.roleType(),
                 isSuperAdmin);
         return isSuperAdmin;
     }

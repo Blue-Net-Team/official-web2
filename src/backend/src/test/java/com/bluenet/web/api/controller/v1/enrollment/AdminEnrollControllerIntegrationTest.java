@@ -32,7 +32,7 @@ import com.bluenet.web.infrastructure.repository.mapper.CollegeMapper;
 import com.bluenet.web.infrastructure.repository.mapper.EnrollMapper;
 import com.bluenet.web.infrastructure.repository.mapper.RoleMapper;
 import com.bluenet.web.infrastructure.repository.mapper.UserMapper;
-import com.bluenet.web.infrastructure.security.WithUserVO;
+import com.bluenet.web.infrastructure.security.principal.WithSecurityPrincipal;
 import com.bluenet.web.infrastructure.security.util.UserCTX;
 import com.bluenet.web.testcontainers.TestcontainersConfiguration;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -134,7 +134,7 @@ class AdminEnrollControllerIntegrationTest extends BaseIntegrationTest {
 
         @Test
         @DisplayName("正常查询：应返回分页结果")
-        @WithUserVO(userId = 1L, studentId = "admin001", username = "管理员", roleName = "SUPER_ADMIN", permissions = {
+        @WithSecurityPrincipal(userId = 1L, studentId = "admin001", username = "管理员", roleType = "SUPER_ADMIN", permissions = {
                 "enrollment:list", "enrollment:detail", "enrollment:approve", "enrollment:reject",
                 "enrollment:statistics" })
         void getEnrollmentList_normalQuery_shouldReturnPagedResult() throws Exception {
@@ -153,7 +153,7 @@ class AdminEnrollControllerIntegrationTest extends BaseIntegrationTest {
 
         @Test
         @DisplayName("按状态筛选：应返回对应状态的报名")
-        @WithUserVO(userId = 1L, studentId = "admin001", username = "管理员", roleName = "SUPER_ADMIN", permissions = {
+        @WithSecurityPrincipal(userId = 1L, studentId = "admin001", username = "管理员", roleType = "SUPER_ADMIN", permissions = {
                 "enrollment:list" })
         void getEnrollmentList_filterByStatus_shouldReturnFiltered() throws Exception {
             createTestEnroll(EnrollStatus.PENDING);
@@ -170,7 +170,7 @@ class AdminEnrollControllerIntegrationTest extends BaseIntegrationTest {
 
         @Test
         @DisplayName("按方向筛选：应返回对应方向的报名")
-        @WithUserVO(userId = 1L, studentId = "admin001", username = "管理员", roleName = "SUPER_ADMIN", permissions = {
+        @WithSecurityPrincipal(userId = 1L, studentId = "admin001", username = "管理员", roleType = "SUPER_ADMIN", permissions = {
                 "enrollment:list" })
         void getEnrollmentList_filterByDirection_shouldReturnFiltered() throws Exception {
             createTestEnroll(EnrollStatus.PENDING);
@@ -185,7 +185,7 @@ class AdminEnrollControllerIntegrationTest extends BaseIntegrationTest {
 
         @Test
         @DisplayName("关键词搜索：应返回匹配的报名")
-        @WithUserVO(userId = 1L, studentId = "admin001", username = "管理员", roleName = "SUPER_ADMIN", permissions = {
+        @WithSecurityPrincipal(userId = 1L, studentId = "admin001", username = "管理员", roleType = "SUPER_ADMIN", permissions = {
                 "enrollment:list" })
         void getEnrollmentList_searchByKeyword_shouldReturnMatching() throws Exception {
             createTestEnroll(EnrollStatus.PENDING);
@@ -210,7 +210,7 @@ class AdminEnrollControllerIntegrationTest extends BaseIntegrationTest {
 
         @Test
         @DisplayName("普通用户访问：应返回403")
-        @WithUserVO(userId = 2L, studentId = "member001", username = "普通用户", roleName = "MEMBER")
+        @WithSecurityPrincipal(userId = 2L, studentId = "member001", username = "普通用户", roleType = "MEMBER")
         void getEnrollmentList_memberRole_shouldReturn403() throws Exception {
             mockMvc.perform(
                     get("/api/v1/admin/enrollments")
@@ -227,7 +227,7 @@ class AdminEnrollControllerIntegrationTest extends BaseIntegrationTest {
 
         @Test
         @DisplayName("正常查询：应返回报名详情")
-        @WithUserVO(userId = 1L, studentId = "admin001", username = "管理员", roleName = "SUPER_ADMIN", permissions = {
+        @WithSecurityPrincipal(userId = 1L, studentId = "admin001", username = "管理员", roleType = "SUPER_ADMIN", permissions = {
                 "enrollment:detail" })
         void getEnrollmentDetail_existingId_shouldReturnDetail() throws Exception {
             Enroll enroll = createTestEnroll(EnrollStatus.PENDING);
@@ -243,7 +243,7 @@ class AdminEnrollControllerIntegrationTest extends BaseIntegrationTest {
 
         @Test
         @DisplayName("报名不存在：应返回404")
-        @WithUserVO(userId = 1L, studentId = "admin001", username = "管理员", roleName = "SUPER_ADMIN", permissions = {
+        @WithSecurityPrincipal(userId = 1L, studentId = "admin001", username = "管理员", roleType = "SUPER_ADMIN", permissions = {
                 "enrollment:detail" })
         void getEnrollmentDetail_nonExistingId_shouldReturn404() throws Exception {
             mockMvc.perform(
@@ -271,7 +271,7 @@ class AdminEnrollControllerIntegrationTest extends BaseIntegrationTest {
 
         @Test
         @DisplayName("正常审核通过：应更新状态并创建用户")
-        @WithUserVO(userId = 1L, studentId = "admin001", username = "管理员", roleName = "SUPER_ADMIN", permissions = {
+        @WithSecurityPrincipal(userId = 1L, studentId = "admin001", username = "管理员", roleType = "SUPER_ADMIN", permissions = {
                 "enrollment:approve" })
         void approveEnrollment_normalCase_shouldApproveAndCreateUser() throws Exception {
             Enroll enroll = createTestEnroll(EnrollStatus.PENDING);
@@ -292,7 +292,7 @@ class AdminEnrollControllerIntegrationTest extends BaseIntegrationTest {
 
         @Test
         @DisplayName("报名不存在：应返回404")
-        @WithUserVO(userId = 1L, studentId = "admin001", username = "管理员", roleName = "SUPER_ADMIN", permissions = {
+        @WithSecurityPrincipal(userId = 1L, studentId = "admin001", username = "管理员", roleType = "SUPER_ADMIN", permissions = {
                 "enrollment:approve" })
         void approveEnrollment_nonExistingId_shouldReturn404() throws Exception {
             mockMvc.perform(
@@ -304,7 +304,7 @@ class AdminEnrollControllerIntegrationTest extends BaseIntegrationTest {
 
         @Test
         @DisplayName("非PENDING状态：应返回409")
-        @WithUserVO(userId = 1L, studentId = "admin001", username = "管理员", roleName = "SUPER_ADMIN", permissions = {
+        @WithSecurityPrincipal(userId = 1L, studentId = "admin001", username = "管理员", roleType = "SUPER_ADMIN", permissions = {
                 "enrollment:approve" })
         void approveEnrollment_notPendingStatus_shouldReturn409() throws Exception {
             Enroll enroll = createTestEnroll(EnrollStatus.APPROVED);
@@ -318,7 +318,7 @@ class AdminEnrollControllerIntegrationTest extends BaseIntegrationTest {
 
         @Test
         @DisplayName("用户已存在：应跳过用户创建")
-        @WithUserVO(userId = 1L, studentId = "admin001", username = "管理员", roleName = "SUPER_ADMIN", permissions = {
+        @WithSecurityPrincipal(userId = 1L, studentId = "admin001", username = "管理员", roleType = "SUPER_ADMIN", permissions = {
                 "enrollment:approve" })
         void approveEnrollment_userAlreadyExists_shouldSkipUserCreation() throws Exception {
             Enroll enroll = createTestEnroll(EnrollStatus.PENDING);
@@ -366,7 +366,7 @@ class AdminEnrollControllerIntegrationTest extends BaseIntegrationTest {
 
         @Test
         @DisplayName("普通用户访问：应返回403")
-        @WithUserVO(userId = 2L, studentId = "member001", username = "普通用户", roleName = "MEMBER")
+        @WithSecurityPrincipal(userId = 2L, studentId = "member001", username = "普通用户", roleType = "MEMBER")
         void approveEnrollment_memberRole_shouldReturn403() throws Exception {
             Enroll enroll = createTestEnroll(EnrollStatus.PENDING);
 
@@ -378,7 +378,7 @@ class AdminEnrollControllerIntegrationTest extends BaseIntegrationTest {
 
         @Test
         @DisplayName("审核通过时应使用报名密码作为用户初始密码")
-        @WithUserVO(userId = 1L, studentId = "admin001", username = "管理员", roleName = "SUPER_ADMIN", permissions = {
+        @WithSecurityPrincipal(userId = 1L, studentId = "admin001", username = "管理员", roleType = "SUPER_ADMIN", permissions = {
                 "enrollment:approve" })
         void approveEnrollment_shouldUseEnrollPasswordAsInitialPassword() throws Exception {
             Enroll enroll = createTestEnroll(EnrollStatus.PENDING);
@@ -407,7 +407,7 @@ class AdminEnrollControllerIntegrationTest extends BaseIntegrationTest {
 
         @Test
         @DisplayName("正常拒绝：应更新状态为REJECTED")
-        @WithUserVO(userId = 1L, studentId = "admin001", username = "管理员", roleName = "SUPER_ADMIN", permissions = {
+        @WithSecurityPrincipal(userId = 1L, studentId = "admin001", username = "管理员", roleType = "SUPER_ADMIN", permissions = {
                 "enrollment:reject" })
         void rejectEnrollment_normalCase_shouldReject() throws Exception {
             Enroll enroll = createTestEnroll(EnrollStatus.PENDING);
@@ -425,7 +425,7 @@ class AdminEnrollControllerIntegrationTest extends BaseIntegrationTest {
 
         @Test
         @DisplayName("无拒绝原因：应正常处理")
-        @WithUserVO(userId = 1L, studentId = "admin001", username = "管理员", roleName = "SUPER_ADMIN", permissions = {
+        @WithSecurityPrincipal(userId = 1L, studentId = "admin001", username = "管理员", roleType = "SUPER_ADMIN", permissions = {
                 "enrollment:reject" })
         void rejectEnrollment_noReason_shouldReject() throws Exception {
             Enroll enroll = createTestEnroll(EnrollStatus.PENDING);
@@ -440,7 +440,7 @@ class AdminEnrollControllerIntegrationTest extends BaseIntegrationTest {
 
         @Test
         @DisplayName("报名不存在：应返回404")
-        @WithUserVO(userId = 1L, studentId = "admin001", username = "管理员", roleName = "SUPER_ADMIN", permissions = {
+        @WithSecurityPrincipal(userId = 1L, studentId = "admin001", username = "管理员", roleType = "SUPER_ADMIN", permissions = {
                 "enrollment:reject" })
         void rejectEnrollment_nonExistingId_shouldReturn404() throws Exception {
             mockMvc.perform(
@@ -452,7 +452,7 @@ class AdminEnrollControllerIntegrationTest extends BaseIntegrationTest {
 
         @Test
         @DisplayName("非PENDING状态：应返回409")
-        @WithUserVO(userId = 1L, studentId = "admin001", username = "管理员", roleName = "SUPER_ADMIN", permissions = {
+        @WithSecurityPrincipal(userId = 1L, studentId = "admin001", username = "管理员", roleType = "SUPER_ADMIN", permissions = {
                 "enrollment:reject" })
         void rejectEnrollment_notPendingStatus_shouldReturn409() throws Exception {
             Enroll enroll = createTestEnroll(EnrollStatus.REJECTED);
@@ -475,7 +475,7 @@ class AdminEnrollControllerIntegrationTest extends BaseIntegrationTest {
 
         @Test
         @DisplayName("普通用户访问：应返回403")
-        @WithUserVO(userId = 2L, studentId = "member001", username = "普通用户", roleName = "MEMBER")
+        @WithSecurityPrincipal(userId = 2L, studentId = "member001", username = "普通用户", roleType = "MEMBER")
         void rejectEnrollment_memberRole_shouldReturn403() throws Exception {
             Enroll enroll = createTestEnroll(EnrollStatus.PENDING);
 
@@ -494,7 +494,7 @@ class AdminEnrollControllerIntegrationTest extends BaseIntegrationTest {
 
         @Test
         @DisplayName("正常查询：应返回统计数据")
-        @WithUserVO(userId = 1L, studentId = "admin001", username = "管理员", roleName = "SUPER_ADMIN", permissions = {
+        @WithSecurityPrincipal(userId = 1L, studentId = "admin001", username = "管理员", roleType = "SUPER_ADMIN", permissions = {
                 "enrollment:statistics" })
         void getStatistics_normalCase_shouldReturnStatistics() throws Exception {
             createTestEnroll(EnrollStatus.PENDING);
@@ -513,7 +513,7 @@ class AdminEnrollControllerIntegrationTest extends BaseIntegrationTest {
 
         @Test
         @DisplayName("无数据：应返回零统计")
-        @WithUserVO(userId = 1L, studentId = "admin001", username = "管理员", roleName = "SUPER_ADMIN", permissions = {
+        @WithSecurityPrincipal(userId = 1L, studentId = "admin001", username = "管理员", roleType = "SUPER_ADMIN", permissions = {
                 "enrollment:statistics" })
         void getStatistics_noData_shouldReturnZeroStatistics() throws Exception {
             mockMvc.perform(
@@ -535,7 +535,7 @@ class AdminEnrollControllerIntegrationTest extends BaseIntegrationTest {
 
         @Test
         @DisplayName("普通用户访问：应返回403")
-        @WithUserVO(userId = 2L, studentId = "member001", username = "普通用户", roleName = "MEMBER")
+        @WithSecurityPrincipal(userId = 2L, studentId = "member001", username = "普通用户", roleType = "MEMBER")
         void getStatistics_memberRole_shouldReturn403() throws Exception {
             mockMvc.perform(
                     get("/api/v1/admin/enrollments/statistics")

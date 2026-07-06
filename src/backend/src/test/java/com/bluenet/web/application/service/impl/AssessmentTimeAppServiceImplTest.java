@@ -1,5 +1,7 @@
 package com.bluenet.web.application.service.impl;
 
+import com.bluenet.web.domain.model.enumerate.RoleType;
+
 import com.bluenet.web.application.AssessmentTimeResult;
 import com.bluenet.web.application.command.assessment_time.AssessmentTimeCommands;
 import com.bluenet.web.domain.exception.DataConflict;
@@ -8,13 +10,14 @@ import com.bluenet.web.domain.exception.Forbidden;
 import com.bluenet.web.domain.exception.Unauthorized;
 import com.bluenet.web.domain.model.entity.AssessmentTime;
 import com.bluenet.web.domain.model.enumerate.Direction;
-import com.bluenet.web.domain.model.vo.UserVO;
+import com.bluenet.web.domain.model.entity.User;
 import com.bluenet.web.domain.repository.AssessmentAnswerRepository;
 import com.bluenet.web.domain.repository.AssessmentDecisionRepository;
 import com.bluenet.web.domain.repository.AssessmentQuestionRepository;
 import com.bluenet.web.domain.repository.AssessmentTimeRepository;
 import com.bluenet.web.domain.service.AssessmentDecisionDomainService;
-import com.bluenet.web.domain.service.UserDomainService;
+import com.bluenet.web.domain.repository.UserRepository;
+import com.bluenet.web.infrastructure.security.principal.RoleTypeResolver;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -24,6 +27,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -59,10 +63,24 @@ class AssessmentTimeAppServiceImplTest {
     private AssessmentDecisionDomainService assessmentDecisionDomainService;
 
     @Mock
-    private UserDomainService userDomainService;
+    private UserRepository userRepository;
+
+    @Mock
+    private RoleTypeResolver roleTypeResolver;
 
     @InjectMocks
     private AssessmentTimeAppServiceImpl assessmentTimeAppService;
+
+    @BeforeEach
+    void setUp() {
+        lenient().when(roleTypeResolver.resolve(anyLong())).thenAnswer(invocation -> {
+            Long roleId = invocation.getArgument(0);
+            return Arrays.stream(RoleType.values())
+                    .filter(rt -> (long) rt.getLevel() == roleId)
+                    .findFirst()
+                    .orElse(null);
+        });
+    }
 
     private static final Long TEST_USER_ID = 1L;
     private static final Long TEST_ID = 10L;
@@ -83,22 +101,20 @@ class AssessmentTimeAppServiceImplTest {
                 false);
     }
 
-    private UserVO createUser(String roleName, Direction direction) {
-        return UserVO.builder()
-                .id(TEST_USER_ID)
-                .roleName(roleName)
-                .direction(direction)
-                .studentId("2024123456")
-                .build();
+    private User createUser(String roleName, Direction direction) {
+        User user = User.reconstruct(TEST_USER_ID, "password");
+        user.setRoleId((long) RoleType.fromName(roleName).getLevel());
+        user.setDirection(direction);
+        user.setStudentId("2024123456");
+        return user;
     }
 
-    private UserVO createUser(String roleName, Direction direction, String studentId) {
-        return UserVO.builder()
-                .id(TEST_USER_ID)
-                .roleName(roleName)
-                .direction(direction)
-                .studentId(studentId)
-                .build();
+    private User createUser(String roleName, Direction direction, String studentId) {
+        User user = User.reconstruct(TEST_USER_ID, "password");
+        user.setRoleId((long) RoleType.fromName(roleName).getLevel());
+        user.setDirection(direction);
+        user.setStudentId(studentId);
+        return user;
     }
 
     // ==================== createAssessmentTime 测试 ====================
@@ -110,7 +126,7 @@ class AssessmentTimeAppServiceImplTest {
         @Test
         @DisplayName("正常创建：应返回Result")
         void create_validCommand_shouldReturnResult() {
-            when(userDomainService.getUser(TEST_USER_ID)).thenReturn(Optional.of(createUser("SUPER_ADMIN", null)));
+            when(userRepository.findById(TEST_USER_ID)).thenReturn(Optional.of(createUser("SUPER_ADMIN", null)));
             when(assessmentTimeRepository.existsByDirectionAndEpochAndGrade(any(), any(), any())).thenReturn(false);
 
             AssessmentTimeCommands.CreateAssessmentTimeCommand command = new AssessmentTimeCommands.CreateAssessmentTimeCommand(
@@ -126,7 +142,7 @@ class AssessmentTimeAppServiceImplTest {
         @Test
         @DisplayName("重复组合：应抛出IllegalArgumentException")
         void create_duplicateCombination_shouldThrow() {
-            when(userDomainService.getUser(TEST_USER_ID)).thenReturn(Optional.of(createUser("SUPER_ADMIN", null)));
+            when(userRepository.findById(TEST_USER_ID)).thenReturn(Optional.of(createUser("SUPER_ADMIN", null)));
             when(assessmentTimeRepository.existsByDirectionAndEpochAndGrade(any(), any(), any())).thenReturn(true);
 
             AssessmentTimeCommands.CreateAssessmentTimeCommand command = new AssessmentTimeCommands.CreateAssessmentTimeCommand(
@@ -141,7 +157,7 @@ class AssessmentTimeAppServiceImplTest {
         @Test
         @DisplayName("开始时间不早于结束时间：应抛出IllegalArgumentException")
         void create_startTimeNotBeforeEndTime_shouldThrow() {
-            when(userDomainService.getUser(TEST_USER_ID)).thenReturn(Optional.of(createUser("SUPER_ADMIN", null)));
+            when(userRepository.findById(TEST_USER_ID)).thenReturn(Optional.of(createUser("SUPER_ADMIN", null)));
 
             AssessmentTimeCommands.CreateAssessmentTimeCommand command = new AssessmentTimeCommands.CreateAssessmentTimeCommand(
                     Direction.COMPUTER_VISION, 1, 2024, futureEnd, futureStart, false, null, false);
@@ -155,7 +171,7 @@ class AssessmentTimeAppServiceImplTest {
         @Test
         @DisplayName("限时考核未设置限时分钟数：应抛出IllegalArgumentException")
         void create_timeLimitWithoutMinutes_shouldThrow() {
-            when(userDomainService.getUser(TEST_USER_ID)).thenReturn(Optional.of(createUser("SUPER_ADMIN", null)));
+            when(userRepository.findById(TEST_USER_ID)).thenReturn(Optional.of(createUser("SUPER_ADMIN", null)));
 
             AssessmentTimeCommands.CreateAssessmentTimeCommand command = new AssessmentTimeCommands.CreateAssessmentTimeCommand(
                     Direction.COMPUTER_VISION, 1, 2024, futureStart, futureEnd, true, null, false);
@@ -178,7 +194,7 @@ class AssessmentTimeAppServiceImplTest {
         void update_validCommand_shouldReturnResult() {
             AssessmentTime existing = createTestEntity();
             when(assessmentTimeRepository.findById(TEST_ID)).thenReturn(Optional.of(existing));
-            when(userDomainService.getUser(TEST_USER_ID)).thenReturn(Optional.of(createUser("SUPER_ADMIN", null)));
+            when(userRepository.findById(TEST_USER_ID)).thenReturn(Optional.of(createUser("SUPER_ADMIN", null)));
 
             AssessmentTimeCommands.UpdateAssessmentTimeCommand command = new AssessmentTimeCommands.UpdateAssessmentTimeCommand(
                     TEST_ID, null, null, null, futureStart, futureEnd, true, 90, false);
@@ -218,7 +234,7 @@ class AssessmentTimeAppServiceImplTest {
                     false);
 
             when(assessmentTimeRepository.findById(TEST_ID)).thenReturn(Optional.of(existing));
-            when(userDomainService.getUser(TEST_USER_ID)).thenReturn(Optional.of(createUser("SUPER_ADMIN", null)));
+            when(userRepository.findById(TEST_USER_ID)).thenReturn(Optional.of(createUser("SUPER_ADMIN", null)));
 
             AssessmentTimeCommands.UpdateAssessmentTimeCommand command = new AssessmentTimeCommands.UpdateAssessmentTimeCommand(
                     TEST_ID, null, null, null, LocalDateTime.of(2025, 6, 1, 9, 0), null, null, null, null);
@@ -241,7 +257,7 @@ class AssessmentTimeAppServiceImplTest {
         void delete_valid_shouldSucceed() {
             AssessmentTime existing = createTestEntity();
             when(assessmentTimeRepository.findById(TEST_ID)).thenReturn(Optional.of(existing));
-            when(userDomainService.getUser(TEST_USER_ID)).thenReturn(Optional.of(createUser("SUPER_ADMIN", null)));
+            when(userRepository.findById(TEST_USER_ID)).thenReturn(Optional.of(createUser("SUPER_ADMIN", null)));
             when(assessmentTimeRepository.hasAssociatedQuestions(TEST_ID)).thenReturn(false);
 
             assessmentTimeAppService.deleteAssessmentTime(TEST_USER_ID, TEST_ID);
@@ -254,7 +270,7 @@ class AssessmentTimeAppServiceImplTest {
         void delete_withQuestions_shouldThrow() {
             AssessmentTime existing = createTestEntity();
             when(assessmentTimeRepository.findById(TEST_ID)).thenReturn(Optional.of(existing));
-            when(userDomainService.getUser(TEST_USER_ID)).thenReturn(Optional.of(createUser("SUPER_ADMIN", null)));
+            when(userRepository.findById(TEST_USER_ID)).thenReturn(Optional.of(createUser("SUPER_ADMIN", null)));
             when(assessmentTimeRepository.hasAssociatedQuestions(TEST_ID)).thenReturn(true);
 
             assertThrows(
@@ -282,7 +298,7 @@ class AssessmentTimeAppServiceImplTest {
         @Test
         @DisplayName("DIRECTION_ADMIN 创建自己方向的考核时间：应成功")
         void create_ownDirection_shouldSucceed() {
-            when(userDomainService.getUser(TEST_USER_ID))
+            when(userRepository.findById(TEST_USER_ID))
                     .thenReturn(Optional.of(createUser("DIRECTION_ADMIN", Direction.COMPUTER_VISION)));
             when(assessmentTimeRepository.existsByDirectionAndEpochAndGrade(any(), any(), any())).thenReturn(false);
 
@@ -298,7 +314,7 @@ class AssessmentTimeAppServiceImplTest {
         @Test
         @DisplayName("DIRECTION_ADMIN 创建其他方向的考核时间：应抛出Forbidden")
         void create_otherDirection_shouldThrowForbidden() {
-            when(userDomainService.getUser(TEST_USER_ID))
+            when(userRepository.findById(TEST_USER_ID))
                     .thenReturn(Optional.of(createUser("DIRECTION_ADMIN", Direction.COMPUTER_VISION)));
 
             AssessmentTimeCommands.CreateAssessmentTimeCommand command = new AssessmentTimeCommands.CreateAssessmentTimeCommand(
@@ -315,7 +331,7 @@ class AssessmentTimeAppServiceImplTest {
         void update_ownDirection_shouldSucceed() {
             AssessmentTime existing = createTestEntity();
             when(assessmentTimeRepository.findById(TEST_ID)).thenReturn(Optional.of(existing));
-            when(userDomainService.getUser(TEST_USER_ID))
+            when(userRepository.findById(TEST_USER_ID))
                     .thenReturn(Optional.of(createUser("DIRECTION_ADMIN", Direction.COMPUTER_VISION)));
 
             AssessmentTimeCommands.UpdateAssessmentTimeCommand command = new AssessmentTimeCommands.UpdateAssessmentTimeCommand(
@@ -341,7 +357,7 @@ class AssessmentTimeAppServiceImplTest {
                     null,
                     false);
             when(assessmentTimeRepository.findById(TEST_ID)).thenReturn(Optional.of(existing));
-            when(userDomainService.getUser(TEST_USER_ID))
+            when(userRepository.findById(TEST_USER_ID))
                     .thenReturn(Optional.of(createUser("DIRECTION_ADMIN", Direction.COMPUTER_VISION)));
 
             AssessmentTimeCommands.UpdateAssessmentTimeCommand command = new AssessmentTimeCommands.UpdateAssessmentTimeCommand(
@@ -358,7 +374,7 @@ class AssessmentTimeAppServiceImplTest {
         void delete_ownDirection_shouldSucceed() {
             AssessmentTime existing = createTestEntity();
             when(assessmentTimeRepository.findById(TEST_ID)).thenReturn(Optional.of(existing));
-            when(userDomainService.getUser(TEST_USER_ID))
+            when(userRepository.findById(TEST_USER_ID))
                     .thenReturn(Optional.of(createUser("DIRECTION_ADMIN", Direction.COMPUTER_VISION)));
             when(assessmentTimeRepository.hasAssociatedQuestions(TEST_ID)).thenReturn(false);
 
@@ -382,7 +398,7 @@ class AssessmentTimeAppServiceImplTest {
                     null,
                     false);
             when(assessmentTimeRepository.findById(TEST_ID)).thenReturn(Optional.of(existing));
-            when(userDomainService.getUser(TEST_USER_ID))
+            when(userRepository.findById(TEST_USER_ID))
                     .thenReturn(Optional.of(createUser("DIRECTION_ADMIN", Direction.COMPUTER_VISION)));
 
             Forbidden ex = assertThrows(
@@ -401,7 +417,7 @@ class AssessmentTimeAppServiceImplTest {
         @Test
         @DisplayName("方向管理员以上角色：应返回全部数据")
         void list_directionAdmin_shouldReturnAll() {
-            when(userDomainService.getUser(TEST_USER_ID))
+            when(userRepository.findById(TEST_USER_ID))
                     .thenReturn(Optional.of(createUser("DIRECTION_ADMIN", null)));
 
             List<AssessmentTime> entityList = List.of(createTestEntity());
@@ -419,7 +435,7 @@ class AssessmentTimeAppServiceImplTest {
         @Test
         @DisplayName("MEMBER角色：应按方向过滤")
         void list_member_shouldFilterByDirection() {
-            when(userDomainService.getUser(TEST_USER_ID))
+            when(userRepository.findById(TEST_USER_ID))
                     .thenReturn(Optional.of(createUser("MEMBER", Direction.COMPUTER_VISION)));
 
             List<AssessmentTime> entityList = List.of(createTestEntity());
@@ -436,7 +452,7 @@ class AssessmentTimeAppServiceImplTest {
         @Test
         @DisplayName("CANDIDATE角色：应按方向和入学年份过滤")
         void list_candidate_shouldFilterByDirectionAndEnrollmentYear() {
-            when(userDomainService.getUser(TEST_USER_ID))
+            when(userRepository.findById(TEST_USER_ID))
                     .thenReturn(Optional.of(createUser("CANDIDATE", Direction.COMPUTER_VISION, "2024123456")));
 
             List<AssessmentTime> entityList = List.of(createTestEntity());
@@ -461,7 +477,7 @@ class AssessmentTimeAppServiceImplTest {
         @Test
         @DisplayName("CANDIDATE用户：应调用findByUserParticipation并填充进度")
         void listForUser_candidate_shouldUseParticipationQuery() {
-            when(userDomainService.getUser(TEST_USER_ID))
+            when(userRepository.findById(TEST_USER_ID))
                     .thenReturn(Optional.of(createUser("CANDIDATE", Direction.COMPUTER_VISION, "2024123456")));
 
             AssessmentTime entity = createTestEntity();
@@ -505,7 +521,7 @@ class AssessmentTimeAppServiceImplTest {
         @Test
         @DisplayName("被淘汰CANDIDATE：后续轮次应标记eliminated=true")
         void listForUser_eliminatedCandidate_shouldMarkSubsequentEliminated() {
-            when(userDomainService.getUser(TEST_USER_ID))
+            when(userRepository.findById(TEST_USER_ID))
                     .thenReturn(Optional.of(createUser("CANDIDATE", Direction.COMPUTER_VISION, "2024123456")));
 
             AssessmentTime entity = createTestEntity();
@@ -540,7 +556,7 @@ class AssessmentTimeAppServiceImplTest {
         @Test
         @DisplayName("用户不存在：应抛出Unauthorized")
         void listForUser_userNotFound_shouldThrow() {
-            when(userDomainService.getUser(TEST_USER_ID)).thenReturn(Optional.empty());
+            when(userRepository.findById(TEST_USER_ID)).thenReturn(Optional.empty());
 
             assertThrows(
                     Unauthorized.class,

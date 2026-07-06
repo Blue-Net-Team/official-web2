@@ -20,7 +20,8 @@ import com.bluenet.web.domain.model.vo.AssessmentJudgementVO;
 import com.bluenet.web.domain.model.entity.AssessmentQuestion;
 import com.bluenet.web.domain.model.entity.AssessmentTime;
 import com.bluenet.web.domain.model.vo.FileVO;
-import com.bluenet.web.domain.model.vo.UserVO;
+import com.bluenet.web.domain.model.entity.User;
+import com.bluenet.web.infrastructure.security.principal.RoleTypeResolver;
 import com.bluenet.web.domain.model.vo.evaluation.MultipleChoiceContent;
 import com.bluenet.web.domain.model.vo.evaluation.SingleChoiceContent;
 import com.bluenet.web.domain.model.entity.AssessmentTeam;
@@ -31,9 +32,9 @@ import com.bluenet.web.domain.service.AssessmentDecisionDomainService;
 import com.bluenet.web.domain.service.AssessmentJudgementDomainService;
 import com.bluenet.web.domain.repository.AssessmentQuestionRepository;
 import com.bluenet.web.domain.repository.AssessmentTimeRepository;
+import com.bluenet.web.domain.repository.UserRepository;
 import com.bluenet.web.domain.service.CommentDomainService;
 import com.bluenet.web.domain.service.FileDomainService;
-import com.bluenet.web.domain.service.UserDomainService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -73,9 +74,10 @@ public class AssessmentAnswerAppServiceImpl implements AssessmentAnswerAppServic
     private final AssessmentSessionRepository assessmentSessionRepository;
     private final AssessmentTeamRepository assessmentTeamRepository;
     private final ObjectMapper objectMapper;
-    private final UserDomainService userDomainService;
+    private final UserRepository userRepository;
     private final CommentDomainService commentDomainService;
     private final AssessmentDecisionDomainService assessmentDecisionDomainService;
+    private final RoleTypeResolver roleTypeResolver;
 
     /**
      * 创建答案。
@@ -94,7 +96,7 @@ public class AssessmentAnswerAppServiceImpl implements AssessmentAnswerAppServic
     @Override
     @Transactional
     public AssessmentAnswerResult createAnswer(AssessmentAnswerCommands.CreateAssessmentAnswerCommand command) {
-        UserVO currentUser = userDomainService.getUser(command.userId())
+        User currentUser = userRepository.findById(command.userId())
                 .orElseThrow(() -> new SecurityException("未登录"));
 
         AssessmentQuestion question = assessmentQuestionRepository.findById(command.questionId())
@@ -171,7 +173,7 @@ public class AssessmentAnswerAppServiceImpl implements AssessmentAnswerAppServic
     @Override
     @Transactional
     public AssessmentAnswerResult updateAnswer(AssessmentAnswerCommands.UpdateAssessmentAnswerCommand command) {
-        UserVO currentUser = userDomainService.getUser(command.userId())
+        User currentUser = userRepository.findById(command.userId())
                 .orElseThrow(() -> new SecurityException("未登录"));
 
         AssessmentQuestion question = assessmentQuestionRepository.findById(command.questionId())
@@ -324,7 +326,7 @@ public class AssessmentAnswerAppServiceImpl implements AssessmentAnswerAppServic
         return team.getId();
     }
 
-    private AssessmentTime validateDirectionMatch(UserVO user, AssessmentQuestion question) {
+    private AssessmentTime validateDirectionMatch(User user, AssessmentQuestion question) {
         AssessmentTime time = assessmentTimeRepository.findById(question.getAssessmentTimeId())
                 .orElseThrow(() -> new BadRequest("考核时间不存在"));
         if (time.getDirection() != null && user.getDirection() != null
@@ -340,8 +342,8 @@ public class AssessmentAnswerAppServiceImpl implements AssessmentAnswerAppServic
         }
     }
 
-    private void validateNotEliminated(UserVO user, AssessmentTime time) {
-        RoleType roleType = RoleType.fromName(user.getRoleName());
+    private void validateNotEliminated(User user, AssessmentTime time) {
+        RoleType roleType = roleTypeResolver.resolve(user.getRoleId());
         if (roleType == RoleType.CANDIDATE
                 && assessmentDecisionDomainService.isEliminatedFromPriorEpoch(user.getId(), time)) {
             throw new Forbidden("已在该方向考核中被淘汰，无法提交答案");

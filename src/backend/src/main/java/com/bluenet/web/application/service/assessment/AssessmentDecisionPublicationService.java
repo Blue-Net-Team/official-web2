@@ -7,9 +7,10 @@ import com.bluenet.web.domain.exception.DataNotFound;
 import com.bluenet.web.domain.model.enumerate.MessageChannel;
 import com.bluenet.web.domain.model.enumerate.RoleType;
 import com.bluenet.web.domain.model.entity.AssessmentTime;
+import com.bluenet.web.domain.model.entity.User;
 import com.bluenet.web.domain.model.vo.AssessmentDecisionVO;
-import com.bluenet.web.domain.model.vo.UserVO;
 import com.bluenet.web.domain.repository.UserRepository;
+import com.bluenet.web.infrastructure.security.principal.RoleTypeResolver;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -31,6 +32,7 @@ public class AssessmentDecisionPublicationService {
     private final UserRepository userRepository;
     private final MessageDispatcher messageDispatcher;
     private final AssessmentDecisionNotificationTemplate notificationTemplate;
+    private final RoleTypeResolver roleTypeResolver;
 
     /**
      * 发布单个考生的决策结果。
@@ -45,7 +47,7 @@ public class AssessmentDecisionPublicationService {
      */
     @Transactional
     public void publish(AssessmentDecisionVO decision, AssessmentTime assessmentTime) {
-        UserVO user = userRepository.findById(decision.getUserId())
+        User user = userRepository.findById(decision.getUserId())
                 .orElseThrow(() -> new DataNotFound("用户不存在，ID: " + decision.getUserId()));
 
         if (shouldPromoteToMember(decision, assessmentTime, user)) {
@@ -59,16 +61,16 @@ public class AssessmentDecisionPublicationService {
     /**
      * 判断是否需要将考生升级为组员。
      */
-    private boolean shouldPromoteToMember(AssessmentDecisionVO decision, AssessmentTime assessmentTime, UserVO user) {
+    private boolean shouldPromoteToMember(AssessmentDecisionVO decision, AssessmentTime assessmentTime, User user) {
         return assessmentTime.isGlobalFinalAssessment()
                 && Boolean.TRUE.equals(decision.getPassed())
-                && RoleType.CANDIDATE.getName().equals(user.getRoleName());
+                && RoleType.CANDIDATE == roleTypeResolver.resolve(user.getRoleId());
     }
 
     /**
      * 发送决策结果邮件。
      */
-    private void sendDecisionEmail(UserVO user, AssessmentTime assessmentTime, AssessmentDecisionVO decision) {
+    private void sendDecisionEmail(User user, AssessmentTime assessmentTime, AssessmentDecisionVO decision) {
         if (user.getEmail() == null || user.getEmail().isBlank()) {
             log.warn("跳过无邮箱用户：userId={}", user.getId());
             return;

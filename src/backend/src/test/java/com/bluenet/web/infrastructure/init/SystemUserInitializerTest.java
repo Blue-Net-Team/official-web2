@@ -2,8 +2,8 @@ package com.bluenet.web.infrastructure.init;
 
 import com.bluenet.web.domain.model.entity.User;
 import com.bluenet.web.domain.model.enumerate.RoleType;
-import com.bluenet.web.domain.model.vo.RoleVO;
-import com.bluenet.web.domain.model.vo.UserVO;
+import com.bluenet.web.domain.model.entity.Role;
+import com.bluenet.web.domain.model.entity.User;
 import com.bluenet.web.domain.repository.RoleRepository;
 import com.bluenet.web.domain.repository.UserRepository;
 import com.bluenet.web.infrastructure.config.properties.SystemUserProperties;
@@ -135,11 +135,10 @@ class SystemUserInitializerTest {
         @DisplayName("系统用户已存在时应跳过创建")
         void run_whenSystemUserExists_shouldSkipCreation() throws Exception {
             when(systemUserProperties.getStudentId()).thenReturn(DEFAULT_STUDENT_ID);
-            UserVO existingUser = UserVO.builder()
-                    .id(1L)
-                    .studentId(DEFAULT_STUDENT_ID)
-                    .username(DEFAULT_USERNAME)
-                    .build();
+            User existingUser = User.reconstruct(1L, "password");
+            existingUser.setStudentId(DEFAULT_STUDENT_ID);
+            existingUser.setUsername(DEFAULT_USERNAME);
+            ;
             when(userRepository.findByStudentId(DEFAULT_STUDENT_ID)).thenReturn(Optional.of(existingUser));
 
             systemUserInitializer.run();
@@ -202,12 +201,9 @@ class SystemUserInitializerTest {
     private String sha256Hash(String input) {
         return sha256HashViaInitializer(input);
     }
-    private RoleVO superAdminRole() {
+    private Role superAdminRole() {
         // Initializer depends on the repository boundary, so the fixture returns a
         // domain VO instead of a DO.
-        return RoleVO.builder()
-                .id(1L)
-                .name(RoleType.SUPER_ADMIN.getName())
-                .build();
+        return Role.reconstruct(1L, RoleType.SUPER_ADMIN.getName());
     }
 }

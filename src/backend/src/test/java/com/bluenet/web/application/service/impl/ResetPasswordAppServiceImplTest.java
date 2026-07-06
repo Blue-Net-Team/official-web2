@@ -10,7 +10,7 @@ import java.util.Optional;
 import com.bluenet.web.application.ResetPasswordResult;
 import com.bluenet.web.application.command.resetpassword.ResetPasswordCommands;
 import com.bluenet.web.domain.exception.BadRequest;
-import com.bluenet.web.domain.model.vo.UserVO;
+import com.bluenet.web.domain.model.entity.User;
 import com.bluenet.web.domain.model.vo.VerifyCodeVO;
 import com.bluenet.web.domain.repository.UserRepository;
 import com.bluenet.web.domain.repository.VerificationCodeRepository;
@@ -70,12 +70,11 @@ class ResetPasswordAppServiceImplTest {
     private static final Long TEST_USER_ID = 1L;
     private static final String TEST_CODE = "123456";
 
-    private UserVO createTestUserVO() {
-        return UserVO.builder()
-                .id(TEST_USER_ID)
-                .studentId(TEST_STUDENT_ID)
-                .email(TEST_EMAIL)
-                .build();
+    private User createTestUser() {
+        User user = User.reconstruct(TEST_USER_ID, "password");
+        user.setStudentId(TEST_STUDENT_ID);
+        user.setEmail(TEST_EMAIL);
+        return user;
     }
 
     private VerifyCodeVO createTestVerifyCodeVO() {
@@ -97,7 +96,7 @@ class ResetPasswordAppServiceImplTest {
         @Test
         @DisplayName("学号存在：应返回 resetToken")
         void verifyStudent_existingStudent_shouldReturnToken() {
-            UserVO user = createTestUserVO();
+            User user = createTestUser();
             when(userRepository.findByStudentId(TEST_STUDENT_ID)).thenReturn(Optional.of(user));
             when(stateService.create(TEST_STUDENT_ID, TEST_USER_ID)).thenReturn(TEST_TOKEN);
 
@@ -132,7 +131,7 @@ class ResetPasswordAppServiceImplTest {
         @Test
         @DisplayName("邮箱匹配：应返回 resetToken")
         void verifyEmail_matchingEmail_shouldReturnToken() {
-            UserVO user = createTestUserVO();
+            User user = createTestUser();
             when(stateService.exists(TEST_TOKEN)).thenReturn(true);
             when(stateService.getStep(TEST_TOKEN)).thenReturn(1);
             when(stateService.getField(TEST_TOKEN, "studentId")).thenReturn(TEST_STUDENT_ID);
@@ -175,7 +174,7 @@ class ResetPasswordAppServiceImplTest {
         @Test
         @DisplayName("邮箱不匹配：应抛出 BadRequest")
         void verifyEmail_mismatchedEmail_shouldThrowBadRequest() {
-            UserVO user = createTestUserVO();
+            User user = createTestUser();
             when(stateService.exists(TEST_TOKEN)).thenReturn(true);
             when(stateService.getStep(TEST_TOKEN)).thenReturn(1);
             when(stateService.getField(TEST_TOKEN, "studentId")).thenReturn(TEST_STUDENT_ID);
@@ -360,7 +359,7 @@ class ResetPasswordAppServiceImplTest {
         @Test
         @DisplayName("正常重置密码：应成功更新密码并清理状态")
         void resetPassword_normal_shouldSucceed() {
-            UserVO user = createTestUserVO();
+            User user = createTestUser();
             when(stateService.exists(TEST_TOKEN)).thenReturn(true);
             when(stateService.getStep(TEST_TOKEN)).thenReturn(4);
             when(stateService.getField(TEST_TOKEN, "userId")).thenReturn(TEST_USER_ID.toString());

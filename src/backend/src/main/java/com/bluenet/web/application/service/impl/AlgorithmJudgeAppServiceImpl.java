@@ -18,7 +18,7 @@ import com.bluenet.web.domain.model.entity.AssessmentAnswer;
 import com.bluenet.web.domain.model.vo.AssessmentJudgementVO;
 import com.bluenet.web.domain.model.entity.AssessmentQuestion;
 import com.bluenet.web.domain.model.entity.AssessmentTime;
-import com.bluenet.web.domain.model.vo.UserVO;
+import com.bluenet.web.domain.model.entity.User;
 import com.bluenet.web.domain.model.vo.evaluation.AlgorithmContent;
 import com.bluenet.web.domain.repository.AlgorithmJudgeCaseResultRepository;
 import com.bluenet.web.domain.repository.AlgorithmJudgeJobRepository;
@@ -71,7 +71,7 @@ public class AlgorithmJudgeAppServiceImpl implements AlgorithmJudgeAppService {
     @Override
     @Transactional
     public AlgorithmJudgeResult.SubmitResult run(AlgorithmJudgeCommands.RunCommand command) {
-        UserVO currentUser = getCurrentUser();
+        User currentUser = getCurrentUser();
         AssessmentQuestion question = assessmentQuestionRepository.findById(command.questionId())
                 .orElseThrow(() -> new DataNotFound("题目不存在，ID: " + command.questionId()));
         AlgorithmContent content = validateAlgorithmQuestion(question);
@@ -114,7 +114,7 @@ public class AlgorithmJudgeAppServiceImpl implements AlgorithmJudgeAppService {
     @Override
     @Transactional
     public AlgorithmJudgeResult.SubmitResult submit(AlgorithmJudgeCommands.SubmitCommand command) {
-        UserVO currentUser = getCurrentUser();
+        User currentUser = getCurrentUser();
         AssessmentQuestion question = assessmentQuestionRepository.findById(command.questionId())
                 .orElseThrow(() -> new DataNotFound("题目不存在，ID: " + command.questionId()));
         AlgorithmContent content = validateAlgorithmQuestion(question);
@@ -149,7 +149,7 @@ public class AlgorithmJudgeAppServiceImpl implements AlgorithmJudgeAppService {
      */
     @Override
     public AlgorithmJudgeResult.PollResult getJob(Long jobId) {
-        UserVO currentUser = getCurrentUser();
+        User currentUser = getCurrentUser();
         AlgorithmJudgeJob job = algorithmJudgeJobRepository.findById(jobId)
                 .orElseThrow(() -> new DataNotFound("判题任务不存在"));
         if (!job.getUserId().equals(currentUser.getId())) {
@@ -177,8 +177,8 @@ public class AlgorithmJudgeAppServiceImpl implements AlgorithmJudgeAppService {
                 findJudgement(job));
     }
 
-    private UserVO getCurrentUser() {
-        UserVO currentUser = UserCTX.getCurrentUser();
+    private User getCurrentUser() {
+        User currentUser = UserCTX.getCurrentUser();
         if (currentUser == null) {
             throw new SecurityException("未登录");
         }
@@ -193,7 +193,7 @@ public class AlgorithmJudgeAppServiceImpl implements AlgorithmJudgeAppService {
         return content;
     }
 
-    private void validateCandidateCanUseQuestion(UserVO user, AssessmentQuestion question) {
+    private void validateCandidateCanUseQuestion(User user, AssessmentQuestion question) {
         AssessmentTime time = assessmentTimeRepository.findById(question.getAssessmentTimeId())
                 .orElseThrow(() -> new BadRequest("考核时间不存在"));
         if (user.getDirection() != null && !user.getDirection().equals(time.getDirection())) {
@@ -234,7 +234,7 @@ public class AlgorithmJudgeAppServiceImpl implements AlgorithmJudgeAppService {
     }
 
     private AssessmentAnswer saveOrUpdateAnswer(
-            UserVO user,
+            User user,
             AssessmentQuestion question,
             AlgorithmJudgeCommands.SubmitCommand command) {
         Optional<AssessmentAnswer> existing = assessmentAnswerRepository

@@ -20,7 +20,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import com.bluenet.web.domain.exception.Unauthorized;
 import com.bluenet.web.domain.model.enumerate.Direction;
 import com.bluenet.web.domain.model.enumerate.LocalLoginType;
-import com.bluenet.web.domain.model.vo.UserVO;
+import com.bluenet.web.domain.model.entity.User;
 import com.bluenet.web.domain.model.vo.VerifyCodeVO;
 import com.bluenet.web.domain.repository.UserRepository;
 import com.bluenet.web.domain.repository.VerificationCodeRepository;
@@ -50,16 +50,15 @@ class AuthDomainServiceImplTest {
     private static final String TEST_PASSWORD = "encodedPassword123";
     private static final String TEST_RAW_PASSWORD = "rawPassword123";
 
-    private UserVO createTestUserVO() {
-        return UserVO.builder()
-                .id(TEST_USER_ID)
-                .studentId(TEST_STUDENT_ID)
-                .email(TEST_EMAIL)
-                .username("测试用户")
-                .password(TEST_PASSWORD)
-                .disabled(false)
-                .direction(Direction.COMPUTER_VISION)
-                .build();
+    private User createTestUser() {
+        User user = User.reconstruct(TEST_USER_ID, "password");
+        user.setStudentId(TEST_STUDENT_ID);
+        user.setEmail(TEST_EMAIL);
+        user.setUsername("测试用户");
+        user.setPassword(TEST_PASSWORD);
+        user.setDisable(false);
+        user.setDirection(Direction.COMPUTER_VISION);
+        return user;
     }
 
     /**
@@ -67,14 +66,14 @@ class AuthDomainServiceImplTest {
      */
     @Test
     @DisplayName("验证本地登录：有效的学号和密码应返回用户信息")
-    void checkLocalValid_withValidStudentIdAndPassword_shouldReturnUserVO() {
+    void checkLocalValid_withValidStudentIdAndPassword_shouldReturnUser() {
         // 准备
-        UserVO userVO = createTestUserVO();
+        User userVO = createTestUser();
         when(userRepository.findByStudentId(TEST_STUDENT_ID)).thenReturn(Optional.of(userVO));
         when(passwordEncoder.matches(TEST_RAW_PASSWORD, TEST_PASSWORD)).thenReturn(true);
 
         // 执行
-        Optional<UserVO> result = authDomainService.checkLocalValid(
+        Optional<User> result = authDomainService.checkLocalValid(
                 TEST_STUDENT_ID,
                 TEST_RAW_PASSWORD,
                 LocalLoginType.STUDENT_ID);
@@ -109,12 +108,11 @@ class AuthDomainServiceImplTest {
     @DisplayName("验证本地登录：账号被禁用应抛出 Unauthorized 异常")
     void checkLocalValid_withDisabledAccount_shouldThrowUnauthorized() {
         // 准备
-        UserVO userVO = UserVO.builder()
-                .id(TEST_USER_ID)
-                .studentId(TEST_STUDENT_ID)
-                .password(TEST_PASSWORD)
-                .disabled(true)
-                .build();
+        User userVO = User.reconstruct(TEST_USER_ID, "password");
+        userVO.setStudentId(TEST_STUDENT_ID);
+        userVO.setPassword(TEST_PASSWORD);
+        userVO.setDisable(true);
+        ;
         when(userRepository.findByStudentId(TEST_STUDENT_ID)).thenReturn(Optional.of(userVO));
 
         // 执行 & 验证
@@ -131,12 +129,12 @@ class AuthDomainServiceImplTest {
     @DisplayName("验证本地登录：密码错误应返回空")
     void checkLocalValid_withIncorrectPassword_shouldReturnEmpty() {
         // 准备
-        UserVO userVO = createTestUserVO();
+        User userVO = createTestUser();
         when(userRepository.findByStudentId(TEST_STUDENT_ID)).thenReturn(Optional.of(userVO));
         when(passwordEncoder.matches(TEST_RAW_PASSWORD, TEST_PASSWORD)).thenReturn(false);
 
         // 执行
-        Optional<UserVO> result = authDomainService.checkLocalValid(
+        Optional<User> result = authDomainService.checkLocalValid(
                 TEST_STUDENT_ID,
                 TEST_RAW_PASSWORD,
                 LocalLoginType.STUDENT_ID);
@@ -150,9 +148,9 @@ class AuthDomainServiceImplTest {
      */
     @Test
     @DisplayName("验证本地登录：有效的邮箱和验证码应返回用户信息")
-    void checkLocalValid_withValidEmailAndVerifyCode_shouldReturnUserVO() {
+    void checkLocalValid_withValidEmailAndVerifyCode_shouldReturnUser() {
         // 准备
-        UserVO userVO = createTestUserVO();
+        User userVO = createTestUser();
         String verifyCode = "123456";
         VerifyCodeVO verifyCodeVO = VerifyCodeVO.builder()
                 .target(TEST_EMAIL)
@@ -166,7 +164,7 @@ class AuthDomainServiceImplTest {
                 .thenReturn(Optional.of(verifyCodeVO));
 
         // 执行
-        Optional<UserVO> result = authDomainService.checkLocalValid(TEST_EMAIL, verifyCode, LocalLoginType.EMAIL);
+        Optional<User> result = authDomainService.checkLocalValid(TEST_EMAIL, verifyCode, LocalLoginType.EMAIL);
 
         // 验证
         assertTrue(result.isPresent());
@@ -180,7 +178,7 @@ class AuthDomainServiceImplTest {
     @DisplayName("验证本地登录：验证码过期应返回空")
     void checkLocalValid_withExpiredVerifyCode_shouldReturnEmpty() {
         // 准备
-        UserVO userVO = createTestUserVO();
+        User userVO = createTestUser();
         String verifyCode = "123456";
         VerifyCodeVO verifyCodeVO = VerifyCodeVO.builder()
                 .target(TEST_EMAIL)
@@ -194,7 +192,7 @@ class AuthDomainServiceImplTest {
                 .thenReturn(Optional.of(verifyCodeVO));
 
         // 执行
-        Optional<UserVO> result = authDomainService.checkLocalValid(TEST_EMAIL, verifyCode, LocalLoginType.EMAIL);
+        Optional<User> result = authDomainService.checkLocalValid(TEST_EMAIL, verifyCode, LocalLoginType.EMAIL);
 
         // 验证
         assertFalse(result.isPresent());
@@ -207,7 +205,7 @@ class AuthDomainServiceImplTest {
     @DisplayName("验证本地登录：验证码已使用应返回空")
     void checkLocalValid_withUsedVerifyCode_shouldReturnEmpty() {
         // 准备
-        UserVO userVO = createTestUserVO();
+        User userVO = createTestUser();
         String verifyCode = "123456";
         VerifyCodeVO verifyCodeVO = VerifyCodeVO.builder()
                 .target(TEST_EMAIL)
@@ -221,7 +219,7 @@ class AuthDomainServiceImplTest {
                 .thenReturn(Optional.of(verifyCodeVO));
 
         // 执行
-        Optional<UserVO> result = authDomainService.checkLocalValid(TEST_EMAIL, verifyCode, LocalLoginType.EMAIL);
+        Optional<User> result = authDomainService.checkLocalValid(TEST_EMAIL, verifyCode, LocalLoginType.EMAIL);
 
         // 验证
         assertFalse(result.isPresent());
@@ -234,14 +232,14 @@ class AuthDomainServiceImplTest {
     @DisplayName("验证本地登录：验证码无效/不存在应返回空")
     void checkLocalValid_withInvalidVerifyCode_shouldReturnEmpty() {
         // 准备
-        UserVO userVO = createTestUserVO();
+        User userVO = createTestUser();
         String verifyCode = "123456";
 
         when(userRepository.findByEmail(TEST_EMAIL)).thenReturn(Optional.of(userVO));
         when(verificationCodeRepository.findByEmailAndCode(TEST_EMAIL, verifyCode)).thenReturn(Optional.empty());
 
         // 执行
-        Optional<UserVO> result = authDomainService.checkLocalValid(TEST_EMAIL, verifyCode, LocalLoginType.EMAIL);
+        Optional<User> result = authDomainService.checkLocalValid(TEST_EMAIL, verifyCode, LocalLoginType.EMAIL);
 
         // 验证
         assertFalse(result.isPresent());

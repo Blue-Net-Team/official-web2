@@ -7,7 +7,7 @@ import com.bluenet.web.domain.exception.Forbidden;
 import com.bluenet.web.domain.exception.Unauthorized;
 import com.bluenet.web.domain.model.entity.UserExperience;
 import com.bluenet.web.domain.model.enumerate.ExperienceType;
-import com.bluenet.web.domain.model.vo.UserVO;
+import com.bluenet.web.domain.model.entity.User;
 import com.bluenet.web.domain.repository.UserExperienceRepository;
 import com.bluenet.web.infrastructure.security.util.UserCTX;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -55,10 +55,9 @@ class UserExperienceAppServiceImplTest {
     }
 
     private void mockCurrentUser(Long userId) {
-        UserVO userVO = UserVO.builder()
-                .id(userId)
-                .username("testUser")
-                .build();
+        User userVO = User.reconstruct(userId, "password");
+        userVO.setUsername("testUser");
+        ;
         userCTXMockedStatic.when(UserCTX::getCurrentUser).thenReturn(userVO);
     }
 

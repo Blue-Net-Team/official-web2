@@ -1,5 +1,7 @@
 package com.bluenet.web.application.service.impl;
 
+import com.bluenet.web.domain.model.enumerate.RoleType;
+
 import com.bluenet.web.application.AssessmentAnswerResult;
 import com.bluenet.web.application.command.assessment_answer.AssessmentAnswerCommands;
 import com.bluenet.web.domain.exception.DataConflict;
@@ -10,7 +12,7 @@ import com.bluenet.web.domain.model.entity.AssessmentTime;
 import com.bluenet.web.domain.model.vo.AssessmentJudgementVO;
 import com.bluenet.web.domain.model.entity.AssessmentQuestion;
 
-import com.bluenet.web.domain.model.vo.UserVO;
+import com.bluenet.web.domain.model.entity.User;
 import com.bluenet.web.domain.model.vo.FileVO;
 import com.bluenet.web.domain.model.vo.evaluation.MultipleChoiceContent;
 import com.bluenet.web.domain.model.vo.evaluation.SingleChoiceContent;
@@ -23,8 +25,10 @@ import com.bluenet.web.domain.repository.AssessmentQuestionRepository;
 import com.bluenet.web.domain.repository.AssessmentTimeRepository;
 import com.bluenet.web.domain.service.CommentDomainService;
 import com.bluenet.web.domain.service.FileDomainService;
-import com.bluenet.web.domain.service.UserDomainService;
+import com.bluenet.web.domain.repository.UserRepository;
+import com.bluenet.web.infrastructure.security.principal.RoleTypeResolver;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -64,15 +68,28 @@ class AssessmentAnswerAppServiceImplTest {
     @Spy
     private ObjectMapper objectMapper = new ObjectMapper();
     @Mock
-    private UserDomainService userDomainService;
+    private UserRepository userRepository;
     @Mock
     private CommentDomainService commentDomainService;
     @Mock
     private AssessmentDecisionDomainService assessmentDecisionDomainService;
     @Mock
     private AssessmentTeamRepository assessmentTeamRepository;
+    @Mock
+    private RoleTypeResolver roleTypeResolver;
     @InjectMocks
     private AssessmentAnswerAppServiceImpl assessmentAnswerAppService;
+
+    @BeforeEach
+    void setUp() {
+        lenient().when(roleTypeResolver.resolve(anyLong())).thenAnswer(invocation -> {
+            Long roleId = invocation.getArgument(0);
+            return Arrays.stream(RoleType.values())
+                    .filter(rt -> (long) rt.getLevel() == roleId)
+                    .findFirst()
+                    .orElse(null);
+        });
+    }
 
     private static final Long TEST_USER_ID = 1L;
     private static final Long TEST_QUESTION_ID = 10L;
@@ -81,13 +98,12 @@ class AssessmentAnswerAppServiceImplTest {
     private static final Long TEST_FILE_ID = 50L;
     private static final LocalDateTime TEST_SUBMIT_TIME = LocalDateTime.of(2026, 4, 5, 14, 30);
 
-    private UserVO createTestUser() {
-        return UserVO.builder()
-                .id(TEST_USER_ID)
-                .studentId("2024123456")
-                .roleName("CANDIDATE")
-                .direction(Direction.COMPUTER_VISION)
-                .build();
+    private User createTestUser() {
+        User user = User.reconstruct(TEST_USER_ID, "password");
+        user.setStudentId("2024123456");
+        user.setRoleId((long) RoleType.fromName("CANDIDATE").getLevel());
+        user.setDirection(Direction.COMPUTER_VISION);
+        return user;
     }
 
     private AssessmentAnswerCommands.CreateAssessmentAnswerCommand createTestCreateCommand() {
@@ -214,8 +230,8 @@ class AssessmentAnswerAppServiceImplTest {
         @Test
         @DisplayName("正常创建：应返回Result")
         void createAnswer_success_shouldReturnResult() {
-            UserVO user = createTestUser();
-            when(userDomainService.getUser(TEST_USER_ID)).thenReturn(Optional.of(user));
+            User user = createTestUser();
+            when(userRepository.findById(TEST_USER_ID)).thenReturn(Optional.of(user));
             AssessmentAnswerCommands.CreateAssessmentAnswerCommand command = createTestCreateCommand();
             AssessmentQuestion question = createTestQuestion();
             when(assessmentQuestionRepository.findById(TEST_QUESTION_ID)).thenReturn(Optional.of(question));
@@ -245,7 +261,7 @@ class AssessmentAnswerAppServiceImplTest {
         @Test
         @DisplayName("未登录：应抛出SecurityException")
         void createAnswer_notAuthenticated_shouldThrowSecurityException() {
-            when(userDomainService.getUser(TEST_USER_ID)).thenReturn(Optional.empty());
+            when(userRepository.findById(TEST_USER_ID)).thenReturn(Optional.empty());
             AssessmentAnswerCommands.CreateAssessmentAnswerCommand command = createTestCreateCommand();
             SecurityException ex = assertThrows(
                     SecurityException.class,
@@ -258,8 +274,8 @@ class AssessmentAnswerAppServiceImplTest {
         @Test
         @DisplayName("题目不存在：应抛出RuntimeException")
         void createAnswer_questionNotFound_shouldThrow() {
-            UserVO user = createTestUser();
-            when(userDomainService.getUser(TEST_USER_ID)).thenReturn(Optional.of(user));
+            User user = createTestUser();
+            when(userRepository.findById(TEST_USER_ID)).thenReturn(Optional.of(user));
             when(assessmentQuestionRepository.findById(TEST_QUESTION_ID)).thenThrow(new RuntimeException("题目不存在"));
             RuntimeException ex = assertThrows(
                     RuntimeException.class,
@@ -271,8 +287,8 @@ class AssessmentAnswerAppServiceImplTest {
         @Test
         @DisplayName("重复提交：应抛出DataConflict")
         void createAnswer_duplicateSubmission_shouldThrow() {
-            UserVO user = createTestUser();
-            when(userDomainService.getUser(TEST_USER_ID)).thenReturn(Optional.of(user));
+            User user = createTestUser();
+            when(userRepository.findById(TEST_USER_ID)).thenReturn(Optional.of(user));
             AssessmentQuestion question = createTestQuestion();
             when(assessmentQuestionRepository.findById(TEST_QUESTION_ID)).thenReturn(Optional.of(question));
             stubDirectionAndFileValidation();
@@ -289,8 +305,8 @@ class AssessmentAnswerAppServiceImplTest {
         @Test
         @DisplayName("不限时考核存在过期旧会话：创建答案不应被deadline拦截")
         void createAnswer_nonTimedWithExpiredOldSession_shouldIgnoreDeadline() {
-            UserVO user = createTestUser();
-            when(userDomainService.getUser(TEST_USER_ID)).thenReturn(Optional.of(user));
+            User user = createTestUser();
+            when(userRepository.findById(TEST_USER_ID)).thenReturn(Optional.of(user));
             AssessmentAnswerCommands.CreateAssessmentAnswerCommand command = createTestCreateCommand();
             AssessmentQuestion question = createTestQuestion();
             when(assessmentQuestionRepository.findById(TEST_QUESTION_ID)).thenReturn(Optional.of(question));
@@ -316,8 +332,8 @@ class AssessmentAnswerAppServiceImplTest {
         @Test
         @DisplayName("单选题回答正确：应同步写入AC评判但返回结果中擦除")
         void createAnswer_singleChoiceCorrect_shouldCreateAcceptedJudgementButErased() {
-            UserVO user = createTestUser();
-            when(userDomainService.getUser(TEST_USER_ID)).thenReturn(Optional.of(user));
+            User user = createTestUser();
+            when(userRepository.findById(TEST_USER_ID)).thenReturn(Optional.of(user));
             AssessmentAnswerCommands.CreateAssessmentAnswerCommand command = new AssessmentAnswerCommands.CreateAssessmentAnswerCommand(
                     TEST_USER_ID, TEST_QUESTION_ID, "B", null, null);
             AssessmentQuestion question = createSingleChoiceQuestion("B");
@@ -342,8 +358,8 @@ class AssessmentAnswerAppServiceImplTest {
         @Test
         @DisplayName("单选题回答错误：应同步写入WA评判但返回结果中擦除")
         void createAnswer_singleChoiceWrong_shouldCreateWrongAnswerJudgementButErased() {
-            UserVO user = createTestUser();
-            when(userDomainService.getUser(TEST_USER_ID)).thenReturn(Optional.of(user));
+            User user = createTestUser();
+            when(userRepository.findById(TEST_USER_ID)).thenReturn(Optional.of(user));
             AssessmentAnswerCommands.CreateAssessmentAnswerCommand command = new AssessmentAnswerCommands.CreateAssessmentAnswerCommand(
                     TEST_USER_ID, TEST_QUESTION_ID, "A", null, null);
             AssessmentQuestion question = createSingleChoiceQuestion("B");
@@ -372,8 +388,8 @@ class AssessmentAnswerAppServiceImplTest {
         @Test
         @DisplayName("不限时考核存在过期旧会话：修改答案不应被deadline拦截")
         void updateAnswer_nonTimedWithExpiredOldSession_shouldIgnoreDeadline() {
-            UserVO user = createTestUser();
-            when(userDomainService.getUser(TEST_USER_ID)).thenReturn(Optional.of(user));
+            User user = createTestUser();
+            when(userRepository.findById(TEST_USER_ID)).thenReturn(Optional.of(user));
             AssessmentAnswerCommands.UpdateAssessmentAnswerCommand command = createTestUpdateCommand();
             AssessmentQuestion question = createTestQuestion();
             AssessmentAnswer existing = createTestAnswer();
@@ -397,8 +413,8 @@ class AssessmentAnswerAppServiceImplTest {
         @Test
         @DisplayName("多选题回答顺序不同但集合一致：应同步写入AC评判但返回结果中擦除")
         void updateAnswer_multipleChoiceSameSet_shouldCreateAcceptedJudgementButErased() {
-            UserVO user = createTestUser();
-            when(userDomainService.getUser(TEST_USER_ID)).thenReturn(Optional.of(user));
+            User user = createTestUser();
+            when(userRepository.findById(TEST_USER_ID)).thenReturn(Optional.of(user));
             AssessmentAnswerCommands.UpdateAssessmentAnswerCommand command = new AssessmentAnswerCommands.UpdateAssessmentAnswerCommand(
                     TEST_USER_ID, TEST_QUESTION_ID, "[\"B\",\"A\"]", null, null);
             AssessmentQuestion question = createMultipleChoiceQuestion("A", "B");
@@ -428,8 +444,8 @@ class AssessmentAnswerAppServiceImplTest {
         @Test
         @DisplayName("多选题答案格式错误：应拒绝并抛出BadRequest")
         void updateAnswer_multipleChoiceInvalidJson_shouldThrowBadRequest() {
-            UserVO user = createTestUser();
-            when(userDomainService.getUser(TEST_USER_ID)).thenReturn(Optional.of(user));
+            User user = createTestUser();
+            when(userRepository.findById(TEST_USER_ID)).thenReturn(Optional.of(user));
             AssessmentAnswerCommands.UpdateAssessmentAnswerCommand command = new AssessmentAnswerCommands.UpdateAssessmentAnswerCommand(
                     TEST_USER_ID, TEST_QUESTION_ID, "A,B", null, null);
             AssessmentQuestion question = createMultipleChoiceQuestion("A", "B");
@@ -460,8 +476,8 @@ class AssessmentAnswerAppServiceImplTest {
         @Test
         @DisplayName("队长更新 FILE_UPLOAD 答案：应同步组员答案")
         void updateAnswer_teamLeaderFileUpload_shouldSyncMemberAnswers() {
-            UserVO user = createTestUser();
-            when(userDomainService.getUser(TEST_USER_ID)).thenReturn(Optional.of(user));
+            User user = createTestUser();
+            when(userRepository.findById(TEST_USER_ID)).thenReturn(Optional.of(user));
 
             AssessmentQuestion question = AssessmentQuestion.reconstruct(
                     TEST_QUESTION_ID,
@@ -554,13 +570,12 @@ class AssessmentAnswerAppServiceImplTest {
         @Test
         @DisplayName("TC-402: 方向不匹配应抛出Forbidden")
         void createAnswer_directionMismatch_shouldThrowForbidden() {
-            UserVO user = UserVO.builder()
-                    .id(TEST_USER_ID)
-                    .studentId("2024123456")
-                    .roleName("CANDIDATE")
-                    .direction(Direction.EMBEDDED)
-                    .build();
-            when(userDomainService.getUser(TEST_USER_ID)).thenReturn(Optional.of(user));
+            User user = User.reconstruct(TEST_USER_ID, "password");
+            user.setStudentId("2024123456");
+            user.setRoleId((long) RoleType.fromName("CANDIDATE").getLevel());
+            user.setDirection(Direction.EMBEDDED);
+            ;
+            when(userRepository.findById(TEST_USER_ID)).thenReturn(Optional.of(user));
             AssessmentAnswerCommands.CreateAssessmentAnswerCommand command = new AssessmentAnswerCommands.CreateAssessmentAnswerCommand(
                     TEST_USER_ID, TEST_QUESTION_ID, "answer", null, null);
             AssessmentQuestion question = createTestQuestion();
@@ -574,8 +589,8 @@ class AssessmentAnswerAppServiceImplTest {
         @Test
         @DisplayName("TC-403: fileId 对应文件不存在应抛出BadRequest")
         void createAnswer_fileNotFound_shouldThrowBadRequest() {
-            UserVO user = createTestUser();
-            when(userDomainService.getUser(TEST_USER_ID)).thenReturn(Optional.of(user));
+            User user = createTestUser();
+            when(userRepository.findById(TEST_USER_ID)).thenReturn(Optional.of(user));
             AssessmentAnswerCommands.CreateAssessmentAnswerCommand command = new AssessmentAnswerCommands.CreateAssessmentAnswerCommand(
                     TEST_USER_ID, TEST_QUESTION_ID, "answer", null, 9999L);
             AssessmentQuestion question = createTestQuestion();
@@ -592,8 +607,8 @@ class AssessmentAnswerAppServiceImplTest {
         @Test
         @DisplayName("TC-404: fileId 类型不是 WORK 应抛出BadRequest")
         void createAnswer_fileTypeMismatch_shouldThrowBadRequest() {
-            UserVO user = createTestUser();
-            when(userDomainService.getUser(TEST_USER_ID)).thenReturn(Optional.of(user));
+            User user = createTestUser();
+            when(userRepository.findById(TEST_USER_ID)).thenReturn(Optional.of(user));
             AssessmentAnswerCommands.CreateAssessmentAnswerCommand command = createTestCreateCommand();
             AssessmentQuestion question = createTestQuestion();
             when(assessmentQuestionRepository.findById(TEST_QUESTION_ID)).thenReturn(Optional.of(question));
@@ -610,8 +625,8 @@ class AssessmentAnswerAppServiceImplTest {
         @Test
         @DisplayName("TC-405: fileId 为 null 但 content 有值应正常创建")
         void createAnswer_noFileId_shouldSucceed() {
-            UserVO user = createTestUser();
-            when(userDomainService.getUser(TEST_USER_ID)).thenReturn(Optional.of(user));
+            User user = createTestUser();
+            when(userRepository.findById(TEST_USER_ID)).thenReturn(Optional.of(user));
             AssessmentAnswerCommands.CreateAssessmentAnswerCommand command = new AssessmentAnswerCommands.CreateAssessmentAnswerCommand(
                     TEST_USER_ID, TEST_QUESTION_ID, "text answer", null, null);
             AssessmentQuestion question = createTestQuestion();
@@ -709,8 +724,8 @@ class AssessmentAnswerAppServiceImplTest {
         @Test
         @DisplayName("被淘汰考生创建答案：应抛出Forbidden")
         void createAnswer_eliminatedCandidate_shouldThrowForbidden() {
-            UserVO user = createTestUser();
-            when(userDomainService.getUser(TEST_USER_ID)).thenReturn(Optional.of(user));
+            User user = createTestUser();
+            when(userRepository.findById(TEST_USER_ID)).thenReturn(Optional.of(user));
             AssessmentQuestion question = createTestQuestion();
             when(assessmentQuestionRepository.findById(TEST_QUESTION_ID)).thenReturn(Optional.of(question));
             when(assessmentTimeRepository.findById(TEST_ASSESSMENT_TIME_ID)).thenReturn(Optional.of(createTestTime()));
@@ -728,8 +743,8 @@ class AssessmentAnswerAppServiceImplTest {
         @Test
         @DisplayName("被淘汰考生更新答案：应抛出Forbidden")
         void updateAnswer_eliminatedCandidate_shouldThrowForbidden() {
-            UserVO user = createTestUser();
-            when(userDomainService.getUser(TEST_USER_ID)).thenReturn(Optional.of(user));
+            User user = createTestUser();
+            when(userRepository.findById(TEST_USER_ID)).thenReturn(Optional.of(user));
             AssessmentQuestion question = createTestQuestion();
             when(assessmentQuestionRepository.findById(TEST_QUESTION_ID)).thenReturn(Optional.of(question));
             when(assessmentTimeRepository.findById(TEST_ASSESSMENT_TIME_ID)).thenReturn(Optional.of(createTestTime()));
@@ -747,13 +762,12 @@ class AssessmentAnswerAppServiceImplTest {
         @Test
         @DisplayName("非考生角色提交答案：淘汰检查应跳过")
         void createAnswer_nonCandidate_shouldSkipEliminationCheck() {
-            UserVO user = UserVO.builder()
-                    .id(TEST_USER_ID)
-                    .studentId("2024123456")
-                    .roleName("MEMBER")
-                    .direction(Direction.COMPUTER_VISION)
-                    .build();
-            when(userDomainService.getUser(TEST_USER_ID)).thenReturn(Optional.of(user));
+            User user = User.reconstruct(TEST_USER_ID, "password");
+            user.setStudentId("2024123456");
+            user.setRoleId((long) RoleType.fromName("MEMBER").getLevel());
+            user.setDirection(Direction.COMPUTER_VISION);
+            ;
+            when(userRepository.findById(TEST_USER_ID)).thenReturn(Optional.of(user));
             AssessmentQuestion question = createTestQuestion();
             when(assessmentQuestionRepository.findById(TEST_QUESTION_ID)).thenReturn(Optional.of(question));
             when(assessmentTimeRepository.findById(TEST_ASSESSMENT_TIME_ID)).thenReturn(Optional.of(createTestTime()));
@@ -778,8 +792,8 @@ class AssessmentAnswerAppServiceImplTest {
         @Test
         @DisplayName("队长提交 FILE_UPLOAD 答案：应为组员批量创建答案")
         void createAnswer_teamLeaderFileUpload_shouldBatchCreateMemberAnswers() {
-            UserVO user = createTestUser();
-            when(userDomainService.getUser(TEST_USER_ID)).thenReturn(Optional.of(user));
+            User user = createTestUser();
+            when(userRepository.findById(TEST_USER_ID)).thenReturn(Optional.of(user));
 
             AssessmentQuestion question = AssessmentQuestion.reconstruct(
                     TEST_QUESTION_ID,

@@ -1,5 +1,7 @@
 package com.bluenet.web.application.service.impl;
 
+import com.bluenet.web.domain.model.enumerate.RoleType;
+
 import com.bluenet.web.application.command.userinfo.UserInfoCommands;
 import com.bluenet.web.domain.exception.BadRequest;
 import com.bluenet.web.domain.exception.DataNotFound;
@@ -9,13 +11,19 @@ import com.bluenet.web.domain.model.enumerate.Direction;
 import com.bluenet.web.domain.model.enumerate.FileType;
 import com.bluenet.web.domain.model.enumerate.Gender;
 import com.bluenet.web.domain.model.vo.FileVO;
-import com.bluenet.web.domain.model.vo.UserVO;
+import com.bluenet.web.domain.model.entity.User;
+import com.bluenet.web.application.message.MessageDispatcher;
+import com.bluenet.web.application.message.template.EmailVerificationCodeTemplate;
+import com.bluenet.web.domain.repository.CollegeRepository;
+import com.bluenet.web.domain.repository.UserRepository;
 import com.bluenet.web.domain.repository.VerificationCodeRepository;
 import com.bluenet.web.domain.service.FileDomainService;
 import com.bluenet.web.domain.service.UserDomainService;
 import com.bluenet.web.domain.service.VerificationCodeDomainService;
 import com.bluenet.web.infrastructure.security.auth.AuthTokenService;
 import com.bluenet.web.infrastructure.security.change.ChangePasswordStateService;
+import com.bluenet.web.infrastructure.security.principal.RoleTypeResolver;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -25,6 +33,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.util.Arrays;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -38,6 +47,9 @@ class UserInfoAppServiceImplTest {
 
     @Mock
     private UserDomainService userDomainService;
+
+    @Mock
+    private UserRepository userRepository;
 
     @Mock
     private VerificationCodeDomainService verificationCodeDomainService;
@@ -57,8 +69,31 @@ class UserInfoAppServiceImplTest {
     @Mock
     private FileDomainService fileDomainService;
 
+    @Mock
+    private MessageDispatcher messageDispatcher;
+
+    @Mock
+    private EmailVerificationCodeTemplate emailVerificationCodeTemplate;
+
+    @Mock
+    private CollegeRepository collegeRepository;
+
+    @Mock
+    private RoleTypeResolver roleTypeResolver;
+
     @InjectMocks
     private UserInfoAppServiceImpl userInfoAppService;
+
+    @BeforeEach
+    void setUp() {
+        lenient().when(roleTypeResolver.resolve(anyLong())).thenAnswer(invocation -> {
+            Long roleId = invocation.getArgument(0);
+            return Arrays.stream(RoleType.values())
+                    .filter(rt -> (long) rt.getLevel() == roleId)
+                    .findFirst()
+                    .orElse(null);
+        });
+    }
 
     private static final Long TEST_USER_ID = 1L;
     private static final String TEST_STUDENT_ID = "2024001001";
@@ -67,33 +102,30 @@ class UserInfoAppServiceImplTest {
     private static final String TEST_ROLE_NAME = "MEMBER";
     private static final String TEST_PASSWORD = "encoded_old_pwd";
 
-    private UserVO createMemberUser() {
-        return UserVO.builder()
-                .id(TEST_USER_ID)
-                .studentId(TEST_STUDENT_ID)
-                .username(TEST_USERNAME)
-                .email(TEST_EMAIL)
-                .roleName(TEST_ROLE_NAME)
-                .college("计算机学院")
-                .major("软件工程")
-                .direction(Direction.COMPUTER_VISION)
-                .gender(Gender.UNKNOWN)
-                .build();
+    private User createMemberUser() {
+        User user = User.reconstruct(TEST_USER_ID, "password");
+        user.setStudentId(TEST_STUDENT_ID);
+        user.setUsername(TEST_USERNAME);
+        user.setEmail(TEST_EMAIL);
+        user.setRoleId((long) RoleType.fromName(TEST_ROLE_NAME).getLevel());
+        user.setMajor("软件工程");
+        user.setDirection(Direction.COMPUTER_VISION);
+        user.setGender(Gender.UNKNOWN);
+        return user;
     }
 
-    private UserVO createCandidateUser() {
-        return UserVO.builder()
-                .id(TEST_USER_ID)
-                .studentId(TEST_STUDENT_ID)
-                .username(TEST_USERNAME)
-                .email(TEST_EMAIL)
-                .roleName("CANDIDATE")
-                .build();
+    private User createCandidateUser() {
+        User user = User.reconstruct(TEST_USER_ID, "password");
+        user.setStudentId(TEST_STUDENT_ID);
+        user.setUsername(TEST_USERNAME);
+        user.setEmail(TEST_EMAIL);
+        user.setRoleId((long) RoleType.fromName("CANDIDATE").getLevel());
+        return user;
     }
 
     @Test
     void getMyInfo_whenUserExists_returnsConvertedUserInfo() {
-        when(userDomainService.getUser(TEST_USER_ID)).thenReturn(Optional.of(createMemberUser()));
+        when(userRepository.findById(TEST_USER_ID)).thenReturn(Optional.of(createMemberUser()));
 
         var result = userInfoAppService.getMyInfo(TEST_USER_ID);
 
@@ -105,7 +137,7 @@ class UserInfoAppServiceImplTest {
 
     @Test
     void getMyInfo_whenUserNotFound_throwsUnauthorized() {
-        when(userDomainService.getUser(TEST_USER_ID)).thenReturn(Optional.empty());
+        when(userRepository.findById(TEST_USER_ID)).thenReturn(Optional.empty());
 
         Unauthorized ex = assertThrows(Unauthorized.class, () -> userInfoAppService.getMyInfo(TEST_USER_ID));
         assertEquals("用户不存在", ex.getMessage());
@@ -113,7 +145,7 @@ class UserInfoAppServiceImplTest {
 
     @Test
     void updateProfile_whenCandidateModifiesUsername_throwsForbidden() {
-        when(userDomainService.getUser(TEST_USER_ID)).thenReturn(Optional.of(createCandidateUser()));
+        when(userRepository.findById(TEST_USER_ID)).thenReturn(Optional.of(createCandidateUser()));
 
         UserInfoCommands.UpdateProfileCommand command = new UserInfoCommands.UpdateProfileCommand(
                 "newUsername", null, null, null, null, null, null, null);
@@ -124,7 +156,7 @@ class UserInfoAppServiceImplTest {
 
     @Test
     void updateProfile_whenMemberModifiesUsername_succeeds() {
-        when(userDomainService.getUser(TEST_USER_ID)).thenReturn(Optional.of(createMemberUser()));
+        when(userRepository.findById(TEST_USER_ID)).thenReturn(Optional.of(createMemberUser()));
 
         UserInfoCommands.UpdateProfileCommand command = new UserInfoCommands.UpdateProfileCommand(
                 "newUsername", "newNickname", null, null, null, null, null, null);
@@ -147,11 +179,10 @@ class UserInfoAppServiceImplTest {
 
     @Test
     void verifyCurrentPassword_whenPasswordCorrect_returnsToken() {
-        UserVO user = UserVO.builder()
-                .id(TEST_USER_ID)
-                .password(TEST_PASSWORD)
-                .build();
-        when(userDomainService.getUser(TEST_USER_ID)).thenReturn(Optional.of(user));
+        User user = User.reconstruct(TEST_USER_ID, "password");
+        user.setPassword(TEST_PASSWORD);
+        ;
+        when(userRepository.findById(TEST_USER_ID)).thenReturn(Optional.of(user));
         when(passwordEncoder.matches("correctPwd", TEST_PASSWORD)).thenReturn(true);
         when(changePasswordStateService.create(TEST_USER_ID)).thenReturn("test-token");
 
@@ -164,11 +195,10 @@ class UserInfoAppServiceImplTest {
 
     @Test
     void verifyCurrentPassword_whenPasswordWrong_throwsBadRequest() {
-        UserVO user = UserVO.builder()
-                .id(TEST_USER_ID)
-                .password(TEST_PASSWORD)
-                .build();
-        when(userDomainService.getUser(TEST_USER_ID)).thenReturn(Optional.of(user));
+        User user = User.reconstruct(TEST_USER_ID, "password");
+        user.setPassword(TEST_PASSWORD);
+        ;
+        when(userRepository.findById(TEST_USER_ID)).thenReturn(Optional.of(user));
         when(passwordEncoder.matches("wrongPwd", TEST_PASSWORD)).thenReturn(false);
 
         BadRequest ex = assertThrows(
@@ -182,7 +212,7 @@ class UserInfoAppServiceImplTest {
 
     @Test
     void verifyCurrentPassword_whenUserNotFound_throwsUnauthorized() {
-        when(userDomainService.getUser(TEST_USER_ID)).thenReturn(Optional.empty());
+        when(userRepository.findById(TEST_USER_ID)).thenReturn(Optional.empty());
 
         assertThrows(
                 Unauthorized.class,
@@ -263,18 +293,16 @@ class UserInfoAppServiceImplTest {
 
     @Test
     void getMyInfo_whenUserHasQrcode_returnsWechatQrcode() {
-        UserVO userVO = UserVO.builder()
-                .id(TEST_USER_ID)
-                .studentId(TEST_STUDENT_ID)
-                .username(TEST_USERNAME)
-                .email(TEST_EMAIL)
-                .roleName(TEST_ROLE_NAME)
-                .college("计算机学院")
-                .major("软件工程")
-                .wechatQrcode(123L)
-                .build();
+        User userVO = User.reconstruct(TEST_USER_ID, "password");
+        userVO.setStudentId(TEST_STUDENT_ID);
+        userVO.setUsername(TEST_USERNAME);
+        userVO.setEmail(TEST_EMAIL);
+        userVO.setRoleId((long) RoleType.fromName(TEST_ROLE_NAME).getLevel());
+        userVO.setMajor("软件工程");
+        userVO.setQrcodeId(123L);
+        ;
 
-        when(userDomainService.getUser(TEST_USER_ID)).thenReturn(Optional.of(userVO));
+        when(userRepository.findById(TEST_USER_ID)).thenReturn(Optional.of(userVO));
 
         var result = userInfoAppService.getMyInfo(TEST_USER_ID);
 
@@ -284,7 +312,7 @@ class UserInfoAppServiceImplTest {
 
     @Test
     void updateProfile_withQrcodeFileId_succeeds() {
-        when(userDomainService.getUser(TEST_USER_ID)).thenReturn(Optional.of(createMemberUser()));
+        when(userRepository.findById(TEST_USER_ID)).thenReturn(Optional.of(createMemberUser()));
 
         UserInfoCommands.UpdateProfileCommand command = new UserInfoCommands.UpdateProfileCommand(
                 null, "newNickname", null, null, null, null, null, 100L);

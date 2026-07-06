@@ -11,13 +11,13 @@ import com.bluenet.web.domain.exception.DataNotFound;
 import com.bluenet.web.domain.exception.GlobalException;
 import com.bluenet.web.domain.model.entity.Enroll;
 import com.bluenet.web.domain.model.entity.File;
+import com.bluenet.web.domain.model.entity.User;
 import com.bluenet.web.domain.model.enumerate.EnrollStatus;
 import com.bluenet.web.domain.model.enumerate.FileType;
 import com.bluenet.web.domain.model.enumerate.MessageChannel;
 import com.bluenet.web.domain.model.vo.EnrollStatisticsVO;
 import com.bluenet.web.domain.model.vo.UserOnboardingCreateUserRequest;
 import com.bluenet.web.domain.model.vo.UserOnboardingResult;
-import com.bluenet.web.domain.model.vo.UserVO;
 import com.bluenet.web.domain.repository.EnrollRepository;
 import com.bluenet.web.domain.repository.FileRepository;
 import com.bluenet.web.domain.repository.UserRepository;
@@ -223,7 +223,7 @@ public class EnrollAppServiceImpl implements EnrollAppService {
         Integer assessmentGradeYear = command.assessmentGradeYear();
         validateAssessmentGradeYear(assessmentGradeYear);
 
-        Optional<UserVO> existingUser = userRepository.findByStudentId(enroll.getStudentId());
+        Optional<User> existingUser = userRepository.findByStudentId(enroll.getStudentId());
         Long createdUserId = null;
         String initialPassword = null;
         boolean newUserCreated = false;

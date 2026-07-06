@@ -5,8 +5,8 @@ import java.util.Optional;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.bluenet.web.domain.model.entity.User;
 import com.bluenet.web.domain.model.enumerate.LocalLoginType;
-import com.bluenet.web.domain.model.vo.UserVO;
 import com.bluenet.web.domain.model.vo.VerifyCodeVO;
 import com.bluenet.web.domain.repository.UserRepository;
 import com.bluenet.web.domain.repository.VerificationCodeRepository;
@@ -32,12 +32,12 @@ public class AuthDomainServiceImpl implements AuthDomainService {
     private final VerificationCodeRepository verificationCodeRepository;
 
     @Override
-    public Optional<UserVO> checkLocalValid(String userSign, String principal, LocalLoginType localLoginType) {
+    public Optional<User> checkLocalValid(String userSign, String principal, LocalLoginType localLoginType) {
         // 1. 根据登录类型查询用户
-        UserVO user = findUserByLoginType(userSign, localLoginType);
+        User user = findUserByLoginType(userSign, localLoginType);
 
         // 2. 检查账户状态
-        if (user.isDisabled()) {
+        if (Boolean.TRUE.equals(user.getDisable())) {
             log.warn("Login failed: account disabled - type={}, sign={}", localLoginType, userSign);
             throw new Unauthorized("账户已被禁用");
         }
@@ -61,17 +61,17 @@ public class AuthDomainServiceImpl implements AuthDomainService {
      *            登录类型
      * @return 用户实体，未找到返回null
      */
-    private UserVO findUserByLoginType(String userSign, LocalLoginType localLoginType) {
-        Optional<UserVO> userVO = Optional.empty();
+    private User findUserByLoginType(String userSign, LocalLoginType localLoginType) {
+        Optional<User> userOpt = Optional.empty();
         switch (localLoginType) {
-            case STUDENT_ID -> userVO = userRepository.findByStudentId(userSign);
-            case EMAIL -> userVO = userRepository.findByEmail(userSign);
+            case STUDENT_ID -> userOpt = userRepository.findByStudentId(userSign);
+            case EMAIL -> userOpt = userRepository.findByEmail(userSign);
         }
-        if (userVO.isEmpty()) {
+        if (userOpt.isEmpty()) {
             log.error("用户不存在 - type={}, sign={}", localLoginType, userSign);
             throw new Unauthorized("账号或密码错误");
         }
-        return userVO.get();
+        return userOpt.get();
     }
 
     /**
@@ -80,12 +80,12 @@ public class AuthDomainServiceImpl implements AuthDomainService {
      * @param principal
      *            认证凭证（如密码或验证码）
      * @param user
-     *            用户信息
+     *            用户实体
      * @param localLoginType
      *            登录类型
      * @return 如果合法返回true，否则返回false
      */
-    private boolean verifyPrincipal(String principal, UserVO user, LocalLoginType localLoginType) {
+    private boolean verifyPrincipal(String principal, User user, LocalLoginType localLoginType) {
         return switch (localLoginType) {
             case STUDENT_ID -> verifyPassword(principal, user.getPassword());
             case EMAIL -> verifyCode(principal, user.getEmail());

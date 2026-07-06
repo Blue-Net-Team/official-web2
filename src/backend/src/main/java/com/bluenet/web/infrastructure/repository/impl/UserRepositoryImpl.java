@@ -77,13 +77,8 @@ public class UserRepositoryImpl implements UserRepository {
      * @return 查询到的用户 结果；不存在时为空。
      */
     @Override
-    public Optional<UserVO> findById(Long id) {
-        User user = userConverter.toEntity(userMapper.selectById(id));
-        if (user == null) {
-            log.warn("user not found id {}", id);
-            return Optional.empty();
-        }
-        return Optional.of(convertToVO(user));
+    public Optional<User> findById(Long id) {
+        return Optional.ofNullable(userConverter.toEntity(userMapper.selectById(id)));
     }
 
     /**
@@ -94,13 +89,8 @@ public class UserRepositoryImpl implements UserRepository {
      * @return 查询到的用户 结果；不存在时为空。
      */
     @Override
-    public Optional<UserVO> findByEmail(String email) {
-        User user = userConverter.toEntity(userMapper.selectByEmail(email));
-        if (user == null) {
-            log.warn("user not found email {}", email);
-            return Optional.empty();
-        }
-        return Optional.of(convertToVO(user));
+    public Optional<User> findByEmail(String email) {
+        return Optional.ofNullable(userConverter.toEntity(userMapper.selectByEmail(email)));
     }
 
     /**
@@ -111,13 +101,8 @@ public class UserRepositoryImpl implements UserRepository {
      * @return 查询到的用户 结果；不存在时为空。
      */
     @Override
-    public Optional<UserVO> findByStudentId(String studentId) {
-        User user = userConverter.toEntity(userMapper.selectByStudentId(studentId));
-        if (user == null) {
-            log.warn("user not found studentId {}", studentId);
-            return Optional.empty();
-        }
-        return Optional.of(convertToVO(user));
+    public Optional<User> findByStudentId(String studentId) {
+        return Optional.ofNullable(userConverter.toEntity(userMapper.selectByStudentId(studentId)));
     }
 
     /**
@@ -130,7 +115,7 @@ public class UserRepositoryImpl implements UserRepository {
      * @return 数据库受影响行数。
      */
     @Override
-    public int updateAvatar(UserVO user, FileVO file) {
+    public int updateAvatar(User user, FileVO file) {
         if (file.getId() == null) {
             log.warn("更新头像的时候，file id 不能为空，请先保存文件获取id");
             throw new GlobalException("更新头像失败：文件ID不能为空");
@@ -169,7 +154,7 @@ public class UserRepositoryImpl implements UserRepository {
      * @return 数据库受影响行数。
      */
     @Override
-    public int updateQrcode(UserVO user, QrcodeVO qrcode) {
+    public int updateQrcode(User user, QrcodeVO qrcode) {
         if (qrcode.getId() == null) {
             log.warn("更新二维码的时候，qrcode id 不能为空，请先保存文件获取id");
             throw new GlobalException("更新二维码失败：qrcode ID不能为空");
@@ -241,12 +226,8 @@ public class UserRepositoryImpl implements UserRepository {
      * @return 查询到的用户 结果；不存在时为空。
      */
     @Override
-    public Optional<UserVO> findByGithubId(String githubId) {
-        User user = userConverter.toEntity(userMapper.selectByGithubId(githubId));
-        if (user == null) {
-            return Optional.empty();
-        }
-        return Optional.of(convertToVO(user));
+    public Optional<User> findByGithubId(String githubId) {
+        return Optional.ofNullable(userConverter.toEntity(userMapper.selectByGithubId(githubId)));
     }
 
     /**
@@ -341,15 +322,6 @@ public class UserRepositoryImpl implements UserRepository {
                 .map(userConverter::toEntity)
                 .toList();
         return new PageImpl<>(users, pageable, mpPage.getTotal());
-    }
-
-    @Override
-    public Optional<User> findEntityById(Long id) {
-        UserDO userDO = userMapper.selectById(id);
-        if (userDO == null) {
-            return Optional.empty();
-        }
-        return Optional.ofNullable(userConverter.toEntity(userDO));
     }
 
     @Override

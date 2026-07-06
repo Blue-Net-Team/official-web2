@@ -9,8 +9,9 @@ import com.bluenet.web.domain.model.enumerate.MessageChannel;
 import com.bluenet.web.domain.model.enumerate.RoleType;
 import com.bluenet.web.domain.model.entity.AssessmentTime;
 import com.bluenet.web.domain.model.vo.AssessmentDecisionVO;
-import com.bluenet.web.domain.model.vo.UserVO;
+import com.bluenet.web.domain.model.entity.User;
 import com.bluenet.web.domain.repository.UserRepository;
+import com.bluenet.web.infrastructure.security.principal.RoleTypeResolver;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -46,6 +47,9 @@ class AssessmentDecisionPublicationServiceTest {
     @Mock
     private AssessmentDecisionNotificationTemplate notificationTemplate;
 
+    @Mock
+    private RoleTypeResolver roleTypeResolver;
+
     @InjectMocks
     private AssessmentDecisionPublicationService publicationService;
 
@@ -57,7 +61,7 @@ class AssessmentDecisionPublicationServiceTest {
     void publish_globalFinalPassedCandidate_shouldPromoteAndSendEmail() {
         AssessmentTime assessmentTime = createGlobalFinalTime();
         AssessmentDecisionVO decision = createDecision(true);
-        UserVO user = createUser(RoleType.CANDIDATE, "candidate@test.com");
+        User user = createUserWithRoleType(RoleType.CANDIDATE, "candidate@test.com");
         when(userRepository.findById(USER_ID)).thenReturn(Optional.of(user));
         when(notificationTemplate.buildHtml("用户" + USER_ID, "全局", 0, "录取"))
                 .thenReturn("<p>录取</p>");
@@ -80,7 +84,7 @@ class AssessmentDecisionPublicationServiceTest {
     void publish_globalFinalPassedMember_shouldNotPromoteButSendEmail() {
         AssessmentTime assessmentTime = createGlobalFinalTime();
         AssessmentDecisionVO decision = createDecision(true);
-        UserVO user = createUser(RoleType.MEMBER, "member@test.com");
+        User user = createUserWithRoleType(RoleType.MEMBER, "member@test.com");
         when(userRepository.findById(USER_ID)).thenReturn(Optional.of(user));
         when(notificationTemplate.buildHtml("用户" + USER_ID, "全局", 0, "录取"))
                 .thenReturn("<p>录取</p>");
@@ -99,7 +103,7 @@ class AssessmentDecisionPublicationServiceTest {
     void publish_globalFinalPassedDirectionAdmin_shouldNotPromote() {
         AssessmentTime assessmentTime = createGlobalFinalTime();
         AssessmentDecisionVO decision = createDecision(true);
-        UserVO user = createUser(RoleType.DIRECTION_ADMIN, "admin@test.com");
+        User user = createUserWithRoleType(RoleType.DIRECTION_ADMIN, "admin@test.com");
         when(userRepository.findById(USER_ID)).thenReturn(Optional.of(user));
         when(notificationTemplate.buildHtml("用户" + USER_ID, "全局", 0, "录取"))
                 .thenReturn("<p>录取</p>");
@@ -118,7 +122,7 @@ class AssessmentDecisionPublicationServiceTest {
     void publish_directionPassed_shouldSendEmailWithoutPromote() {
         AssessmentTime assessmentTime = createDirectionTime();
         AssessmentDecisionVO decision = createDecision(true);
-        UserVO user = createUser(RoleType.CANDIDATE, "candidate@test.com");
+        User user = createUser(RoleType.CANDIDATE, "candidate@test.com");
         when(userRepository.findById(USER_ID)).thenReturn(Optional.of(user));
         when(notificationTemplate.buildHtml("用户" + USER_ID, "计算机视觉", 1, "通过"))
                 .thenReturn("<p>通过</p>");
@@ -137,7 +141,7 @@ class AssessmentDecisionPublicationServiceTest {
     void publish_globalFinalEliminated_shouldSendEmailWithoutPromote() {
         AssessmentTime assessmentTime = createGlobalFinalTime();
         AssessmentDecisionVO decision = createDecision(false);
-        UserVO user = createUser(RoleType.CANDIDATE, "candidate@test.com");
+        User user = createUser(RoleType.CANDIDATE, "candidate@test.com");
         when(userRepository.findById(USER_ID)).thenReturn(Optional.of(user));
         when(notificationTemplate.buildHtml("用户" + USER_ID, "全局", 0, "淘汰"))
                 .thenReturn("<p>淘汰</p>");
@@ -170,7 +174,7 @@ class AssessmentDecisionPublicationServiceTest {
     void publish_userWithoutEmail_shouldPromoteButSkipEmail() {
         AssessmentTime assessmentTime = createGlobalFinalTime();
         AssessmentDecisionVO decision = createDecision(true);
-        UserVO user = createUser(RoleType.CANDIDATE, null);
+        User user = createUserWithRoleType(RoleType.CANDIDATE, null);
         when(userRepository.findById(USER_ID)).thenReturn(Optional.of(user));
 
         publicationService.publish(decision, assessmentTime);
@@ -190,14 +194,19 @@ class AssessmentDecisionPublicationServiceTest {
                 .build();
     }
 
-    private UserVO createUser(RoleType roleType, String email) {
-        return UserVO.builder()
-                .id(USER_ID)
-                .email(email)
-                .roleName(roleType.getName())
-                .nickname("用户" + USER_ID)
-                .username("用户" + USER_ID)
-                .build();
+    private User createUser(RoleType roleType, String email) {
+        User user = User.reconstruct(USER_ID, "password");
+        user.setEmail(email);
+        user.setRoleId((long) roleType.getLevel());
+        user.setNickname("用户" + USER_ID);
+        user.setUsername("用户" + USER_ID);
+        return user;
+    }
+
+    private User createUserWithRoleType(RoleType roleType, String email) {
+        User user = createUser(roleType, email);
+        when(roleTypeResolver.resolve(user.getRoleId())).thenReturn(roleType);
+        return user;
     }
 
     private AssessmentTime createGlobalFinalTime() {

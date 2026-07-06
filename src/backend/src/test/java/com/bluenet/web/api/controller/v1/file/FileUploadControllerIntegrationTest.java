@@ -26,7 +26,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import com.bluenet.web.BaseIntegrationTest;
 import com.bluenet.web.domain.model.enumerate.FileType;
 import com.bluenet.web.infrastructure.repository.mapper.FileMapper;
-import com.bluenet.web.infrastructure.security.WithUserVO;
+import com.bluenet.web.infrastructure.security.principal.WithSecurityPrincipal;
 import com.bluenet.web.infrastructure.security.util.UserCTX;
 import com.bluenet.web.infrastructure.security.rate.AnonymousUploadRateLimiter;
 import com.bluenet.web.testcontainers.TestcontainersConfiguration;
@@ -102,7 +102,7 @@ class FileUploadControllerIntegrationTest extends BaseIntegrationTest {
         @ParameterizedTest(name = "上传 {0} 类型 - 已登录应成功")
         @EnumSource(FileType.class)
         @DisplayName("上传各类型文件 - 已登录用户应成功")
-        @WithUserVO(userId = 1L, studentId = "2024001001", username = "用户", roleName = "MEMBER")
+        @WithSecurityPrincipal(userId = 1L, studentId = "2024001001", username = "用户", roleType = "MEMBER")
         void uploadFile_authenticatedEachType_shouldReturn200(FileType fileType) throws Exception {
             MockMultipartFile file = new MockMultipartFile("file", "test.dat", "application/octet-stream",
                     "content".getBytes(StandardCharsets.UTF_8));
@@ -169,7 +169,7 @@ class FileUploadControllerIntegrationTest extends BaseIntegrationTest {
          */
         @Test
         @DisplayName("上传 AVATAR 类型 - 已登录用户应成功")
-        @WithUserVO(userId = 2L, studentId = "2024001002", username = "已登录用户", roleName = "CANDIDATE")
+        @WithSecurityPrincipal(userId = 2L, studentId = "2024001002", username = "已登录用户", roleType = "CANDIDATE")
         void uploadFile_avatarAuthenticated_shouldReturn200() throws Exception {
             MockMultipartFile file = new MockMultipartFile("file", "avatar.jpg", "image/jpeg",
                     "jpeg content".getBytes(StandardCharsets.UTF_8));
@@ -298,7 +298,7 @@ class FileUploadControllerIntegrationTest extends BaseIntegrationTest {
 
         @Test
         @DisplayName("已登录用户 prepare WORK 应成功")
-        @WithUserVO(userId = 3L, studentId = "2024001003", username = "已登录用户", roleName = "MEMBER")
+        @WithSecurityPrincipal(userId = 3L, studentId = "2024001003", username = "已登录用户", roleType = "MEMBER")
         void prepareUpload_workAuthenticated_shouldReturn200() throws Exception {
             Map<String, Object> request = Map.of(
                     "filename",

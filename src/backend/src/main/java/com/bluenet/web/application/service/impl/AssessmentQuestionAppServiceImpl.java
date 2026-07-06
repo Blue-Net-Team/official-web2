@@ -16,7 +16,7 @@ import com.bluenet.web.domain.model.enumerate.QuestionType;
 import com.bluenet.web.domain.model.enumerate.RoleType;
 import com.bluenet.web.domain.model.entity.AssessmentTime;
 import com.bluenet.web.domain.model.entity.File;
-import com.bluenet.web.domain.model.vo.UserVO;
+import com.bluenet.web.domain.model.entity.User;
 import com.bluenet.web.domain.model.vo.evaluation.AlgorithmContent;
 import com.bluenet.web.domain.repository.AssessmentAnswerRepository;
 import com.bluenet.web.domain.repository.AssessmentQuestionRepository;
@@ -25,6 +25,7 @@ import com.bluenet.web.domain.repository.FileRepository;
 import com.bluenet.web.domain.service.AssessmentDecisionDomainService;
 import com.bluenet.web.domain.util.GradeCalculator;
 import com.bluenet.web.infrastructure.repository.mapper.JudgeProblemConfigMapper;
+import com.bluenet.web.infrastructure.security.principal.RoleTypeResolver;
 import com.bluenet.web.infrastructure.repository.dataobject.JudgeProblemConfigDO;
 import com.bluenet.web.infrastructure.storage.JudgeAssetStorage;
 import com.bluenet.web.infrastructure.security.util.UserCTX;
@@ -58,6 +59,7 @@ public class AssessmentQuestionAppServiceImpl implements AssessmentQuestionAppSe
     private final AssessmentTimeRepository assessmentTimeRepository;
     private final AssessmentSessionAppService assessmentSessionAppService;
     private final AssessmentAnswerRepository assessmentAnswerRepository;
+    private final RoleTypeResolver roleTypeResolver;
     private final FileRepository fileRepository;
     private final JudgeProblemConfigMapper judgeProblemConfigMapper;
     private final JudgeAssetStorage judgeAssetStorage;
@@ -271,9 +273,9 @@ public class AssessmentQuestionAppServiceImpl implements AssessmentQuestionAppSe
         AssessmentTime time = assessmentTimeRepository.findById(assessmentTimeId)
                 .orElseThrow(() -> new IllegalArgumentException("考核时间不存在"));
 
-        UserVO currentUser = UserCTX.getCurrentUser();
+        User currentUser = UserCTX.getCurrentUser();
         if (currentUser != null) {
-            RoleType roleType = RoleType.fromName(currentUser.getRoleName());
+            RoleType roleType = roleTypeResolver.resolve(currentUser.getRoleId());
             if (roleType == RoleType.CANDIDATE) {
                 if (time.getDirection() != null && !currentUser.getDirection().equals(time.getDirection())) {
                     throw new SecurityException("无权查看该考核的题目");
@@ -342,10 +344,10 @@ public class AssessmentQuestionAppServiceImpl implements AssessmentQuestionAppSe
         AssessmentQuestion entity = assessmentQuestionRepository.findById(id)
                 .orElseThrow(() -> new DataNotFound("考题不存在，ID: " + id));
 
-        UserVO currentUser = UserCTX.getCurrentUser();
+        User currentUser = UserCTX.getCurrentUser();
 
         if (currentUser != null) {
-            RoleType roleType = RoleType.fromName(currentUser.getRoleName());
+            RoleType roleType = roleTypeResolver.resolve(currentUser.getRoleId());
             if (roleType == RoleType.CANDIDATE) {
                 AssessmentTime time = assessmentTimeRepository.findById(entity.getAssessmentTimeId())
                         .orElseThrow(() -> new IllegalArgumentException("考核时间不存在"));

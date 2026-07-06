@@ -1,5 +1,7 @@
 package com.bluenet.web.application.service.impl;
 
+import com.bluenet.web.domain.model.enumerate.RoleType;
+
 import com.bluenet.web.application.AssessmentQuestionResult;
 import com.bluenet.web.application.command.assessment_question.AssessmentQuestionCommands;
 import com.bluenet.web.domain.exception.DataConflict;
@@ -8,11 +10,14 @@ import com.bluenet.web.domain.model.entity.AssessmentQuestion;
 import com.bluenet.web.domain.model.enumerate.QuestionType;
 import com.bluenet.web.domain.model.entity.AssessmentTime;
 import com.bluenet.web.domain.model.enumerate.Direction;
-import com.bluenet.web.domain.model.vo.UserVO;
+import com.bluenet.web.domain.model.entity.User;
 import com.bluenet.web.domain.model.vo.evaluation.AlgorithmContent;
+import com.bluenet.web.application.service.AssessmentSessionAppService;
 import com.bluenet.web.domain.repository.AssessmentAnswerRepository;
 import com.bluenet.web.domain.repository.AssessmentQuestionRepository;
 import com.bluenet.web.domain.repository.AssessmentTimeRepository;
+import com.bluenet.web.domain.repository.FileRepository;
+import com.bluenet.web.infrastructure.security.principal.RoleTypeResolver;
 import com.bluenet.web.domain.service.AssessmentDecisionDomainService;
 import com.bluenet.web.infrastructure.repository.dataobject.JudgeProblemConfigDO;
 import com.bluenet.web.infrastructure.repository.mapper.JudgeProblemConfigMapper;
@@ -58,6 +63,12 @@ class AssessmentQuestionAppServiceImplTest {
     @Mock
     private AssessmentAnswerRepository assessmentAnswerRepository;
     @Mock
+    private AssessmentSessionAppService assessmentSessionAppService;
+    @Mock
+    private RoleTypeResolver roleTypeResolver;
+    @Mock
+    private FileRepository fileRepository;
+    @Mock
     private JudgeProblemConfigMapper judgeProblemConfigMapper;
     @Mock
     private JudgeAssetStorage judgeAssetStorage;
@@ -71,12 +82,14 @@ class AssessmentQuestionAppServiceImplTest {
         assessmentQuestionAppService = new AssessmentQuestionAppServiceImpl(
                 assessmentQuestionRepository,
                 assessmentTimeRepository,
-                null,
+                assessmentSessionAppService,
                 assessmentAnswerRepository,
-                null,
+                roleTypeResolver,
+                fileRepository,
                 judgeProblemConfigMapper,
                 judgeAssetStorage,
                 assessmentDecisionDomainService);
+        lenient().when(roleTypeResolver.resolve(anyLong())).thenReturn(RoleType.CANDIDATE);
     }
 
     private AssessmentTime createTime() {
@@ -388,12 +401,11 @@ class AssessmentQuestionAppServiceImplTest {
     @DisplayName("淘汰考生查看后续轮次题目列表：应抛出SecurityException")
     void listQuestionsForUser_eliminatedCandidate_shouldThrowSecurityException() {
         try (MockedStatic<UserCTX> mockedUserCTX = mockStatic(UserCTX.class)) {
-            UserVO userVO = UserVO.builder()
-                    .id(1L)
-                    .roleName("CANDIDATE")
-                    .direction(Direction.COMPUTER_VISION)
-                    .studentId("2024123456")
-                    .build();
+            User userVO = User.reconstruct(1L, "password");
+            userVO.setRoleId((long) RoleType.fromName("CANDIDATE").getLevel());
+            userVO.setDirection(Direction.COMPUTER_VISION);
+            userVO.setStudentId("2024123456");
+            ;
             mockedUserCTX.when(UserCTX::getCurrentUser).thenReturn(userVO);
 
             AssessmentTime time = AssessmentTime.reconstruct(
@@ -421,12 +433,11 @@ class AssessmentQuestionAppServiceImplTest {
     @DisplayName("淘汰考生查看后续轮次题目详情：应抛出SecurityException")
     void getQuestionDetailForUser_eliminatedCandidate_shouldThrowSecurityException() {
         try (MockedStatic<UserCTX> mockedUserCTX = mockStatic(UserCTX.class)) {
-            UserVO userVO = UserVO.builder()
-                    .id(1L)
-                    .roleName("CANDIDATE")
-                    .direction(Direction.COMPUTER_VISION)
-                    .studentId("2024123456")
-                    .build();
+            User userVO = User.reconstruct(1L, "password");
+            userVO.setRoleId((long) RoleType.fromName("CANDIDATE").getLevel());
+            userVO.setDirection(Direction.COMPUTER_VISION);
+            userVO.setStudentId("2024123456");
+            ;
             mockedUserCTX.when(UserCTX::getCurrentUser).thenReturn(userVO);
 
             AssessmentQuestion entity = createQuestionEntity(QuestionType.SINGLE_CHOICE, null);
@@ -458,12 +469,11 @@ class AssessmentQuestionAppServiceImplTest {
     @DisplayName("考核结束后CANDIDATE仍可查看题目列表：时间拦截已移除")
     void listQuestionsForUser_afterEndTime_shouldAllowView() {
         try (MockedStatic<UserCTX> mockedUserCTX = mockStatic(UserCTX.class)) {
-            UserVO userVO = UserVO.builder()
-                    .id(1L)
-                    .roleName("CANDIDATE")
-                    .direction(Direction.COMPUTER_VISION)
-                    .studentId("2024123456")
-                    .build();
+            User userVO = User.reconstruct(1L, "password");
+            userVO.setRoleId((long) RoleType.fromName("CANDIDATE").getLevel());
+            userVO.setDirection(Direction.COMPUTER_VISION);
+            userVO.setStudentId("2024123456");
+            ;
             mockedUserCTX.when(UserCTX::getCurrentUser).thenReturn(userVO);
 
             AssessmentTime time = AssessmentTime.reconstruct(
@@ -493,12 +503,11 @@ class AssessmentQuestionAppServiceImplTest {
     @DisplayName("非淘汰考生查看后续轮次题目列表：应正常访问")
     void listQuestionsForUser_notEliminated_shouldAllowAccess() {
         try (MockedStatic<UserCTX> mockedUserCTX = mockStatic(UserCTX.class)) {
-            UserVO userVO = UserVO.builder()
-                    .id(1L)
-                    .roleName("CANDIDATE")
-                    .direction(Direction.COMPUTER_VISION)
-                    .studentId("2024123456")
-                    .build();
+            User userVO = User.reconstruct(1L, "password");
+            userVO.setRoleId((long) RoleType.fromName("CANDIDATE").getLevel());
+            userVO.setDirection(Direction.COMPUTER_VISION);
+            userVO.setStudentId("2024123456");
+            ;
             mockedUserCTX.when(UserCTX::getCurrentUser).thenReturn(userVO);
 
             AssessmentTime time = AssessmentTime.reconstruct(

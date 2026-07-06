@@ -1,6 +1,6 @@
 package com.bluenet.web.application.service.auth.session;
 
-import com.bluenet.web.domain.model.vo.UserVO;
+import com.bluenet.web.domain.model.entity.User;
 import com.bluenet.web.infrastructure.security.auth.AuthTokenService;
 import com.bluenet.web.infrastructure.security.cookie.CookieService;
 import com.bluenet.web.infrastructure.security.csrf.CsrfTokenService;
@@ -23,12 +23,12 @@ public class AuthSessionIssuer {
      * 只签发 Cookie，适用于 GitHub OAuth 回调后重定向场景。
      *
      * @param user
-     *            已解析出的登录用户。
+     *            已解析出的登录用户实体。
      * @param response
      *            HTTP 响应。
      * @return 新生成的 CSRF Token。
      */
-    public String issueCookies(UserVO user, HttpServletResponse response) {
+    public String issueCookies(User user, HttpServletResponse response) {
         String jwtToken = jwtUtil.generateToken(user.getId());
         authTokenService.storeToken(jwtUtil.getJti(jwtToken), user.getId());
         String csrfToken = csrfTokenService.generateCsrfToken();

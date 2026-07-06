@@ -1,4 +1,4 @@
-package com.bluenet.web.infrastructure.security;
+package com.bluenet.web.infrastructure.security.principal;
 
 import com.bluenet.web.domain.model.enumerate.Direction;
 import org.springframework.security.test.context.support.WithSecurityContext;
@@ -7,7 +7,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
 /**
- * 测试用：以指定用户身份运行，同时填充 Spring Security 的 SecurityContext 和 UserCTX。
+ * 测试用：以指定安全主体身份运行，同时填充 Spring Security 的 SecurityContext 和 UserCTX。
  * <p>
  * 使用方式示例：
  * </p>
@@ -25,7 +25,7 @@ import java.lang.annotation.RetentionPolicy;
  *     }
  *
  *     &#64;Test
- *     &#64;WithUserVO(userId = 1L, studentId = "2024001001", username = "张三", roleName = "MEMBER")
+ *     &#64;WithSecurityPrincipal(userId = 1L, roleId = 2L, roleType = "MEMBER")
  *     void getMe_returnsOk() throws Exception {
  *         mockMvc.perform(get("/api/v1/user/me")).andExpect(status().isOk());
  *     }
@@ -33,16 +33,18 @@ import java.lang.annotation.RetentionPolicy;
  * </pre>
  */
 @Retention(RetentionPolicy.RUNTIME)
-@WithSecurityContext(factory = WithUserVOSecurityContextFactory.class)
-public @interface WithUserVO {
+@WithSecurityContext(factory = WithSecurityPrincipalContextFactory.class)
+public @interface WithSecurityPrincipal {
 
     long userId() default 1L;
+
+    long roleId() default 2L;
 
     String studentId() default "2024001001";
 
     String username() default "测试用户";
 
-    String roleName() default "MEMBER";
+    String roleType() default "MEMBER";
 
     Direction direction() default Direction.COMPUTER_VISION;
 

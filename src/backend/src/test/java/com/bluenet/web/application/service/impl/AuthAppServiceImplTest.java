@@ -5,7 +5,7 @@ import com.bluenet.web.application.command.auth.AuthCommands;
 import com.bluenet.web.domain.exception.Unauthorized;
 import com.bluenet.web.domain.model.enumerate.Direction;
 import com.bluenet.web.domain.model.enumerate.LocalLoginType;
-import com.bluenet.web.domain.model.vo.UserVO;
+import com.bluenet.web.domain.model.entity.User;
 import com.bluenet.web.domain.model.vo.VerifyCodeVO;
 import com.bluenet.web.domain.repository.UserRepository;
 import com.bluenet.web.domain.repository.VerificationCodeRepository;
@@ -93,15 +93,14 @@ class AuthAppServiceImplTest {
     private static final String TEST_CSRF_TOKEN = "test-csrf-token-456";
     private static final String TEST_VERIFY_CODE = "123456";
 
-    private UserVO createTestUserVO() {
-        return UserVO.builder()
-                .id(TEST_USER_ID)
-                .studentId(TEST_STUDENT_ID)
-                .email(TEST_EMAIL)
-                .username(TEST_USERNAME)
-                .disabled(false)
-                .direction(Direction.COMPUTER_VISION)
-                .build();
+    private User createTestUser() {
+        User user = User.reconstruct(TEST_USER_ID, "password");
+        user.setStudentId(TEST_STUDENT_ID);
+        user.setEmail(TEST_EMAIL);
+        user.setUsername(TEST_USERNAME);
+        user.setDisable(false);
+        user.setDirection(Direction.COMPUTER_VISION);
+        return user;
     }
 
     private AuthCommands.StudentIdLoginCommand createLoginCommand() {
@@ -114,7 +113,7 @@ class AuthAppServiceImplTest {
     @DisplayName("学号登录：有效凭证应返回CSRF Token")
     void login_withValidCredentials_shouldReturnCsrfToken() {
         // 准备
-        UserVO userVO = createTestUserVO();
+        User userVO = createTestUser();
         AuthCommands.StudentIdLoginCommand command = createLoginCommand();
 
         when(authDomainService.checkLocalValid(TEST_STUDENT_ID, TEST_PASSWORD, LocalLoginType.STUDENT_ID))
@@ -129,8 +128,8 @@ class AuthAppServiceImplTest {
         // 验证
         assertNotNull(result);
         assertEquals(TEST_CSRF_TOKEN, result.csrfToken());
-        assertNotNull(result.user());
-        assertEquals(TEST_USERNAME, result.user().getUsername());
+        assertNotNull(result.userId());
+        assertEquals(TEST_USER_ID, result.userId());
 
         verify(authDomainService).checkLocalValid(TEST_STUDENT_ID, TEST_PASSWORD, LocalLoginType.STUDENT_ID);
         verify(jwtUtil).generateToken(TEST_USER_ID);
@@ -177,7 +176,7 @@ class AuthAppServiceImplTest {
     @DisplayName("邮箱登录：有效邮箱和验证码应返回 CSRF Token 和用户信息")
     void loginWithEmail_withValidCredentials_shouldReturnCsrfTokenAndUserInfo() {
         // 准备
-        UserVO userVO = createTestUserVO();
+        User userVO = createTestUser();
         AuthCommands.EmailLoginCommand command = new AuthCommands.EmailLoginCommand(TEST_EMAIL, TEST_VERIFY_CODE);
 
         when(authDomainService.checkLocalValid(TEST_EMAIL, TEST_VERIFY_CODE, LocalLoginType.EMAIL))
@@ -192,8 +191,8 @@ class AuthAppServiceImplTest {
         // 验证
         assertNotNull(result);
         assertEquals(TEST_CSRF_TOKEN, result.csrfToken());
-        assertNotNull(result.user());
-        assertEquals(TEST_USERNAME, result.user().getUsername());
+        assertNotNull(result.userId());
+        assertEquals(TEST_USER_ID, result.userId());
 
         verify(authDomainService).checkLocalValid(TEST_EMAIL, TEST_VERIFY_CODE, LocalLoginType.EMAIL);
         verify(verificationCodeRepository).markAsUsed(TEST_EMAIL, TEST_VERIFY_CODE);

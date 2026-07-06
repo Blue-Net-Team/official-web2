@@ -20,7 +20,7 @@ import com.bluenet.web.infrastructure.repository.mapper.AssessmentQuestionMapper
 import com.bluenet.web.infrastructure.repository.mapper.AssessmentTimeMapper;
 import com.bluenet.web.infrastructure.repository.mapper.FileMapper;
 import com.bluenet.web.infrastructure.repository.mapper.UserMapper;
-import com.bluenet.web.infrastructure.security.WithUserVO;
+import com.bluenet.web.infrastructure.security.principal.WithSecurityPrincipal;
 import com.bluenet.web.infrastructure.security.util.UserCTX;
 import com.bluenet.web.testcontainers.TestcontainersConfiguration;
 import org.junit.jupiter.api.AfterEach;
@@ -131,7 +131,7 @@ class FileUploadDownloadIntegrationTest extends BaseIntegrationTest {
 
         @Test
         @DisplayName("上传作品文件 - 已登录用户应成功")
-        @WithUserVO(userId = 2L, studentId = "2024001002", username = "李四", roleName = "CANDIDATE")
+        @WithSecurityPrincipal(userId = 2L, studentId = "2024001002", username = "李四", roleType = "CANDIDATE")
         void uploadWork_authenticated_shouldCreateFileRecord() throws Exception {
             MockMultipartFile file = new MockMultipartFile("file", "work.zip", "application/zip",
                     "zip".getBytes(StandardCharsets.UTF_8));
@@ -175,7 +175,7 @@ class FileUploadDownloadIntegrationTest extends BaseIntegrationTest {
 
     @Test
     @DisplayName("下载作品文件 - 提交者下载自己的作品应返回200")
-    @WithUserVO(userId = 100L, studentId = "2024001100", username = "提交者", roleName = "CANDIDATE", direction = Direction.COMPUTER_VISION)
+    @WithSecurityPrincipal(userId = 100L, studentId = "2024001100", username = "提交者", roleType = "CANDIDATE", direction = Direction.COMPUTER_VISION)
     void downloadWorkFile_asSubmitter_shouldReturn200() throws Exception {
         User user = User.reconstruct(
                 100L,
@@ -222,7 +222,7 @@ class FileUploadDownloadIntegrationTest extends BaseIntegrationTest {
 
     @Test
     @DisplayName("下载作品文件 - 其他考生尝试下载应返回403")
-    @WithUserVO(userId = 101L, studentId = "2024001101", username = "其他考生", roleName = "CANDIDATE", direction = Direction.COMPUTER_VISION)
+    @WithSecurityPrincipal(userId = 101L, studentId = "2024001101", username = "其他考生", roleType = "CANDIDATE", direction = Direction.COMPUTER_VISION)
     void downloadWorkFile_asOtherCandidate_shouldReturn403() throws Exception {
         User submitter = User.reconstruct(
                 102L,
@@ -267,7 +267,7 @@ class FileUploadDownloadIntegrationTest extends BaseIntegrationTest {
 
     @Test
     @DisplayName("下载作品文件 - MEMBER角色下载任意作品应返回200")
-    @WithUserVO(userId = 103L, studentId = "2024001103", username = "管理员", roleName = "MEMBER", direction = Direction.COMPUTER_VISION)
+    @WithSecurityPrincipal(userId = 103L, studentId = "2024001103", username = "管理员", roleType = "MEMBER", direction = Direction.COMPUTER_VISION)
     void downloadWorkFile_asMember_shouldReturn200() throws Exception {
         User submitter = User.reconstruct(
                 104L,
@@ -314,7 +314,7 @@ class FileUploadDownloadIntegrationTest extends BaseIntegrationTest {
 
     @Test
     @DisplayName("下载考题附件 - 方向匹配应返回200")
-    @WithUserVO(userId = 105L, studentId = "2024001105", username = "考生A", roleName = "CANDIDATE", direction = Direction.COMPUTER_VISION)
+    @WithSecurityPrincipal(userId = 105L, studentId = "2024001105", username = "考生A", roleType = "CANDIDATE", direction = Direction.COMPUTER_VISION)
     void downloadAssessmentAttachment_asMatchingDirection_shouldReturn200() throws Exception {
         User user = User.reconstruct(
                 105L,
@@ -358,7 +358,7 @@ class FileUploadDownloadIntegrationTest extends BaseIntegrationTest {
 
     @Test
     @DisplayName("下载考题附件 - 方向不匹配应返回403")
-    @WithUserVO(userId = 106L, studentId = "2024001106", username = "考生B", roleName = "CANDIDATE", direction = Direction.EMBEDDED)
+    @WithSecurityPrincipal(userId = 106L, studentId = "2024001106", username = "考生B", roleType = "CANDIDATE", direction = Direction.EMBEDDED)
     void downloadAssessmentAttachment_asDifferentDirection_shouldReturn403() throws Exception {
         User user = User.reconstruct(
                 106L,
@@ -430,7 +430,7 @@ class FileUploadDownloadIntegrationTest extends BaseIntegrationTest {
 
     @Test
     @DisplayName("下载考题附件 - 用户无方向应返回403")
-    @WithUserVO(userId = 107L, studentId = "2024001107", username = "未报名考生", roleName = "CANDIDATE", noDirection = true)
+    @WithSecurityPrincipal(userId = 107L, studentId = "2024001107", username = "未报名考生", roleType = "CANDIDATE", noDirection = true)
     void downloadAssessmentAttachment_asNoDirection_shouldReturn403() throws Exception {
         User user = User.reconstruct(
                 107L,

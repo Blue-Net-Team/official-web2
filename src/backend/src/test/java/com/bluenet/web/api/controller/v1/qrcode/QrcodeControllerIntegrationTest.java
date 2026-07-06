@@ -17,7 +17,7 @@ import com.bluenet.web.domain.model.enumerate.FileType;
 import com.bluenet.web.domain.model.enumerate.QrcodeType;
 import com.bluenet.web.infrastructure.repository.mapper.FileMapper;
 import com.bluenet.web.infrastructure.repository.mapper.QrcodeMapper;
-import com.bluenet.web.infrastructure.security.WithUserVO;
+import com.bluenet.web.infrastructure.security.principal.WithSecurityPrincipal;
 import com.bluenet.web.infrastructure.security.util.UserCTX;
 import com.bluenet.web.testcontainers.TestcontainersConfiguration;
 import org.junit.jupiter.api.AfterEach;
@@ -156,7 +156,7 @@ class QrcodeControllerIntegrationTest extends BaseIntegrationTest {
 
     @Test
     @DisplayName("创建咨询群二维码 - 超管应成功")
-    @WithUserVO(userId = 1L, studentId = "2024001001", username = "管理员", roleName = "SUPER_ADMIN")
+    @WithSecurityPrincipal(userId = 1L, studentId = "2024001001", username = "管理员", roleType = "SUPER_ADMIN")
     void createConsultationQrcode_asAdmin_shouldSucceed() throws Exception {
         File file = createTestFile("qrcode.png");
 
@@ -178,7 +178,7 @@ class QrcodeControllerIntegrationTest extends BaseIntegrationTest {
 
     @Test
     @DisplayName("创建咨询群二维码 - 普通用户应返回403")
-    @WithUserVO(userId = 2L, studentId = "2024001002", username = "普通用户", roleName = "CANDIDATE")
+    @WithSecurityPrincipal(userId = 2L, studentId = "2024001002", username = "普通用户", roleType = "CANDIDATE")
     void createConsultationQrcode_asCandidate_shouldReturn403() throws Exception {
         mockMvc.perform(
                 post("/api/v1/admin/qrcodes/consultation")
@@ -188,7 +188,7 @@ class QrcodeControllerIntegrationTest extends BaseIntegrationTest {
 
     @Test
     @DisplayName("创建咨询群二维码 - 文件不存在应返回404")
-    @WithUserVO(userId = 1L, studentId = "2024001001", username = "管理员", roleName = "SUPER_ADMIN")
+    @WithSecurityPrincipal(userId = 1L, studentId = "2024001001", username = "管理员", roleType = "SUPER_ADMIN")
     void createConsultationQrcode_fileNotFound_shouldReturn404() throws Exception {
         mockMvc.perform(
                 post("/api/v1/admin/qrcodes/consultation")
@@ -198,7 +198,7 @@ class QrcodeControllerIntegrationTest extends BaseIntegrationTest {
 
     @Test
     @DisplayName("创建咨询群二维码 - 文件类型不匹配应返回400")
-    @WithUserVO(userId = 1L, studentId = "2024001001", username = "管理员", roleName = "SUPER_ADMIN")
+    @WithSecurityPrincipal(userId = 1L, studentId = "2024001001", username = "管理员", roleType = "SUPER_ADMIN")
     void createConsultationQrcode_fileTypeMismatch_shouldReturn400() throws Exception {
         File file = createTestFileWithType("avatar.png", FileType.AVATAR);
 
@@ -212,7 +212,7 @@ class QrcodeControllerIntegrationTest extends BaseIntegrationTest {
 
     @Test
     @DisplayName("删除咨询群二维码 - 超管应成功")
-    @WithUserVO(userId = 3L, studentId = "2024001003", username = "管理员", roleName = "SUPER_ADMIN")
+    @WithSecurityPrincipal(userId = 3L, studentId = "2024001003", username = "管理员", roleType = "SUPER_ADMIN")
     void deleteConsultationQrcode_asAdmin_shouldSucceed() throws Exception {
         // 创建测试文件和二维码
         File file = createTestFile("to-delete.png");
@@ -230,7 +230,7 @@ class QrcodeControllerIntegrationTest extends BaseIntegrationTest {
 
     @Test
     @DisplayName("删除咨询群二维码 - 不存在应返回404")
-    @WithUserVO(userId = 4L, studentId = "2024001004", username = "管理员", roleName = "SUPER_ADMIN")
+    @WithSecurityPrincipal(userId = 4L, studentId = "2024001004", username = "管理员", roleType = "SUPER_ADMIN")
     void deleteConsultationQrcode_notFound_shouldReturn404() throws Exception {
         mockMvc.perform(delete("/api/v1/admin/qrcodes/consultation/99999"))
                 .andExpect(status().isNotFound());
@@ -245,7 +245,7 @@ class QrcodeControllerIntegrationTest extends BaseIntegrationTest {
 
     @Test
     @DisplayName("删除咨询群二维码 - 普通用户应返回403")
-    @WithUserVO(userId = 5L, studentId = "2024001005", username = "普通用户", roleName = "CANDIDATE")
+    @WithSecurityPrincipal(userId = 5L, studentId = "2024001005", username = "普通用户", roleType = "CANDIDATE")
     void deleteConsultationQrcode_asCandidate_shouldReturn403() throws Exception {
         // 创建测试文件和二维码
         File file = createTestFile("qrcode.png");
@@ -258,7 +258,7 @@ class QrcodeControllerIntegrationTest extends BaseIntegrationTest {
 
     @Test
     @DisplayName("删除咨询群二维码 - 删除用户类型二维码应失败")
-    @WithUserVO(userId = 6L, studentId = "2024001006", username = "管理员", roleName = "SUPER_ADMIN")
+    @WithSecurityPrincipal(userId = 6L, studentId = "2024001006", username = "管理员", roleType = "SUPER_ADMIN")
     void deleteConsultationQrcode_deleteUserType_shouldFail() throws Exception {
         // 创建用户类型二维码
         File file = createTestFile("user-qrcode.png");
@@ -285,7 +285,7 @@ class QrcodeControllerIntegrationTest extends BaseIntegrationTest {
 
     @Test
     @DisplayName("更新咨询群二维码 - 超管应成功")
-    @WithUserVO(userId = 7L, studentId = "2024001007", username = "管理员", roleName = "SUPER_ADMIN")
+    @WithSecurityPrincipal(userId = 7L, studentId = "2024001007", username = "管理员", roleType = "SUPER_ADMIN")
     void updateConsultationQrcode_asAdmin_shouldSucceed() throws Exception {
         // 创建原始文件和二维码
         File oldFile = createTestFile("old-qrcode.png");
@@ -310,7 +310,7 @@ class QrcodeControllerIntegrationTest extends BaseIntegrationTest {
 
     @Test
     @DisplayName("管理端获取咨询群二维码列表 - 超管应成功")
-    @WithUserVO(userId = 8L, studentId = "2024001008", username = "管理员", roleName = "SUPER_ADMIN")
+    @WithSecurityPrincipal(userId = 8L, studentId = "2024001008", username = "管理员", roleType = "SUPER_ADMIN")
     void getConsultationQrcodesAdmin_asAdmin_shouldSucceed() throws Exception {
         // 创建测试数据
         File file = createTestFile("qrcode.png");
@@ -328,7 +328,7 @@ class QrcodeControllerIntegrationTest extends BaseIntegrationTest {
 
     @Test
     @DisplayName("获取考核群二维码列表 - 超管应成功")
-    @WithUserVO(userId = 9L, studentId = "2024001009", username = "管理员", roleName = "SUPER_ADMIN")
+    @WithSecurityPrincipal(userId = 9L, studentId = "2024001009", username = "管理员", roleType = "SUPER_ADMIN")
     void getAssessmentQrcodes_asAdmin_shouldSucceed() throws Exception {
         // 创建测试数据
         File file = createTestFile("assessment-qrcode.png");
@@ -344,7 +344,7 @@ class QrcodeControllerIntegrationTest extends BaseIntegrationTest {
 
     @Test
     @DisplayName("创建考核群二维码 - 超管应成功")
-    @WithUserVO(userId = 10L, studentId = "2024001010", username = "管理员", roleName = "SUPER_ADMIN")
+    @WithSecurityPrincipal(userId = 10L, studentId = "2024001010", username = "管理员", roleType = "SUPER_ADMIN")
     void createAssessmentQrcode_asAdmin_shouldSucceed() throws Exception {
         File file = createTestFile("assessment-qrcode.png");
 
@@ -365,7 +365,7 @@ class QrcodeControllerIntegrationTest extends BaseIntegrationTest {
 
     @Test
     @DisplayName("创建共用考核群二维码 - 超管应成功")
-    @WithUserVO(userId = 11L, studentId = "2024001011", username = "管理员", roleName = "SUPER_ADMIN")
+    @WithSecurityPrincipal(userId = 11L, studentId = "2024001011", username = "管理员", roleType = "SUPER_ADMIN")
     void createSharedAssessmentQrcode_asAdmin_shouldSucceed() throws Exception {
         File file = createTestFile("shared-qrcode.png");
 
@@ -385,7 +385,7 @@ class QrcodeControllerIntegrationTest extends BaseIntegrationTest {
 
     @Test
     @DisplayName("更新考核群二维码 - 超管应成功")
-    @WithUserVO(userId = 12L, studentId = "2024001012", username = "管理员", roleName = "SUPER_ADMIN")
+    @WithSecurityPrincipal(userId = 12L, studentId = "2024001012", username = "管理员", roleType = "SUPER_ADMIN")
     void updateAssessmentQrcode_asAdmin_shouldSucceed() throws Exception {
         // 创建原始数据
         File oldFile = createTestFile("old-assessment-qrcode.png");
@@ -412,7 +412,7 @@ class QrcodeControllerIntegrationTest extends BaseIntegrationTest {
 
     @Test
     @DisplayName("删除考核群二维码 - 超管应成功")
-    @WithUserVO(userId = 13L, studentId = "2024001013", username = "管理员", roleName = "SUPER_ADMIN")
+    @WithSecurityPrincipal(userId = 13L, studentId = "2024001013", username = "管理员", roleType = "SUPER_ADMIN")
     void deleteAssessmentQrcode_asAdmin_shouldSucceed() throws Exception {
         // 创建测试数据
         File file = createTestFile("assessment-qrcode.png");

@@ -24,8 +24,9 @@ import com.bluenet.web.domain.model.vo.AssessmentQuestionSubmissionHistoryVO;
 import com.bluenet.web.domain.model.vo.AssessmentQuestionSubmissionVO;
 import com.bluenet.web.domain.model.entity.AssessmentQuestion;
 import com.bluenet.web.domain.model.entity.AssessmentTime;
-import com.bluenet.web.domain.model.vo.UserVO;
+import com.bluenet.web.domain.model.entity.User;
 import com.bluenet.web.domain.repository.AssessmentAnswerRepository;
+import com.bluenet.web.infrastructure.security.principal.RoleTypeResolver;
 import com.bluenet.web.domain.repository.AssessmentDecisionRepository;
 import com.bluenet.web.domain.repository.AssessmentJudgementRepository;
 import com.bluenet.web.domain.repository.AssessmentTeamRepository;
@@ -35,7 +36,7 @@ import com.bluenet.web.domain.service.AssessmentJudgementDomainService;
 import com.bluenet.web.domain.repository.AssessmentQuestionRepository;
 import com.bluenet.web.domain.repository.AssessmentTimeRepository;
 import com.bluenet.web.application.service.assessment.AssessmentDecisionPublicationService;
-import com.bluenet.web.domain.service.UserDomainService;
+import com.bluenet.web.domain.repository.UserRepository;
 import com.bluenet.web.infrastructure.security.util.UserCTX;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -88,7 +89,7 @@ class AssessmentJudgementAppServiceImplTest {
     private AssessmentDecisionRepository assessmentDecisionRepository;
 
     @Mock
-    private UserDomainService userDomainService;
+    private UserRepository userRepository;
 
     @Mock
     private AssessmentDecisionPublicationService publicationService;
@@ -99,8 +100,22 @@ class AssessmentJudgementAppServiceImplTest {
     @Mock
     private AssessmentTeamRepository assessmentTeamRepository;
 
+    @Mock
+    private RoleTypeResolver roleTypeResolver;
+
     @InjectMocks
     private AssessmentJudgementAppServiceImpl assessmentJudgementAppService;
+
+    @org.junit.jupiter.api.BeforeEach
+    void setUp() {
+        lenient().when(roleTypeResolver.resolve(anyLong())).thenAnswer(invocation -> {
+            Long roleId = invocation.getArgument(0);
+            return java.util.Arrays.stream(RoleType.values())
+                    .filter(rt -> (long) rt.getLevel() == roleId)
+                    .findFirst()
+                    .orElse(null);
+        });
+    }
 
     /**
      * 验证答案最新评判查询会转换为应用层结果。
@@ -396,13 +411,9 @@ class AssessmentJudgementAppServiceImplTest {
     @DisplayName("方向管理员查询其他方向：应拒绝")
     void listCandidateScoreboard_directionAdminOtherDirection_shouldThrowForbidden() {
         try (MockedStatic<UserCTX> mockedUserCTX = mockStatic(UserCTX.class)) {
-            mockedUserCTX.when(UserCTX::getCurrentUser)
-                    .thenReturn(
-                            UserVO.builder()
-                                    .id(REVIEWER_ID)
-                                    .roleName(RoleType.DIRECTION_ADMIN.getName())
-                                    .direction(com.bluenet.web.domain.model.enumerate.Direction.EMBEDDED)
-                                    .build());
+            User user = createUser(RoleType.DIRECTION_ADMIN);
+            user.setDirection(com.bluenet.web.domain.model.enumerate.Direction.STRUCTURAL_DESIGN);
+            mockedUserCTX.when(UserCTX::getCurrentUser).thenReturn(user);
             when(assessmentTimeRepository.findById(ASSESSMENT_TIME_ID)).thenReturn(Optional.of(createTime()));
 
             assertThrows(
@@ -952,20 +963,18 @@ class AssessmentJudgementAppServiceImplTest {
 
     // ========== 测试数据构造 ==========
 
-    private UserVO createUser(RoleType roleType) {
-        return UserVO.builder()
-                .id(REVIEWER_ID)
-                .roleName(roleType.getName())
-                .direction(com.bluenet.web.domain.model.enumerate.Direction.COMPUTER_VISION)
-                .build();
+    private User createUser(RoleType roleType) {
+        User user = User.reconstruct(REVIEWER_ID, "password");
+        user.setRoleId((long) roleType.getLevel());
+        user.setDirection(com.bluenet.web.domain.model.enumerate.Direction.COMPUTER_VISION);
+        return user;
     }
 
-    private UserVO createUserWithEmail(Long userId, String email) {
-        return UserVO.builder()
-                .id(userId)
-                .email(email)
-                .nickname("用户" + userId)
-                .build();
+    private User createUserWithEmail(Long userId, String email) {
+        User user = User.reconstruct(userId, "password");
+        user.setEmail(email);
+        user.setNickname("用户" + userId);
+        return user;
     }
 
     private AssessmentAnswer createAnswerEntity() {

@@ -1,13 +1,12 @@
 package com.bluenet.web.domain.service.impl;
 
 import com.bluenet.web.domain.exception.DataConflict;
+import com.bluenet.web.domain.model.entity.Role;
 import com.bluenet.web.domain.model.entity.User;
 import com.bluenet.web.domain.model.enumerate.Gender;
 import com.bluenet.web.domain.model.enumerate.RoleType;
-import com.bluenet.web.domain.model.vo.RoleVO;
 import com.bluenet.web.domain.model.vo.UserOnboardingCreateUserRequest;
 import com.bluenet.web.domain.model.vo.UserOnboardingResult;
-import com.bluenet.web.domain.model.vo.UserVO;
 import com.bluenet.web.domain.repository.RoleRepository;
 import com.bluenet.web.domain.repository.UserRepository;
 import com.bluenet.web.domain.service.ReferralCodeGenerator;
@@ -51,13 +50,13 @@ public class UserOnboardingServiceImpl implements UserOnboardingService {
     @Transactional
     public UserOnboardingResult createUser(UserOnboardingCreateUserRequest request, String initialPassword) {
         // 检查学号是否已存在
-        Optional<UserVO> existingStudent = userRepository.findByStudentId(request.studentId());
+        Optional<User> existingStudent = userRepository.findByStudentId(request.studentId());
         if (existingStudent.isPresent()) {
             throw new DataConflict("学号 " + request.studentId() + " 对应的用户已存在");
         }
 
         // 检查邮箱是否已存在
-        Optional<UserVO> existingEmail = userRepository.findByEmail(request.email());
+        Optional<User> existingEmail = userRepository.findByEmail(request.email());
         if (existingEmail.isPresent()) {
             throw new DataConflict("邮箱 " + request.email() + " 对应的用户已存在");
         }
@@ -97,13 +96,13 @@ public class UserOnboardingServiceImpl implements UserOnboardingService {
     }
 
     @Override
-    public RoleVO getMemberRole() {
+    public Role getMemberRole() {
         return roleRepository.findByName(RoleType.MEMBER.getName())
                 .orElseThrow(() -> new IllegalStateException("MEMBER 角色不存在，请先初始化角色数据"));
     }
 
     @Override
-    public RoleVO getCandidateRole() {
+    public Role getCandidateRole() {
         return roleRepository.findByName(RoleType.CANDIDATE.getName())
                 .orElseThrow(() -> new IllegalStateException("CANDIDATE 角色不存在，请先初始化角色数据"));
     }

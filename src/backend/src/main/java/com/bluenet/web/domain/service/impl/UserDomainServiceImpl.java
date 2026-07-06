@@ -8,7 +8,6 @@ import com.bluenet.web.domain.model.enumerate.FileType;
 import com.bluenet.web.domain.model.enumerate.Gender;
 import com.bluenet.web.domain.model.vo.FileVO;
 import com.bluenet.web.domain.model.vo.TabCountsVO;
-import com.bluenet.web.domain.model.vo.UserVO;
 import com.bluenet.web.domain.model.vo.VerifyCodeVO;
 import com.bluenet.web.domain.repository.UserRepository;
 import com.bluenet.web.domain.repository.VerificationCodeRepository;
@@ -32,14 +31,9 @@ public class UserDomainServiceImpl implements UserDomainService {
     @Override
     @Transactional
     public void updateUserAvatar(Long userId, FileVO file) {
-        UserVO user = userRepository.findById(userId)
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new DataNotFound("用户不存在"));
         userRepository.updateAvatar(user, file);
-    }
-
-    @Override
-    public Optional<UserVO> getUser(Long userId) {
-        return userRepository.findById(userId);
     }
 
     @Override
@@ -72,7 +66,7 @@ public class UserDomainServiceImpl implements UserDomainService {
     @Transactional
     public void changeEmail(Long userId, String currentEmail, String originalEmailVerifyCode,
             String newEmail, String newEmailVerifyCode) {
-        UserVO user = userRepository.findById(userId)
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new DataNotFound("用户不存在"));
 
         if (!user.getEmail().equals(currentEmail)) {
@@ -82,7 +76,7 @@ public class UserDomainServiceImpl implements UserDomainService {
         verifyCode(currentEmail, originalEmailVerifyCode, "change-email-original");
         verifyCode(newEmail, newEmailVerifyCode, "change-email-new");
 
-        Optional<UserVO> existingUser = userRepository.findByEmail(newEmail);
+        Optional<User> existingUser = userRepository.findByEmail(newEmail);
         if (existingUser.isPresent()) {
             throw new BadRequest("该邮箱已被其他账号绑定");
         }
@@ -96,9 +90,8 @@ public class UserDomainServiceImpl implements UserDomainService {
     @Override
     @Transactional
     public void changePassword(Long userId, String rawNewPassword) {
-        UserVO userVO = userRepository.findById(userId)
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new DataNotFound("用户不存在"));
-        User user = User.reconstruct(userVO.getId(), userVO.getPassword());
         user.changePassword(passwordEncoder.encode(rawNewPassword));
         userRepository.updatePassword(user.getId(), user.getPassword());
     }

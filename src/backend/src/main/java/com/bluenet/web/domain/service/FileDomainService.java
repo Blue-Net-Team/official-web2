@@ -4,10 +4,10 @@ import com.bluenet.web.domain.model.enumerate.FileType;
 import com.bluenet.web.domain.model.entity.AssessmentAnswer;
 import com.bluenet.web.domain.model.entity.AssessmentQuestion;
 import com.bluenet.web.domain.model.entity.AssessmentTime;
+import com.bluenet.web.domain.model.entity.User;
 import com.bluenet.web.domain.model.vo.ConfirmUploadVO;
 import com.bluenet.web.domain.model.vo.FileVO;
 import com.bluenet.web.domain.model.vo.PresignedUploadVO;
-import com.bluenet.web.domain.model.vo.UserVO;
 import org.springframework.core.io.Resource;
 
 import java.io.InputStream;
@@ -131,9 +131,9 @@ public interface FileDomainService {
      * @param fileVO
      *            文件 VO
      * @param currentUser
-     *            当前用户（可为 null，表示未登录）
+     *            当前用户实体（可为 null，表示未登录）
      * @throws com.bluenet.web.domain.exception.Forbidden
      *             权限不足时抛出
      */
-    void checkDownloadPermission(FileVO fileVO, UserVO currentUser);
+    void checkDownloadPermission(FileVO fileVO, User currentUser);
 }

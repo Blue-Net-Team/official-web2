@@ -1,5 +1,7 @@
 package com.bluenet.web.application.service.impl;
 
+import com.bluenet.web.domain.model.enumerate.RoleType;
+
 import com.bluenet.web.application.TeamPreviewResult;
 import com.bluenet.web.application.TeamResult;
 import com.bluenet.web.domain.exception.BadRequest;
@@ -9,13 +11,13 @@ import com.bluenet.web.domain.model.entity.AssessmentTeam;
 import com.bluenet.web.domain.model.entity.AssessmentTeamMember;
 import com.bluenet.web.domain.model.entity.AssessmentTime;
 import com.bluenet.web.domain.model.enumerate.Direction;
-import com.bluenet.web.domain.model.vo.UserVO;
+import com.bluenet.web.domain.model.entity.User;
 import com.bluenet.web.domain.repository.AssessmentAnswerRepository;
 import com.bluenet.web.domain.repository.AssessmentJudgementRepository;
 import com.bluenet.web.domain.repository.AssessmentQuestionRepository;
 import com.bluenet.web.domain.repository.AssessmentTeamRepository;
 import com.bluenet.web.domain.repository.AssessmentTimeRepository;
-import com.bluenet.web.domain.service.UserDomainService;
+import com.bluenet.web.domain.repository.UserRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -50,7 +52,7 @@ class AssessmentTeamAppServiceImplTest {
     private AssessmentQuestionRepository assessmentQuestionRepository;
 
     @Mock
-    private UserDomainService userDomainService;
+    private UserRepository userRepository;
 
     @Mock
     private AssessmentJudgementRepository assessmentJudgementRepository;
@@ -66,22 +68,20 @@ class AssessmentTeamAppServiceImplTest {
     private static final String TEST_INVITE_CODE = "ABC123";
     private static final String TEST_TEAM_NAME = "测试队伍";
 
-    private UserVO createTestUser() {
-        return UserVO.builder()
-                .id(TEST_USER_ID)
-                .username("testuser")
-                .roleName("MEMBER")
-                .direction(Direction.COMPUTER_VISION)
-                .build();
+    private User createTestUser() {
+        User user = User.reconstruct(TEST_USER_ID, "password");
+        user.setUsername("testuser");
+        user.setRoleId((long) RoleType.fromName("MEMBER").getLevel());
+        user.setDirection(Direction.COMPUTER_VISION);
+        return user;
     }
 
-    private UserVO createTestUser(Long userId, String username) {
-        return UserVO.builder()
-                .id(userId)
-                .username(username)
-                .roleName("MEMBER")
-                .direction(Direction.COMPUTER_VISION)
-                .build();
+    private User createTestUser(Long userId, String username) {
+        User user = User.reconstruct(userId, "password");
+        user.setUsername(username);
+        user.setRoleId((long) RoleType.fromName("MEMBER").getLevel());
+        user.setDirection(Direction.COMPUTER_VISION);
+        return user;
     }
 
     private AssessmentTime createTestAssessmentTime(Boolean allowTeam) {
@@ -238,7 +238,7 @@ class AssessmentTeamAppServiceImplTest {
             when(assessmentTimeRepository.findById(TEST_TIME_ID)).thenReturn(Optional.of(time));
             when(assessmentTeamRepository.findMembersByTeamId(TEST_TEAM_ID))
                     .thenReturn(List.of(createTestMember(1L, TEST_USER_ID)));
-            when(userDomainService.getUser(TEST_USER_ID))
+            when(userRepository.findById(TEST_USER_ID))
                     .thenReturn(Optional.of(createTestUser()));
 
             TeamPreviewResult result = assessmentTeamAppService.previewTeam(TEST_INVITE_CODE);

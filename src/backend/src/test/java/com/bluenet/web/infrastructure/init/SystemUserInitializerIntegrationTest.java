@@ -1,7 +1,7 @@
 package com.bluenet.web.infrastructure.init;
 
 import com.bluenet.web.BaseIntegrationTest;
-import com.bluenet.web.domain.model.vo.UserVO;
+import com.bluenet.web.domain.model.entity.User;
 import com.bluenet.web.domain.repository.UserRepository;
 import com.bluenet.web.infrastructure.config.properties.SystemUserProperties;
 import org.junit.jupiter.api.BeforeEach;
@@ -40,18 +40,18 @@ public class SystemUserInitializerIntegrationTest extends BaseIntegrationTest {
     @Test
     @DisplayName("首次启动：系统用户应被自动创建")
     void firstStartup_shouldCreateSystemUser() {
-        Optional<UserVO> systemUser = userRepository.findByStudentId("000000000000");
+        Optional<User> systemUser = userRepository.findByStudentId("000000000000");
 
         assertThat(systemUser).isPresent();
         assertThat(systemUser.get().getUsername()).isEqualTo("system");
         assertThat(systemUser.get().getStudentId()).isEqualTo("000000000000");
-        assertThat(systemUser.get().isDisabled()).isFalse();
+        assertThat(systemUser.get().getDisable()).isFalse();
     }
 
     @Test
     @DisplayName("系统用户密码应被BCrypt加密")
     void systemUserPassword_shouldBeBCryptEncoded() {
-        Optional<UserVO> systemUser = userRepository.findByStudentId("000000000000");
+        Optional<User> systemUser = userRepository.findByStudentId("000000000000");
 
         assertThat(systemUser).isPresent();
         String storedPassword = systemUser.get().getPassword();
@@ -86,8 +86,8 @@ public class SystemUserInitializerIntegrationTest extends BaseIntegrationTest {
     @Test
     @DisplayName("系统用户学号应唯一")
     void systemUserStudentId_shouldBeUnique() {
-        Optional<UserVO> user1 = userRepository.findByStudentId("000000000000");
-        Optional<UserVO> user2 = userRepository.findByStudentId("000000000000");
+        Optional<User> user1 = userRepository.findByStudentId("000000000000");
+        Optional<User> user2 = userRepository.findByStudentId("000000000000");
 
         assertThat(user1).isPresent();
         assertThat(user2).isPresent();
@@ -101,7 +101,7 @@ public class SystemUserInitializerIntegrationTest extends BaseIntegrationTest {
 
         systemUserInitializer.run();
 
-        Optional<UserVO> systemUser = userRepository.findByStudentId("000000000000");
+        Optional<User> systemUser = userRepository.findByStudentId("000000000000");
         assertThat(systemUser).isPresent();
         assertThat(countBefore).isEqualTo(1L);
     }

@@ -2,7 +2,7 @@ package com.bluenet.web.api.controller.v1.admin;
 
 import com.bluenet.web.application.AuditStatisticsResult;
 import com.bluenet.web.application.service.AuditStatisticsAppService;
-import com.bluenet.web.infrastructure.security.WithUserVO;
+import com.bluenet.web.infrastructure.security.principal.WithSecurityPrincipal;
 import com.bluenet.web.testcontainers.TestcontainersConfiguration;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
@@ -57,7 +57,7 @@ class AuditStatisticsControllerTest {
 
         @Test
         @DisplayName("已认证用户请求趋势应返回数据")
-        @WithUserVO(roleName = "MEMBER", permissions = "audit:statistics:trends")
+        @WithSecurityPrincipal(roleType = "MEMBER", permissions = "audit:statistics:trends")
         void getTrends_withAuth_shouldReturnData() throws Exception {
             AuditStatisticsResult.TrendPoint point = new AuditStatisticsResult.TrendPoint(
                     LocalDateTime.of(2026, 4, 11, 10, 0), 42L);
@@ -77,7 +77,7 @@ class AuditStatisticsControllerTest {
 
         @Test
         @DisplayName("无 period 参数应使用默认值 7d")
-        @WithUserVO(roleName = "MEMBER", permissions = "audit:statistics:trends")
+        @WithSecurityPrincipal(roleType = "MEMBER", permissions = "audit:statistics:trends")
         void getTrends_withoutPeriod_shouldUseDefault() throws Exception {
             when(auditStatisticsAppService.getTrends(any())).thenReturn(new ArrayList<>());
 
@@ -92,7 +92,7 @@ class AuditStatisticsControllerTest {
 
         @Test
         @DisplayName("空数据时应返回空数组")
-        @WithUserVO(roleName = "MEMBER", permissions = "audit:statistics:trends")
+        @WithSecurityPrincipal(roleType = "MEMBER", permissions = "audit:statistics:trends")
         void getTrends_emptyData_shouldReturnEmptyArray() throws Exception {
             when(auditStatisticsAppService.getTrends(any())).thenReturn(new ArrayList<>());
 
@@ -115,7 +115,7 @@ class AuditStatisticsControllerTest {
 
         @Test
         @DisplayName("已认证用户请求排名应返回数据")
-        @WithUserVO(roleName = "MEMBER", permissions = "audit:statistics:endpoints")
+        @WithSecurityPrincipal(roleType = "MEMBER", permissions = "audit:statistics:endpoints")
         void getEndpoints_withAuth_shouldReturnData() throws Exception {
             AuditStatisticsResult.EndpointRanking ranking = new AuditStatisticsResult.EndpointRanking(
                     "/api/v1/file/download/{fileId}", 100L, 45.5, 2L);
@@ -135,7 +135,7 @@ class AuditStatisticsControllerTest {
 
         @Test
         @DisplayName("无参数应使用默认值 period=7d, limit=20")
-        @WithUserVO(roleName = "MEMBER", permissions = "audit:statistics:endpoints")
+        @WithSecurityPrincipal(roleType = "MEMBER", permissions = "audit:statistics:endpoints")
         void getEndpoints_withoutParams_shouldUseDefaults() throws Exception {
             when(auditStatisticsAppService.getEndpointRanking(any())).thenReturn(new ArrayList<>());
 
@@ -157,7 +157,7 @@ class AuditStatisticsControllerTest {
 
         @Test
         @DisplayName("已认证用户请求延迟排名应返回数据")
-        @WithUserVO(roleName = "MEMBER", permissions = "audit:statistics:latency")
+        @WithSecurityPrincipal(roleType = "MEMBER", permissions = "audit:statistics:latency")
         void getLatency_withAuth_shouldReturnData() throws Exception {
             AuditStatisticsResult.EndpointLatency latency = new AuditStatisticsResult.EndpointLatency(
                     "/api/v1/admin/competitions/{id}/images/{imageId}", 320.8, 1500L, 50L);
@@ -178,7 +178,7 @@ class AuditStatisticsControllerTest {
 
         @Test
         @DisplayName("无参数应使用默认值 period=7d, limit=20")
-        @WithUserVO(roleName = "MEMBER", permissions = "audit:statistics:latency")
+        @WithSecurityPrincipal(roleType = "MEMBER", permissions = "audit:statistics:latency")
         void getLatency_withoutParams_shouldUseDefaults() throws Exception {
             when(auditStatisticsAppService.getEndpointLatencyRanking(any())).thenReturn(new ArrayList<>());
 

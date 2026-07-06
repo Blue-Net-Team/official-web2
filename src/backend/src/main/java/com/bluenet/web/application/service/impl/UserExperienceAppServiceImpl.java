@@ -8,7 +8,7 @@ import com.bluenet.web.domain.exception.Forbidden;
 import com.bluenet.web.domain.exception.Unauthorized;
 import com.bluenet.web.domain.model.entity.UserExperience;
 import com.bluenet.web.domain.model.enumerate.ExperienceType;
-import com.bluenet.web.domain.model.vo.UserVO;
+import com.bluenet.web.domain.model.entity.User;
 import com.bluenet.web.domain.model.vo.content.CompetitionContent;
 import com.bluenet.web.domain.model.vo.content.InternshipContent;
 import com.bluenet.web.domain.model.vo.content.ProjectContent;
@@ -139,11 +139,11 @@ public class UserExperienceAppServiceImpl implements UserExperienceAppService {
     }
 
     private Long getCurrentUserId() {
-        UserVO userVO = UserCTX.getCurrentUser();
-        if (userVO == null) {
+        User user = UserCTX.getCurrentUser();
+        if (user == null) {
             throw new Unauthorized("未认证");
         }
-        return userVO.getId();
+        return user.getId();
     }
 
     private ExperienceType parseExperienceType(String type) {

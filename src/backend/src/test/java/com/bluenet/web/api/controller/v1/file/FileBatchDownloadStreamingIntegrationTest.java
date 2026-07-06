@@ -6,7 +6,7 @@ import com.bluenet.web.domain.model.enumerate.FileType;
 import com.bluenet.web.domain.model.vo.FileVO;
 import com.bluenet.web.domain.repository.FileRepository;
 import com.bluenet.web.infrastructure.repository.mapper.FileMapper;
-import com.bluenet.web.infrastructure.security.WithUserVO;
+import com.bluenet.web.infrastructure.security.principal.WithSecurityPrincipal;
 import com.bluenet.web.infrastructure.security.util.UserCTX;
 import com.bluenet.web.testcontainers.TestcontainersConfiguration;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -82,7 +82,7 @@ class FileBatchDownloadStreamingIntegrationTest extends BaseIntegrationTest {
 
     @Test
     @DisplayName("批量下载 ZIP 流式输出应返回有效 ZIP 文件")
-    @WithUserVO(userId = 1L, studentId = "2024001001", username = "测试用户", roleName = "MEMBER")
+    @WithSecurityPrincipal(userId = 1L, studentId = "2024001001", username = "测试用户", roleType = "MEMBER")
     void downloadBatchStream_shouldReturnValidZip() throws Exception {
         // 创建公开可下载的文件
         FileVO file1 = createFile("image1.jpg", FileType.NORMAL_IMG, "jpeg content 1".getBytes(StandardCharsets.UTF_8));
@@ -119,7 +119,7 @@ class FileBatchDownloadStreamingIntegrationTest extends BaseIntegrationTest {
 
     @Test
     @DisplayName("批量下载大文件 ZIP 流式输出，响应字节数应等于 ZIP 实际大小")
-    @WithUserVO(userId = 2L, studentId = "2024001002", username = "测试用户", roleName = "MEMBER")
+    @WithSecurityPrincipal(userId = 2L, studentId = "2024001002", username = "测试用户", roleType = "MEMBER")
     void downloadBatchStream_largeFiles_shouldNotBufferInMemory() throws Exception {
         // 创建较大的文件（256KB each）
         byte[] largeContent1 = new byte[256 * 1024];

@@ -8,7 +8,7 @@ import com.bluenet.web.domain.model.enumerate.Gender;
 import com.bluenet.web.domain.model.vo.FileVO;
 import com.bluenet.web.domain.service.FileDomainService;
 import com.bluenet.web.domain.model.vo.TabCountsVO;
-import com.bluenet.web.domain.model.vo.UserVO;
+import com.bluenet.web.domain.model.entity.User;
 import com.bluenet.web.domain.repository.UserRepository;
 import com.bluenet.web.domain.repository.VerificationCodeRepository;
 import org.junit.jupiter.api.Test;
@@ -52,17 +52,16 @@ class UserDomainServiceImplTest {
     private static final String TEST_BIO = "这是个人简介";
 
     @Test
-    void getUser_whenUserExists_returnsUserVO() {
-        UserVO userVO = UserVO.builder()
-                .id(TEST_USER_ID)
-                .username(TEST_USERNAME)
-                .nickname(TEST_NICKNAME)
-                .bio(TEST_BIO)
-                .build();
+    void getUser_whenUserExists_returnsUser() {
+        User userVO = User.reconstruct(TEST_USER_ID, "password");
+        userVO.setUsername(TEST_USERNAME);
+        userVO.setNickname(TEST_NICKNAME);
+        userVO.setBio(TEST_BIO);
+        ;
 
         when(userRepository.findById(TEST_USER_ID)).thenReturn(Optional.of(userVO));
 
-        Optional<UserVO> result = userDomainService.getUser(TEST_USER_ID);
+        Optional<User> result = userDomainService.getUser(TEST_USER_ID);
 
         assertTrue(result.isPresent());
         assertEquals(TEST_USER_ID, result.get().getId());
@@ -75,7 +74,7 @@ class UserDomainServiceImplTest {
     void getUser_whenUserNotExists_returnsEmpty() {
         when(userRepository.findById(TEST_USER_ID)).thenReturn(Optional.empty());
 
-        Optional<UserVO> result = userDomainService.getUser(TEST_USER_ID);
+        Optional<User> result = userDomainService.getUser(TEST_USER_ID);
 
         assertFalse(result.isPresent());
         verify(userRepository).findById(TEST_USER_ID);
@@ -83,10 +82,9 @@ class UserDomainServiceImplTest {
 
     @Test
     void updateProfile_whenUserExists_updatesSuccessfully() {
-        UserVO userVO = UserVO.builder()
-                .id(TEST_USER_ID)
-                .username(TEST_USERNAME)
-                .build();
+        User userVO = User.reconstruct(TEST_USER_ID, "password");
+        userVO.setUsername(TEST_USERNAME);
+        ;
 
         when(userRepository.findById(TEST_USER_ID)).thenReturn(Optional.of(userVO));
         when(
@@ -147,12 +145,11 @@ class UserDomainServiceImplTest {
 
     @Test
     void updateProfile_withNullValues_updatesSuccessfully() {
-        UserVO userVO = UserVO.builder()
-                .id(TEST_USER_ID)
-                .username(TEST_USERNAME)
-                .nickname("原昵称")
-                .bio("原简介")
-                .build();
+        User userVO = User.reconstruct(TEST_USER_ID, "password");
+        userVO.setUsername(TEST_USERNAME);
+        userVO.setNickname("原昵称");
+        userVO.setBio("原简介");
+        ;
 
         when(userRepository.findById(TEST_USER_ID)).thenReturn(Optional.of(userVO));
         when(
@@ -183,10 +180,9 @@ class UserDomainServiceImplTest {
 
     @Test
     void updateProfile_withValidQrcodeFileId_updatesQrcode() {
-        UserVO userVO = UserVO.builder()
-                .id(TEST_USER_ID)
-                .username(TEST_USERNAME)
-                .build();
+        User userVO = User.reconstruct(TEST_USER_ID, "password");
+        userVO.setUsername(TEST_USERNAME);
+        ;
         FileVO qrcodeFile = FileVO.builder().id(100L).type(FileType.QRCODE).build();
 
         when(userRepository.findById(TEST_USER_ID)).thenReturn(Optional.of(userVO));
@@ -211,10 +207,9 @@ class UserDomainServiceImplTest {
 
     @Test
     void updateProfile_withQrcodeFileNotFound_throwsDataNotFound() {
-        UserVO userVO = UserVO.builder()
-                .id(TEST_USER_ID)
-                .username(TEST_USERNAME)
-                .build();
+        User userVO = User.reconstruct(TEST_USER_ID, "password");
+        userVO.setUsername(TEST_USERNAME);
+        ;
 
         when(userRepository.findById(TEST_USER_ID)).thenReturn(Optional.of(userVO));
         when(fileDomainService.getFileById(999L)).thenReturn(null);
@@ -238,10 +233,9 @@ class UserDomainServiceImplTest {
 
     @Test
     void updateProfile_withQrcodeFileTypeMismatch_throwsBadRequest() {
-        UserVO userVO = UserVO.builder()
-                .id(TEST_USER_ID)
-                .username(TEST_USERNAME)
-                .build();
+        User userVO = User.reconstruct(TEST_USER_ID, "password");
+        userVO.setUsername(TEST_USERNAME);
+        ;
         FileVO wrongFile = FileVO.builder().id(100L).type(FileType.AVATAR).build();
 
         when(userRepository.findById(TEST_USER_ID)).thenReturn(Optional.of(userVO));
@@ -293,27 +287,27 @@ class UserDomainServiceImplTest {
 
     @Test
     void updateUserAvatar_whenUserExists_updatesSuccessfully() {
-        UserVO userVO = UserVO.builder()
-                .id(TEST_USER_ID)
-                .username(TEST_USERNAME)
-                .build();
+        User userVO = User.reconstruct(TEST_USER_ID, "password");
+        userVO.setUsername(TEST_USERNAME);
+        ;
         FileVO fileVO = FileVO.builder()
                 .id(100L)
                 .name("avatar.jpg")
                 .build();
 
         when(userRepository.findById(TEST_USER_ID)).thenReturn(Optional.of(userVO));
-        when(userRepository.updateAvatar(any(UserVO.class), any(FileVO.class))).thenReturn(1);
+        when(userRepository.updateAvatar(any(User.class), any(FileVO.class))).thenReturn(1);
 
         userDomainService.updateUserAvatar(TEST_USER_ID, fileVO);
 
         verify(userRepository).findById(TEST_USER_ID);
-        verify(userRepository).updateAvatar(any(UserVO.class), any(FileVO.class));
+        verify(userRepository).updateAvatar(any(User.class), any(FileVO.class));
     }
 
     @Test
     void changePassword_whenUserExists_encodesAndUpdates() {
-        UserVO userVO = UserVO.builder().id(TEST_USER_ID).build();
+        User userVO = User.reconstruct(TEST_USER_ID, "password");
+        ;
         when(userRepository.findById(TEST_USER_ID)).thenReturn(Optional.of(userVO));
         when(passwordEncoder.encode("newPassword123")).thenReturn("encoded_new_pwd");
 

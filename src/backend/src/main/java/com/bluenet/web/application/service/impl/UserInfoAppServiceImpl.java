@@ -7,13 +7,16 @@ import com.bluenet.web.domain.exception.BadRequest;
 import com.bluenet.web.domain.exception.DataNotFound;
 import com.bluenet.web.domain.exception.Forbidden;
 import com.bluenet.web.domain.exception.Unauthorized;
+import com.bluenet.web.domain.model.entity.College;
+import com.bluenet.web.domain.model.entity.User;
 import com.bluenet.web.domain.model.enumerate.FileType;
 import com.bluenet.web.domain.model.enumerate.MessageChannel;
 import com.bluenet.web.domain.model.enumerate.RoleType;
 import com.bluenet.web.domain.model.vo.FileVO;
 import com.bluenet.web.domain.model.vo.TabCountsVO;
-import com.bluenet.web.domain.model.vo.UserVO;
 import com.bluenet.web.domain.model.vo.VerifyCodeVO;
+import com.bluenet.web.domain.repository.CollegeRepository;
+import com.bluenet.web.domain.repository.UserRepository;
 import com.bluenet.web.domain.repository.VerificationCodeRepository;
 import com.bluenet.web.domain.service.FileDomainService;
 import com.bluenet.web.domain.service.UserDomainService;
@@ -25,6 +28,7 @@ import com.bluenet.web.application.message.template.EmailVerificationCodeTemplat
 import com.bluenet.web.application.message.template.VerificationCodeScene;
 import com.bluenet.web.infrastructure.security.auth.AuthTokenService;
 import com.bluenet.web.infrastructure.security.change.ChangePasswordStateService;
+import com.bluenet.web.infrastructure.security.principal.RoleTypeResolver;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -43,6 +47,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class UserInfoAppServiceImpl implements UserInfoAppService {
 
     private final UserDomainService userDomainService;
+    private final UserRepository userRepository;
     private final FileDomainService fileDomainService;
     private final VerificationCodeDomainService verificationCodeDomainService;
     private final VerificationCodeRepository verificationCodeRepository;
@@ -51,32 +56,50 @@ public class UserInfoAppServiceImpl implements UserInfoAppService {
     private final PasswordEncoder passwordEncoder;
     private final ChangePasswordStateService changePasswordStateService;
     private final AuthTokenService authTokenService;
+    private final CollegeRepository collegeRepository;
+    private final RoleTypeResolver roleTypeResolver;
 
     @Override
     public UserInfoResult getMyInfo(Long userId) {
-        UserVO userVO = userDomainService.getUser(userId)
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new Unauthorized("用户不存在"));
-        String gradeLabel = GradeCalculator.getGradeLabel(userVO.getStudentId(), userVO.getAssessmentGradeYear());
+        String gradeLabel = GradeCalculator.getGradeLabel(user.getStudentId(), user.getAssessmentGradeYear());
+        String collegeName = resolveCollegeName(user.getCollegeId());
+        String roleName = resolveRoleName(user.getRoleId());
         return new UserInfoResult(
-                userVO.getId(),
-                userVO.getUsername(),
-                userVO.getNickname(),
-                userVO.getCollege(),
-                userVO.getMajor(),
+                user.getId(),
+                user.getUsername(),
+                user.getNickname(),
+                collegeName,
+                user.getMajor(),
                 gradeLabel,
-                userVO.getEmail(),
-                userVO.getAvatarFileId(),
-                userVO.getRoleName(),
-                userVO.getDirection(),
-                userVO.getGender(),
-                userVO.getBio(),
-                userVO.getGithubUsername(),
-                userVO.getWechatQrcode());
+                user.getEmail(),
+                user.getAvatarId(),
+                roleName,
+                user.getDirection(),
+                user.getGender(),
+                user.getBio(),
+                user.getGithubUsername(),
+                user.getQrcodeId());
+    }
+
+    private String resolveCollegeName(Long collegeId) {
+        if (collegeId == null) {
+            return null;
+        }
+        return collegeRepository.findById(collegeId)
+                .map(College::getName)
+                .orElse(null);
+    }
+
+    private String resolveRoleName(Long roleId) {
+        RoleType roleType = roleTypeResolver.resolve(roleId);
+        return roleType != null ? roleType.getName() : null;
     }
 
     @Override
     public void updateProfile(Long userId, UserInfoCommands.UpdateProfileCommand command) {
-        UserVO currentUser = userDomainService.getUser(userId)
+        User currentUser = userRepository.findById(userId)
                 .orElseThrow(() -> new Unauthorized("用户不存在"));
         validateProfileUpdatePermission(currentUser, command);
         userDomainService.updateProfile(
@@ -120,7 +143,7 @@ public class UserInfoAppServiceImpl implements UserInfoAppService {
 
     @Override
     public void changeEmail(Long userId, UserInfoCommands.ChangeEmailCommand command) {
-        UserVO currentUser = userDomainService.getUser(userId)
+        User currentUser = userRepository.findById(userId)
                 .orElseThrow(() -> new Unauthorized("用户不存在"));
         userDomainService.changeEmail(
                 userId,
@@ -133,7 +156,7 @@ public class UserInfoAppServiceImpl implements UserInfoAppService {
 
     @Override
     public String verifyCurrentPassword(UserInfoCommands.VerifyCurrentPasswordCommand command) {
-        UserVO user = userDomainService.getUser(command.userId())
+        User user = userRepository.findById(command.userId())
                 .orElseThrow(() -> new Unauthorized("用户不存在"));
         if (!passwordEncoder.matches(command.currentPassword(), user.getPassword())) {
             throw new BadRequest("当前密码不正确");
@@ -180,8 +203,8 @@ public class UserInfoAppServiceImpl implements UserInfoAppService {
         log.info("用户头像更新成功 - userId={}, fileId={}", userId, command.fileId());
     }
 
-    private void validateProfileUpdatePermission(UserVO user, UserInfoCommands.UpdateProfileCommand command) {
-        RoleType role = RoleType.fromName(user.getRoleName());
+    private void validateProfileUpdatePermission(User user, UserInfoCommands.UpdateProfileCommand command) {
+        RoleType role = roleTypeResolver.resolve(user.getRoleId());
         if (role == RoleType.CANDIDATE) {
             if (command.username() != null || command.gender() != null || command.college() != null
                     || command.major() != null || command.direction() != null) {

@@ -10,7 +10,7 @@ import com.bluenet.web.domain.model.entity.College;
 import com.bluenet.web.domain.model.enumerate.Direction;
 import com.bluenet.web.domain.model.enumerate.Gender;
 import com.bluenet.web.domain.model.enumerate.MessageChannel;
-import com.bluenet.web.domain.model.vo.RoleVO;
+import com.bluenet.web.domain.model.entity.Role;
 import com.bluenet.web.domain.model.vo.UserOnboardingCreateUserRequest;
 import com.bluenet.web.domain.model.vo.UserOnboardingResult;
 import com.bluenet.web.domain.repository.CollegeRepository;
@@ -63,7 +63,7 @@ public class WpsFormAppServiceImpl implements WpsFormAppService {
         College college = collegeRepository.findByName(command.collegeText())
                 .orElseThrow(() -> new BadRequest("学院" + command.collegeText() + "不存在"));
 
-        RoleVO role = userOnboardingService.getMemberRole();
+        Role role = userOnboardingService.getMemberRole();
 
         UserOnboardingCreateUserRequest request = UserOnboardingCreateUserRequest.builder()
                 .studentId(command.studentId())
