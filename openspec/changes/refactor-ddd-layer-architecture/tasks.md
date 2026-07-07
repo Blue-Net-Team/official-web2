@@ -2,7 +2,7 @@
 
 **已完成**：
 - Task 1（安全上下文基础设施改造）已全部完成。
-- Task 2（User 聚合重构）已部分启动：`UserDomainService.getUser` 已移除，5 个应用服务改为直接注入 `UserRepository.findById`；`AuthController` / `UserInfoController` 已简化异常处理与 `ResponseMessage` 包装。
+- Task 2（User 聚合重构）已全部完成：`UserRepository` 返回 `User` Entity 并移除字段级更新方法；`User` Entity 增加状态变更方法；`UserInfoAppServiceImpl` / `AdminUserAppServiceImpl` / `ResetPasswordAppServiceImpl` 改为 `load → modify → save`；`UserDomainService` 与 `UserVO` 已删除。
 
 **测试策略调整**：
 本次重构涉及所有模块，大量旧测试依赖即将删除的 `*VO`、`@WithUserVO`、透传型 `DomainService` 以及旧的 Repository 返回类型。继续维护这些测试会在每个子任务中产生高昂的同步成本，因此决定：
@@ -45,15 +45,15 @@
 - **后置状态**：`UserRepository.findById` 返回 `User`，应用层直接调用 `User` Entity + `UserRepository.save()`
 
 #### 实现步骤
-- [ ] 2.1 改造 `UserRepository` 接口：`findById`、`findByEmail`、`findByStudentId`、`findByGithubId` 返回 `Optional<User>`
-- [ ] 2.2 改造 `UserRepositoryImpl`：移除 `convertToVO`，查询结果直接返回 `User` Entity；保留管理员批量操作方法
-- [ ] 2.3 `User` Entity 增加 `updateAvatar(Long)`、`updateProfile(...)`、`updateQrcodeId(Long)`、`changeEmail(String)` 方法
-- [ ] 2.4 重写 `UserInfoAppServiceImpl`：直接注入 `UserRepository`，每个方法遵循 `load → modify → save` 模式
-- [ ] 2.5 修复 `AdminUserAppServiceImpl.updateUser`：调用 `user.updateAdminFields(...)` 后 `userRepository.save(user)`，删除 `UserRepository.updateAdminFields(...)`
+- [x] 2.1 改造 `UserRepository` 接口：`findById`、`findByEmail`、`findByStudentId`、`findByGithubId` 返回 `Optional<User>`
+- [x] 2.2 改造 `UserRepositoryImpl`：移除 `convertToVO`，查询结果直接返回 `User` Entity；保留管理员批量操作方法
+- [x] 2.3 `User` Entity 增加 `updateAvatar(Long)`、`updateProfile(...)`、`updateQrcodeId(Long)`、`changeEmail(String)` 方法
+- [x] 2.4 重写 `UserInfoAppServiceImpl`：直接注入 `UserRepository`，每个方法遵循 `load → modify → save` 模式
+- [x] 2.5 修复 `AdminUserAppServiceImpl.updateUser`：调用 `user.updateAdminFields(...)` 后 `userRepository.save(user)`，删除 `UserRepository.updateAdminFields(...)`
 - [x] 2.6 迁移 `AuthDomainServiceImpl`、`UserOnboardingServiceImpl`、`GitHubAuthProvider` 等所有 `UserVO` 引用到 `User` Entity（`UserDomainService.getUser` 调用点已迁移至 `UserRepository.findById`）
-- [ ] 2.7 删除 `UserDomainService` 接口和实现
-- [ ] 2.8 删除 `UserVO`，如果 API 需要用户信息则使用 `UserInfoResult`
-- [ ] 2.9 编译通过，User 相关接口通过手动/新测试验证
+- [x] 2.7 删除 `UserDomainService` 接口和实现
+- [x] 2.8 删除 `UserVO`，如果 API 需要用户信息则使用 `UserInfoResult`
+- [x] 2.9 编译通过，User 相关接口通过手动/新测试验证
 
 ---
 

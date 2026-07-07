@@ -19,7 +19,6 @@ import com.bluenet.web.domain.repository.CollegeRepository;
 import com.bluenet.web.domain.repository.UserRepository;
 import com.bluenet.web.domain.repository.VerificationCodeRepository;
 import com.bluenet.web.domain.service.FileDomainService;
-import com.bluenet.web.domain.service.UserDomainService;
 import com.bluenet.web.domain.service.VerificationCodeDomainService;
 import com.bluenet.web.domain.util.GradeCalculator;
 import com.bluenet.web.application.message.MessageDispatcher;
@@ -46,7 +45,6 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class UserInfoAppServiceImpl implements UserInfoAppService {
 
-    private final UserDomainService userDomainService;
     private final UserRepository userRepository;
     private final FileDomainService fileDomainService;
     private final VerificationCodeDomainService verificationCodeDomainService;
@@ -101,25 +99,36 @@ public class UserInfoAppServiceImpl implements UserInfoAppService {
     }
 
     @Override
+    @Transactional
     public void updateProfile(Long userId, UserInfoCommands.UpdateProfileCommand command) {
         User currentUser = userRepository.findById(userId)
                 .orElseThrow(() -> new Unauthorized("用户不存在"));
         validateProfileUpdatePermission(currentUser, command);
-        userDomainService.updateProfile(
-                userId,
+        Long collegeId = resolveCollegeId(command.college());
+        currentUser.updateProfile(
                 command.username(),
                 command.nickname(),
-                command.college(),
+                collegeId,
                 command.major(),
                 command.direction(),
                 command.gender(),
                 command.bio(),
                 command.qrcodeFileId());
+        userRepository.save(currentUser);
+    }
+
+    private Long resolveCollegeId(String collegeName) {
+        if (collegeName == null || collegeName.isBlank()) {
+            return null;
+        }
+        return collegeRepository.findByName(collegeName)
+                .map(College::getId)
+                .orElseThrow(() -> new DataNotFound("学院不存在: " + collegeName));
     }
 
     @Override
     public UserInfoResult.TabCounts getTabCounts(Long userId) {
-        TabCountsVO tabCountsVO = userDomainService.getTabCounts(userId);
+        TabCountsVO tabCountsVO = userRepository.getTabCounts(userId);
         return new UserInfoResult.TabCounts(
                 tabCountsVO.getProjects(),
                 tabCountsVO.getCompetitions(),
@@ -145,15 +154,22 @@ public class UserInfoAppServiceImpl implements UserInfoAppService {
     }
 
     @Override
+    @Transactional
     public void changeEmail(Long userId, UserInfoCommands.ChangeEmailCommand command) {
         User currentUser = userRepository.findById(userId)
                 .orElseThrow(() -> new Unauthorized("用户不存在"));
-        userDomainService.changeEmail(
-                userId,
+        verifyCode(currentUser.getEmail(), command.originalEmailVerifyCode(), "change-email-original");
+        verifyCode(command.newEmail(), command.newEmailVerifyCode(), "change-email-new");
+        if (userRepository.findByEmail(command.newEmail()).isPresent()) {
+            throw new BadRequest("该邮箱已被其他账号绑定");
+        }
+        currentUser.changeEmail(command.newEmail());
+        userRepository.save(currentUser);
+        verificationCodeRepository.markAsUsed(
                 currentUser.getEmail(),
                 command.originalEmailVerifyCode(),
-                command.newEmail(),
-                command.newEmailVerifyCode());
+                "change-email-original");
+        verificationCodeRepository.markAsUsed(command.newEmail(), command.newEmailVerifyCode(), "change-email-new");
         log.info("用户邮箱修改成功 - userId={}", userId);
     }
 
@@ -186,7 +202,10 @@ public class UserInfoAppServiceImpl implements UserInfoAppService {
         if (!command.newPassword().equals(command.confirmPassword())) {
             throw new BadRequest("两次输入的密码不一致");
         }
-        userDomainService.changePassword(command.userId(), command.newPassword());
+        User user = userRepository.findById(command.userId())
+                .orElseThrow(() -> new Unauthorized("用户不存在"));
+        user.changePassword(passwordEncoder.encode(command.newPassword()));
+        userRepository.save(user);
         authTokenService.revokeAllUserTokens(command.userId());
         changePasswordStateService.delete(command.token());
         log.info("密码修改成功 - userId={}", command.userId());
@@ -202,7 +221,10 @@ public class UserInfoAppServiceImpl implements UserInfoAppService {
         if (fileVO.getType() != FileType.AVATAR) {
             throw new BadRequest("文件类型不匹配，期望 AVATAR");
         }
-        userDomainService.updateUserAvatar(userId, fileVO);
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new Unauthorized("用户不存在"));
+        user.updateAvatar(command.fileId());
+        userRepository.save(user);
         log.info("用户头像更新成功 - userId={}, fileId={}", userId, command.fileId());
     }
 
@@ -213,6 +235,17 @@ public class UserInfoAppServiceImpl implements UserInfoAppService {
                     || command.major() != null || command.direction() != null) {
                 throw new Forbidden("只有成员及以上角色才能修改用户名、性别、学院、专业和报名方向");
             }
+        }
+    }
+
+    private void verifyCode(String email, String code, String scene) {
+        VerifyCodeVO verifyCodeVO = verificationCodeRepository.findByEmailAndCodeAndScene(email, code, scene)
+                .orElseThrow(() -> new BadRequest("验证码错误"));
+        if (verifyCodeVO.isExpired()) {
+            throw new BadRequest("验证码已过期");
+        }
+        if (verifyCodeVO.isUsed()) {
+            throw new BadRequest("验证码已被使用");
         }
     }
 

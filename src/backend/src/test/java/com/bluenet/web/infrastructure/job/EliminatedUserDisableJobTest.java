@@ -1,9 +1,11 @@
 package com.bluenet.web.infrastructure.job;
 
+import com.bluenet.web.domain.model.entity.User;
 import com.bluenet.web.domain.repository.UserRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -11,6 +13,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -34,11 +37,18 @@ class EliminatedUserDisableJobTest {
         List<Long> userIds = List.of(100L, 101L);
         when(userRepository.findUserIdsToDisableByElimination(any(LocalDateTime.class)))
                 .thenReturn(userIds);
+        User user100 = User.reconstruct(100L, "password");
+        User user101 = User.reconstruct(101L, "password");
+        when(userRepository.findById(100L)).thenReturn(Optional.of(user100));
+        when(userRepository.findById(101L)).thenReturn(Optional.of(user101));
 
         eliminatedUserDisableJob.disableEliminatedUsers();
 
-        verify(userRepository).batchUpdateDisable(List.of(100L), true);
-        verify(userRepository).batchUpdateDisable(List.of(101L), true);
+        ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
+        verify(userRepository, times(2)).save(captor.capture());
+        List<User> savedUsers = captor.getAllValues();
+        assertTrue(savedUsers.stream().allMatch(User::getDisable));
+        assertEquals(2, savedUsers.size());
     }
 
     @Test
@@ -49,7 +59,8 @@ class EliminatedUserDisableJobTest {
 
         eliminatedUserDisableJob.disableEliminatedUsers();
 
-        verify(userRepository, never()).batchUpdateDisable(any(), any());
+        verify(userRepository, never()).findById(any());
+        verify(userRepository, never()).save(any());
     }
 
     @Test
@@ -59,7 +70,8 @@ class EliminatedUserDisableJobTest {
                 .thenThrow(new RuntimeException("数据库连接失败"));
 
         assertDoesNotThrow(() -> eliminatedUserDisableJob.disableEliminatedUsers());
-        verify(userRepository, never()).batchUpdateDisable(any(), any());
+        verify(userRepository, never()).findById(any());
+        verify(userRepository, never()).save(any());
     }
 
     @Test
@@ -68,11 +80,15 @@ class EliminatedUserDisableJobTest {
         List<Long> userIds = List.of(100L, 101L);
         when(userRepository.findUserIdsToDisableByElimination(any(LocalDateTime.class)))
                 .thenReturn(userIds);
+        User user100 = User.reconstruct(100L, "password");
+        User user101 = User.reconstruct(101L, "password");
+        when(userRepository.findById(100L)).thenReturn(Optional.of(user100));
+        when(userRepository.findById(101L)).thenReturn(Optional.of(user101));
         doThrow(new RuntimeException("锁定冲突"))
                 .when(userRepository)
-                .batchUpdateDisable(List.of(100L), true);
+                .save(user100);
 
         assertDoesNotThrow(() -> eliminatedUserDisableJob.disableEliminatedUsers());
-        verify(userRepository).batchUpdateDisable(List.of(101L), true);
+        verify(userRepository).save(user101);
     }
 }

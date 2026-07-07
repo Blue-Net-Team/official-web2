@@ -2,10 +2,6 @@ package com.bluenet.web.domain.repository;
 
 import com.bluenet.web.domain.model.entity.User;
 import com.bluenet.web.domain.model.enumerate.Direction;
-import com.bluenet.web.domain.model.enumerate.Gender;
-import com.bluenet.web.domain.model.enumerate.RoleType;
-import com.bluenet.web.domain.model.vo.FileVO;
-import com.bluenet.web.domain.model.vo.QrcodeVO;
 import com.bluenet.web.domain.model.vo.TabCountsVO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -16,12 +12,20 @@ import java.util.Optional;
 
 public interface UserRepository {
     /**
-     * 保存新的用户 记录。
+     * 保存或更新用户记录。
      *
      * @param user
-     *            用户领域对象。
+     *            用户领域对象。若 id 为空则插入，否则按 id 更新。
      */
     void save(User user);
+
+    /**
+     * 批量保存或更新用户记录。
+     *
+     * @param users
+     *            用户领域对象列表。每个对象若 id 为空则插入，否则按 id 更新。
+     */
+    void saveAll(List<User> users);
     /**
      * 按主键查询用户 记录。
      *
@@ -46,72 +50,6 @@ public interface UserRepository {
      * @return 查询到的用户 结果；不存在时为空。
      */
     Optional<User> findByStudentId(String studentId);
-    /**
-     * 更新用户头像文件关联。
-     *
-     * @param user
-     *            用户领域对象。
-     * @param file
-     *            文件领域对象或文件视图对象。
-     * @return 数据库受影响行数。
-     */
-    int updateAvatar(User user, FileVO file);
-    /**
-     * 更新用户头像文件关联。
-     *
-     * @param userId
-     *            用户主键，用于限定用户范围。
-     * @param id
-     *            业务记录主键。
-     * @return 数据库受影响行数。
-     */
-    int updateAvatar(Long userId, Long id);
-    /**
-     * 更新用户微信二维码文件关联。
-     *
-     * @param user
-     *            用户领域对象。
-     * @param qrcode
-     *            二维码领域对象或视图对象。
-     * @return 数据库受影响行数。
-     */
-    int updateQrcode(User user, QrcodeVO qrcode);
-
-    /**
-     * 更新用户个人资料字段。
-     *
-     * @param userId
-     *            用户主键，用于限定用户范围。
-     * @param username
-     *            用户姓名或登录名。
-     * @param nickname
-     *            用户昵称。
-     * @param college
-     *            学院名称。
-     * @param major
-     *            专业名称。
-     * @param direction
-     *            技术方向过滤条件。
-     * @param gender
-     *            性别。
-     * @param bio
-     *            个人简介。
-     * @return 数据库受影响行数。
-     */
-    int updateProfile(Long userId, String username, String nickname, String college,
-            String major, Direction direction, Gender gender, String bio);
-
-    /**
-     * 更新用户微信二维码文件关联。
-     *
-     * @param userId
-     *            用户主键。
-     * @param qrcodeId
-     *            二维码文件主键，null 表示清空。
-     * @return 数据库受影响行数。
-     */
-    int updateQrcodeId(Long userId, Long qrcodeId);
-
     /**
      * 统计用户主页各标签页展示数量。
      *
@@ -151,26 +89,6 @@ public interface UserRepository {
     void clearGithubBinding(Long userId);
 
     /**
-     * 更新用户邮箱地址。
-     *
-     * @param userId
-     *            用户主键，用于限定用户范围。
-     * @param newEmail
-     *            新的邮箱地址。
-     */
-    void updateEmail(Long userId, String newEmail);
-
-    /**
-     * 更新用户加密后的登录密码。
-     *
-     * @param userId
-     *            用户主键，用于限定用户范围。
-     * @param encodedPassword
-     *            加密后的密码。
-     */
-    void updatePassword(Long userId, String encodedPassword);
-
-    /**
      * 判断内部推荐码是否已被用户占用。
      *
      * @param code
@@ -199,96 +117,12 @@ public interface UserRepository {
     Page<User> findPage(Pageable pageable, Long roleId, Direction direction, Long collegeId, String keyword);
 
     /**
-     * 按主键查询用户实体（管理员用）
-     *
-     * @param id
-     *            用户ID
-     * @return 用户实体
-     */
-    default Optional<User> findEntityById(Long id) {
-        return findById(id);
-    }
-
-    /**
-     * 更新用户管理员可修改字段
-     *
-     * @param userId
-     *            用户主键
-     * @param roleId
-     *            角色ID
-     * @param direction
-     *            方向
-     * @param disable
-     *            禁用状态
-     * @param job
-     *            岗位
-     * @param studentId
-     *            学号
-     * @param email
-     *            邮箱
-     * @param username
-     *            姓名
-     * @param nickname
-     *            昵称
-     * @param collegeId
-     *            学院ID
-     * @param major
-     *            专业
-     * @param gender
-     *            性别
-     * @param assessmentGradeYear
-     *            考核年级年份
-     * @return 受影响行数
-     */
-    int updateAdminFields(Long userId, Long roleId, Direction direction, Boolean disable, String job,
-            String studentId, String email, String username, String nickname,
-            Long collegeId, String major, Gender gender, Integer assessmentGradeYear);
-
-    /**
      * 级联删除用户及关联数据
      *
      * @param userId
      *            用户ID
      */
     void deleteByIdWithCascade(Long userId);
-
-    /**
-     * 批量删除用户及关联数据
-     *
-     * @param userIds
-     *            用户ID列表
-     */
-    void batchDeleteByIds(List<Long> userIds);
-
-    /**
-     * 批量更新禁用状态
-     *
-     * @param userIds
-     *            用户ID列表
-     * @param disable
-     *            禁用状态
-     */
-    void batchUpdateDisable(List<Long> userIds, Boolean disable);
-
-    /**
-     * 批量更新角色
-     *
-     * @param userIds
-     *            用户ID列表
-     * @param roleId
-     *            角色ID
-     */
-    void batchUpdateRole(List<Long> userIds, Long roleId);
-
-    /**
-     * 批量更新角色（按角色枚举）
-     *
-     * @param userIds
-     *            用户ID列表
-     * @param roleType
-     *            角色枚举
-     */
-    void batchUpdateRole(List<Long> userIds, RoleType roleType);
 
     /**
      * 统计用户关联数据数量

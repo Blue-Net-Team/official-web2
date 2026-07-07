@@ -7,16 +7,12 @@ import com.bluenet.web.infrastructure.repository.dataobject.*;
 import java.time.LocalDateTime;
 import java.util.*;
 
-import com.bluenet.web.domain.exception.GlobalException;
 import com.bluenet.web.domain.model.entity.*;
 import com.bluenet.web.domain.model.enumerate.Direction;
 import com.bluenet.web.domain.model.enumerate.ExperienceType;
-import com.bluenet.web.domain.model.enumerate.Gender;
-import com.bluenet.web.domain.model.enumerate.RoleType;
-import com.bluenet.web.domain.model.vo.FileVO;
-import com.bluenet.web.domain.model.vo.QrcodeVO;
 import com.bluenet.web.domain.model.vo.TabCountsVO;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.bluenet.web.infrastructure.repository.dataobject.*;
 import com.bluenet.web.infrastructure.repository.mapper.*;
 import com.bluenet.web.infrastructure.security.cache.PermissionCache;
@@ -35,7 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 @Repository
 @Slf4j
 @RequiredArgsConstructor
-public class UserRepositoryImpl implements UserRepository {
+public class UserRepositoryImpl extends ServiceImpl<UserMapper, UserDO> implements UserRepository {
     private final UserMapper userMapper;
     private final CollegeMapper collegeMapper;
     private final FileMapper fileMapper;
@@ -55,17 +51,54 @@ public class UserRepositoryImpl implements UserRepository {
     private final FileRepository fileRepository;
 
     /**
-     * 保存新的用户 记录。
+     * 保存或更新用户记录。
      *
      * @param user
-     *            用户领域对象。
+     *            用户领域对象。若 id 为空则插入，否则按 id 更新。
      */
     @Override
+    @Transactional
     public void save(User user) {
         UserDO dataObject = userConverter.toDataObject(user);
-        userMapper.insert(dataObject);
+        saveOrUpdate(dataObject);
         user.setId(dataObject.getId());
         log.info("save user {}", user);
+    }
+
+    /**
+     * 批量保存或更新用户记录。
+     *
+     * @param users
+     *            用户领域对象列表。每个对象若 id 为空则插入，否则按 id 更新。
+     */
+    @Override
+    @Transactional
+    public void saveAll(List<User> users) {
+        if (users == null || users.isEmpty()) {
+            return;
+        }
+        List<UserDO> toInsert = new ArrayList<>();
+        List<User> insertEntities = new ArrayList<>();
+        List<UserDO> toUpdate = new ArrayList<>();
+        for (User user : users) {
+            UserDO dataObject = userConverter.toDataObject(user);
+            if (dataObject.getId() == null) {
+                toInsert.add(dataObject);
+                insertEntities.add(user);
+            } else {
+                toUpdate.add(dataObject);
+            }
+        }
+        if (!toInsert.isEmpty()) {
+            saveBatch(toInsert);
+            for (int i = 0; i < toInsert.size(); i++) {
+                insertEntities.get(i).setId(toInsert.get(i).getId());
+            }
+        }
+        if (!toUpdate.isEmpty()) {
+            updateBatchById(toUpdate);
+        }
+        log.info("batch saved {} users", users.size());
     }
 
     /**
@@ -77,7 +110,7 @@ public class UserRepositoryImpl implements UserRepository {
      */
     @Override
     public Optional<User> findById(Long id) {
-        return Optional.ofNullable(userConverter.toEntity(userMapper.selectById(id)));
+        return Optional.ofNullable(userConverter.toEntity(getById(id)));
     }
 
     /**
@@ -102,102 +135,6 @@ public class UserRepositoryImpl implements UserRepository {
     @Override
     public Optional<User> findByStudentId(String studentId) {
         return Optional.ofNullable(userConverter.toEntity(userMapper.selectByStudentId(studentId)));
-    }
-
-    /**
-     * 更新用户头像文件关联。
-     *
-     * @param user
-     *            用户领域对象。
-     * @param file
-     *            文件领域对象或文件视图对象。
-     * @return 数据库受影响行数。
-     */
-    @Override
-    public int updateAvatar(User user, FileVO file) {
-        if (file.getId() == null) {
-            log.warn("更新头像的时候，file id 不能为空，请先保存文件获取id");
-            throw new GlobalException("更新头像失败：文件ID不能为空");
-        }
-
-        return updateAvatar(user.getId(), file.getId());
-    }
-
-    /**
-     * 更新用户头像文件关联。
-     *
-     * @param userId
-     *            用户主键，用于限定用户范围。
-     * @param id
-     *            业务记录主键。
-     * @return 数据库受影响行数。
-     */
-    @Override
-    public int updateAvatar(Long userId, Long id) {
-        int influence = userMapper.updateAvatarId(userId, id);
-        if (influence == 0) {
-            log.warn("更新文件失败，保存到数据库时没有影响任何行，userId {}, fileId {}", userId, id);
-            throw new GlobalException("更新头像失败");
-        }
-
-        return influence;
-    }
-
-    /**
-     * 更新用户微信二维码文件关联。
-     *
-     * @param user
-     *            用户领域对象。
-     * @param qrcode
-     *            二维码领域对象或视图对象。
-     * @return 数据库受影响行数。
-     */
-    @Override
-    public int updateQrcode(User user, QrcodeVO qrcode) {
-        if (qrcode.getId() == null) {
-            log.warn("更新二维码的时候，qrcode id 不能为空，请先保存文件获取id");
-            throw new GlobalException("更新二维码失败：qrcode ID不能为空");
-        }
-        int influence = userMapper.updateQrcodeId(user.getId(), qrcode.getId());
-
-        if (influence == 0) {
-            log.warn("更新二维码失败，保存到数据库时没有影响任何行，userId {}, qrcodeId {}", user.getId(), qrcode.getId());
-            throw new GlobalException("更新二维码失败");
-        }
-
-        return influence;
-    }
-
-    /**
-     * 更新用户个人资料字段。
-     *
-     * @param userId
-     *            用户主键，用于限定用户范围。
-     * @param username
-     *            用户姓名或登录名。
-     * @param nickname
-     *            用户昵称。
-     * @param college
-     *            学院名称。
-     * @param major
-     *            专业名称。
-     * @param direction
-     *            技术方向过滤条件。
-     * @param gender
-     *            性别。
-     * @param bio
-     *            个人简介。
-     * @return 数据库受影响行数。
-     */
-    @Override
-    public int updateProfile(Long userId, String username, String nickname, String college,
-            String major, Direction direction, Gender gender, String bio) {
-        return userMapper.updateProfile(userId, username, nickname, college, major, direction, gender, bio);
-    }
-
-    @Override
-    public int updateQrcodeId(Long userId, Long qrcodeId) {
-        return userMapper.updateQrcodeId(userId, qrcodeId);
     }
 
     /**
@@ -240,6 +177,7 @@ public class UserRepositoryImpl implements UserRepository {
      *            GitHub 登录名。
      */
     @Override
+    @Transactional
     public void updateGithubBinding(Long userId, String githubId, String githubUsername) {
         userMapper.updateGithubBinding(userId, githubId, githubUsername);
     }
@@ -251,34 +189,9 @@ public class UserRepositoryImpl implements UserRepository {
      *            用户主键，用于限定用户范围。
      */
     @Override
+    @Transactional
     public void clearGithubBinding(Long userId) {
         userMapper.clearGithubBinding(userId);
-    }
-
-    /**
-     * 更新用户邮箱地址。
-     *
-     * @param userId
-     *            用户主键，用于限定用户范围。
-     * @param newEmail
-     *            新的邮箱地址。
-     */
-    @Override
-    public void updateEmail(Long userId, String newEmail) {
-        userMapper.updateEmail(userId, newEmail);
-    }
-
-    /**
-     * 更新用户加密后的登录密码。
-     *
-     * @param userId
-     *            用户主键，用于限定用户范围。
-     * @param encodedPassword
-     *            加密后的密码。
-     */
-    @Override
-    public void updatePassword(Long userId, String encodedPassword) {
-        userMapper.updatePassword(userId, encodedPassword);
     }
 
     /**
@@ -324,51 +237,6 @@ public class UserRepositoryImpl implements UserRepository {
     }
 
     @Override
-    public int updateAdminFields(Long userId, Long roleId, Direction direction, Boolean disable, String job,
-            String studentId, String email, String username, String nickname,
-            Long collegeId, String major, Gender gender, Integer assessmentGradeYear) {
-        UserDO userDO = new UserDO();
-        userDO.setId(userId);
-        if (roleId != null) {
-            userDO.setRoleId(roleId);
-        }
-        if (direction != null) {
-            userDO.setDirection(direction);
-        }
-        if (disable != null) {
-            userDO.setDisable(disable);
-        }
-        if (job != null) {
-            userDO.setJob(job);
-        }
-        if (studentId != null) {
-            userDO.setStudentId(studentId);
-        }
-        if (email != null) {
-            userDO.setEmail(email);
-        }
-        if (username != null) {
-            userDO.setUsername(username);
-        }
-        if (nickname != null) {
-            userDO.setNickname(nickname);
-        }
-        if (collegeId != null) {
-            userDO.setCollegeId(collegeId);
-        }
-        if (major != null) {
-            userDO.setMajor(major);
-        }
-        if (gender != null) {
-            userDO.setGender(gender);
-        }
-        if (assessmentGradeYear != null) {
-            userDO.setAssessmentGradeYear(assessmentGradeYear);
-        }
-        return userMapper.updateById(userDO);
-    }
-
-    @Override
     @Transactional
     public void deleteByIdWithCascade(Long userId) {
         // 0. 获取用户，提取头像文件ID
@@ -397,67 +265,6 @@ public class UserRepositoryImpl implements UserRepository {
             }
         }
         log.info("Cascade deleted user {}", userId);
-    }
-
-    @Override
-    @Transactional
-    public void batchDeleteByIds(List<Long> userIds) {
-        if (userIds == null || userIds.isEmpty()) {
-            return;
-        }
-        for (Long userId : userIds) {
-            deleteByIdWithCascade(userId);
-        }
-        log.info("Batch deleted {} users", userIds.size());
-    }
-
-    @Override
-    @Transactional
-    public void batchUpdateDisable(List<Long> userIds, Boolean disable) {
-        if (userIds == null || userIds.isEmpty()) {
-            return;
-        }
-        for (Long userId : userIds) {
-            UserDO userDO = new UserDO();
-            userDO.setId(userId);
-            userDO.setDisable(disable);
-            userMapper.updateById(userDO);
-        }
-        log.info("Batch updated disable={} for {} users", disable, userIds.size());
-    }
-
-    @Override
-    @Transactional
-    public void batchUpdateRole(List<Long> userIds, Long roleId) {
-        if (userIds == null || userIds.isEmpty()) {
-            return;
-        }
-        for (Long userId : userIds) {
-            UserDO userDO = new UserDO();
-            userDO.setId(userId);
-            userDO.setRoleId(roleId);
-            userMapper.updateById(userDO);
-        }
-        log.info("Batch updated roleId={} for {} users", roleId, userIds.size());
-    }
-
-    @Override
-    @Transactional
-    public void batchUpdateRole(List<Long> userIds, RoleType roleType) {
-        if (userIds == null || userIds.isEmpty()) {
-            return;
-        }
-        RoleDO role = roleMapper.selectByName(roleType.getName());
-        if (role == null) {
-            throw new GlobalException("角色不存在: " + roleType.getName());
-        }
-        for (Long userId : userIds) {
-            UserDO userDO = new UserDO();
-            userDO.setId(userId);
-            userDO.setRoleId(role.getId());
-            userMapper.updateById(userDO);
-        }
-        log.info("Batch updated role={} for {} users", roleType.getName(), userIds.size());
     }
 
     @Override

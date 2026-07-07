@@ -9,14 +9,14 @@ import com.bluenet.web.domain.model.enumerate.RoleType;
 import com.bluenet.web.domain.model.entity.AssessmentTime;
 import com.bluenet.web.domain.model.entity.User;
 import com.bluenet.web.domain.model.vo.AssessmentDecisionVO;
+import com.bluenet.web.domain.model.entity.Role;
+import com.bluenet.web.domain.repository.RoleRepository;
 import com.bluenet.web.domain.repository.UserRepository;
 import com.bluenet.web.infrastructure.security.principal.RoleTypeResolver;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 /**
  * 考核决策发布服务。
@@ -30,6 +30,7 @@ import java.util.List;
 public class AssessmentDecisionPublicationService {
 
     private final UserRepository userRepository;
+    private final RoleRepository roleRepository;
     private final MessageDispatcher messageDispatcher;
     private final AssessmentDecisionNotificationTemplate notificationTemplate;
     private final RoleTypeResolver roleTypeResolver;
@@ -51,7 +52,11 @@ public class AssessmentDecisionPublicationService {
                 .orElseThrow(() -> new DataNotFound("用户不存在，ID: " + decision.getUserId()));
 
         if (shouldPromoteToMember(decision, assessmentTime, user)) {
-            userRepository.batchUpdateRole(List.of(user.getId()), RoleType.MEMBER);
+            Long memberRoleId = roleRepository.findByName(RoleType.MEMBER.getName())
+                    .map(Role::getId)
+                    .orElseThrow(() -> new DataNotFound("角色不存在: " + RoleType.MEMBER.getName()));
+            user.setRoleId(memberRoleId);
+            userRepository.save(user);
             log.info("考生 {} 通过全局最终考核，角色已升级为 MEMBER", user.getId());
         }
 

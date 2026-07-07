@@ -100,6 +100,90 @@ public class User {
     }
 
     /**
+     * 更新用户头像文件关联
+     *
+     * @param avatarId
+     *            头像文件标识
+     */
+    public void updateAvatar(Long avatarId) {
+        if (avatarId == null) {
+            throw new IllegalArgumentException("头像文件ID不能为空");
+        }
+        this.avatarId = avatarId;
+    }
+
+    /**
+     * 更新用户微信二维码文件关联
+     *
+     * @param qrcodeId
+     *            二维码文件标识，null 表示清空
+     */
+    public void updateQrcodeId(Long qrcodeId) {
+        this.qrcodeId = qrcodeId;
+    }
+
+    /**
+     * 更新用户个人资料字段（仅更新非 null 字段）
+     *
+     * @param username
+     *            用户姓名或登录名
+     * @param nickname
+     *            用户昵称
+     * @param collegeId
+     *            学院标识
+     * @param major
+     *            专业名称
+     * @param direction
+     *            技术方向
+     * @param gender
+     *            性别
+     * @param bio
+     *            个人简介
+     * @param qrcodeId
+     *            二维码文件标识，null 表示不更新
+     */
+    public void updateProfile(String username, String nickname, Long collegeId,
+            String major, Direction direction, Gender gender, String bio, Long qrcodeId) {
+        if (username != null) {
+            this.username = username;
+        }
+        if (nickname != null) {
+            this.nickname = nickname;
+        }
+        if (collegeId != null) {
+            this.collegeId = collegeId;
+        }
+        if (major != null) {
+            this.major = major;
+        }
+        if (direction != null) {
+            this.direction = direction;
+        }
+        if (gender != null) {
+            this.gender = gender;
+        }
+        if (bio != null) {
+            this.bio = bio;
+        }
+        if (qrcodeId != null) {
+            this.qrcodeId = qrcodeId;
+        }
+    }
+
+    /**
+     * 变更用户邮箱地址
+     *
+     * @param newEmail
+     *            新的邮箱地址
+     */
+    public void changeEmail(String newEmail) {
+        if (newEmail == null || newEmail.isBlank()) {
+            throw new IllegalArgumentException("邮箱不能为空");
+        }
+        this.email = newEmail;
+    }
+
+    /**
      * 管理员重置用户密码（需二次确认）
      *
      * @param newPassword

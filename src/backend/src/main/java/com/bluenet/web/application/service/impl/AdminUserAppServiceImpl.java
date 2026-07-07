@@ -57,7 +57,7 @@ public class AdminUserAppServiceImpl implements AdminUserAppService {
 
     @Override
     public AdminUserResult.Detail getUserDetail(Long userId) {
-        User user = userRepository.findEntityById(userId)
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new DataNotFound("用户不存在"));
         UserRepository.UserStatistics stats = userRepository.getStatistics(userId);
         return toDetail(user, stats);
@@ -66,7 +66,7 @@ public class AdminUserAppServiceImpl implements AdminUserAppService {
     @Override
     @Transactional
     public void updateUser(AdminUserCommands.UpdateUserCommand command) {
-        User user = userRepository.findEntityById(command.userId())
+        User user = userRepository.findById(command.userId())
                 .orElseThrow(() -> new DataNotFound("用户不存在"));
         user.updateAdminFields(
                 command.roleId(),
@@ -81,35 +81,22 @@ public class AdminUserAppServiceImpl implements AdminUserAppService {
                 command.major(),
                 command.gender(),
                 command.assessmentGradeYear());
-        userRepository.updateAdminFields(
-                command.userId(),
-                command.roleId(),
-                command.direction(),
-                command.disable(),
-                command.job(),
-                command.studentId(),
-                command.email(),
-                command.username(),
-                command.nickname(),
-                command.collegeId(),
-                command.major(),
-                command.gender(),
-                command.assessmentGradeYear());
+        userRepository.save(user);
     }
 
     @Override
     @Transactional
     public void resetPassword(AdminUserCommands.ResetPasswordCommand command) {
-        User user = userRepository.findEntityById(command.userId())
+        User user = userRepository.findById(command.userId())
                 .orElseThrow(() -> new DataNotFound("用户不存在"));
         user.resetPassword(command.newPassword(), command.confirmPassword());
-        userRepository.updatePassword(command.userId(), passwordEncoder.encode(user.getPassword()));
+        userRepository.save(user);
     }
 
     @Override
     @Transactional
     public void deleteUser(Long userId) {
-        User user = userRepository.findEntityById(userId)
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new DataNotFound("用户不存在"));
         preventProtectedUserDeletion(user);
         userRepository.deleteByIdWithCascade(userId);
@@ -120,32 +107,47 @@ public class AdminUserAppServiceImpl implements AdminUserAppService {
     public void batchDelete(AdminUserCommands.BatchOperateCommand command) {
         validateBatchSize(command.userIds());
         for (Long userId : command.userIds()) {
-            User user = userRepository.findEntityById(userId).orElse(null);
+            User user = userRepository.findById(userId).orElse(null);
             if (user != null) {
                 preventProtectedUserDeletion(user);
+                userRepository.deleteByIdWithCascade(userId);
             }
         }
-        userRepository.batchDeleteByIds(command.userIds());
     }
 
     @Override
     @Transactional
     public void batchDisable(AdminUserCommands.BatchOperateCommand command, Boolean disable) {
         validateBatchSize(command.userIds());
+        List<User> usersToUpdate = new java.util.ArrayList<>();
         for (Long userId : command.userIds()) {
-            User user = userRepository.findEntityById(userId).orElse(null);
+            User user = userRepository.findById(userId).orElse(null);
             if (user != null) {
                 preventSuperAdminModification(user);
+                user.setDisable(disable);
+                usersToUpdate.add(user);
             }
         }
-        userRepository.batchUpdateDisable(command.userIds(), disable);
+        if (!usersToUpdate.isEmpty()) {
+            userRepository.saveAll(usersToUpdate);
+        }
     }
 
     @Override
     @Transactional
     public void batchUpdateRole(AdminUserCommands.BatchUpdateRoleCommand command) {
         validateBatchSize(command.userIds());
-        userRepository.batchUpdateRole(command.userIds(), command.roleId());
+        List<User> usersToUpdate = new java.util.ArrayList<>();
+        for (Long userId : command.userIds()) {
+            User user = userRepository.findById(userId).orElse(null);
+            if (user != null) {
+                user.setRoleId(command.roleId());
+                usersToUpdate.add(user);
+            }
+        }
+        if (!usersToUpdate.isEmpty()) {
+            userRepository.saveAll(usersToUpdate);
+        }
     }
 
     @Override

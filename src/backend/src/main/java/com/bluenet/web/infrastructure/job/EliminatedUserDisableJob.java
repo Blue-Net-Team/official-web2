@@ -1,5 +1,6 @@
 package com.bluenet.web.infrastructure.job;
 
+import com.bluenet.web.domain.model.entity.User;
 import com.bluenet.web.domain.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -50,7 +51,14 @@ public class EliminatedUserDisableJob {
 
         for (Long userId : userIds) {
             try {
-                userRepository.batchUpdateDisable(List.of(userId), true);
+                User user = userRepository.findById(userId).orElse(null);
+                if (user == null) {
+                    failureCount++;
+                    log.warn("禁用淘汰考生账号失败，用户不存在: userId={}", userId);
+                    continue;
+                }
+                user.setDisable(true);
+                userRepository.save(user);
                 successCount++;
                 log.info("已禁用淘汰考生账号: userId={}", userId);
             } catch (Exception e) {
