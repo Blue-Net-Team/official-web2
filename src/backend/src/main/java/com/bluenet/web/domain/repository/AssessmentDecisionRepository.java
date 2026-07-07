@@ -1,7 +1,6 @@
 package com.bluenet.web.domain.repository;
 
 import com.bluenet.web.domain.model.entity.AssessmentDecision;
-import com.bluenet.web.domain.model.vo.AssessmentDecisionVO;
 
 import java.util.List;
 import java.util.Optional;
@@ -26,7 +25,7 @@ public interface AssessmentDecisionRepository {
      *            业务记录主键。
      * @return 查询到的考核最终决策 结果；不存在时为空。
      */
-    Optional<AssessmentDecisionVO> findById(Long id);
+    Optional<AssessmentDecision> findById(Long id);
 
     /**
      * 更新已有考核最终决策 记录。
@@ -34,7 +33,7 @@ public interface AssessmentDecisionRepository {
      * @param decision
      *            考核最终决策对象。
      */
-    void update(AssessmentDecisionVO decision);
+    void update(AssessmentDecision decision);
 
     /**
      * 按用户和考核场次查询对应记录。
@@ -45,7 +44,7 @@ public interface AssessmentDecisionRepository {
      *            考核场次主键。
      * @return 查询到的考核最终决策 结果；不存在时为空。
      */
-    Optional<AssessmentDecisionVO> findByUserIdAndAssessmentTimeId(Long userId, Long assessmentTimeId);
+    Optional<AssessmentDecision> findByUserIdAndAssessmentTimeId(Long userId, Long assessmentTimeId);
 
     /**
      * 查询指定考核场次下的记录列表。
@@ -54,7 +53,7 @@ public interface AssessmentDecisionRepository {
      *            考核场次主键。
      * @return 满足条件的考核最终决策 结果集合。
      */
-    List<AssessmentDecisionVO> findByAssessmentTimeId(Long assessmentTimeId);
+    List<AssessmentDecision> findByAssessmentTimeId(Long assessmentTimeId);
 
     /**
      * 查询指定用户的所有淘汰决策记录（passed = false）。
@@ -63,5 +62,5 @@ public interface AssessmentDecisionRepository {
      *            用户主键。
      * @return 该用户的淘汰决策列表；无记录时返回空列表。
      */
-    List<AssessmentDecisionVO> findEliminatedDecisionsByUserId(Long userId);
+    List<AssessmentDecision> findEliminatedDecisionsByUserId(Long userId);
 }

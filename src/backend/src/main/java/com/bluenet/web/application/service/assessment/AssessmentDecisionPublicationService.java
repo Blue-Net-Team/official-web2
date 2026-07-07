@@ -6,9 +6,9 @@ import com.bluenet.web.application.message.template.AssessmentDecisionNotificati
 import com.bluenet.web.domain.exception.DataNotFound;
 import com.bluenet.web.domain.model.enumerate.MessageChannel;
 import com.bluenet.web.domain.model.enumerate.RoleType;
+import com.bluenet.web.domain.model.entity.AssessmentDecision;
 import com.bluenet.web.domain.model.entity.AssessmentTime;
 import com.bluenet.web.domain.model.entity.User;
-import com.bluenet.web.domain.model.vo.AssessmentDecisionVO;
 import com.bluenet.web.domain.model.entity.Role;
 import com.bluenet.web.domain.repository.RoleRepository;
 import com.bluenet.web.domain.repository.UserRepository;
@@ -47,7 +47,7 @@ public class AssessmentDecisionPublicationService {
      *            考核时间
      */
     @Transactional
-    public void publish(AssessmentDecisionVO decision, AssessmentTime assessmentTime) {
+    public void publish(AssessmentDecision decision, AssessmentTime assessmentTime) {
         User user = userRepository.findById(decision.getUserId())
                 .orElseThrow(() -> new DataNotFound("用户不存在，ID: " + decision.getUserId()));
 
@@ -66,7 +66,7 @@ public class AssessmentDecisionPublicationService {
     /**
      * 判断是否需要将考生升级为组员。
      */
-    private boolean shouldPromoteToMember(AssessmentDecisionVO decision, AssessmentTime assessmentTime, User user) {
+    private boolean shouldPromoteToMember(AssessmentDecision decision, AssessmentTime assessmentTime, User user) {
         return assessmentTime.isGlobalFinalAssessment()
                 && Boolean.TRUE.equals(decision.getPassed())
                 && RoleType.CANDIDATE == roleTypeResolver.resolve(user.getRoleId());
@@ -75,7 +75,7 @@ public class AssessmentDecisionPublicationService {
     /**
      * 发送决策结果邮件。
      */
-    private void sendDecisionEmail(User user, AssessmentTime assessmentTime, AssessmentDecisionVO decision) {
+    private void sendDecisionEmail(User user, AssessmentTime assessmentTime, AssessmentDecision decision) {
         if (user.getEmail() == null || user.getEmail().isBlank()) {
             log.warn("跳过无邮箱用户：userId={}", user.getId());
             return;

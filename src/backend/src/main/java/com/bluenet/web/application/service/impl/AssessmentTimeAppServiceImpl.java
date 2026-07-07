@@ -12,7 +12,7 @@ import com.bluenet.web.domain.model.entity.AssessmentTime;
 import com.bluenet.web.domain.model.enumerate.Direction;
 import com.bluenet.web.domain.model.enumerate.RoleType;
 import com.bluenet.web.domain.model.policy.RoleHierarchy;
-import com.bluenet.web.domain.model.vo.AssessmentDecisionVO;
+import com.bluenet.web.domain.model.entity.AssessmentDecision;
 import com.bluenet.web.domain.model.entity.User;
 import com.bluenet.web.infrastructure.security.principal.RoleTypeResolver;
 import com.bluenet.web.domain.repository.AssessmentAnswerRepository;
@@ -267,11 +267,11 @@ public class AssessmentTimeAppServiceImpl implements AssessmentTimeAppService {
         Map<Long, Integer> completedQuestionCounts = assessmentAnswerRepository
                 .countByUserIdAndAssessmentTimeIds(currentUser.getId(), assessmentTimeIds);
 
-        List<AssessmentDecisionVO> eliminatedDecisions = isCandidate
+        List<AssessmentDecision> eliminatedDecisions = isCandidate
                 ? assessmentDecisionRepository.findEliminatedDecisionsByUserId(currentUser.getId())
                 : List.of();
         List<Long> decisionTimeIds = eliminatedDecisions.stream()
-                .map(AssessmentDecisionVO::getAssessmentTimeId)
+                .map(AssessmentDecision::getAssessmentTimeId)
                 .distinct()
                 .toList();
         Map<Long, AssessmentTime> decisionTimeMap = assessmentTimeRepository.findAllById(decisionTimeIds)

@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 /**
  * Stores the final pass decision for one candidate in one assessment time.
@@ -104,5 +105,33 @@ public class AssessmentDecision {
             LocalDateTime decidedAt, LocalDateTime updatedAt) {
         return new AssessmentDecision(id, userId, assessmentTimeId, passed, decidedBy,
                 decisionComment, decidedAt, updatedAt);
+    }
+
+    /**
+     * 更新决策结果（用于覆盖已有决策）。
+     *
+     * @param passed
+     *            是否通过
+     * @param decidedBy
+     *            决策人标识
+     * @param decisionComment
+     *            决策说明
+     */
+    public void updatePassed(Boolean passed, Long decidedBy, String decisionComment) {
+        this.passed = Objects.requireNonNull(passed, "passed 不能为空");
+        this.decidedBy = decidedBy;
+        this.decisionComment = decisionComment;
+        LocalDateTime now = LocalDateTime.now();
+        this.decidedAt = now;
+        this.updatedAt = now;
+    }
+
+    /**
+     * 将新决策标记为已决策，设置决策时间和更新时间。
+     */
+    public void decideNow() {
+        LocalDateTime now = LocalDateTime.now();
+        this.decidedAt = now;
+        this.updatedAt = now;
     }
 }

@@ -7,6 +7,7 @@
 - Task 3（Comment 聚合重构）已全部完成：`CommentRepository` 返回 `Comment` Entity；`Comment` Entity 承载更新/删除权限校验与防重复评论逻辑；`CommentAppServiceImpl` 直接调用 Repository；`CommentDomainService` 与 `CommentVO` 已删除。
 - Task 4（UserExperience 聚合清理）已全部完成：`MemberAppServiceImpl.getMemberExperiences` 直接调用 `UserExperienceRepository`；`UserExperienceDomainService` 与 `ExperienceVO` 已删除。
 - Task 5（AssessmentJudgement 拆分）已全部完成：`AssessmentJudgementRepository` 返回 `AssessmentJudgement` Entity；`AssessmentJudgementAppServiceImpl` / `AssessmentAnswerAppServiceImpl` / `AlgorithmJudgeAppServiceImpl` 直接调用 Repository；`AssessmentJudgementDomainService` 仅保留 `finalizeJudgement`；`AssessmentJudgementVO` 已删除；已补充单元/集成测试。
+- Task 6（AssessmentDecision 清理）已全部完成：`AssessmentDecisionRepository` 返回 `AssessmentDecision` Entity；`AssessmentDecision` Entity 增加 `updatePassed(...)` / `decideNow()`；`AssessmentDecisionDomainService` 仅保留 `isEliminatedFromPriorEpoch`；CRUD 下沉到 `AssessmentJudgementAppServiceImpl` 直接调用 Repository；`AssessmentDecisionPublicationService` 改为接收 `AssessmentDecision` Entity；`AssessmentDecisionVO` 已删除。
 
 **测试策略调整**：
 本次重构涉及所有模块，大量旧测试依赖即将删除的 `*VO`、`@WithUserVO`、透传型 `DomainService` 以及旧的 Repository 返回类型。继续维护这些测试会在每个子任务中产生高昂的同步成本，因此决定：
@@ -118,14 +119,14 @@
 
 #### 实现步骤
 
-- [ ] 6.1 改造 `AssessmentDecisionRepository` 返回 `AssessmentDecision` Entity
-- [ ] 6.2 `AssessmentDecision` Entity 增加 `updatePassed(...)` 等方法
-- [ ] 6.3 迁移 `AssessmentDecisionDomainService` 中的 CRUD 到 AppService/Repository
-- [ ] 6.4 保留 `isEliminatedFromPriorEpoch` 在 `AssessmentDecisionDomainService`
-- [ ] 6.5 改造 `AssessmentDecisionPublicationService`：使用 `User` Entity 和 `RoleTypeResolver`
-- [ ] 6.6 迁移 `AssessmentQuestionAppServiceImpl`、`AssessmentTimeAppServiceImpl` 等引用点
-- [ ] 6.7 删除 `AssessmentDecisionVO`
-- [ ] 6.8 编译通过
+- [x] 6.1 改造 `AssessmentDecisionRepository` 返回 `AssessmentDecision` Entity
+- [x] 6.2 `AssessmentDecision` Entity 增加 `updatePassed(...)` 等方法
+- [x] 6.3 迁移 `AssessmentDecisionDomainService` 中的 CRUD 到 AppService/Repository
+- [x] 6.4 保留 `isEliminatedFromPriorEpoch` 在 `AssessmentDecisionDomainService`
+- [x] 6.5 改造 `AssessmentDecisionPublicationService`：使用 `User` Entity 和 `RoleTypeResolver`
+- [x] 6.6 迁移 `AssessmentQuestionAppServiceImpl`、`AssessmentTimeAppServiceImpl` 等引用点
+- [x] 6.7 删除 `AssessmentDecisionVO`
+- [x] 6.8 编译通过
 
 ***
 

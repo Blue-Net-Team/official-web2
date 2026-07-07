@@ -16,7 +16,6 @@ import com.bluenet.web.domain.model.vo.AssessmentCandidateQuestionScoreVO;
 import com.bluenet.web.domain.model.vo.AssessmentCandidateScoreboardVO;
 import com.bluenet.web.domain.model.vo.AssessmentDecisionCandidateVO;
 import com.bluenet.web.domain.model.vo.AssessmentDecisionStatisticsVO;
-import com.bluenet.web.domain.model.vo.AssessmentDecisionVO;
 import com.bluenet.web.domain.model.entity.AssessmentJudgement;
 import com.bluenet.web.domain.model.vo.AssessmentDecisionWorkspaceVO;
 import com.bluenet.web.domain.model.vo.AssessmentQuestionScoreboardVO;
@@ -265,24 +264,6 @@ public class AssessmentJudgementResponseConverter {
                 .reviewerId(judgement.getReviewerId())
                 .reviewerType(judgement.getReviewerType())
                 .judgedAt(judgement.getJudgedAt())
-                .build();
-    }
-
-    /**
-     * 将决策 VO 转换为接口 DTO
-     */
-    public AssessmentDecisionDTO convertToDTO(AssessmentDecisionVO decision) {
-        if (decision == null) {
-            return null;
-        }
-        return AssessmentDecisionDTO.builder()
-                .id(decision.getId())
-                .userId(decision.getUserId())
-                .assessmentTimeId(decision.getAssessmentTimeId())
-                .passed(decision.getPassed())
-                .decidedBy(decision.getDecidedBy())
-                .decisionComment(decision.getDecisionComment())
-                .decidedAt(decision.getDecidedAt())
                 .build();
     }
 

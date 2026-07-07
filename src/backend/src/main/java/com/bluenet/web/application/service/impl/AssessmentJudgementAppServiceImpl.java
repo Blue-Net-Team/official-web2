@@ -15,6 +15,7 @@ import com.bluenet.web.domain.model.enumerate.QuestionType;
 import com.bluenet.web.domain.model.enumerate.ReviewerType;
 import com.bluenet.web.domain.model.enumerate.RoleType;
 import com.bluenet.web.domain.model.entity.AssessmentAnswer;
+import com.bluenet.web.domain.model.entity.AssessmentDecision;
 import com.bluenet.web.domain.model.entity.AssessmentJudgement;
 import com.bluenet.web.domain.model.entity.AssessmentTeam;
 import com.bluenet.web.domain.model.vo.AssessmentCandidateScoreRowVO;
@@ -22,7 +23,6 @@ import com.bluenet.web.domain.model.vo.AssessmentCandidateScoreboardVO;
 import com.bluenet.web.domain.model.vo.AssessmentCandidateQuestionScoreVO;
 import com.bluenet.web.domain.model.vo.AssessmentDecisionCandidateVO;
 import com.bluenet.web.domain.model.vo.AssessmentDecisionStatisticsVO;
-import com.bluenet.web.domain.model.vo.AssessmentDecisionVO;
 import com.bluenet.web.domain.model.vo.AssessmentDecisionWorkspaceVO;
 import com.bluenet.web.domain.model.vo.AssessmentQuestionScoreboardVO;
 import com.bluenet.web.domain.model.vo.AssessmentQuestionSubmissionHistoryVO;
@@ -329,14 +329,25 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
             throw new Forbidden("只有方向管理员及以上权限可以设置最终通过决策");
         }
 
-        AssessmentDecisionVO decision = AssessmentDecisionVO.builder()
-                .userId(command.userId())
-                .assessmentTimeId(command.assessmentTimeId())
-                .passed(command.passed())
-                .decidedBy(currentUser.getId())
-                .decisionComment(command.decisionComment())
-                .build();
-        AssessmentDecisionResult result = toDecisionResult(assessmentDecisionDomainService.saveDecision(decision));
+        AssessmentDecision decision = assessmentDecisionRepository
+                .findByUserIdAndAssessmentTimeId(command.userId(), command.assessmentTimeId())
+                .map(existing -> {
+                    existing.updatePassed(command.passed(), currentUser.getId(), command.decisionComment());
+                    assessmentDecisionRepository.update(existing);
+                    return existing;
+                })
+                .orElseGet(() -> {
+                    AssessmentDecision created = AssessmentDecision.create(
+                            command.userId(),
+                            command.assessmentTimeId(),
+                            command.passed(),
+                            currentUser.getId(),
+                            command.decisionComment());
+                    created.decideNow();
+                    assessmentDecisionRepository.save(created);
+                    return created;
+                });
+        AssessmentDecisionResult result = toDecisionResult(decision);
 
         AssessmentTime assessmentTime = assessmentTimeRepository.findById(command.assessmentTimeId())
                 .orElseThrow(() -> new DataNotFound("考核时间不存在，ID: " + command.assessmentTimeId()));
@@ -435,10 +446,10 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
                                 scoreboard.getCandidateUserId(),
                                 assessmentTime))
                 .toList();
-        Map<Long, AssessmentDecisionVO> decisions = assessmentDecisionRepository
+        Map<Long, AssessmentDecision> decisions = assessmentDecisionRepository
                 .findByAssessmentTimeId(assessmentTimeId)
                 .stream()
-                .collect(Collectors.toMap(AssessmentDecisionVO::getUserId, Function.identity()));
+                .collect(Collectors.toMap(AssessmentDecision::getUserId, Function.identity()));
 
         List<AssessmentDecisionCandidateVO> candidates = scoreboards.stream()
                 .map(
@@ -477,13 +488,13 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
             assessmentTimeRepository.update(assessmentTime);
         }
 
-        List<AssessmentDecisionVO> decisions = assessmentDecisionRepository
+        List<AssessmentDecision> decisions = assessmentDecisionRepository
                 .findByAssessmentTimeId(assessmentTimeId)
                 .stream()
                 .filter(d -> d.getPassed() != null)
                 .toList();
         int sentCount = 0;
-        for (AssessmentDecisionVO decision : decisions) {
+        for (AssessmentDecision decision : decisions) {
             try {
                 publicationService.publish(decision, assessmentTime);
                 sentCount++;
@@ -686,7 +697,7 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
      */
     private AssessmentDecisionCandidateVO convertDecisionCandidate(
             AssessmentCandidateScoreboardVO scoreboard,
-            AssessmentDecisionVO decision) {
+            AssessmentDecision decision) {
         return AssessmentDecisionCandidateVO.builder()
                 .candidateUserId(scoreboard.getCandidateUserId())
                 .studentId(scoreboard.getStudentId())
@@ -713,7 +724,7 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
      */
     private AssessmentDecisionStatisticsVO calculateDecisionStatistics(
             List<AssessmentCandidateScoreboardVO> scoreboards,
-            Map<Long, AssessmentDecisionVO> decisions) {
+            Map<Long, AssessmentDecision> decisions) {
         long candidates = scoreboards.size();
         long passed = scoreboards.stream()
                 .map(scoreboard -> decisions.get(scoreboard.getCandidateUserId()))
@@ -804,7 +815,7 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
                 entity.getJudgedAt());
     }
 
-    private AssessmentDecisionResult toDecisionResult(AssessmentDecisionVO decision) {
+    private AssessmentDecisionResult toDecisionResult(AssessmentDecision decision) {
         if (decision == null) {
             return null;
         }
