@@ -89,7 +89,11 @@ public class AdminUserAppServiceImpl implements AdminUserAppService {
     public void resetPassword(AdminUserCommands.ResetPasswordCommand command) {
         User user = userRepository.findById(command.userId())
                 .orElseThrow(() -> new DataNotFound("用户不存在"));
-        user.resetPassword(command.newPassword(), command.confirmPassword());
+        if (!command.newPassword().equals(command.confirmPassword())) {
+            throw new IllegalArgumentException("两次输入的密码不一致");
+        }
+        String encodedPassword = passwordEncoder.encode(command.newPassword());
+        user.changePassword(encodedPassword);
         userRepository.save(user);
     }
 
