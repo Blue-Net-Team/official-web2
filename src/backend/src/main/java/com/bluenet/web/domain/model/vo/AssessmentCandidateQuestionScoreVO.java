@@ -1,5 +1,6 @@
 package com.bluenet.web.domain.model.vo;
 
+import com.bluenet.web.domain.model.entity.AssessmentJudgement;
 import com.bluenet.web.domain.model.enumerate.QuestionType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -27,5 +28,5 @@ public class AssessmentCandidateQuestionScoreVO {
     private LocalDateTime submitTime;
     private BigDecimal score;
     private Boolean judged;
-    private AssessmentJudgementVO latestJudgement;
+    private AssessmentJudgement latestJudgement;
 }

@@ -16,7 +16,7 @@ import com.bluenet.web.domain.model.enumerate.JudgementStatus;
 import com.bluenet.web.domain.model.enumerate.ObjectiveResultCode;
 import com.bluenet.web.domain.model.enumerate.QuestionType;
 import com.bluenet.web.domain.model.enumerate.RoleType;
-import com.bluenet.web.domain.model.vo.AssessmentJudgementVO;
+import com.bluenet.web.domain.model.entity.AssessmentJudgement;
 import com.bluenet.web.domain.model.entity.AssessmentQuestion;
 import com.bluenet.web.domain.model.entity.AssessmentTime;
 import com.bluenet.web.domain.model.vo.FileVO;
@@ -29,8 +29,8 @@ import com.bluenet.web.domain.repository.AssessmentAnswerRepository;
 import com.bluenet.web.domain.repository.AssessmentSessionRepository;
 import com.bluenet.web.domain.repository.AssessmentTeamRepository;
 import com.bluenet.web.application.service.CommentAppService;
+import com.bluenet.web.domain.repository.AssessmentJudgementRepository;
 import com.bluenet.web.domain.service.AssessmentDecisionDomainService;
-import com.bluenet.web.domain.service.AssessmentJudgementDomainService;
 import com.bluenet.web.domain.repository.AssessmentQuestionRepository;
 import com.bluenet.web.domain.repository.AssessmentTimeRepository;
 import com.bluenet.web.domain.repository.UserRepository;
@@ -69,7 +69,7 @@ public class AssessmentAnswerAppServiceImpl implements AssessmentAnswerAppServic
     private final AssessmentQuestionRepository assessmentQuestionRepository;
     private final AssessmentTimeRepository assessmentTimeRepository;
     private final FileDomainService fileDomainService;
-    private final AssessmentJudgementDomainService assessmentJudgementDomainService;
+    private final AssessmentJudgementRepository assessmentJudgementRepository;
     private final AssessmentAnswerRepository assessmentAnswerRepository;
     private final AssessmentSessionRepository assessmentSessionRepository;
     private final AssessmentTeamRepository assessmentTeamRepository;
@@ -148,7 +148,7 @@ public class AssessmentAnswerAppServiceImpl implements AssessmentAnswerAppServic
                 command.questionId(),
                 entity.getId());
 
-        AssessmentJudgementVO judgement = judgeObjectiveAnswerIfNeeded(entity, question);
+        AssessmentJudgement judgement = judgeObjectiveAnswerIfNeeded(entity, question);
         AssessmentAnswerResult result = toResult(entity, judgement, java.util.Collections.emptyList());
         if (question.getQuestionType().isChoiceQuestion()) {
             return result.withJudgementErased();
@@ -236,7 +236,7 @@ public class AssessmentAnswerAppServiceImpl implements AssessmentAnswerAppServic
 
         log.info("update answer success for answer {}", updated.getId());
 
-        AssessmentJudgementVO judgement = judgeObjectiveAnswerIfNeeded(updated, question);
+        AssessmentJudgement judgement = judgeObjectiveAnswerIfNeeded(updated, question);
         AssessmentAnswerResult result = toResult(updated, judgement, java.util.Collections.emptyList());
         if (question.getQuestionType().isChoiceQuestion()) {
             return result.withJudgementErased();
@@ -299,7 +299,7 @@ public class AssessmentAnswerAppServiceImpl implements AssessmentAnswerAppServic
     }
 
     private AssessmentAnswerResult toAnswerResult(AssessmentAnswer answer, AssessmentQuestion question) {
-        AssessmentJudgementVO judgement = findLatestJudgement(answer);
+        AssessmentJudgement judgement = findLatestJudgement(answer);
         List<com.bluenet.web.application.CommentResult> comments = commentAppService
                 .listComments(answer.getId());
         AssessmentAnswerResult result = toResult(answer, judgement, comments);
@@ -363,7 +363,7 @@ public class AssessmentAnswerAppServiceImpl implements AssessmentAnswerAppServic
         }
     }
 
-    private AssessmentJudgementVO judgeObjectiveAnswerIfNeeded(AssessmentAnswer answer, AssessmentQuestion question) {
+    private AssessmentJudgement judgeObjectiveAnswerIfNeeded(AssessmentAnswer answer, AssessmentQuestion question) {
         if (question.getQuestionType() == QuestionType.SINGLE_CHOICE) {
             return judgeSingleChoice(answer, question);
         }
@@ -373,7 +373,7 @@ public class AssessmentAnswerAppServiceImpl implements AssessmentAnswerAppServic
         return findLatestJudgement(answer);
     }
 
-    private AssessmentJudgementVO judgeSingleChoice(AssessmentAnswer answer, AssessmentQuestion question) {
+    private AssessmentJudgement judgeSingleChoice(AssessmentAnswer answer, AssessmentQuestion question) {
         if (!(question.getContent()instanceof SingleChoiceContent content)) {
             throw new GlobalException("单选题内容配置错误");
         }
@@ -381,7 +381,7 @@ public class AssessmentAnswerAppServiceImpl implements AssessmentAnswerAppServic
         return createAutomaticJudgement(answer, question, accepted ? ObjectiveResultCode.AC : ObjectiveResultCode.WA);
     }
 
-    private AssessmentJudgementVO judgeMultipleChoice(AssessmentAnswer answer, AssessmentQuestion question) {
+    private AssessmentJudgement judgeMultipleChoice(AssessmentAnswer answer, AssessmentQuestion question) {
         if (!(question.getContent()instanceof MultipleChoiceContent content)) {
             throw new GlobalException("多选题内容配置错误");
         }
@@ -391,33 +391,32 @@ public class AssessmentAnswerAppServiceImpl implements AssessmentAnswerAppServic
         return createAutomaticJudgement(answer, question, accepted ? ObjectiveResultCode.AC : ObjectiveResultCode.WA);
     }
 
-    private AssessmentJudgementVO createAutomaticJudgement(
+    private AssessmentJudgement createAutomaticJudgement(
             AssessmentAnswer answer, AssessmentQuestion question, ObjectiveResultCode resultCode) {
         BigDecimal maxScore = question.getScore() == null ? BigDecimal.ZERO : question.getScore();
         BigDecimal score = resultCode == ObjectiveResultCode.AC ? maxScore : BigDecimal.ZERO;
-        AssessmentJudgementVO judgement = AssessmentJudgementVO.builder()
-                .answerId(answer.getId())
-                .questionId(question.getId())
-                .assessmentTimeId(question.getAssessmentTimeId())
-                .userId(answer.getUserId())
-                .score(score)
-                .maxScore(maxScore)
-                .status(JudgementStatus.JUDGED)
-                .resultCode(resultCode)
-                .source(JudgementSource.AUTO)
-                .build();
-        return assessmentJudgementDomainService.createJudgement(judgement);
+        AssessmentJudgement judgement = AssessmentJudgement.create(
+                answer.getId(),
+                question.getId(),
+                question.getAssessmentTimeId(),
+                answer.getUserId(),
+                score,
+                maxScore,
+                JudgementStatus.JUDGED,
+                resultCode,
+                JudgementSource.AUTO,
+                null,
+                null,
+                LocalDateTime.now());
+        assessmentJudgementRepository.save(judgement);
+        return judgement;
     }
 
-    private AssessmentJudgementVO findLatestJudgement(AssessmentAnswer answer) {
+    private AssessmentJudgement findLatestJudgement(AssessmentAnswer answer) {
         if (answer.getId() == null) {
             return null;
         }
-        try {
-            return assessmentJudgementDomainService.getLatestByAnswerId(answer.getId());
-        } catch (DataNotFound ignored) {
-            return null;
-        }
+        return assessmentJudgementRepository.findLatestByAnswerId(answer.getId()).orElse(null);
     }
 
     private Set<String> parseSubmittedMultipleChoiceAnswers(String answerContent) {
@@ -451,7 +450,7 @@ public class AssessmentAnswerAppServiceImpl implements AssessmentAnswerAppServic
         return answer == null ? "" : answer.trim();
     }
 
-    private AssessmentAnswerResult toResult(AssessmentAnswer answer, AssessmentJudgementVO judgement,
+    private AssessmentAnswerResult toResult(AssessmentAnswer answer, AssessmentJudgement judgement,
             List<com.bluenet.web.application.CommentResult> comments) {
         return new AssessmentAnswerResult(
                 answer.getId(),
@@ -464,7 +463,7 @@ public class AssessmentAnswerAppServiceImpl implements AssessmentAnswerAppServic
                 comments);
     }
 
-    private AssessmentJudgementResult toJudgementResult(AssessmentJudgementVO judgement) {
+    private AssessmentJudgementResult toJudgementResult(AssessmentJudgement judgement) {
         if (judgement == null) {
             return null;
         }

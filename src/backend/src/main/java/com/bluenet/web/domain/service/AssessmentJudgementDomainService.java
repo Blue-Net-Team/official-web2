@@ -1,76 +1,24 @@
 package com.bluenet.web.domain.service;
 
-import com.bluenet.web.domain.model.vo.AssessmentJudgementVO;
-
-import java.util.List;
+import com.bluenet.web.domain.model.entity.AssessmentJudgement;
 
 /**
  * 考核题目评判领域服务接口。
+ * <p>
+ * 仅保留需要并发原子性 upsert 的最终评分确认逻辑，CRUD 已下沉到实体和仓储。
+ * </p>
  */
 public interface AssessmentJudgementDomainService {
 
     /**
-     * 创建题目评判记录。
-     *
-     * @param judgement
-     *            评判记录VO
-     * @return 创建后的评判记录
-     */
-    AssessmentJudgementVO createJudgement(AssessmentJudgementVO judgement);
-
-    /**
-     * 更新题目评判记录。
-     *
-     * @param judgement
-     *            评判记录VO
-     * @return 更新后的评判记录
-     */
-    AssessmentJudgementVO updateJudgement(AssessmentJudgementVO judgement);
-
-    /**
-     * 查询评判记录详情。
-     *
-     * @param id
-     *            评判记录ID
-     * @return 评判记录
-     */
-    AssessmentJudgementVO getJudgementById(Long id);
-
-    /**
-     * 查询答案最新评判记录。
-     *
-     * @param answerId
-     *            答案ID
-     * @return 最新评判记录
-     */
-    AssessmentJudgementVO getLatestByAnswerId(Long answerId);
-
-    /**
-     * 查询考生在某道题上的最新评判记录。
-     *
-     * @param questionId
-     *            题目ID
-     * @param userId
-     *            考生用户ID
-     * @return 最新评判记录
-     */
-    AssessmentJudgementVO getLatestByQuestionIdAndUserId(Long questionId, Long userId);
-
-    /**
-     * 查询一道题下的全部评判记录。
-     *
-     * @param questionId
-     *            题目ID
-     * @return 评判记录列表
-     */
-    List<AssessmentJudgementVO> listByQuestionId(Long questionId);
-
-    /**
      * 方向管理员确认最终评分。
+     * <p>
+     * 利用数据库唯一索引实现原子性的 upsert，避免并发场景下重复插入。
+     * </p>
      *
      * @param judgement
-     *            评判记录VO，source 应为 ADMIN_FINALIZED
-     * @return 创建后的评判记录
+     *            评判记录实体，source 应为 ADMIN_FINALIZED
+     * @return 创建或更新后的评判记录
      */
-    AssessmentJudgementVO finalizeJudgement(AssessmentJudgementVO judgement);
+    AssessmentJudgement finalizeJudgement(AssessmentJudgement judgement);
 }

@@ -5,7 +5,6 @@ import com.bluenet.web.domain.model.entity.AssessmentJudgement;
 import com.bluenet.web.domain.model.enumerate.JudgementSource;
 import com.bluenet.web.domain.model.enumerate.QuestionType;
 import com.bluenet.web.domain.model.vo.AssessmentCandidateScoreRowVO;
-import com.bluenet.web.domain.model.vo.AssessmentJudgementVO;
 import com.bluenet.web.domain.model.vo.AssessmentQuestionScoreboardVO;
 import com.bluenet.web.domain.model.vo.AssessmentQuestionSubmissionHistoryVO;
 import com.bluenet.web.domain.model.vo.AssessmentQuestionSubmissionVO;
@@ -272,23 +271,24 @@ public class AssessmentJudgementRepositoryImpl implements AssessmentJudgementRep
      */
     private AssessmentQuestionSubmissionHistoryVO convertSubmissionHistoryToVO(
             AssessmentQuestionSubmissionQueryDO row) {
-        AssessmentJudgementVO judgement = null;
+        AssessmentJudgement judgement = null;
         if (row.getJudgementId() != null) {
-            judgement = AssessmentJudgementVO.builder()
-                    .id(row.getJudgementId())
-                    .answerId(row.getAnswerId())
-                    .questionId(row.getQuestionId())
-                    .assessmentTimeId(row.getAssessmentTimeId())
-                    .userId(row.getCandidateUserId())
-                    .score(row.getJudgementScore())
-                    .maxScore(row.getJudgementMaxScore())
-                    .status(row.getJudgementStatus())
-                    .resultCode(row.getResultCode())
-                    .source(row.getSource())
-                    .reviewerId(row.getReviewerId())
-                    .reviewerType(row.getReviewerType())
-                    .judgedAt(row.getJudgedAt())
-                    .build();
+            judgement = AssessmentJudgement.reconstruct(
+                    row.getJudgementId(),
+                    row.getAnswerId(),
+                    row.getQuestionId(),
+                    row.getAssessmentTimeId(),
+                    row.getCandidateUserId(),
+                    row.getJudgementScore(),
+                    row.getJudgementMaxScore(),
+                    row.getJudgementStatus(),
+                    row.getResultCode(),
+                    row.getSource(),
+                    row.getReviewerId(),
+                    row.getReviewerType(),
+                    row.getJudgedAt(),
+                    null,
+                    null);
         }
         return AssessmentQuestionSubmissionHistoryVO.builder()
                 .judgement(judgement)

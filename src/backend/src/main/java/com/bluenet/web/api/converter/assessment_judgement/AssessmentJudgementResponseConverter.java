@@ -17,8 +17,8 @@ import com.bluenet.web.domain.model.vo.AssessmentCandidateScoreboardVO;
 import com.bluenet.web.domain.model.vo.AssessmentDecisionCandidateVO;
 import com.bluenet.web.domain.model.vo.AssessmentDecisionStatisticsVO;
 import com.bluenet.web.domain.model.vo.AssessmentDecisionVO;
+import com.bluenet.web.domain.model.entity.AssessmentJudgement;
 import com.bluenet.web.domain.model.vo.AssessmentDecisionWorkspaceVO;
-import com.bluenet.web.domain.model.vo.AssessmentJudgementVO;
 import com.bluenet.web.domain.model.vo.AssessmentQuestionScoreboardVO;
 import com.bluenet.web.domain.model.vo.AssessmentQuestionSubmissionHistoryVO;
 import com.bluenet.web.domain.model.vo.AssessmentQuestionSubmissionVO;
@@ -245,9 +245,9 @@ public class AssessmentJudgementResponseConverter {
     }
 
     /**
-     * 将评判 VO 转换为接口 DTO
+     * 将评判实体转换为接口 DTO
      */
-    public AssessmentJudgementDTO convertToDTO(AssessmentJudgementVO judgement) {
+    public AssessmentJudgementDTO convertToDTO(AssessmentJudgement judgement) {
         if (judgement == null) {
             return null;
         }

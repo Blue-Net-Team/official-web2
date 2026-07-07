@@ -15,7 +15,7 @@ import com.bluenet.web.domain.model.enumerate.JudgeJobStatus;
 import com.bluenet.web.domain.model.enumerate.ProgrammingLanguage;
 import com.bluenet.web.domain.model.enumerate.QuestionType;
 import com.bluenet.web.domain.model.entity.AssessmentAnswer;
-import com.bluenet.web.domain.model.vo.AssessmentJudgementVO;
+import com.bluenet.web.domain.model.entity.AssessmentJudgement;
 import com.bluenet.web.domain.model.entity.AssessmentQuestion;
 import com.bluenet.web.domain.model.entity.AssessmentTime;
 import com.bluenet.web.domain.model.entity.User;
@@ -24,7 +24,7 @@ import com.bluenet.web.domain.repository.AlgorithmJudgeCaseResultRepository;
 import com.bluenet.web.domain.repository.AlgorithmJudgeJobRepository;
 import com.bluenet.web.domain.repository.AssessmentAnswerRepository;
 import com.bluenet.web.domain.repository.AssessmentSessionRepository;
-import com.bluenet.web.domain.service.AssessmentJudgementDomainService;
+import com.bluenet.web.domain.repository.AssessmentJudgementRepository;
 import com.bluenet.web.domain.repository.AssessmentQuestionRepository;
 import com.bluenet.web.domain.repository.AssessmentTimeRepository;
 import com.bluenet.web.infrastructure.judge.AlgorithmJudgeJobPublisher;
@@ -53,7 +53,7 @@ public class AlgorithmJudgeAppServiceImpl implements AlgorithmJudgeAppService {
     private final AssessmentQuestionRepository assessmentQuestionRepository;
     private final AssessmentTimeRepository assessmentTimeRepository;
 
-    private final AssessmentJudgementDomainService assessmentJudgementDomainService;
+    private final AssessmentJudgementRepository assessmentJudgementRepository;
     private final AssessmentAnswerRepository assessmentAnswerRepository;
     private final AssessmentSessionRepository assessmentSessionRepository;
     private final AlgorithmJudgeJobRepository algorithmJudgeJobRepository;
@@ -278,24 +278,25 @@ public class AlgorithmJudgeAppServiceImpl implements AlgorithmJudgeAppService {
         if (job.getAnswerId() == null || job.getStatus() != JudgeJobStatus.SUCCEEDED) {
             return null;
         }
-        try {
-            AssessmentJudgementVO judgement = assessmentJudgementDomainService.getLatestByAnswerId(job.getAnswerId());
-            return new AlgorithmJudgeResult.JudgementInfo(
-                    judgement.getId(),
-                    judgement.getAnswerId(),
-                    judgement.getQuestionId(),
-                    judgement.getAssessmentTimeId(),
-                    judgement.getUserId(),
-                    judgement.getScore(),
-                    judgement.getMaxScore(),
-                    judgement.getStatus(),
-                    judgement.getResultCode(),
-                    judgement.getSource(),
-                    judgement.getReviewerId(),
-                    judgement.getReviewerType(),
-                    judgement.getJudgedAt());
-        } catch (DataNotFound ignored) {
-            return null;
-        }
+        return assessmentJudgementRepository.findLatestByAnswerId(job.getAnswerId())
+                .map(this::toJudgementInfo)
+                .orElse(null);
+    }
+
+    private AlgorithmJudgeResult.JudgementInfo toJudgementInfo(AssessmentJudgement judgement) {
+        return new AlgorithmJudgeResult.JudgementInfo(
+                judgement.getId(),
+                judgement.getAnswerId(),
+                judgement.getQuestionId(),
+                judgement.getAssessmentTimeId(),
+                judgement.getUserId(),
+                judgement.getScore(),
+                judgement.getMaxScore(),
+                judgement.getStatus(),
+                judgement.getResultCode(),
+                judgement.getSource(),
+                judgement.getReviewerId(),
+                judgement.getReviewerType(),
+                judgement.getJudgedAt());
     }
 }

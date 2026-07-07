@@ -24,7 +24,6 @@ import com.bluenet.web.domain.model.vo.AssessmentDecisionCandidateVO;
 import com.bluenet.web.domain.model.vo.AssessmentDecisionStatisticsVO;
 import com.bluenet.web.domain.model.vo.AssessmentDecisionVO;
 import com.bluenet.web.domain.model.vo.AssessmentDecisionWorkspaceVO;
-import com.bluenet.web.domain.model.vo.AssessmentJudgementVO;
 import com.bluenet.web.domain.model.vo.AssessmentQuestionScoreboardVO;
 import com.bluenet.web.domain.model.vo.AssessmentQuestionSubmissionHistoryVO;
 import com.bluenet.web.domain.model.vo.AssessmentQuestionSubmissionVO;
@@ -145,7 +144,9 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
      */
     @Override
     public AssessmentJudgementResult getLatestByAnswerId(Long answerId) {
-        return toResult(assessmentJudgementDomainService.getLatestByAnswerId(answerId));
+        return assessmentJudgementRepository.findLatestByAnswerId(answerId)
+                .map(this::entityToResult)
+                .orElse(null);
     }
 
     /**
@@ -157,9 +158,9 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
      */
     @Override
     public List<AssessmentJudgementResult> listByQuestionId(Long questionId) {
-        return assessmentJudgementDomainService.listByQuestionId(questionId)
+        return assessmentJudgementRepository.findAllByQuestionId(questionId)
                 .stream()
-                .map(this::toResult)
+                .map(this::entityToResult)
                 .toList();
     }
 
@@ -231,20 +232,20 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
             User currentUser,
             RoleType roleType,
             LocalDateTime judgedAt) {
-        AssessmentJudgementVO judgement = AssessmentJudgementVO.builder()
-                .answerId(answer.getId())
-                .questionId(question.getId())
-                .assessmentTimeId(question.getAssessmentTimeId())
-                .userId(answer.getUserId())
-                .score(command.score())
-                .maxScore(question.getScore())
-                .status(JudgementStatus.JUDGED)
-                .source(JudgementSource.ADMIN_FINALIZED)
-                .reviewerId(currentUser.getId())
-                .reviewerType(resolveReviewerType(roleType))
-                .judgedAt(judgedAt)
-                .build();
-        return toResult(assessmentJudgementDomainService.finalizeJudgement(judgement));
+        AssessmentJudgement judgement = AssessmentJudgement.create(
+                answer.getId(),
+                question.getId(),
+                question.getAssessmentTimeId(),
+                answer.getUserId(),
+                command.score(),
+                question.getScore(),
+                JudgementStatus.JUDGED,
+                null,
+                JudgementSource.ADMIN_FINALIZED,
+                currentUser.getId(),
+                resolveReviewerType(roleType),
+                judgedAt);
+        return entityToResult(assessmentJudgementDomainService.finalizeJudgement(judgement));
     }
 
     /**
@@ -756,51 +757,32 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
     }
 
     /**
-     * 从考生评分行 VO 中提取评判信息转换为 VO。
+     * 从考生评分行 VO 中提取评判信息转换为实体。
      */
-    private AssessmentJudgementVO convertJudgementFromScoreRow(Long assessmentTimeId,
+    private AssessmentJudgement convertJudgementFromScoreRow(Long assessmentTimeId,
             AssessmentCandidateScoreRowVO row) {
         if (row.getJudgementId() == null) {
             return null;
         }
-        return AssessmentJudgementVO.builder()
-                .id(row.getJudgementId())
-                .answerId(row.getAnswerId())
-                .questionId(row.getQuestionId())
-                .assessmentTimeId(assessmentTimeId)
-                .userId(row.getCandidateUserId())
-                .score(row.getJudgementScore())
-                .maxScore(row.getJudgementMaxScore())
-                .status(row.getJudgementStatus())
-                .resultCode(row.getResultCode())
-                .source(row.getSource())
-                .reviewerId(row.getReviewerId())
-                .reviewerType(row.getReviewerType())
-                .judgedAt(row.getJudgedAt())
-                .build();
+        return AssessmentJudgement.reconstruct(
+                row.getJudgementId(),
+                row.getAnswerId(),
+                row.getQuestionId(),
+                assessmentTimeId,
+                row.getCandidateUserId(),
+                row.getJudgementScore(),
+                row.getJudgementMaxScore(),
+                row.getJudgementStatus(),
+                row.getResultCode(),
+                row.getSource(),
+                row.getReviewerId(),
+                row.getReviewerType(),
+                row.getJudgedAt(),
+                null,
+                null);
     }
 
     // ========== 结果转换 ==========
-
-    private AssessmentJudgementResult toResult(AssessmentJudgementVO judgement) {
-        if (judgement == null) {
-            return null;
-        }
-        return new AssessmentJudgementResult(
-                judgement.getId(),
-                judgement.getAnswerId(),
-                judgement.getQuestionId(),
-                judgement.getAssessmentTimeId(),
-                judgement.getUserId(),
-                judgement.getScore(),
-                judgement.getMaxScore(),
-                judgement.getStatus(),
-                judgement.getResultCode(),
-                judgement.getSource(),
-                judgement.getReviewerId(),
-                judgement.getReviewerType(),
-                judgement.getJudgedAt());
-    }
 
     private AssessmentJudgementResult entityToResult(AssessmentJudgement entity) {
         if (entity == null) {
