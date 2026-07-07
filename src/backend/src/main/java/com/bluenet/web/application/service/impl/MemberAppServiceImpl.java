@@ -1,15 +1,15 @@
 package com.bluenet.web.application.service.impl;
 
 import com.bluenet.web.application.MemberResult;
+import com.bluenet.web.application.UserExperienceResult;
 import com.bluenet.web.application.command.member.MemberCommands;
 import com.bluenet.web.application.service.MemberAppService;
 import com.bluenet.web.domain.exception.BadRequest;
 import com.bluenet.web.domain.exception.DataNotFound;
 import com.bluenet.web.domain.model.entity.Member;
 import com.bluenet.web.domain.model.enumerate.ExperienceType;
-import com.bluenet.web.domain.model.vo.ExperienceVO;
 import com.bluenet.web.domain.repository.MemberRepository;
-import com.bluenet.web.domain.service.UserExperienceDomainService;
+import com.bluenet.web.domain.repository.UserExperienceRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -17,6 +17,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.List;
 
@@ -31,9 +33,10 @@ import java.util.List;
 @RequiredArgsConstructor
 public class MemberAppServiceImpl implements MemberAppService {
     private final MemberRepository memberRepository;
-    private final UserExperienceDomainService userExperienceDomainService;
+    private final UserExperienceRepository userExperienceRepository;
 
     private static final int MAX_PAGE_SIZE = 100;
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy.MM");
 
     /**
      * 查询成员列表。
@@ -87,10 +90,10 @@ public class MemberAppServiceImpl implements MemberAppService {
      *            成员ID
      * @param type
      *            经历类型
-     * @return 经历VO列表
+     * @return 经历结果列表
      */
     @Override
-    public List<ExperienceVO> getMemberExperiences(Long memberId, String type) {
+    public List<UserExperienceResult> getMemberExperiences(Long memberId, String type) {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new DataNotFound("成员不存在"));
 
@@ -99,12 +102,16 @@ public class MemberAppServiceImpl implements MemberAppService {
             return Collections.emptyList();
         }
 
+        List<com.bluenet.web.domain.model.entity.UserExperience> experiences;
         if (type != null && !type.isBlank()) {
             ExperienceType experienceType = parseExperienceType(type);
-            return userExperienceDomainService.getExperiencesByType(memberId, experienceType);
+            experiences = userExperienceRepository.findByUserIdAndType(memberId, experienceType);
         } else {
-            return userExperienceDomainService.getExperiences(memberId);
+            experiences = userExperienceRepository.findByUserId(memberId);
         }
+        return experiences.stream()
+                .map(this::toUserExperienceResult)
+                .toList();
     }
 
     private ExperienceType parseExperienceType(String type) {
@@ -113,6 +120,23 @@ public class MemberAppServiceImpl implements MemberAppService {
         } catch (IllegalArgumentException e) {
             throw new BadRequest("无效的经历类型: " + type);
         }
+    }
+
+    private UserExperienceResult toUserExperienceResult(com.bluenet.web.domain.model.entity.UserExperience experience) {
+        return new UserExperienceResult(
+                experience.getId(),
+                experience.getType(),
+                experience.getTitle(),
+                formatDateTime(experience.getStartTime()),
+                formatDateTime(experience.getEndTime()),
+                experience.getContent());
+    }
+
+    private String formatDateTime(LocalDateTime dateTime) {
+        if (dateTime == null) {
+            return null;
+        }
+        return dateTime.format(DATE_FORMATTER);
     }
 
     private MemberResult toResult(Member member) {

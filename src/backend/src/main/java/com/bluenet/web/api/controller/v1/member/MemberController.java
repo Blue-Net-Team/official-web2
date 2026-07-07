@@ -96,6 +96,6 @@ public class MemberController {
             @Parameter(description = "经历类型：PROJECT/COMPETITION/INTERNSHIP") @RequestParam(required = false) String type) {
         return ResponseMessage.success(
                 userExperienceResponseConverter
-                        .toDTOListFromVO(memberAppService.getMemberExperiences(memberId, type)));
+                        .toDTOList(memberAppService.getMemberExperiences(memberId, type)));
     }
 }
