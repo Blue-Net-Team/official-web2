@@ -69,9 +69,9 @@ public class Comment {
         return new Comment(id, answerId, userId, content, score, commentTime);
     }
 
-    private void ensureAuthor(Long actingUserId) {
+    private void ensureAuthor(Long actingUserId, String action) {
         if (!userId.equals(actingUserId)) {
-            throw new Forbidden("只能操作自己的评论");
+            throw new Forbidden("只能" + action + "自己的评论");
         }
     }
 
@@ -79,7 +79,7 @@ public class Comment {
      * 更新评论内容（仅限评论者本人）
      */
     public void update(Long actingUserId, String content, BigDecimal score) {
-        ensureAuthor(actingUserId);
+        ensureAuthor(actingUserId, "修改");
         if (content != null) {
             this.content = content;
         }
@@ -92,6 +92,6 @@ public class Comment {
      * 删除评论校验（仅限评论者本人）
      */
     public void delete(Long actingUserId) {
-        ensureAuthor(actingUserId);
+        ensureAuthor(actingUserId, "删除");
     }
 }

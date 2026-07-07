@@ -180,8 +180,8 @@ class UserInfoAppServiceImplIntegrationTest extends BaseIntegrationTest {
     }
 
     @Test
-    @DisplayName("updateProfile: 学院不存在应抛异常")
-    void updateProfile_collegeNotFound_shouldThrow() {
+    @DisplayName("updateProfile: 学院不存在时应清空 college_id（兼容旧行为）")
+    void updateProfile_collegeNotFound_shouldClearCollegeId() {
         User user = createUser("2024003004", memberRoleId);
         UserInfoCommands.UpdateProfileCommand command = new UserInfoCommands.UpdateProfileCommand(
                 null,
@@ -193,7 +193,31 @@ class UserInfoAppServiceImplIntegrationTest extends BaseIntegrationTest {
                 null,
                 null);
 
-        assertThrows(DataNotFound.class, () -> userInfoAppService.updateProfile(user.getId(), command));
+        userInfoAppService.updateProfile(user.getId(), command);
+
+        User updated = userRepository.findById(user.getId()).orElseThrow();
+        assertNull(updated.getCollegeId());
+    }
+
+    @Test
+    @DisplayName("updateProfile: 不传学院时应保留原 college_id")
+    void updateProfile_collegeNull_shouldKeepCollegeId() {
+        User user = createUser("2024003012", memberRoleId);
+        UserInfoCommands.UpdateProfileCommand command = new UserInfoCommands.UpdateProfileCommand(
+                null,
+                "新昵称",
+                null,
+                null,
+                null,
+                null,
+                null,
+                null);
+
+        userInfoAppService.updateProfile(user.getId(), command);
+
+        User updated = userRepository.findById(user.getId()).orElseThrow();
+        assertEquals("新昵称", updated.getNickname());
+        assertEquals(collegeId, updated.getCollegeId());
     }
 
     @Test

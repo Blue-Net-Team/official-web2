@@ -21,6 +21,7 @@ import com.bluenet.web.domain.repository.VerificationCodeRepository;
 import com.bluenet.web.domain.service.FileDomainService;
 import com.bluenet.web.domain.service.VerificationCodeDomainService;
 import com.bluenet.web.domain.util.GradeCalculator;
+import com.bluenet.web.infrastructure.repository.mapper.UserMapper;
 import com.bluenet.web.application.message.MessageDispatcher;
 import com.bluenet.web.application.message.MessageRequest;
 import com.bluenet.web.application.message.template.EmailVerificationCodeTemplate;
@@ -56,6 +57,7 @@ public class UserInfoAppServiceImpl implements UserInfoAppService {
     private final AuthTokenService authTokenService;
     private final CollegeRepository collegeRepository;
     private final RoleTypeResolver roleTypeResolver;
+    private final UserMapper userMapper;
 
     @Override
     public UserInfoResult getMyInfo(Long userId) {
@@ -104,26 +106,18 @@ public class UserInfoAppServiceImpl implements UserInfoAppService {
         User currentUser = userRepository.findById(userId)
                 .orElseThrow(() -> new Unauthorized("用户不存在"));
         validateProfileUpdatePermission(currentUser, command);
-        Long collegeId = resolveCollegeId(command.college());
-        currentUser.updateProfile(
+        userMapper.updateProfile(
+                userId,
                 command.username(),
                 command.nickname(),
-                collegeId,
+                command.college(),
                 command.major(),
                 command.direction(),
                 command.gender(),
-                command.bio(),
-                command.qrcodeFileId());
-        userRepository.save(currentUser);
-    }
-
-    private Long resolveCollegeId(String collegeName) {
-        if (collegeName == null || collegeName.isBlank()) {
-            return null;
+                command.bio());
+        if (command.qrcodeFileId() != null) {
+            userMapper.updateQrcodeId(userId, command.qrcodeFileId());
         }
-        return collegeRepository.findByName(collegeName)
-                .map(College::getId)
-                .orElseThrow(() -> new DataNotFound("学院不存在: " + collegeName));
     }
 
     @Override

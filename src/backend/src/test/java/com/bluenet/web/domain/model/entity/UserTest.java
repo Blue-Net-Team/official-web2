@@ -83,11 +83,11 @@ class UserTest {
     @DisplayName("updateProfile: 仅更新非 null 字段")
     void updateProfile_shouldUpdateNonNullFieldsOnly() {
         User user = newUser();
-        user.updateProfile("新姓名", null, 2L, null, Direction.STRUCTURAL_DESIGN, null, "新简介", 300L);
+        user.updateProfile("新姓名", null, null, Direction.STRUCTURAL_DESIGN, null, "新简介", 300L);
 
         assertEquals("新姓名", user.getUsername());
         assertEquals("昵称", user.getNickname()); // 未更新
-        assertEquals(2L, user.getCollegeId());
+        assertEquals(1L, user.getCollegeId()); // 未更新
         assertEquals("计算机科学与技术", user.getMajor()); // 未更新
         assertEquals(Direction.STRUCTURAL_DESIGN, user.getDirection());
         assertEquals(Gender.MALE, user.getGender()); // 未更新

@@ -146,7 +146,7 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
     public AssessmentJudgementResult getLatestByAnswerId(Long answerId) {
         return assessmentJudgementRepository.findLatestByAnswerId(answerId)
                 .map(this::entityToResult)
-                .orElse(null);
+                .orElseThrow(() -> new DataNotFound("该答案暂无评判记录，ID: " + answerId));
     }
 
     /**
