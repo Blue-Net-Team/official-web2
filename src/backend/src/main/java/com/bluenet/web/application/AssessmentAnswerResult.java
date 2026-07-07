@@ -1,7 +1,6 @@
 package com.bluenet.web.application;
 
 import com.bluenet.web.domain.model.enumerate.ProgrammingLanguage;
-import com.bluenet.web.domain.model.vo.CommentVO;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -28,7 +27,7 @@ public record AssessmentAnswerResult(
         /** 评测结果 */
         AssessmentJudgementResult judgement,
         /** 成员评论列表 */
-        List<CommentVO> comments) {
+        List<CommentResult> comments) {
 
     /**
      * 通过已有的对象创建一个新实例，将评测结果设为 null。

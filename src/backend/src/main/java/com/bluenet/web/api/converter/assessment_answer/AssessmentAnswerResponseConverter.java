@@ -43,7 +43,7 @@ public class AssessmentAnswerResponseConverter {
     }
 
     private List<com.bluenet.web.api.dto.assessment_judgement.CommentDTO> toCommentDTOs(
-            List<com.bluenet.web.domain.model.vo.CommentVO> comments) {
+            List<com.bluenet.web.application.CommentResult> comments) {
         if (comments == null || comments.isEmpty()) {
             return Collections.emptyList();
         }

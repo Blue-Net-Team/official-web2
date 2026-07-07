@@ -1,7 +1,6 @@
 package com.bluenet.web.domain.repository;
 
 import com.bluenet.web.domain.model.entity.Comment;
-import com.bluenet.web.domain.model.vo.CommentVO;
 
 import java.util.List;
 import java.util.Optional;
@@ -12,7 +11,7 @@ import java.util.Optional;
 public interface CommentRepository {
 
     /**
-     * 保存评论
+     * 保存评论（新增或更新）
      */
     void save(Comment comment);
 
@@ -24,17 +23,12 @@ public interface CommentRepository {
     /**
      * 按答案查询所有评论
      */
-    List<CommentVO> findByAnswerId(Long answerId);
+    List<Comment> findByAnswerId(Long answerId);
 
     /**
      * 判断指定用户是否已对某答案评论
      */
     boolean existsByAnswerIdAndUserId(Long answerId, Long userId);
-
-    /**
-     * 更新评论
-     */
-    void update(Comment comment);
 
     /**
      * 删除评论

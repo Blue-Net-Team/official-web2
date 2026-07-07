@@ -1,6 +1,6 @@
 package com.bluenet.web.application.service;
 
-import com.bluenet.web.domain.model.vo.CommentVO;
+import com.bluenet.web.application.CommentResult;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -22,12 +22,12 @@ public interface CommentAppService {
      * @param score
      *            评分
      */
-    CommentVO addComment(Long userId, Long answerId, String content, BigDecimal score);
+    CommentResult addComment(Long userId, Long answerId, String content, BigDecimal score);
 
     /**
      * 按答案查询评论列表
      */
-    List<CommentVO> listComments(Long answerId);
+    List<CommentResult> listComments(Long answerId);
 
     /**
      * 更新评论
@@ -41,7 +41,7 @@ public interface CommentAppService {
      * @param score
      *            评分
      */
-    CommentVO updateComment(Long userId, Long commentId, String content, BigDecimal score);
+    CommentResult updateComment(Long userId, Long commentId, String content, BigDecimal score);
 
     /**
      * 删除评论

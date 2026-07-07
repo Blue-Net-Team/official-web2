@@ -28,12 +28,12 @@ import com.bluenet.web.domain.model.entity.AssessmentTeam;
 import com.bluenet.web.domain.repository.AssessmentAnswerRepository;
 import com.bluenet.web.domain.repository.AssessmentSessionRepository;
 import com.bluenet.web.domain.repository.AssessmentTeamRepository;
+import com.bluenet.web.application.service.CommentAppService;
 import com.bluenet.web.domain.service.AssessmentDecisionDomainService;
 import com.bluenet.web.domain.service.AssessmentJudgementDomainService;
 import com.bluenet.web.domain.repository.AssessmentQuestionRepository;
 import com.bluenet.web.domain.repository.AssessmentTimeRepository;
 import com.bluenet.web.domain.repository.UserRepository;
-import com.bluenet.web.domain.service.CommentDomainService;
 import com.bluenet.web.domain.service.FileDomainService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -75,7 +75,7 @@ public class AssessmentAnswerAppServiceImpl implements AssessmentAnswerAppServic
     private final AssessmentTeamRepository assessmentTeamRepository;
     private final ObjectMapper objectMapper;
     private final UserRepository userRepository;
-    private final CommentDomainService commentDomainService;
+    private final CommentAppService commentAppService;
     private final AssessmentDecisionDomainService assessmentDecisionDomainService;
     private final RoleTypeResolver roleTypeResolver;
 
@@ -300,8 +300,8 @@ public class AssessmentAnswerAppServiceImpl implements AssessmentAnswerAppServic
 
     private AssessmentAnswerResult toAnswerResult(AssessmentAnswer answer, AssessmentQuestion question) {
         AssessmentJudgementVO judgement = findLatestJudgement(answer);
-        List<com.bluenet.web.domain.model.vo.CommentVO> comments = commentDomainService
-                .listCommentsByAnswerId(answer.getId());
+        List<com.bluenet.web.application.CommentResult> comments = commentAppService
+                .listComments(answer.getId());
         AssessmentAnswerResult result = toResult(answer, judgement, comments);
 
         if (question != null && question.getQuestionType().isChoiceQuestion()) {
@@ -452,7 +452,7 @@ public class AssessmentAnswerAppServiceImpl implements AssessmentAnswerAppServic
     }
 
     private AssessmentAnswerResult toResult(AssessmentAnswer answer, AssessmentJudgementVO judgement,
-            List<com.bluenet.web.domain.model.vo.CommentVO> comments) {
+            List<com.bluenet.web.application.CommentResult> comments) {
         return new AssessmentAnswerResult(
                 answer.getId(),
                 answer.getQuestionId(),
