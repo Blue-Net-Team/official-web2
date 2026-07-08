@@ -28,8 +28,6 @@ public interface AssessmentTeamRepository {
 
     void deleteById(Long id);
 
-    void updateLeader(Long teamId, Long newLeaderId);
-
     void addMember(Long teamId, Long userId);
 
     void removeMember(Long teamId, Long userId);

@@ -76,11 +76,6 @@ public class AssessmentTeamRepositoryImpl implements AssessmentTeamRepository {
     }
 
     @Override
-    public void updateLeader(Long teamId, Long newLeaderId) {
-        assessmentTeamMapper.updateLeader(teamId, newLeaderId);
-    }
-
-    @Override
     public void addMember(Long teamId, Long userId) {
         AssessmentTeamMemberDO member = AssessmentTeamMemberDO.builder()
                 .teamId(teamId)

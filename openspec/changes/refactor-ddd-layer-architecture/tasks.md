@@ -151,12 +151,12 @@
 
 #### 实现步骤
 
-- [ ] 8.1 新增 `AssessmentTeamDomainService` 接口和实现
-- [ ] 8.2 迁移创建/加入/退出/转让/解散的业务规则
-- [ ] 8.3 迁移“已有个人答案不能组队”“已提交答案不能解散”等校验
-- [ ] 8.4 迁移解散队伍时清理答案和评判的逻辑
-- [ ] 8.5 重写 `AssessmentTeamAppServiceImpl`：直接调用 DomainService
-- [ ] 8.6 编译通过
+- [x] 8.1 新增 `AssessmentTeamDomainService` 接口和实现
+- [x] 8.2 迁移创建/加入/退出/转让/解散的业务规则
+- [x] 8.3 迁移“已有个人答案不能组队”“已提交答案不能解散”等校验
+- [x] 8.4 迁移解散队伍时清理答案和评判的逻辑
+- [x] 8.5 重写 `AssessmentTeamAppServiceImpl`：直接调用 DomainService
+- [x] 8.6 编译通过
 
 ***
 
