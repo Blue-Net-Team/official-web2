@@ -1,6 +1,7 @@
 package com.bluenet.web.application.service;
 
-import com.bluenet.web.application.AchievementResult;
+import com.bluenet.web.application.result.achievement.AchievementResult;
+import com.bluenet.web.application.result.achievement.AchievementStatistics;
 import com.bluenet.web.application.command.achievement.AchievementCommands;
 
 /**
@@ -35,7 +36,7 @@ public interface AchievementAppService {
      *
      * @return 成就统计数据
      */
-    com.bluenet.web.domain.model.vo.AchievementStatsVO getAchievementStats();
+    AchievementStatistics getAchievementStats();
 
     /**
      * 创建成就

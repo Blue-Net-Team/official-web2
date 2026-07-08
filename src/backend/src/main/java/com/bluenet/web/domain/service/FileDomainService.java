@@ -6,8 +6,8 @@ import com.bluenet.web.domain.model.entity.AssessmentQuestion;
 import com.bluenet.web.domain.model.entity.AssessmentTime;
 import com.bluenet.web.domain.model.entity.File;
 import com.bluenet.web.domain.model.entity.User;
-import com.bluenet.web.domain.model.vo.ConfirmUploadVO;
-import com.bluenet.web.domain.model.vo.PresignedUploadVO;
+import com.bluenet.web.domain.model.result.ConfirmUploadResult;
+import com.bluenet.web.domain.model.result.PresignedUploadResult;
 import org.springframework.core.io.Resource;
 
 import java.io.InputStream;
@@ -97,7 +97,7 @@ public interface FileDomainService {
      *            文件大小
      * @return 准备结果，包含文件 ID、上传 URL 和回调令牌
      */
-    PresignedUploadVO prepareUpload(FileType fileType, String originalFilename, String contentType, long size);
+    PresignedUploadResult prepareUpload(FileType fileType, String originalFilename, String contentType, long size);
 
     /**
      * 预签名上传确认。
@@ -112,7 +112,7 @@ public interface FileDomainService {
      *            预期的大小
      * @return 确认结果
      */
-    ConfirmUploadVO confirmUpload(Long fileId, String callbackToken, String expectedMd5, long expectedSize);
+    ConfirmUploadResult confirmUpload(Long fileId, String callbackToken, String expectedMd5, long expectedSize);
 
     /**
      * 生成预签名下载 URL。

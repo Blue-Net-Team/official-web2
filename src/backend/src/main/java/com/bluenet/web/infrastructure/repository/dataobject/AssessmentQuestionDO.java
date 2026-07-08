@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.bluenet.web.domain.model.enumerate.QuestionType;
-import com.bluenet.web.domain.model.vo.evaluation.QuestionContent;
+import com.bluenet.web.domain.model.vo.question_content.QuestionContent;
 import com.bluenet.web.infrastructure.repository.handler.QuestionContentTypeHandler;
 import java.math.BigDecimal;
 import lombok.AllArgsConstructor;

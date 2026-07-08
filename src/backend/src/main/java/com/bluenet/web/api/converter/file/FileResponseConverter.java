@@ -3,9 +3,9 @@ package com.bluenet.web.api.converter.file;
 import com.bluenet.web.api.dto.file.ConfirmUploadResponse;
 import com.bluenet.web.api.dto.file.FileInfo;
 import com.bluenet.web.api.dto.file.PrepareUploadResponse;
-import com.bluenet.web.application.ConfirmUploadResult;
-import com.bluenet.web.application.FileResult;
-import com.bluenet.web.application.PresignedUploadResult;
+import com.bluenet.web.application.result.file.FileResult;
+import com.bluenet.web.domain.model.result.ConfirmUploadResult;
+import com.bluenet.web.domain.model.result.PresignedUploadResult;
 import org.springframework.stereotype.Component;
 
 import java.util.List;

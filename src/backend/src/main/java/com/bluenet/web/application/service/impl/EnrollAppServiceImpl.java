@@ -1,9 +1,10 @@
 package com.bluenet.web.application.service.impl;
 
-import com.bluenet.web.application.EnrollResult;
+import com.bluenet.web.application.result.enroll.EnrollResult;
 import com.bluenet.web.application.command.enroll.EnrollCommands;
 import com.bluenet.web.application.message.MessageDispatcher;
 import com.bluenet.web.application.message.MessageRequest;
+import com.bluenet.web.application.query.enroll.GetEnrollmentListQuery;
 import com.bluenet.web.application.service.EnrollAppService;
 import com.bluenet.web.domain.exception.BadRequest;
 import com.bluenet.web.domain.exception.DataConflict;
@@ -15,7 +16,7 @@ import com.bluenet.web.domain.model.entity.User;
 import com.bluenet.web.domain.model.enumerate.EnrollStatus;
 import com.bluenet.web.domain.model.enumerate.FileType;
 import com.bluenet.web.domain.model.enumerate.MessageChannel;
-import com.bluenet.web.domain.model.vo.EnrollStatisticsVO;
+import com.bluenet.web.application.result.enroll.EnrollStatistics;
 import com.bluenet.web.domain.model.vo.UserOnboardingCreateUserRequest;
 import com.bluenet.web.domain.model.vo.UserOnboardingResult;
 import com.bluenet.web.domain.repository.EnrollRepository;
@@ -155,20 +156,20 @@ public class EnrollAppServiceImpl implements EnrollAppService {
     /**
      * 查询报名列表。
      *
-     * @param command
-     *            查询报名列表命令
+     * @param query
+     *            查询报名列表参数
      * @return 报名简要信息分页结果
      */
     @Override
-    public Page<EnrollResult.Brief> getEnrollmentList(EnrollCommands.GetEnrollmentListCommand command) {
-        int page = command.page() != null ? command.page() : 0;
-        int size = command.size() != null ? Math.min(command.size(), 100) : 20;
+    public Page<EnrollResult.Brief> getEnrollmentList(GetEnrollmentListQuery query) {
+        int page = query.page() != null ? query.page() : 0;
+        int size = query.size() != null ? Math.min(query.size(), 100) : 20;
         Pageable pageable = PageRequest.of(page, size);
 
         Page<Enroll> enrollPage = enrollRepository.search(
-                command.keyword(),
-                command.status(),
-                command.direction(),
+                query.keyword(),
+                query.status(),
+                query.direction(),
                 pageable);
 
         return enrollPage.map(this::toBriefResult);
@@ -284,7 +285,7 @@ public class EnrollAppServiceImpl implements EnrollAppService {
      */
     @Override
     public EnrollResult.Statistics getStatistics() {
-        EnrollStatisticsVO statistics = enrollRepository.getStatistics();
+        EnrollStatistics statistics = enrollRepository.getStatistics();
         return new EnrollResult.Statistics(statistics.getTotal(), statistics.getByStatus(),
                 statistics.getByDirection());
     }

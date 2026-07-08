@@ -1,7 +1,8 @@
 package com.bluenet.web.application.service;
 
-import com.bluenet.web.application.EnrollResult;
+import com.bluenet.web.application.result.enroll.EnrollResult;
 import com.bluenet.web.application.command.enroll.EnrollCommands;
+import com.bluenet.web.application.query.enroll.GetEnrollmentListQuery;
 import org.springframework.data.domain.Page;
 
 /**
@@ -33,11 +34,11 @@ public interface EnrollAppService {
     /**
      * 分页查询报名列表
      *
-     * @param command
-     *            查询命令
+     * @param query
+     *            查询参数
      * @return 分页后的报名摘要结果
      */
-    Page<EnrollResult.Brief> getEnrollmentList(EnrollCommands.GetEnrollmentListCommand command);
+    Page<EnrollResult.Brief> getEnrollmentList(GetEnrollmentListQuery query);
 
     /**
      * 获取报名详情

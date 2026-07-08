@@ -1,7 +1,5 @@
 package com.bluenet.web.application.command.bugreport;
 
-import com.bluenet.web.domain.model.enumerate.BugReportStatus;
-
 import java.util.List;
 
 /**
@@ -47,18 +45,4 @@ public class BugReportCommands {
         }
     }
 
-    /**
-     * 查询 Bug 报告列表命令。
-     * <p>
-     * 用于管理员分页查询 Bug 报告列表。
-     * </p>
-     */
-    public record GetBugReportListCommand(
-            /** 页码 */
-            Integer page,
-            /** 每页大小 */
-            Integer size,
-            /** 状态筛选 */
-            BugReportStatus status) {
-    }
 }

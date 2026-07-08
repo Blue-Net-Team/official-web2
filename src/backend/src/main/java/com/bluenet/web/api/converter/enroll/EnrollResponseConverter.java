@@ -1,7 +1,7 @@
 package com.bluenet.web.api.converter.enroll;
 
 import com.bluenet.web.api.dto.enrollment.*;
-import com.bluenet.web.application.EnrollResult;
+import com.bluenet.web.application.result.enroll.EnrollResult;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
 

@@ -1,7 +1,7 @@
 package com.bluenet.web.api.converter.assessment_judgement;
 
 import com.bluenet.web.api.dto.assessment_judgement.CommentDTO;
-import com.bluenet.web.application.CommentResult;
+import com.bluenet.web.application.result.comment.CommentResult;
 import org.springframework.stereotype.Component;
 
 @Component

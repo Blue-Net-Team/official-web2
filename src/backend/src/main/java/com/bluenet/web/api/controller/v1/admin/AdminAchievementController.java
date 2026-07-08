@@ -6,7 +6,7 @@ import com.bluenet.web.api.dto.achievement.CreateAchievementRequestDTO;
 import com.bluenet.web.api.dto.achievement.UpdateAchievementRequestDTO;
 import com.bluenet.web.api.converter.achievement.AchievementRequestConverter;
 import com.bluenet.web.api.converter.achievement.AchievementResponseConverter;
-import com.bluenet.web.application.AchievementResult;
+import com.bluenet.web.application.result.achievement.AchievementResult;
 import com.bluenet.web.application.service.AchievementAppService;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
 import com.bluenet.web.infrastructure.security.annotation.RequiresPermission;

@@ -1,8 +1,8 @@
 package com.bluenet.web.application.service;
 
-import com.bluenet.web.application.CompetitionResult;
+import com.bluenet.web.application.result.competition.CompetitionResult;
 import com.bluenet.web.application.command.competition.CompetitionCommands;
-import com.bluenet.web.domain.model.vo.CompetitionVO;
+import com.bluenet.web.domain.model.readmodel.CompetitionReadModel;
 
 import org.springframework.data.domain.Page;
 
@@ -23,7 +23,7 @@ public interface CompetitionAppService {
      *            限制返回数量
      * @return 竞赛VO列表
      */
-    List<CompetitionVO> getCompetitionResponseList(int limit);
+    List<CompetitionReadModel> getCompetitionResponseList(int limit);
 
     /**
      * 分页查询竞赛列表
@@ -34,7 +34,7 @@ public interface CompetitionAppService {
      *            每页数量
      * @return 分页竞赛VO
      */
-    Page<CompetitionVO> getCompetitionPage(Integer page, Integer size);
+    Page<CompetitionReadModel> getCompetitionPage(Integer page, Integer size);
 
     /**
      * 创建竞赛

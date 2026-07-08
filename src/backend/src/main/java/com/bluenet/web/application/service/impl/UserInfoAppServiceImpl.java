@@ -1,6 +1,6 @@
 package com.bluenet.web.application.service.impl;
 
-import com.bluenet.web.application.UserInfoResult;
+import com.bluenet.web.application.result.user.UserInfoResult;
 import com.bluenet.web.application.command.userinfo.UserInfoCommands;
 import com.bluenet.web.application.service.UserInfoAppService;
 import com.bluenet.web.domain.exception.BadRequest;
@@ -14,7 +14,7 @@ import com.bluenet.web.domain.model.entity.VerifyCode;
 import com.bluenet.web.domain.model.enumerate.FileType;
 import com.bluenet.web.domain.model.enumerate.MessageChannel;
 import com.bluenet.web.domain.model.enumerate.RoleType;
-import com.bluenet.web.domain.model.vo.TabCountsVO;
+import com.bluenet.web.application.result.common.TabCounts;
 import com.bluenet.web.domain.repository.CollegeRepository;
 import com.bluenet.web.domain.repository.UserRepository;
 import com.bluenet.web.domain.repository.VerificationCodeRepository;
@@ -116,12 +116,8 @@ public class UserInfoAppServiceImpl implements UserInfoAppService {
     }
 
     @Override
-    public UserInfoResult.TabCounts getTabCounts(Long userId) {
-        TabCountsVO tabCountsVO = userRepository.getTabCounts(userId);
-        return new UserInfoResult.TabCounts(
-                tabCountsVO.getProjects(),
-                tabCountsVO.getCompetitions(),
-                tabCountsVO.getInternships());
+    public TabCounts getTabCounts(Long userId) {
+        return userRepository.getTabCounts(userId);
     }
 
     @Override

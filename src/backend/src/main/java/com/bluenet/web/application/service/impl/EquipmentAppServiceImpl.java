@@ -1,6 +1,6 @@
 package com.bluenet.web.application.service.impl;
 
-import com.bluenet.web.application.EquipmentResult;
+import com.bluenet.web.application.result.equipment.EquipmentResult;
 import com.bluenet.web.application.command.equipment.EquipmentCommands;
 import com.bluenet.web.application.service.EquipmentAppService;
 import com.bluenet.web.domain.exception.DataNotFound;

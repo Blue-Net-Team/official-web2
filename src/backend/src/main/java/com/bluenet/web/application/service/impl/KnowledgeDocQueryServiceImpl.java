@@ -1,8 +1,8 @@
 package com.bluenet.web.application.service.impl;
 
-import com.bluenet.web.application.knowledge.KnowledgeChunkResult;
-import com.bluenet.web.application.knowledge.KnowledgeDocResult;
-import com.bluenet.web.application.knowledge.KnowledgeTagResult;
+import com.bluenet.web.application.result.knowledge.KnowledgeChunkResult;
+import com.bluenet.web.application.result.knowledge.KnowledgeDocResult;
+import com.bluenet.web.application.result.knowledge.KnowledgeTagResult;
 import com.bluenet.web.application.service.KnowledgeDocQueryService;
 import com.bluenet.web.domain.model.entity.KnowledgeChunk;
 import com.bluenet.web.domain.model.entity.KnowledgeDoc;

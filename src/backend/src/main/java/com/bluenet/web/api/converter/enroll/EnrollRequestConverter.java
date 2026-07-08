@@ -4,12 +4,13 @@ import com.bluenet.web.api.dto.enrollment.ApproveEnrollmentRequestDTO;
 import com.bluenet.web.api.dto.enrollment.CreateEnrollmentRequestDTO;
 import com.bluenet.web.api.dto.enrollment.RejectEnrollmentRequestDTO;
 import com.bluenet.web.application.command.enroll.EnrollCommands;
+import com.bluenet.web.application.query.enroll.GetEnrollmentListQuery;
 import org.springframework.stereotype.Component;
 
 /**
  * 报名请求转换器
  * <p>
- * 负责将 API 层的 RequestDTO 转换为应用层的 Command
+ * 负责将 API 层的 RequestDTO 转换为应用层的 Command/Query
  * </p>
  */
 @Component
@@ -51,11 +52,11 @@ public class EnrollRequestConverter {
     }
 
     /**
-     * 将查询参数转换为列表查询命令
+     * 将查询参数转换为列表查询参数
      */
-    public EnrollCommands.GetEnrollmentListCommand toListCommand(Integer page, Integer size,
+    public GetEnrollmentListQuery toListQuery(Integer page, Integer size,
             String keyword, String status, String direction) {
-        return new EnrollCommands.GetEnrollmentListCommand(
+        return new GetEnrollmentListQuery(
                 page,
                 size,
                 keyword,

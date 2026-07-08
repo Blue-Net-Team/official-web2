@@ -3,12 +3,13 @@ package com.bluenet.web.api.converter.bugreport;
 import com.bluenet.web.api.dto.bugreport.BugReportListQueryDTO;
 import com.bluenet.web.api.dto.bugreport.CreateBugReportRequestDTO;
 import com.bluenet.web.application.command.bugreport.BugReportCommands;
+import com.bluenet.web.application.query.bugreport.GetBugReportListQuery;
 import org.springframework.stereotype.Component;
 
 /**
  * Bug 报告请求转换器
  * <p>
- * 负责将 API 层的 RequestDTO 转换为应用层的 Command
+ * 负责将 API 层的 RequestDTO 转换为应用层的 Command/Query
  * </p>
  */
 @Component
@@ -28,10 +29,10 @@ public class BugReportRequestConverter {
     }
 
     /**
-     * 将查询参数转换为列表查询命令
+     * 将查询参数转换为列表查询参数
      */
-    public BugReportCommands.GetBugReportListCommand toListCommand(BugReportListQueryDTO dto) {
-        return new BugReportCommands.GetBugReportListCommand(
+    public GetBugReportListQuery toListQuery(BugReportListQueryDTO dto) {
+        return new GetBugReportListQuery(
                 dto.getPage(),
                 dto.getSize(),
                 dto.getStatus());

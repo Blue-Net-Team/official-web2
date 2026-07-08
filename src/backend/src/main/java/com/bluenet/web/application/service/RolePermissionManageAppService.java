@@ -1,6 +1,6 @@
 package com.bluenet.web.application.service;
 
-import com.bluenet.web.application.RolePermissionManageResult;
+import com.bluenet.web.application.result.rolepermission.RolePermissionManageResult;
 import com.bluenet.web.application.command.rolepermission.RolePermissionCommands;
 
 import java.util.List;

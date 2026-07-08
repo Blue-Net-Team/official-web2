@@ -3,7 +3,9 @@ package com.bluenet.web.api.converter.auditstatistics;
 import com.bluenet.web.api.dto.audit.EndpointLatencyDTO;
 import com.bluenet.web.api.dto.audit.EndpointRankingDTO;
 import com.bluenet.web.api.dto.audit.TrendPointDTO;
-import com.bluenet.web.application.AuditStatisticsResult;
+import com.bluenet.web.application.result.audit.AuditEndpointLatency;
+import com.bluenet.web.application.result.audit.AuditEndpointRanking;
+import com.bluenet.web.application.result.audit.AuditTrendPoint;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -17,40 +19,40 @@ import java.util.List;
 @Component
 public class AuditStatisticsResponseConverter {
 
-    public TrendPointDTO toDTO(AuditStatisticsResult.TrendPoint result) {
+    public TrendPointDTO toDTO(AuditTrendPoint result) {
         TrendPointDTO dto = new TrendPointDTO();
-        dto.setTime(result.time());
-        dto.setCount(result.count());
+        dto.setTime(result.getTime());
+        dto.setCount(result.getCount());
         return dto;
     }
 
-    public List<TrendPointDTO> toTrendPointDTOList(List<AuditStatisticsResult.TrendPoint> results) {
+    public List<TrendPointDTO> toTrendPointDTOList(List<AuditTrendPoint> results) {
         return results.stream().map(this::toDTO).toList();
     }
 
-    public EndpointRankingDTO toDTO(AuditStatisticsResult.EndpointRanking result) {
+    public EndpointRankingDTO toDTO(AuditEndpointRanking result) {
         EndpointRankingDTO dto = new EndpointRankingDTO();
-        dto.setPattern(result.pattern());
-        dto.setCount(result.count());
-        dto.setAvgDurationMs(result.avgDurationMs());
-        dto.setErrorCount(result.errorCount());
+        dto.setPattern(result.getPattern());
+        dto.setCount(result.getCount());
+        dto.setAvgDurationMs(result.getAvgDurationMs());
+        dto.setErrorCount(result.getErrorCount());
         return dto;
     }
 
-    public List<EndpointRankingDTO> toEndpointRankingDTOList(List<AuditStatisticsResult.EndpointRanking> results) {
+    public List<EndpointRankingDTO> toEndpointRankingDTOList(List<AuditEndpointRanking> results) {
         return results.stream().map(this::toDTO).toList();
     }
 
-    public EndpointLatencyDTO toDTO(AuditStatisticsResult.EndpointLatency result) {
+    public EndpointLatencyDTO toDTO(AuditEndpointLatency result) {
         EndpointLatencyDTO dto = new EndpointLatencyDTO();
-        dto.setPattern(result.pattern());
-        dto.setAvgDurationMs(result.avgDurationMs());
-        dto.setMaxDurationMs(result.maxDurationMs());
-        dto.setCount(result.count());
+        dto.setPattern(result.getPattern());
+        dto.setAvgDurationMs(result.getAvgDurationMs());
+        dto.setMaxDurationMs(result.getMaxDurationMs());
+        dto.setCount(result.getCount());
         return dto;
     }
 
-    public List<EndpointLatencyDTO> toEndpointLatencyDTOList(List<AuditStatisticsResult.EndpointLatency> results) {
+    public List<EndpointLatencyDTO> toEndpointLatencyDTOList(List<AuditEndpointLatency> results) {
         return results.stream().map(this::toDTO).toList();
     }
 }

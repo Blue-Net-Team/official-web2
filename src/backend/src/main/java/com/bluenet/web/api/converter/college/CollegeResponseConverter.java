@@ -1,7 +1,7 @@
 package com.bluenet.web.api.converter.college;
 
 import com.bluenet.web.api.dto.college.CollegeDTO;
-import com.bluenet.web.application.CollegeResult;
+import com.bluenet.web.application.result.college.CollegeResult;
 import org.springframework.stereotype.Component;
 
 import java.util.List;

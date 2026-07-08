@@ -5,7 +5,7 @@ import com.bluenet.web.api.dto.venue.CreateVenueRequestDTO;
 import com.bluenet.web.api.dto.venue.UpdateVenueRequestDTO;
 import com.bluenet.web.api.dto.venue.VenueDTO;
 import com.bluenet.web.api.converter.venue.VenueRequestConverter;
-import com.bluenet.web.application.VenueResult;
+import com.bluenet.web.application.result.venue.VenueResult;
 import com.bluenet.web.application.command.venue.VenueCommands;
 import com.bluenet.web.api.converter.venue.VenueResponseConverter;
 import com.bluenet.web.application.service.VenueAppService;

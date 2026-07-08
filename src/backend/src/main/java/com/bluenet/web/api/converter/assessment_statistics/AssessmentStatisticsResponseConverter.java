@@ -1,7 +1,7 @@
 package com.bluenet.web.api.converter.assessment_statistics;
 
 import com.bluenet.web.api.dto.assessment_statistics.QuestionStatisticsDTO;
-import com.bluenet.web.application.AssessmentStatisticsResult;
+import com.bluenet.web.application.result.assessment.AssessmentStatisticsResult;
 import org.springframework.stereotype.Component;
 
 /**

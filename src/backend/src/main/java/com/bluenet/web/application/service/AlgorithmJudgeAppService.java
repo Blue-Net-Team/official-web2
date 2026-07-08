@@ -1,6 +1,6 @@
 package com.bluenet.web.application.service;
 
-import com.bluenet.web.application.AlgorithmJudgeResult;
+import com.bluenet.web.application.result.algorithm_judge.AlgorithmJudgeResult;
 import com.bluenet.web.application.command.algorithm_judge.AlgorithmJudgeCommands;
 
 /**

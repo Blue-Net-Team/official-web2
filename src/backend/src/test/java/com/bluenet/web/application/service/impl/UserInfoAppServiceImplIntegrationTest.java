@@ -1,7 +1,8 @@
 package com.bluenet.web.application.service.impl;
 
 import com.bluenet.web.BaseIntegrationTest;
-import com.bluenet.web.application.UserInfoResult;
+import com.bluenet.web.application.result.common.TabCounts;
+import com.bluenet.web.application.result.user.UserInfoResult;
 import com.bluenet.web.application.command.userinfo.UserInfoCommands;
 import com.bluenet.web.application.service.UserInfoAppService;
 import com.bluenet.web.domain.exception.BadRequest;
@@ -319,10 +320,10 @@ class UserInfoAppServiceImplIntegrationTest extends BaseIntegrationTest {
     void getTabCounts_shouldReturnCounts() {
         User user = createUser("2024003011", memberRoleId);
 
-        UserInfoResult.TabCounts tabCounts = userInfoAppService.getTabCounts(user.getId());
+        TabCounts tabCounts = userInfoAppService.getTabCounts(user.getId());
 
-        assertEquals(0, tabCounts.projects());
-        assertEquals(0, tabCounts.competitions());
-        assertEquals(0, tabCounts.internships());
+        assertEquals(0, tabCounts.getProjects());
+        assertEquals(0, tabCounts.getCompetitions());
+        assertEquals(0, tabCounts.getInternships());
     }
 }

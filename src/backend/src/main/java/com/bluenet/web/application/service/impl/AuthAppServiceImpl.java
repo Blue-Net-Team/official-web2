@@ -1,6 +1,6 @@
 package com.bluenet.web.application.service.impl;
 
-import com.bluenet.web.application.AuthResult;
+import com.bluenet.web.application.result.auth.AuthResult;
 import com.bluenet.web.application.command.auth.AuthCommands;
 import com.bluenet.web.application.message.MessageRequest;
 import com.bluenet.web.application.message.MessageDispatcher;

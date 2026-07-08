@@ -3,7 +3,7 @@ package com.bluenet.web.api.converter.member;
 import com.bluenet.web.api.dto.member.DirectionLeaderDTO;
 import com.bluenet.web.api.dto.member.MemberBriefDTO;
 import com.bluenet.web.api.dto.member.MemberDetailDTO;
-import com.bluenet.web.application.MemberResult;
+import com.bluenet.web.application.result.member.MemberResult;
 import com.bluenet.web.domain.model.enumerate.Direction;
 import com.bluenet.web.domain.util.GradeCalculator;
 import org.springframework.stereotype.Component;

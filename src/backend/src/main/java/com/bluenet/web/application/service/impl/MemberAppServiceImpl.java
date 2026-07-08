@@ -1,8 +1,8 @@
 package com.bluenet.web.application.service.impl;
 
-import com.bluenet.web.application.MemberResult;
-import com.bluenet.web.application.UserExperienceResult;
-import com.bluenet.web.application.command.member.MemberCommands;
+import com.bluenet.web.application.result.member.MemberResult;
+import com.bluenet.web.application.result.user.UserExperienceResult;
+import com.bluenet.web.application.query.member.GetMemberListQuery;
 import com.bluenet.web.application.service.MemberAppService;
 import com.bluenet.web.domain.exception.BadRequest;
 import com.bluenet.web.domain.exception.DataNotFound;
@@ -41,17 +41,17 @@ public class MemberAppServiceImpl implements MemberAppService {
     /**
      * 查询成员列表。
      *
-     * @param command
-     *            查询成员列表命令
+     * @param query
+     *            查询成员列表参数
      * @return 成员分页结果
      */
     @Override
-    public Page<MemberResult> getMemberList(MemberCommands.GetMemberListCommand command) {
-        int page = command.page() != null ? command.page() : 0;
-        int size = command.size() != null ? Math.min(command.size(), MAX_PAGE_SIZE) : 20;
+    public Page<MemberResult> getMemberList(GetMemberListQuery query) {
+        int page = query.page() != null ? query.page() : 0;
+        int size = query.size() != null ? Math.min(query.size(), MAX_PAGE_SIZE) : 20;
 
         Pageable pageable = PageRequest.of(page, size);
-        Page<Member> memberPage = memberRepository.findAll(command.direction(), pageable);
+        Page<Member> memberPage = memberRepository.findAll(query.direction(), pageable);
 
         return memberPage.map(this::toResult);
     }

@@ -1,6 +1,6 @@
 package com.bluenet.web.application.service.impl;
 
-import com.bluenet.web.application.VenueResult;
+import com.bluenet.web.application.result.venue.VenueResult;
 import com.bluenet.web.application.command.venue.VenueCommands;
 import com.bluenet.web.application.service.VenueAppService;
 import com.bluenet.web.domain.exception.DataNotFound;

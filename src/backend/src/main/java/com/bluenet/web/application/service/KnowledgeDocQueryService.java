@@ -1,8 +1,8 @@
 package com.bluenet.web.application.service;
 
-import com.bluenet.web.application.knowledge.KnowledgeChunkResult;
-import com.bluenet.web.application.knowledge.KnowledgeDocResult;
-import com.bluenet.web.application.knowledge.KnowledgeTagResult;
+import com.bluenet.web.application.result.knowledge.KnowledgeChunkResult;
+import com.bluenet.web.application.result.knowledge.KnowledgeDocResult;
+import com.bluenet.web.application.result.knowledge.KnowledgeTagResult;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 

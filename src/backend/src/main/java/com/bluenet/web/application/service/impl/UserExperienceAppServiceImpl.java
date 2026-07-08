@@ -1,6 +1,6 @@
 package com.bluenet.web.application.service.impl;
 
-import com.bluenet.web.application.UserExperienceResult;
+import com.bluenet.web.application.result.user.UserExperienceResult;
 import com.bluenet.web.application.command.userexperience.UserExperienceCommands;
 import com.bluenet.web.application.service.UserExperienceAppService;
 import com.bluenet.web.domain.exception.DataNotFound;
@@ -9,9 +9,9 @@ import com.bluenet.web.domain.exception.Unauthorized;
 import com.bluenet.web.domain.model.entity.UserExperience;
 import com.bluenet.web.domain.model.enumerate.ExperienceType;
 import com.bluenet.web.domain.model.entity.User;
-import com.bluenet.web.domain.model.vo.content.CompetitionContent;
-import com.bluenet.web.domain.model.vo.content.InternshipContent;
-import com.bluenet.web.domain.model.vo.content.ProjectContent;
+import com.bluenet.web.domain.model.vo.experience_content.CompetitionContent;
+import com.bluenet.web.domain.model.vo.experience_content.InternshipContent;
+import com.bluenet.web.domain.model.vo.experience_content.ProjectContent;
 import com.bluenet.web.domain.repository.UserExperienceRepository;
 import com.bluenet.web.infrastructure.security.util.UserCTX;
 import com.fasterxml.jackson.core.JsonProcessingException;

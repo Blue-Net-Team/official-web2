@@ -2,8 +2,8 @@ package com.bluenet.web.api.converter.assessment_time;
 
 import com.bluenet.web.api.dto.assessment_time.AssessmentProgressDTO;
 import com.bluenet.web.api.dto.assessment_time.AssessmentTimeDTO;
-import com.bluenet.web.application.AssessmentProgressResult;
-import com.bluenet.web.application.AssessmentTimeResult;
+import com.bluenet.web.application.result.assessment.AssessmentProgressResult;
+import com.bluenet.web.application.result.assessment.AssessmentTimeResult;
 import org.springframework.stereotype.Component;
 
 /**

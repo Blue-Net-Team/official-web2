@@ -4,7 +4,7 @@ import com.bluenet.web.api.dto.ResponseMessage;
 import com.bluenet.web.api.dto.permission.RolePermissionBatchRequestDTO;
 import com.bluenet.web.api.dto.permission.RolePermissionResponseDTO;
 import com.bluenet.web.api.converter.rolepermission.RolePermissionManageRequestConverter;
-import com.bluenet.web.application.RolePermissionManageResult;
+import com.bluenet.web.application.result.rolepermission.RolePermissionManageResult;
 import com.bluenet.web.application.service.RolePermissionManageAppService;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
 import com.bluenet.web.infrastructure.security.annotation.RequiresPermission;

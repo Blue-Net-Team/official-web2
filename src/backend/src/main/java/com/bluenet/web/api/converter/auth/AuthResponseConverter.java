@@ -3,8 +3,8 @@ package com.bluenet.web.api.converter.auth;
 import com.bluenet.web.api.dto.auth.AuthMeResponseDTO;
 import com.bluenet.web.api.dto.auth.UserAuthResponseDTO;
 import com.bluenet.web.api.dto.user.UserInfo;
-import com.bluenet.web.application.AuthResult;
-import com.bluenet.web.application.UserInfoResult;
+import com.bluenet.web.application.result.auth.AuthResult;
+import com.bluenet.web.application.result.user.UserInfoResult;
 import org.springframework.stereotype.Component;
 
 /**

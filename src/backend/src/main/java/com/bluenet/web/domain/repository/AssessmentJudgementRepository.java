@@ -3,10 +3,10 @@ package com.bluenet.web.domain.repository;
 import com.bluenet.web.domain.model.entity.AssessmentJudgement;
 import com.bluenet.web.domain.model.enumerate.JudgementSource;
 import com.bluenet.web.domain.model.enumerate.QuestionType;
-import com.bluenet.web.domain.model.vo.AssessmentCandidateScoreRowVO;
-import com.bluenet.web.domain.model.vo.AssessmentQuestionScoreboardVO;
-import com.bluenet.web.domain.model.vo.AssessmentQuestionSubmissionHistoryVO;
-import com.bluenet.web.domain.model.vo.AssessmentQuestionSubmissionVO;
+import com.bluenet.web.domain.model.readmodel.AssessmentCandidateScoreRowReadModel;
+import com.bluenet.web.application.result.assessment.AssessmentQuestionScoreboard;
+import com.bluenet.web.domain.model.readmodel.AssessmentQuestionSubmissionHistoryReadModel;
+import com.bluenet.web.domain.model.readmodel.AssessmentQuestionSubmissionReadModel;
 
 import java.util.List;
 import java.util.Optional;
@@ -104,7 +104,7 @@ public interface AssessmentJudgementRepository {
      *            搜索关键字。
      * @return 满足条件的考核评审结果 结果集合。
      */
-    List<AssessmentQuestionScoreboardVO> findQuestionScoreboard(Long assessmentTimeId, QuestionType questionType,
+    List<AssessmentQuestionScoreboard> findQuestionScoreboard(Long assessmentTimeId, QuestionType questionType,
             String keyword);
 
     /**
@@ -118,7 +118,7 @@ public interface AssessmentJudgementRepository {
      *            业务状态过滤条件。
      * @return 满足条件的考核评审结果 结果集合。
      */
-    List<AssessmentQuestionSubmissionVO> findQuestionSubmissions(Long questionId, String keyword, String status);
+    List<AssessmentQuestionSubmissionReadModel> findQuestionSubmissions(Long questionId, String keyword, String status);
 
     /**
      * 查询符合条件的考核评审结果 记录。
@@ -129,7 +129,8 @@ public interface AssessmentJudgementRepository {
      *            候选用户主键集合。
      * @return 满足条件的考核评审结果 结果集合。
      */
-    List<AssessmentQuestionSubmissionHistoryVO> findQuestionSubmissionHistories(Long questionId, List<Long> userIds);
+    List<AssessmentQuestionSubmissionHistoryReadModel> findQuestionSubmissionHistories(Long questionId,
+            List<Long> userIds);
 
     /**
      * 查询符合条件的考核评审结果 记录。
@@ -140,7 +141,7 @@ public interface AssessmentJudgementRepository {
      *            搜索关键字。
      * @return 满足条件的考核评审结果 结果集合。
      */
-    List<AssessmentCandidateScoreRowVO> findCandidateScoreRows(Long assessmentTimeId, String keyword);
+    List<AssessmentCandidateScoreRowReadModel> findCandidateScoreRows(Long assessmentTimeId, String keyword);
 
     /**
      * 按作答主键集合删除评审结果记录。

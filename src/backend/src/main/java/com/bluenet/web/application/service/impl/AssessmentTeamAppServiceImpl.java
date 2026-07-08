@@ -1,7 +1,7 @@
 package com.bluenet.web.application.service.impl;
 
-import com.bluenet.web.application.TeamPreviewResult;
-import com.bluenet.web.application.TeamResult;
+import com.bluenet.web.application.result.team.TeamPreviewResult;
+import com.bluenet.web.application.result.team.TeamResult;
 import com.bluenet.web.application.service.AssessmentTeamAppService;
 import com.bluenet.web.domain.exception.DataNotFound;
 import com.bluenet.web.domain.model.entity.AssessmentTeam;

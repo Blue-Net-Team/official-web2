@@ -1,6 +1,7 @@
 package com.bluenet.web.application.service;
 
-import com.bluenet.web.application.UserInfoResult;
+import com.bluenet.web.application.result.common.TabCounts;
+import com.bluenet.web.application.result.user.UserInfoResult;
 import com.bluenet.web.application.command.userinfo.UserInfoCommands;
 
 /**
@@ -37,7 +38,7 @@ public interface UserInfoAppService {
      *            当前用户ID
      * @return 标签页计数结果
      */
-    UserInfoResult.TabCounts getTabCounts(Long userId);
+    TabCounts getTabCounts(Long userId);
 
     /**
      * 发送邮箱验证码。

@@ -8,7 +8,7 @@ import com.bluenet.web.api.dto.softwareresource.SoftwareResourceDTO;
 import com.bluenet.web.api.dto.softwareresource.UpdateSoftwareResourceRequestDTO;
 import com.bluenet.web.api.converter.softwareresource.SoftwareResourceRequestConverter;
 import com.bluenet.web.api.converter.softwareresource.SoftwareResourceResponseConverter;
-import com.bluenet.web.application.SoftwareResourceResult;
+import com.bluenet.web.application.result.softwareresource.SoftwareResourceResult;
 import com.bluenet.web.application.command.softwareresource.SoftwareResourceCommands;
 import com.bluenet.web.application.service.SoftwareResourceAppService;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;

@@ -1,7 +1,7 @@
 package com.bluenet.web.application.service.impl;
 
 import com.bluenet.web.BaseIntegrationTest;
-import com.bluenet.web.application.CommentResult;
+import com.bluenet.web.application.result.comment.CommentResult;
 import com.bluenet.web.application.service.CommentAppService;
 import com.bluenet.web.domain.exception.BadRequest;
 import com.bluenet.web.domain.exception.DataNotFound;

@@ -1,7 +1,7 @@
 package com.bluenet.web.application.service;
 
-import com.bluenet.web.application.AssessmentQuestionResult;
-import com.bluenet.web.application.UserQuestionListResult;
+import com.bluenet.web.application.result.assessment.AssessmentQuestionResult;
+import com.bluenet.web.application.result.user.UserQuestionListResult;
 import com.bluenet.web.application.command.assessment_question.AssessmentQuestionCommands;
 import org.springframework.data.domain.Page;
 

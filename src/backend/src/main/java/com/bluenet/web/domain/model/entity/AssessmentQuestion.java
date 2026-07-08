@@ -1,7 +1,7 @@
 package com.bluenet.web.domain.model.entity;
 
 import com.bluenet.web.domain.model.enumerate.QuestionType;
-import com.bluenet.web.domain.model.vo.evaluation.QuestionContent;
+import com.bluenet.web.domain.model.vo.question_content.QuestionContent;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.NoArgsConstructor;

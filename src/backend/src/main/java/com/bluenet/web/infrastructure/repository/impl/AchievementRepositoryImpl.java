@@ -5,8 +5,8 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bluenet.web.domain.model.entity.Achievement;
 import com.bluenet.web.domain.model.enumerate.AchievementType;
 import com.bluenet.web.domain.model.enumerate.AwardLevel;
-import com.bluenet.web.domain.model.vo.AchievementStatsVO;
-import com.bluenet.web.domain.model.vo.AchievementVO;
+import com.bluenet.web.application.result.achievement.AchievementStatistics;
+import com.bluenet.web.domain.model.readmodel.AchievementReadModel;
 import com.bluenet.web.domain.repository.AchievementRepository;
 import com.bluenet.web.infrastructure.repository.converter.AchievementRepositoryConverter;
 import com.bluenet.web.infrastructure.repository.dataobject.AchievementDO;
@@ -38,19 +38,19 @@ public class AchievementRepositoryImpl implements AchievementRepository {
     private final AchievementRepositoryConverter converter;
 
     @Override
-    public org.springframework.data.domain.Page<AchievementVO> findAchievementsWithFilter(AchievementType type,
+    public org.springframework.data.domain.Page<AchievementReadModel> findAchievementsWithFilter(AchievementType type,
             AwardLevel awardLevel, Integer year, Pageable pageable) {
         Page<AchievementDO> page = new Page<>(pageable.getPageNumber() + 1, pageable.getPageSize());
         IPage<AchievementDO> result = achievementMapper.selectAchievementsWithFilter(type, awardLevel, year, page);
 
-        List<AchievementVO> content = buildAchievementVOs(result.getRecords());
+        List<AchievementReadModel> content = buildAchievementReadModels(result.getRecords());
         return new PageImpl<>(content, pageable, result.getTotal());
     }
 
     @Override
-    public AchievementStatsVO findAchievementStats() {
+    public AchievementStatistics findAchievementStats() {
         AchievementStatsQueryDO stats = achievementMapper.selectAchievementStats();
-        return AchievementStatsVO.builder()
+        return AchievementStatistics.builder()
                 .totalAchievements(stats.getTotalAchievements())
                 .nationalCount(stats.getNationalCount())
                 .provincialCount(stats.getProvincialCount())
@@ -79,11 +79,11 @@ public class AchievementRepositoryImpl implements AchievementRepository {
         achievementMapper.deleteById(id);
     }
 
-    private AchievementVO convertToVO(AchievementDO entity) {
+    private AchievementReadModel convertToVO(AchievementDO entity) {
         if (entity == null) {
             return null;
         }
-        return AchievementVO.builder()
+        return AchievementReadModel.builder()
                 .id(entity.getId())
                 .title(entity.getTitle())
                 .type(entity.getType())
@@ -95,7 +95,7 @@ public class AchievementRepositoryImpl implements AchievementRepository {
                 .build();
     }
 
-    private List<AchievementVO> buildAchievementVOs(List<AchievementDO> achievements) {
+    private List<AchievementReadModel> buildAchievementReadModels(List<AchievementDO> achievements) {
         List<Long> fileIds = achievements.stream()
                 .map(AchievementDO::getFileId)
                 .filter(Objects::nonNull)
@@ -125,8 +125,8 @@ public class AchievementRepositoryImpl implements AchievementRepository {
                 .toList();
     }
 
-    private AchievementVO toVO(AchievementDO achievement, FileDO file, CompetitionDO competition) {
-        return AchievementVO.builder()
+    private AchievementReadModel toVO(AchievementDO achievement, FileDO file, CompetitionDO competition) {
+        return AchievementReadModel.builder()
                 .id(achievement.getId())
                 .title(achievement.getTitle())
                 .type(achievement.getType())

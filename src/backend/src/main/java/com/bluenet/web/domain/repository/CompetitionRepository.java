@@ -1,7 +1,7 @@
 package com.bluenet.web.domain.repository;
 
 import com.bluenet.web.domain.model.entity.Competition;
-import com.bluenet.web.domain.model.vo.CompetitionVO;
+import com.bluenet.web.domain.model.readmodel.CompetitionReadModel;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -22,7 +22,7 @@ public interface CompetitionRepository {
      *            最大返回数量。
      * @return 竞赛简要信息列表
      */
-    List<CompetitionVO> findCompetitionsWithLimit(int limit);
+    List<CompetitionReadModel> findCompetitionsWithLimit(int limit);
 
     /**
      * 按展示排序分页查询竞赛视图。
@@ -31,7 +31,7 @@ public interface CompetitionRepository {
      *            Spring 分页请求对象。
      * @return 分页后的竞赛结果。
      */
-    Page<CompetitionVO> findCompetitionsPage(Pageable pageable);
+    Page<CompetitionReadModel> findCompetitionsPage(Pageable pageable);
 
     /**
      * 保存新的竞赛记录。

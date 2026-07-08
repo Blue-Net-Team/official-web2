@@ -2,9 +2,9 @@ package com.bluenet.web.infrastructure.repository.impl;
 
 import com.bluenet.web.domain.model.entity.Audit;
 import com.bluenet.web.domain.model.enumerate.AuditStatisticsPeriod;
-import com.bluenet.web.domain.model.vo.AuditEndpointLatencyVO;
-import com.bluenet.web.domain.model.vo.AuditEndpointRankingVO;
-import com.bluenet.web.domain.model.vo.AuditTrendPointVO;
+import com.bluenet.web.application.result.audit.AuditEndpointLatency;
+import com.bluenet.web.application.result.audit.AuditEndpointRanking;
+import com.bluenet.web.application.result.audit.AuditTrendPoint;
 import com.bluenet.web.domain.repository.AuditRepository;
 import com.bluenet.web.infrastructure.repository.dataobject.AuditDO;
 import com.bluenet.web.infrastructure.repository.mapper.AuditMapper;
@@ -44,7 +44,7 @@ public class AuditRepositoryImpl implements AuditRepository {
      * @return 满足条件的审计日志 结果集合。
      */
     @Override
-    public List<AuditTrendPointVO> queryTrends(AuditStatisticsPeriod period) {
+    public List<AuditTrendPoint> queryTrends(AuditStatisticsPeriod period) {
         return auditMapper.selectTrends(period.getValue())
                 .stream()
                 .map(this::toTrendPointVO)
@@ -61,7 +61,7 @@ public class AuditRepositoryImpl implements AuditRepository {
      * @return 满足条件的审计日志 结果集合。
      */
     @Override
-    public List<AuditEndpointRankingVO> queryEndpointRanking(AuditStatisticsPeriod period, int limit) {
+    public List<AuditEndpointRanking> queryEndpointRanking(AuditStatisticsPeriod period, int limit) {
         return auditMapper.selectEndpointRanking(period.getValue(), limit)
                 .stream()
                 .map(this::toEndpointRankingVO)
@@ -78,7 +78,7 @@ public class AuditRepositoryImpl implements AuditRepository {
      * @return 满足条件的审计日志 结果集合。
      */
     @Override
-    public List<AuditEndpointLatencyVO> queryEndpointLatencyRanking(AuditStatisticsPeriod period, int limit) {
+    public List<AuditEndpointLatency> queryEndpointLatencyRanking(AuditStatisticsPeriod period, int limit) {
         return auditMapper.selectEndpointLatencyRanking(period.getValue(), limit)
                 .stream()
                 .map(this::toEndpointLatencyVO)
@@ -92,8 +92,8 @@ public class AuditRepositoryImpl implements AuditRepository {
      *            Mapper 返回的投影数据行。
      * @return 转换后的目标模型对象。
      */
-    private AuditTrendPointVO toTrendPointVO(AuditTrendPointQueryDO row) {
-        return AuditTrendPointVO.builder()
+    private AuditTrendPoint toTrendPointVO(AuditTrendPointQueryDO row) {
+        return AuditTrendPoint.builder()
                 .time(row.getTime())
                 .count(row.getCount())
                 .build();
@@ -106,8 +106,8 @@ public class AuditRepositoryImpl implements AuditRepository {
      *            Mapper 返回的投影数据行。
      * @return 转换后的目标模型对象。
      */
-    private AuditEndpointRankingVO toEndpointRankingVO(AuditEndpointRankingQueryDO row) {
-        return AuditEndpointRankingVO.builder()
+    private AuditEndpointRanking toEndpointRankingVO(AuditEndpointRankingQueryDO row) {
+        return AuditEndpointRanking.builder()
                 .pattern(row.getPattern())
                 .count(row.getCount())
                 .avgDurationMs(row.getAvgDurationMs())
@@ -122,8 +122,8 @@ public class AuditRepositoryImpl implements AuditRepository {
      *            Mapper 返回的投影数据行。
      * @return 转换后的目标模型对象。
      */
-    private AuditEndpointLatencyVO toEndpointLatencyVO(AuditEndpointLatencyQueryDO row) {
-        return AuditEndpointLatencyVO.builder()
+    private AuditEndpointLatency toEndpointLatencyVO(AuditEndpointLatencyQueryDO row) {
+        return AuditEndpointLatency.builder()
                 .pattern(row.getPattern())
                 .avgDurationMs(row.getAvgDurationMs())
                 .maxDurationMs(row.getMaxDurationMs())

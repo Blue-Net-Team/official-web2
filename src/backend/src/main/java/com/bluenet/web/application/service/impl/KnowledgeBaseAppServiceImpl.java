@@ -1,7 +1,7 @@
 package com.bluenet.web.application.service.impl;
 
 import com.bluenet.web.application.command.knowledge.KnowledgeCommands;
-import com.bluenet.web.application.knowledge.KnowledgeDocResult;
+import com.bluenet.web.application.result.knowledge.KnowledgeDocResult;
 import com.bluenet.web.application.service.KnowledgeBaseAppService;
 import com.bluenet.web.domain.exception.BadRequest;
 import com.bluenet.web.domain.exception.DataNotFound;

@@ -1,16 +1,14 @@
 package com.bluenet.web.application.service.impl;
 
-import com.bluenet.web.application.ConfirmUploadResult;
-import com.bluenet.web.application.FileDownloadResult;
-import com.bluenet.web.application.FileResult;
-import com.bluenet.web.application.PresignedUploadResult;
+import com.bluenet.web.application.result.file.FileDownloadResult;
+import com.bluenet.web.application.result.file.FileResult;
 import com.bluenet.web.application.command.file.FileCommands;
 import com.bluenet.web.application.service.FileAppService;
 import com.bluenet.web.domain.exception.DataNotFound;
 import com.bluenet.web.domain.model.enumerate.FileType;
 import com.bluenet.web.domain.model.entity.File;
-import com.bluenet.web.domain.model.vo.ConfirmUploadVO;
-import com.bluenet.web.domain.model.vo.PresignedUploadVO;
+import com.bluenet.web.domain.model.result.ConfirmUploadResult;
+import com.bluenet.web.domain.model.result.PresignedUploadResult;
 import com.bluenet.web.domain.repository.FileRepository;
 import com.bluenet.web.domain.service.FileDomainService;
 import com.bluenet.web.infrastructure.security.util.UserCTX;
@@ -141,14 +139,14 @@ public class FileAppServiceImpl implements FileAppService {
 
     @Override
     public PresignedUploadResult prepareUpload(FileCommands.PrepareUploadCommand command) {
-        PresignedUploadVO vo = fileDomainService
+        PresignedUploadResult vo = fileDomainService
                 .prepareUpload(command.type(), command.filename(), command.contentType(), command.size());
         return new PresignedUploadResult(vo.fileId(), vo.uploadUrl(), vo.callbackToken(), vo.filename(), vo.type());
     }
 
     @Override
     public ConfirmUploadResult confirmUpload(FileCommands.ConfirmUploadCommand command) {
-        ConfirmUploadVO vo = fileDomainService
+        ConfirmUploadResult vo = fileDomainService
                 .confirmUpload(command.fileId(), command.callbackToken(), command.md5(), command.size());
         return new ConfirmUploadResult(vo.fileId(), vo.filename(), vo.type(), vo.status());
     }

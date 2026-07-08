@@ -3,8 +3,8 @@ package com.bluenet.web.domain.repository;
 import com.bluenet.web.domain.model.entity.Achievement;
 import com.bluenet.web.domain.model.enumerate.AchievementType;
 import com.bluenet.web.domain.model.enumerate.AwardLevel;
-import com.bluenet.web.domain.model.vo.AchievementStatsVO;
-import com.bluenet.web.domain.model.vo.AchievementVO;
+import com.bluenet.web.application.result.achievement.AchievementStatistics;
+import com.bluenet.web.domain.model.readmodel.AchievementReadModel;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -24,7 +24,7 @@ public interface AchievementRepository {
      *            Spring 分页请求对象。
      * @return 分页后的成果结果。
      */
-    Page<AchievementVO> findAchievementsWithFilter(AchievementType type, AwardLevel awardLevel, Integer year,
+    Page<AchievementReadModel> findAchievementsWithFilter(AchievementType type, AwardLevel awardLevel, Integer year,
             Pageable pageable);
 
     /**
@@ -32,7 +32,7 @@ public interface AchievementRepository {
      *
      * @return 查询或处理得到的成果结果。
      */
-    AchievementStatsVO findAchievementStats();
+    AchievementStatistics findAchievementStats();
 
     /**
      * 保存新的成果记录。

@@ -4,10 +4,10 @@ import com.bluenet.web.domain.exception.GlobalException;
 import com.bluenet.web.domain.model.entity.AssessmentJudgement;
 import com.bluenet.web.domain.model.enumerate.JudgementSource;
 import com.bluenet.web.domain.model.enumerate.QuestionType;
-import com.bluenet.web.domain.model.vo.AssessmentCandidateScoreRowVO;
-import com.bluenet.web.domain.model.vo.AssessmentQuestionScoreboardVO;
-import com.bluenet.web.domain.model.vo.AssessmentQuestionSubmissionHistoryVO;
-import com.bluenet.web.domain.model.vo.AssessmentQuestionSubmissionVO;
+import com.bluenet.web.domain.model.readmodel.AssessmentCandidateScoreRowReadModel;
+import com.bluenet.web.application.result.assessment.AssessmentQuestionScoreboard;
+import com.bluenet.web.domain.model.readmodel.AssessmentQuestionSubmissionHistoryReadModel;
+import com.bluenet.web.domain.model.readmodel.AssessmentQuestionSubmissionReadModel;
 import com.bluenet.web.domain.repository.AssessmentJudgementRepository;
 import com.bluenet.web.infrastructure.repository.converter.AssessmentJudgementRepositoryConverter;
 import com.bluenet.web.infrastructure.repository.dataobject.AssessmentJudgementDO;
@@ -169,7 +169,7 @@ public class AssessmentJudgementRepositoryImpl implements AssessmentJudgementRep
      * @return 满足条件的考核评审结果 结果集合。
      */
     @Override
-    public List<AssessmentQuestionScoreboardVO> findQuestionScoreboard(Long assessmentTimeId,
+    public List<AssessmentQuestionScoreboard> findQuestionScoreboard(Long assessmentTimeId,
             QuestionType questionType, String keyword) {
         return assessmentJudgementMapper.selectQuestionScoreboard(assessmentTimeId, questionType, keyword)
                 .stream()
@@ -189,7 +189,7 @@ public class AssessmentJudgementRepositoryImpl implements AssessmentJudgementRep
      * @return 满足条件的考核评审结果 结果集合。
      */
     @Override
-    public List<AssessmentQuestionSubmissionVO> findQuestionSubmissions(Long questionId, String keyword,
+    public List<AssessmentQuestionSubmissionReadModel> findQuestionSubmissions(Long questionId, String keyword,
             String status) {
         return assessmentJudgementMapper.selectQuestionSubmissions(questionId, keyword, status)
                 .stream()
@@ -207,7 +207,7 @@ public class AssessmentJudgementRepositoryImpl implements AssessmentJudgementRep
      * @return 满足条件的考核评审结果 结果集合。
      */
     @Override
-    public List<AssessmentQuestionSubmissionHistoryVO> findQuestionSubmissionHistories(Long questionId,
+    public List<AssessmentQuestionSubmissionHistoryReadModel> findQuestionSubmissionHistories(Long questionId,
             List<Long> userIds) {
         return assessmentJudgementMapper.selectQuestionSubmissionHistories(questionId, userIds)
                 .stream()
@@ -225,7 +225,7 @@ public class AssessmentJudgementRepositoryImpl implements AssessmentJudgementRep
      * @return 满足条件的考核评审结果 结果集合。
      */
     @Override
-    public List<AssessmentCandidateScoreRowVO> findCandidateScoreRows(Long assessmentTimeId, String keyword) {
+    public List<AssessmentCandidateScoreRowReadModel> findCandidateScoreRows(Long assessmentTimeId, String keyword) {
         return assessmentJudgementMapper.selectCandidateScoreRows(assessmentTimeId, keyword)
                 .stream()
                 .map(this::convertCandidateScoreRowToVO)
@@ -266,7 +266,7 @@ public class AssessmentJudgementRepositoryImpl implements AssessmentJudgementRep
      *            Mapper 返回的投影数据行。
      * @return 转换后的目标模型对象。
      */
-    private AssessmentQuestionSubmissionHistoryVO convertSubmissionHistoryToVO(
+    private AssessmentQuestionSubmissionHistoryReadModel convertSubmissionHistoryToVO(
             AssessmentQuestionSubmissionQueryDO row) {
         AssessmentJudgement judgement = null;
         if (row.getJudgementId() != null) {
@@ -287,7 +287,7 @@ public class AssessmentJudgementRepositoryImpl implements AssessmentJudgementRep
                     null,
                     null);
         }
-        return AssessmentQuestionSubmissionHistoryVO.builder()
+        return AssessmentQuestionSubmissionHistoryReadModel.builder()
                 .judgement(judgement)
                 .selectedBest(Boolean.TRUE.equals(row.getSelectedBest()))
                 .build();
@@ -300,8 +300,8 @@ public class AssessmentJudgementRepositoryImpl implements AssessmentJudgementRep
      *            Mapper 返回的投影数据行。
      * @return 转换后的目标模型对象。
      */
-    private AssessmentQuestionScoreboardVO convertScoreboardToVO(AssessmentQuestionScoreboardQueryDO row) {
-        return AssessmentQuestionScoreboardVO.builder()
+    private AssessmentQuestionScoreboard convertScoreboardToVO(AssessmentQuestionScoreboardQueryDO row) {
+        return AssessmentQuestionScoreboard.builder()
                 .questionId(row.getQuestionId())
                 .assessmentTimeId(row.getAssessmentTimeId())
                 .questionNo(row.getQuestionNo())
@@ -322,8 +322,8 @@ public class AssessmentJudgementRepositoryImpl implements AssessmentJudgementRep
      *            Mapper 返回的投影数据行。
      * @return 转换后的目标模型对象。
      */
-    private AssessmentQuestionSubmissionVO convertSubmissionToVO(AssessmentQuestionSubmissionQueryDO row) {
-        return AssessmentQuestionSubmissionVO.builder()
+    private AssessmentQuestionSubmissionReadModel convertSubmissionToVO(AssessmentQuestionSubmissionQueryDO row) {
+        return AssessmentQuestionSubmissionReadModel.builder()
                 .answerId(row.getAnswerId())
                 .questionId(row.getQuestionId())
                 .assessmentTimeId(row.getAssessmentTimeId())
@@ -362,8 +362,8 @@ public class AssessmentJudgementRepositoryImpl implements AssessmentJudgementRep
      *            Mapper 返回的投影数据行。
      * @return 转换后的目标模型对象。
      */
-    private AssessmentCandidateScoreRowVO convertCandidateScoreRowToVO(AssessmentCandidateScoreQueryDO row) {
-        return AssessmentCandidateScoreRowVO.builder()
+    private AssessmentCandidateScoreRowReadModel convertCandidateScoreRowToVO(AssessmentCandidateScoreQueryDO row) {
+        return AssessmentCandidateScoreRowReadModel.builder()
                 .candidateUserId(row.getCandidateUserId())
                 .studentId(row.getStudentId())
                 .username(row.getUsername())

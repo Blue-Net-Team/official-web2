@@ -4,7 +4,7 @@ import com.bluenet.web.api.dto.algorithm_judge.AlgorithmSubmitResponseDTO;
 import com.bluenet.web.api.dto.algorithm_judge.JudgeCaseResultDTO;
 import com.bluenet.web.api.dto.algorithm_judge.JudgeJobPollingResponseDTO;
 import com.bluenet.web.api.dto.assessment_judgement.AssessmentJudgementDTO;
-import com.bluenet.web.application.AlgorithmJudgeResult;
+import com.bluenet.web.application.result.algorithm_judge.AlgorithmJudgeResult;
 import org.springframework.stereotype.Component;
 
 import java.util.List;

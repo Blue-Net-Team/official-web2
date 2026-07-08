@@ -4,7 +4,7 @@ import com.bluenet.web.api.dto.PageDTO;
 import com.bluenet.web.api.dto.adminuser.AdminUserCreateResponseDTO;
 import com.bluenet.web.api.dto.adminuser.AdminUserDetailResponseDTO;
 import com.bluenet.web.api.dto.adminuser.AdminUserListItemResponseDTO;
-import com.bluenet.web.application.AdminUserResult;
+import com.bluenet.web.application.result.adminuser.AdminUserResult;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
 

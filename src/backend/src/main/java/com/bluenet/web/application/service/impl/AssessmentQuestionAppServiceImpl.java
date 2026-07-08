@@ -1,12 +1,12 @@
 package com.bluenet.web.application.service.impl;
 
-import com.bluenet.web.application.AssessmentQuestionResult;
-import com.bluenet.web.application.UserQuestionListResult;
+import com.bluenet.web.application.result.assessment.AssessmentQuestionResult;
+import com.bluenet.web.application.result.user.UserQuestionListResult;
 import com.bluenet.web.application.command.assessment_question.AssessmentQuestionCommands;
 import com.bluenet.web.application.service.AssessmentQuestionAppService;
 import com.bluenet.web.application.service.AssessmentSessionAppService;
 import com.bluenet.web.application.command.assessment_session.AssessmentSessionCommands;
-import com.bluenet.web.application.AssessmentSessionResult;
+import com.bluenet.web.application.result.assessment.AssessmentSessionResult;
 import com.bluenet.web.domain.exception.BadRequest;
 import com.bluenet.web.domain.exception.DataConflict;
 import com.bluenet.web.domain.exception.DataNotFound;
@@ -17,7 +17,7 @@ import com.bluenet.web.domain.model.enumerate.RoleType;
 import com.bluenet.web.domain.model.entity.AssessmentTime;
 import com.bluenet.web.domain.model.entity.File;
 import com.bluenet.web.domain.model.entity.User;
-import com.bluenet.web.domain.model.vo.evaluation.AlgorithmContent;
+import com.bluenet.web.domain.model.vo.question_content.AlgorithmContent;
 import com.bluenet.web.domain.repository.AssessmentAnswerRepository;
 import com.bluenet.web.domain.repository.AssessmentQuestionRepository;
 import com.bluenet.web.domain.repository.AssessmentTimeRepository;
@@ -415,7 +415,7 @@ public class AssessmentQuestionAppServiceImpl implements AssessmentQuestionAppSe
     }
 
     private void validateQuestionContent(QuestionType questionType,
-            com.bluenet.web.domain.model.vo.evaluation.QuestionContent content) {
+            com.bluenet.web.domain.model.vo.question_content.QuestionContent content) {
         if (questionType != QuestionType.ALGORITHM) {
             return;
         }

@@ -6,7 +6,7 @@ import com.bluenet.web.api.dto.algorithm_judge.AlgorithmSubmitResponseDTO;
 import com.bluenet.web.api.dto.algorithm_judge.JudgeJobPollingResponseDTO;
 import com.bluenet.web.api.dto.assessment_answer.CreateAnswerRequestDTO;
 import com.bluenet.web.api.converter.algorithm_judge.AlgorithmJudgeRequestConverter;
-import com.bluenet.web.application.AlgorithmJudgeResult;
+import com.bluenet.web.application.result.algorithm_judge.AlgorithmJudgeResult;
 import com.bluenet.web.api.converter.algorithm_judge.AlgorithmJudgeResponseConverter;
 import com.bluenet.web.application.service.AlgorithmJudgeAppService;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;

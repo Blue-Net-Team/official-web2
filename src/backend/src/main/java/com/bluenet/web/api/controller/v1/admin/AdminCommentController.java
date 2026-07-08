@@ -4,7 +4,7 @@ import com.bluenet.web.api.dto.ResponseMessage;
 import com.bluenet.web.api.dto.assessment_judgement.CommentDTO;
 import com.bluenet.web.api.dto.assessment_judgement.CommentRequestDTO;
 import com.bluenet.web.api.converter.assessment_judgement.CommentResponseConverter;
-import com.bluenet.web.application.CommentResult;
+import com.bluenet.web.application.result.comment.CommentResult;
 import com.bluenet.web.application.service.CommentAppService;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
 import com.bluenet.web.infrastructure.security.annotation.RequiresPermission;

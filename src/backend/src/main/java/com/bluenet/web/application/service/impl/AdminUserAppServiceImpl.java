@@ -1,7 +1,8 @@
 package com.bluenet.web.application.service.impl;
 
-import com.bluenet.web.application.AdminUserResult;
+import com.bluenet.web.application.result.adminuser.AdminUserResult;
 import com.bluenet.web.application.command.adminuser.AdminUserCommands;
+import com.bluenet.web.application.query.adminuser.GetUserListQuery;
 import com.bluenet.web.application.service.AdminUserAppService;
 import com.bluenet.web.domain.exception.BadRequest;
 import com.bluenet.web.domain.exception.DataNotFound;
@@ -42,16 +43,16 @@ public class AdminUserAppServiceImpl implements AdminUserAppService {
     private static final int MAX_BATCH_SIZE = 50;
 
     @Override
-    public Page<AdminUserResult.ListItem> getUserList(AdminUserCommands.GetUserListCommand command) {
+    public Page<AdminUserResult.ListItem> getUserList(GetUserListQuery query) {
         Pageable pageable = PageRequest.of(
-                command.page() != null ? command.page() : 0,
-                command.size() != null ? command.size() : 20);
+                query.page() != null ? query.page() : 0,
+                query.size() != null ? query.size() : 20);
         Page<User> userPage = userRepository.findPage(
                 pageable,
-                command.roleId(),
-                command.direction(),
-                command.collegeId(),
-                command.keyword());
+                query.roleId(),
+                query.direction(),
+                query.collegeId(),
+                query.keyword());
         return userPage.map(this::toListItem);
     }
 

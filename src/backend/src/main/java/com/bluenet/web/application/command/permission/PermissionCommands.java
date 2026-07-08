@@ -12,20 +12,4 @@ public class PermissionCommands {
     private PermissionCommands() {
     }
 
-    /**
-     * 查询权限列表命令。
-     * <p>
-     * 用于分页查询权限列表。
-     * </p>
-     */
-    public record GetPermissionsCommand(
-            /** 关键词 */
-            String keyword,
-            /** 格式 */
-            String format,
-            /** 页码 */
-            Integer page,
-            /** 每页大小 */
-            Integer size) {
-    }
 }

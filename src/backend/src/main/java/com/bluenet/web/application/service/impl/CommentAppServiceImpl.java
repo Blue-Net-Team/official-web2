@@ -1,6 +1,6 @@
 package com.bluenet.web.application.service.impl;
 
-import com.bluenet.web.application.CommentResult;
+import com.bluenet.web.application.result.comment.CommentResult;
 import com.bluenet.web.application.service.CommentAppService;
 import com.bluenet.web.domain.exception.DataNotFound;
 import com.bluenet.web.domain.model.entity.Comment;

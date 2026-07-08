@@ -1,10 +1,10 @@
 package com.bluenet.web.api.converter.userexperience;
 
 import com.bluenet.web.api.dto.experience.ExperienceDTO;
-import com.bluenet.web.application.UserExperienceResult;
-import com.bluenet.web.domain.model.vo.content.CompetitionContent;
-import com.bluenet.web.domain.model.vo.content.InternshipContent;
-import com.bluenet.web.domain.model.vo.content.ProjectContent;
+import com.bluenet.web.application.result.user.UserExperienceResult;
+import com.bluenet.web.domain.model.vo.experience_content.CompetitionContent;
+import com.bluenet.web.domain.model.vo.experience_content.InternshipContent;
+import com.bluenet.web.domain.model.vo.experience_content.ProjectContent;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;

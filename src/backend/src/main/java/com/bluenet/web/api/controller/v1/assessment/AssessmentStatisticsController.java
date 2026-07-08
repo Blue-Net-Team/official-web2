@@ -2,7 +2,7 @@ package com.bluenet.web.api.controller.v1.assessment;
 
 import com.bluenet.web.api.dto.ResponseMessage;
 import com.bluenet.web.api.dto.assessment_statistics.QuestionStatisticsDTO;
-import com.bluenet.web.application.AssessmentStatisticsResult;
+import com.bluenet.web.application.result.assessment.AssessmentStatisticsResult;
 import com.bluenet.web.api.converter.assessment_statistics.AssessmentStatisticsResponseConverter;
 import com.bluenet.web.application.service.AssessmentStatisticsAppService;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;

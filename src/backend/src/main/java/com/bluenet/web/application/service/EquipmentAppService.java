@@ -1,6 +1,6 @@
 package com.bluenet.web.application.service;
 
-import com.bluenet.web.application.EquipmentResult;
+import com.bluenet.web.application.result.equipment.EquipmentResult;
 import com.bluenet.web.application.command.equipment.EquipmentCommands;
 
 import java.util.List;

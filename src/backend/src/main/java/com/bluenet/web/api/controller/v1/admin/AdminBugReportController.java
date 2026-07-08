@@ -6,7 +6,7 @@ import com.bluenet.web.api.dto.bugreport.BugReportBriefDTO;
 import com.bluenet.web.api.dto.bugreport.BugReportDetailDTO;
 import com.bluenet.web.api.dto.bugreport.BugReportListQueryDTO;
 import com.bluenet.web.api.converter.bugreport.BugReportRequestConverter;
-import com.bluenet.web.application.BugReportResult;
+import com.bluenet.web.application.result.bugreport.BugReportResult;
 import com.bluenet.web.api.converter.bugreport.BugReportResponseConverter;
 import com.bluenet.web.application.service.BugReportAdminAppService;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
@@ -50,7 +50,7 @@ public class AdminBugReportController {
     public ResponseMessage<PageDTO<BugReportBriefDTO>> getBugReportList(
             @Valid BugReportListQueryDTO query) {
         Page<BugReportResult.Brief> page = bugReportAdminAppService
-                .getBugReportList(requestConverter.toListCommand(query));
+                .getBugReportList(requestConverter.toListQuery(query));
         return ResponseMessage.success(PageDTO.from(responseConverter.toBriefDTOPage(page)));
     }
 

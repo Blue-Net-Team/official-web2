@@ -1,7 +1,7 @@
 package com.bluenet.web.application.service.impl;
 
 import com.bluenet.web.BaseIntegrationTest;
-import com.bluenet.web.application.ResetPasswordResult;
+import com.bluenet.web.application.result.resetpassword.ResetPasswordResult;
 import com.bluenet.web.application.command.resetpassword.ResetPasswordCommands;
 import com.bluenet.web.application.message.MessageDispatcher;
 import com.bluenet.web.application.message.MessageRequest;

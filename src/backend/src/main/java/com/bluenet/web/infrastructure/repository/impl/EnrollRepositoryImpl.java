@@ -6,7 +6,7 @@ import com.bluenet.web.domain.model.entity.Enroll;
 import com.bluenet.web.domain.model.entity.User;
 import com.bluenet.web.domain.model.enumerate.Direction;
 import com.bluenet.web.domain.model.enumerate.EnrollStatus;
-import com.bluenet.web.domain.model.vo.EnrollStatisticsVO;
+import com.bluenet.web.application.result.enroll.EnrollStatistics;
 import com.bluenet.web.domain.repository.EnrollRepository;
 import com.bluenet.web.infrastructure.repository.converter.CollegeRepositoryConverter;
 import com.bluenet.web.infrastructure.repository.converter.EnrollRepositoryConverter;
@@ -102,7 +102,7 @@ public class EnrollRepositoryImpl implements EnrollRepository {
     }
 
     @Override
-    public EnrollStatisticsVO getStatistics() {
+    public EnrollStatistics getStatistics() {
         long total = enrollMapper.countAll();
 
         Map<String, Long> byStatus = new HashMap<>();
@@ -115,7 +115,7 @@ public class EnrollRepositoryImpl implements EnrollRepository {
             byDirection.put(direction, enrollMapper.countByDirection(direction));
         }
 
-        return EnrollStatisticsVO.builder()
+        return EnrollStatistics.builder()
                 .total(total)
                 .byStatus(byStatus)
                 .byDirection(byDirection)

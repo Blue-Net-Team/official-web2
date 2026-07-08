@@ -1,6 +1,6 @@
 package com.bluenet.web.application.service.impl;
 
-import com.bluenet.web.application.BugReportResult;
+import com.bluenet.web.application.result.bugreport.BugReportResult;
 import com.bluenet.web.application.command.bugreport.BugReportCommands;
 import com.bluenet.web.application.service.BugReportAppService;
 import com.bluenet.web.domain.model.entity.BugReport;

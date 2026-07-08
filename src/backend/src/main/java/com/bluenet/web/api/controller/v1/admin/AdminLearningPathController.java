@@ -5,7 +5,7 @@ import com.bluenet.web.api.dto.learningpath.CreateLearningStepRequestDTO;
 import com.bluenet.web.api.dto.learningpath.LearningStepDTO;
 import com.bluenet.web.api.dto.learningpath.UpdateLearningStepRequestDTO;
 import com.bluenet.web.api.converter.learningpath.LearningPathRequestConverter;
-import com.bluenet.web.application.LearningPathResult;
+import com.bluenet.web.application.result.learningpath.LearningPathResult;
 import com.bluenet.web.application.command.learningpath.LearningPathCommands;
 import com.bluenet.web.api.converter.learningpath.LearningPathResponseConverter;
 import com.bluenet.web.application.service.LearningPathAppService;

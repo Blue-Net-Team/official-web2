@@ -2,7 +2,7 @@ package com.bluenet.web.api.converter.assessment_team;
 
 import com.bluenet.web.api.dto.assessment_team.AssessmentTeamDTO;
 import com.bluenet.web.api.dto.assessment_team.TeamMemberDTO;
-import com.bluenet.web.application.TeamResult;
+import com.bluenet.web.application.result.team.TeamResult;
 import org.springframework.stereotype.Component;
 
 import java.util.Collections;

@@ -1,6 +1,6 @@
 package com.bluenet.web.application.service.impl;
 
-import com.bluenet.web.application.AchievementResult;
+import com.bluenet.web.application.result.achievement.AchievementResult;
 import com.bluenet.web.application.command.achievement.AchievementCommands;
 import com.bluenet.web.application.service.AchievementAppService;
 import com.bluenet.web.domain.exception.BadRequest;
@@ -10,8 +10,8 @@ import com.bluenet.web.domain.model.entity.File;
 import com.bluenet.web.domain.model.enumerate.AchievementType;
 import com.bluenet.web.domain.model.enumerate.AwardLevel;
 import com.bluenet.web.domain.model.enumerate.FileType;
-import com.bluenet.web.domain.model.vo.AchievementStatsVO;
-import com.bluenet.web.domain.model.vo.AchievementVO;
+import com.bluenet.web.application.result.achievement.AchievementStatistics;
+import com.bluenet.web.domain.model.readmodel.AchievementReadModel;
 import com.bluenet.web.domain.repository.AchievementRepository;
 import com.bluenet.web.domain.service.FileDomainService;
 import lombok.RequiredArgsConstructor;
@@ -55,7 +55,8 @@ public class AchievementAppServiceImpl implements AchievementAppService {
         int pageSize = size != null ? size : 12;
         Pageable pageable = PageRequest.of(pageNum, pageSize);
 
-        Page<AchievementVO> voPage = achievementRepository.findAchievementsWithFilter(type, awardLevel, year, pageable);
+        Page<AchievementReadModel> voPage = achievementRepository
+                .findAchievementsWithFilter(type, awardLevel, year, pageable);
         return voPage.map(this::toResult);
     }
 
@@ -65,7 +66,7 @@ public class AchievementAppServiceImpl implements AchievementAppService {
      * @return 成就统计结果
      */
     @Override
-    public AchievementStatsVO getAchievementStats() {
+    public AchievementStatistics getAchievementStats() {
         return achievementRepository.findAchievementStats();
     }
 
@@ -163,7 +164,7 @@ public class AchievementAppServiceImpl implements AchievementAppService {
                 null);
     }
 
-    private AchievementResult toResult(AchievementVO vo) {
+    private AchievementResult toResult(AchievementReadModel vo) {
         return new AchievementResult(
                 vo.getId(),
                 vo.getTitle(),

@@ -2,7 +2,7 @@ package com.bluenet.web.api.converter.learningpath;
 
 import com.bluenet.web.api.dto.learningpath.DirectionLearningPathDTO;
 import com.bluenet.web.api.dto.learningpath.LearningStepDTO;
-import com.bluenet.web.application.LearningPathResult;
+import com.bluenet.web.application.result.learningpath.LearningPathResult;
 import com.bluenet.web.domain.model.enumerate.Direction;
 import com.bluenet.web.infrastructure.util.DirectionSlugConverter;
 import org.springframework.stereotype.Component;

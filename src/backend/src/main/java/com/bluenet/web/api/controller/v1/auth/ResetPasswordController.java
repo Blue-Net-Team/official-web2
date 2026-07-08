@@ -3,7 +3,7 @@ package com.bluenet.web.api.controller.v1.auth;
 import com.bluenet.web.api.dto.ResponseMessage;
 import com.bluenet.web.api.dto.auth.*;
 import com.bluenet.web.api.converter.resetpassword.ResetPasswordRequestConverter;
-import com.bluenet.web.application.ResetPasswordResult;
+import com.bluenet.web.application.result.resetpassword.ResetPasswordResult;
 import com.bluenet.web.application.service.ResetPasswordAppService;
 import com.bluenet.web.domain.exception.BadRequest;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;

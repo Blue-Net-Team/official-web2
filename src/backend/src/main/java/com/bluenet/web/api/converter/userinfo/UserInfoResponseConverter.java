@@ -2,7 +2,8 @@ package com.bluenet.web.api.converter.userinfo;
 
 import com.bluenet.web.api.dto.user.TabCountsDTO;
 import com.bluenet.web.api.dto.user.UserInfo;
-import com.bluenet.web.application.UserInfoResult;
+import com.bluenet.web.application.result.common.TabCounts;
+import com.bluenet.web.application.result.user.UserInfoResult;
 import org.springframework.stereotype.Component;
 
 /**
@@ -39,11 +40,11 @@ public class UserInfoResponseConverter {
     /**
      * 将Tab计数结果转换为 TabCounts DTO
      */
-    public TabCountsDTO toTabCountsDTO(UserInfoResult.TabCounts tabCounts) {
+    public TabCountsDTO toTabCountsDTO(TabCounts tabCounts) {
         return TabCountsDTO.builder()
-                .projects(tabCounts.projects())
-                .competitions(tabCounts.competitions())
-                .internships(tabCounts.internships())
+                .projects(tabCounts.getProjects())
+                .competitions(tabCounts.getCompetitions())
+                .internships(tabCounts.getInternships())
                 .build();
     }
 }

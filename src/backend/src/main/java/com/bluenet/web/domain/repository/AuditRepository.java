@@ -2,9 +2,9 @@ package com.bluenet.web.domain.repository;
 
 import com.bluenet.web.domain.model.entity.Audit;
 import com.bluenet.web.domain.model.enumerate.AuditStatisticsPeriod;
-import com.bluenet.web.domain.model.vo.AuditEndpointLatencyVO;
-import com.bluenet.web.domain.model.vo.AuditEndpointRankingVO;
-import com.bluenet.web.domain.model.vo.AuditTrendPointVO;
+import com.bluenet.web.application.result.audit.AuditEndpointLatency;
+import com.bluenet.web.application.result.audit.AuditEndpointRanking;
+import com.bluenet.web.application.result.audit.AuditTrendPoint;
 
 import java.util.List;
 
@@ -27,7 +27,7 @@ public interface AuditRepository {
      *            统计周期，例如按日、按周或按月。
      * @return 审计访问趋势点列表（按时间顺序）
      */
-    List<AuditTrendPointVO> queryTrends(AuditStatisticsPeriod period);
+    List<AuditTrendPoint> queryTrends(AuditStatisticsPeriod period);
 
     /**
      * 查询接口访问次数排行，供审计统计页面展示热点接口。
@@ -38,7 +38,7 @@ public interface AuditRepository {
      *            最大返回数量。
      * @return 满足条件的审计日志 结果集合。
      */
-    List<AuditEndpointRankingVO> queryEndpointRanking(AuditStatisticsPeriod period, int limit);
+    List<AuditEndpointRanking> queryEndpointRanking(AuditStatisticsPeriod period, int limit);
 
     /**
      * 查询接口平均耗时排行，供审计统计页面定位慢接口。
@@ -49,5 +49,5 @@ public interface AuditRepository {
      *            最大返回数量。
      * @return 满足条件的审计日志 结果集合。
      */
-    List<AuditEndpointLatencyVO> queryEndpointLatencyRanking(AuditStatisticsPeriod period, int limit);
+    List<AuditEndpointLatency> queryEndpointLatencyRanking(AuditStatisticsPeriod period, int limit);
 }

@@ -2,7 +2,7 @@ package com.bluenet.web.api.controller.v1.qrcode;
 
 import com.bluenet.web.api.dto.ResponseMessage;
 import com.bluenet.web.api.dto.qrcode.ConsultationQrcodeDTO;
-import com.bluenet.web.application.QrcodeResult;
+import com.bluenet.web.application.result.qrcode.QrcodeResult;
 import com.bluenet.web.api.converter.qrcode.QrcodeResponseConverter;
 import com.bluenet.web.application.service.QrcodeAppService;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;

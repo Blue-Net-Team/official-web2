@@ -1,6 +1,6 @@
 package com.bluenet.web.infrastructure.repository.handler;
 
-import com.bluenet.web.domain.model.vo.evaluation.QuestionContent;
+import com.bluenet.web.domain.model.vo.question_content.QuestionContent;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.ibatis.type.BaseTypeHandler;

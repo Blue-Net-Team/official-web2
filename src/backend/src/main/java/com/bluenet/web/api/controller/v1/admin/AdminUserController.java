@@ -4,7 +4,7 @@ import com.bluenet.web.api.dto.PageDTO;
 import com.bluenet.web.api.dto.ResponseMessage;
 import com.bluenet.web.api.dto.adminuser.*;
 import com.bluenet.web.api.converter.adminuser.AdminUserRequestConverter;
-import com.bluenet.web.application.AdminUserResult;
+import com.bluenet.web.application.result.adminuser.AdminUserResult;
 import com.bluenet.web.api.converter.adminuser.AdminUserResponseConverter;
 import com.bluenet.web.application.service.AdminUserAppService;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
@@ -45,7 +45,7 @@ public class AdminUserController {
     @GetMapping
     public ResponseMessage<PageDTO<AdminUserListItemResponseDTO>> getUserList(
             @Valid AdminUserListQueryDTO query) {
-        Page<AdminUserResult.ListItem> page = adminUserAppService.getUserList(requestConverter.toCommand(query));
+        Page<AdminUserResult.ListItem> page = adminUserAppService.getUserList(requestConverter.toQuery(query));
         return ResponseMessage.success(responseConverter.toPageDTO(page));
     }
 

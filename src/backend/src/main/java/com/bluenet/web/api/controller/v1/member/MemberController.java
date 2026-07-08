@@ -10,8 +10,8 @@ import com.bluenet.web.api.dto.member.MemberListQueryDTO;
 import com.bluenet.web.api.converter.member.MemberRequestConverter;
 import com.bluenet.web.api.converter.member.MemberResponseConverter;
 import com.bluenet.web.api.converter.userexperience.UserExperienceResponseConverter;
-import com.bluenet.web.application.MemberResult;
-import com.bluenet.web.application.command.member.MemberCommands;
+import com.bluenet.web.application.result.member.MemberResult;
+import com.bluenet.web.application.query.member.GetMemberListQuery;
 import com.bluenet.web.application.service.MemberAppService;
 import com.bluenet.web.domain.model.enumerate.Direction;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
@@ -49,13 +49,13 @@ public class MemberController {
             @Parameter(description = "页码，从0开始") @RequestParam(required = false) Integer page,
             @Parameter(description = "每页数量，默认20，最大100") @RequestParam(required = false) Integer size,
             @Parameter(description = "方向筛选") @RequestParam(required = false) Direction direction) {
-        MemberListQueryDTO query = MemberListQueryDTO.builder()
+        MemberListQueryDTO listQueryDTO = MemberListQueryDTO.builder()
                 .page(page)
                 .size(size)
                 .direction(direction)
                 .build();
-        MemberCommands.GetMemberListCommand command = memberRequestConverter.toCommand(query);
-        Page<MemberResult> resultPage = memberAppService.getMemberList(command);
+        GetMemberListQuery query = memberRequestConverter.toQuery(listQueryDTO);
+        Page<MemberResult> resultPage = memberAppService.getMemberList(query);
         Page<MemberBriefDTO> dtoPage = resultPage.map(memberResponseConverter::toBriefDTO);
         return ResponseMessage.success(PageDTO.from(dtoPage));
     }

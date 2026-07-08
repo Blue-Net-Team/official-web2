@@ -10,7 +10,7 @@ import java.util.*;
 import com.bluenet.web.domain.model.entity.*;
 import com.bluenet.web.domain.model.enumerate.Direction;
 import com.bluenet.web.domain.model.enumerate.ExperienceType;
-import com.bluenet.web.domain.model.vo.TabCountsVO;
+import com.bluenet.web.application.result.common.TabCounts;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.bluenet.web.infrastructure.repository.dataobject.*;
@@ -145,13 +145,13 @@ public class UserRepositoryImpl extends ServiceImpl<UserMapper, UserDO> implemen
      * @return 查询或处理得到的用户 结果。
      */
     @Override
-    public TabCountsVO getTabCounts(Long userId) {
+    public TabCounts getTabCounts(Long userId) {
         int projects = Math.toIntExact(userExperienceMapper.countByUserIdAndType(userId, ExperienceType.PROJECT));
         int competitions = Math
                 .toIntExact(userExperienceMapper.countByUserIdAndType(userId, ExperienceType.COMPETITION));
         int internships = Math.toIntExact(userExperienceMapper.countByUserIdAndType(userId, ExperienceType.INTERNSHIP));
 
-        return new TabCountsVO(projects, competitions, internships);
+        return new TabCounts(projects, competitions, internships);
     }
 
     /**

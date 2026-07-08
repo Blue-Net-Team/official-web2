@@ -5,7 +5,7 @@ import com.bluenet.web.api.dto.qrcode.ConsultationQrcodeDTO;
 import com.bluenet.web.api.dto.qrcode.UpdateConsultationQrcodeRequestDTO;
 import com.bluenet.web.api.converter.qrcode.QrcodeRequestConverter;
 import com.bluenet.web.api.converter.qrcode.QrcodeResponseConverter;
-import com.bluenet.web.application.QrcodeResult;
+import com.bluenet.web.application.result.qrcode.QrcodeResult;
 import com.bluenet.web.application.command.qrcode.QrcodeCommands;
 import com.bluenet.web.application.service.QrcodeAppService;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;

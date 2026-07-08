@@ -1,6 +1,6 @@
 package com.bluenet.web.application.service.impl;
 
-import com.bluenet.web.application.AlgorithmJudgeResult;
+import com.bluenet.web.application.result.algorithm_judge.AlgorithmJudgeResult;
 import com.bluenet.web.application.command.algorithm_judge.AlgorithmJudgeCommands;
 import com.bluenet.web.application.service.AlgorithmJudgeAppService;
 import com.bluenet.web.domain.exception.BadRequest;
@@ -19,7 +19,7 @@ import com.bluenet.web.domain.model.entity.AssessmentJudgement;
 import com.bluenet.web.domain.model.entity.AssessmentQuestion;
 import com.bluenet.web.domain.model.entity.AssessmentTime;
 import com.bluenet.web.domain.model.entity.User;
-import com.bluenet.web.domain.model.vo.evaluation.AlgorithmContent;
+import com.bluenet.web.domain.model.vo.question_content.AlgorithmContent;
 import com.bluenet.web.domain.repository.AlgorithmJudgeCaseResultRepository;
 import com.bluenet.web.domain.repository.AlgorithmJudgeJobRepository;
 import com.bluenet.web.domain.repository.AssessmentAnswerRepository;

@@ -11,8 +11,8 @@ import com.bluenet.web.domain.model.enumerate.FileStatus;
 import com.bluenet.web.domain.model.enumerate.FileType;
 import com.bluenet.web.domain.model.enumerate.RoleType;
 import com.bluenet.web.domain.model.policy.RoleHierarchy;
-import com.bluenet.web.domain.model.vo.ConfirmUploadVO;
-import com.bluenet.web.domain.model.vo.PresignedUploadVO;
+import com.bluenet.web.domain.model.result.ConfirmUploadResult;
+import com.bluenet.web.domain.model.result.PresignedUploadResult;
 import com.bluenet.web.infrastructure.security.principal.RoleTypeResolver;
 import com.bluenet.web.domain.repository.AssessmentAnswerRepository;
 import com.bluenet.web.domain.repository.AssessmentQuestionRepository;
@@ -116,7 +116,8 @@ public class FileDomainServiceImpl implements FileDomainService {
 
     @Override
     @Transactional
-    public PresignedUploadVO prepareUpload(FileType fileType, String originalFilename, String contentType, long size) {
+    public PresignedUploadResult prepareUpload(FileType fileType, String originalFilename, String contentType,
+            long size) {
         String extension = getFileExtension(originalFilename);
         String filename = generateFilename(fileType, extension);
 
@@ -144,12 +145,12 @@ public class FileDomainServiceImpl implements FileDomainService {
                 storageProperties.getPresignedUploadExpiry());
 
         log.info("预签名上传准备完成，fileId={}, type={}, filename={}", fileId, fileType, filename);
-        return new PresignedUploadVO(fileId, uploadUrl, callbackToken, filename, fileType);
+        return new PresignedUploadResult(fileId, uploadUrl, callbackToken, filename, fileType);
     }
 
     @Override
     @Transactional
-    public ConfirmUploadVO confirmUpload(Long fileId, String callbackToken, String expectedMd5, long expectedSize) {
+    public ConfirmUploadResult confirmUpload(Long fileId, String callbackToken, String expectedMd5, long expectedSize) {
         Long tokenFileId = presignedUploadTokenService.getFileId(callbackToken);
         if (tokenFileId == null || !tokenFileId.equals(fileId)) {
             log.warn("预签名上传确认失败，Token 无效或 fileId 不匹配: fileId={}", fileId);
@@ -161,7 +162,7 @@ public class FileDomainServiceImpl implements FileDomainService {
 
         if (file.getStatus() == FileStatus.ACTIVE) {
             log.info("预签名上传确认幂等，文件已是 ACTIVE 状态: fileId={}", fileId);
-            return new ConfirmUploadVO(fileId, file.getName(), file.getType(), FileStatus.ACTIVE);
+            return new ConfirmUploadResult(fileId, file.getName(), file.getType(), FileStatus.ACTIVE);
         }
 
         if (file.getStatus() != FileStatus.PENDING) {
@@ -175,7 +176,7 @@ public class FileDomainServiceImpl implements FileDomainService {
         } catch (DataNotFound e) {
             log.warn("预签名上传确认失败，OSS 对象不存在: fileId={}, filename={}", fileId, file.getName());
             updateFileStatus(file, FileStatus.REJECTED);
-            return new ConfirmUploadVO(fileId, file.getName(), file.getType(), FileStatus.REJECTED);
+            return new ConfirmUploadResult(fileId, file.getName(), file.getType(), FileStatus.REJECTED);
         }
 
         String actualEtag = sanitizeEtag(metadata.etag());
@@ -195,7 +196,7 @@ public class FileDomainServiceImpl implements FileDomainService {
         if (md5Match && sizeMatch && magicMatch) {
             updateFileStatus(file, FileStatus.ACTIVE);
             log.info("预签名上传确认成功，fileId={}, filename={}, etag={}", fileId, file.getName(), actualEtag);
-            return new ConfirmUploadVO(fileId, file.getName(), file.getType(), FileStatus.ACTIVE);
+            return new ConfirmUploadResult(fileId, file.getName(), file.getType(), FileStatus.ACTIVE);
         } else {
             log.warn(
                     "预签名上传确认失败，校验不通过: fileId={}, expectedMd5={}, actualEtag={}, expectedSize={}, actualSize={}, magicMatch={}",
@@ -211,7 +212,7 @@ public class FileDomainServiceImpl implements FileDomainService {
                 log.error("清理 OSS 对象失败: fileId={}, filename={}", fileId, file.getName(), e);
             }
             updateFileStatus(file, FileStatus.REJECTED);
-            return new ConfirmUploadVO(fileId, file.getName(), file.getType(), FileStatus.REJECTED);
+            return new ConfirmUploadResult(fileId, file.getName(), file.getType(), FileStatus.REJECTED);
         }
     }
 

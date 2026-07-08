@@ -1,7 +1,7 @@
 package com.bluenet.web.application.service.impl;
 
-import com.bluenet.web.application.AssessmentProgressResult;
-import com.bluenet.web.application.AssessmentTimeResult;
+import com.bluenet.web.application.result.assessment.AssessmentProgressResult;
+import com.bluenet.web.application.result.assessment.AssessmentTimeResult;
 import com.bluenet.web.application.command.assessment_time.AssessmentTimeCommands;
 import com.bluenet.web.application.service.AssessmentTimeAppService;
 import com.bluenet.web.domain.exception.DataConflict;

@@ -2,7 +2,7 @@ package com.bluenet.web.domain.repository;
 
 import com.bluenet.web.domain.model.entity.User;
 import com.bluenet.web.domain.model.enumerate.Direction;
-import com.bluenet.web.domain.model.vo.TabCountsVO;
+import com.bluenet.web.application.result.common.TabCounts;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -57,7 +57,7 @@ public interface UserRepository {
      *            用户主键，用于限定用户范围。
      * @return 查询或处理得到的用户 结果。
      */
-    TabCountsVO getTabCounts(Long userId);
+    TabCounts getTabCounts(Long userId);
 
     /**
      * 按 GitHub 用户标识查询已绑定用户。

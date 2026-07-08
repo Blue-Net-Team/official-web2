@@ -1,8 +1,9 @@
 package com.bluenet.web.application.service.impl;
 
 import com.bluenet.web.BaseIntegrationTest;
-import com.bluenet.web.application.AdminUserResult;
+import com.bluenet.web.application.result.adminuser.AdminUserResult;
 import com.bluenet.web.application.command.adminuser.AdminUserCommands;
+import com.bluenet.web.application.query.adminuser.GetUserListQuery;
 import com.bluenet.web.application.service.AdminUserAppService;
 import com.bluenet.web.domain.exception.BadRequest;
 import com.bluenet.web.domain.exception.DataNotFound;
@@ -333,7 +334,7 @@ class AdminUserAppServiceImplIntegrationTest extends BaseIntegrationTest {
         userRepository.save(candidate);
 
         Page<AdminUserResult.ListItem> page = adminUserAppService.getUserList(
-                new AdminUserCommands.GetUserListCommand(0, 20, memberRoleId, null, null, null));
+                new GetUserListQuery(0, 20, memberRoleId, null, null, null));
 
         assertEquals(1, page.getTotalElements());
         assertEquals(member.getId(), page.getContent().get(0).id());

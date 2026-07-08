@@ -1,7 +1,11 @@
 package com.bluenet.web.application.service;
 
-import com.bluenet.web.application.AuditStatisticsResult;
-import com.bluenet.web.application.command.auditstatistics.AuditStatisticsCommands;
+import com.bluenet.web.application.result.audit.AuditEndpointLatency;
+import com.bluenet.web.application.result.audit.AuditEndpointRanking;
+import com.bluenet.web.application.result.audit.AuditTrendPoint;
+import com.bluenet.web.application.query.auditstatistics.GetEndpointLatencyRankingQuery;
+import com.bluenet.web.application.query.auditstatistics.GetEndpointRankingQuery;
+import com.bluenet.web.application.query.auditstatistics.GetTrendsQuery;
 
 import java.util.List;
 
@@ -16,29 +20,29 @@ public interface AuditStatisticsAppService {
     /**
      * 获取审计趋势统计。
      *
-     * @param command
-     *            查询趋势命令
+     * @param query
+     *            查询趋势参数
      * @return 趋势点列表
      */
-    List<AuditStatisticsResult.TrendPoint> getTrends(AuditStatisticsCommands.GetTrendsCommand command);
+    List<AuditTrendPoint> getTrends(GetTrendsQuery query);
 
     /**
      * 获取接口调用排行。
      *
-     * @param command
-     *            查询排行命令
+     * @param query
+     *            查询排行参数
      * @return 接口调用排行列表
      */
-    List<AuditStatisticsResult.EndpointRanking> getEndpointRanking(
-            AuditStatisticsCommands.GetEndpointRankingCommand command);
+    List<AuditEndpointRanking> getEndpointRanking(
+            GetEndpointRankingQuery query);
 
     /**
      * 获取接口延迟排行。
      *
-     * @param command
-     *            查询延迟排行命令
+     * @param query
+     *            查询延迟排行参数
      * @return 接口延迟排行列表
      */
-    List<AuditStatisticsResult.EndpointLatency> getEndpointLatencyRanking(
-            AuditStatisticsCommands.GetEndpointLatencyRankingCommand command);
+    List<AuditEndpointLatency> getEndpointLatencyRanking(
+            GetEndpointLatencyRankingQuery query);
 }

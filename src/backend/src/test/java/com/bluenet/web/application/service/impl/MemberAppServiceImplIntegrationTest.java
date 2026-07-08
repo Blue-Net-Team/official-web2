@@ -1,8 +1,8 @@
 package com.bluenet.web.application.service.impl;
 
 import com.bluenet.web.BaseIntegrationTest;
-import com.bluenet.web.application.UserExperienceResult;
-import com.bluenet.web.application.command.member.MemberCommands;
+import com.bluenet.web.application.result.user.UserExperienceResult;
+import com.bluenet.web.application.query.member.GetMemberListQuery;
 import com.bluenet.web.application.service.MemberAppService;
 import com.bluenet.web.domain.exception.DataNotFound;
 import com.bluenet.web.domain.model.entity.User;
@@ -168,7 +168,7 @@ class MemberAppServiceImplIntegrationTest extends BaseIntegrationTest {
     void getMemberList_shouldReturnPage() {
         createMember("2026002006");
 
-        var page = memberAppService.getMemberList(new MemberCommands.GetMemberListCommand(null, 0, 20));
+        var page = memberAppService.getMemberList(new GetMemberListQuery(null, 0, 20));
 
         assertFalse(page.isEmpty());
     }

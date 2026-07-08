@@ -1,8 +1,8 @@
 package com.bluenet.web.application.service.impl;
 
-import com.bluenet.web.application.AssessmentAnswerResult;
-import com.bluenet.web.application.AssessmentJudgementResult;
-import com.bluenet.web.application.CommentResult;
+import com.bluenet.web.application.result.assessment.AssessmentAnswerResult;
+import com.bluenet.web.application.result.assessment.AssessmentJudgementResult;
+import com.bluenet.web.application.result.comment.CommentResult;
 import com.bluenet.web.application.command.assessment_answer.AssessmentAnswerCommands;
 import com.bluenet.web.application.service.AssessmentAnswerAppService;
 import com.bluenet.web.domain.exception.BadRequest;

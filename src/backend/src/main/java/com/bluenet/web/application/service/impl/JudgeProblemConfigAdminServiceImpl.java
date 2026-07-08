@@ -1,8 +1,8 @@
 package com.bluenet.web.application.service.impl;
 
-import com.bluenet.web.application.JudgeProblemConfigResult;
-import com.bluenet.web.application.JudgeStandardSolutionResult;
-import com.bluenet.web.application.JudgeTestcaseConfigResult;
+import com.bluenet.web.application.result.judge.JudgeProblemConfigResult;
+import com.bluenet.web.application.result.judge.JudgeStandardSolutionResult;
+import com.bluenet.web.application.result.judge.JudgeTestcaseConfigResult;
 import com.bluenet.web.application.command.judge.JudgeProblemConfigCommands;
 import com.bluenet.web.application.service.JudgeProblemConfigAdminService;
 import com.bluenet.web.infrastructure.judge.JudgeTestDataGenerationPublisher;

@@ -1,7 +1,7 @@
 package com.bluenet.web.application.service.impl;
 
 import com.bluenet.web.BaseIntegrationTest;
-import com.bluenet.web.application.UserExperienceResult;
+import com.bluenet.web.application.result.user.UserExperienceResult;
 import com.bluenet.web.application.command.userexperience.UserExperienceCommands;
 import com.bluenet.web.application.service.UserExperienceAppService;
 import com.bluenet.web.domain.exception.DataNotFound;

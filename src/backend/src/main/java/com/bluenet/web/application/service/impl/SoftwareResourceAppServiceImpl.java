@@ -1,6 +1,6 @@
 package com.bluenet.web.application.service.impl;
 
-import com.bluenet.web.application.SoftwareResourceResult;
+import com.bluenet.web.application.result.softwareresource.SoftwareResourceResult;
 import com.bluenet.web.application.command.softwareresource.SoftwareResourceCommands;
 import com.bluenet.web.application.service.SoftwareResourceAppService;
 import com.bluenet.web.domain.exception.DataNotFound;

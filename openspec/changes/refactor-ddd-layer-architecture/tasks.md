@@ -183,52 +183,63 @@
 #### 实现步骤
 
 ##### 10.1 查询参数 CQRS 命名规范
-- [ ] 10.1.1 新增 `com.bluenet.web.application.query` 包
-- [ ] 10.1.2 把所有读操作参数类从 `command` 包移到 `query` 包，并从 `*Command` 改名为 `*Query`
-- [ ] 10.1.3 更新所有应用服务接口方法签名
+- [x] 10.1.1 新增 `com.bluenet.web.application.query` 包
+- [x] 10.1.2 把所有读操作参数类从 `command` 包移到 `query` 包，并从 `*Command` 改名为 `*Query`
+- [x] 10.1.3 更新所有应用服务接口方法签名
 
 ##### 10.2 删除无引用的 dead code VO（11 个）
-- [ ] 10.2.1 删除 `AlgorithmJudgeCaseResultVO`
-- [ ] 10.2.2 删除 `AlgorithmJudgeJobVO`
-- [ ] 10.2.3 删除 `AssessmentAnswerVO`
-- [ ] 10.2.4 删除 `AssessmentQuestionVO`
-- [ ] 10.2.5 删除 `AssessmentSessionVO`
-- [ ] 10.2.6 删除 `AssessmentTimeVO`
-- [ ] 10.2.7 删除 `EnrollBriefVO`
-- [ ] 10.2.8 删除 `EnrollVO`
-- [ ] 10.2.9 删除 `EnrollmentApprovalVO`
-- [ ] 10.2.10 删除 `LearningStepVO`
-- [ ] 10.2.11 删除 `MemberVO`
+- [x] 10.2.1 删除 `AlgorithmJudgeCaseResultVO`
+- [x] 10.2.2 删除 `AlgorithmJudgeJobVO`
+- [x] 10.2.3 删除 `AssessmentAnswerVO`
+- [x] 10.2.4 删除 `AssessmentQuestionVO`
+- [x] 10.2.5 删除 `AssessmentSessionVO`
+- [x] 10.2.6 删除 `AssessmentTimeVO`
+- [x] 10.2.7 删除 `EnrollBriefVO`
+- [x] 10.2.8 删除 `EnrollVO`
+- [x] 10.2.9 删除 `EnrollmentApprovalVO`
+- [x] 10.2.10 删除 `LearningStepVO`
+- [x] 10.2.11 删除 `MemberVO`
 
 ##### 10.3 读模型型 VO 改名为 `*ReadModel` 保留在 domain 层（5 个）
-- [ ] 10.3.1 `AchievementVO` → `AchievementReadModel`
-- [ ] 10.3.2 `CompetitionVO` → `CompetitionReadModel`
-- [ ] 10.3.3 `AssessmentCandidateScoreRowVO` → `AssessmentCandidateScoreRowReadModel`
-- [ ] 10.3.4 `AssessmentQuestionSubmissionVO` → `AssessmentQuestionSubmissionReadModel`
-- [ ] 10.3.5 `AssessmentQuestionSubmissionHistoryVO` → `AssessmentQuestionSubmissionHistoryReadModel`
+- [x] 10.3.1 `AchievementVO` → `AchievementReadModel`
+- [x] 10.3.2 `CompetitionVO` → `CompetitionReadModel`
+- [x] 10.3.3 `AssessmentCandidateScoreRowVO` → `AssessmentCandidateScoreRowReadModel`
+- [x] 10.3.4 `AssessmentQuestionSubmissionVO` → `AssessmentQuestionSubmissionReadModel`
+- [x] 10.3.5 `AssessmentQuestionSubmissionHistoryVO` → `AssessmentQuestionSubmissionHistoryReadModel`
 
 ##### 10.4 统计/报表/聚合对象移到 application 层并去掉 VO 后缀（12 个）
-- [ ] 10.4.1 `AchievementStatsVO` → `AchievementStatistics`
-- [ ] 10.4.2 `AssessmentCandidateQuestionScoreVO` → `AssessmentCandidateQuestionScore`
-- [ ] 10.4.3 `AssessmentCandidateScoreboardVO` → `AssessmentCandidateScoreboard`
-- [ ] 10.4.4 `AssessmentDecisionCandidateVO` → `AssessmentDecisionCandidate`
-- [ ] 10.4.5 `AssessmentDecisionStatisticsVO` → `AssessmentDecisionStatistics`
-- [ ] 10.4.6 `AssessmentDecisionWorkspaceVO` → `AssessmentDecisionWorkspace`
-- [ ] 10.4.7 `AssessmentQuestionScoreboardVO` → `AssessmentQuestionScoreboard`
-- [ ] 10.4.8 `AuditEndpointLatencyVO` → `AuditEndpointLatency`
-- [ ] 10.4.9 `AuditEndpointRankingVO` → `AuditEndpointRanking`
-- [ ] 10.4.10 `AuditTrendPointVO` → `AuditTrendPoint`
-- [ ] 10.4.11 `EnrollStatisticsVO` → `EnrollStatistics`
-- [ ] 10.4.12 `TabCountsVO` → `TabCounts`
+- [x] 10.4.1 `AchievementStatsVO` → `AchievementStatistics`
+- [x] 10.4.2 `AssessmentCandidateQuestionScoreVO` → `AssessmentCandidateQuestionScore`
+- [x] 10.4.3 `AssessmentCandidateScoreboardVO` → `AssessmentCandidateScoreboard`
+- [x] 10.4.4 `AssessmentDecisionCandidateVO` → `AssessmentDecisionCandidate`
+- [x] 10.4.5 `AssessmentDecisionStatisticsVO` → `AssessmentDecisionStatistics`
+- [x] 10.4.6 `AssessmentDecisionWorkspaceVO` → `AssessmentDecisionWorkspace`
+- [x] 10.4.7 `AssessmentQuestionScoreboardVO` → `AssessmentQuestionScoreboard`
+- [x] 10.4.8 `AuditEndpointLatencyVO` → `AuditEndpointLatency`
+- [x] 10.4.9 `AuditEndpointRankingVO` → `AuditEndpointRanking`
+- [x] 10.4.10 `AuditTrendPointVO` → `AuditTrendPoint`
+- [x] 10.4.11 `EnrollStatisticsVO` → `EnrollStatistics`
+- [x] 10.4.12 `TabCountsVO` → `TabCounts`
 
 ##### 10.5 领域服务结果对象归位（2 个）
-- [ ] 10.5.1 将 `application.ConfirmUploadResult` 移到 `domain.model.result.ConfirmUploadResult`，删除 `ConfirmUploadVO`
-- [ ] 10.5.2 将 `application.PresignedUploadResult` 移到 `domain.model.result.PresignedUploadResult`，删除 `PresignedUploadVO`
+- [x] 10.5.1 将 `application.ConfirmUploadResult` 移到 `domain.model.result.ConfirmUploadResult`，删除 `ConfirmUploadVO`
+- [x] 10.5.2 将 `application.PresignedUploadResult` 移到 `domain.model.result.PresignedUploadResult`，删除 `PresignedUploadVO`
 
 ##### 10.6 收尾
-- [ ] 10.6.1 删除 `domain.model.vo` 包（确认无剩余 VO 后）
-- [ ] 10.6.2 编译通过（`./mvnw compile`）
-- [ ] 10.6.3 测试编译通过（`./mvnw test-compile`）
+- [x] 10.6.1 删除 `domain.model.vo` 包中剩余的 `*VO` 后缀类（非 VO 后缀的值对象如 `content/`、`evaluation/`、`GitHubUserInfo`、`OAuthState`、`UserOnboarding*` 等按用户要求保留）
+- [x] 10.6.2 编译通过（`./mvnw compile`）
+- [x] 10.6.3 测试编译通过（`./mvnw test-compile`）
+- [x] 10.6.4 重命名 `domain.model.vo` 下语义不清的包：`content` → `experience_content`，`evaluation` → `question_content`
+
+##### 10.7 application 层结果对象目录结构归位
+- [x] 10.7.1 新建 `application/result/` 包，按领域分子包
+- [x] 10.7.2 将 `application/` 根目录下 50+ 个 `*Result` / `*Statistics` / `*Scoreboard` / `*Score` / `TabCounts` 类迁移到 `application/result/<领域>/`
+- [x] 10.7.3 将 `application/knowledge/` 下 3 个 `Knowledge*Result` 类并入 `application/result/knowledge/`
+- [x] 10.7.4 删除已空的 `application/knowledge/` 目录
+- [x] 10.7.5 更新所有引用（package 声明、import、全限定名）
+- [x] 10.7.6 消除 application/result 下的重复类：`UserInfoResult.TabCounts` 合并到 `result.common.TabCounts`，`AuditStatisticsResult` 的内部类合并到 `result.audit.AuditTrendPoint` / `AuditEndpointRanking` / `AuditEndpointLatency`，删除 `AuditStatisticsResult`
+- [x] 10.7.7 编译通过（`./mvnw compile`）
+- [x] 10.7.8 测试编译通过（`./mvnw test-compile`）
 
 ***
 

@@ -4,7 +4,7 @@ import com.bluenet.web.api.converter.assessment_answer.AssessmentAnswerRequestCo
 import com.bluenet.web.api.dto.ResponseMessage;
 import com.bluenet.web.api.dto.assessment_answer.AssessmentAnswerDTO;
 import com.bluenet.web.api.dto.assessment_answer.CreateAnswerRequestDTO;
-import com.bluenet.web.application.AssessmentAnswerResult;
+import com.bluenet.web.application.result.assessment.AssessmentAnswerResult;
 import com.bluenet.web.api.converter.assessment_answer.AssessmentAnswerResponseConverter;
 import com.bluenet.web.application.service.AssessmentAnswerAppService;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;

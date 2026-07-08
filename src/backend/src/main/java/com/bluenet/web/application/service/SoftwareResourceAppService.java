@@ -1,6 +1,6 @@
 package com.bluenet.web.application.service;
 
-import com.bluenet.web.application.SoftwareResourceResult;
+import com.bluenet.web.application.result.softwareresource.SoftwareResourceResult;
 import com.bluenet.web.application.command.softwareresource.SoftwareResourceCommands;
 import com.bluenet.web.domain.model.enumerate.SoftwareResourceDirection;
 import org.springframework.data.domain.Page;

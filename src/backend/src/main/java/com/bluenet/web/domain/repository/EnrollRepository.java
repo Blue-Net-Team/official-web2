@@ -3,7 +3,7 @@ package com.bluenet.web.domain.repository;
 import com.bluenet.web.domain.model.entity.Enroll;
 import com.bluenet.web.domain.model.enumerate.Direction;
 import com.bluenet.web.domain.model.enumerate.EnrollStatus;
-import com.bluenet.web.domain.model.vo.EnrollStatisticsVO;
+import com.bluenet.web.application.result.enroll.EnrollStatistics;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -115,5 +115,5 @@ public interface EnrollRepository {
      *
      * @return 统计数据。
      */
-    EnrollStatisticsVO getStatistics();
+    EnrollStatistics getStatistics();
 }

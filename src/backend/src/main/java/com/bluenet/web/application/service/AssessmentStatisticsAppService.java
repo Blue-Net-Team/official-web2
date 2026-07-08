@@ -1,6 +1,6 @@
 package com.bluenet.web.application.service;
 
-import com.bluenet.web.application.AssessmentStatisticsResult;
+import com.bluenet.web.application.result.assessment.AssessmentStatisticsResult;
 
 /**
  * 考核统计应用服务接口。

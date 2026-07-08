@@ -52,7 +52,7 @@ public class AdminAuditStatisticsController {
             @Parameter(description = "时间范围：24h、7d、30d，默认 7d") @RequestParam(defaultValue = "7d") AuditStatisticsPeriod period) {
         return ResponseMessage.success(
                 responseConverter.toTrendPointDTOList(
-                        auditStatisticsAppService.getTrends(requestConverter.toTrendsCommand(period))));
+                        auditStatisticsAppService.getTrends(requestConverter.toTrendsQuery(period))));
     }
 
     @Operation(summary = "接口访问排名", description = "返回按请求量排序的接口排名")
@@ -69,7 +69,7 @@ public class AdminAuditStatisticsController {
         return ResponseMessage.success(
                 responseConverter.toEndpointRankingDTOList(
                         auditStatisticsAppService
-                                .getEndpointRanking(requestConverter.toEndpointRankingCommand(period, limit))));
+                                .getEndpointRanking(requestConverter.toEndpointRankingQuery(period, limit))));
     }
 
     @Operation(summary = "接口响应时间排名", description = "返回按平均响应时间排序的接口排名")
@@ -86,6 +86,6 @@ public class AdminAuditStatisticsController {
         return ResponseMessage.success(
                 responseConverter.toEndpointLatencyDTOList(
                         auditStatisticsAppService.getEndpointLatencyRanking(
-                                requestConverter.toEndpointLatencyRankingCommand(period, limit))));
+                                requestConverter.toEndpointLatencyRankingQuery(period, limit))));
     }
 }

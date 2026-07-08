@@ -1,6 +1,6 @@
 package com.bluenet.web.application.service;
 
-import com.bluenet.web.application.CommentResult;
+import com.bluenet.web.application.result.comment.CommentResult;
 
 import java.math.BigDecimal;
 import java.util.List;

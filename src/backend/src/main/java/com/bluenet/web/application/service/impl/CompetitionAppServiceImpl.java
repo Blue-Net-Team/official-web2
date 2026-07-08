@@ -1,6 +1,6 @@
 package com.bluenet.web.application.service.impl;
 
-import com.bluenet.web.application.CompetitionResult;
+import com.bluenet.web.application.result.competition.CompetitionResult;
 import com.bluenet.web.application.command.competition.CompetitionCommands;
 import com.bluenet.web.application.service.CompetitionAppService;
 import com.bluenet.web.domain.exception.BadRequest;
@@ -8,7 +8,7 @@ import com.bluenet.web.domain.exception.DataNotFound;
 import com.bluenet.web.domain.model.entity.Competition;
 import com.bluenet.web.domain.model.entity.File;
 import com.bluenet.web.domain.model.enumerate.FileType;
-import com.bluenet.web.domain.model.vo.CompetitionVO;
+import com.bluenet.web.domain.model.readmodel.CompetitionReadModel;
 import com.bluenet.web.domain.repository.CompetitionRepository;
 import com.bluenet.web.domain.service.FileDomainService;
 import lombok.RequiredArgsConstructor;
@@ -41,7 +41,7 @@ public class CompetitionAppServiceImpl implements CompetitionAppService {
      * @return 竞赛VO列表
      */
     @Override
-    public List<CompetitionVO> getCompetitionResponseList(int limit) {
+    public List<CompetitionReadModel> getCompetitionResponseList(int limit) {
         int validLimit = Math.min(Math.max(limit, 1), 50);
         return competitionRepository.findCompetitionsWithLimit(validLimit);
     }
@@ -56,7 +56,7 @@ public class CompetitionAppServiceImpl implements CompetitionAppService {
      * @return 竞赛分页结果
      */
     @Override
-    public Page<CompetitionVO> getCompetitionPage(Integer page, Integer size) {
+    public Page<CompetitionReadModel> getCompetitionPage(Integer page, Integer size) {
         int pageNum = page != null ? page : 0;
         int pageSize = size != null ? size : 10;
         pageSize = Math.min(Math.max(pageSize, 1), 50);

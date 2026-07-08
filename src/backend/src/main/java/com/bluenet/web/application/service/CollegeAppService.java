@@ -1,6 +1,6 @@
 package com.bluenet.web.application.service;
 
-import com.bluenet.web.application.CollegeResult;
+import com.bluenet.web.application.result.college.CollegeResult;
 import com.bluenet.web.application.command.college.CollegeCommands;
 
 import java.util.List;

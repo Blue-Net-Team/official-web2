@@ -1,7 +1,7 @@
 package com.bluenet.web.application.service.impl;
 
-import com.bluenet.web.application.PermissionResult;
-import com.bluenet.web.application.command.permission.PermissionCommands;
+import com.bluenet.web.application.result.permission.PermissionResult;
+import com.bluenet.web.application.query.permission.GetPermissionsQuery;
 import com.bluenet.web.application.service.PermissionAppService;
 import com.bluenet.web.domain.exception.DataNotFound;
 import com.bluenet.web.domain.model.entity.Permission;
@@ -34,20 +34,20 @@ public class PermissionAppServiceImpl implements PermissionAppService {
     /**
      * 分页查询权限列表。
      *
-     * @param command
-     *            查询权限命令
+     * @param query
+     *            查询权限参数
      * @return 权限分页结果
      */
     @Override
-    public Page<PermissionResult> getPermissions(PermissionCommands.GetPermissionsCommand command) {
-        int pageNum = command.page() != null ? command.page() : 0;
-        int pageSize = command.size() != null ? command.size() : 20;
+    public Page<PermissionResult> getPermissions(GetPermissionsQuery query) {
+        int pageNum = query.page() != null ? query.page() : 0;
+        int pageSize = query.size() != null ? query.size() : 20;
         pageSize = Math.min(Math.max(pageSize, 1), 100);
 
         Pageable pageable = PageRequest.of(pageNum, pageSize);
         Page<Permission> permissionPage = permissionRepository.findAll(
-                command.keyword(),
-                command.format(),
+                query.keyword(),
+                query.format(),
                 pageable);
 
         if (permissionPage.getContent().isEmpty()) {

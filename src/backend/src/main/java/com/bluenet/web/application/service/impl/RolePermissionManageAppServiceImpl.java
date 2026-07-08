@@ -1,6 +1,6 @@
 package com.bluenet.web.application.service.impl;
 
-import com.bluenet.web.application.RolePermissionManageResult;
+import com.bluenet.web.application.result.rolepermission.RolePermissionManageResult;
 import com.bluenet.web.application.command.rolepermission.RolePermissionCommands;
 import com.bluenet.web.application.service.RolePermissionManageAppService;
 import com.bluenet.web.domain.exception.DataNotFound;

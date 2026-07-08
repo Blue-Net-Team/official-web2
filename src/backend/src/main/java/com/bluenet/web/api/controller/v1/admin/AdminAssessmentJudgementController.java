@@ -11,8 +11,8 @@ import com.bluenet.web.api.dto.assessment_judgement.AssessmentQuestionSubmission
 import com.bluenet.web.api.dto.assessment_judgement.FinalizeScoreRequestDTO;
 import com.bluenet.web.api.converter.assessment_judgement.AssessmentJudgementRequestConverter;
 import com.bluenet.web.api.converter.assessment_judgement.AssessmentJudgementResponseConverter;
-import com.bluenet.web.application.AssessmentDecisionResult;
-import com.bluenet.web.application.AssessmentJudgementResult;
+import com.bluenet.web.application.result.assessment.AssessmentDecisionResult;
+import com.bluenet.web.application.result.assessment.AssessmentJudgementResult;
 import com.bluenet.web.application.command.assessment_judgement.AssessmentJudgementCommands;
 import com.bluenet.web.application.service.AssessmentJudgementAppService;
 import com.bluenet.web.domain.model.enumerate.QuestionType;

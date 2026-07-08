@@ -14,18 +14,6 @@ public class AdminUserCommands {
     }
 
     /**
-     * 分页查询用户列表命令
-     */
-    public record GetUserListCommand(
-            Integer page,
-            Integer size,
-            Long roleId,
-            Direction direction,
-            Long collegeId,
-            String keyword) {
-    }
-
-    /**
      * 更新用户信息命令
      */
     public record UpdateUserCommand(

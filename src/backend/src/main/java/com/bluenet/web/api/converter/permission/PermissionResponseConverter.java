@@ -2,7 +2,7 @@ package com.bluenet.web.api.converter.permission;
 
 import com.bluenet.web.api.dto.permission.PermissionDTO;
 import com.bluenet.web.api.dto.permission.PermissionTreeDTO;
-import com.bluenet.web.application.PermissionResult;
+import com.bluenet.web.application.result.permission.PermissionResult;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;

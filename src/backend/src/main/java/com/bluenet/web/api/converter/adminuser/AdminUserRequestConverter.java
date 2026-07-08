@@ -2,13 +2,14 @@ package com.bluenet.web.api.converter.adminuser;
 
 import com.bluenet.web.api.dto.adminuser.*;
 import com.bluenet.web.application.command.adminuser.AdminUserCommands;
+import com.bluenet.web.application.query.adminuser.GetUserListQuery;
 import org.springframework.stereotype.Component;
 
 @Component
 public class AdminUserRequestConverter {
 
-    public AdminUserCommands.GetUserListCommand toCommand(AdminUserListQueryDTO dto) {
-        return new AdminUserCommands.GetUserListCommand(
+    public GetUserListQuery toQuery(AdminUserListQueryDTO dto) {
+        return new GetUserListQuery(
                 dto.getPage(), dto.getSize(), dto.getRoleId(),
                 dto.getDirection(), dto.getCollegeId(), dto.getKeyword());
     }

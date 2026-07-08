@@ -1,6 +1,6 @@
 package com.bluenet.web.application.service;
 
-import com.bluenet.web.application.AssessmentAnswerResult;
+import com.bluenet.web.application.result.assessment.AssessmentAnswerResult;
 import com.bluenet.web.application.command.assessment_answer.AssessmentAnswerCommands;
 
 /**

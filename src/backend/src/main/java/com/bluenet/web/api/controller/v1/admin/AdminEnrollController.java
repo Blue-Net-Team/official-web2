@@ -5,8 +5,9 @@ import com.bluenet.web.api.dto.ResponseMessage;
 import com.bluenet.web.api.dto.enrollment.*;
 import com.bluenet.web.api.converter.enroll.EnrollRequestConverter;
 import com.bluenet.web.api.converter.enroll.EnrollResponseConverter;
-import com.bluenet.web.application.EnrollResult;
+import com.bluenet.web.application.result.enroll.EnrollResult;
 import com.bluenet.web.application.command.enroll.EnrollCommands;
+import com.bluenet.web.application.query.enroll.GetEnrollmentListQuery;
 import com.bluenet.web.application.service.EnrollAppService;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
 import com.bluenet.web.infrastructure.security.annotation.RequiresPermission;
@@ -47,9 +48,9 @@ public class AdminEnrollController {
             @Parameter(description = "方向筛选") @RequestParam(required = false) String direction,
             @Parameter(description = "关键词搜索（姓名/学号）") @RequestParam(required = false) String keyword) {
 
-        EnrollCommands.GetEnrollmentListCommand command = enrollRequestConverter
-                .toListCommand(page, size, keyword, status, direction);
-        Page<EnrollResult.Brief> result = enrollAppService.getEnrollmentList(command);
+        GetEnrollmentListQuery query = enrollRequestConverter
+                .toListQuery(page, size, keyword, status, direction);
+        Page<EnrollResult.Brief> result = enrollAppService.getEnrollmentList(query);
         return ResponseMessage.success(PageDTO.from(enrollResponseConverter.toBriefDTOPage(result)));
     }
 

@@ -3,7 +3,7 @@ package com.bluenet.web.api.converter.assessment_answer;
 import com.bluenet.web.api.converter.assessment_judgement.AssessmentJudgementResponseConverter;
 import com.bluenet.web.api.converter.assessment_judgement.CommentResponseConverter;
 import com.bluenet.web.api.dto.assessment_answer.AssessmentAnswerDTO;
-import com.bluenet.web.application.AssessmentAnswerResult;
+import com.bluenet.web.application.result.assessment.AssessmentAnswerResult;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -43,7 +43,7 @@ public class AssessmentAnswerResponseConverter {
     }
 
     private List<com.bluenet.web.api.dto.assessment_judgement.CommentDTO> toCommentDTOs(
-            List<com.bluenet.web.application.CommentResult> comments) {
+            List<com.bluenet.web.application.result.comment.CommentResult> comments) {
         if (comments == null || comments.isEmpty()) {
             return Collections.emptyList();
         }
