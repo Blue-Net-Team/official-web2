@@ -136,12 +136,12 @@
 
 #### 实现步骤
 
-- [ ] 7.1 新增 `AssessmentAnswerDomainService` 接口和实现
-- [ ] 7.2 迁移方向/年级匹配、时间窗口、淘汰判断、会话截止、重复提交、文件校验等规则
-- [ ] 7.3 迁移团队答案同步逻辑
-- [ ] 7.4 迁移客观题自动评判触发逻辑
-- [ ] 7.5 重写 `AssessmentAnswerAppServiceImpl`：只做参数校验、调用 DomainService、结果转换、事务控制
-- [ ] 7.6 编译通过，答案提交相关流程通过手动/新测试验证
+- [x] 7.1 新增 `AssessmentAnswerDomainService` 接口和实现
+- [x] 7.2 迁移方向/年级匹配、时间窗口、淘汰判断、会话截止、重复提交、文件校验等规则
+- [x] 7.3 迁移团队答案同步逻辑
+- [x] 7.4 迁移客观题自动评判触发逻辑
+- [x] 7.5 重写 `AssessmentAnswerAppServiceImpl`：只做参数校验、调用 DomainService、结果转换、事务控制
+- [x] 7.6 编译通过，答案提交相关流程通过手动/新测试验证
 
 ***
 

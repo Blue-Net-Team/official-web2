@@ -45,4 +45,27 @@ public class AssessmentAnswer {
             ProgrammingLanguage language, Long fileId, LocalDateTime submitTime, Long teamId) {
         return new AssessmentAnswer(id, userId, questionId, content, language, fileId, submitTime, teamId);
     }
+
+    /**
+     * 更新答案内容、编程语言或文件，并刷新提交时间。
+     *
+     * @param content
+     *            答案内容，非 null 时更新
+     * @param language
+     *            编程语言，非 null 时更新
+     * @param fileId
+     *            文件 ID，非 null 时更新
+     */
+    public void update(String content, ProgrammingLanguage language, Long fileId) {
+        if (content != null) {
+            this.content = content;
+        }
+        if (language != null) {
+            this.language = language;
+        }
+        if (fileId != null) {
+            this.fileId = fileId;
+        }
+        this.submitTime = LocalDateTime.now();
+    }
 }
