@@ -403,7 +403,14 @@ public class AssessmentQuestionAppServiceImpl implements AssessmentQuestionAppSe
             throw new BadRequest("文件类型不匹配，期望 ASSESSMENT_ATTACHMENT");
         }
 
-        assessmentQuestionRepository.updateAttachmentId(questionId, fileId);
+        question.update(
+                question.getQuestionNo(),
+                question.getQuestionType(),
+                question.getTitle(),
+                question.getContent(),
+                fileId,
+                question.getScore());
+        assessmentQuestionRepository.save(question);
         log.info("题目附件更新成功 - questionId={}, fileId={}", questionId, fileId);
     }
 

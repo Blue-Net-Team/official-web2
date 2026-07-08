@@ -106,12 +106,13 @@ public interface FileRepository {
     File saveFileMetadata(File file);
 
     /**
-     * 更新文件元数据。
+     * 保存或更新文件元数据，不操作对象存储。
      *
      * @param file
      *            文件领域对象
+     * @return 保存后的文件领域对象
      */
-    void updateFileMetadata(File file);
+    File save(File file);
 
     /**
      * 查询所有孤儿文件。

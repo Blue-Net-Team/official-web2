@@ -4,7 +4,6 @@ import com.bluenet.web.infrastructure.repository.converter.AssessmentQuestionRep
 import com.bluenet.web.infrastructure.repository.dataobject.AssessmentQuestionCountResult;
 import com.bluenet.web.infrastructure.repository.dataobject.AssessmentQuestionDO;
 
-import com.bluenet.web.domain.exception.GlobalException;
 import com.bluenet.web.domain.model.entity.AssessmentQuestion;
 import com.bluenet.web.domain.repository.AssessmentQuestionRepository;
 import com.bluenet.web.infrastructure.repository.mapper.AssessmentQuestionMapper;
@@ -76,35 +75,6 @@ public class AssessmentQuestionRepositoryImpl implements AssessmentQuestionRepos
             return Optional.empty();
         }
         return Optional.of(question);
-    }
-
-    /**
-     * 更新考核题目附件文件关联。
-     *
-     * @param questionId
-     *            考核题目主键。
-     * @param attachmentId
-     *            附件文件主键。
-     * @return 数据库受影响行数。
-     */
-    @Override
-    public int updateAttachmentId(Long questionId, Long attachmentId) {
-        AssessmentQuestion question = AssessmentQuestion.reconstruct(
-                questionId,
-                null,
-                null,
-                null,
-                null,
-                null,
-                attachmentId,
-                null);
-        int influence = assessmentQuestionMapper.updateById(
-                assessmentQuestionRepositoryConverter.toDataObject(question));
-        if (influence == 0) {
-            log.warn("更新题目附件失败，保存到数据库时没有影响任何行，questionId {}, attachmentId {}", questionId, attachmentId);
-            throw new GlobalException("更新题目附件失败");
-        }
-        return influence;
     }
 
     /**

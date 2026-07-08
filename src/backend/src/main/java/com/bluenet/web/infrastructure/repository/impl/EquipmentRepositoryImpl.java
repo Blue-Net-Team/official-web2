@@ -55,11 +55,4 @@ public class EquipmentRepositoryImpl implements EquipmentRepository {
         return equipmentMapper.selectById(id) != null;
     }
 
-    @Override
-    public void updateImage(Long id, Long imageFileId) {
-        EquipmentDO dataObject = new EquipmentDO();
-        dataObject.setId(id);
-        dataObject.setImageFileId(imageFileId);
-        equipmentMapper.updateById(dataObject);
-    }
 }

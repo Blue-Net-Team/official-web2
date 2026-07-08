@@ -167,34 +167,6 @@ public class UserRepositoryImpl extends ServiceImpl<UserMapper, UserDO> implemen
     }
 
     /**
-     * 保存用户与 GitHub 账号的绑定信息。
-     *
-     * @param userId
-     *            用户主键，用于限定用户范围。
-     * @param githubId
-     *            GitHub 用户唯一标识。
-     * @param githubUsername
-     *            GitHub 登录名。
-     */
-    @Override
-    @Transactional
-    public void updateGithubBinding(Long userId, String githubId, String githubUsername) {
-        userMapper.updateGithubBinding(userId, githubId, githubUsername);
-    }
-
-    /**
-     * 清除用户与 GitHub 账号的绑定信息。
-     *
-     * @param userId
-     *            用户主键，用于限定用户范围。
-     */
-    @Override
-    @Transactional
-    public void clearGithubBinding(Long userId) {
-        userMapper.clearGithubBinding(userId);
-    }
-
-    /**
      * 判断内部推荐码是否已被用户占用。
      *
      * @param code

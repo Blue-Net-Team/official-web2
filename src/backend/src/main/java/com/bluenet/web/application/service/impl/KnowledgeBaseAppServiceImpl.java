@@ -6,6 +6,7 @@ import com.bluenet.web.application.service.KnowledgeBaseAppService;
 import com.bluenet.web.domain.exception.BadRequest;
 import com.bluenet.web.domain.exception.DataNotFound;
 import com.bluenet.web.domain.model.entity.KnowledgeDoc;
+import com.bluenet.web.domain.model.entity.KnowledgeTag;
 import com.bluenet.web.domain.model.enumerate.DocParseStatus;
 import com.bluenet.web.domain.model.enumerate.FileType;
 import com.bluenet.web.domain.model.vo.FileVO;
@@ -91,7 +92,8 @@ public class KnowledgeBaseAppServiceImpl implements KnowledgeBaseAppService {
             throw new BadRequest("当前状态不允许取消解析: " + doc.getStatus().getValue());
         }
 
-        knowledgeDocRepository.updateStatus(doc.getId(), DocParseStatus.CANCELING, null, null);
+        doc.updateStatus(DocParseStatus.CANCELING, null, null);
+        knowledgeDocRepository.save(doc);
         log.info("知识库文档取消解析已请求，docId={}", doc.getId());
     }
 
@@ -118,10 +120,10 @@ public class KnowledgeBaseAppServiceImpl implements KnowledgeBaseAppService {
     @Override
     @Transactional
     public void updateTagDescription(Long tagId, String description) {
-        int rows = knowledgeTagRepository.updateDescription(tagId, description);
-        if (rows == 0) {
-            throw new DataNotFound("标签不存在，ID: " + tagId);
-        }
+        KnowledgeTag tag = knowledgeTagRepository.findById(tagId)
+                .orElseThrow(() -> new DataNotFound("标签不存在，ID: " + tagId));
+        tag.updateDescription(description);
+        knowledgeTagRepository.save(tag);
         log.info("知识库标签描述更新成功，tagId={}", tagId);
     }
 

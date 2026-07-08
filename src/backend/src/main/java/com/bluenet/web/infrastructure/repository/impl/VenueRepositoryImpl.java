@@ -55,11 +55,4 @@ public class VenueRepositoryImpl implements VenueRepository {
         return venueMapper.selectById(id) != null;
     }
 
-    @Override
-    public void updateImage(Long id, Long imageFileId) {
-        VenueDO dataObject = new VenueDO();
-        dataObject.setId(id);
-        dataObject.setImageFileId(imageFileId);
-        venueMapper.updateById(dataObject);
-    }
 }

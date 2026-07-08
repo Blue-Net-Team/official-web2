@@ -38,30 +38,6 @@ public interface BugReportRepository {
     Page<BugReport> findPage(Pageable pageable, BugReportStatus status);
 
     /**
-     * 更新 Bug 报告状态。
-     *
-     * @param id
-     *            Bug 报告 ID
-     * @param status
-     *            新状态
-     * @return 数据库受影响行数
-     */
-    int updateStatus(Long id, BugReportStatus status);
-
-    /**
-     * 更新 GitHub Issue 同步信息。
-     *
-     * @param id
-     *            Bug 报告 ID
-     * @param githubIssueUrl
-     *            GitHub Issue URL
-     * @param githubIssueNumber
-     *            GitHub Issue 编号
-     * @return 数据库受影响行数
-     */
-    int updateGithubIssueInfo(Long id, String githubIssueUrl, Integer githubIssueNumber);
-
-    /**
      * 按 GitHub Issue 编号查询 Bug 报告。
      *
      * @param githubIssueNumber

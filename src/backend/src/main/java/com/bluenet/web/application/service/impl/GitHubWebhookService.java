@@ -145,7 +145,7 @@ public class GitHubWebhookService {
         }
 
         bugReport.updateStatus(newStatus);
-        bugReportRepository.updateStatus(bugReport.getId(), newStatus);
+        bugReportRepository.save(bugReport);
         log.info(
                 "Bug 报告 {} 状态自动更新: {} → {} (triggered by GitHub issues.{})",
                 bugReport.getId(),

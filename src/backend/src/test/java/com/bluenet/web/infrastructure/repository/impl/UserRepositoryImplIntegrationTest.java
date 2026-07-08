@@ -173,11 +173,12 @@ class UserRepositoryImplIntegrationTest extends BaseIntegrationTest {
     }
 
     @Test
-    @DisplayName("updateGithubBinding / clearGithubBinding: 应正确绑定和清除")
+    @DisplayName("save: 通过 bindGithub / clearGithubBinding 更新后应正确持久化")
     void githubBinding_shouldBindAndClear() {
         User user = createUser("2024001008");
 
-        userRepository.updateGithubBinding(user.getId(), "github-1", "github-user");
+        user.bindGithub("github-1", "github-user");
+        userRepository.save(user);
 
         UserDO bound = userMapper.selectById(user.getId());
         assertEquals("github-1", bound.getGithubId());
@@ -187,7 +188,8 @@ class UserRepositoryImplIntegrationTest extends BaseIntegrationTest {
         assertTrue(foundByGithub.isPresent());
         assertEquals(user.getId(), foundByGithub.get().getId());
 
-        userRepository.clearGithubBinding(user.getId());
+        user.clearGithubBinding();
+        userRepository.save(user);
 
         UserDO cleared = userMapper.selectById(user.getId());
         assertNull(cleared.getGithubId());

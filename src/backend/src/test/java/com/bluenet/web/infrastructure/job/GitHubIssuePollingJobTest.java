@@ -162,7 +162,7 @@ class GitHubIssuePollingJobTest {
 
             job.sync();
 
-            verify(bugReportRepository, never()).updateStatus(any(), any());
+            verify(bugReportRepository, never()).save(any());
         }
 
         @Test
@@ -190,7 +190,10 @@ class GitHubIssuePollingJobTest {
 
             job.sync();
 
-            verify(bugReportRepository).updateStatus(1L, BugReportStatus.RESOLVED);
+            verify(bugReportRepository).save(
+                    argThat(
+                            bugReport -> bugReport.getId().equals(1L)
+                                    && bugReport.getStatus() == BugReportStatus.RESOLVED));
         }
 
         @Test
@@ -221,7 +224,10 @@ class GitHubIssuePollingJobTest {
             // 验证 updateStatus 被调用后，bugReport 的状态已更新
             assertEquals(BugReportStatus.RESOLVED, existing.getStatus());
             // 验证 repository 被传入正确的旧状态目标值
-            verify(bugReportRepository).updateStatus(1L, BugReportStatus.RESOLVED);
+            verify(bugReportRepository).save(
+                    argThat(
+                            bugReport -> bugReport.getId().equals(1L)
+                                    && bugReport.getStatus() == BugReportStatus.RESOLVED));
         }
     }
 
@@ -271,7 +277,7 @@ class GitHubIssuePollingJobTest {
 
             verify(bugReportRepository, never()).findByGithubIssueNumber(any());
             verify(bugReportRepository, never()).save(any());
-            verify(bugReportRepository, never()).updateStatus(any(), any());
+            verify(bugReportRepository, never()).save(any());
         }
 
         @Test

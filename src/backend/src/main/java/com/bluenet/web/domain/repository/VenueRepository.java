@@ -50,13 +50,4 @@ public interface VenueRepository {
      */
     boolean existsById(Long id);
 
-    /**
-     * 更新场地展示图片文件关联。
-     *
-     * @param id
-     *            业务记录主键。
-     * @param imageFileId
-     *            展示图片文件主键。
-     */
-    void updateImage(Long id, Long imageFileId);
 }

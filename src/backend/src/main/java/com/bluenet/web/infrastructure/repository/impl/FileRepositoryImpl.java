@@ -134,10 +134,16 @@ public class FileRepositoryImpl implements FileRepository {
 
     @Override
     @Transactional
-    public void updateFileMetadata(File file) {
+    public File save(File file) {
         FileDO dataObject = converter.toDataObject(file);
-        fileMapper.updateById(dataObject);
-        log.debug("File metadata updated successfully: id={}, status={}", file.getId(), file.getStatus());
+        if (dataObject.getId() == null) {
+            fileMapper.insert(dataObject);
+            file.setId(dataObject.getId());
+        } else {
+            fileMapper.updateById(dataObject);
+        }
+        log.debug("File metadata saved successfully: id={}, status={}", file.getId(), file.getStatus());
+        return file;
     }
 
     @Override

@@ -60,8 +60,12 @@ public class MockFileRepository implements FileRepository {
     }
 
     @Override
-    public void updateFileMetadata(File file) {
-        log.debug("Mock updating file metadata: {}", file.getId());
+    public File save(File file) {
+        log.debug("Mock saving file metadata: {}", file.getId());
+        if (file.getId() == null) {
+            file.setId(idGenerator.getAndIncrement());
+        }
+        return file;
     }
 
     @Override

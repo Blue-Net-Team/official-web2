@@ -123,6 +123,33 @@ public class User {
     }
 
     /**
+     * 绑定 GitHub 账号
+     *
+     * @param githubId
+     *            GitHub 用户唯一标识
+     * @param githubUsername
+     *            GitHub 登录名
+     */
+    public void bindGithub(String githubId, String githubUsername) {
+        if (githubId == null || githubId.isBlank()) {
+            throw new IllegalArgumentException("GitHub 用户标识不能为空");
+        }
+        if (githubUsername == null || githubUsername.isBlank()) {
+            throw new IllegalArgumentException("GitHub 登录名不能为空");
+        }
+        this.githubId = githubId;
+        this.githubUsername = githubUsername;
+    }
+
+    /**
+     * 清除 GitHub 账号绑定
+     */
+    public void clearGithubBinding() {
+        this.githubId = null;
+        this.githubUsername = null;
+    }
+
+    /**
      * 更新用户个人资料字段（仅更新非 null 字段）
      *
      * @param username

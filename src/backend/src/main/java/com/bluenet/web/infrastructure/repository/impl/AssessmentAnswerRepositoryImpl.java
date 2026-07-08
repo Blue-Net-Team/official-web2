@@ -125,19 +125,6 @@ public class AssessmentAnswerRepositoryImpl implements AssessmentAnswerRepositor
     }
 
     @Override
-    public int updateTeamMemberAnswers(Long teamId, Long questionId, Long fileId,
-            String content, com.bluenet.web.domain.model.enumerate.ProgrammingLanguage language,
-            java.time.LocalDateTime submitTime) {
-        return assessmentAnswerMapper.updateTeamMemberAnswers(
-                teamId,
-                questionId,
-                fileId,
-                content,
-                language,
-                submitTime);
-    }
-
-    @Override
     public List<Long> findExistingAnswerUserIds(List<Long> userIds, Long questionId) {
         if (userIds == null || userIds.isEmpty()) {
             return List.of();

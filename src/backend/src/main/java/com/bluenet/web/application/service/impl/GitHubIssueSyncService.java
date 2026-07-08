@@ -40,10 +40,10 @@ public class GitHubIssueSyncService {
 
         try {
             GitHubIssueCreateResult result = gitHubIssueClient.createIssue(title, body);
-            bugReportRepository.updateGithubIssueInfo(
-                    bugReport.getId(),
-                    result.htmlUrl(),
-                    result.number());
+            BugReport savedBugReport = bugReportRepository.findById(bugReport.getId())
+                    .orElseThrow(() -> new IllegalStateException("Bug 报告不存在，ID: " + bugReport.getId()));
+            savedBugReport.updateGithubIssueInfo(result.htmlUrl(), result.number());
+            bugReportRepository.save(savedBugReport);
             log.info(
                     "Bug 报告同步到 GitHub Issue 成功: bugReportId={}, issueNumber={}, issueUrl={}",
                     bugReport.getId(),

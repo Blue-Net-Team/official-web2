@@ -111,7 +111,7 @@ public class GitHubIssuePollingJob {
 
         BugReportStatus oldStatus = bugReport.getStatus();
         bugReport.updateStatus(expectedStatus);
-        bugReportRepository.updateStatus(bugReport.getId(), expectedStatus);
+        bugReportRepository.save(bugReport);
         log.info(
                 "Bug 报告 {} 状态更新: {} → {} (source=polling, issueNumber={})",
                 bugReport.getId(),

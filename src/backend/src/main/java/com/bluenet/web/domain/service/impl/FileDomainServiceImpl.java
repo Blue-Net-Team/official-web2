@@ -225,7 +225,7 @@ public class FileDomainServiceImpl implements FileDomainService {
 
     private void updateFileStatus(File file, FileStatus status) {
         file.setStatus(status);
-        fileRepository.updateFileMetadata(file);
+        fileRepository.save(file);
     }
 
     private String sanitizeEtag(String etag) {

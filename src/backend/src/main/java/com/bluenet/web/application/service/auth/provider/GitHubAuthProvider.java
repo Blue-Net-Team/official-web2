@@ -144,8 +144,11 @@ public class GitHubAuthProvider extends AbstractAuthProvider<GitHubCallbackCrede
         if (currentUser.getGithubUsername() == null) {
             throw new BadRequest("未绑定 GitHub 账号");
         }
-        userRepository.clearGithubBinding(currentUser.getId());
-        log.info("GitHub unbind success for userId {}", currentUser.getId());
+        User user = userRepository.findById(currentUser.getId())
+                .orElseThrow(() -> new Unauthorized("用户不存在"));
+        user.clearGithubBinding();
+        userRepository.save(user);
+        log.info("GitHub unbind success for userId {}", user.getId());
     }
 
     private void handleLoginFlow(String githubId, GitHubUserInfo githubUser, HttpServletResponse response) {
@@ -158,7 +161,8 @@ public class GitHubAuthProvider extends AbstractAuthProvider<GitHubCallbackCrede
 
         User user = userOpt.get();
         if (githubUser.getLogin() != null && !githubUser.getLogin().equals(user.getGithubUsername())) {
-            userRepository.updateGithubBinding(user.getId(), githubId, githubUser.getLogin());
+            user.bindGithub(githubId, githubUser.getLogin());
+            userRepository.save(user);
         }
 
         authSessionIssuer.issueCookies(user, response);
@@ -175,8 +179,11 @@ public class GitHubAuthProvider extends AbstractAuthProvider<GitHubCallbackCrede
             return;
         }
 
-        userRepository.updateGithubBinding(oauthState.getUserId(), githubId, githubUser.getLogin());
-        log.info("GitHub bind success for userId {}", oauthState.getUserId());
+        User user = userRepository.findById(oauthState.getUserId())
+                .orElseThrow(() -> new Unauthorized("用户不存在"));
+        user.bindGithub(githubId, githubUser.getLogin());
+        userRepository.save(user);
+        log.info("GitHub bind success for userId {}", user.getId());
         redirectToFrontend(response, "/profile", "github=binding_success");
     }
 
