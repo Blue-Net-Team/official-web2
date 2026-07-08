@@ -53,16 +53,13 @@ public class CompetitionRepositoryImpl implements CompetitionRepository {
     @Override
     public void save(Competition competition) {
         CompetitionDO dataObject = converter.toDataObject(competition);
-        competitionMapper.insert(dataObject);
-        competition.setId(dataObject.getId());
+        if (dataObject.getId() == null) {
+            competitionMapper.insert(dataObject);
+            competition.setId(dataObject.getId());
+        } else {
+            competitionMapper.updateById(dataObject);
+        }
     }
-
-    @Override
-    public void update(Competition competition) {
-        CompetitionDO dataObject = converter.toDataObject(competition);
-        competitionMapper.updateById(dataObject);
-    }
-
     @Override
     public void deleteById(Long id) {
         competitionMapper.deleteById(id);

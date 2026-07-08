@@ -142,16 +142,13 @@ public class RolePermissionRepositoryImpl implements RolePermissionRepository {
     @Override
     public void save(RolePermission rolePermission) {
         RolePermissionDO dataObject = converter.toDataObject(rolePermission);
-        rolePermissionMapper.insert(dataObject);
-        rolePermission.setId(dataObject.getId());
+        if (dataObject.getId() == null) {
+            rolePermissionMapper.insert(dataObject);
+            rolePermission.setId(dataObject.getId());
+        } else {
+            rolePermissionMapper.updateById(dataObject);
+        }
     }
-
-    @Override
-    public void update(RolePermission rolePermission) {
-        RolePermissionDO dataObject = converter.toDataObject(rolePermission);
-        rolePermissionMapper.updateById(dataObject);
-    }
-
     @Override
     public void deleteById(Long id) {
         rolePermissionMapper.deleteById(id);

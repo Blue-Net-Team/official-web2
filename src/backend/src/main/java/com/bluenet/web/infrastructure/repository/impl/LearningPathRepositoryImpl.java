@@ -39,16 +39,13 @@ public class LearningPathRepositoryImpl implements LearningPathRepository {
     @Override
     public void save(DirectionLearningStep step) {
         DirectionLearningStepDO dataObject = converter.toDataObject(step);
-        learningPathMapper.insert(dataObject);
-        step.setId(dataObject.getId());
+        if (dataObject.getId() == null) {
+            learningPathMapper.insert(dataObject);
+            step.setId(dataObject.getId());
+        } else {
+            learningPathMapper.updateById(dataObject);
+        }
     }
-
-    @Override
-    public void update(DirectionLearningStep step) {
-        DirectionLearningStepDO dataObject = converter.toDataObject(step);
-        learningPathMapper.updateById(dataObject);
-    }
-
     @Override
     public void deleteById(Long id) {
         learningPathMapper.deleteById(id);

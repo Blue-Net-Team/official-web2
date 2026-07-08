@@ -34,10 +34,13 @@ public class AssessmentQuestionRepositoryImpl implements AssessmentQuestionRepos
      */
     @Override
     public void save(AssessmentQuestion assessmentQuestion) {
-        log.info("save assessment question {}", assessmentQuestion);
         AssessmentQuestionDO dataObject = assessmentQuestionRepositoryConverter.toDataObject(assessmentQuestion);
-        assessmentQuestionMapper.insert(dataObject);
-        assessmentQuestion.setId(dataObject.getId());
+        if (dataObject.getId() == null) {
+            assessmentQuestionMapper.insert(dataObject);
+            assessmentQuestion.setId(dataObject.getId());
+        } else {
+            assessmentQuestionMapper.updateById(dataObject);
+        }
     }
 
     /**
@@ -162,12 +165,6 @@ public class AssessmentQuestionRepositoryImpl implements AssessmentQuestionRepos
      * @param question
      *            考核题目对象。
      */
-    @Override
-    public void update(AssessmentQuestion question) {
-        assessmentQuestionMapper.updateById(
-                assessmentQuestionRepositoryConverter.toDataObject(question));
-    }
-
     /**
      * 删除指定考核题目 记录。
      *

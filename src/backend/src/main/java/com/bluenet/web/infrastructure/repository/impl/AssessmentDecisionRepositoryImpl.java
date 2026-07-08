@@ -30,10 +30,17 @@ public class AssessmentDecisionRepositoryImpl implements AssessmentDecisionRepos
      */
     @Override
     public void save(AssessmentDecision decision) {
-        log.info("save assessment decision {}", decision);
         AssessmentDecisionDO dataObject = converter.toDataObject(decision);
-        assessmentDecisionMapper.insert(dataObject);
-        decision.setId(dataObject.getId());
+        if (dataObject.getId() == null) {
+            assessmentDecisionMapper.insert(dataObject);
+            decision.setId(dataObject.getId());
+        } else {
+            int influence = assessmentDecisionMapper.updateById(dataObject);
+            if (influence == 0) {
+                log.warn("更新考核通过决策失败，decisionId {}", decision.getId());
+                throw new GlobalException("更新考核通过决策失败");
+            }
+        }
     }
 
     /**
@@ -59,15 +66,6 @@ public class AssessmentDecisionRepositoryImpl implements AssessmentDecisionRepos
      * @param decision
      *            考核最终决策对象。
      */
-    @Override
-    public void update(AssessmentDecision decision) {
-        int influence = assessmentDecisionMapper.updateById(converter.toDataObject(decision));
-        if (influence == 0) {
-            log.warn("更新考核通过决策失败，decisionId {}", decision.getId());
-            throw new GlobalException("更新考核通过决策失败");
-        }
-    }
-
     /**
      * 按用户和考核场次查询对应记录。
      *

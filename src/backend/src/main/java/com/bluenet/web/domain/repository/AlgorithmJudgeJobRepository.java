@@ -22,11 +22,4 @@ public interface AlgorithmJudgeJobRepository {
      */
     Optional<AlgorithmJudgeJob> findById(Long id);
 
-    /**
-     * 更新已有算法评测任务记录。
-     *
-     * @param job
-     *            算法评测任务领域对象。
-     */
-    void update(AlgorithmJudgeJob job);
 }

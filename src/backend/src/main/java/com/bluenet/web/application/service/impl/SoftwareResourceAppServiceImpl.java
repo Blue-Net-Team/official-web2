@@ -69,7 +69,7 @@ public class SoftwareResourceAppServiceImpl implements SoftwareResourceAppServic
                 command.externalUrl(),
                 command.sortOrder(),
                 command.status());
-        softwareResourceRepository.update(softwareResource);
+        softwareResourceRepository.save(softwareResource);
         return toResult(softwareResource);
     }
 

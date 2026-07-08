@@ -73,7 +73,7 @@ public class KnowledgeBaseAppServiceImpl implements KnowledgeBaseAppService {
         FileVO fileVO = fileDomainService.getFileById(doc.getFileId());
 
         doc.markForReparse();
-        knowledgeDocRepository.update(doc);
+        knowledgeDocRepository.save(doc);
 
         String downloadUrl = fileDomainService.getPresignedDownloadUrl(FileType.KNOWLEDGE, fileVO.getName());
         knowledgeParsePublisher.publish(doc.getId(), fileVO.getId(), downloadUrl, true);

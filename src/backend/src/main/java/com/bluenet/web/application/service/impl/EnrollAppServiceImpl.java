@@ -148,7 +148,7 @@ public class EnrollAppServiceImpl implements EnrollAppService {
                 command.introduction(),
                 command.internalReferralCode(),
                 newPassword);
-        enrollRepository.update(existing);
+        enrollRepository.save(existing);
         return toEnrollmentResult(existing, false);
     }
 
@@ -239,7 +239,7 @@ public class EnrollAppServiceImpl implements EnrollAppService {
         }
 
         enroll.approve();
-        enrollRepository.update(enroll);
+        enrollRepository.save(enroll);
 
         if (newUserCreated) {
             sendApprovalCredentialMessage(enroll, initialPassword);
@@ -269,7 +269,7 @@ public class EnrollAppServiceImpl implements EnrollAppService {
         }
 
         enroll.reject();
-        enrollRepository.update(enroll);
+        enrollRepository.save(enroll);
 
         sendRejectionMessage(enroll, command.reason());
 

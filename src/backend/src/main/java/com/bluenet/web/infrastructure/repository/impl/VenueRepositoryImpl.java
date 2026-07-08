@@ -36,19 +36,15 @@ public class VenueRepositoryImpl implements VenueRepository {
     }
 
     @Override
-    public Long save(Venue venue) {
+    public void save(Venue venue) {
         VenueDO dataObject = converter.toDataObject(venue);
-        venueMapper.insert(dataObject);
-        venue.setId(dataObject.getId());
-        return dataObject.getId();
+        if (dataObject.getId() == null) {
+            venueMapper.insert(dataObject);
+            venue.setId(dataObject.getId());
+        } else {
+            venueMapper.updateById(dataObject);
+        }
     }
-
-    @Override
-    public void update(Venue venue) {
-        VenueDO dataObject = converter.toDataObject(venue);
-        venueMapper.updateById(dataObject);
-    }
-
     @Override
     public void deleteById(Long id) {
         venueMapper.deleteById(id);

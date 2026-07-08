@@ -52,14 +52,6 @@ public interface EnrollRepository {
     void save(Enroll enroll);
 
     /**
-     * 更新已有报名申请记录。
-     *
-     * @param enroll
-     *            报名实体（id 必须非空）。
-     */
-    void update(Enroll enroll);
-
-    /**
      * 查询全部报名申请记录。
      *
      * @param pageable

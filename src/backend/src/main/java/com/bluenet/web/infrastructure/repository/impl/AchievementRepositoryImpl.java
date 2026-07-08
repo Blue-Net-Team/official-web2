@@ -61,8 +61,12 @@ public class AchievementRepositoryImpl implements AchievementRepository {
     @Override
     public void save(Achievement achievement) {
         AchievementDO dataObject = converter.toDataObject(achievement);
-        achievementMapper.insert(dataObject);
-        achievement.setId(dataObject.getId());
+        if (dataObject.getId() == null) {
+            achievementMapper.insert(dataObject);
+            achievement.setId(dataObject.getId());
+        } else {
+            achievementMapper.updateById(dataObject);
+        }
     }
 
     @Override
@@ -70,13 +74,6 @@ public class AchievementRepositoryImpl implements AchievementRepository {
         AchievementDO dataObject = achievementMapper.selectById(id);
         return Optional.ofNullable(converter.toEntity(dataObject));
     }
-
-    @Override
-    public void update(Achievement achievement) {
-        AchievementDO dataObject = converter.toDataObject(achievement);
-        achievementMapper.updateById(dataObject);
-    }
-
     @Override
     public void deleteById(Long id) {
         achievementMapper.deleteById(id);

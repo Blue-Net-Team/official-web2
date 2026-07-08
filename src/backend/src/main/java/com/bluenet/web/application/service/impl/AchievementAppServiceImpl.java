@@ -118,7 +118,7 @@ public class AchievementAppServiceImpl implements AchievementAppService {
                 command.awardName(),
                 command.fileId());
 
-        achievementRepository.update(achievement);
+        achievementRepository.save(achievement);
         return toResult(achievement);
     }
 

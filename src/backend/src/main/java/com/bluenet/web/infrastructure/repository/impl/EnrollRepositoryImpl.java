@@ -56,16 +56,13 @@ public class EnrollRepositoryImpl implements EnrollRepository {
     @Override
     public void save(Enroll enroll) {
         EnrollDO dataObject = converter.toDataObject(enroll);
-        enrollMapper.insert(dataObject);
-        enroll.setId(dataObject.getId());
+        if (dataObject.getId() == null) {
+            enrollMapper.insert(dataObject);
+            enroll.setId(dataObject.getId());
+        } else {
+            enrollMapper.updateById(dataObject);
+        }
     }
-
-    @Override
-    public void update(Enroll enroll) {
-        EnrollDO dataObject = converter.toDataObject(enroll);
-        enrollMapper.updateById(dataObject);
-    }
-
     @Override
     public org.springframework.data.domain.Page<Enroll> findAll(Pageable pageable) {
         Page<EnrollDO> page = new Page<>(pageable.getPageNumber() + 1, pageable.getPageSize());

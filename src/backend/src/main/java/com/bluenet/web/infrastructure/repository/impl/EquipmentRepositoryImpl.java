@@ -36,19 +36,15 @@ public class EquipmentRepositoryImpl implements EquipmentRepository {
     }
 
     @Override
-    public Long save(Equipment equipment) {
+    public void save(Equipment equipment) {
         EquipmentDO dataObject = converter.toDataObject(equipment);
-        equipmentMapper.insert(dataObject);
-        equipment.setId(dataObject.getId());
-        return dataObject.getId();
+        if (dataObject.getId() == null) {
+            equipmentMapper.insert(dataObject);
+            equipment.setId(dataObject.getId());
+        } else {
+            equipmentMapper.updateById(dataObject);
+        }
     }
-
-    @Override
-    public void update(Equipment equipment) {
-        EquipmentDO dataObject = converter.toDataObject(equipment);
-        equipmentMapper.updateById(dataObject);
-    }
-
     @Override
     public void deleteById(Long id) {
         equipmentMapper.deleteById(id);

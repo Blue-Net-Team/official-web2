@@ -21,7 +21,6 @@ public interface SoftwareResourceRepository {
      *
      * @param id
      *            业务记录主键。
-     * @return 查询到的软件资源实体；不存在时为 Optional.empty()。
      */
     Optional<SoftwareResource> findById(Long id);
 
@@ -34,7 +33,6 @@ public interface SoftwareResourceRepository {
      *            搜索关键词；为 null 或空时忽略。
      * @param pageable
      *            分页参数。
-     * @return 分页的软件资源实体。
      */
     Page<SoftwareResource> findActiveByDirection(SoftwareResourceDirection direction, String keyword,
             Pageable pageable);
@@ -44,17 +42,8 @@ public interface SoftwareResourceRepository {
      *
      * @param softwareResource
      *            软件资源实体。
-     * @return 新记录的主键。
      */
-    Long save(SoftwareResource softwareResource);
-
-    /**
-     * 更新已有软件资源记录。
-     *
-     * @param softwareResource
-     *            软件资源实体（id 必须非空）。
-     */
-    void update(SoftwareResource softwareResource);
+    void save(SoftwareResource softwareResource);
 
     /**
      * 删除指定软件资源记录。
@@ -69,7 +58,6 @@ public interface SoftwareResourceRepository {
      *
      * @param pageable
      *            分页参数。
-     * @return 分页的软件资源实体。
      */
     Page<SoftwareResource> findAllForAdmin(Pageable pageable);
 
@@ -78,14 +66,12 @@ public interface SoftwareResourceRepository {
      *
      * @param id
      *            业务记录主键。
-     * @return 存在返回 true，否则 false。
      */
     boolean existsById(Long id);
 
     /**
      * 查询当前最大的排序号。
      *
-     * @return 最大排序号；无记录时返回 null。
      */
     Integer findMaxSortOrder();
 

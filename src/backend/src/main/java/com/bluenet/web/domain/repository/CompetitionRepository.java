@@ -42,14 +42,6 @@ public interface CompetitionRepository {
     void save(Competition competition);
 
     /**
-     * 更新已有竞赛记录。
-     *
-     * @param competition
-     *            竞赛实体（id 必须非空）。
-     */
-    void update(Competition competition);
-
-    /**
      * 删除指定竞赛记录。
      *
      * @param id

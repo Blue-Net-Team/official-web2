@@ -121,7 +121,7 @@ public class CompetitionAppServiceImpl implements CompetitionAppService {
                 command.month(),
                 command.organizer());
 
-        competitionRepository.update(competition);
+        competitionRepository.save(competition);
         return toResult(competition);
     }
 
@@ -151,7 +151,7 @@ public class CompetitionAppServiceImpl implements CompetitionAppService {
         Competition competition = competitionRepository.findById(command.id())
                 .orElseThrow(() -> new DataNotFound("竞赛不存在"));
         competition.updateSortOrder(command.sortOrder());
-        competitionRepository.update(competition);
+        competitionRepository.save(competition);
     }
 
     /**
@@ -205,8 +205,8 @@ public class CompetitionAppServiceImpl implements CompetitionAppService {
         Integer tempSortOrder = currentSortOrder;
         competition.updateSortOrder(adjacent.getSortOrder());
         adjacent.updateSortOrder(tempSortOrder);
-        competitionRepository.update(competition);
-        competitionRepository.update(adjacent);
+        competitionRepository.save(competition);
+        competitionRepository.save(adjacent);
     }
 
     private void validateFileId(Long fileId, String fieldName) {

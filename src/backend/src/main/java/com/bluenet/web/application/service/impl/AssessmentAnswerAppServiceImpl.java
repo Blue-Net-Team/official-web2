@@ -125,7 +125,7 @@ public class AssessmentAnswerAppServiceImpl implements AssessmentAnswerAppServic
                 command.fileId());
 
         for (AssessmentAnswer answer : answersToUpdate) {
-            assessmentAnswerRepository.update(answer);
+            assessmentAnswerRepository.save(answer);
         }
 
         AssessmentAnswer updatedAnswer = answersToUpdate.stream()

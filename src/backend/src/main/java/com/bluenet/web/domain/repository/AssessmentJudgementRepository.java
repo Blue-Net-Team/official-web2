@@ -34,14 +34,6 @@ public interface AssessmentJudgementRepository {
     Optional<AssessmentJudgement> findById(Long id);
 
     /**
-     * 更新已有考核评审结果 记录。
-     *
-     * @param judgement
-     *            考核评审结果实体。
-     */
-    void update(AssessmentJudgement judgement);
-
-    /**
      * 查询指定作答的最新评审结果。
      *
      * @param answerId

@@ -24,8 +24,6 @@ public interface AssessmentTeamRepository {
 
     void save(AssessmentTeam team);
 
-    void update(AssessmentTeam team);
-
     void deleteById(Long id);
 
     void addMember(Long teamId, Long userId);

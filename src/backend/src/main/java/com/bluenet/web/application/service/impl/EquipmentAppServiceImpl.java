@@ -92,7 +92,7 @@ public class EquipmentAppServiceImpl implements EquipmentAppService {
                 command.description(),
                 command.imageFileId(),
                 command.sortOrder());
-        equipmentRepository.update(equipment);
+        equipmentRepository.save(equipment);
         return toResult(equipment);
     }
 
@@ -124,7 +124,7 @@ public class EquipmentAppServiceImpl implements EquipmentAppService {
         Equipment equipment = equipmentRepository.findById(id)
                 .orElseThrow(() -> new DataNotFound("设备不存在"));
         equipment.updateImage(imageFileId);
-        equipmentRepository.update(equipment);
+        equipmentRepository.save(equipment);
     }
 
     private EquipmentResult toResult(Equipment equipment) {

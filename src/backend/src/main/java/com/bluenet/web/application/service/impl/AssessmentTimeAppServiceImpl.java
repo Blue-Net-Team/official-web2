@@ -170,7 +170,7 @@ public class AssessmentTimeAppServiceImpl implements AssessmentTimeAppService {
                 newTimeLimit,
                 newTimeLimitMinutes,
                 newAllowTeam);
-        assessmentTimeRepository.update(existing);
+        assessmentTimeRepository.save(existing);
         return toResult(existing);
     }
 

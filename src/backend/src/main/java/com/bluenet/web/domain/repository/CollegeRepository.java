@@ -46,14 +46,6 @@ public interface CollegeRepository {
     void save(College college);
 
     /**
-     * 更新已有学院记录。
-     *
-     * @param college
-     *            学院实体（id 必须非空）
-     */
-    void update(College college);
-
-    /**
      * 删除指定学院记录。
      *
      * @param id

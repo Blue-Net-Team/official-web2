@@ -55,19 +55,16 @@ public class AssessmentTimeRepositoryImpl implements AssessmentTimeRepository {
     @Override
     public void save(AssessmentTime assessmentTime) {
         AssessmentTimeDO dataObject = converter.toDataObject(assessmentTime);
-        assessmentTimeMapper.insert(dataObject);
-        assessmentTime.setId(dataObject.getId());
-    }
-
-    @Override
-    public void update(AssessmentTime assessmentTime) {
-        AssessmentTimeDO dataObject = converter.toDataObject(assessmentTime);
-        assessmentTimeMapper.updateById(dataObject);
-        if (Boolean.FALSE.equals(assessmentTime.getTimeLimit())) {
-            assessmentTimeMapper.clearTimeLimitMinutesById(assessmentTime.getId());
+        if (dataObject.getId() == null) {
+            assessmentTimeMapper.insert(dataObject);
+            assessmentTime.setId(dataObject.getId());
+        } else {
+            assessmentTimeMapper.updateById(dataObject);
+            if (Boolean.FALSE.equals(assessmentTime.getTimeLimit())) {
+                assessmentTimeMapper.clearTimeLimitMinutesById(assessmentTime.getId());
+            }
         }
     }
-
     @Override
     public void deleteById(Long id) {
         assessmentTimeMapper.deleteById(id);

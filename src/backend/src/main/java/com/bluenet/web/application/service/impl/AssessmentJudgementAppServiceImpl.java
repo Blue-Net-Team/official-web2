@@ -333,7 +333,7 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
                 .findByUserIdAndAssessmentTimeId(command.userId(), command.assessmentTimeId())
                 .map(existing -> {
                     existing.updatePassed(command.passed(), currentUser.getId(), command.decisionComment());
-                    assessmentDecisionRepository.update(existing);
+                    assessmentDecisionRepository.save(existing);
                     return existing;
                 })
                 .orElseGet(() -> {
@@ -353,7 +353,7 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
                 .orElseThrow(() -> new DataNotFound("考核时间不存在，ID: " + command.assessmentTimeId()));
         if (!assessmentTime.isResultsPublished()) {
             assessmentTime.publishResults();
-            assessmentTimeRepository.update(assessmentTime);
+            assessmentTimeRepository.save(assessmentTime);
         }
 
         return result;
@@ -485,7 +485,7 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
 
         if (!assessmentTime.isResultsPublished()) {
             assessmentTime.publishResults();
-            assessmentTimeRepository.update(assessmentTime);
+            assessmentTimeRepository.save(assessmentTime);
         }
 
         List<AssessmentDecision> decisions = assessmentDecisionRepository

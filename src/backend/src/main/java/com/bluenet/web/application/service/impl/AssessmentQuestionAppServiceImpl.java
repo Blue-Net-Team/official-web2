@@ -147,7 +147,7 @@ public class AssessmentQuestionAppServiceImpl implements AssessmentQuestionAppSe
                 command.attachmentId(),
                 command.score());
 
-        assessmentQuestionRepository.update(existing);
+        assessmentQuestionRepository.save(existing);
         return toResult(existing, null);
     }
 

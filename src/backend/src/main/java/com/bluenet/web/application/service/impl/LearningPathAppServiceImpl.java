@@ -83,7 +83,7 @@ public class LearningPathAppServiceImpl implements LearningPathAppService {
         step.updateStepNumber(command.stepNumber());
         step.updateTitle(command.title());
         step.updateVideoUrl(command.videoUrl());
-        learningPathRepository.update(step);
+        learningPathRepository.save(step);
         return toResult(step);
     }
 

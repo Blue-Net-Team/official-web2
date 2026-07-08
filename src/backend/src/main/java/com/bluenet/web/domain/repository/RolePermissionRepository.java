@@ -112,14 +112,6 @@ public interface RolePermissionRepository {
     void save(RolePermission rolePermission);
 
     /**
-     * 更新已有角色权限关联记录。
-     *
-     * @param rolePermission
-     *            角色权限关联实体（id 必须非空）
-     */
-    void update(RolePermission rolePermission);
-
-    /**
      * 删除指定角色权限关联记录。
      *
      * @param id

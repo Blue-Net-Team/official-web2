@@ -15,7 +15,6 @@ public interface EquipmentRepository {
     /**
      * 按展示排序倒序查询全部设备。
      *
-     * @return 设备实体集合。
      */
     List<Equipment> findAllOrderBySortOrderDesc();
 
@@ -24,7 +23,6 @@ public interface EquipmentRepository {
      *
      * @param id
      *            业务记录主键。
-     * @return 查询到的设备实体；不存在时为 Optional.empty()。
      */
     Optional<Equipment> findById(Long id);
 
@@ -33,17 +31,8 @@ public interface EquipmentRepository {
      *
      * @param equipment
      *            设备实体。
-     * @return 新记录的主键。
      */
-    Long save(Equipment equipment);
-
-    /**
-     * 更新已有设备记录。
-     *
-     * @param equipment
-     *            设备实体（id 必须非空）。
-     */
-    void update(Equipment equipment);
+    void save(Equipment equipment);
 
     /**
      * 删除指定设备记录。
@@ -58,7 +47,6 @@ public interface EquipmentRepository {
      *
      * @param id
      *            业务记录主键。
-     * @return 满足条件时返回 true，否则返回 false。
      */
     boolean existsById(Long id);
 

@@ -52,14 +52,6 @@ public interface AchievementRepository {
     Optional<Achievement> findById(Long id);
 
     /**
-     * 更新已有成果记录。
-     *
-     * @param achievement
-     *            成果实体（id 必须非空）。
-     */
-    void update(Achievement achievement);
-
-    /**
      * 删除指定成果记录。
      *
      * @param id

@@ -70,13 +70,7 @@ public interface AssessmentQuestionRepository {
      * @return 分页后的考核题目 结果。
      */
     Page<AssessmentQuestion> findAllByTimeId(Long assessmentTimeId, Pageable pageable);
-    /**
-     * 更新已有考核题目 记录。
-     *
-     * @param question
-     *            考核题目对象。
-     */
-    void update(AssessmentQuestion question);
+
     /**
      * 删除指定考核题目 记录。
      *

@@ -37,10 +37,17 @@ public class AssessmentJudgementRepositoryImpl implements AssessmentJudgementRep
      */
     @Override
     public void save(AssessmentJudgement judgement) {
-        log.info("save assessment judgement {}", judgement);
         AssessmentJudgementDO dataObject = converter.toDataObject(judgement);
-        assessmentJudgementMapper.insert(dataObject);
-        judgement.setId(dataObject.getId());
+        if (dataObject.getId() == null) {
+            assessmentJudgementMapper.insert(dataObject);
+            judgement.setId(dataObject.getId());
+        } else {
+            int influence = assessmentJudgementMapper.updateById(dataObject);
+            if (influence == 0) {
+                log.warn("更新考核评判记录失败，judgementId {}", judgement.getId());
+                throw new GlobalException("更新考核评判记录失败");
+            }
+        }
     }
 
     /**
@@ -62,16 +69,6 @@ public class AssessmentJudgementRepositoryImpl implements AssessmentJudgementRep
      * @param judgement
      *            考核评审结果实体。
      */
-    @Override
-    public void update(AssessmentJudgement judgement) {
-        AssessmentJudgementDO dataObject = converter.toDataObject(judgement);
-        int influence = assessmentJudgementMapper.updateById(dataObject);
-        if (influence == 0) {
-            log.warn("更新考核评判记录失败，judgementId {}", judgement.getId());
-            throw new GlobalException("更新考核评判记录失败");
-        }
-    }
-
     /**
      * 查询指定作答的最新评审结果。
      *

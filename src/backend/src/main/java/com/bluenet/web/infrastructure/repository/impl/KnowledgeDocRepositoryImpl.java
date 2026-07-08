@@ -46,21 +46,16 @@ public class KnowledgeDocRepositoryImpl implements KnowledgeDocRepository {
     }
 
     @Override
-    public KnowledgeDoc save(KnowledgeDoc doc) {
+    public void save(KnowledgeDoc doc) {
         KnowledgeDocDO dataObject = converter.toDataObject(doc);
-        knowledgeDocMapper.insert(dataObject);
-        doc.setId(dataObject.getId());
+        if (dataObject.getId() == null) {
+            knowledgeDocMapper.insert(dataObject);
+            doc.setId(dataObject.getId());
+        } else {
+            knowledgeDocMapper.updateById(dataObject);
+        }
         log.debug("知识库文档保存成功: id={}", doc.getId());
-        return doc;
     }
-
-    @Override
-    public void update(KnowledgeDoc doc) {
-        KnowledgeDocDO dataObject = converter.toDataObject(doc);
-        knowledgeDocMapper.updateById(dataObject);
-        log.debug("知识库文档更新成功: id={}", doc.getId());
-    }
-
     @Override
     public void deleteById(Long id) {
         knowledgeDocMapper.deleteById(id);

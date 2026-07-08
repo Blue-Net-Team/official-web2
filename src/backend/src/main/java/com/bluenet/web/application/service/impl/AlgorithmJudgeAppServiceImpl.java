@@ -244,7 +244,7 @@ public class AlgorithmJudgeAppServiceImpl implements AlgorithmJudgeAppService {
             answer.setContent(command.content());
             answer.setLanguage(command.language());
             answer.setSubmitTime(LocalDateTime.now());
-            assessmentAnswerRepository.update(answer);
+            assessmentAnswerRepository.save(answer);
             return assessmentAnswerRepository.findById(answer.getId())
                     .orElseThrow(() -> new GlobalException("更新算法题答案后查询失败"));
         }

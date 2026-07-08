@@ -48,16 +48,13 @@ public class CollegeRepositoryImpl implements CollegeRepository {
     @Override
     public void save(College college) {
         CollegeDO dataObject = converter.toDataObject(college);
-        collegeMapper.insert(dataObject);
-        college.setId(dataObject.getId());
+        if (dataObject.getId() == null) {
+            collegeMapper.insert(dataObject);
+            college.setId(dataObject.getId());
+        } else {
+            collegeMapper.updateById(dataObject);
+        }
     }
-
-    @Override
-    public void update(College college) {
-        CollegeDO dataObject = converter.toDataObject(college);
-        collegeMapper.updateById(dataObject);
-    }
-
     @Override
     public void deleteById(Long id) {
         collegeMapper.deleteById(id);

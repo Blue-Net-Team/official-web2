@@ -142,7 +142,7 @@ public class AssessmentTeamAppServiceImpl implements AssessmentTeamAppService {
                 .orElseThrow(() -> new DataNotFound("队伍不存在"));
 
         AssessmentTeam updatedTeam = assessmentTeamDomainService.prepareLeaderTransfer(userId, team, newLeaderId);
-        assessmentTeamRepository.update(updatedTeam);
+        assessmentTeamRepository.save(updatedTeam);
 
         log.info("转让队长成功，teamId: {}, newLeaderId: {}", teamId, newLeaderId);
 
@@ -157,7 +157,7 @@ public class AssessmentTeamAppServiceImpl implements AssessmentTeamAppService {
 
         AssessmentTeam disbandedTeam = assessmentTeamDomainService.prepareDisband(userId, team);
         cleanupTeamAnswers(teamId);
-        assessmentTeamRepository.update(disbandedTeam);
+        assessmentTeamRepository.save(disbandedTeam);
 
         log.info("解散队伍成功，teamId: {}, leaderId: {}", teamId, userId);
     }

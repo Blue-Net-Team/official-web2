@@ -92,7 +92,7 @@ public class VenueAppServiceImpl implements VenueAppService {
                 command.description(),
                 command.imageFileId(),
                 command.sortOrder());
-        venueRepository.update(venue);
+        venueRepository.save(venue);
         return toResult(venue);
     }
 
@@ -124,7 +124,7 @@ public class VenueAppServiceImpl implements VenueAppService {
         Venue venue = venueRepository.findById(id)
                 .orElseThrow(() -> new DataNotFound("场地不存在"));
         venue.updateImage(imageFileId);
-        venueRepository.update(venue);
+        venueRepository.save(venue);
     }
 
     private VenueResult toResult(Venue venue) {

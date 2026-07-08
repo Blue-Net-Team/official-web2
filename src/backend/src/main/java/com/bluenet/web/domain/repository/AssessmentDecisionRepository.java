@@ -28,14 +28,6 @@ public interface AssessmentDecisionRepository {
     Optional<AssessmentDecision> findById(Long id);
 
     /**
-     * 更新已有考核最终决策 记录。
-     *
-     * @param decision
-     *            考核最终决策对象。
-     */
-    void update(AssessmentDecision decision);
-
-    /**
      * 按用户和考核场次查询对应记录。
      *
      * @param userId

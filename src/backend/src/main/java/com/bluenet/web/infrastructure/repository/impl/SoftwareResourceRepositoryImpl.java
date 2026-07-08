@@ -55,19 +55,15 @@ public class SoftwareResourceRepositoryImpl implements SoftwareResourceRepositor
     }
 
     @Override
-    public Long save(SoftwareResource softwareResource) {
+    public void save(SoftwareResource softwareResource) {
         SoftwareResourceDO dataObject = converter.toDataObject(softwareResource);
-        softwareResourceMapper.insert(dataObject);
-        softwareResource.setId(dataObject.getId());
-        return dataObject.getId();
+        if (dataObject.getId() == null) {
+            softwareResourceMapper.insert(dataObject);
+            softwareResource.setId(dataObject.getId());
+        } else {
+            softwareResourceMapper.updateById(dataObject);
+        }
     }
-
-    @Override
-    public void update(SoftwareResource softwareResource) {
-        SoftwareResourceDO dataObject = converter.toDataObject(softwareResource);
-        softwareResourceMapper.updateById(dataObject);
-    }
-
     @Override
     public void deleteById(Long id) {
         softwareResourceMapper.deleteById(id);

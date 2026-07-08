@@ -111,7 +111,7 @@ public class UserExperienceAppServiceImpl implements UserExperienceAppService {
         LocalDateTime endTime = parseDateTime(command.endDate());
 
         experience.updateDetails(title, content, startTime, endTime);
-        userExperienceRepository.update(experience);
+        userExperienceRepository.save(experience);
         return toResult(experience);
     }
 
