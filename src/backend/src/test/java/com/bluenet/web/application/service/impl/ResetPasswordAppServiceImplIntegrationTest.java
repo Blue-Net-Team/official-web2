@@ -10,7 +10,7 @@ import com.bluenet.web.domain.exception.BadRequest;
 import com.bluenet.web.domain.model.entity.User;
 import com.bluenet.web.domain.model.enumerate.Gender;
 import com.bluenet.web.domain.model.enumerate.RoleType;
-import com.bluenet.web.domain.model.vo.VerifyCodeVO;
+import com.bluenet.web.domain.model.entity.VerifyCode;
 import com.bluenet.web.domain.repository.UserRepository;
 import com.bluenet.web.domain.repository.VerificationCodeRepository;
 import com.bluenet.web.domain.service.VerificationCodeDomainService;
@@ -135,13 +135,11 @@ class ResetPasswordAppServiceImplIntegrationTest extends BaseIntegrationTest {
     }
 
     private void mockVerificationCode(String email) {
-        VerifyCodeVO code = VerifyCodeVO.builder()
-                .target(email)
-                .code("123456")
-                .expireAt(java.time.LocalDateTime.now().plusMinutes(5))
-                .used(false)
-                .scene("reset_password")
-                .build();
+        VerifyCode code = VerifyCode.create(
+                email,
+                "123456",
+                java.time.LocalDateTime.now().plusMinutes(5),
+                "reset_password");
         when(verificationCodeDomainService.generateCode(email, "reset_password")).thenReturn(code);
     }
 

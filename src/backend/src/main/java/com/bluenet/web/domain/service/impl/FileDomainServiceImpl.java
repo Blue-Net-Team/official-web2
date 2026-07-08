@@ -12,7 +12,6 @@ import com.bluenet.web.domain.model.enumerate.FileType;
 import com.bluenet.web.domain.model.enumerate.RoleType;
 import com.bluenet.web.domain.model.policy.RoleHierarchy;
 import com.bluenet.web.domain.model.vo.ConfirmUploadVO;
-import com.bluenet.web.domain.model.vo.FileVO;
 import com.bluenet.web.domain.model.vo.PresignedUploadVO;
 import com.bluenet.web.infrastructure.security.principal.RoleTypeResolver;
 import com.bluenet.web.domain.repository.AssessmentAnswerRepository;
@@ -53,10 +52,9 @@ public class FileDomainServiceImpl implements FileDomainService {
     private final RoleTypeResolver roleTypeResolver;
 
     @Override
-    public FileVO getFileById(Long fileId) {
-        File file = fileRepository.findById(fileId)
+    public File getFileById(Long fileId) {
+        return fileRepository.findById(fileId)
                 .orElseThrow(() -> new DataNotFound("文件不存在，ID: " + fileId));
-        return convertToVO(file);
     }
 
     @Override
@@ -96,7 +94,7 @@ public class FileDomainServiceImpl implements FileDomainService {
 
     @Override
     @Transactional
-    public FileVO saveFile(FileType fileType, String filename, InputStream inputStream) {
+    public File saveFile(FileType fileType, String filename, InputStream inputStream) {
         String newFilename = generateFilename(fileType, getFileExtension(filename));
 
         File file = File.reconstruct(
@@ -108,7 +106,7 @@ public class FileDomainServiceImpl implements FileDomainService {
                 java.time.LocalDateTime.now());
         File savedFile = fileRepository.saveFile(inputStream, file);
 
-        return convertToVO(savedFile);
+        return savedFile;
     }
 
     @Override
@@ -239,23 +237,13 @@ public class FileDomainServiceImpl implements FileDomainService {
         return sanitized;
     }
 
-    private FileVO convertToVO(File file) {
-        return FileVO.builder()
-                .id(file.getId())
-                .name(file.getName())
-                .type(file.getType())
-                .url(file.getUrl())
-                .status(file.getStatus())
-                .build();
-    }
-
     @Override
-    public void checkDownloadPermission(FileVO fileVO, User currentUser) {
-        FileType fileType = fileVO.getType();
+    public void checkDownloadPermission(File file, User currentUser) {
+        FileType fileType = file.getType();
 
         switch (fileType) {
-            case WORK -> checkWorkPermission(fileVO, currentUser);
-            case ASSESSMENT_ATTACHMENT -> checkAssessmentAttachmentPermission(fileVO, currentUser);
+            case WORK -> checkWorkPermission(file, currentUser);
+            case ASSESSMENT_ATTACHMENT -> checkAssessmentAttachmentPermission(file, currentUser);
             case AVATAR -> {
             }
             case NORMAL_IMG, QRCODE -> {
@@ -267,33 +255,33 @@ public class FileDomainServiceImpl implements FileDomainService {
         }
     }
 
-    private void checkWorkPermission(FileVO fileVO, User currentUser) {
+    private void checkWorkPermission(File file, User currentUser) {
         if (currentUser == null) {
             log.warn("User not authenticated for WORK file download");
             throw new Forbidden("需要登录才能下载作品文件");
         }
 
-        AssessmentAnswer answer = getAnswerByFileId(fileVO.getId());
+        AssessmentAnswer answer = getAnswerByFileId(file.getId());
 
         if (answer.getUserId().equals(currentUser.getId())) {
             return;
         }
 
         if (!hasRoleAtLeast(currentUser, RoleType.MEMBER)) {
-            log.warn("User {} does not have permission to download work file {}", currentUser.getId(), fileVO.getId());
+            log.warn("User {} does not have permission to download work file {}", currentUser.getId(), file.getId());
             throw new Forbidden("权限不够，需要 MEMBER 及以上权限");
         }
     }
 
-    private void checkAssessmentAttachmentPermission(FileVO fileVO, User currentUser) {
+    private void checkAssessmentAttachmentPermission(File file, User currentUser) {
         if (currentUser == null) {
             log.warn("User not authenticated for ASSESSMENT_ATTACHMENT file download");
             throw new Forbidden("需要登录才能下载考题附件");
         }
 
-        AssessmentQuestion question = getQuestionByAttachmentId(fileVO.getId());
+        AssessmentQuestion question = getQuestionByAttachmentId(file.getId());
         if (question == null) {
-            log.warn("No question found for assessment attachment: {}", fileVO.getId());
+            log.warn("No question found for assessment attachment: {}", file.getId());
             throw new Forbidden("考题附件不存在");
         }
 

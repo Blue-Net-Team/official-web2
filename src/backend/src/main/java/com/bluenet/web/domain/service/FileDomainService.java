@@ -4,9 +4,9 @@ import com.bluenet.web.domain.model.enumerate.FileType;
 import com.bluenet.web.domain.model.entity.AssessmentAnswer;
 import com.bluenet.web.domain.model.entity.AssessmentQuestion;
 import com.bluenet.web.domain.model.entity.AssessmentTime;
+import com.bluenet.web.domain.model.entity.File;
 import com.bluenet.web.domain.model.entity.User;
 import com.bluenet.web.domain.model.vo.ConfirmUploadVO;
-import com.bluenet.web.domain.model.vo.FileVO;
 import com.bluenet.web.domain.model.vo.PresignedUploadVO;
 import org.springframework.core.io.Resource;
 
@@ -18,16 +18,16 @@ public interface FileDomainService {
      *
      * @param fileId
      *            文件ID
-     * @return 文件VO
+     * @return 文件实体
      */
-    FileVO getFileById(Long fileId);
+    File getFileById(Long fileId);
 
     /**
      * 根据文件的答题ID获取答题信息
      *
      * @param fileId
      *            文件ID
-     * @return 答题VO
+     * @return 答题实体
      */
     AssessmentAnswer getAnswerByFileId(Long fileId);
 
@@ -36,7 +36,7 @@ public interface FileDomainService {
      *
      * @param attachmentId
      *            附件ID
-     * @return 题目VO
+     * @return 题目实体
      */
     AssessmentQuestion getQuestionByAttachmentId(Long attachmentId);
 
@@ -45,7 +45,7 @@ public interface FileDomainService {
      *
      * @param id
      *            考试时间ID
-     * @return 考试时间VO
+     * @return 考试时间实体
      */
     AssessmentTime getAssessmentTimeById(Long id);
 
@@ -69,9 +69,9 @@ public interface FileDomainService {
      *            文件名（包含扩展名）
      * @param inputStream
      *            文件输入流
-     * @return 保存后的文件信息，包括文件ID、URL等
+     * @return 保存后的文件实体
      */
-    FileVO saveFile(FileType fileType, String filename, InputStream inputStream);
+    File saveFile(FileType fileType, String filename, InputStream inputStream);
 
     /**
      * 加载文件
@@ -128,12 +128,12 @@ public interface FileDomainService {
     /**
      * 校验当前用户是否有指定文件的下载权限。
      *
-     * @param fileVO
-     *            文件 VO
+     * @param file
+     *            文件实体
      * @param currentUser
      *            当前用户实体（可为 null，表示未登录）
      * @throws com.bluenet.web.domain.exception.Forbidden
      *             权限不足时抛出
      */
-    void checkDownloadPermission(FileVO fileVO, User currentUser);
+    void checkDownloadPermission(File file, User currentUser);
 }

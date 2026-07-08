@@ -9,8 +9,8 @@ import com.bluenet.web.application.message.template.VerificationCodeScene;
 import com.bluenet.web.application.service.ResetPasswordAppService;
 import com.bluenet.web.domain.exception.BadRequest;
 import com.bluenet.web.domain.model.entity.User;
+import com.bluenet.web.domain.model.entity.VerifyCode;
 import com.bluenet.web.domain.model.enumerate.MessageChannel;
-import com.bluenet.web.domain.model.vo.VerifyCodeVO;
 import com.bluenet.web.domain.repository.UserRepository;
 import com.bluenet.web.domain.repository.VerificationCodeRepository;
 import com.bluenet.web.domain.service.VerificationCodeDomainService;
@@ -117,12 +117,12 @@ public class ResetPasswordAppServiceImpl implements ResetPasswordAppService {
             throw new BadRequest("重置流程状态异常，请重新开始");
         }
 
-        VerifyCodeVO verifyCodeVO = verificationCodeDomainService.generateCode(email, SCENE);
-        verificationCodeRepository.save(verifyCodeVO);
+        VerifyCode verifyCode = verificationCodeDomainService.generateCode(email, SCENE);
+        verificationCodeRepository.save(verifyCode);
 
         String subject = "蓝网密码重置验证码";
         String htmlContent = emailVerificationCodeTemplate
-                .buildHtml(VerificationCodeScene.RESET_PASSWORD, verifyCodeVO.getCode());
+                .buildHtml(VerificationCodeScene.RESET_PASSWORD, verifyCode.getCode());
         messageDispatcher.dispatchAsync(MessageRequest.html(MessageChannel.EMAIL, email, subject, htmlContent));
 
         Map<String, String> updates = new HashMap<>();
@@ -147,16 +147,16 @@ public class ResetPasswordAppServiceImpl implements ResetPasswordAppService {
             throw new BadRequest("重置流程状态异常，请重新开始");
         }
 
-        Optional<VerifyCodeVO> codeOpt = verificationCodeRepository
+        Optional<VerifyCode> codeOpt = verificationCodeRepository
                 .findByEmailAndCodeAndScene(email, command.code(), SCENE);
         if (codeOpt.isEmpty()) {
             throw new BadRequest("验证码错误");
         }
-        VerifyCodeVO verifyCodeVO = codeOpt.get();
-        if (verifyCodeVO.isUsed()) {
+        VerifyCode verifyCode = codeOpt.get();
+        if (verifyCode.isUsed()) {
             throw new BadRequest("验证码已使用");
         }
-        if (verifyCodeVO.getExpireAt() != null && verifyCodeVO.getExpireAt().isBefore(java.time.LocalDateTime.now())) {
+        if (verifyCode.isExpired()) {
             throw new BadRequest("验证码已过期");
         }
 

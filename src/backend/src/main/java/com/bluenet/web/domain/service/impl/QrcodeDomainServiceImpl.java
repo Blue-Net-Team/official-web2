@@ -1,9 +1,9 @@
 package com.bluenet.web.domain.service.impl;
 
 import com.bluenet.web.domain.exception.DataNotFound;
+import com.bluenet.web.domain.model.entity.File;
 import com.bluenet.web.domain.model.entity.Qrcode;
 import com.bluenet.web.domain.model.enumerate.QrcodeType;
-import com.bluenet.web.domain.model.vo.FileVO;
 import com.bluenet.web.domain.repository.FileRepository;
 import com.bluenet.web.domain.repository.QrcodeRepository;
 import com.bluenet.web.domain.service.QrcodeDomainService;
@@ -56,13 +56,13 @@ public class QrcodeDomainServiceImpl implements QrcodeDomainService {
     }
 
     @Override
-    public void saveQrcode(FileVO fileVO, QrcodeType type) {
+    public void saveQrcode(File file, QrcodeType type) {
         if (type == null) {
             throw new IllegalArgumentException("二维码类型不能为空");
         }
-        Qrcode qrcode = Qrcode.create(fileVO.getId(), type);
+        Qrcode qrcode = Qrcode.create(file.getId(), type);
         qrcodeRepository.save(qrcode);
-        log.info("二维码保存成功，fileId={}, type={}", fileVO.getId(), type);
+        log.info("二维码保存成功，fileId={}, type={}", file.getId(), type);
     }
 
     @Override
@@ -72,7 +72,7 @@ public class QrcodeDomainServiceImpl implements QrcodeDomainService {
 
     @Override
     @Transactional
-    public void updateConsultationQrcode(Long id, FileVO fileVO) {
+    public void updateConsultationQrcode(Long id, File file) {
         // 1. 获取二维码记录
         Qrcode qrcode = qrcodeRepository.findById(id)
                 .orElseThrow(() -> new DataNotFound("二维码不存在: " + id));
@@ -86,18 +86,18 @@ public class QrcodeDomainServiceImpl implements QrcodeDomainService {
         Long oldFileId = qrcode.getFileId();
 
         // 4. 更新二维码记录
-        qrcode.setFileId(fileVO.getId());
+        qrcode.setFileId(file.getId());
         qrcodeRepository.save(qrcode);
 
         // 5. 删除旧的关联文件
-        if (oldFileId != null && !oldFileId.equals(fileVO.getId())) {
+        if (oldFileId != null && !oldFileId.equals(file.getId())) {
             try {
                 fileRepository.deleteFileById(oldFileId);
                 log.info(
                         "更新咨询群二维码成功，id={}, oldFileId={}, newFileId={}",
                         id,
                         oldFileId,
-                        fileVO.getId());
+                        file.getId());
             } catch (Exception e) {
                 log.warn(
                         "删除旧关联文件失败: oldFileId={}, error={}",
@@ -162,7 +162,7 @@ public class QrcodeDomainServiceImpl implements QrcodeDomainService {
 
     @Override
     @Transactional
-    public void updateAssessmentQrcode(Long id, FileVO fileVO, String direction,
+    public void updateAssessmentQrcode(Long id, File file, String direction,
             Integer epoch, Boolean isShared) {
         // 1. 获取二维码记录
         Qrcode qrcode = qrcodeRepository.findById(id)
@@ -188,8 +188,8 @@ public class QrcodeDomainServiceImpl implements QrcodeDomainService {
         checkAssessmentConflict(checkEpoch, checkDirection, checkIsShared, id);
 
         // 6. 更新二维码记录
-        if (fileVO != null) {
-            qrcode.setFileId(fileVO.getId());
+        if (file != null) {
+            qrcode.setFileId(file.getId());
         }
         if (direction != null) {
             qrcode.setDirection(direction);
@@ -219,14 +219,14 @@ public class QrcodeDomainServiceImpl implements QrcodeDomainService {
         qrcodeRepository.save(qrcode);
 
         // 7. 删除旧的关联文件
-        if (fileVO != null && oldFileId != null && !oldFileId.equals(fileVO.getId())) {
+        if (file != null && oldFileId != null && !oldFileId.equals(file.getId())) {
             try {
                 fileRepository.deleteFileById(oldFileId);
                 log.info(
                         "更新考核群二维码成功，id={}, oldFileId={}, newFileId={}",
                         id,
                         oldFileId,
-                        fileVO.getId());
+                        file.getId());
             } catch (Exception e) {
                 log.warn(
                         "删除旧关联文件失败: oldFileId={}, error={}",

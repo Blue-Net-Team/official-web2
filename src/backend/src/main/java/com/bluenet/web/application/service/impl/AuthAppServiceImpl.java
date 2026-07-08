@@ -15,8 +15,8 @@ import com.bluenet.web.application.service.auth.session.AuthSessionIssuer;
 import com.bluenet.web.application.service.auth.strategy.AuthProviderRegistry;
 import com.bluenet.web.application.service.auth.strategy.AuthProviderType;
 import com.bluenet.web.domain.model.entity.User;
+import com.bluenet.web.domain.model.entity.VerifyCode;
 import com.bluenet.web.domain.model.enumerate.MessageChannel;
-import com.bluenet.web.domain.model.vo.VerifyCodeVO;
 import com.bluenet.web.domain.repository.UserRepository;
 import com.bluenet.web.domain.repository.VerificationCodeRepository;
 import com.bluenet.web.domain.service.AuthDomainService;
@@ -177,12 +177,12 @@ public class AuthAppServiceImpl implements AuthAppService {
         String email = command.email();
         String scene = command.scene() != null ? command.scene() : "login";
 
-        VerifyCodeVO verifyCodeVO = verificationCodeDomainService.generateCode(email, scene);
-        verificationCodeRepository.save(verifyCodeVO);
+        VerifyCode verifyCode = verificationCodeDomainService.generateCode(email, scene);
+        verificationCodeRepository.save(verifyCode);
 
         String subject = "蓝网登录验证码";
         String htmlContent = emailVerificationCodeTemplate
-                .buildHtml(VerificationCodeScene.LOGIN, verifyCodeVO.getCode());
+                .buildHtml(VerificationCodeScene.LOGIN, verifyCode.getCode());
         messageDispatcher.dispatchAsync(MessageRequest.html(MessageChannel.EMAIL, email, subject, htmlContent));
 
         log.info("验证码已发送 - email={}, scene={}", email, scene);

@@ -6,12 +6,12 @@ import com.bluenet.web.application.service.AchievementAppService;
 import com.bluenet.web.domain.exception.BadRequest;
 import com.bluenet.web.domain.exception.DataNotFound;
 import com.bluenet.web.domain.model.entity.Achievement;
+import com.bluenet.web.domain.model.entity.File;
 import com.bluenet.web.domain.model.enumerate.AchievementType;
 import com.bluenet.web.domain.model.enumerate.AwardLevel;
 import com.bluenet.web.domain.model.enumerate.FileType;
 import com.bluenet.web.domain.model.vo.AchievementStatsVO;
 import com.bluenet.web.domain.model.vo.AchievementVO;
-import com.bluenet.web.domain.model.vo.FileVO;
 import com.bluenet.web.domain.repository.AchievementRepository;
 import com.bluenet.web.domain.service.FileDomainService;
 import lombok.RequiredArgsConstructor;
@@ -137,7 +137,7 @@ public class AchievementAppServiceImpl implements AchievementAppService {
     }
 
     private void validateFile(Long fileId) {
-        FileVO file = fileDomainService.getFileById(fileId);
+        File file = fileDomainService.getFileById(fileId);
         if (file == null) {
             throw new DataNotFound("文件不存在");
         }

@@ -6,8 +6,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.bluenet.web.domain.model.entity.User;
+import com.bluenet.web.domain.model.entity.VerifyCode;
 import com.bluenet.web.domain.model.enumerate.LocalLoginType;
-import com.bluenet.web.domain.model.vo.VerifyCodeVO;
 import com.bluenet.web.domain.repository.UserRepository;
 import com.bluenet.web.domain.repository.VerificationCodeRepository;
 import com.bluenet.web.domain.service.AuthDomainService;
@@ -115,20 +115,21 @@ public class AuthDomainServiceImpl implements AuthDomainService {
      * @return 如果验证码正确返回true，否则返回false
      */
     private boolean verifyCode(String verifyCode, String userEmail) {
-        Optional<VerifyCodeVO> verifyCodeVOOptional = verificationCodeRepository.findByEmailAndCode(
+        Optional<VerifyCode> verifyCodeOptional = verificationCodeRepository.findByEmailAndCode(
                 userEmail,
                 verifyCode);
-        if (verifyCodeVOOptional.isEmpty()) {
+        if (verifyCodeOptional.isEmpty()) {
             log.warn("验证码无效 未找到 - email={}, code={}", userEmail, verifyCode);
             return false;
         }
 
-        if (verifyCodeVOOptional.get().isExpired()) {
+        VerifyCode code = verifyCodeOptional.get();
+        if (code.isExpired()) {
             log.warn("验证码无效 已过期 - email={}, code={}", userEmail, verifyCode);
             return false;
         }
 
-        if (verifyCodeVOOptional.get().isUsed()) {
+        if (code.isUsed()) {
             log.warn("验证码无效 已被使用 - email={}, code={}", userEmail, verifyCode);
             return false;
         }

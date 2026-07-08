@@ -6,9 +6,9 @@ import com.bluenet.web.application.service.CompetitionAppService;
 import com.bluenet.web.domain.exception.BadRequest;
 import com.bluenet.web.domain.exception.DataNotFound;
 import com.bluenet.web.domain.model.entity.Competition;
+import com.bluenet.web.domain.model.entity.File;
 import com.bluenet.web.domain.model.enumerate.FileType;
 import com.bluenet.web.domain.model.vo.CompetitionVO;
-import com.bluenet.web.domain.model.vo.FileVO;
 import com.bluenet.web.domain.repository.CompetitionRepository;
 import com.bluenet.web.domain.service.FileDomainService;
 import lombok.RequiredArgsConstructor;
@@ -213,11 +213,11 @@ public class CompetitionAppServiceImpl implements CompetitionAppService {
         if (fileId == null) {
             return;
         }
-        FileVO fileVO = fileDomainService.getFileById(fileId);
-        if (fileVO == null) {
+        File file = fileDomainService.getFileById(fileId);
+        if (file == null) {
             throw new DataNotFound(fieldName + "文件不存在");
         }
-        if (fileVO.getType() != FileType.NORMAL_IMG) {
+        if (file.getType() != FileType.NORMAL_IMG) {
             throw new BadRequest(fieldName + "文件类型不匹配，期望 NORMAL_IMG");
         }
     }

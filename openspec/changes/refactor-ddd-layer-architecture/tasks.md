@@ -166,13 +166,13 @@
 
 #### 实现步骤
 
-- [ ] 9.1 改造 `RoleRepository.findByName` 返回 `Optional<Role>`
-- [ ] 9.2 改造 `FileDomainService` 返回/接收 `File` Entity（`getFileById`、`saveFile`、`checkDownloadPermission` 等）
-- [ ] 9.3 改造 `QrcodeDomainService` 返回/接收 `Qrcode` Entity
-- [ ] 9.4 改造 `VerificationCodeDomainService` 返回 `VerificationCode` Entity
-- [ ] 9.5 删除 `RoleVO`、`FileVO`、`QrcodeVO`、`VerifyCodeVO`
-- [ ] 9.6 迁移所有引用点（`AuthAppServiceImpl`、`UserInfoAppServiceImpl`、`FileAppServiceImpl` 等）
-- [ ] 9.7 编译通过
+- [x] 9.1 改造 `RoleRepository.findByName` 返回 `Optional<Role>`
+- [x] 9.2 改造 `FileDomainService` 返回/接收 `File` Entity（`getFileById`、`saveFile`、`checkDownloadPermission` 等）
+- [x] 9.3 改造 `QrcodeDomainService` 返回/接收 `Qrcode` Entity
+- [x] 9.4 改造 `VerificationCodeDomainService` 返回 `VerificationCode` Entity
+- [x] 9.5 删除 `RoleVO`、`FileVO`、`QrcodeVO`、`VerifyCodeVO`
+- [x] 9.6 迁移所有引用点（`AuthAppServiceImpl`、`UserInfoAppServiceImpl`、`FileAppServiceImpl` 等）
+- [x] 9.7 编译通过
 
 ***
 

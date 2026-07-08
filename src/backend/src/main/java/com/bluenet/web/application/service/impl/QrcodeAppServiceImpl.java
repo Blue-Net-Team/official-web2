@@ -5,9 +5,9 @@ import com.bluenet.web.application.command.qrcode.QrcodeCommands;
 import com.bluenet.web.application.service.QrcodeAppService;
 import com.bluenet.web.domain.exception.BadRequest;
 import com.bluenet.web.domain.exception.DataNotFound;
+import com.bluenet.web.domain.model.entity.File;
 import com.bluenet.web.domain.model.entity.Qrcode;
 import com.bluenet.web.domain.model.enumerate.FileType;
-import com.bluenet.web.domain.model.vo.FileVO;
 import com.bluenet.web.domain.service.FileDomainService;
 import com.bluenet.web.domain.service.QrcodeDomainService;
 import lombok.RequiredArgsConstructor;
@@ -52,15 +52,15 @@ public class QrcodeAppServiceImpl implements QrcodeAppService {
     @Override
     @Transactional
     public void createConsultationQrcode(QrcodeCommands.CreateConsultationQrcodeCommand command) {
-        FileVO fileVO = fileDomainService.getFileById(command.fileId());
-        if (fileVO == null) {
+        File file = fileDomainService.getFileById(command.fileId());
+        if (file == null) {
             throw new DataNotFound("文件不存在");
         }
-        if (fileVO.getType() != FileType.QRCODE) {
+        if (file.getType() != FileType.QRCODE) {
             throw new BadRequest("文件类型不匹配，期望 QRCODE");
         }
 
-        qrcodeDomainService.saveQrcode(fileVO, com.bluenet.web.domain.model.enumerate.QrcodeType.CONSULTATION);
+        qrcodeDomainService.saveQrcode(file, com.bluenet.web.domain.model.enumerate.QrcodeType.CONSULTATION);
         log.info("二维码创建成功，fileId={}", command.fileId());
     }
 
@@ -73,15 +73,15 @@ public class QrcodeAppServiceImpl implements QrcodeAppService {
     @Override
     @Transactional
     public void updateConsultationQrcode(QrcodeCommands.UpdateConsultationQrcodeCommand command) {
-        FileVO fileVO = fileDomainService.getFileById(command.fileId());
-        if (fileVO == null) {
+        File file = fileDomainService.getFileById(command.fileId());
+        if (file == null) {
             throw new DataNotFound("文件不存在");
         }
-        if (fileVO.getType() != FileType.QRCODE) {
+        if (file.getType() != FileType.QRCODE) {
             throw new BadRequest("文件类型不匹配，期望 QRCODE");
         }
 
-        qrcodeDomainService.updateConsultationQrcode(command.id(), fileVO);
+        qrcodeDomainService.updateConsultationQrcode(command.id(), file);
         log.info("二维码更新成功，id={}, fileId={}", command.id(), command.fileId());
     }
 
@@ -126,11 +126,11 @@ public class QrcodeAppServiceImpl implements QrcodeAppService {
     @Override
     @Transactional
     public void createAssessmentQrcode(QrcodeCommands.CreateAssessmentQrcodeCommand command) {
-        FileVO fileVO = fileDomainService.getFileById(command.fileId());
-        if (fileVO == null) {
+        File file = fileDomainService.getFileById(command.fileId());
+        if (file == null) {
             throw new DataNotFound("文件不存在");
         }
-        if (fileVO.getType() != FileType.QRCODE) {
+        if (file.getType() != FileType.QRCODE) {
             throw new BadRequest("文件类型不匹配，期望 QRCODE");
         }
 
@@ -153,20 +153,20 @@ public class QrcodeAppServiceImpl implements QrcodeAppService {
     @Override
     @Transactional
     public void updateAssessmentQrcode(QrcodeCommands.UpdateAssessmentQrcodeCommand command) {
-        FileVO fileVO = null;
+        File file = null;
         if (command.fileId() != null) {
-            fileVO = fileDomainService.getFileById(command.fileId());
-            if (fileVO == null) {
+            file = fileDomainService.getFileById(command.fileId());
+            if (file == null) {
                 throw new DataNotFound("文件不存在");
             }
-            if (fileVO.getType() != FileType.QRCODE) {
+            if (file.getType() != FileType.QRCODE) {
                 throw new BadRequest("文件类型不匹配，期望 QRCODE");
             }
         }
 
         qrcodeDomainService.updateAssessmentQrcode(
                 command.id(),
-                fileVO,
+                file,
                 command.direction(),
                 command.epoch(),
                 command.isShared());

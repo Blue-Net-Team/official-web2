@@ -16,8 +16,8 @@ import com.bluenet.web.domain.model.entity.AssessmentJudgement;
 import com.bluenet.web.domain.model.entity.AssessmentQuestion;
 import com.bluenet.web.domain.model.entity.AssessmentTeam;
 import com.bluenet.web.domain.model.entity.AssessmentTime;
+import com.bluenet.web.domain.model.entity.File;
 import com.bluenet.web.domain.model.entity.User;
-import com.bluenet.web.domain.model.vo.FileVO;
 import com.bluenet.web.domain.model.vo.evaluation.MultipleChoiceContent;
 import com.bluenet.web.domain.model.vo.evaluation.SingleChoiceContent;
 import com.bluenet.web.domain.repository.AssessmentAnswerRepository;
@@ -261,11 +261,11 @@ public class AssessmentAnswerDomainServiceImpl implements AssessmentAnswerDomain
         if (fileId == null) {
             return;
         }
-        FileVO fileVO = fileDomainService.getFileById(fileId);
-        if (fileVO == null) {
+        File file = fileDomainService.getFileById(fileId);
+        if (file == null) {
             throw new BadRequest("文件不存在");
         }
-        if (fileVO.getType() != FileType.WORK) {
+        if (file.getType() != FileType.WORK) {
             throw new BadRequest("文件类型不匹配，期望 WORK");
         }
     }

@@ -8,13 +8,13 @@ import com.bluenet.web.domain.exception.DataNotFound;
 import com.bluenet.web.domain.exception.Forbidden;
 import com.bluenet.web.domain.exception.Unauthorized;
 import com.bluenet.web.domain.model.entity.College;
+import com.bluenet.web.domain.model.entity.File;
 import com.bluenet.web.domain.model.entity.User;
+import com.bluenet.web.domain.model.entity.VerifyCode;
 import com.bluenet.web.domain.model.enumerate.FileType;
 import com.bluenet.web.domain.model.enumerate.MessageChannel;
 import com.bluenet.web.domain.model.enumerate.RoleType;
-import com.bluenet.web.domain.model.vo.FileVO;
 import com.bluenet.web.domain.model.vo.TabCountsVO;
-import com.bluenet.web.domain.model.vo.VerifyCodeVO;
 import com.bluenet.web.domain.repository.CollegeRepository;
 import com.bluenet.web.domain.repository.UserRepository;
 import com.bluenet.web.domain.repository.VerificationCodeRepository;
@@ -131,13 +131,13 @@ public class UserInfoAppServiceImpl implements UserInfoAppService {
         if (!"change-email-original".equals(scene) && !"change-email-new".equals(scene)) {
             throw new BadRequest("无效的验证码场景");
         }
-        VerifyCodeVO verifyCodeVO = verificationCodeDomainService.generateCode(email, scene);
-        verificationCodeRepository.save(verifyCodeVO);
+        VerifyCode verifyCode = verificationCodeDomainService.generateCode(email, scene);
+        verificationCodeRepository.save(verifyCode);
         String subject = "change-email-original".equals(scene) ? "蓝网修改邮箱 - 验证原邮箱" : "蓝网修改邮箱 - 验证新邮箱";
         VerificationCodeScene codeScene = "change-email-original".equals(scene)
                 ? VerificationCodeScene.CHANGE_EMAIL_ORIGINAL
                 : VerificationCodeScene.CHANGE_EMAIL_NEW;
-        String htmlContent = emailVerificationCodeTemplate.buildHtml(codeScene, verifyCodeVO.getCode());
+        String htmlContent = emailVerificationCodeTemplate.buildHtml(codeScene, verifyCode.getCode());
         messageDispatcher.dispatchAsync(MessageRequest.html(MessageChannel.EMAIL, email, subject, htmlContent));
         log.info("修改邮箱验证码已发送 - email={}, scene={}", email, scene);
     }
@@ -203,11 +203,11 @@ public class UserInfoAppServiceImpl implements UserInfoAppService {
     @Override
     @Transactional
     public void updateAvatar(Long userId, UserInfoCommands.UpdateAvatarCommand command) {
-        FileVO fileVO = fileDomainService.getFileById(command.fileId());
-        if (fileVO == null) {
+        File file = fileDomainService.getFileById(command.fileId());
+        if (file == null) {
             throw new DataNotFound("文件不存在");
         }
-        if (fileVO.getType() != FileType.AVATAR) {
+        if (file.getType() != FileType.AVATAR) {
             throw new BadRequest("文件类型不匹配，期望 AVATAR");
         }
         User user = userRepository.findById(userId)
@@ -228,12 +228,12 @@ public class UserInfoAppServiceImpl implements UserInfoAppService {
     }
 
     private void verifyCode(String email, String code, String scene) {
-        VerifyCodeVO verifyCodeVO = verificationCodeRepository.findByEmailAndCodeAndScene(email, code, scene)
+        VerifyCode verifyCode = verificationCodeRepository.findByEmailAndCodeAndScene(email, code, scene)
                 .orElseThrow(() -> new BadRequest("验证码错误"));
-        if (verifyCodeVO.isExpired()) {
+        if (verifyCode.isExpired()) {
             throw new BadRequest("验证码已过期");
         }
-        if (verifyCodeVO.isUsed()) {
+        if (verifyCode.isUsed()) {
             throw new BadRequest("验证码已被使用");
         }
     }
