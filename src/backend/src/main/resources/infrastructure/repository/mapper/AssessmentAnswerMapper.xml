@@ -86,18 +86,6 @@
         </foreach>
     </insert>
 
-    <!-- 批量更新队伍答案：通过 team_id + question_id 更新该队伍在该题目下的所有答案（含队长） -->
-    <update id="updateTeamMemberAnswers">
-        UPDATE tb_assessment_answer
-        SET
-            <if test="fileId != null">file_id = #{fileId},</if>
-            <if test="content != null">content = #{content},</if>
-            <if test="language != null">language = #{language},</if>
-            submit_time = #{submitTime}
-        WHERE team_id = #{teamId}
-          AND question_id = #{questionId}
-    </update>
-
     <select id="selectExistingAnswerUserIds" resultType="java.lang.Long">
         SELECT user_id
         FROM tb_assessment_answer

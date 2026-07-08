@@ -21,7 +21,6 @@ import com.bluenet.web.domain.repository.VerificationCodeRepository;
 import com.bluenet.web.domain.service.FileDomainService;
 import com.bluenet.web.domain.service.VerificationCodeDomainService;
 import com.bluenet.web.domain.util.GradeCalculator;
-import com.bluenet.web.infrastructure.repository.mapper.UserMapper;
 import com.bluenet.web.application.message.MessageDispatcher;
 import com.bluenet.web.application.message.MessageRequest;
 import com.bluenet.web.application.message.template.EmailVerificationCodeTemplate;
@@ -57,7 +56,6 @@ public class UserInfoAppServiceImpl implements UserInfoAppService {
     private final AuthTokenService authTokenService;
     private final CollegeRepository collegeRepository;
     private final RoleTypeResolver roleTypeResolver;
-    private final UserMapper userMapper;
 
     @Override
     public UserInfoResult getMyInfo(Long userId) {
@@ -106,18 +104,15 @@ public class UserInfoAppServiceImpl implements UserInfoAppService {
         User currentUser = userRepository.findById(userId)
                 .orElseThrow(() -> new Unauthorized("用户不存在"));
         validateProfileUpdatePermission(currentUser, command);
-        userMapper.updateProfile(
-                userId,
+        currentUser.updateProfile(
                 command.username(),
                 command.nickname(),
-                command.college(),
                 command.major(),
                 command.direction(),
                 command.gender(),
-                command.bio());
-        if (command.qrcodeFileId() != null) {
-            userMapper.updateQrcodeId(userId, command.qrcodeFileId());
-        }
+                command.bio(),
+                command.qrcodeFileId());
+        userRepository.save(currentUser);
     }
 
     @Override

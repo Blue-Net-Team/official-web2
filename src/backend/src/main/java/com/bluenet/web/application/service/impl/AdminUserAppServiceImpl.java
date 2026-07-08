@@ -9,12 +9,12 @@ import com.bluenet.web.domain.model.entity.College;
 import com.bluenet.web.domain.model.entity.User;
 import com.bluenet.web.domain.model.enumerate.Gender;
 import com.bluenet.web.domain.model.enumerate.RoleType;
+import com.bluenet.web.domain.model.entity.Role;
 import com.bluenet.web.domain.repository.CollegeRepository;
+import com.bluenet.web.domain.repository.RoleRepository;
 import com.bluenet.web.domain.repository.UserRepository;
 import com.bluenet.web.domain.service.ReferralCodeGenerator;
 import com.bluenet.web.infrastructure.config.properties.SystemUserProperties;
-import com.bluenet.web.infrastructure.repository.dataobject.RoleDO;
-import com.bluenet.web.infrastructure.repository.mapper.RoleMapper;
 import com.bluenet.web.infrastructure.security.util.UserCTX;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,7 +33,7 @@ import java.util.List;
 public class AdminUserAppServiceImpl implements AdminUserAppService {
 
     private final UserRepository userRepository;
-    private final RoleMapper roleMapper;
+    private final RoleRepository roleRepository;
     private final CollegeRepository collegeRepository;
     private final PasswordEncoder passwordEncoder;
     private final ReferralCodeGenerator referralCodeGenerator;
@@ -163,7 +163,7 @@ public class AdminUserAppServiceImpl implements AdminUserAppService {
         }
 
         // 校验角色存在性
-        RoleDO role = roleMapper.selectById(command.roleId());
+        Role role = roleRepository.findById(command.roleId()).orElse(null);
         if (role == null) {
             throw new BadRequest("角色不存在");
         }
@@ -215,7 +215,7 @@ public class AdminUserAppServiceImpl implements AdminUserAppService {
     }
 
     private void preventSuperAdminModification(User user) {
-        RoleDO role = roleMapper.selectById(user.getRoleId());
+        Role role = roleRepository.findById(user.getRoleId()).orElse(null);
         if (role != null && RoleType.SUPER_ADMIN.getName().equals(role.getName())) {
             throw new BadRequest("不能对超级管理员执行此操作");
         }
@@ -235,7 +235,7 @@ public class AdminUserAppServiceImpl implements AdminUserAppService {
     private AdminUserResult.ListItem toListItem(User user) {
         String roleName = null;
         if (user.getRoleId() != null) {
-            RoleDO role = roleMapper.selectById(user.getRoleId());
+            Role role = roleRepository.findById(user.getRoleId()).orElse(null);
             roleName = role != null ? role.getName() : null;
         }
         String collegeName = null;
@@ -254,7 +254,7 @@ public class AdminUserAppServiceImpl implements AdminUserAppService {
     private AdminUserResult.Detail toDetail(User user, UserRepository.UserStatistics stats) {
         String roleName = null;
         if (user.getRoleId() != null) {
-            RoleDO role = roleMapper.selectById(user.getRoleId());
+            Role role = roleRepository.findById(user.getRoleId()).orElse(null);
             roleName = role != null ? role.getName() : null;
         }
         String collegeName = null;

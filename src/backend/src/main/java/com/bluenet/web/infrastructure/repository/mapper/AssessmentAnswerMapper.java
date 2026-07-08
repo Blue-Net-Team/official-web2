@@ -115,31 +115,6 @@ public interface AssessmentAnswerMapper extends BaseMapper<AssessmentAnswerDO> {
     int batchInsert(@Param("answers") List<AssessmentAnswerDO> answers);
 
     /**
-     * 批量更新组员作答（排除队长）。
-     *
-     * @param teamId
-     *            队伍主键。
-     * @param leaderId
-     *            队长用户主键。
-     * @param questionId
-     *            考核题目主键。
-     * @param fileId
-     *            文件主键。
-     * @param content
-     *            答案内容。
-     * @param language
-     *            编程语言。
-     * @param submitTime
-     *            提交时间。
-     * @return 更新的记录数量。
-     */
-    int updateTeamMemberAnswers(@Param("teamId") Long teamId,
-            @Param("questionId") Long questionId, @Param("fileId") Long fileId,
-            @Param("content") String content,
-            @Param("language") com.bluenet.web.domain.model.enumerate.ProgrammingLanguage language,
-            @Param("submitTime") java.time.LocalDateTime submitTime);
-
-    /**
      * 批量查询已有答案的用户主键。
      *
      * @param userIds
