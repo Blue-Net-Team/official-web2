@@ -10,12 +10,12 @@
 - Task 6（AssessmentDecision 清理）已全部完成：`AssessmentDecisionRepository` 返回 `AssessmentDecision` Entity；`AssessmentDecision` Entity 增加 `updatePassed(...)` / `decideNow()`；`AssessmentDecisionDomainService` 仅保留 `isEliminatedFromPriorEpoch`；CRUD 下沉到 `AssessmentJudgementAppServiceImpl` 直接调用 Repository；`AssessmentDecisionPublicationService` 改为接收 `AssessmentDecision` Entity；`AssessmentDecisionVO` 已删除。
 
 **测试策略调整**：
-本次重构涉及所有模块，大量旧测试依赖即将删除的 `*VO`、`@WithUserVO`、透传型 `DomainService` 以及旧的 Repository 返回类型。继续维护这些测试会在每个子任务中产生高昂的同步成本，因此决定：
+本次重构早期曾计划删除全部旧业务测试以降低同步成本，但 Task 2/5/6/7/8 在重构过程中已重新补充了面向新架构的单元/集成测试。当前策略调整为：
 
-- **删除所有业务测试文件**（Controller、AppService、DomainService、Repository/Mapper、Entity 业务规则、业务集成测试）。
+- **保留并继续维护新补充的业务测试文件**（Controller、AppService、DomainService、Repository/Mapper、Entity 业务规则、业务集成测试）。
 - **保留并必要时重构测试基础设施**：`BaseIntegrationTest`、`TestSecurityConfig`、`TestcontainersConfiguration`、`RepositoryTestObjects`、`@WithSecurityPrincipal` + `WithSecurityPrincipalContextFactory`、`MockFileRepository`、`MockQrcodeRepository`。
 - **保留通用工具/架构守护/基础设施测试**：工具类、配置属性、JSON 值对象、邮件/存储/安全基础组件、ArchUnit、权限注解规范、应用上下文加载等测试。
-- 后续每个模块重构完成后，再为该模块补充新的单元/集成测试。
+- 后续 Task 9/10 如导致测试引用失效，同步更新对应测试而非删除。
 
 ***
 
@@ -196,12 +196,12 @@
 
 ## 11. 测试基础设施重构与架构守护更新
 
-**目标**：删除因大变更而失效的旧业务测试，保留并重构测试基础设施；更新 ArchUnit 规则与后端开发手册。
+**目标**：保留 Task 2/5/6/7/8 新补充的业务测试，重构受影响的测试基础设施；更新 ArchUnit 规则与后端开发手册。
 
 #### 实现步骤
 
-- [ ] 11.1 删除所有业务测试文件：Controller 测试、AppService 测试、DomainService 测试、Repository/Mapper 测试、Entity 业务规则测试、业务集成测试
-- [ ] 11.2 保留测试基础设施：`BaseIntegrationTest`、`TestSecurityConfig`、`TestcontainersConfiguration`、`RepositoryTestObjects`、`@WithSecurityPrincipal` + `WithSecurityPrincipalContextFactory`、`MockFileRepository`、`MockQrcodeRepository`
+- [ ] 11.1 保留新补充的业务测试文件，仅清理真正的旧测试残留引用（如已不存在的 `UserVO`、`@WithUserVO` 相关测试）
+- [ ] 11.2 保留并重构测试基础设施：`BaseIntegrationTest`、`TestSecurityConfig`、`TestcontainersConfiguration`、`RepositoryTestObjects`、`@WithSecurityPrincipal` + `WithSecurityPrincipalContextFactory`、`MockFileRepository`、`MockQrcodeRepository`
 - [ ] 11.3 保留通用工具/架构守护/基础设施测试，并重构受安全上下文改造影响的测试（如 `JwtAuthenticationFilterTest`）
 - [ ] 11.4 更新 `ConverterLayerArchTest` 等架构测试
 - [ ] 11.5 新增或更新 ArchUnit 规则：Repository 不得返回 `*VO`、ApplicationService 不得直接依赖 Mapper 等
