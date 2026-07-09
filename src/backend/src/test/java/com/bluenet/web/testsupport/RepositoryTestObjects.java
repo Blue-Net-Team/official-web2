@@ -37,7 +37,7 @@ public final class RepositoryTestObjects {
             return null;
         }
         try {
-            var ctor = targetType.getDeclaredConstructor();
+            java.lang.reflect.Constructor<T> ctor = targetType.getDeclaredConstructor();
             ctor.setAccessible(true);
             T target = ctor.newInstance();
             BeanUtils.copyProperties(source, target);

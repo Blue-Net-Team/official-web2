@@ -117,17 +117,16 @@ class JwtAuthenticationFilterTest {
         when(jwtUtil.parseToken(TEST_TOKEN)).thenReturn(payload);
         when(authTokenService.validateToken(TEST_JTI)).thenReturn(Optional.of(TEST_USER_ID));
 
-        User userVO = User.reconstruct(TEST_USER_ID, "password");
-        userVO.setUsername("testUser");
-        ;
-        when(userRepository.findById(TEST_USER_ID)).thenReturn(Optional.of(userVO));
+        User user = User.reconstruct(TEST_USER_ID, "password");
+        user.setUsername("testUser");
+        when(userRepository.findById(TEST_USER_ID)).thenReturn(Optional.of(user));
 
         // 模拟 filterChain 执行时的行为，确保在执行 doFilter 时 SecurityContext 已设置
         doAnswer(invocation -> {
             assertNotNull(SecurityContextHolder.getContext().getAuthentication());
             Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
             assertNotNull(principal);
-            assertEquals(userVO, ((SecurityPrincipal) principal).user());
+            assertEquals(user, ((SecurityPrincipal) principal).user());
             return null;
         }).when(filterChain).doFilter(request, response);
 
