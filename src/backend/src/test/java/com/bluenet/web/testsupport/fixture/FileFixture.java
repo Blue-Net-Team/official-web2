@@ -3,6 +3,7 @@ package com.bluenet.web.testsupport.fixture;
 import com.bluenet.web.domain.model.entity.File;
 import com.bluenet.web.domain.model.enumerate.FileStatus;
 import com.bluenet.web.domain.model.enumerate.FileType;
+import com.bluenet.web.domain.repository.FileRepository;
 
 /**
  * 文件测试夹具。
@@ -32,7 +33,23 @@ public final class FileFixture {
         return File.create(name, FileType.QRCODE);
     }
 
-    @SuppressWarnings("deprecation")
+    /**
+     * 仅保存文件元数据，不操作对象存储。 若 url 为空，自动填充占位地址以满足数据库非空约束。
+     */
+    public static File save(FileRepository fileRepository, File file) {
+        if (file.getUrl() == null) {
+            file.setUrl("http://localhost/test/" + file.getName());
+        }
+        return fileRepository.save(file);
+    }
+
+    /**
+     * 创建并保存指定名称与类型的文件元数据。
+     */
+    public static File save(FileRepository fileRepository, String name, FileType type) {
+        return save(fileRepository, File.create(name, type));
+    }
+
     public static File withStatus(File file, FileStatus status) {
         return File.reconstruct(
                 file.getId(),

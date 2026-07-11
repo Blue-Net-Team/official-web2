@@ -1,5 +1,7 @@
 package com.bluenet.web.testsupport.fixture;
 
+import com.bluenet.web.domain.model.entity.AlgorithmJudgeCaseResult;
+import com.bluenet.web.domain.model.entity.AlgorithmJudgeJob;
 import com.bluenet.web.domain.model.entity.AssessmentAnswer;
 import com.bluenet.web.domain.model.entity.AssessmentDecision;
 import com.bluenet.web.domain.model.entity.AssessmentJudgement;
@@ -7,9 +9,12 @@ import com.bluenet.web.domain.model.entity.AssessmentQuestion;
 import com.bluenet.web.domain.model.entity.AssessmentSession;
 import com.bluenet.web.domain.model.entity.AssessmentTeam;
 import com.bluenet.web.domain.model.entity.AssessmentTime;
+import com.bluenet.web.domain.model.entity.Audit;
 import com.bluenet.web.domain.model.entity.File;
 import com.bluenet.web.domain.model.entity.User;
+import com.bluenet.web.domain.model.enumerate.AlgorithmTestcaseType;
 import com.bluenet.web.domain.model.enumerate.Direction;
+import com.bluenet.web.domain.model.enumerate.JudgeCaseStatus;
 import com.bluenet.web.domain.model.enumerate.JudgementSource;
 import com.bluenet.web.domain.model.enumerate.JudgementStatus;
 import com.bluenet.web.domain.model.enumerate.ObjectiveResultCode;
@@ -20,6 +25,8 @@ import com.bluenet.web.domain.model.vo.question_content.FileUploadContent;
 import com.bluenet.web.domain.model.vo.question_content.MultipleChoiceContent;
 import com.bluenet.web.domain.model.vo.question_content.QuestionContent;
 import com.bluenet.web.domain.model.vo.question_content.SingleChoiceContent;
+import com.bluenet.web.domain.repository.AlgorithmJudgeCaseResultRepository;
+import com.bluenet.web.domain.repository.AlgorithmJudgeJobRepository;
 import com.bluenet.web.domain.repository.AssessmentAnswerRepository;
 import com.bluenet.web.domain.repository.AssessmentDecisionRepository;
 import com.bluenet.web.domain.repository.AssessmentJudgementRepository;
@@ -27,6 +34,7 @@ import com.bluenet.web.domain.repository.AssessmentQuestionRepository;
 import com.bluenet.web.domain.repository.AssessmentSessionRepository;
 import com.bluenet.web.domain.repository.AssessmentTeamRepository;
 import com.bluenet.web.domain.repository.AssessmentTimeRepository;
+import com.bluenet.web.domain.repository.AuditRepository;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -70,6 +78,18 @@ public final class AssessmentFixture {
 
     public static DecisionBuilder decisionBuilder() {
         return new DecisionBuilder();
+    }
+
+    public static AlgorithmJudgeJobBuilder algorithmJudgeJobBuilder() {
+        return new AlgorithmJudgeJobBuilder();
+    }
+
+    public static AlgorithmJudgeCaseResultBuilder algorithmJudgeCaseResultBuilder() {
+        return new AlgorithmJudgeCaseResultBuilder();
+    }
+
+    public static AuditBuilder auditBuilder() {
+        return new AuditBuilder();
     }
 
     public static final class TimeBuilder {
@@ -168,6 +188,11 @@ public final class AssessmentFixture {
 
         public QuestionBuilder assessmentTimeId(Long assessmentTimeId) {
             this.assessmentTimeId = assessmentTimeId;
+            return this;
+        }
+
+        public QuestionBuilder assessmentTime(AssessmentTime assessmentTime) {
+            this.assessmentTimeId = assessmentTime.getId();
             return this;
         }
 
@@ -333,7 +358,6 @@ public final class AssessmentFixture {
         public AssessmentTeam save(AssessmentTeamRepository repository) {
             AssessmentTeam team = build();
             repository.save(team);
-            repository.addMember(team.getId(), team.getLeaderId());
             return team;
         }
     }
@@ -530,6 +554,271 @@ public final class AssessmentFixture {
             AssessmentDecision decision = build();
             repository.save(decision);
             return decision;
+        }
+    }
+
+    public static final class AlgorithmJudgeJobBuilder {
+
+        private Long answerId;
+        private Long questionId;
+        private Long assessmentTimeId;
+        private Long userId;
+        private ProgrammingLanguage language = ProgrammingLanguage.CPP;
+        private String sourceCode = "#include <iostream>\nint main() { return 0; }";
+        private AlgorithmTestcaseType testcaseType = AlgorithmTestcaseType.FORMAL;
+        private String customInput;
+
+        public AlgorithmJudgeJobBuilder answer(AssessmentAnswer answer) {
+            this.answerId = answer.getId();
+            return this;
+        }
+
+        public AlgorithmJudgeJobBuilder answerId(Long answerId) {
+            this.answerId = answerId;
+            return this;
+        }
+
+        public AlgorithmJudgeJobBuilder question(AssessmentQuestion question) {
+            this.questionId = question.getId();
+            this.assessmentTimeId = question.getAssessmentTimeId();
+            return this;
+        }
+
+        public AlgorithmJudgeJobBuilder questionId(Long questionId) {
+            this.questionId = questionId;
+            return this;
+        }
+
+        public AlgorithmJudgeJobBuilder assessmentTimeId(Long assessmentTimeId) {
+            this.assessmentTimeId = assessmentTimeId;
+            return this;
+        }
+
+        public AlgorithmJudgeJobBuilder user(User user) {
+            this.userId = user.getId();
+            return this;
+        }
+
+        public AlgorithmJudgeJobBuilder userId(Long userId) {
+            this.userId = userId;
+            return this;
+        }
+
+        public AlgorithmJudgeJobBuilder language(ProgrammingLanguage language) {
+            this.language = language;
+            return this;
+        }
+
+        public AlgorithmJudgeJobBuilder sourceCode(String sourceCode) {
+            this.sourceCode = sourceCode;
+            return this;
+        }
+
+        public AlgorithmJudgeJobBuilder testcaseType(AlgorithmTestcaseType testcaseType) {
+            this.testcaseType = testcaseType;
+            return this;
+        }
+
+        public AlgorithmJudgeJobBuilder customInput(String customInput) {
+            this.customInput = customInput;
+            return this;
+        }
+
+        public AlgorithmJudgeJob build() {
+            return AlgorithmJudgeJob.create(
+                    answerId,
+                    questionId,
+                    assessmentTimeId,
+                    userId,
+                    language,
+                    sourceCode,
+                    testcaseType,
+                    customInput);
+        }
+
+        public AlgorithmJudgeJob save(AlgorithmJudgeJobRepository repository) {
+            AlgorithmJudgeJob job = build();
+            repository.save(job);
+            return job;
+        }
+    }
+
+    public static final class AlgorithmJudgeCaseResultBuilder {
+
+        private Long judgeJobId;
+        private Integer caseNo = 1;
+        private AlgorithmTestcaseType testcaseType = AlgorithmTestcaseType.FORMAL;
+        private JudgeCaseStatus status = JudgeCaseStatus.AC;
+        private String input = "1 2";
+        private String expectedOutput = "3";
+        private String actualOutput = "3";
+        private String stdout;
+        private String stderr;
+        private Integer timeUsedMs = 100;
+        private Integer memoryUsedKb = 1024;
+        private String message = "通过";
+        private Boolean visibleToCandidate = true;
+
+        public AlgorithmJudgeCaseResultBuilder judgeJob(AlgorithmJudgeJob job) {
+            this.judgeJobId = job.getId();
+            return this;
+        }
+
+        public AlgorithmJudgeCaseResultBuilder judgeJobId(Long judgeJobId) {
+            this.judgeJobId = judgeJobId;
+            return this;
+        }
+
+        public AlgorithmJudgeCaseResultBuilder caseNo(Integer caseNo) {
+            this.caseNo = caseNo;
+            return this;
+        }
+
+        public AlgorithmJudgeCaseResultBuilder testcaseType(AlgorithmTestcaseType testcaseType) {
+            this.testcaseType = testcaseType;
+            return this;
+        }
+
+        public AlgorithmJudgeCaseResultBuilder status(JudgeCaseStatus status) {
+            this.status = status;
+            return this;
+        }
+
+        public AlgorithmJudgeCaseResultBuilder input(String input) {
+            this.input = input;
+            return this;
+        }
+
+        public AlgorithmJudgeCaseResultBuilder expectedOutput(String expectedOutput) {
+            this.expectedOutput = expectedOutput;
+            return this;
+        }
+
+        public AlgorithmJudgeCaseResultBuilder actualOutput(String actualOutput) {
+            this.actualOutput = actualOutput;
+            return this;
+        }
+
+        public AlgorithmJudgeCaseResultBuilder stdout(String stdout) {
+            this.stdout = stdout;
+            return this;
+        }
+
+        public AlgorithmJudgeCaseResultBuilder stderr(String stderr) {
+            this.stderr = stderr;
+            return this;
+        }
+
+        public AlgorithmJudgeCaseResultBuilder timeUsedMs(Integer timeUsedMs) {
+            this.timeUsedMs = timeUsedMs;
+            return this;
+        }
+
+        public AlgorithmJudgeCaseResultBuilder memoryUsedKb(Integer memoryUsedKb) {
+            this.memoryUsedKb = memoryUsedKb;
+            return this;
+        }
+
+        public AlgorithmJudgeCaseResultBuilder message(String message) {
+            this.message = message;
+            return this;
+        }
+
+        public AlgorithmJudgeCaseResultBuilder visibleToCandidate(Boolean visibleToCandidate) {
+            this.visibleToCandidate = visibleToCandidate;
+            return this;
+        }
+
+        public AlgorithmJudgeCaseResult build() {
+            return AlgorithmJudgeCaseResult.create(
+                    judgeJobId,
+                    caseNo,
+                    testcaseType,
+                    status,
+                    input,
+                    expectedOutput,
+                    actualOutput,
+                    stdout,
+                    stderr,
+                    timeUsedMs,
+                    memoryUsedKb,
+                    message,
+                    visibleToCandidate);
+        }
+
+        public AlgorithmJudgeCaseResult save(AlgorithmJudgeCaseResultRepository repository) {
+            AlgorithmJudgeCaseResult result = build();
+            repository.saveAll(List.of(result));
+            return result;
+        }
+    }
+
+    public static final class AuditBuilder {
+
+        private String requestMethod = "GET";
+        private String requestUri = "/api/v1/test";
+        private String requestUriPattern = "/api/v1/test";
+        private String actionArg = "{}";
+        private Long actionUserId;
+        private String ipAddress = "127.0.0.1";
+        private String userAgent = "UnitTest";
+
+        public AuditBuilder requestMethod(String requestMethod) {
+            this.requestMethod = requestMethod;
+            return this;
+        }
+
+        public AuditBuilder requestUri(String requestUri) {
+            this.requestUri = requestUri;
+            this.requestUriPattern = requestUri;
+            return this;
+        }
+
+        public AuditBuilder requestUriPattern(String requestUriPattern) {
+            this.requestUriPattern = requestUriPattern;
+            return this;
+        }
+
+        public AuditBuilder actionArg(String actionArg) {
+            this.actionArg = actionArg;
+            return this;
+        }
+
+        public AuditBuilder actionUser(User user) {
+            this.actionUserId = user.getId();
+            return this;
+        }
+
+        public AuditBuilder actionUserId(Long actionUserId) {
+            this.actionUserId = actionUserId;
+            return this;
+        }
+
+        public AuditBuilder ipAddress(String ipAddress) {
+            this.ipAddress = ipAddress;
+            return this;
+        }
+
+        public AuditBuilder userAgent(String userAgent) {
+            this.userAgent = userAgent;
+            return this;
+        }
+
+        public Audit build() {
+            return Audit.create(
+                    requestMethod,
+                    requestUri,
+                    requestUriPattern,
+                    actionArg,
+                    actionUserId,
+                    ipAddress,
+                    userAgent);
+        }
+
+        public Audit save(AuditRepository repository) {
+            Audit audit = build();
+            repository.save(audit);
+            return audit;
         }
     }
 }

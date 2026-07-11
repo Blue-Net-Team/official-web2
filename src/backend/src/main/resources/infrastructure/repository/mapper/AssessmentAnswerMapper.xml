@@ -102,7 +102,7 @@
         JOIN tb_assessment_question q ON a.question_id = q.id
         WHERE q.assessment_time_id = #{assessmentTimeId}
           AND a.user_id = #{userId}
-          AND q.question_type = 'FILE_UPLOAD'
+          AND q.question_type = 'file_upload'
           AND a.team_id IS NULL
     </select>
 
@@ -112,7 +112,7 @@
         JOIN tb_assessment_question q ON a.question_id = q.id
         WHERE q.assessment_time_id = #{assessmentTimeId}
           AND a.user_id = #{userId}
-          AND q.question_type = 'FILE_UPLOAD'
+          AND q.question_type = 'file_upload'
           AND a.team_id IS NOT NULL
     </select>
 </mapper>
