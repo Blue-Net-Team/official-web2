@@ -86,4 +86,49 @@ class AssessmentJudgementDomainServiceImplTest {
 
         assertEquals(100L, result.getId());
     }
+
+    @Test
+    @DisplayName("finalizeJudgement: 当 judgedAt 已存在时不应覆盖原值")
+    void finalizeJudgement_shouldPreserveExistingJudgedAt() {
+        LocalDateTime existingJudgedAt = LocalDateTime.of(2024, 1, 1, 12, 0, 0);
+        AssessmentJudgement judgement = AssessmentJudgement.create(
+                1L,
+                2L,
+                3L,
+                4L,
+                new BigDecimal("90"),
+                new BigDecimal("100"),
+                JudgementStatus.JUDGED,
+                null,
+                JudgementSource.ADMIN_FINALIZED,
+                10L,
+                ReviewerType.DIRECTION_ADMIN,
+                existingJudgedAt);
+
+        AssessmentJudgement persisted = AssessmentJudgement.reconstruct(
+                100L,
+                judgement.getAnswerId(),
+                judgement.getQuestionId(),
+                judgement.getAssessmentTimeId(),
+                judgement.getUserId(),
+                judgement.getScore(),
+                judgement.getMaxScore(),
+                judgement.getStatus(),
+                judgement.getResultCode(),
+                judgement.getSource(),
+                judgement.getReviewerId(),
+                judgement.getReviewerType(),
+                existingJudgedAt,
+                LocalDateTime.now(),
+                LocalDateTime.now());
+        when(assessmentJudgementRepository.findLatestByAnswerIdAndSource(1L, JudgementSource.ADMIN_FINALIZED))
+                .thenReturn(Optional.of(persisted));
+
+        domainService.finalizeJudgement(judgement);
+
+        ArgumentCaptor<AssessmentJudgement> captor = ArgumentCaptor.forClass(AssessmentJudgement.class);
+        verify(assessmentJudgementRepository).upsertAdminFinalized(captor.capture());
+        AssessmentJudgement upserted = captor.getValue();
+        assertEquals(existingJudgedAt, upserted.getJudgedAt());
+    }
 }

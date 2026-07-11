@@ -492,8 +492,18 @@ public final class AssessmentFixture {
             return this;
         }
 
+        public DecisionBuilder userId(Long userId) {
+            this.userId = userId;
+            return this;
+        }
+
         public DecisionBuilder assessmentTime(AssessmentTime assessmentTime) {
             this.assessmentTimeId = assessmentTime.getId();
+            return this;
+        }
+
+        public DecisionBuilder assessmentTimeId(Long assessmentTimeId) {
+            this.assessmentTimeId = assessmentTimeId;
             return this;
         }
 
