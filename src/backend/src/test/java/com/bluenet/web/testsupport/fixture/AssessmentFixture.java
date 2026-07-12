@@ -37,10 +37,15 @@ import com.bluenet.web.domain.repository.AssessmentSessionRepository;
 import com.bluenet.web.domain.repository.AssessmentTeamRepository;
 import com.bluenet.web.domain.repository.AssessmentTimeRepository;
 import com.bluenet.web.domain.repository.AuditRepository;
+import com.bluenet.web.domain.repository.UserRepository;
+
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * 考核模块测试夹具，解决构造一次合法考核需要多张表的痛点。
@@ -166,6 +171,241 @@ public final class AssessmentFixture {
                 return AssessmentTeamMember.create(teamId, userId);
             }
             return AssessmentTeamMember.reconstruct(id, teamId, userId, joinedAt);
+        }
+    }
+
+    private static final AtomicLong SCENARIO_SEQUENCE = new AtomicLong(1000);
+
+    public static ScenarioBuilder scenarioBuilder() {
+        return new ScenarioBuilder();
+    }
+
+    private static String nextStudentId(String prefix) {
+        return prefix + SCENARIO_SEQUENCE.incrementAndGet();
+    }
+
+    public static final class ScenarioBuilder {
+
+        private Direction direction = Direction.COMPUTER_VISION;
+        private Integer epoch = 1;
+        private Integer grade = 2024;
+        private LocalDateTime startTime;
+        private LocalDateTime endTime;
+        private boolean withQuestion = true;
+        private boolean withSession = true;
+        private boolean withTeam = false;
+        private boolean withAnswer = false;
+        private boolean withJudgement = false;
+        private boolean withDecision = false;
+
+        public ScenarioBuilder direction(Direction direction) {
+            this.direction = direction;
+            return this;
+        }
+
+        public ScenarioBuilder epoch(Integer epoch) {
+            this.epoch = epoch;
+            return this;
+        }
+
+        public ScenarioBuilder grade(Integer grade) {
+            this.grade = grade;
+            return this;
+        }
+
+        public ScenarioBuilder startTime(LocalDateTime startTime) {
+            this.startTime = startTime;
+            return this;
+        }
+
+        public ScenarioBuilder endTime(LocalDateTime endTime) {
+            this.endTime = endTime;
+            return this;
+        }
+
+        public ScenarioBuilder withinNow() {
+            LocalDateTime[] window = TimeFixture.withinNow();
+            this.startTime = window[0];
+            this.endTime = window[1];
+            return this;
+        }
+
+        public ScenarioBuilder withQuestion(boolean withQuestion) {
+            this.withQuestion = withQuestion;
+            return this;
+        }
+
+        public ScenarioBuilder withSession(boolean withSession) {
+            this.withSession = withSession;
+            return this;
+        }
+
+        public ScenarioBuilder withTeam(boolean withTeam) {
+            this.withTeam = withTeam;
+            return this;
+        }
+
+        public ScenarioBuilder withAnswer(boolean withAnswer) {
+            this.withAnswer = withAnswer;
+            return this;
+        }
+
+        public ScenarioBuilder withJudgement(boolean withJudgement) {
+            this.withJudgement = withJudgement;
+            return this;
+        }
+
+        public ScenarioBuilder withDecision(boolean withDecision) {
+            this.withDecision = withDecision;
+            return this;
+        }
+
+        public AssessmentScenario save(
+                AssessmentTimeRepository timeRepository,
+                AssessmentQuestionRepository questionRepository,
+                AssessmentSessionRepository sessionRepository,
+                AssessmentTeamRepository teamRepository,
+                AssessmentAnswerRepository answerRepository,
+                AssessmentJudgementRepository judgementRepository,
+                AssessmentDecisionRepository decisionRepository,
+                UserRepository userRepository,
+                PasswordEncoder passwordEncoder) {
+
+            if (startTime == null || endTime == null) {
+                withinNow();
+            }
+
+            AssessmentTime time = timeBuilder()
+                    .direction(direction)
+                    .epoch(epoch)
+                    .grade(grade)
+                    .startTime(startTime)
+                    .endTime(endTime)
+                    .build();
+            timeRepository.save(time);
+
+            AssessmentQuestion question = null;
+            if (withQuestion) {
+                question = questionBuilder().assessmentTime(time).save(questionRepository);
+            }
+
+            User candidate = UserFixture.candidate(nextStudentId("SC"))
+                    .withDirection(direction)
+                    .withAssessmentGradeYear(grade)
+                    .save(userRepository, passwordEncoder);
+
+            AssessmentSession session = null;
+            if (withSession) {
+                session = sessionBuilder().user(candidate).assessmentTime(time).save(sessionRepository);
+            }
+
+            AssessmentTeam team = null;
+            List<AssessmentTeamMember> members = new ArrayList<>();
+            if (withTeam) {
+                team = teamBuilder().assessmentTime(time).leader(candidate).save(teamRepository);
+                teamRepository.addMember(team.getId(), candidate.getId());
+                members.addAll(teamRepository.findMembersByTeamId(team.getId()));
+            }
+
+            AssessmentAnswer answer = null;
+            if (withAnswer && question != null) {
+                AnswerBuilder answerBuilder = answerBuilder()
+                        .user(candidate)
+                        .question(question);
+                if (team != null) {
+                    answerBuilder.team(team);
+                }
+                answer = answerBuilder.save(answerRepository);
+            }
+
+            User admin = null;
+            if ((withJudgement && answer != null) || withDecision) {
+                admin = UserFixture.superAdmin(nextStudentId("SA")).save(userRepository, passwordEncoder);
+            }
+
+            AssessmentJudgement judgement = null;
+            if (withJudgement && answer != null && admin != null) {
+                judgement = judgementBuilder()
+                        .answer(answer)
+                        .question(question)
+                        .reviewer(admin)
+                        .save(judgementRepository);
+            }
+
+            AssessmentDecision decision = null;
+            if (withDecision && admin != null) {
+                decision = decisionBuilder()
+                        .user(candidate)
+                        .assessmentTime(time)
+                        .decidedBy(admin)
+                        .save(decisionRepository);
+            }
+
+            return new AssessmentScenario(time, question, candidate, session, team, members, answer, judgement,
+                    decision);
+        }
+    }
+
+    public static final class AssessmentScenario {
+
+        private final AssessmentTime time;
+        private final AssessmentQuestion question;
+        private final User candidate;
+        private final AssessmentSession session;
+        private final AssessmentTeam team;
+        private final List<AssessmentTeamMember> members;
+        private final AssessmentAnswer answer;
+        private final AssessmentJudgement judgement;
+        private final AssessmentDecision decision;
+
+        public AssessmentScenario(AssessmentTime time, AssessmentQuestion question, User candidate,
+                AssessmentSession session, AssessmentTeam team, List<AssessmentTeamMember> members,
+                AssessmentAnswer answer, AssessmentJudgement judgement, AssessmentDecision decision) {
+            this.time = time;
+            this.question = question;
+            this.candidate = candidate;
+            this.session = session;
+            this.team = team;
+            this.members = members;
+            this.answer = answer;
+            this.judgement = judgement;
+            this.decision = decision;
+        }
+
+        public AssessmentTime time() {
+            return time;
+        }
+
+        public AssessmentQuestion question() {
+            return question;
+        }
+
+        public User candidate() {
+            return candidate;
+        }
+
+        public AssessmentSession session() {
+            return session;
+        }
+
+        public AssessmentTeam team() {
+            return team;
+        }
+
+        public List<AssessmentTeamMember> members() {
+            return members;
+        }
+
+        public AssessmentAnswer answer() {
+            return answer;
+        }
+
+        public AssessmentJudgement judgement() {
+            return judgement;
+        }
+
+        public AssessmentDecision decision() {
+            return decision;
         }
     }
 
