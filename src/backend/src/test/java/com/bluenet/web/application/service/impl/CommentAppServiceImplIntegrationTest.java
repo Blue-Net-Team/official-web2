@@ -7,12 +7,9 @@ import com.bluenet.web.domain.exception.BadRequest;
 import com.bluenet.web.domain.exception.DataNotFound;
 import com.bluenet.web.domain.exception.Forbidden;
 import com.bluenet.web.domain.model.entity.User;
-import com.bluenet.web.domain.model.enumerate.Gender;
-import com.bluenet.web.domain.model.enumerate.RoleType;
 import com.bluenet.web.domain.repository.CommentRepository;
 import com.bluenet.web.domain.repository.UserRepository;
-import com.bluenet.web.infrastructure.repository.dataobject.RoleDO;
-import com.bluenet.web.infrastructure.repository.mapper.RoleMapper;
+import com.bluenet.web.testsupport.fixture.UserFixture;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +22,10 @@ import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * CommentAppServiceImpl 集成测试。
+ *
+ * <p>
+ * 按新测试策略：真实 Repository，使用测试夹具创建用户。本类验证应用服务层的编排、 事务边界与响应格式。
+ * </p>
  */
 @DisplayName("CommentAppServiceImpl 集成测试")
 class CommentAppServiceImplIntegrationTest extends BaseIntegrationTest {
@@ -39,34 +40,10 @@ class CommentAppServiceImplIntegrationTest extends BaseIntegrationTest {
     private UserRepository userRepository;
 
     @Autowired
-    private RoleMapper roleMapper;
-
-    @Autowired
     private PasswordEncoder passwordEncoder;
 
     private User createUser(String studentId) {
-        RoleDO role = roleMapper.selectByName(RoleType.MEMBER.getName());
-        User user = User.create(
-                studentId,
-                studentId + "@example.com",
-                role.getId(),
-                passwordEncoder.encode("pwd"),
-                "用户" + studentId,
-                "昵称" + studentId,
-                null,
-                null,
-                null,
-                null,
-                Gender.UNKNOWN,
-                null,
-                null,
-                null,
-                null,
-                null,
-                "REF" + studentId.substring(studentId.length() - 5),
-                null);
-        userRepository.save(user);
-        return user;
+        return UserFixture.member(studentId).save(userRepository, passwordEncoder);
     }
 
     @Test

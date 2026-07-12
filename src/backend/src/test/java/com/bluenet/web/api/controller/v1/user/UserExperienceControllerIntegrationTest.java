@@ -2,16 +2,16 @@ package com.bluenet.web.api.controller.v1.user;
 
 import com.bluenet.web.BaseIntegrationTest;
 import com.bluenet.web.api.dto.experience.CreateExperienceRequestDTO;
+import com.bluenet.web.api.dto.experience.ExperienceDTO;
 import com.bluenet.web.api.dto.experience.UpdateExperienceRequestDTO;
-import com.bluenet.web.domain.model.entity.User;
-import com.bluenet.web.domain.model.entity.UserExperience;
+import com.bluenet.web.api.converter.userexperience.UserExperienceResponseConverter;
+import com.bluenet.web.application.result.user.UserExperienceResult;
+import com.bluenet.web.application.service.UserExperienceAppService;
+import com.bluenet.web.domain.exception.DataNotFound;
 import com.bluenet.web.domain.model.enumerate.ExperienceType;
-import com.bluenet.web.domain.repository.UserExperienceRepository;
-import com.bluenet.web.domain.repository.UserRepository;
 import com.bluenet.web.infrastructure.security.principal.WithSecurityPrincipal;
 import com.bluenet.web.infrastructure.security.util.UserCTX;
 import com.bluenet.web.testconfig.TestSecurityConfig;
-import com.bluenet.web.testsupport.fixture.UserFixture;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
@@ -19,13 +19,16 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -45,36 +48,34 @@ class UserExperienceControllerIntegrationTest extends BaseIntegrationTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @Autowired
-    private UserRepository userRepository;
+    @MockitoBean
+    private UserExperienceAppService userExperienceAppService;
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-
-    @Autowired
-    private UserExperienceRepository userExperienceRepository;
+    @MockitoBean
+    private UserExperienceResponseConverter responseConverter;
 
     @AfterEach
     void tearDown() {
         UserCTX.clear();
     }
 
-    private User saveMemberUser() {
-        return UserFixture.member("2024001001").save(userRepository, passwordEncoder);
-    }
-
     @Test
-    @WithSecurityPrincipal(roleId = 3L, roleType = "MEMBER")
+    @WithSecurityPrincipal(userId = 1L, roleId = 3L, roleType = "MEMBER")
     void getExperiences_authenticated_returnsList() throws Exception {
-        User user = saveMemberUser();
-        UserExperience project = UserExperience.create(
-                user.getId(),
+        UserExperienceResult result = new UserExperienceResult(
+                1L,
                 ExperienceType.PROJECT,
                 "项目经历",
-                "{}",
-                null,
+                "2024.09",
+                "2025.06",
                 null);
-        userExperienceRepository.save(project);
+        ExperienceDTO dto = ExperienceDTO.builder()
+                .id("1")
+                .type("PROJECT")
+                .name("项目经历")
+                .build();
+        when(userExperienceAppService.getExperiences(null)).thenReturn(List.of(result));
+        when(responseConverter.toDTOList(any())).thenReturn(List.of(dto));
 
         mockMvc.perform(get("/api/v1/user/experiences"))
                 .andExpect(status().isOk())
@@ -84,25 +85,22 @@ class UserExperienceControllerIntegrationTest extends BaseIntegrationTest {
     }
 
     @Test
-    @WithSecurityPrincipal(roleId = 3L, roleType = "MEMBER")
+    @WithSecurityPrincipal(userId = 1L, roleId = 3L, roleType = "MEMBER")
     void getExperiences_withTypeFilter_returnsFiltered() throws Exception {
-        User user = saveMemberUser();
-        UserExperience project = UserExperience.create(
-                user.getId(),
+        UserExperienceResult result = new UserExperienceResult(
+                1L,
                 ExperienceType.PROJECT,
                 "项目经历",
-                "{}",
-                null,
+                "2024.09",
+                "2025.06",
                 null);
-        UserExperience competition = UserExperience.create(
-                user.getId(),
-                ExperienceType.COMPETITION,
-                "竞赛经历",
-                "{}",
-                null,
-                null);
-        userExperienceRepository.save(project);
-        userExperienceRepository.save(competition);
+        ExperienceDTO dto = ExperienceDTO.builder()
+                .id("1")
+                .type("PROJECT")
+                .name("项目经历")
+                .build();
+        when(userExperienceAppService.getExperiences("PROJECT")).thenReturn(List.of(result));
+        when(responseConverter.toDTOList(any())).thenReturn(List.of(dto));
 
         mockMvc.perform(
                 get("/api/v1/user/experiences")
@@ -122,9 +120,22 @@ class UserExperienceControllerIntegrationTest extends BaseIntegrationTest {
     }
 
     @Test
-    @WithSecurityPrincipal(roleId = 3L, roleType = "MEMBER", permissions = { "user:experience:create" })
+    @WithSecurityPrincipal(userId = 1L, roleId = 3L, roleType = "MEMBER", permissions = { "user:experience:create" })
     void createExperience_authenticatedWithPermission_returnsCreated() throws Exception {
-        saveMemberUser();
+        UserExperienceResult result = new UserExperienceResult(
+                1L,
+                ExperienceType.PROJECT,
+                "BlueNet",
+                "2024.09",
+                "2025.06",
+                null);
+        ExperienceDTO dto = ExperienceDTO.builder()
+                .id("1")
+                .type("PROJECT")
+                .name("BlueNet")
+                .build();
+        when(userExperienceAppService.createExperience(any())).thenReturn(result);
+        when(responseConverter.toDTO(any(UserExperienceResult.class))).thenReturn(dto);
 
         CreateExperienceRequestDTO request = new CreateExperienceRequestDTO();
         request.setType("PROJECT");
@@ -161,7 +172,7 @@ class UserExperienceControllerIntegrationTest extends BaseIntegrationTest {
     }
 
     @Test
-    @WithSecurityPrincipal(roleId = 3L, roleType = "MEMBER")
+    @WithSecurityPrincipal(userId = 1L, roleId = 3L, roleType = "MEMBER")
     void createExperience_authenticatedWithoutPermission_returnsForbidden() throws Exception {
         CreateExperienceRequestDTO request = new CreateExperienceRequestDTO();
         request.setType("PROJECT");
@@ -176,23 +187,28 @@ class UserExperienceControllerIntegrationTest extends BaseIntegrationTest {
     }
 
     @Test
-    @WithSecurityPrincipal(roleId = 3L, roleType = "MEMBER", permissions = { "user:experience:update" })
+    @WithSecurityPrincipal(userId = 1L, roleId = 3L, roleType = "MEMBER", permissions = { "user:experience:update" })
     void updateExperience_authenticatedWithPermission_returnsUpdated() throws Exception {
-        User user = saveMemberUser();
-        UserExperience project = UserExperience.create(
-                user.getId(),
+        UserExperienceResult result = new UserExperienceResult(
+                1L,
                 ExperienceType.PROJECT,
-                "BlueNet",
-                "{}",
-                null,
+                "BlueNet v2",
+                "2024.09",
+                "2025.06",
                 null);
-        userExperienceRepository.save(project);
+        ExperienceDTO dto = ExperienceDTO.builder()
+                .id("1")
+                .type("PROJECT")
+                .name("BlueNet v2")
+                .build();
+        when(userExperienceAppService.updateExperience(any())).thenReturn(result);
+        when(responseConverter.toDTO(any(UserExperienceResult.class))).thenReturn(dto);
 
         UpdateExperienceRequestDTO request = new UpdateExperienceRequestDTO();
         request.setName("BlueNet v2");
 
         mockMvc.perform(
-                put("/api/v1/user/experiences/{id}", project.getId())
+                put("/api/v1/user/experiences/{id}", 1L)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -201,9 +217,10 @@ class UserExperienceControllerIntegrationTest extends BaseIntegrationTest {
     }
 
     @Test
-    @WithSecurityPrincipal(roleId = 3L, roleType = "MEMBER", permissions = { "user:experience:update" })
+    @WithSecurityPrincipal(userId = 1L, roleId = 3L, roleType = "MEMBER", permissions = { "user:experience:update" })
     void updateExperience_nonExistent_returnsNotFound() throws Exception {
-        saveMemberUser();
+        when(userExperienceAppService.updateExperience(any()))
+                .thenThrow(new DataNotFound("经历不存在"));
 
         UpdateExperienceRequestDTO request = new UpdateExperienceRequestDTO();
         request.setName("不存在");
@@ -230,7 +247,7 @@ class UserExperienceControllerIntegrationTest extends BaseIntegrationTest {
     }
 
     @Test
-    @WithSecurityPrincipal(roleId = 3L, roleType = "MEMBER")
+    @WithSecurityPrincipal(userId = 1L, roleId = 3L, roleType = "MEMBER")
     void updateExperience_authenticatedWithoutPermission_returnsForbidden() throws Exception {
         UpdateExperienceRequestDTO request = new UpdateExperienceRequestDTO();
         request.setName("BlueNet");
@@ -244,27 +261,19 @@ class UserExperienceControllerIntegrationTest extends BaseIntegrationTest {
     }
 
     @Test
-    @WithSecurityPrincipal(roleId = 3L, roleType = "MEMBER", permissions = { "user:experience:delete" })
+    @WithSecurityPrincipal(userId = 1L, roleId = 3L, roleType = "MEMBER", permissions = { "user:experience:delete" })
     void deleteExperience_authenticatedWithPermission_returnsOk() throws Exception {
-        User user = saveMemberUser();
-        UserExperience project = UserExperience.create(
-                user.getId(),
-                ExperienceType.PROJECT,
-                "BlueNet",
-                "{}",
-                null,
-                null);
-        userExperienceRepository.save(project);
-
-        mockMvc.perform(delete("/api/v1/user/experiences/{id}", project.getId()))
+        mockMvc.perform(delete("/api/v1/user/experiences/{id}", 1L))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200));
     }
 
     @Test
-    @WithSecurityPrincipal(roleId = 3L, roleType = "MEMBER", permissions = { "user:experience:delete" })
+    @WithSecurityPrincipal(userId = 1L, roleId = 3L, roleType = "MEMBER", permissions = { "user:experience:delete" })
     void deleteExperience_nonExistent_returnsNotFound() throws Exception {
-        saveMemberUser();
+        doThrow(new DataNotFound("经历不存在"))
+                .when(userExperienceAppService)
+                .deleteExperience(9999L);
 
         mockMvc.perform(delete("/api/v1/user/experiences/{id}", 9999L))
                 .andExpect(status().isNotFound())
@@ -279,7 +288,7 @@ class UserExperienceControllerIntegrationTest extends BaseIntegrationTest {
     }
 
     @Test
-    @WithSecurityPrincipal(roleId = 3L, roleType = "MEMBER")
+    @WithSecurityPrincipal(userId = 1L, roleId = 3L, roleType = "MEMBER")
     void deleteExperience_authenticatedWithoutPermission_returnsForbidden() throws Exception {
         mockMvc.perform(delete("/api/v1/user/experiences/{id}", 1L))
                 .andExpect(status().isForbidden())

@@ -1,21 +1,19 @@
 package com.bluenet.web.application.service.impl;
 
 import com.bluenet.web.BaseIntegrationTest;
-import com.bluenet.web.application.result.user.UserExperienceResult;
 import com.bluenet.web.application.command.userexperience.UserExperienceCommands;
+import com.bluenet.web.application.result.user.UserExperienceResult;
 import com.bluenet.web.application.service.UserExperienceAppService;
 import com.bluenet.web.domain.exception.DataNotFound;
 import com.bluenet.web.domain.exception.Forbidden;
 import com.bluenet.web.domain.exception.Unauthorized;
 import com.bluenet.web.domain.model.entity.User;
 import com.bluenet.web.domain.model.enumerate.ExperienceType;
-import com.bluenet.web.domain.model.enumerate.Gender;
-import com.bluenet.web.domain.model.enumerate.RoleType;
 import com.bluenet.web.domain.repository.UserExperienceRepository;
-import com.bluenet.web.infrastructure.repository.dataobject.RoleDO;
-import com.bluenet.web.infrastructure.repository.mapper.RoleMapper;
+import com.bluenet.web.domain.repository.UserRepository;
 import com.bluenet.web.infrastructure.security.principal.SecurityPrincipal;
 import com.bluenet.web.infrastructure.security.util.UserCTX;
+import com.bluenet.web.testsupport.fixture.UserFixture;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -29,6 +27,10 @@ import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * UserExperienceAppServiceImpl 集成测试。
+ *
+ * <p>
+ * 按新测试策略：真实 Repository，使用测试夹具创建用户。本类验证应用服务层的编排、 事务边界与响应格式。
+ * </p>
  */
 @DisplayName("UserExperienceAppServiceImpl 集成测试")
 class UserExperienceAppServiceImplIntegrationTest extends BaseIntegrationTest {
@@ -40,10 +42,7 @@ class UserExperienceAppServiceImplIntegrationTest extends BaseIntegrationTest {
     private UserExperienceRepository userExperienceRepository;
 
     @Autowired
-    private com.bluenet.web.domain.repository.UserRepository userRepository;
-
-    @Autowired
-    private RoleMapper roleMapper;
+    private UserRepository userRepository;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -52,28 +51,10 @@ class UserExperienceAppServiceImplIntegrationTest extends BaseIntegrationTest {
 
     @BeforeEach
     void prepare() {
-        RoleDO role = roleMapper.selectByName(RoleType.MEMBER.getName());
-        currentUser = User.create(
-                "2026001001",
-                "2026001001@example.com",
-                role.getId(),
-                passwordEncoder.encode("pwd"),
-                "用户2026001001",
-                "昵称",
-                null,
-                null,
-                null,
-                null,
-                Gender.UNKNOWN,
-                null,
-                null,
-                null,
-                null,
-                null,
-                "REF00001",
-                null);
-        userRepository.save(currentUser);
-        UserCTX.setPrincipal(new SecurityPrincipal(currentUser, RoleType.MEMBER, java.util.Collections.emptySet()));
+        currentUser = UserFixture.member("2026001001").save(userRepository, passwordEncoder);
+        UserCTX.setPrincipal(
+                new SecurityPrincipal(currentUser, com.bluenet.web.domain.model.enumerate.RoleType.MEMBER,
+                        java.util.Collections.emptySet()));
     }
 
     @AfterEach
@@ -195,7 +176,9 @@ class UserExperienceAppServiceImplIntegrationTest extends BaseIntegrationTest {
     void updateExperience_notOwner_shouldThrow() {
         UserExperienceResult created = createProject("项目");
         User otherUser = createOtherUser("2026001002");
-        UserCTX.setPrincipal(new SecurityPrincipal(otherUser, RoleType.MEMBER, java.util.Collections.emptySet()));
+        UserCTX.setPrincipal(
+                new SecurityPrincipal(otherUser, com.bluenet.web.domain.model.enumerate.RoleType.MEMBER,
+                        java.util.Collections.emptySet()));
 
         UserExperienceCommands.UpdateExperienceCommand command = new UserExperienceCommands.UpdateExperienceCommand(
                 created.id(),
@@ -233,7 +216,9 @@ class UserExperienceAppServiceImplIntegrationTest extends BaseIntegrationTest {
     void deleteExperience_notOwner_shouldThrow() {
         UserExperienceResult created = createProject("项目");
         User otherUser = createOtherUser("2026001003");
-        UserCTX.setPrincipal(new SecurityPrincipal(otherUser, RoleType.MEMBER, java.util.Collections.emptySet()));
+        UserCTX.setPrincipal(
+                new SecurityPrincipal(otherUser, com.bluenet.web.domain.model.enumerate.RoleType.MEMBER,
+                        java.util.Collections.emptySet()));
 
         assertThrows(Forbidden.class, () -> userExperienceAppService.deleteExperience(created.id()));
     }
@@ -289,27 +274,6 @@ class UserExperienceAppServiceImplIntegrationTest extends BaseIntegrationTest {
     }
 
     private User createOtherUser(String studentId) {
-        RoleDO role = roleMapper.selectByName(RoleType.MEMBER.getName());
-        User user = User.create(
-                studentId,
-                studentId + "@example.com",
-                role.getId(),
-                passwordEncoder.encode("pwd"),
-                "用户" + studentId,
-                "昵称",
-                null,
-                null,
-                null,
-                null,
-                Gender.UNKNOWN,
-                null,
-                null,
-                null,
-                null,
-                null,
-                "REF" + studentId.substring(studentId.length() - 5),
-                null);
-        userRepository.save(user);
-        return user;
+        return UserFixture.member(studentId).save(userRepository, passwordEncoder);
     }
 }

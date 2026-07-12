@@ -32,6 +32,7 @@ import com.bluenet.web.infrastructure.repository.mapper.RolePermissionMapper;
  * 验证启动时缓存加载、按值查询、按角色查询、孤儿权限判断等核心行为。
  * </p>
  */
+@DisplayName("PermissionCache 单元测试")
 @ExtendWith(MockitoExtension.class)
 class PermissionCacheTest {
 

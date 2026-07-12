@@ -1,39 +1,43 @@
 package com.bluenet.web.application.service.impl;
 
 import com.bluenet.web.BaseIntegrationTest;
-import com.bluenet.web.application.result.adminuser.AdminUserResult;
 import com.bluenet.web.application.command.adminuser.AdminUserCommands;
 import com.bluenet.web.application.query.adminuser.GetUserListQuery;
+import com.bluenet.web.application.result.adminuser.AdminUserResult;
 import com.bluenet.web.application.service.AdminUserAppService;
+import com.bluenet.web.api.dto.PageDTO;
 import com.bluenet.web.domain.exception.BadRequest;
 import com.bluenet.web.domain.exception.DataNotFound;
-import com.bluenet.web.domain.model.entity.College;
 import com.bluenet.web.domain.model.entity.User;
 import com.bluenet.web.domain.model.enumerate.Direction;
 import com.bluenet.web.domain.model.enumerate.Gender;
 import com.bluenet.web.domain.model.enumerate.RoleType;
 import com.bluenet.web.domain.repository.CollegeRepository;
 import com.bluenet.web.domain.repository.UserRepository;
-import com.bluenet.web.infrastructure.repository.dataobject.RoleDO;
-import com.bluenet.web.infrastructure.repository.mapper.RoleMapper;
+import com.bluenet.web.domain.service.ReferralCodeGenerator;
 import com.bluenet.web.infrastructure.security.principal.SecurityPrincipal;
 import com.bluenet.web.infrastructure.security.util.UserCTX;
+import com.bluenet.web.testsupport.fixture.CollegeFixture;
+import com.bluenet.web.testsupport.fixture.RoleFixture;
+import com.bluenet.web.testsupport.fixture.UserFixture;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.when;
 
 /**
  * AdminUserAppServiceImpl 集成测试。
  * <p>
- * 验证管理员用户管理应用服务在实体驱动改造后的行为，重点覆盖批量操作使用 saveAll 的路径。
+ * 按新测试策略：真实 Repository，DomainService 中无 @Transactional 的用 @MockitoBean， 外部基础设施
+ * mock。本类验证应用服务层的编排、事务边界与响应格式。
  * </p>
  */
 @DisplayName("AdminUserAppServiceImpl 集成测试")
@@ -49,10 +53,10 @@ class AdminUserAppServiceImplIntegrationTest extends BaseIntegrationTest {
     private CollegeRepository collegeRepository;
 
     @Autowired
-    private RoleMapper roleMapper;
-
-    @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @MockitoBean
+    private ReferralCodeGenerator referralCodeGenerator;
 
     private Long memberRoleId;
     private Long candidateRoleId;
@@ -60,13 +64,9 @@ class AdminUserAppServiceImplIntegrationTest extends BaseIntegrationTest {
 
     @BeforeEach
     void prepare() {
-        // Flyway V1 初始化角色：1=SUPER_ADMIN, 2=DIRECTION_ADMIN, 3=MEMBER, 4=CANDIDATE
-        memberRoleId = roleMapper.selectByName(RoleType.MEMBER.getName()).getId();
-        candidateRoleId = roleMapper.selectByName(RoleType.CANDIDATE.getName()).getId();
-
-        College college = College.create("计算机学院");
-        collegeRepository.save(college);
-        collegeId = college.getId();
+        memberRoleId = RoleFixture.defaultRoleId(RoleType.MEMBER);
+        candidateRoleId = RoleFixture.defaultRoleId(RoleType.CANDIDATE);
+        collegeId = CollegeFixture.saveDefaultCollege(collegeRepository).getId();
     }
 
     @AfterEach
@@ -75,32 +75,15 @@ class AdminUserAppServiceImplIntegrationTest extends BaseIntegrationTest {
     }
 
     private User createMemberUser(String studentId) {
-        User user = User.create(
-                studentId,
-                studentId + "@example.com",
-                memberRoleId,
-                passwordEncoder.encode("password"),
-                "用户" + studentId,
-                "昵称" + studentId,
-                collegeId,
-                "计算机",
-                2024,
-                Direction.COMPUTER_VISION,
-                Gender.MALE,
-                "开发",
-                null,
-                null,
-                null,
-                null,
-                "REF" + studentId.substring(studentId.length() - 5),
-                "bio");
-        userRepository.save(user);
-        return user;
+        return UserFixture.member(studentId)
+                .withCollegeId(collegeId)
+                .save(userRepository, passwordEncoder);
     }
 
     @Test
     @DisplayName("createUser: 应创建普通用户并加密密码")
     void createUser_shouldCreateUserWithEncodedPassword() {
+        when(referralCodeGenerator.generate()).thenReturn("REFADM01");
         AdminUserCommands.CreateUserCommand command = new AdminUserCommands.CreateUserCommand(
                 "2024002001",
                 "2024002001@example.com",
@@ -126,7 +109,7 @@ class AdminUserAppServiceImplIntegrationTest extends BaseIntegrationTest {
     @Test
     @DisplayName("createUser: 不允许创建超级管理员")
     void createUser_withSuperAdminRole_shouldThrow() {
-        Long superAdminRoleId = roleMapper.selectByName(RoleType.SUPER_ADMIN.getName()).getId();
+        Long superAdminRoleId = RoleFixture.defaultRoleId(RoleType.SUPER_ADMIN);
         AdminUserCommands.CreateUserCommand command = new AdminUserCommands.CreateUserCommand(
                 "2024002002",
                 "2024002002@example.com",
@@ -218,27 +201,8 @@ class AdminUserAppServiceImplIntegrationTest extends BaseIntegrationTest {
     @Test
     @DisplayName("batchDisable: 不能操作超级管理员")
     void batchDisable_withSuperAdmin_shouldThrow() {
-        RoleDO superAdminRole = roleMapper.selectByName(RoleType.SUPER_ADMIN.getName());
-        User superAdmin = User.create(
-                "2024002008",
-                "2024002008@example.com",
-                superAdminRole.getId(),
-                passwordEncoder.encode("pwd"),
-                "超管",
-                "昵称",
-                null,
-                null,
-                null,
-                null,
-                Gender.UNKNOWN,
-                null,
-                null,
-                null,
-                null,
-                null,
-                "REF00008",
-                null);
-        userRepository.save(superAdmin);
+        User superAdmin = UserFixture.superAdmin("2024002008")
+                .save(userRepository, passwordEncoder);
 
         assertThrows(
                 BadRequest.class,
@@ -273,28 +237,8 @@ class AdminUserAppServiceImplIntegrationTest extends BaseIntegrationTest {
     @Test
     @DisplayName("deleteUser: 不能删除系统账号")
     void deleteUser_systemUser_shouldThrow() {
-        // 手动创建与系统账号相同 studentId 的用户，模拟系统账号保护逻辑
-        Long superAdminRoleId = roleMapper.selectByName(RoleType.SUPER_ADMIN.getName()).getId();
-        User systemUser = User.create(
-                "000000000000",
-                "system@example.com",
-                superAdminRoleId,
-                passwordEncoder.encode("pwd"),
-                "system",
-                null,
-                null,
-                null,
-                null,
-                null,
-                Gender.UNKNOWN,
-                null,
-                null,
-                null,
-                null,
-                null,
-                "SYSTEM01",
-                null);
-        userRepository.save(systemUser);
+        User systemUser = UserFixture.superAdmin("000000000000")
+                .save(userRepository, passwordEncoder);
 
         assertThrows(BadRequest.class, () -> adminUserAppService.deleteUser(systemUser.getId()));
     }
@@ -312,29 +256,12 @@ class AdminUserAppServiceImplIntegrationTest extends BaseIntegrationTest {
     @DisplayName("getUserList: 应按角色分页")
     void getUserList_shouldFilterByRole() {
         User member = createMemberUser("2024002013");
-        User candidate = User.create(
-                "2024002014",
-                "2024002014@example.com",
-                candidateRoleId,
-                passwordEncoder.encode("pwd"),
-                "考生",
-                "昵称",
-                null,
-                null,
-                null,
-                null,
-                Gender.UNKNOWN,
-                null,
-                null,
-                null,
-                null,
-                null,
-                "REF00014",
-                null);
-        userRepository.save(candidate);
+        UserFixture.candidate("2024002014")
+                .save(userRepository, passwordEncoder);
 
-        Page<AdminUserResult.ListItem> page = adminUserAppService.getUserList(
-                new GetUserListQuery(0, 20, memberRoleId, null, null, null));
+        PageDTO<AdminUserResult.ListItem> page = PageDTO.from(
+                adminUserAppService.getUserList(
+                        new GetUserListQuery(0, 20, memberRoleId, null, null, null)));
 
         assertEquals(1, page.getTotalElements());
         assertEquals(member.getId(), page.getContent().get(0).id());

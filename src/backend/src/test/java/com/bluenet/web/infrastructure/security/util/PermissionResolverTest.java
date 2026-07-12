@@ -1,4 +1,4 @@
-package com.bluenet.web.infrastructure.security.resolver;
+package com.bluenet.web.infrastructure.security.util;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -17,7 +17,6 @@ import org.springframework.web.method.HandlerMethod;
 
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
 import com.bluenet.web.infrastructure.security.annotation.RequiresPermission;
-import com.bluenet.web.infrastructure.security.util.PermissionResolver;
 
 /**
  * PermissionResolver 单元测试。
@@ -25,6 +24,7 @@ import com.bluenet.web.infrastructure.security.util.PermissionResolver;
  * 验证类级与方法级权限注解的解析优先级及合法性校验。
  * </p>
  */
+@DisplayName("PermissionResolver 单元测试")
 @ExtendWith(MockitoExtension.class)
 class PermissionResolverTest {
 

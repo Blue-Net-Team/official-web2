@@ -11,11 +11,13 @@ import com.bluenet.web.domain.repository.PermissionRepository;
 import com.bluenet.web.domain.repository.RolePermissionRepository;
 import com.bluenet.web.infrastructure.repository.dataobject.RoleDO;
 import com.bluenet.web.infrastructure.repository.mapper.RoleMapper;
+import com.bluenet.web.infrastructure.security.cache.PermissionCache;
 import com.bluenet.web.testsupport.fixture.PermissionFixture;
 import com.bluenet.web.testsupport.fixture.RolePermissionFixture;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.util.List;
 
@@ -43,6 +45,9 @@ class RolePermissionManageAppServiceImplIntegrationTest extends BaseIntegrationT
 
     @Autowired
     private RolePermissionRepository rolePermissionRepository;
+
+    @MockitoBean
+    private PermissionCache permissionCache;
 
     private RoleDO createRole(String name) {
         RoleDO role = RoleDO.builder().name(name).build();

@@ -1,4 +1,4 @@
-package com.bluenet.web.infrastructure.security.validator;
+package com.bluenet.web.infrastructure.security.util;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -11,7 +11,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
 import com.bluenet.web.infrastructure.security.annotation.RequiresPermission;
-import com.bluenet.web.infrastructure.security.util.PermissionValidator;
 
 /**
  * PermissionValidator 单元测试。
@@ -19,6 +18,7 @@ import com.bluenet.web.infrastructure.security.util.PermissionValidator;
  * 验证权限值格式校验与注解校验的通过/失败场景。
  * </p>
  */
+@DisplayName("PermissionValidator 单元测试")
 @ExtendWith(MockitoExtension.class)
 class PermissionValidatorTest {
 

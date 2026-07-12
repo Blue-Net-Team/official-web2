@@ -1,40 +1,40 @@
 package com.bluenet.web.api.controller.v1.admin;
 
 import com.bluenet.web.BaseIntegrationTest;
+import com.bluenet.web.api.dto.PageDTO;
 import com.bluenet.web.api.dto.adminuser.AdminUserBatchOperateRequestDTO;
 import com.bluenet.web.api.dto.adminuser.AdminUserBatchUpdateRoleRequestDTO;
 import com.bluenet.web.api.dto.adminuser.AdminUserCreateRequestDTO;
+import com.bluenet.web.api.dto.adminuser.AdminUserCreateResponseDTO;
+import com.bluenet.web.api.dto.adminuser.AdminUserDetailResponseDTO;
+import com.bluenet.web.api.dto.adminuser.AdminUserListItemResponseDTO;
 import com.bluenet.web.api.dto.adminuser.AdminUserResetPasswordRequestDTO;
 import com.bluenet.web.api.dto.adminuser.AdminUserUpdateRequestDTO;
-import com.bluenet.web.domain.model.entity.College;
-import com.bluenet.web.domain.model.entity.User;
+import com.bluenet.web.api.converter.adminuser.AdminUserResponseConverter;
+import com.bluenet.web.application.result.adminuser.AdminUserResult;
+import com.bluenet.web.application.service.AdminUserAppService;
 import com.bluenet.web.domain.model.enumerate.Direction;
 import com.bluenet.web.domain.model.enumerate.Gender;
-import com.bluenet.web.domain.model.enumerate.RoleType;
-import com.bluenet.web.domain.repository.CollegeRepository;
-import com.bluenet.web.domain.repository.UserRepository;
-import com.bluenet.web.infrastructure.repository.mapper.RoleMapper;
 import com.bluenet.web.infrastructure.security.principal.WithSecurityPrincipal;
 import com.bluenet.web.infrastructure.security.util.UserCTX;
 import com.bluenet.web.testconfig.TestSecurityConfig;
-import com.bluenet.web.testsupport.fixture.CollegeFixture;
-import com.bluenet.web.testsupport.fixture.RoleFixture;
-import com.bluenet.web.testsupport.fixture.UserFixture;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -54,49 +54,40 @@ class AdminUserControllerIntegrationTest extends BaseIntegrationTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @Autowired
-    private UserRepository userRepository;
+    @MockitoBean
+    private AdminUserAppService adminUserAppService;
 
-    @Autowired
-    private CollegeRepository collegeRepository;
-
-    @Autowired
-    private RoleMapper roleMapper;
-
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-
-    private Long memberRoleId;
-    private Long candidateRoleId;
-    private Long collegeId;
-
-    @BeforeEach
-    void prepare() {
-        memberRoleId = RoleFixture.roleId(roleMapper, RoleType.MEMBER);
-        candidateRoleId = RoleFixture.roleId(roleMapper, RoleType.CANDIDATE);
-        College college = CollegeFixture.saveDefaultCollege(collegeRepository);
-        collegeId = college.getId();
-    }
+    @MockitoBean
+    private AdminUserResponseConverter responseConverter;
 
     @AfterEach
     void tearDown() {
         UserCTX.clear();
     }
 
-    private User createMemberUser(String studentId) {
-        User user = UserFixture.builder()
-                .withStudentId(studentId)
-                .withRoleId(memberRoleId)
-                .withCollegeId(collegeId)
-                .build();
-        return UserFixture.save(userRepository, passwordEncoder, user);
-    }
+    private static final long SUPER_ADMIN_USER_ID = 9999L;
 
     @Test
     @DisplayName("getUserList: 超级管理员应返回分页用户列表")
-    @WithSecurityPrincipal(userId = 9999L, roleType = "SUPER_ADMIN", roleId = 1L, permissions = { "user:manage:list" })
+    @WithSecurityPrincipal(userId = SUPER_ADMIN_USER_ID, roleType = "SUPER_ADMIN", roleId = 1L, permissions = {
+            "user:manage:list" })
     void getUserList_asSuperAdmin_shouldReturnPagedUsers() throws Exception {
-        User user = createMemberUser("2024003001001");
+        AdminUserListItemResponseDTO item = AdminUserListItemResponseDTO.builder()
+                .id(1L)
+                .studentId("2024003001001")
+                .username("测试用户")
+                .build();
+        PageDTO<AdminUserListItemResponseDTO> pageDTO = new PageDTO<>(
+                List.of(item),
+                1,
+                1,
+                0,
+                20,
+                1,
+                true,
+                true,
+                false);
+        when(responseConverter.toPageDTO(any())).thenReturn(pageDTO);
 
         mockMvc.perform(
                 get("/api/v1/admin/users")
@@ -104,7 +95,8 @@ class AdminUserControllerIntegrationTest extends BaseIntegrationTest {
                         .param("size", "20"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data").exists())
-                .andExpect(jsonPath("$.data.content").isArray());
+                .andExpect(jsonPath("$.data.content").isArray())
+                .andExpect(jsonPath("$.data.content[0].id").value(1));
     }
 
     @Test
@@ -117,41 +109,70 @@ class AdminUserControllerIntegrationTest extends BaseIntegrationTest {
 
     @Test
     @DisplayName("getUserDetail: 超级管理员应返回用户详情")
-    @WithSecurityPrincipal(userId = 9999L, roleType = "SUPER_ADMIN", roleId = 1L, permissions = {
+    @WithSecurityPrincipal(userId = SUPER_ADMIN_USER_ID, roleType = "SUPER_ADMIN", roleId = 1L, permissions = {
             "user:manage:detail" })
     void getUserDetail_asSuperAdmin_shouldReturnDetail() throws Exception {
-        User user = createMemberUser("2024003001002");
+        AdminUserResult.Detail detail = new AdminUserResult.Detail(
+                1L,
+                "2024003001002",
+                "测试用户",
+                "昵称",
+                "test@example.com",
+                3L,
+                "MEMBER",
+                Direction.COMPUTER_VISION,
+                "计算机学院",
+                "计算机科学与技术",
+                Gender.MALE,
+                "后端开发",
+                false,
+                100L,
+                "github",
+                "简介",
+                2024,
+                0L,
+                0L,
+                0L,
+                0L);
+        AdminUserDetailResponseDTO detailDTO = AdminUserDetailResponseDTO.builder()
+                .id(1L)
+                .studentId("2024003001002")
+                .username("测试用户")
+                .build();
+        when(adminUserAppService.getUserDetail(1L)).thenReturn(detail);
+        when(responseConverter.toDetailDTO(any(AdminUserResult.Detail.class))).thenReturn(detailDTO);
 
-        mockMvc.perform(get("/api/v1/admin/users/{id}", user.getId()))
+        mockMvc.perform(get("/api/v1/admin/users/{id}", 1L))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data").exists())
-                .andExpect(jsonPath("$.data.id").value(user.getId()))
-                .andExpect(jsonPath("$.data.studentId").value(user.getStudentId()));
+                .andExpect(jsonPath("$.data.id").value(1))
+                .andExpect(jsonPath("$.data.studentId").value("2024003001002"));
     }
 
     @Test
     @DisplayName("updateUser: 超级管理员应成功更新用户信息")
-    @WithSecurityPrincipal(userId = 9999L, roleType = "SUPER_ADMIN", roleId = 1L, permissions = {
+    @WithSecurityPrincipal(userId = SUPER_ADMIN_USER_ID, roleType = "SUPER_ADMIN", roleId = 1L, permissions = {
             "user:manage:update" })
     void updateUser_asSuperAdmin_shouldReturnOk() throws Exception {
-        User user = createMemberUser("2024003001003");
+        doNothing().when(adminUserAppService).updateUser(any());
+
         AdminUserUpdateRequestDTO request = AdminUserUpdateRequestDTO.builder()
-                .roleId(candidateRoleId)
+                .roleId(3L)
                 .direction(Direction.STRUCTURAL_DESIGN)
                 .disable(true)
                 .job("算法工程师")
-                .studentId(user.getStudentId())
+                .studentId("2024003001003")
                 .email("updated@example.com")
                 .username("更新用户")
                 .nickname("更新昵称")
-                .collegeId(collegeId)
+                .collegeId(1L)
                 .major("新专业")
                 .gender(Gender.FEMALE)
                 .assessmentGradeYear(2025)
                 .build();
 
         mockMvc.perform(
-                put("/api/v1/admin/users/{id}", user.getId())
+                put("/api/v1/admin/users/{id}", 1L)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -160,17 +181,18 @@ class AdminUserControllerIntegrationTest extends BaseIntegrationTest {
 
     @Test
     @DisplayName("resetPassword: 超级管理员应成功重置用户密码")
-    @WithSecurityPrincipal(userId = 9999L, roleType = "SUPER_ADMIN", roleId = 1L, permissions = {
+    @WithSecurityPrincipal(userId = SUPER_ADMIN_USER_ID, roleType = "SUPER_ADMIN", roleId = 1L, permissions = {
             "user:manage:reset-password" })
     void resetPassword_asSuperAdmin_shouldReturnOk() throws Exception {
-        User user = createMemberUser("2024003001004");
+        doNothing().when(adminUserAppService).resetPassword(any());
+
         AdminUserResetPasswordRequestDTO request = AdminUserResetPasswordRequestDTO.builder()
                 .newPassword("newPassword123")
                 .confirmPassword("newPassword123")
                 .build();
 
         mockMvc.perform(
-                put("/api/v1/admin/users/{id}/password", user.getId())
+                put("/api/v1/admin/users/{id}/password", 1L)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk());
@@ -178,24 +200,24 @@ class AdminUserControllerIntegrationTest extends BaseIntegrationTest {
 
     @Test
     @DisplayName("deleteUser: 超级管理员应成功删除普通用户")
-    @WithSecurityPrincipal(userId = 9999L, roleType = "SUPER_ADMIN", roleId = 1L, permissions = {
+    @WithSecurityPrincipal(userId = SUPER_ADMIN_USER_ID, roleType = "SUPER_ADMIN", roleId = 1L, permissions = {
             "user:manage:delete" })
     void deleteUser_asSuperAdmin_shouldReturnOk() throws Exception {
-        User user = createMemberUser("2024003001005");
+        doNothing().when(adminUserAppService).deleteUser(1L);
 
-        mockMvc.perform(delete("/api/v1/admin/users/{id}", user.getId()))
+        mockMvc.perform(delete("/api/v1/admin/users/{id}", 1L))
                 .andExpect(status().isOk());
     }
 
     @Test
     @DisplayName("batchDelete: 超级管理员应成功批量删除用户")
-    @WithSecurityPrincipal(userId = 9999L, roleType = "SUPER_ADMIN", roleId = 1L, permissions = {
+    @WithSecurityPrincipal(userId = SUPER_ADMIN_USER_ID, roleType = "SUPER_ADMIN", roleId = 1L, permissions = {
             "user:manage:batch-delete" })
     void batchDelete_asSuperAdmin_shouldReturnOk() throws Exception {
-        User user1 = createMemberUser("2024003001006");
-        User user2 = createMemberUser("2024003001007");
+        doNothing().when(adminUserAppService).batchDelete(any());
+
         AdminUserBatchOperateRequestDTO request = AdminUserBatchOperateRequestDTO.builder()
-                .userIds(List.of(user1.getId(), user2.getId()))
+                .userIds(List.of(1L, 2L))
                 .build();
 
         mockMvc.perform(
@@ -207,12 +229,13 @@ class AdminUserControllerIntegrationTest extends BaseIntegrationTest {
 
     @Test
     @DisplayName("batchDisable: 超级管理员应成功批量禁用用户")
-    @WithSecurityPrincipal(userId = 9999L, roleType = "SUPER_ADMIN", roleId = 1L, permissions = {
+    @WithSecurityPrincipal(userId = SUPER_ADMIN_USER_ID, roleType = "SUPER_ADMIN", roleId = 1L, permissions = {
             "user:manage:batch-disable" })
     void batchDisable_asSuperAdmin_shouldReturnOk() throws Exception {
-        User user = createMemberUser("2024003001008");
+        doNothing().when(adminUserAppService).batchDisable(any(), any());
+
         AdminUserBatchOperateRequestDTO request = AdminUserBatchOperateRequestDTO.builder()
-                .userIds(List.of(user.getId()))
+                .userIds(List.of(1L))
                 .build();
 
         mockMvc.perform(
@@ -224,18 +247,13 @@ class AdminUserControllerIntegrationTest extends BaseIntegrationTest {
 
     @Test
     @DisplayName("batchEnable: 超级管理员应成功批量启用用户")
-    @WithSecurityPrincipal(userId = 9999L, roleType = "SUPER_ADMIN", roleId = 1L, permissions = {
+    @WithSecurityPrincipal(userId = SUPER_ADMIN_USER_ID, roleType = "SUPER_ADMIN", roleId = 1L, permissions = {
             "user:manage:batch-enable" })
     void batchEnable_asSuperAdmin_shouldReturnOk() throws Exception {
-        User user = UserFixture.builder()
-                .withStudentId("2024003001009")
-                .withRoleId(memberRoleId)
-                .withCollegeId(collegeId)
-                .disabled()
-                .build();
-        UserFixture.save(userRepository, passwordEncoder, user);
+        doNothing().when(adminUserAppService).batchDisable(any(), any());
+
         AdminUserBatchOperateRequestDTO request = AdminUserBatchOperateRequestDTO.builder()
-                .userIds(List.of(user.getId()))
+                .userIds(List.of(1L))
                 .build();
 
         mockMvc.perform(
@@ -247,13 +265,14 @@ class AdminUserControllerIntegrationTest extends BaseIntegrationTest {
 
     @Test
     @DisplayName("batchUpdateRole: 超级管理员应成功批量更新用户角色")
-    @WithSecurityPrincipal(userId = 9999L, roleType = "SUPER_ADMIN", roleId = 1L, permissions = {
+    @WithSecurityPrincipal(userId = SUPER_ADMIN_USER_ID, roleType = "SUPER_ADMIN", roleId = 1L, permissions = {
             "user:manage:batch-update-role" })
     void batchUpdateRole_asSuperAdmin_shouldReturnOk() throws Exception {
-        User user = createMemberUser("2024003001010");
+        doNothing().when(adminUserAppService).batchUpdateRole(any());
+
         AdminUserBatchUpdateRoleRequestDTO request = AdminUserBatchUpdateRoleRequestDTO.builder()
-                .userIds(List.of(user.getId()))
-                .roleId(candidateRoleId)
+                .userIds(List.of(1L))
+                .roleId(2L)
                 .build();
 
         mockMvc.perform(
@@ -265,17 +284,31 @@ class AdminUserControllerIntegrationTest extends BaseIntegrationTest {
 
     @Test
     @DisplayName("createUser: 超级管理员应成功创建用户")
-    @WithSecurityPrincipal(userId = 9999L, roleType = "SUPER_ADMIN", roleId = 1L, permissions = {
+    @WithSecurityPrincipal(userId = SUPER_ADMIN_USER_ID, roleType = "SUPER_ADMIN", roleId = 1L, permissions = {
             "user:manage:create" })
     void createUser_asSuperAdmin_shouldReturnCreatedUser() throws Exception {
+        AdminUserResult.Created created = new AdminUserResult.Created(
+                1L,
+                "2024003001011",
+                "新建用户",
+                3L);
+        AdminUserCreateResponseDTO responseDTO = AdminUserCreateResponseDTO.builder()
+                .id(1L)
+                .studentId("2024003001011")
+                .username("新建用户")
+                .roleId(3L)
+                .build();
+        when(adminUserAppService.createUser(any())).thenReturn(created);
+        when(responseConverter.toCreateResponseDTO(any(AdminUserResult.Created.class))).thenReturn(responseDTO);
+
         AdminUserCreateRequestDTO request = AdminUserCreateRequestDTO.builder()
                 .studentId("2024003001011")
                 .email("2024003001011@example.com")
                 .username("新建用户")
                 .password("newPassword123")
                 .nickname("新建昵称")
-                .roleId(memberRoleId)
-                .collegeId(collegeId)
+                .roleId(3L)
+                .collegeId(1L)
                 .major("计算机科学与技术")
                 .direction(Direction.COMPUTER_VISION)
                 .gender(Gender.MALE)

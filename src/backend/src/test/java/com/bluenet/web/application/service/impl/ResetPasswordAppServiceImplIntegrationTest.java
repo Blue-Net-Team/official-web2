@@ -1,36 +1,38 @@
 package com.bluenet.web.application.service.impl;
 
 import com.bluenet.web.BaseIntegrationTest;
-import com.bluenet.web.application.result.resetpassword.ResetPasswordResult;
 import com.bluenet.web.application.command.resetpassword.ResetPasswordCommands;
 import com.bluenet.web.application.message.MessageDispatcher;
 import com.bluenet.web.application.message.MessageRequest;
+import com.bluenet.web.application.result.resetpassword.ResetPasswordResult;
 import com.bluenet.web.application.service.ResetPasswordAppService;
 import com.bluenet.web.domain.exception.BadRequest;
 import com.bluenet.web.domain.model.entity.User;
-import com.bluenet.web.domain.model.enumerate.Gender;
-import com.bluenet.web.domain.model.enumerate.RoleType;
 import com.bluenet.web.domain.model.entity.VerifyCode;
 import com.bluenet.web.domain.repository.UserRepository;
-import com.bluenet.web.domain.repository.VerificationCodeRepository;
 import com.bluenet.web.domain.service.VerificationCodeDomainService;
-import com.bluenet.web.infrastructure.repository.dataobject.RoleDO;
-import com.bluenet.web.infrastructure.repository.mapper.RoleMapper;
+import com.bluenet.web.infrastructure.security.auth.AuthTokenService;
 import com.bluenet.web.infrastructure.security.reset.ResetPasswordStateService;
+import com.bluenet.web.testsupport.fixture.UserFixture;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.security.crypto.password.PasswordEncoder;
+
+import java.time.LocalDateTime;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 /**
  * ResetPasswordAppServiceImpl 集成测试。
+ *
  * <p>
- * 验证密码重置流程中学号/邮箱查询、验证码校验和密码修改均通过 UserRepository 实体驱动接口完成。
+ * 按新测试策略：真实 Repository，DomainService 中无 @Transactional 的用 @MockitoBean， 外部基础设施
+ * mock。本类验证应用服务层的编排、事务边界与响应格式。
  * </p>
  */
 @DisplayName("ResetPasswordAppServiceImpl 集成测试")
@@ -43,46 +45,24 @@ class ResetPasswordAppServiceImplIntegrationTest extends BaseIntegrationTest {
     private UserRepository userRepository;
 
     @Autowired
-    private RoleMapper roleMapper;
-
-    @Autowired
     private PasswordEncoder passwordEncoder;
 
     @Autowired
     private ResetPasswordStateService resetPasswordStateService;
 
-    @Autowired
-    private VerificationCodeRepository verificationCodeRepository;
-
-    @MockBean
+    @MockitoBean
     private VerificationCodeDomainService verificationCodeDomainService;
 
-    @MockBean
+    @MockitoBean
     private MessageDispatcher messageDispatcher;
 
+    @MockitoBean
+    private AuthTokenService authTokenService;
+
     private User createUser(String studentId) {
-        RoleDO memberRole = roleMapper.selectByName(RoleType.MEMBER.getName());
-        User user = User.create(
-                studentId,
-                studentId + "@example.com",
-                memberRole.getId(),
-                passwordEncoder.encode("oldPassword"),
-                "用户" + studentId,
-                "昵称" + studentId,
-                null,
-                null,
-                null,
-                null,
-                Gender.UNKNOWN,
-                null,
-                null,
-                null,
-                null,
-                null,
-                "REF" + studentId.substring(studentId.length() - 5),
-                null);
-        userRepository.save(user);
-        return user;
+        return UserFixture.member(studentId)
+                .withPassword("oldPassword")
+                .save(userRepository, passwordEncoder);
     }
 
     @Test
@@ -138,7 +118,7 @@ class ResetPasswordAppServiceImplIntegrationTest extends BaseIntegrationTest {
         VerifyCode code = VerifyCode.create(
                 email,
                 "123456",
-                java.time.LocalDateTime.now().plusMinutes(5),
+                LocalDateTime.now().plusMinutes(5),
                 "reset_password");
         when(verificationCodeDomainService.generateCode(email, "reset_password")).thenReturn(code);
     }
@@ -148,7 +128,7 @@ class ResetPasswordAppServiceImplIntegrationTest extends BaseIntegrationTest {
     void sendCode_shouldGenerateCodeAndAdvance() {
         User user = createUser("2024004004");
         String token = resetPasswordStateService.create(user.getStudentId(), user.getId());
-        resetPasswordStateService.update(token, java.util.Map.of("step", "2", "email", user.getEmail()));
+        resetPasswordStateService.update(token, Map.of("step", "2", "email", user.getEmail()));
         mockVerificationCode(user.getEmail());
 
         resetPasswordAppService.sendCode(new ResetPasswordCommands.SendCodeCommand(token));
@@ -164,7 +144,7 @@ class ResetPasswordAppServiceImplIntegrationTest extends BaseIntegrationTest {
     void verifyCode_shouldVerifyCodeAndAdvance() {
         User user = createUser("2024004005");
         String token = resetPasswordStateService.create(user.getStudentId(), user.getId());
-        resetPasswordStateService.update(token, java.util.Map.of("step", "2", "email", user.getEmail()));
+        resetPasswordStateService.update(token, Map.of("step", "2", "email", user.getEmail()));
         mockVerificationCode(user.getEmail());
 
         resetPasswordAppService.sendCode(new ResetPasswordCommands.SendCodeCommand(token));
@@ -180,7 +160,7 @@ class ResetPasswordAppServiceImplIntegrationTest extends BaseIntegrationTest {
     void verifyCode_wrongCode_shouldThrow() {
         User user = createUser("2024004006");
         String token = resetPasswordStateService.create(user.getStudentId(), user.getId());
-        resetPasswordStateService.update(token, java.util.Map.of("step", "2", "email", user.getEmail()));
+        resetPasswordStateService.update(token, Map.of("step", "2", "email", user.getEmail()));
         mockVerificationCode(user.getEmail());
 
         resetPasswordAppService.sendCode(new ResetPasswordCommands.SendCodeCommand(token));
@@ -196,7 +176,7 @@ class ResetPasswordAppServiceImplIntegrationTest extends BaseIntegrationTest {
     void resetPassword_shouldResetPasswordAndCleanUp() {
         User user = createUser("2024004007");
         String token = resetPasswordStateService.create(user.getStudentId(), user.getId());
-        resetPasswordStateService.update(token, java.util.Map.of("step", "2", "email", user.getEmail()));
+        resetPasswordStateService.update(token, Map.of("step", "2", "email", user.getEmail()));
         mockVerificationCode(user.getEmail());
         resetPasswordAppService.sendCode(new ResetPasswordCommands.SendCodeCommand(token));
         resetPasswordAppService.verifyCode(
@@ -207,6 +187,7 @@ class ResetPasswordAppServiceImplIntegrationTest extends BaseIntegrationTest {
         User updated = userRepository.findById(user.getId()).orElseThrow();
         assertTrue(passwordEncoder.matches("newPassword", updated.getPassword()));
         assertFalse(resetPasswordStateService.exists(token));
+        verify(authTokenService).revokeAllUserTokens(user.getId());
     }
 
     @Test

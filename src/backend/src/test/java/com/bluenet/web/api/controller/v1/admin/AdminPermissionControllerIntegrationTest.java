@@ -1,33 +1,34 @@
 package com.bluenet.web.api.controller.v1.admin;
 
 import com.bluenet.web.BaseIntegrationTest;
+import com.bluenet.web.api.dto.permission.PermissionDTO;
 import com.bluenet.web.api.dto.permission.PermissionRoleBatchRequestDTO;
-import com.bluenet.web.domain.model.entity.Permission;
-import com.bluenet.web.domain.model.enumerate.RoleType;
-import com.bluenet.web.domain.repository.PermissionRepository;
-import com.bluenet.web.domain.repository.RolePermissionRepository;
-import com.bluenet.web.infrastructure.repository.dataobject.RoleDO;
-import com.bluenet.web.infrastructure.repository.mapper.RoleMapper;
+import com.bluenet.web.api.dto.permission.PermissionTreeDTO;
+import com.bluenet.web.api.converter.permission.PermissionResponseConverter;
+import com.bluenet.web.application.result.permission.PermissionResult;
+import com.bluenet.web.application.result.rolepermission.RolePermissionManageResult;
+import com.bluenet.web.application.service.PermissionAppService;
+import com.bluenet.web.application.service.RolePermissionManageAppService;
 import com.bluenet.web.infrastructure.security.principal.WithSecurityPrincipal;
 import com.bluenet.web.infrastructure.security.util.UserCTX;
 import com.bluenet.web.testconfig.TestSecurityConfig;
-import com.bluenet.web.testsupport.fixture.PermissionFixture;
-import com.bluenet.web.testsupport.fixture.RoleFixture;
-import com.bluenet.web.testsupport.fixture.RolePermissionFixture;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -46,41 +47,35 @@ class AdminPermissionControllerIntegrationTest extends BaseIntegrationTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @Autowired
-    private PermissionRepository permissionRepository;
+    @MockitoBean
+    private PermissionAppService permissionAppService;
 
-    @Autowired
-    private RolePermissionRepository rolePermissionRepository;
+    @MockitoBean
+    private RolePermissionManageAppService rolePermissionManageAppService;
 
-    @Autowired
-    private RoleMapper roleMapper;
-
-    private Long memberRoleId;
-    private Long directionAdminRoleId;
-
-    @BeforeEach
-    void prepare() {
-        memberRoleId = RoleFixture.roleId(roleMapper, RoleType.MEMBER);
-        directionAdminRoleId = RoleFixture.roleId(roleMapper, RoleType.DIRECTION_ADMIN);
-    }
+    @MockitoBean
+    private PermissionResponseConverter permissionResponseConverter;
 
     @AfterEach
     void tearDown() {
         UserCTX.clear();
     }
 
-    private RoleDO createRole(String name) {
-        RoleDO role = RoleDO.builder().name(name).build();
-        roleMapper.insert(role);
-        return role;
-    }
+    private static final long SUPER_ADMIN_USER_ID = 9999L;
 
     @Test
     @DisplayName("getPermissions: 超级管理员应返回分页权限列表")
-    @WithSecurityPrincipal(userId = 9999L, roleType = "SUPER_ADMIN", roleId = 1L, permissions = { "permission:list" })
+    @WithSecurityPrincipal(userId = SUPER_ADMIN_USER_ID, roleType = "SUPER_ADMIN", roleId = 1L, permissions = {
+            "permission:list" })
     void getPermissions_asSuperAdmin_shouldReturnPagedPermissions() throws Exception {
-        PermissionFixture.save(permissionRepository, "ctrl-test:read");
-        PermissionFixture.save(permissionRepository, "ctrl-test:write");
+        PermissionResult result = new PermissionResult(1L, "ctrl-test:read", "读取", "/api/v1/test", "GET", "PROTECTED");
+        PermissionDTO dto = PermissionDTO.builder()
+                .id(1L)
+                .value("ctrl-test:read")
+                .name("读取")
+                .build();
+        when(permissionAppService.getPermissions(any())).thenReturn(new PageImpl<>(List.of(result)));
+        when(permissionResponseConverter.toDTO(any(PermissionResult.class))).thenReturn(dto);
 
         mockMvc.perform(
                 get("/api/v1/admin/permissions")
@@ -88,7 +83,8 @@ class AdminPermissionControllerIntegrationTest extends BaseIntegrationTest {
                         .param("size", "20"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data").exists())
-                .andExpect(jsonPath("$.data.content").isArray());
+                .andExpect(jsonPath("$.data.content").isArray())
+                .andExpect(jsonPath("$.data.content[0].id").value(1));
     }
 
     @Test
@@ -101,58 +97,73 @@ class AdminPermissionControllerIntegrationTest extends BaseIntegrationTest {
 
     @Test
     @DisplayName("getPermissionDetail: 超级管理员应返回权限详情")
-    @WithSecurityPrincipal(userId = 9999L, roleType = "SUPER_ADMIN", roleId = 1L, permissions = { "permission:detail" })
+    @WithSecurityPrincipal(userId = SUPER_ADMIN_USER_ID, roleType = "SUPER_ADMIN", roleId = 1L, permissions = {
+            "permission:detail" })
     void getPermissionDetail_asSuperAdmin_shouldReturnDetail() throws Exception {
-        Permission permission = PermissionFixture.save(permissionRepository, "权限详情", "ctrl-test:detail");
+        PermissionResult result = new PermissionResult(1L, "ctrl-test:detail", "权限详情", "/api/v1/test", "GET",
+                "PROTECTED");
+        PermissionDTO dto = PermissionDTO.builder()
+                .id(1L)
+                .value("ctrl-test:detail")
+                .name("权限详情")
+                .build();
+        when(permissionAppService.getPermissionDetail(1L)).thenReturn(result);
+        when(permissionResponseConverter.toDTO(any(PermissionResult.class))).thenReturn(dto);
 
-        mockMvc.perform(get("/api/v1/admin/permissions/{id}", permission.getId()))
+        mockMvc.perform(get("/api/v1/admin/permissions/{id}", 1L))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data").exists())
-                .andExpect(jsonPath("$.data.id").value(permission.getId()))
-                .andExpect(jsonPath("$.data.value").value(permission.getValue()));
+                .andExpect(jsonPath("$.data.id").value(1))
+                .andExpect(jsonPath("$.data.value").value("ctrl-test:detail"));
     }
 
     @Test
     @DisplayName("getPermissionTree: 超级管理员应返回权限树")
-    @WithSecurityPrincipal(userId = 9999L, roleType = "SUPER_ADMIN", roleId = 1L, permissions = { "permission:tree" })
+    @WithSecurityPrincipal(userId = SUPER_ADMIN_USER_ID, roleType = "SUPER_ADMIN", roleId = 1L, permissions = {
+            "permission:tree" })
     void getPermissionTree_asSuperAdmin_shouldReturnTree() throws Exception {
-        PermissionFixture.save(permissionRepository, "ctrl-test:tree:first");
-        PermissionFixture.save(permissionRepository, "ctrl-test:tree:second");
+        PermissionTreeDTO treeNode = PermissionTreeDTO.builder()
+                .key("ctrl-test")
+                .title("ctrl-test")
+                .leaf(false)
+                .build();
+        when(permissionAppService.getPermissionTree()).thenReturn(List.of());
+        when(permissionResponseConverter.buildPermissionTree(any())).thenReturn(List.of(treeNode));
 
         mockMvc.perform(get("/api/v1/admin/permissions/tree"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data").isArray());
+                .andExpect(jsonPath("$.data").isArray())
+                .andExpect(jsonPath("$.data[0].key").value("ctrl-test"));
     }
 
     @Test
     @DisplayName("getPermissionRoles: 超级管理员应返回权限已分配的角色名称")
-    @WithSecurityPrincipal(userId = 9999L, roleType = "SUPER_ADMIN", roleId = 1L, permissions = {
+    @WithSecurityPrincipal(userId = SUPER_ADMIN_USER_ID, roleType = "SUPER_ADMIN", roleId = 1L, permissions = {
             "permission:role:list" })
     void getPermissionRoles_asSuperAdmin_shouldReturnRoleNames() throws Exception {
-        RoleDO role = createRole("ROLE_CTRL_PERM_ROLE");
-        Permission permission = PermissionFixture.save(permissionRepository, "ctrl-test:roles");
-        RolePermissionFixture.grant(rolePermissionRepository, role.getId(), permission.getId());
+        when(rolePermissionManageAppService.getPermissionRoles(1L)).thenReturn(List.of("ROLE_CTRL_PERM_ROLE"));
 
-        mockMvc.perform(get("/api/v1/admin/permissions/{id}/roles", permission.getId()))
+        mockMvc.perform(get("/api/v1/admin/permissions/{id}/roles", 1L))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data").isArray())
-                .andExpect(jsonPath("$.data[0]").value(role.getName()));
+                .andExpect(jsonPath("$.data[0]").value("ROLE_CTRL_PERM_ROLE"));
     }
 
     @Test
     @DisplayName("assignRolesToPermission: 超级管理员应成功批量分配角色到权限")
-    @WithSecurityPrincipal(userId = 9999L, roleType = "SUPER_ADMIN", roleId = 1L, permissions = {
+    @WithSecurityPrincipal(userId = SUPER_ADMIN_USER_ID, roleType = "SUPER_ADMIN", roleId = 1L, permissions = {
             "permission:role:assign" })
     void assignRolesToPermission_asSuperAdmin_shouldReturnOk() throws Exception {
-        Permission permission = PermissionFixture.save(permissionRepository, "ctrl-test:assign");
-        RoleDO roleA = createRole("ROLE_CTRL_ASSIGN_A");
-        RoleDO roleB = createRole("ROLE_CTRL_ASSIGN_B");
+        RolePermissionManageResult result = RolePermissionManageResult
+                .ofRoles(2, List.of("ROLE_CTRL_ASSIGN_A", "ROLE_CTRL_ASSIGN_B"));
+        when(rolePermissionManageAppService.assignRolesToPermission(any())).thenReturn(result);
+
         PermissionRoleBatchRequestDTO request = PermissionRoleBatchRequestDTO.builder()
-                .roleNames(List.of(roleA.getName(), roleB.getName()))
+                .roleNames(List.of("ROLE_CTRL_ASSIGN_A", "ROLE_CTRL_ASSIGN_B"))
                 .build();
 
         mockMvc.perform(
-                post("/api/v1/admin/permissions/{id}/roles/batch", permission.getId())
+                post("/api/v1/admin/permissions/{id}/roles/batch", 1L)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -162,25 +173,22 @@ class AdminPermissionControllerIntegrationTest extends BaseIntegrationTest {
 
     @Test
     @DisplayName("removeRolesFromPermission: 超级管理员应成功批量从权限移除角色")
-    @WithSecurityPrincipal(userId = 9999L, roleType = "SUPER_ADMIN", roleId = 1L, permissions = {
+    @WithSecurityPrincipal(userId = SUPER_ADMIN_USER_ID, roleType = "SUPER_ADMIN", roleId = 1L, permissions = {
             "permission:role:remove" })
     void removeRolesFromPermission_asSuperAdmin_shouldReturnOk() throws Exception {
-        Permission permission = PermissionFixture.save(permissionRepository, "ctrl-test:remove");
-        RoleDO roleA = createRole("ROLE_CTRL_REMOVE_A");
-        RoleDO roleB = createRole("ROLE_CTRL_REMOVE_B");
-        RolePermissionFixture.grant(rolePermissionRepository, roleA.getId(), permission.getId());
-        RolePermissionFixture.grant(rolePermissionRepository, roleB.getId(), permission.getId());
+        RolePermissionManageResult result = RolePermissionManageResult.ofRoles(1, List.of("ROLE_CTRL_REMOVE_B"));
+        when(rolePermissionManageAppService.removeRolesFromPermission(any())).thenReturn(result);
 
         PermissionRoleBatchRequestDTO request = PermissionRoleBatchRequestDTO.builder()
-                .roleNames(List.of(roleA.getName()))
+                .roleNames(List.of("ROLE_CTRL_REMOVE_A"))
                 .build();
 
         mockMvc.perform(
-                delete("/api/v1/admin/permissions/{id}/roles/batch", permission.getId())
+                delete("/api/v1/admin/permissions/{id}/roles/batch", 1L)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.successCount").value(1))
-                .andExpect(jsonPath("$.data.currentRoles[0]").value(roleB.getName()));
+                .andExpect(jsonPath("$.data.currentRoles[0]").value("ROLE_CTRL_REMOVE_B"));
     }
 }

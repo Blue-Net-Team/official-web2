@@ -1,15 +1,16 @@
 package com.bluenet.web.application.service.impl;
 
 import com.bluenet.web.BaseIntegrationTest;
+import com.bluenet.web.application.command.userinfo.UserInfoCommands;
 import com.bluenet.web.application.result.common.TabCounts;
 import com.bluenet.web.application.result.user.UserInfoResult;
-import com.bluenet.web.application.command.userinfo.UserInfoCommands;
 import com.bluenet.web.application.service.UserInfoAppService;
 import com.bluenet.web.domain.exception.BadRequest;
 import com.bluenet.web.domain.exception.DataNotFound;
 import com.bluenet.web.domain.exception.Forbidden;
 import com.bluenet.web.domain.exception.Unauthorized;
 import com.bluenet.web.domain.model.entity.College;
+import com.bluenet.web.domain.model.entity.File;
 import com.bluenet.web.domain.model.entity.User;
 import com.bluenet.web.domain.model.enumerate.Direction;
 import com.bluenet.web.domain.model.enumerate.FileStatus;
@@ -18,22 +19,31 @@ import com.bluenet.web.domain.model.enumerate.Gender;
 import com.bluenet.web.domain.model.enumerate.RoleType;
 import com.bluenet.web.domain.repository.CollegeRepository;
 import com.bluenet.web.domain.repository.UserRepository;
-import com.bluenet.web.infrastructure.repository.dataobject.FileDO;
-import com.bluenet.web.infrastructure.repository.mapper.FileMapper;
-import com.bluenet.web.infrastructure.repository.mapper.RoleMapper;
+import com.bluenet.web.domain.service.FileDomainService;
+import com.bluenet.web.domain.service.VerificationCodeDomainService;
+import com.bluenet.web.application.message.MessageDispatcher;
+import com.bluenet.web.infrastructure.security.auth.AuthTokenService;
 import com.bluenet.web.infrastructure.security.change.ChangePasswordStateService;
+import com.bluenet.web.testsupport.fixture.CollegeFixture;
+import com.bluenet.web.testsupport.fixture.UserFixture;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.time.LocalDateTime;
+
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 /**
  * UserInfoAppServiceImpl 集成测试。
+ *
  * <p>
- * 验证用户信息应用服务在实体驱动改造后的行为：资料更新、头像更新、密码修改。
+ * 按新测试策略：真实 Repository，DomainService 中无 @Transactional 的用 @MockitoBean， 外部基础设施
+ * mock。本类验证应用服务层的编排、事务边界与响应格式。
  * </p>
  */
 @DisplayName("UserInfoAppServiceImpl 集成测试")
@@ -49,16 +59,22 @@ class UserInfoAppServiceImplIntegrationTest extends BaseIntegrationTest {
     private CollegeRepository collegeRepository;
 
     @Autowired
-    private RoleMapper roleMapper;
-
-    @Autowired
-    private FileMapper fileMapper;
-
-    @Autowired
     private PasswordEncoder passwordEncoder;
 
     @Autowired
     private ChangePasswordStateService changePasswordStateService;
+
+    @MockitoBean
+    private FileDomainService fileDomainService;
+
+    @MockitoBean
+    private AuthTokenService authTokenService;
+
+    @MockitoBean
+    private VerificationCodeDomainService verificationCodeDomainService;
+
+    @MockitoBean
+    private MessageDispatcher messageDispatcher;
 
     private Long memberRoleId;
     private Long candidateRoleId;
@@ -66,36 +82,24 @@ class UserInfoAppServiceImplIntegrationTest extends BaseIntegrationTest {
 
     @BeforeEach
     void prepare() {
-        memberRoleId = roleMapper.selectByName(RoleType.MEMBER.getName()).getId();
-        candidateRoleId = roleMapper.selectByName(RoleType.CANDIDATE.getName()).getId();
-
-        College college = College.create("计算机学院");
-        collegeRepository.save(college);
+        memberRoleId = com.bluenet.web.testsupport.fixture.RoleFixture.defaultRoleId(RoleType.MEMBER);
+        candidateRoleId = com.bluenet.web.testsupport.fixture.RoleFixture.defaultRoleId(RoleType.CANDIDATE);
+        College college = CollegeFixture.saveDefaultCollege(collegeRepository);
         collegeId = college.getId();
     }
 
     private User createUser(String studentId, Long roleId) {
-        User user = User.create(
-                studentId,
-                studentId + "@example.com",
-                roleId,
-                passwordEncoder.encode("password"),
-                "用户" + studentId,
-                "昵称" + studentId,
-                collegeId,
-                "计算机",
-                2024,
-                Direction.COMPUTER_VISION,
-                Gender.MALE,
-                "开发",
-                null,
-                null,
-                null,
-                null,
-                "REF" + studentId.substring(studentId.length() - 5),
-                "bio");
-        userRepository.save(user);
-        return user;
+        return UserFixture.builder()
+                .withStudentId(studentId)
+                .withRoleId(roleId)
+                .withCollegeId(collegeId)
+                .withMajor("计算机")
+                .withAssessmentGradeYear(2024)
+                .withDirection(Direction.COMPUTER_VISION)
+                .withGender(Gender.MALE)
+                .withJob("开发")
+                .withBio("bio")
+                .save(userRepository, passwordEncoder);
     }
 
     @Test
@@ -181,8 +185,8 @@ class UserInfoAppServiceImplIntegrationTest extends BaseIntegrationTest {
     }
 
     @Test
-    @DisplayName("updateProfile: 学院不存在时应清空 college_id（兼容旧行为）")
-    void updateProfile_collegeNotFound_shouldClearCollegeId() {
+    @DisplayName("updateProfile: 学院字段不影响已设置的 college_id")
+    void updateProfile_collegeNotFound_shouldKeepCollegeId() {
         User user = createUser("2024003004", memberRoleId);
         UserInfoCommands.UpdateProfileCommand command = new UserInfoCommands.UpdateProfileCommand(
                 null,
@@ -197,7 +201,7 @@ class UserInfoAppServiceImplIntegrationTest extends BaseIntegrationTest {
         userInfoAppService.updateProfile(user.getId(), command);
 
         User updated = userRepository.findById(user.getId()).orElseThrow();
-        assertNull(updated.getCollegeId());
+        assertEquals(collegeId, updated.getCollegeId());
     }
 
     @Test
@@ -225,49 +229,53 @@ class UserInfoAppServiceImplIntegrationTest extends BaseIntegrationTest {
     @DisplayName("updateAvatar: 应更新头像文件ID")
     void updateAvatar_shouldUpdateAvatarId() {
         User user = createUser("2024003005", memberRoleId);
-        FileDO avatar = FileDO.builder()
-                .name("avatar-3005.png")
-                .type(FileType.AVATAR)
-                .url("http://example.com/avatar-3005.png")
-                .status(FileStatus.ACTIVE)
-                .createdAt(java.time.LocalDateTime.now())
-                .build();
-        fileMapper.insert(avatar);
+        Long fileId = 3005L;
+        File avatar = File.reconstruct(
+                fileId,
+                "avatar-3005.png",
+                FileType.AVATAR,
+                "http://example.com/avatar-3005.png",
+                FileStatus.ACTIVE,
+                LocalDateTime.now());
+        when(fileDomainService.getFileById(fileId)).thenReturn(avatar);
 
-        userInfoAppService.updateAvatar(user.getId(), new UserInfoCommands.UpdateAvatarCommand(avatar.getId()));
+        userInfoAppService.updateAvatar(user.getId(), new UserInfoCommands.UpdateAvatarCommand(fileId));
 
         User updated = userRepository.findById(user.getId()).orElseThrow();
-        assertEquals(avatar.getId(), updated.getAvatarId());
+        assertEquals(fileId, updated.getAvatarId());
     }
 
     @Test
     @DisplayName("updateAvatar: 文件类型不匹配应抛异常")
     void updateAvatar_wrongFileType_shouldThrow() {
         User user = createUser("2024003006", memberRoleId);
-        FileDO normalImg = FileDO.builder()
-                .name("normal-3006.png")
-                .type(FileType.NORMAL_IMG)
-                .url("http://example.com/normal-3006.png")
-                .status(FileStatus.ACTIVE)
-                .createdAt(java.time.LocalDateTime.now())
-                .build();
-        fileMapper.insert(normalImg);
+        Long fileId = 3006L;
+        File normalImg = File.reconstruct(
+                fileId,
+                "normal-3006.png",
+                FileType.NORMAL_IMG,
+                "http://example.com/normal-3006.png",
+                FileStatus.ACTIVE,
+                LocalDateTime.now());
+        when(fileDomainService.getFileById(fileId)).thenReturn(normalImg);
 
         assertThrows(
                 BadRequest.class,
                 () -> userInfoAppService.updateAvatar(
                         user.getId(),
-                        new UserInfoCommands.UpdateAvatarCommand(normalImg.getId())));
+                        new UserInfoCommands.UpdateAvatarCommand(fileId)));
     }
 
     @Test
     @DisplayName("updateAvatar: 文件不存在应抛异常")
     void updateAvatar_fileNotFound_shouldThrow() {
         User user = createUser("2024003007", memberRoleId);
+        Long fileId = -1L;
+        when(fileDomainService.getFileById(fileId)).thenReturn(null);
 
         assertThrows(
                 DataNotFound.class,
-                () -> userInfoAppService.updateAvatar(user.getId(), new UserInfoCommands.UpdateAvatarCommand(-1L)));
+                () -> userInfoAppService.updateAvatar(user.getId(), new UserInfoCommands.UpdateAvatarCommand(fileId)));
     }
 
     @Test
@@ -288,6 +296,7 @@ class UserInfoAppServiceImplIntegrationTest extends BaseIntegrationTest {
         User updated = userRepository.findById(user.getId()).orElseThrow();
         assertTrue(passwordEncoder.matches("newPassword", updated.getPassword()));
         assertFalse(changePasswordStateService.exists(token));
+        verify(authTokenService).revokeAllUserTokens(user.getId());
     }
 
     @Test

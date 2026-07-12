@@ -4,25 +4,19 @@ import com.bluenet.web.BaseIntegrationTest;
 import com.bluenet.web.api.dto.user.ChangeEmailRequestDTO;
 import com.bluenet.web.api.dto.user.ChangePasswordRequestDTO;
 import com.bluenet.web.api.dto.user.SendEmailVerificationCodeRequestDTO;
+import com.bluenet.web.api.dto.user.TabCountsDTO;
 import com.bluenet.web.api.dto.user.UpdateAvatarRequestDTO;
 import com.bluenet.web.api.dto.user.UpdateProfileRequestDTO;
+import com.bluenet.web.api.dto.user.UserInfo;
 import com.bluenet.web.api.dto.user.VerifyPasswordRequestDTO;
-import com.bluenet.web.application.message.MessageDispatcher;
-import com.bluenet.web.domain.model.entity.File;
-import com.bluenet.web.domain.model.entity.User;
-import com.bluenet.web.domain.model.entity.UserExperience;
-import com.bluenet.web.domain.model.entity.VerifyCode;
-import com.bluenet.web.domain.model.enumerate.ExperienceType;
-import com.bluenet.web.domain.repository.FileRepository;
-import com.bluenet.web.domain.repository.UserExperienceRepository;
-import com.bluenet.web.domain.repository.UserRepository;
-import com.bluenet.web.domain.repository.VerificationCodeRepository;
-import com.bluenet.web.infrastructure.security.change.ChangePasswordStateService;
+import com.bluenet.web.api.converter.userinfo.UserInfoResponseConverter;
+import com.bluenet.web.domain.exception.DataNotFound;
+import com.bluenet.web.application.result.common.TabCounts;
+import com.bluenet.web.application.result.user.UserInfoResult;
+import com.bluenet.web.application.service.UserInfoAppService;
 import com.bluenet.web.infrastructure.security.principal.WithSecurityPrincipal;
 import com.bluenet.web.infrastructure.security.util.UserCTX;
 import com.bluenet.web.testconfig.TestSecurityConfig;
-import com.bluenet.web.testsupport.fixture.FileFixture;
-import com.bluenet.web.testsupport.fixture.UserFixture;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
@@ -30,14 +24,15 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.time.LocalDateTime;
-
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -56,47 +51,49 @@ class UserProfileControllerIntegrationTest extends BaseIntegrationTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @Autowired
-    private UserRepository userRepository;
+    @MockitoBean
+    private UserInfoAppService userInfoAppService;
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-
-    @Autowired
-    private FileRepository fileRepository;
-
-    @Autowired
-    private UserExperienceRepository userExperienceRepository;
-
-    @Autowired
-    private VerificationCodeRepository verificationCodeRepository;
-
-    @Autowired
-    private ChangePasswordStateService changePasswordStateService;
-
-    @MockBean
-    private MessageDispatcher messageDispatcher;
+    @MockitoBean
+    private UserInfoResponseConverter userInfoResponseConverter;
 
     @AfterEach
     void tearDown() {
         UserCTX.clear();
     }
 
-    private User saveMemberUser() {
-        return UserFixture.member("2024001001").save(userRepository, passwordEncoder);
-    }
-
     @Test
-    @WithSecurityPrincipal(roleId = 3L, roleType = "MEMBER")
+    @WithSecurityPrincipal(userId = 1L, roleId = 3L, roleType = "MEMBER")
     void getMyInfo_authenticated_returnsUserInfo() throws Exception {
-        User user = saveMemberUser();
+        UserInfoResult result = new UserInfoResult(
+                1L,
+                "测试用户",
+                "测试昵称",
+                "计算机学院",
+                "计算机科学与技术",
+                "2024",
+                "test@example.com",
+                100L,
+                "MEMBER",
+                null,
+                null,
+                null,
+                null,
+                null);
+        UserInfo userInfo = UserInfo.builder()
+                .id(1L)
+                .username("测试用户")
+                .email("test@example.com")
+                .build();
+        when(userInfoAppService.getMyInfo(1L)).thenReturn(result);
+        when(userInfoResponseConverter.toDTO(any(UserInfoResult.class))).thenReturn(userInfo);
 
         mockMvc.perform(get("/api/v1/user/info"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200))
-                .andExpect(jsonPath("$.data.id").value(user.getId()))
-                .andExpect(jsonPath("$.data.username").value(user.getUsername()))
-                .andExpect(jsonPath("$.data.email").value(user.getEmail()));
+                .andExpect(jsonPath("$.data.id").value(1))
+                .andExpect(jsonPath("$.data.username").value("测试用户"))
+                .andExpect(jsonPath("$.data.email").value("test@example.com"));
     }
 
     @Test
@@ -107,9 +104,9 @@ class UserProfileControllerIntegrationTest extends BaseIntegrationTest {
     }
 
     @Test
-    @WithSecurityPrincipal(roleId = 3L, roleType = "MEMBER")
+    @WithSecurityPrincipal(userId = 1L, roleId = 3L, roleType = "MEMBER")
     void updateProfile_authenticated_returnsOk() throws Exception {
-        saveMemberUser();
+        doNothing().when(userInfoAppService).updateProfile(any(Long.class), any());
 
         UpdateProfileRequestDTO request = new UpdateProfileRequestDTO();
         request.setNickname("新昵称");
@@ -138,26 +135,16 @@ class UserProfileControllerIntegrationTest extends BaseIntegrationTest {
     }
 
     @Test
-    @WithSecurityPrincipal(roleId = 3L, roleType = "MEMBER")
+    @WithSecurityPrincipal(userId = 1L, roleId = 3L, roleType = "MEMBER")
     void getTabCounts_authenticated_returnsCounts() throws Exception {
-        User user = saveMemberUser();
-
-        UserExperience project = UserExperience.create(
-                user.getId(),
-                ExperienceType.PROJECT,
-                "项目经历",
-                "{}",
-                null,
-                null);
-        UserExperience competition = UserExperience.create(
-                user.getId(),
-                ExperienceType.COMPETITION,
-                "竞赛经历",
-                "{}",
-                null,
-                null);
-        userExperienceRepository.save(project);
-        userExperienceRepository.save(competition);
+        TabCounts tabCounts = new TabCounts(1, 1, 0);
+        TabCountsDTO dto = TabCountsDTO.builder()
+                .projects(1)
+                .competitions(1)
+                .internships(0)
+                .build();
+        when(userInfoAppService.getTabCounts(1L)).thenReturn(tabCounts);
+        when(userInfoResponseConverter.toTabCountsDTO(any(TabCounts.class))).thenReturn(dto);
 
         mockMvc.perform(get("/api/v1/user/tab-counts"))
                 .andExpect(status().isOk())
@@ -175,12 +162,12 @@ class UserProfileControllerIntegrationTest extends BaseIntegrationTest {
     }
 
     @Test
-    @WithSecurityPrincipal(roleId = 3L, roleType = "MEMBER")
+    @WithSecurityPrincipal(userId = 1L, roleId = 3L, roleType = "MEMBER")
     void sendEmailVerificationCode_authenticated_returnsOk() throws Exception {
-        User user = saveMemberUser();
+        doNothing().when(userInfoAppService).sendEmailVerificationCode(any());
 
         SendEmailVerificationCodeRequestDTO request = new SendEmailVerificationCodeRequestDTO();
-        request.setEmail(user.getEmail());
+        request.setEmail("test@example.com");
         request.setScene("change-email-original");
 
         mockMvc.perform(
@@ -206,22 +193,9 @@ class UserProfileControllerIntegrationTest extends BaseIntegrationTest {
     }
 
     @Test
-    @WithSecurityPrincipal(roleId = 3L, roleType = "MEMBER")
+    @WithSecurityPrincipal(userId = 1L, roleId = 3L, roleType = "MEMBER")
     void changeEmail_withValidCodes_returnsOk() throws Exception {
-        User user = saveMemberUser();
-
-        VerifyCode originalCode = VerifyCode.create(
-                user.getEmail(),
-                "123456",
-                LocalDateTime.now().plusMinutes(5),
-                "change-email-original");
-        VerifyCode newCode = VerifyCode.create(
-                "new@example.com",
-                "654321",
-                LocalDateTime.now().plusMinutes(5),
-                "change-email-new");
-        verificationCodeRepository.save(originalCode);
-        verificationCodeRepository.save(newCode);
+        doNothing().when(userInfoAppService).changeEmail(any(Long.class), any());
 
         ChangeEmailRequestDTO request = new ChangeEmailRequestDTO();
         request.setOriginalEmailVerifyCode("123456");
@@ -252,9 +226,9 @@ class UserProfileControllerIntegrationTest extends BaseIntegrationTest {
     }
 
     @Test
-    @WithSecurityPrincipal(roleId = 3L, roleType = "MEMBER")
+    @WithSecurityPrincipal(userId = 1L, roleId = 3L, roleType = "MEMBER")
     void verifyCurrentPassword_correct_returnsToken() throws Exception {
-        saveMemberUser();
+        when(userInfoAppService.verifyCurrentPassword(any())).thenReturn("verify-token");
 
         VerifyPasswordRequestDTO request = new VerifyPasswordRequestDTO();
         request.setCurrentPassword("password");
@@ -265,7 +239,7 @@ class UserProfileControllerIntegrationTest extends BaseIntegrationTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200))
-                .andExpect(jsonPath("$.data").isString());
+                .andExpect(jsonPath("$.data").value("verify-token"));
     }
 
     @Test
@@ -282,13 +256,12 @@ class UserProfileControllerIntegrationTest extends BaseIntegrationTest {
     }
 
     @Test
-    @WithSecurityPrincipal(roleId = 3L, roleType = "MEMBER")
+    @WithSecurityPrincipal(userId = 1L, roleId = 3L, roleType = "MEMBER")
     void changePassword_withValidToken_returnsOk() throws Exception {
-        User user = saveMemberUser();
-        String token = changePasswordStateService.create(user.getId());
+        doNothing().when(userInfoAppService).changePassword(any());
 
         ChangePasswordRequestDTO changeRequest = new ChangePasswordRequestDTO();
-        changeRequest.setToken(token);
+        changeRequest.setToken("token");
         changeRequest.setNewPassword("newPassword");
         changeRequest.setConfirmPassword("newPassword");
 
@@ -316,15 +289,12 @@ class UserProfileControllerIntegrationTest extends BaseIntegrationTest {
     }
 
     @Test
-    @WithSecurityPrincipal(roleId = 3L, roleType = "MEMBER")
+    @WithSecurityPrincipal(userId = 1L, roleId = 3L, roleType = "MEMBER")
     void updateAvatar_authenticated_returnsOk() throws Exception {
-        User user = saveMemberUser();
-        File avatar = FileFixture.avatar("avatar.png");
-        avatar.setUrl("http://example.com/avatar.png");
-        File savedAvatar = fileRepository.save(avatar);
+        doNothing().when(userInfoAppService).updateAvatar(any(Long.class), any());
 
         UpdateAvatarRequestDTO request = new UpdateAvatarRequestDTO();
-        request.setFileId(savedAvatar.getId());
+        request.setFileId(100L);
 
         mockMvc.perform(
                 put("/api/v1/user/avatar")
@@ -335,9 +305,11 @@ class UserProfileControllerIntegrationTest extends BaseIntegrationTest {
     }
 
     @Test
-    @WithSecurityPrincipal(roleId = 3L, roleType = "MEMBER")
+    @WithSecurityPrincipal(userId = 1L, roleId = 3L, roleType = "MEMBER")
     void updateAvatar_nonExistentFile_returnsNotFound() throws Exception {
-        saveMemberUser();
+        doThrow(new DataNotFound("文件不存在"))
+                .when(userInfoAppService)
+                .updateAvatar(any(Long.class), any());
 
         UpdateAvatarRequestDTO request = new UpdateAvatarRequestDTO();
         request.setFileId(9999L);

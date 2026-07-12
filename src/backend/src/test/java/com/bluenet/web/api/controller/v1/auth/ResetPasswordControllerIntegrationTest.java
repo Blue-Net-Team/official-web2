@@ -6,16 +6,8 @@ import com.bluenet.web.api.dto.auth.SendResetCodeRequestDTO;
 import com.bluenet.web.api.dto.auth.VerifyEmailRequestDTO;
 import com.bluenet.web.api.dto.auth.VerifyResetCodeRequestDTO;
 import com.bluenet.web.api.dto.auth.VerifyStudentRequestDTO;
-import com.bluenet.web.application.message.MessageDispatcher;
-import com.bluenet.web.domain.model.entity.User;
-import com.bluenet.web.domain.model.entity.VerifyCode;
-import com.bluenet.web.domain.model.enumerate.Gender;
-import com.bluenet.web.domain.model.enumerate.RoleType;
-import com.bluenet.web.domain.repository.UserRepository;
-import com.bluenet.web.domain.service.VerificationCodeDomainService;
-import com.bluenet.web.infrastructure.repository.dataobject.RoleDO;
-import com.bluenet.web.infrastructure.repository.mapper.RoleMapper;
-import com.bluenet.web.infrastructure.security.reset.ResetPasswordStateService;
+import com.bluenet.web.application.result.resetpassword.ResetPasswordResult;
+import com.bluenet.web.application.service.ResetPasswordAppService;
 import com.bluenet.web.infrastructure.security.util.UserCTX;
 import com.bluenet.web.testconfig.TestSecurityConfig;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -25,19 +17,16 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.MediaType;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.time.LocalDateTime;
 import java.util.Objects;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -62,25 +51,10 @@ class ResetPasswordControllerIntegrationTest extends BaseIntegrationTest {
     private ObjectMapper objectMapper;
 
     @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private RoleMapper roleMapper;
-
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-
-    @Autowired
-    private ResetPasswordStateService resetPasswordStateService;
-
-    @Autowired
     private StringRedisTemplate redisTemplate;
 
-    @MockBean
-    private VerificationCodeDomainService verificationCodeDomainService;
-
-    @MockBean
-    private MessageDispatcher messageDispatcher;
+    @MockitoBean
+    private ResetPasswordAppService resetPasswordAppService;
 
     @AfterEach
     void tearDown() {
@@ -88,55 +62,17 @@ class ResetPasswordControllerIntegrationTest extends BaseIntegrationTest {
         redisTemplate.delete(Objects.requireNonNull(redisTemplate.keys("rate_limit:*")));
     }
 
-    private static final String RESET_PASSWORD_SCENE = "reset_password";
+    private static final String RESET_TOKEN = "reset-token";
     private static final String VERIFICATION_CODE = "123456";
-
-    private User createUser(String studentId) {
-        RoleDO memberRole = roleMapper.selectByName(RoleType.MEMBER.getName());
-        User user = User.create(
-                studentId,
-                studentId + "@example.com",
-                memberRole.getId(),
-                passwordEncoder.encode("oldPassword"),
-                "用户" + studentId,
-                "昵称" + studentId,
-                null,
-                null,
-                null,
-                null,
-                Gender.UNKNOWN,
-                null,
-                null,
-                null,
-                null,
-                null,
-                "REF" + studentId.substring(studentId.length() - 5),
-                null);
-        userRepository.save(user);
-        return user;
-    }
-
-    private void mockVerificationCode(String email) {
-        VerifyCode code = VerifyCode.create(
-                email,
-                VERIFICATION_CODE,
-                LocalDateTime.now().plusMinutes(5),
-                RESET_PASSWORD_SCENE);
-        when(verificationCodeDomainService.generateCode(email, RESET_PASSWORD_SCENE)).thenReturn(code);
-    }
-
-    private SendResetCodeRequestDTO sendCodeRequest(String resetToken) {
-        SendResetCodeRequestDTO requestDTO = new SendResetCodeRequestDTO();
-        requestDTO.setResetToken(resetToken);
-        return requestDTO;
-    }
 
     @Test
     @DisplayName("验证学号：存在的学号应返回 resetToken")
     void verifyStudent_withExistingStudentId_shouldReturnResetToken() throws Exception {
-        User user = createUser("2024006001");
+        when(resetPasswordAppService.verifyStudent(any()))
+                .thenReturn(new ResetPasswordResult.VerifyStudent(RESET_TOKEN));
+
         VerifyStudentRequestDTO requestDTO = new VerifyStudentRequestDTO();
-        requestDTO.setStudentId(user.getStudentId());
+        requestDTO.setStudentId("2024006001");
 
         mockMvc.perform(
                 post("/api/v1/auth/reset-password/verify-student")
@@ -144,7 +80,7 @@ class ResetPasswordControllerIntegrationTest extends BaseIntegrationTest {
                         .content(objectMapper.writeValueAsString(requestDTO)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200))
-                .andExpect(jsonPath("$.data").isNotEmpty());
+                .andExpect(jsonPath("$.data").value(RESET_TOKEN));
     }
 
     @Test
@@ -165,11 +101,12 @@ class ResetPasswordControllerIntegrationTest extends BaseIntegrationTest {
     @Test
     @DisplayName("验证邮箱：匹配的邮箱应推进流程")
     void verifyEmail_withMatchingEmail_shouldReturnOk() throws Exception {
-        User user = createUser("2024006002");
-        String token = resetPasswordStateService.create(user.getStudentId(), user.getId());
+        when(resetPasswordAppService.verifyEmail(any()))
+                .thenReturn(new ResetPasswordResult.VerifyEmail(RESET_TOKEN));
+
         VerifyEmailRequestDTO requestDTO = new VerifyEmailRequestDTO();
-        requestDTO.setResetToken(token);
-        requestDTO.setEmail(user.getEmail());
+        requestDTO.setResetToken(RESET_TOKEN);
+        requestDTO.setEmail("test@example.com");
 
         mockMvc.perform(
                 post("/api/v1/auth/reset-password/verify-email")
@@ -177,10 +114,7 @@ class ResetPasswordControllerIntegrationTest extends BaseIntegrationTest {
                         .content(objectMapper.writeValueAsString(requestDTO)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200))
-                .andExpect(jsonPath("$.data").value(token));
-
-        assertTrue(resetPasswordStateService.exists(token));
-        assertEquals("2", resetPasswordStateService.getField(token, "step"));
+                .andExpect(jsonPath("$.data").value(RESET_TOKEN));
     }
 
     @Test
@@ -201,13 +135,10 @@ class ResetPasswordControllerIntegrationTest extends BaseIntegrationTest {
     @Test
     @DisplayName("发送验证码：流程到达邮箱验证后应返回 200")
     void sendCode_afterEmailVerification_shouldReturnOk() throws Exception {
-        User user = createUser("2024006003");
-        String token = resetPasswordStateService.create(user.getStudentId(), user.getId());
-        resetPasswordStateService.update(token, java.util.Map.of("step", "2", "email", user.getEmail()));
-        mockVerificationCode(user.getEmail());
+        doNothing().when(resetPasswordAppService).sendCode(any());
 
         SendResetCodeRequestDTO requestDTO = new SendResetCodeRequestDTO();
-        requestDTO.setResetToken(token);
+        requestDTO.setResetToken(RESET_TOKEN);
 
         mockMvc.perform(
                 post("/api/v1/auth/reset-password/send-code")
@@ -215,26 +146,15 @@ class ResetPasswordControllerIntegrationTest extends BaseIntegrationTest {
                         .content(objectMapper.writeValueAsString(requestDTO)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200));
-
-        assertEquals("3", resetPasswordStateService.getField(token, "step"));
     }
 
     @Test
     @DisplayName("验证验证码：正确验证码应推进流程")
     void verifyCode_withCorrectCode_shouldReturnOk() throws Exception {
-        User user = createUser("2024006004");
-        String token = resetPasswordStateService.create(user.getStudentId(), user.getId());
-        resetPasswordStateService.update(token, java.util.Map.of("step", "2", "email", user.getEmail()));
-        mockVerificationCode(user.getEmail());
-
-        mockMvc.perform(
-                post("/api/v1/auth/reset-password/send-code")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(sendCodeRequest(token))))
-                .andExpect(status().isOk());
+        doNothing().when(resetPasswordAppService).verifyCode(any());
 
         VerifyResetCodeRequestDTO requestDTO = new VerifyResetCodeRequestDTO();
-        requestDTO.setResetToken(token);
+        requestDTO.setResetToken(RESET_TOKEN);
         requestDTO.setCode(VERIFICATION_CODE);
 
         mockMvc.perform(
@@ -243,26 +163,46 @@ class ResetPasswordControllerIntegrationTest extends BaseIntegrationTest {
                         .content(objectMapper.writeValueAsString(requestDTO)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200));
-
-        assertEquals("4", resetPasswordStateService.getField(token, "step"));
     }
 
     @Test
-    @DisplayName("重置密码：完整流程后新密码应生效")
-    void resetPassword_afterFullFlow_shouldUpdatePassword() throws Exception {
-        User user = createUser("2024006005");
-        String token = resetPasswordStateService.create(user.getStudentId(), user.getId());
-        resetPasswordStateService.update(token, java.util.Map.of("step", "2", "email", user.getEmail()));
-        mockVerificationCode(user.getEmail());
+    @DisplayName("重置密码：完整流程后新密码提交应返回 200")
+    void resetPassword_afterFullFlow_shouldReturnOk() throws Exception {
+        when(resetPasswordAppService.verifyStudent(any()))
+                .thenReturn(new ResetPasswordResult.VerifyStudent(RESET_TOKEN));
+        when(resetPasswordAppService.verifyEmail(any()))
+                .thenReturn(new ResetPasswordResult.VerifyEmail(RESET_TOKEN));
+        doNothing().when(resetPasswordAppService).sendCode(any());
+        doNothing().when(resetPasswordAppService).verifyCode(any());
+        doNothing().when(resetPasswordAppService).resetPassword(any());
 
+        VerifyStudentRequestDTO verifyStudentDTO = new VerifyStudentRequestDTO();
+        verifyStudentDTO.setStudentId("2024006005");
+        mockMvc.perform(
+                post("/api/v1/auth/reset-password/verify-student")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(verifyStudentDTO)))
+                .andExpect(status().isOk());
+
+        VerifyEmailRequestDTO verifyEmailDTO = new VerifyEmailRequestDTO();
+        verifyEmailDTO.setResetToken(RESET_TOKEN);
+        verifyEmailDTO.setEmail("test@example.com");
+        mockMvc.perform(
+                post("/api/v1/auth/reset-password/verify-email")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(verifyEmailDTO)))
+                .andExpect(status().isOk());
+
+        SendResetCodeRequestDTO sendCodeDTO = new SendResetCodeRequestDTO();
+        sendCodeDTO.setResetToken(RESET_TOKEN);
         mockMvc.perform(
                 post("/api/v1/auth/reset-password/send-code")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(sendCodeRequest(token))))
+                        .content(objectMapper.writeValueAsString(sendCodeDTO)))
                 .andExpect(status().isOk());
 
         VerifyResetCodeRequestDTO verifyCodeDTO = new VerifyResetCodeRequestDTO();
-        verifyCodeDTO.setResetToken(token);
+        verifyCodeDTO.setResetToken(RESET_TOKEN);
         verifyCodeDTO.setCode(VERIFICATION_CODE);
         mockMvc.perform(
                 post("/api/v1/auth/reset-password/verify-code")
@@ -271,7 +211,7 @@ class ResetPasswordControllerIntegrationTest extends BaseIntegrationTest {
                 .andExpect(status().isOk());
 
         ResetPasswordRequestDTO requestDTO = new ResetPasswordRequestDTO();
-        requestDTO.setResetToken(token);
+        requestDTO.setResetToken(RESET_TOKEN);
         requestDTO.setNewPassword("newEncodedPassword");
         requestDTO.setConfirmPassword("newEncodedPassword");
 
@@ -281,10 +221,6 @@ class ResetPasswordControllerIntegrationTest extends BaseIntegrationTest {
                         .content(objectMapper.writeValueAsString(requestDTO)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200));
-
-        User updated = userRepository.findById(user.getId()).orElseThrow();
-        assertTrue(passwordEncoder.matches("newEncodedPassword", updated.getPassword()));
-        assertFalse(resetPasswordStateService.exists(token));
     }
 
     @Test

@@ -9,10 +9,12 @@ import com.bluenet.web.application.service.AuthAppService;
 import com.bluenet.web.domain.exception.Unauthorized;
 import com.bluenet.web.domain.model.entity.User;
 import com.bluenet.web.domain.model.entity.VerifyCode;
+import com.bluenet.web.domain.model.enumerate.LocalLoginType;
 import com.bluenet.web.domain.model.enumerate.MessageChannel;
 import com.bluenet.web.domain.model.enumerate.RoleType;
 import com.bluenet.web.domain.repository.UserRepository;
 import com.bluenet.web.domain.repository.VerificationCodeRepository;
+import com.bluenet.web.domain.service.AuthDomainService;
 import com.bluenet.web.domain.service.GitHubOAuthService;
 import com.bluenet.web.domain.service.VerificationCodeDomainService;
 import com.bluenet.web.infrastructure.repository.mapper.RoleMapper;
@@ -27,7 +29,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDateTime;
@@ -40,7 +42,8 @@ import static org.mockito.Mockito.*;
 /**
  * AuthAppServiceImpl 集成测试。
  * <p>
- * 验证认证应用服务的登录、验证码发送、登出以及当前认证信息查询行为。
+ * 按新测试策略：真实 Repository，DomainService 中无 @Transactional 的用 @MockitoBean， 外部基础设施
+ * mock。本类验证应用服务层的编排、事务边界与响应格式。
  * </p>
  */
 @DisplayName("AuthAppServiceImpl 集成测试")
@@ -61,14 +64,17 @@ class AuthAppServiceImplIntegrationTest extends BaseIntegrationTest {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    @MockBean
+    @MockitoBean
     private MessageDispatcher messageDispatcher;
 
-    @MockBean
+    @MockitoBean
     private GitHubOAuthService gitHubOAuthService;
 
-    @MockBean
+    @MockitoBean
     private VerificationCodeDomainService verificationCodeDomainService;
+
+    @MockitoBean
+    private AuthDomainService authDomainService;
 
     @AfterEach
     void clearContext() {
@@ -82,16 +88,12 @@ class AuthAppServiceImplIntegrationTest extends BaseIntegrationTest {
                 .save(userRepository, passwordEncoder);
     }
 
-    private VerifyCode createVerifyCode(String email, String code, LocalDateTime expireAt, String scene) {
-        VerifyCode verifyCode = VerifyCode.create(email, code, expireAt, scene);
-        verificationCodeRepository.save(verifyCode);
-        return verifyCode;
-    }
-
     @Test
     @DisplayName("login: 学号与编码密码登录应返回用户ID与CSRF令牌")
     void login_withStudentIdAndEncodedPassword_shouldReturnUserIdAndCsrfToken() {
         User user = createMemberUser("2024005001");
+        when(authDomainService.checkLocalValid(user.getStudentId(), "password", LocalLoginType.STUDENT_ID))
+                .thenReturn(Optional.of(user));
         HttpServletResponse response = mock(HttpServletResponse.class);
         AuthCommands.StudentIdLoginCommand command = new AuthCommands.StudentIdLoginCommand(
                 user.getStudentId(),
@@ -108,7 +110,8 @@ class AuthAppServiceImplIntegrationTest extends BaseIntegrationTest {
     void loginWithEmail_withValidCode_shouldReturnUserIdAndCsrfToken() {
         User user = createMemberUser("2024005002");
         String code = "123456";
-        createVerifyCode(user.getEmail(), code, LocalDateTime.now().plusMinutes(5), "login");
+        when(authDomainService.checkLocalValid(user.getEmail(), code, LocalLoginType.EMAIL))
+                .thenReturn(Optional.of(user));
         HttpServletResponse response = mock(HttpServletResponse.class);
         AuthCommands.EmailLoginCommand command = new AuthCommands.EmailLoginCommand(user.getEmail(), code);
 
@@ -122,7 +125,8 @@ class AuthAppServiceImplIntegrationTest extends BaseIntegrationTest {
     @DisplayName("loginWithEmail: 无效验证码应抛出未授权异常")
     void loginWithEmail_withInvalidCode_shouldThrowUnauthorized() {
         User user = createMemberUser("2024005003");
-        createVerifyCode(user.getEmail(), "123456", LocalDateTime.now().plusMinutes(5), "login");
+        when(authDomainService.checkLocalValid(user.getEmail(), "000000", LocalLoginType.EMAIL))
+                .thenReturn(Optional.empty());
         HttpServletResponse response = mock(HttpServletResponse.class);
         AuthCommands.EmailLoginCommand command = new AuthCommands.EmailLoginCommand(user.getEmail(), "000000");
 
@@ -134,7 +138,8 @@ class AuthAppServiceImplIntegrationTest extends BaseIntegrationTest {
     void loginWithEmail_withExpiredCode_shouldThrowUnauthorized() {
         User user = createMemberUser("2024005004");
         String code = "123456";
-        createVerifyCode(user.getEmail(), code, LocalDateTime.now().minusMinutes(1), "login");
+        when(authDomainService.checkLocalValid(user.getEmail(), code, LocalLoginType.EMAIL))
+                .thenReturn(Optional.empty());
         HttpServletResponse response = mock(HttpServletResponse.class);
         AuthCommands.EmailLoginCommand command = new AuthCommands.EmailLoginCommand(user.getEmail(), code);
 
