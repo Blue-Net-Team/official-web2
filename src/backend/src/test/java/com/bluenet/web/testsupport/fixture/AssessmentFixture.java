@@ -6,8 +6,10 @@ import com.bluenet.web.domain.model.entity.AssessmentAnswer;
 import com.bluenet.web.domain.model.entity.AssessmentDecision;
 import com.bluenet.web.domain.model.entity.AssessmentJudgement;
 import com.bluenet.web.domain.model.entity.AssessmentQuestion;
+import com.bluenet.web.domain.model.entity.AssessmentScope;
 import com.bluenet.web.domain.model.entity.AssessmentSession;
 import com.bluenet.web.domain.model.entity.AssessmentTeam;
+import com.bluenet.web.domain.model.entity.AssessmentTeamMember;
 import com.bluenet.web.domain.model.entity.AssessmentTime;
 import com.bluenet.web.domain.model.entity.Audit;
 import com.bluenet.web.domain.model.entity.File;
@@ -90,6 +92,81 @@ public final class AssessmentFixture {
 
     public static AuditBuilder auditBuilder() {
         return new AuditBuilder();
+    }
+
+    /**
+     * 构造考核范围值对象。
+     *
+     * @param direction
+     *            技术方向，null 表示全局考核
+     * @param epoch
+     *            考核批次或轮次编号，0 表示最终轮
+     */
+    public static AssessmentScope scope(Direction direction, Integer epoch) {
+        return new AssessmentScope(direction, epoch);
+    }
+
+    /**
+     * 构造全局最终考核范围（direction=null, epoch=0）。
+     */
+    public static AssessmentScope globalFinalScope() {
+        return new AssessmentScope(null, 0);
+    }
+
+    /**
+     * 构造某方向的最终考核范围（epoch=0）。
+     */
+    public static AssessmentScope directionalFinalScope(Direction direction) {
+        return new AssessmentScope(direction, 0);
+    }
+
+    public static TeamMemberBuilder teamMemberBuilder() {
+        return new TeamMemberBuilder();
+    }
+
+    public static final class TeamMemberBuilder {
+
+        private Long id;
+        private Long teamId;
+        private Long userId;
+        private LocalDateTime joinedAt = TimeFixture.now();
+
+        public TeamMemberBuilder id(Long id) {
+            this.id = id;
+            return this;
+        }
+
+        public TeamMemberBuilder team(AssessmentTeam team) {
+            this.teamId = team.getId();
+            return this;
+        }
+
+        public TeamMemberBuilder teamId(Long teamId) {
+            this.teamId = teamId;
+            return this;
+        }
+
+        public TeamMemberBuilder user(User user) {
+            this.userId = user.getId();
+            return this;
+        }
+
+        public TeamMemberBuilder userId(Long userId) {
+            this.userId = userId;
+            return this;
+        }
+
+        public TeamMemberBuilder joinedAt(LocalDateTime joinedAt) {
+            this.joinedAt = joinedAt;
+            return this;
+        }
+
+        public AssessmentTeamMember build() {
+            if (id == null) {
+                return AssessmentTeamMember.create(teamId, userId);
+            }
+            return AssessmentTeamMember.reconstruct(id, teamId, userId, joinedAt);
+        }
     }
 
     public static final class TimeBuilder {
