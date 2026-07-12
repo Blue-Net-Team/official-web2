@@ -185,8 +185,8 @@ class UserInfoAppServiceImplIntegrationTest extends BaseIntegrationTest {
     }
 
     @Test
-    @DisplayName("updateProfile: 学院字段不影响已设置的 college_id")
-    void updateProfile_collegeNotFound_shouldKeepCollegeId() {
+    @DisplayName("updateProfile: 学院名不存在应抛异常")
+    void updateProfile_collegeNotFound_shouldThrow() {
         User user = createUser("2024003004", memberRoleId);
         UserInfoCommands.UpdateProfileCommand command = new UserInfoCommands.UpdateProfileCommand(
                 null,
@@ -198,10 +198,49 @@ class UserInfoAppServiceImplIntegrationTest extends BaseIntegrationTest {
                 null,
                 null);
 
+        assertThrows(DataNotFound.class, () -> userInfoAppService.updateProfile(user.getId(), command));
+    }
+
+    @Test
+    @DisplayName("updateProfile: 空字符串学院名应清空 college_id")
+    void updateProfile_collegeBlank_shouldClearCollegeId() {
+        User user = createUser("2024003013", memberRoleId);
+        UserInfoCommands.UpdateProfileCommand command = new UserInfoCommands.UpdateProfileCommand(
+                null,
+                null,
+                "",
+                null,
+                null,
+                null,
+                null,
+                null);
+
         userInfoAppService.updateProfile(user.getId(), command);
 
         User updated = userRepository.findById(user.getId()).orElseThrow();
-        assertEquals(collegeId, updated.getCollegeId());
+        assertNull(updated.getCollegeId());
+    }
+
+    @Test
+    @DisplayName("updateProfile: 成员修改学院名应更新 college_id")
+    void updateProfile_member_shouldUpdateCollegeByName() {
+        User user = createUser("2024003014", memberRoleId);
+        College newCollege = CollegeFixture.saveCollege(collegeRepository, "软件学院");
+
+        UserInfoCommands.UpdateProfileCommand command = new UserInfoCommands.UpdateProfileCommand(
+                null,
+                null,
+                "软件学院",
+                null,
+                null,
+                null,
+                null,
+                null);
+
+        userInfoAppService.updateProfile(user.getId(), command);
+
+        User updated = userRepository.findById(user.getId()).orElseThrow();
+        assertEquals(newCollege.getId(), updated.getCollegeId());
     }
 
     @Test

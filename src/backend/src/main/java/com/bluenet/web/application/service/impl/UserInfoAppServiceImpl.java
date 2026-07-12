@@ -104,9 +104,20 @@ public class UserInfoAppServiceImpl implements UserInfoAppService {
         User currentUser = userRepository.findById(userId)
                 .orElseThrow(() -> new Unauthorized("用户不存在"));
         validateProfileUpdatePermission(currentUser, command);
+        Long collegeId = null;
+        if (command.college() != null) {
+            if (command.college().isEmpty()) {
+                currentUser.clearCollegeId();
+            } else {
+                College college = collegeRepository.findByName(command.college())
+                        .orElseThrow(() -> new DataNotFound("学院不存在"));
+                collegeId = college.getId();
+            }
+        }
         currentUser.updateProfile(
                 command.username(),
                 command.nickname(),
+                collegeId,
                 command.major(),
                 command.direction(),
                 command.gender(),

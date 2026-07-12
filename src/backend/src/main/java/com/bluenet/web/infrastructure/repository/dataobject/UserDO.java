@@ -57,6 +57,7 @@ public class UserDO {
     /**
      * 用户、报名或统计记录所属学院标识。
      */
+    @TableField(updateStrategy = FieldStrategy.ALWAYS)
     private Long collegeId;
     /**
      * 用户所在专业。

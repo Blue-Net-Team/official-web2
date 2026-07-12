@@ -123,6 +123,13 @@ public class User {
     }
 
     /**
+     * 清除用户所属学院关联。
+     */
+    public void clearCollegeId() {
+        this.collegeId = null;
+    }
+
+    /**
      * 绑定 GitHub 账号
      *
      * @param githubId
@@ -156,6 +163,8 @@ public class User {
      *            用户姓名或登录名
      * @param nickname
      *            用户昵称
+     * @param collegeId
+     *            学院标识，null 表示不更新
      * @param major
      *            专业名称
      * @param direction
@@ -167,13 +176,16 @@ public class User {
      * @param qrcodeId
      *            二维码文件标识，null 表示不更新
      */
-    public void updateProfile(String username, String nickname, String major,
+    public void updateProfile(String username, String nickname, Long collegeId, String major,
             Direction direction, Gender gender, String bio, Long qrcodeId) {
         if (username != null) {
             this.username = username;
         }
         if (nickname != null) {
             this.nickname = nickname;
+        }
+        if (collegeId != null) {
+            this.collegeId = collegeId;
         }
         if (major != null) {
             this.major = major;
