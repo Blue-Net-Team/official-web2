@@ -16,6 +16,7 @@ import com.bluenet.web.domain.repository.AssessmentQuestionRepository;
 import com.bluenet.web.domain.repository.AssessmentTeamRepository;
 import com.bluenet.web.domain.repository.AssessmentTimeRepository;
 import com.bluenet.web.domain.repository.UserRepository;
+import com.bluenet.web.domain.service.AssessmentTeamDomainService;
 import com.bluenet.web.testsupport.fixture.AssessmentFixture;
 import com.bluenet.web.testsupport.fixture.TimeFixture;
 import com.bluenet.web.testsupport.fixture.UserFixture;
@@ -23,8 +24,13 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.when;
 
 /**
  * AssessmentTeamAppServiceImpl 集成测试。
@@ -57,6 +63,9 @@ class AssessmentTeamAppServiceImplIntegrationTest extends BaseIntegrationTest {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @MockitoBean
+    private AssessmentTeamDomainService assessmentTeamDomainService;
+
     private long sequence = 1000;
 
     private String nextStudentId(String prefix) {
@@ -79,11 +88,66 @@ class AssessmentTeamAppServiceImplIntegrationTest extends BaseIntegrationTest {
                 .save(assessmentTimeRepository);
     }
 
+    private void stubPrepareNewTeam(Long userId, AssessmentTime time, String name, String inviteCode) {
+        AssessmentTeam team = AssessmentTeam.create(time.getId(), userId, name, inviteCode);
+        when(assessmentTeamDomainService.prepareNewTeam(eq(userId), any(AssessmentTime.class), eq(name)))
+                .thenReturn(team);
+    }
+
+    private void stubPrepareNewTeamThrows(Long userId, AssessmentTime time, String name, RuntimeException exception) {
+        when(assessmentTeamDomainService.prepareNewTeam(eq(userId), any(AssessmentTime.class), eq(name)))
+                .thenThrow(exception);
+    }
+
+    private void stubPrepareLeaderTransfer(Long userId, Long newLeaderId) {
+        when(assessmentTeamDomainService.prepareLeaderTransfer(eq(userId), any(AssessmentTeam.class), eq(newLeaderId)))
+                .thenAnswer(invocation -> {
+                    AssessmentTeam team = invocation.getArgument(1);
+                    team.updateLeader(newLeaderId);
+                    return team;
+                });
+    }
+
+    private void stubPrepareLeaderTransferThrows(Long userId, Long newLeaderId, RuntimeException exception) {
+        doThrow(exception).when(assessmentTeamDomainService)
+                .prepareLeaderTransfer(eq(userId), any(AssessmentTeam.class), eq(newLeaderId));
+    }
+
+    private void stubPrepareDisband(Long userId) {
+        when(assessmentTeamDomainService.prepareDisband(eq(userId), any(AssessmentTeam.class)))
+                .thenAnswer(invocation -> {
+                    AssessmentTeam team = invocation.getArgument(1);
+                    team.disband();
+                    return team;
+                });
+    }
+
+    private void stubPrepareDisbandThrows(Long userId, RuntimeException exception) {
+        doThrow(exception).when(assessmentTeamDomainService)
+                .prepareDisband(eq(userId), any(AssessmentTeam.class));
+    }
+
+    private void stubValidateCanJoinTeamThrows(Long userId, RuntimeException exception) {
+        doThrow(exception).when(assessmentTeamDomainService)
+                .validateCanJoinTeam(eq(userId), any(AssessmentTeam.class), any(AssessmentTime.class));
+    }
+
+    private void stubValidateCanLeaveTeamThrows(Long userId, RuntimeException exception) {
+        doThrow(exception).when(assessmentTeamDomainService)
+                .validateCanLeaveTeam(eq(userId), any(AssessmentTeam.class));
+    }
+
+    private void stubValidateTeamPreviewableThrows(RuntimeException exception) {
+        doThrow(exception).when(assessmentTeamDomainService)
+                .validateTeamPreviewable(any(AssessmentTeam.class), any(AssessmentTime.class));
+    }
+
     @Test
     @DisplayName("createTeam: 允许组队的考核应成功创建队伍")
     void createTeam_shouldCreate() {
         User leader = createCandidate(Direction.COMPUTER_VISION, 2024);
         AssessmentTime time = createTeamAllowedTime(Direction.COMPUTER_VISION, 2024);
+        stubPrepareNewTeam(leader.getId(), time, "无敌队", "CODE01");
 
         TeamResult result = assessmentTeamAppService.createTeam(leader.getId(), time.getId(), "无敌队");
 
@@ -103,6 +167,7 @@ class AssessmentTeamAppServiceImplIntegrationTest extends BaseIntegrationTest {
                 .grade(2024)
                 .withinNow()
                 .save(assessmentTimeRepository);
+        stubPrepareNewTeamThrows(leader.getId(), time, "队", new BadRequest("该考核不允许组队"));
 
         assertThrows(
                 BadRequest.class,
@@ -114,6 +179,9 @@ class AssessmentTeamAppServiceImplIntegrationTest extends BaseIntegrationTest {
     void createTeam_alreadyInTeam_shouldThrowBadRequest() {
         User leader = createCandidate(Direction.COMPUTER_VISION, 2024);
         AssessmentTime time = createTeamAllowedTime(Direction.COMPUTER_VISION, 2024);
+        stubPrepareNewTeam(leader.getId(), time, "队一", "CODE01");
+        stubPrepareNewTeamThrows(leader.getId(), time, "队二", new BadRequest("您已加入该考核的队伍"));
+
         assessmentTeamAppService.createTeam(leader.getId(), time.getId(), "队一");
 
         assertThrows(
@@ -130,6 +198,7 @@ class AssessmentTeamAppServiceImplIntegrationTest extends BaseIntegrationTest {
                 .assessmentTime(time)
                 .save(assessmentQuestionRepository);
         AssessmentFixture.answerBuilder().user(leader).question(question).save(assessmentAnswerRepository);
+        stubPrepareNewTeamThrows(leader.getId(), time, "队", new BadRequest("您已提交过个人答案，无法创建队伍"));
 
         assertThrows(
                 BadRequest.class,
@@ -147,6 +216,7 @@ class AssessmentTeamAppServiceImplIntegrationTest extends BaseIntegrationTest {
                 .endTime(TimeFixture.minusMinutes(5))
                 .allowTeam()
                 .save(assessmentTimeRepository);
+        stubPrepareNewTeamThrows(leader.getId(), time, "队", new BadRequest("考核时间已结束"));
 
         assertThrows(
                 BadRequest.class,
@@ -158,6 +228,7 @@ class AssessmentTeamAppServiceImplIntegrationTest extends BaseIntegrationTest {
     void previewTeam_shouldReturnPreview() {
         User leader = createCandidate(Direction.COMPUTER_VISION, 2024);
         AssessmentTime time = createTeamAllowedTime(Direction.COMPUTER_VISION, 2024);
+        stubPrepareNewTeam(leader.getId(), time, "预览队", "CODE02");
         TeamResult team = assessmentTeamAppService.createTeam(leader.getId(), time.getId(), "预览队");
 
         TeamPreviewResult result = assessmentTeamAppService.previewTeam(team.inviteCode());
@@ -174,6 +245,9 @@ class AssessmentTeamAppServiceImplIntegrationTest extends BaseIntegrationTest {
     void previewTeam_disbanded_shouldThrowBadRequest() {
         User leader = createCandidate(Direction.COMPUTER_VISION, 2024);
         AssessmentTime time = createTeamAllowedTime(Direction.COMPUTER_VISION, 2024);
+        stubPrepareNewTeam(leader.getId(), time, "解散队", "CODE03");
+        stubPrepareDisband(leader.getId());
+        stubValidateTeamPreviewableThrows(new BadRequest("该队伍已解散"));
         TeamResult team = assessmentTeamAppService.createTeam(leader.getId(), time.getId(), "解散队");
         assessmentTeamAppService.disbandTeam(leader.getId(), team.id());
 
@@ -186,6 +260,7 @@ class AssessmentTeamAppServiceImplIntegrationTest extends BaseIntegrationTest {
         User leader = createCandidate(Direction.COMPUTER_VISION, 2024);
         User member = createCandidate(Direction.COMPUTER_VISION, 2024);
         AssessmentTime time = createTeamAllowedTime(Direction.COMPUTER_VISION, 2024);
+        stubPrepareNewTeam(leader.getId(), time, "扩容队", "CODE04");
         TeamResult team = assessmentTeamAppService.createTeam(leader.getId(), time.getId(), "扩容队");
 
         TeamResult result = assessmentTeamAppService.joinTeam(member.getId(), team.inviteCode());
@@ -200,8 +275,10 @@ class AssessmentTeamAppServiceImplIntegrationTest extends BaseIntegrationTest {
         User leader = createCandidate(Direction.COMPUTER_VISION, 2024);
         User member = createCandidate(Direction.COMPUTER_VISION, 2024);
         AssessmentTime time = createTeamAllowedTime(Direction.COMPUTER_VISION, 2024);
+        stubPrepareNewTeam(leader.getId(), time, "队一", "CODE05");
         TeamResult team = assessmentTeamAppService.createTeam(leader.getId(), time.getId(), "队一");
         assessmentTeamAppService.joinTeam(member.getId(), team.inviteCode());
+        stubValidateCanJoinTeamThrows(member.getId(), new BadRequest("您已加入该考核的队伍"));
 
         assertThrows(
                 BadRequest.class,
@@ -214,6 +291,7 @@ class AssessmentTeamAppServiceImplIntegrationTest extends BaseIntegrationTest {
         User leader = createCandidate(Direction.COMPUTER_VISION, 2024);
         User member = createCandidate(Direction.COMPUTER_VISION, 2024);
         AssessmentTime time = createTeamAllowedTime(Direction.COMPUTER_VISION, 2024);
+        stubPrepareNewTeam(leader.getId(), time, "离队队", "CODE06");
         TeamResult team = assessmentTeamAppService.createTeam(leader.getId(), time.getId(), "离队队");
         assessmentTeamAppService.joinTeam(member.getId(), team.inviteCode());
 
@@ -228,7 +306,9 @@ class AssessmentTeamAppServiceImplIntegrationTest extends BaseIntegrationTest {
     void leaveTeam_leaderCannotLeave_shouldThrowForbidden() {
         User leader = createCandidate(Direction.COMPUTER_VISION, 2024);
         AssessmentTime time = createTeamAllowedTime(Direction.COMPUTER_VISION, 2024);
+        stubPrepareNewTeam(leader.getId(), time, "队", "CODE07");
         TeamResult team = assessmentTeamAppService.createTeam(leader.getId(), time.getId(), "队");
+        stubValidateCanLeaveTeamThrows(leader.getId(), new Forbidden("队长不能离开队伍，请先转让队长或解散队伍"));
 
         assertThrows(Forbidden.class, () -> assessmentTeamAppService.leaveTeam(leader.getId(), team.id()));
     }
@@ -239,8 +319,10 @@ class AssessmentTeamAppServiceImplIntegrationTest extends BaseIntegrationTest {
         User leader = createCandidate(Direction.COMPUTER_VISION, 2024);
         User member = createCandidate(Direction.COMPUTER_VISION, 2024);
         AssessmentTime time = createTeamAllowedTime(Direction.COMPUTER_VISION, 2024);
+        stubPrepareNewTeam(leader.getId(), time, "转让队", "CODE08");
         TeamResult team = assessmentTeamAppService.createTeam(leader.getId(), time.getId(), "转让队");
         assessmentTeamAppService.joinTeam(member.getId(), team.inviteCode());
+        stubPrepareLeaderTransfer(leader.getId(), member.getId());
 
         TeamResult result = assessmentTeamAppService.transferLeader(leader.getId(), team.id(), member.getId());
 
@@ -253,8 +335,10 @@ class AssessmentTeamAppServiceImplIntegrationTest extends BaseIntegrationTest {
         User leader = createCandidate(Direction.COMPUTER_VISION, 2024);
         User member = createCandidate(Direction.COMPUTER_VISION, 2024);
         AssessmentTime time = createTeamAllowedTime(Direction.COMPUTER_VISION, 2024);
+        stubPrepareNewTeam(leader.getId(), time, "队", "CODE09");
         TeamResult team = assessmentTeamAppService.createTeam(leader.getId(), time.getId(), "队");
         assessmentTeamAppService.joinTeam(member.getId(), team.inviteCode());
+        stubPrepareLeaderTransferThrows(member.getId(), leader.getId(), new Forbidden("只有队长可以转让队长"));
 
         assertThrows(
                 Forbidden.class,
@@ -266,7 +350,9 @@ class AssessmentTeamAppServiceImplIntegrationTest extends BaseIntegrationTest {
     void disbandTeam_shouldDisband() {
         User leader = createCandidate(Direction.COMPUTER_VISION, 2024);
         AssessmentTime time = createTeamAllowedTime(Direction.COMPUTER_VISION, 2024);
+        stubPrepareNewTeam(leader.getId(), time, "解散队", "CODE10");
         TeamResult team = assessmentTeamAppService.createTeam(leader.getId(), time.getId(), "解散队");
+        stubPrepareDisband(leader.getId());
 
         assessmentTeamAppService.disbandTeam(leader.getId(), team.id());
 
@@ -280,8 +366,10 @@ class AssessmentTeamAppServiceImplIntegrationTest extends BaseIntegrationTest {
         User leader = createCandidate(Direction.COMPUTER_VISION, 2024);
         User member = createCandidate(Direction.COMPUTER_VISION, 2024);
         AssessmentTime time = createTeamAllowedTime(Direction.COMPUTER_VISION, 2024);
+        stubPrepareNewTeam(leader.getId(), time, "队", "CODE11");
         TeamResult team = assessmentTeamAppService.createTeam(leader.getId(), time.getId(), "队");
         assessmentTeamAppService.joinTeam(member.getId(), team.inviteCode());
+        stubPrepareDisbandThrows(member.getId(), new Forbidden("只有队长可以解散队伍"));
 
         assertThrows(Forbidden.class, () -> assessmentTeamAppService.disbandTeam(member.getId(), team.id()));
     }
@@ -291,6 +379,7 @@ class AssessmentTeamAppServiceImplIntegrationTest extends BaseIntegrationTest {
     void getMyTeam_shouldReturnTeam() {
         User leader = createCandidate(Direction.COMPUTER_VISION, 2024);
         AssessmentTime time = createTeamAllowedTime(Direction.COMPUTER_VISION, 2024);
+        stubPrepareNewTeam(leader.getId(), time, "我的队", "CODE12");
         TeamResult team = assessmentTeamAppService.createTeam(leader.getId(), time.getId(), "我的队");
 
         TeamResult result = assessmentTeamAppService.getMyTeam(leader.getId(), time.getId());

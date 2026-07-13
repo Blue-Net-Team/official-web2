@@ -21,21 +21,32 @@ import com.bluenet.web.domain.repository.AssessmentQuestionRepository;
 import com.bluenet.web.domain.repository.AssessmentTeamRepository;
 import com.bluenet.web.domain.repository.AssessmentTimeRepository;
 import com.bluenet.web.domain.repository.UserRepository;
+import com.bluenet.web.domain.service.AssessmentAnswerDomainService;
 import com.bluenet.web.testsupport.fixture.AssessmentFixture;
 import com.bluenet.web.testsupport.fixture.TimeFixture;
 import com.bluenet.web.testsupport.fixture.UserFixture;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentMatchers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+import static org.mockito.Mockito.when;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * AssessmentAnswerAppServiceImpl 集成测试。
  *
  * <p>
- * 验证考核答案应用服务的提交、更新、查询及客观题自动评判逻辑。
+ * 验证考核答案应用服务的提交、更新、查询及与领域服务的协作逻辑。 因
+ * {@link com.bluenet.web.domain.service.impl.AssessmentAnswerDomainServiceImpl}
+ * 未加 {@code @Transactional}，本测试通过 {@link MockitoBean} 将其替换为 mock，
+ * 仅验证应用层对仓储与领域服务的编排行为。
  * </p>
  */
 @DisplayName("AssessmentAnswerAppServiceImpl 集成测试")
@@ -61,6 +72,9 @@ class AssessmentAnswerAppServiceImplIntegrationTest extends BaseIntegrationTest 
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @MockitoBean
+    private AssessmentAnswerDomainService assessmentAnswerDomainService;
 
     private long sequence = 1000;
 
@@ -92,6 +106,147 @@ class AssessmentAnswerAppServiceImplIntegrationTest extends BaseIntegrationTest 
                 .save(assessmentTimeRepository);
     }
 
+    private AssessmentAnswer buildAnswer(User user, AssessmentQuestion question, String content,
+            ProgrammingLanguage language, Long fileId, Long teamId) {
+        return AssessmentAnswer.create(user.getId(), question.getId(), content, language, fileId, teamId);
+    }
+
+    private List<AssessmentAnswer> buildMemberAnswers(AssessmentAnswer leaderAnswer, AssessmentQuestion question,
+            String content, ProgrammingLanguage language, Long fileId, Long... memberUserIds) {
+        List<AssessmentAnswer> answers = new ArrayList<>();
+        for (Long memberUserId : memberUserIds) {
+            answers.add(
+                    AssessmentAnswer.create(
+                            memberUserId,
+                            question.getId(),
+                            content,
+                            language,
+                            fileId,
+                            leaderAnswer.getTeamId()));
+        }
+        return answers;
+    }
+
+    private void stubPrepareAnswer(User user, AssessmentQuestion question, String content,
+            ProgrammingLanguage language, Long fileId, Long teamId) {
+        AssessmentAnswer answer = buildAnswer(user, question, content, language, fileId, teamId);
+        when(
+                assessmentAnswerDomainService.prepareAnswer(
+                        ArgumentMatchers.any(User.class),
+                        ArgumentMatchers.any(AssessmentQuestion.class),
+                        ArgumentMatchers.any(),
+                        ArgumentMatchers.any(),
+                        ArgumentMatchers.any()))
+                                .thenReturn(answer);
+    }
+
+    private void stubPrepareAnswerThenThrow(RuntimeException exception) {
+        when(
+                assessmentAnswerDomainService.prepareAnswer(
+                        ArgumentMatchers.any(User.class),
+                        ArgumentMatchers.any(AssessmentQuestion.class),
+                        ArgumentMatchers.any(),
+                        ArgumentMatchers.any(),
+                        ArgumentMatchers.any()))
+                                .thenThrow(exception);
+    }
+
+    private void stubPrepareAnswerReturnThenThrow(AssessmentAnswer answer, RuntimeException exception) {
+        when(
+                assessmentAnswerDomainService.prepareAnswer(
+                        ArgumentMatchers.any(User.class),
+                        ArgumentMatchers.any(AssessmentQuestion.class),
+                        ArgumentMatchers.any(),
+                        ArgumentMatchers.any(),
+                        ArgumentMatchers.any()))
+                                .thenReturn(answer)
+                                .thenThrow(exception);
+    }
+
+    private void stubPrepareTeamMemberAnswers(AssessmentAnswer leaderAnswer, AssessmentQuestion question,
+            String content, ProgrammingLanguage language, Long fileId, Long... memberUserIds) {
+        List<AssessmentAnswer> answers = buildMemberAnswers(
+                leaderAnswer,
+                question,
+                content,
+                language,
+                fileId,
+                memberUserIds);
+        when(
+                assessmentAnswerDomainService.prepareTeamMemberAnswers(
+                        ArgumentMatchers.any(AssessmentAnswer.class),
+                        ArgumentMatchers.any(AssessmentQuestion.class),
+                        ArgumentMatchers.any(),
+                        ArgumentMatchers.any(),
+                        ArgumentMatchers.any()))
+                                .thenReturn(answers);
+    }
+
+    private void stubPrepareTeamMemberAnswersEmpty() {
+        when(
+                assessmentAnswerDomainService.prepareTeamMemberAnswers(
+                        ArgumentMatchers.any(AssessmentAnswer.class),
+                        ArgumentMatchers.any(AssessmentQuestion.class),
+                        ArgumentMatchers.any(),
+                        ArgumentMatchers.any(),
+                        ArgumentMatchers.any()))
+                                .thenReturn(Collections.emptyList());
+    }
+
+    private void stubPrepareObjectiveJudgementNull() {
+        when(
+                assessmentAnswerDomainService.prepareObjectiveJudgement(
+                        ArgumentMatchers.any(AssessmentAnswer.class),
+                        ArgumentMatchers.any(AssessmentQuestion.class)))
+                                .thenReturn(null);
+    }
+
+    private void stubPrepareUpdatedAnswers(User user, AssessmentQuestion question, String content,
+            ProgrammingLanguage language, Long fileId) {
+        AssessmentAnswer existingAnswer = assessmentAnswerRepository
+                .findByUserIdAndQuestionId(user.getId(), question.getId())
+                .orElseThrow();
+        List<AssessmentAnswer> answers = new ArrayList<>();
+        answers.add(
+                AssessmentAnswer.reconstruct(
+                        existingAnswer.getId(),
+                        existingAnswer.getUserId(),
+                        existingAnswer.getQuestionId(),
+                        content,
+                        language,
+                        fileId,
+                        existingAnswer.getSubmitTime(),
+                        existingAnswer.getTeamId()));
+        if (existingAnswer.getTeamId() != null) {
+            List<AssessmentAnswer> teamAnswers = assessmentAnswerRepository
+                    .findByTeamIdAndQuestionId(existingAnswer.getTeamId(), question.getId());
+            for (AssessmentAnswer teamAnswer : teamAnswers) {
+                if (teamAnswer.getUserId().equals(user.getId())) {
+                    continue;
+                }
+                answers.add(
+                        AssessmentAnswer.reconstruct(
+                                teamAnswer.getId(),
+                                teamAnswer.getUserId(),
+                                teamAnswer.getQuestionId(),
+                                content,
+                                language,
+                                fileId,
+                                teamAnswer.getSubmitTime(),
+                                teamAnswer.getTeamId()));
+            }
+        }
+        when(
+                assessmentAnswerDomainService.prepareUpdatedAnswers(
+                        ArgumentMatchers.any(User.class),
+                        ArgumentMatchers.any(AssessmentQuestion.class),
+                        ArgumentMatchers.any(AssessmentAnswer.class),
+                        ArgumentMatchers.any(),
+                        ArgumentMatchers.any(),
+                        ArgumentMatchers.any()))
+                                .thenReturn(answers);
+    }
+
     @Test
     @DisplayName("createAnswer: 文件上传题队长应能提交答案")
     void createAnswer_fileUploadLeader_shouldCreate() {
@@ -104,6 +259,10 @@ class AssessmentAnswerAppServiceImplIntegrationTest extends BaseIntegrationTest 
                 .assessmentTime(time)
                 .leader(leader)
                 .save(assessmentTeamRepository);
+
+        stubPrepareAnswer(leader, question, "答案", ProgrammingLanguage.CPP, null, 1L);
+        stubPrepareTeamMemberAnswersEmpty();
+        stubPrepareObjectiveJudgementNull();
 
         AssessmentAnswerResult result = assessmentAnswerAppService.createAnswer(
                 new AssessmentAnswerCommands.CreateAssessmentAnswerCommand(
@@ -123,6 +282,10 @@ class AssessmentAnswerAppServiceImplIntegrationTest extends BaseIntegrationTest 
                 .assessmentTime(time)
                 .singleChoice("A", "A", "B", "C")
                 .save(assessmentQuestionRepository);
+
+        stubPrepareAnswer(user, question, "A", ProgrammingLanguage.CPP, null, null);
+        stubPrepareTeamMemberAnswersEmpty();
+        stubPrepareObjectiveJudgementNull();
 
         AssessmentAnswerResult result = assessmentAnswerAppService.createAnswer(
                 new AssessmentAnswerCommands.CreateAssessmentAnswerCommand(
@@ -154,6 +317,12 @@ class AssessmentAnswerAppServiceImplIntegrationTest extends BaseIntegrationTest 
         AssessmentQuestion question = AssessmentFixture.questionBuilder()
                 .assessmentTime(time)
                 .save(assessmentQuestionRepository);
+
+        AssessmentAnswer answer = buildAnswer(user, question, "答案", ProgrammingLanguage.CPP, null, null);
+        stubPrepareAnswerReturnThenThrow(answer, new DataConflict("已经提交过该题目的答案"));
+        stubPrepareTeamMemberAnswersEmpty();
+        stubPrepareObjectiveJudgementNull();
+
         assessmentAnswerAppService.createAnswer(
                 new AssessmentAnswerCommands.CreateAssessmentAnswerCommand(
                         user.getId(), question.getId(), "答案", ProgrammingLanguage.CPP, null));
@@ -179,6 +348,8 @@ class AssessmentAnswerAppServiceImplIntegrationTest extends BaseIntegrationTest 
                 .assessmentTime(time)
                 .save(assessmentQuestionRepository);
 
+        stubPrepareAnswerThenThrow(new BadRequest("考核时间已结束，无法提交答案"));
+
         assertThrows(
                 BadRequest.class,
                 () -> assessmentAnswerAppService.createAnswer(
@@ -200,6 +371,8 @@ class AssessmentAnswerAppServiceImplIntegrationTest extends BaseIntegrationTest 
                 .leader(leader)
                 .save(assessmentTeamRepository);
         assessmentTeamRepository.addMember(team.getId(), member.getId());
+
+        stubPrepareAnswerThenThrow(new Forbidden("只有队长可以提交文件上传题的答案"));
 
         assertThrows(
                 Forbidden.class,
@@ -223,6 +396,17 @@ class AssessmentAnswerAppServiceImplIntegrationTest extends BaseIntegrationTest 
                 .save(assessmentTeamRepository);
         assessmentTeamRepository.addMember(team.getId(), member.getId());
 
+        stubPrepareAnswer(leader, question, "队伍答案", ProgrammingLanguage.CPP, null, team.getId());
+        AssessmentAnswer leaderAnswer = buildAnswer(
+                leader,
+                question,
+                "队伍答案",
+                ProgrammingLanguage.CPP,
+                null,
+                team.getId());
+        stubPrepareTeamMemberAnswers(leaderAnswer, question, "队伍答案", ProgrammingLanguage.CPP, null, member.getId());
+        stubPrepareObjectiveJudgementNull();
+
         assessmentAnswerAppService.createAnswer(
                 new AssessmentAnswerCommands.CreateAssessmentAnswerCommand(
                         leader.getId(), question.getId(), "队伍答案", ProgrammingLanguage.CPP, null));
@@ -238,9 +422,17 @@ class AssessmentAnswerAppServiceImplIntegrationTest extends BaseIntegrationTest 
         AssessmentQuestion question = AssessmentFixture.questionBuilder()
                 .assessmentTime(time)
                 .save(assessmentQuestionRepository);
+
+        stubPrepareAnswer(user, question, "旧答案", ProgrammingLanguage.CPP, null, null);
+        stubPrepareTeamMemberAnswersEmpty();
+        stubPrepareObjectiveJudgementNull();
+
         assessmentAnswerAppService.createAnswer(
                 new AssessmentAnswerCommands.CreateAssessmentAnswerCommand(
                         user.getId(), question.getId(), "旧答案", ProgrammingLanguage.CPP, null));
+
+        stubPrepareUpdatedAnswers(user, question, "新答案", ProgrammingLanguage.JAVA, null);
+        stubPrepareObjectiveJudgementNull();
 
         AssessmentAnswerResult result = assessmentAnswerAppService.updateAnswer(
                 new AssessmentAnswerCommands.UpdateAssessmentAnswerCommand(
@@ -264,9 +456,24 @@ class AssessmentAnswerAppServiceImplIntegrationTest extends BaseIntegrationTest 
                 .leader(leader)
                 .save(assessmentTeamRepository);
         assessmentTeamRepository.addMember(team.getId(), member.getId());
+
+        stubPrepareAnswer(leader, question, "旧答案", ProgrammingLanguage.CPP, null, team.getId());
+        AssessmentAnswer leaderAnswer = buildAnswer(
+                leader,
+                question,
+                "旧答案",
+                ProgrammingLanguage.CPP,
+                null,
+                team.getId());
+        stubPrepareTeamMemberAnswers(leaderAnswer, question, "旧答案", ProgrammingLanguage.CPP, null, member.getId());
+        stubPrepareObjectiveJudgementNull();
+
         assessmentAnswerAppService.createAnswer(
                 new AssessmentAnswerCommands.CreateAssessmentAnswerCommand(
                         leader.getId(), question.getId(), "旧答案", ProgrammingLanguage.CPP, null));
+
+        stubPrepareUpdatedAnswers(leader, question, "新答案", ProgrammingLanguage.JAVA, null);
+        stubPrepareObjectiveJudgementNull();
 
         assessmentAnswerAppService.updateAnswer(
                 new AssessmentAnswerCommands.UpdateAssessmentAnswerCommand(
@@ -303,6 +510,11 @@ class AssessmentAnswerAppServiceImplIntegrationTest extends BaseIntegrationTest 
         AssessmentQuestion question = AssessmentFixture.questionBuilder()
                 .assessmentTime(time)
                 .save(assessmentQuestionRepository);
+
+        stubPrepareAnswer(user, question, "我的答案", ProgrammingLanguage.CPP, null, null);
+        stubPrepareTeamMemberAnswersEmpty();
+        stubPrepareObjectiveJudgementNull();
+
         assessmentAnswerAppService.createAnswer(
                 new AssessmentAnswerCommands.CreateAssessmentAnswerCommand(
                         user.getId(), question.getId(), "我的答案", ProgrammingLanguage.CPP, null));
@@ -328,6 +540,11 @@ class AssessmentAnswerAppServiceImplIntegrationTest extends BaseIntegrationTest 
                 .leader(leader)
                 .save(assessmentTeamRepository);
         assessmentTeamRepository.addMember(team.getId(), member.getId());
+
+        stubPrepareAnswer(leader, question, "队长答案", ProgrammingLanguage.CPP, null, team.getId());
+        stubPrepareTeamMemberAnswersEmpty();
+        stubPrepareObjectiveJudgementNull();
+
         assessmentAnswerAppService.createAnswer(
                 new AssessmentAnswerCommands.CreateAssessmentAnswerCommand(
                         leader.getId(), question.getId(), "队长答案", ProgrammingLanguage.CPP, null));
