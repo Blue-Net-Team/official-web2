@@ -1,4 +1,4 @@
-# Nginx 配置建议（大文件上传场景）
+# Nginx配置建议
 
 ## 背景
 
@@ -63,3 +63,7 @@ server {
 - **旧接口下线后**：将 `client_max_body_size` 从 `500M` 收紧到 `1M`，所有大文件流量已走直传 OSS，Nginx 不再承担文件传输压力。
 - **HTTPS 强制**：生产环境建议配置 `listen 443 ssl` 并启用 HSTS，防止预签名 URL 在传输过程中被劫持。
 - **OSS 域名独立**：若使用阿里云 OSS，建议将 OSS 域名（如 `oss-cn-hangzhou.aliyuncs.com`）通过 CNAME 绑定独立子域名（如 `cdn.bluenet.example`），前端直接访问该域名，不经过 Nginx。
+
+## 相关文档
+
+- [04-03-CI-CD自动部署](./04-03-CI-CD自动部署.md)
