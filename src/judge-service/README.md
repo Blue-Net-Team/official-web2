@@ -2,7 +2,7 @@
 
 `judge-service` 是一个可独立运行的 Spring Boot 服务，专门负责算法题的测试数据生成和正式判题。它通过 RabbitMQ 消费判题任务 ID，从 PostgreSQL 读取判题元数据，从独立的判题 OSS bucket（`bluenet-judge`）获取测试资产，并在 Linux 沙箱（isolate）中执行代码。
 
-完整的功能使用文档（含管理员配置、Generator 编写规范、考生作答指南）请见 [`docs/algorithm-judge-guide.md`](../../docs/algorithm-judge-guide.md)。
+完整的功能使用文档（含管理员配置、Generator 编写规范、考生作答指南）请见 [`docs/05-参考手册/05-03-算法判题指南.md`](../../docs/05-参考手册/05-03-算法判题指南.md)。
 
 ## 架构
 
