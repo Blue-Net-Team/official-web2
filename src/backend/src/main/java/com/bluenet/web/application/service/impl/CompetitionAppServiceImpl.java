@@ -213,8 +213,10 @@ public class CompetitionAppServiceImpl implements CompetitionAppService {
         if (fileId == null) {
             return;
         }
-        File file = fileDomainService.getFileById(fileId);
-        if (file == null) {
+        File file;
+        try {
+            file = fileDomainService.getFileById(fileId);
+        } catch (DataNotFound e) {
             throw new DataNotFound(fieldName + "文件不存在");
         }
         if (file.getType() != FileType.NORMAL_IMG) {
