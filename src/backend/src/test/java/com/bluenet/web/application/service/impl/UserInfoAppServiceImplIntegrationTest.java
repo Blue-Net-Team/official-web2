@@ -13,18 +13,18 @@ import com.bluenet.web.domain.model.entity.College;
 import com.bluenet.web.domain.model.entity.File;
 import com.bluenet.web.domain.model.entity.User;
 import com.bluenet.web.domain.model.enumerate.Direction;
-import com.bluenet.web.domain.model.enumerate.FileStatus;
 import com.bluenet.web.domain.model.enumerate.FileType;
 import com.bluenet.web.domain.model.enumerate.Gender;
 import com.bluenet.web.domain.model.enumerate.RoleType;
 import com.bluenet.web.domain.repository.CollegeRepository;
+import com.bluenet.web.domain.repository.FileRepository;
 import com.bluenet.web.domain.repository.UserRepository;
-import com.bluenet.web.domain.service.FileDomainService;
 import com.bluenet.web.domain.service.VerificationCodeDomainService;
 import com.bluenet.web.application.message.MessageDispatcher;
 import com.bluenet.web.infrastructure.security.auth.AuthTokenService;
 import com.bluenet.web.infrastructure.security.change.ChangePasswordStateService;
 import com.bluenet.web.testsupport.fixture.CollegeFixture;
+import com.bluenet.web.testsupport.fixture.FileFixture;
 import com.bluenet.web.testsupport.fixture.UserFixture;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -33,10 +33,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.time.LocalDateTime;
-
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.verify;
 
 /**
  * UserInfoAppServiceImpl 集成测试。
@@ -59,13 +57,13 @@ class UserInfoAppServiceImplIntegrationTest extends BaseIntegrationTest {
     private CollegeRepository collegeRepository;
 
     @Autowired
+    private FileRepository fileRepository;
+
+    @Autowired
     private PasswordEncoder passwordEncoder;
 
     @Autowired
     private ChangePasswordStateService changePasswordStateService;
-
-    @MockitoBean
-    private FileDomainService fileDomainService;
 
     @MockitoBean
     private AuthTokenService authTokenService;
@@ -268,41 +266,25 @@ class UserInfoAppServiceImplIntegrationTest extends BaseIntegrationTest {
     @DisplayName("updateAvatar: 应更新头像文件ID")
     void updateAvatar_shouldUpdateAvatarId() {
         User user = createUser("2024003005", memberRoleId);
-        Long fileId = 3005L;
-        File avatar = File.reconstruct(
-                fileId,
-                "avatar-3005.png",
-                FileType.AVATAR,
-                "http://example.com/avatar-3005.png",
-                FileStatus.ACTIVE,
-                LocalDateTime.now());
-        when(fileDomainService.getFileById(fileId)).thenReturn(avatar);
+        File avatar = FileFixture.save(fileRepository, "avatar-3005.png", FileType.AVATAR);
 
-        userInfoAppService.updateAvatar(user.getId(), new UserInfoCommands.UpdateAvatarCommand(fileId));
+        userInfoAppService.updateAvatar(user.getId(), new UserInfoCommands.UpdateAvatarCommand(avatar.getId()));
 
         User updated = userRepository.findById(user.getId()).orElseThrow();
-        assertEquals(fileId, updated.getAvatarId());
+        assertEquals(avatar.getId(), updated.getAvatarId());
     }
 
     @Test
     @DisplayName("updateAvatar: 文件类型不匹配应抛异常")
     void updateAvatar_wrongFileType_shouldThrow() {
         User user = createUser("2024003006", memberRoleId);
-        Long fileId = 3006L;
-        File normalImg = File.reconstruct(
-                fileId,
-                "normal-3006.png",
-                FileType.NORMAL_IMG,
-                "http://example.com/normal-3006.png",
-                FileStatus.ACTIVE,
-                LocalDateTime.now());
-        when(fileDomainService.getFileById(fileId)).thenReturn(normalImg);
+        File normalImg = FileFixture.save(fileRepository, "normal-3006.png", FileType.NORMAL_IMG);
 
         assertThrows(
                 BadRequest.class,
                 () -> userInfoAppService.updateAvatar(
                         user.getId(),
-                        new UserInfoCommands.UpdateAvatarCommand(fileId)));
+                        new UserInfoCommands.UpdateAvatarCommand(normalImg.getId())));
     }
 
     @Test
@@ -310,7 +292,6 @@ class UserInfoAppServiceImplIntegrationTest extends BaseIntegrationTest {
     void updateAvatar_fileNotFound_shouldThrow() {
         User user = createUser("2024003007", memberRoleId);
         Long fileId = -1L;
-        when(fileDomainService.getFileById(fileId)).thenReturn(null);
 
         assertThrows(
                 DataNotFound.class,

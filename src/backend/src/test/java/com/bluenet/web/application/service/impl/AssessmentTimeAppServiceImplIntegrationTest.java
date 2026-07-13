@@ -18,6 +18,7 @@ import com.bluenet.web.domain.repository.AssessmentSessionRepository;
 import com.bluenet.web.domain.repository.AssessmentTeamRepository;
 import com.bluenet.web.domain.repository.AssessmentTimeRepository;
 import com.bluenet.web.domain.repository.UserRepository;
+import com.bluenet.web.domain.service.AssessmentDecisionDomainService;
 import com.bluenet.web.testsupport.fixture.AssessmentFixture;
 import com.bluenet.web.testsupport.fixture.AssessmentFixture.AssessmentScenario;
 import com.bluenet.web.testsupport.fixture.TimeFixture;
@@ -27,6 +28,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.time.LocalDateTime;
 
@@ -65,6 +67,9 @@ class AssessmentTimeAppServiceImplIntegrationTest extends BaseIntegrationTest {
 
     @Autowired
     private AssessmentDecisionRepository assessmentDecisionRepository;
+
+    @MockitoBean
+    private AssessmentDecisionDomainService assessmentDecisionDomainService;
 
     @Autowired
     private UserRepository userRepository;

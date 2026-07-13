@@ -20,6 +20,7 @@ import com.bluenet.web.domain.repository.AssessmentQuestionRepository;
 import com.bluenet.web.domain.repository.AssessmentTimeRepository;
 import com.bluenet.web.domain.repository.FileRepository;
 import com.bluenet.web.domain.repository.UserRepository;
+import com.bluenet.web.domain.service.AssessmentDecisionDomainService;
 import com.bluenet.web.infrastructure.security.principal.RoleTypeResolver;
 import com.bluenet.web.infrastructure.security.principal.SecurityPrincipal;
 import com.bluenet.web.infrastructure.security.util.UserCTX;
@@ -33,6 +34,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.math.BigDecimal;
 import java.util.Collections;
@@ -72,6 +74,9 @@ class AssessmentQuestionAppServiceImplIntegrationTest extends BaseIntegrationTes
 
     @Autowired
     private RoleTypeResolver roleTypeResolver;
+
+    @MockitoBean
+    private AssessmentDecisionDomainService assessmentDecisionDomainService;
 
     private long sequence = 1000;
 
