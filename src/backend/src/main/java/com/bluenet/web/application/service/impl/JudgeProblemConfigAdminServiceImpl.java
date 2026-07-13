@@ -5,14 +5,15 @@ import com.bluenet.web.application.result.judge.JudgeStandardSolutionResult;
 import com.bluenet.web.application.result.judge.JudgeTestcaseConfigResult;
 import com.bluenet.web.application.command.judge.JudgeProblemConfigCommands;
 import com.bluenet.web.application.service.JudgeProblemConfigAdminService;
+import com.bluenet.web.domain.model.entity.JudgeLanguageLimit;
+import com.bluenet.web.domain.model.entity.JudgeProblemConfig;
+import com.bluenet.web.domain.model.entity.JudgeStandardSolution;
+import com.bluenet.web.domain.model.entity.JudgeTestcaseConfig;
+import com.bluenet.web.domain.repository.JudgeLanguageLimitRepository;
+import com.bluenet.web.domain.repository.JudgeProblemConfigRepository;
+import com.bluenet.web.domain.repository.JudgeStandardSolutionRepository;
+import com.bluenet.web.domain.repository.JudgeTestcaseConfigRepository;
 import com.bluenet.web.infrastructure.judge.JudgeTestDataGenerationPublisher;
-import com.bluenet.web.infrastructure.repository.dataobject.JudgeProblemConfigDO;
-import com.bluenet.web.infrastructure.repository.dataobject.JudgeStandardSolutionDO;
-import com.bluenet.web.infrastructure.repository.dataobject.JudgeTestcaseConfigDO;
-import com.bluenet.web.infrastructure.repository.mapper.JudgeLanguageLimitMapper;
-import com.bluenet.web.infrastructure.repository.mapper.JudgeProblemConfigMapper;
-import com.bluenet.web.infrastructure.repository.mapper.JudgeStandardSolutionMapper;
-import com.bluenet.web.infrastructure.repository.mapper.JudgeTestcaseConfigMapper;
 import com.bluenet.web.infrastructure.storage.JudgeAssetStorage;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -47,14 +48,14 @@ public class JudgeProblemConfigAdminServiceImpl implements JudgeProblemConfigAdm
     private final JudgeAssetStorage judgeAssetStorage;
     /** 测试数据生成消息发布器。 */
     private final JudgeTestDataGenerationPublisher testDataGenerationPublisher;
-    /** 判题配置 mapper。 */
-    private final JudgeProblemConfigMapper judgeProblemConfigMapper;
-    /** 标准解 mapper。 */
-    private final JudgeStandardSolutionMapper judgeStandardSolutionMapper;
-    /** 测试用例生成配置 mapper。 */
-    private final JudgeTestcaseConfigMapper judgeTestcaseConfigMapper;
-    /** 语言资源限制 mapper。 */
-    private final JudgeLanguageLimitMapper judgeLanguageLimitMapper;
+    /** 判题配置仓储。 */
+    private final JudgeProblemConfigRepository judgeProblemConfigRepository;
+    /** 标准解仓储。 */
+    private final JudgeStandardSolutionRepository judgeStandardSolutionRepository;
+    /** 测试用例生成配置仓储。 */
+    private final JudgeTestcaseConfigRepository judgeTestcaseConfigRepository;
+    /** 语言资源限制仓储。 */
+    private final JudgeLanguageLimitRepository judgeLanguageLimitRepository;
 
     /**
      * 新增或替换某道算法题的当前判题配置。
@@ -77,18 +78,17 @@ public class JudgeProblemConfigAdminServiceImpl implements JudgeProblemConfigAdm
                 .formatted(basePrefix, generatorHash, extension(command.generatorLanguage()));
         judgeAssetStorage.put(generatorKey, generatorBytes, CONTENT_TYPE_TEXT);
 
-        Long configId = judgeProblemConfigMapper.upsertCurrentConfig(
-                JudgeProblemConfigDO.builder()
-                        .questionId(questionId)
-                        .generatorLanguage(command.generatorLanguage())
-                        .generatorObjectKey(generatorKey)
-                        .generatorObjectHash(generatorHash)
-                        .primaryStandardLanguage(command.primaryStandardLanguage())
-                        .benchmarkRepeatTimes(command.benchmarkRepeatTimes())
-                        .marginMultiplier(command.marginMultiplier())
-                        .minExtraMs(command.minExtraMs())
-                        .roundToMs(command.roundToMs())
-                        .build());
+        JudgeProblemConfig config = JudgeProblemConfig.create(
+                questionId,
+                command.generatorLanguage(),
+                generatorKey,
+                generatorHash,
+                command.primaryStandardLanguage(),
+                command.benchmarkRepeatTimes(),
+                command.marginMultiplier(),
+                command.minExtraMs(),
+                command.roundToMs());
+        Long configId = judgeProblemConfigRepository.upsertCurrentConfig(config);
         replaceStandardSolutions(configId, questionId, basePrefix, command.standardSolutions());
         replaceTestcaseConfigs(configId, command.testcases());
 
@@ -96,7 +96,7 @@ public class JudgeProblemConfigAdminServiceImpl implements JudgeProblemConfigAdm
         String manifestHash = sha256(manifestBytes);
         String manifestKey = "%s/manifest/%s.json".formatted(basePrefix, manifestHash);
         judgeAssetStorage.put(manifestKey, manifestBytes, CONTENT_TYPE_JSON);
-        judgeProblemConfigMapper.updateManifest(configId, manifestKey, manifestHash);
+        judgeProblemConfigRepository.updateManifest(configId, manifestKey, manifestHash);
 
         return findByQuestionId(questionId)
                 .orElseThrow(() -> new IllegalStateException("判题配置保存后查询失败"));
@@ -111,24 +111,23 @@ public class JudgeProblemConfigAdminServiceImpl implements JudgeProblemConfigAdm
      */
     @Override
     public Optional<JudgeProblemConfigResult> findByQuestionId(Long questionId) {
-        Optional<JudgeProblemConfigDO> config = Optional
-                .ofNullable(judgeProblemConfigMapper.selectByQuestionId(questionId));
-        return config.map(
-                row -> new JudgeProblemConfigResult(
-                        row.getId(),
-                        row.getQuestionId(),
-                        row.getGeneratorLanguage(),
-                        row.getGeneratorObjectKey(),
-                        readSource(row.getGeneratorObjectKey()),
-                        row.getManifestObjectKey(),
-                        row.getPrimaryStandardLanguage(),
-                        row.getStatus(),
-                        row.getBenchmarkRepeatTimes(),
-                        row.getMarginMultiplier().doubleValue(),
-                        row.getMinExtraMs(),
-                        row.getRoundToMs(),
-                        standardSolutions(row.getId()),
-                        testcaseConfigs(row.getId())));
+        return judgeProblemConfigRepository.findByQuestionId(questionId)
+                .map(
+                        config -> new JudgeProblemConfigResult(
+                                config.getId(),
+                                config.getQuestionId(),
+                                config.getGeneratorLanguage(),
+                                config.getGeneratorObjectKey(),
+                                readSource(config.getGeneratorObjectKey()),
+                                config.getManifestObjectKey(),
+                                config.getPrimaryStandardLanguage(),
+                                config.getStatus(),
+                                config.getBenchmarkRepeatTimes(),
+                                config.getMarginMultiplier().doubleValue(),
+                                config.getMinExtraMs(),
+                                config.getRoundToMs(),
+                                standardSolutions(config.getId()),
+                                testcaseConfigs(config.getId())));
     }
 
     /**
@@ -141,9 +140,9 @@ public class JudgeProblemConfigAdminServiceImpl implements JudgeProblemConfigAdm
     @Override
     @Transactional
     public void requestGeneration(Long questionId) {
-        Long configId = Optional.ofNullable(judgeProblemConfigMapper.selectIdByQuestionId(questionId))
+        Long configId = judgeProblemConfigRepository.findIdByQuestionId(questionId)
                 .orElseThrow(() -> new IllegalArgumentException("判题配置不存在"));
-        judgeProblemConfigMapper.markGenerating(configId);
+        judgeProblemConfigRepository.markGenerating(configId);
         // 生成任务只传 configId，Judge Service 自行读取 manifest、generator 和标准解元数据。
         testDataGenerationPublisher.publish(configId);
     }
@@ -165,16 +164,17 @@ public class JudgeProblemConfigAdminServiceImpl implements JudgeProblemConfigAdm
             Long questionId,
             String language,
             JudgeProblemConfigCommands.ConfirmLanguageLimitCommand command) {
-        Long configId = Optional.ofNullable(judgeProblemConfigMapper.selectIdByQuestionId(questionId))
+        Long configId = judgeProblemConfigRepository.findIdByQuestionId(questionId)
                 .orElseThrow(() -> new IllegalArgumentException("判题配置不存在"));
-        judgeLanguageLimitMapper.upsertConfirmedLimit(
+        JudgeLanguageLimit limit = JudgeLanguageLimit.createConfirmed(
                 questionId,
                 language,
                 command.timeLimitMs(),
                 command.memoryLimitKb(),
                 command.outputLimitKb(),
                 configId);
-        judgeProblemConfigMapper.markReadyIfGenerated(configId);
+        judgeLanguageLimitRepository.upsertConfirmedLimit(limit);
+        judgeProblemConfigRepository.markReadyIfGenerated(configId);
     }
 
     /**
@@ -211,23 +211,22 @@ public class JudgeProblemConfigAdminServiceImpl implements JudgeProblemConfigAdm
             Long questionId,
             String basePrefix,
             List<JudgeProblemConfigCommands.StandardSolutionCommand> solutions) {
-        judgeStandardSolutionMapper.deleteByConfigId(configId);
+        judgeStandardSolutionRepository.deleteByConfigId(configId);
         for (JudgeProblemConfigCommands.StandardSolutionCommand solution : solutions) {
             byte[] sourceBytes = solution.source().getBytes(StandardCharsets.UTF_8);
             String hash = sha256(sourceBytes);
             String objectKey = "%s/standard/%s-%s.%s"
                     .formatted(basePrefix, solution.language(), hash, extension(solution.language()));
             judgeAssetStorage.put(objectKey, sourceBytes, CONTENT_TYPE_TEXT);
-            judgeStandardSolutionMapper.insert(
-                    JudgeStandardSolutionDO.builder()
-                            .configId(configId)
-                            .questionId(questionId)
-                            .language(solution.language())
-                            .objectKey(objectKey)
-                            .objectHash(hash)
-                            .primarySolution(Boolean.TRUE.equals(solution.primarySolution()))
-                            .benchmarkStatus("PENDING")
-                            .build());
+            JudgeStandardSolution entity = JudgeStandardSolution.create(
+                    configId,
+                    questionId,
+                    solution.language(),
+                    objectKey,
+                    hash,
+                    Boolean.TRUE.equals(solution.primarySolution()),
+                    "PENDING");
+            judgeStandardSolutionRepository.save(entity);
         }
     }
 
@@ -243,19 +242,18 @@ public class JudgeProblemConfigAdminServiceImpl implements JudgeProblemConfigAdm
     private void replaceTestcaseConfigs(
             Long configId,
             List<JudgeProblemConfigCommands.TestcaseConfigCommand> testcases) {
-        judgeTestcaseConfigMapper.deleteByConfigId(configId);
+        judgeTestcaseConfigRepository.deleteByConfigId(configId);
         for (JudgeProblemConfigCommands.TestcaseConfigCommand testcase : testcases) {
-            judgeTestcaseConfigMapper.insertConfig(
-                    JudgeTestcaseConfigDO.builder()
-                            .configId(configId)
-                            .caseNo(testcase.caseNo())
-                            .category(testcase.category())
-                            .generatorArgs(json(testcase.generatorArgs()))
-                            .weight(testcase.weight())
-                            .hidden(testcase.hidden() == null || testcase.hidden())
-                            .sample(Boolean.TRUE.equals(testcase.sample()))
-                            .description(testcase.description())
-                            .build());
+            JudgeTestcaseConfig entity = JudgeTestcaseConfig.create(
+                    configId,
+                    testcase.caseNo(),
+                    testcase.category(),
+                    json(testcase.generatorArgs()),
+                    testcase.weight(),
+                    testcase.hidden() == null || testcase.hidden(),
+                    Boolean.TRUE.equals(testcase.sample()),
+                    testcase.description());
+            judgeTestcaseConfigRepository.save(entity);
         }
     }
 
@@ -324,7 +322,7 @@ public class JudgeProblemConfigAdminServiceImpl implements JudgeProblemConfigAdm
      * @return 标准解结果对象列表。
      */
     private List<JudgeStandardSolutionResult> standardSolutions(Long configId) {
-        return judgeStandardSolutionMapper.selectByConfigId(configId)
+        return judgeStandardSolutionRepository.findByConfigId(configId)
                 .stream()
                 .map(
                         solution -> new JudgeStandardSolutionResult(
@@ -368,7 +366,7 @@ public class JudgeProblemConfigAdminServiceImpl implements JudgeProblemConfigAdm
      * @return 测试用例配置结果对象列表。
      */
     private List<JudgeTestcaseConfigResult> testcaseConfigs(Long configId) {
-        return judgeTestcaseConfigMapper.selectByConfigId(configId)
+        return judgeTestcaseConfigRepository.findByConfigId(configId)
                 .stream()
                 .map(
                         testcase -> new JudgeTestcaseConfigResult(

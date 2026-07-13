@@ -16,17 +16,17 @@ import com.bluenet.web.domain.model.enumerate.QuestionType;
 import com.bluenet.web.domain.model.enumerate.RoleType;
 import com.bluenet.web.domain.model.entity.AssessmentTime;
 import com.bluenet.web.domain.model.entity.File;
+import com.bluenet.web.domain.model.entity.JudgeProblemConfig;
 import com.bluenet.web.domain.model.entity.User;
 import com.bluenet.web.domain.model.vo.question_content.AlgorithmContent;
 import com.bluenet.web.domain.repository.AssessmentAnswerRepository;
 import com.bluenet.web.domain.repository.AssessmentQuestionRepository;
 import com.bluenet.web.domain.repository.AssessmentTimeRepository;
 import com.bluenet.web.domain.repository.FileRepository;
+import com.bluenet.web.domain.repository.JudgeProblemConfigRepository;
 import com.bluenet.web.domain.service.AssessmentDecisionDomainService;
 import com.bluenet.web.domain.util.GradeCalculator;
-import com.bluenet.web.infrastructure.repository.mapper.JudgeProblemConfigMapper;
 import com.bluenet.web.infrastructure.security.principal.RoleTypeResolver;
-import com.bluenet.web.infrastructure.repository.dataobject.JudgeProblemConfigDO;
 import com.bluenet.web.infrastructure.storage.JudgeAssetStorage;
 import com.bluenet.web.infrastructure.security.util.UserCTX;
 import lombok.RequiredArgsConstructor;
@@ -61,7 +61,7 @@ public class AssessmentQuestionAppServiceImpl implements AssessmentQuestionAppSe
     private final AssessmentAnswerRepository assessmentAnswerRepository;
     private final RoleTypeResolver roleTypeResolver;
     private final FileRepository fileRepository;
-    private final JudgeProblemConfigMapper judgeProblemConfigMapper;
+    private final JudgeProblemConfigRepository judgeProblemConfigRepository;
     private final JudgeAssetStorage judgeAssetStorage;
     private final AssessmentDecisionDomainService assessmentDecisionDomainService;
 
@@ -170,19 +170,19 @@ public class AssessmentQuestionAppServiceImpl implements AssessmentQuestionAppSe
                 .orElseThrow(() -> new DataNotFound("考题不存在，ID: " + id));
 
         if (existing.getQuestionType() == QuestionType.ALGORITHM) {
-            JudgeProblemConfigDO config = judgeProblemConfigMapper.selectByQuestionId(id);
-            if (config != null) {
-                deleteJudgeAssets(config);
-                judgeProblemConfigMapper.deleteByQuestionId(id);
-                log.info("delete judge problem config for questionId={}", id);
-            }
+            judgeProblemConfigRepository.findByQuestionId(id)
+                    .ifPresent(config -> {
+                        deleteJudgeAssets(config);
+                        judgeProblemConfigRepository.deleteByQuestionId(id);
+                        log.info("delete judge problem config for questionId={}", id);
+                    });
         }
 
         assessmentQuestionRepository.deleteById(id);
         log.info("delete question success id {}", id);
     }
 
-    private void deleteJudgeAssets(JudgeProblemConfigDO config) {
+    private void deleteJudgeAssets(JudgeProblemConfig config) {
         Long questionId = config.getQuestionId();
 
         try {

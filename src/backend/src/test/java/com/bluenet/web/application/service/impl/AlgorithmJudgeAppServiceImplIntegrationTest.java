@@ -25,6 +25,8 @@ import com.bluenet.web.domain.model.enumerate.ProgrammingLanguage;
 import com.bluenet.web.domain.model.enumerate.QuestionType;
 import com.bluenet.web.domain.model.enumerate.ReviewerType;
 import com.bluenet.web.domain.model.vo.question_content.AlgorithmContent;
+import com.bluenet.web.domain.model.entity.JudgeLanguageLimit;
+import com.bluenet.web.domain.model.entity.JudgeProblemConfig;
 import com.bluenet.web.domain.repository.AlgorithmJudgeCaseResultRepository;
 import com.bluenet.web.domain.repository.AlgorithmJudgeJobRepository;
 import com.bluenet.web.domain.repository.AssessmentAnswerRepository;
@@ -33,10 +35,9 @@ import com.bluenet.web.domain.repository.AssessmentQuestionRepository;
 import com.bluenet.web.domain.repository.AssessmentSessionRepository;
 import com.bluenet.web.domain.repository.AssessmentTimeRepository;
 import com.bluenet.web.domain.repository.UserRepository;
+import com.bluenet.web.domain.repository.JudgeLanguageLimitRepository;
+import com.bluenet.web.domain.repository.JudgeProblemConfigRepository;
 import com.bluenet.web.infrastructure.judge.AlgorithmJudgeJobPublisher;
-import com.bluenet.web.infrastructure.repository.dataobject.JudgeProblemConfigDO;
-import com.bluenet.web.infrastructure.repository.mapper.JudgeLanguageLimitMapper;
-import com.bluenet.web.infrastructure.repository.mapper.JudgeProblemConfigMapper;
 import com.bluenet.web.testsupport.fixture.AssessmentFixture;
 import com.bluenet.web.testsupport.fixture.SecurityContextFixture;
 import com.bluenet.web.testsupport.fixture.TimeFixture;
@@ -97,10 +98,10 @@ class AlgorithmJudgeAppServiceImplIntegrationTest extends BaseIntegrationTest {
     private PasswordEncoder passwordEncoder;
 
     @Autowired
-    private JudgeProblemConfigMapper judgeProblemConfigMapper;
+    private JudgeProblemConfigRepository judgeProblemConfigRepository;
 
     @Autowired
-    private JudgeLanguageLimitMapper judgeLanguageLimitMapper;
+    private JudgeLanguageLimitRepository judgeLanguageLimitRepository;
 
     @MockitoBean
     private AlgorithmJudgeJobPublisher algorithmJudgeJobPublisher;
@@ -172,23 +173,25 @@ class AlgorithmJudgeAppServiceImplIntegrationTest extends BaseIntegrationTest {
     }
 
     private void createConfirmedLanguageLimit(Long questionId, ProgrammingLanguage language) {
-        JudgeProblemConfigDO config = new JudgeProblemConfigDO();
-        config.setQuestionId(questionId);
-        config.setGeneratorLanguage("cpp");
-        config.setGeneratorObjectKey("generator");
-        config.setGeneratorObjectHash("hash");
-        config.setBenchmarkRepeatTimes(5);
-        config.setMarginMultiplier(new BigDecimal("1.5000"));
-        config.setMinExtraMs(50);
-        config.setRoundToMs(50);
-        Long configId = judgeProblemConfigMapper.upsertCurrentConfig(config);
-        judgeLanguageLimitMapper.upsertConfirmedLimit(
+        JudgeProblemConfig config = JudgeProblemConfig.create(
+                questionId,
+                "cpp",
+                "generator",
+                "hash",
+                null,
+                5,
+                new BigDecimal("1.5000"),
+                50,
+                50);
+        Long configId = judgeProblemConfigRepository.upsertCurrentConfig(config);
+        JudgeLanguageLimit limit = JudgeLanguageLimit.createConfirmed(
                 questionId,
                 language.getValue(),
                 1000,
                 65536,
                 1024,
                 configId);
+        judgeLanguageLimitRepository.upsertConfirmedLimit(limit);
     }
 
     private void loginAs(User user) {

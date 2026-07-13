@@ -27,8 +27,8 @@ import com.bluenet.web.domain.repository.AssessmentSessionRepository;
 import com.bluenet.web.domain.repository.AssessmentJudgementRepository;
 import com.bluenet.web.domain.repository.AssessmentQuestionRepository;
 import com.bluenet.web.domain.repository.AssessmentTimeRepository;
+import com.bluenet.web.domain.repository.JudgeLanguageLimitRepository;
 import com.bluenet.web.infrastructure.judge.AlgorithmJudgeJobPublisher;
-import com.bluenet.web.infrastructure.repository.mapper.JudgeLanguageLimitMapper;
 import com.bluenet.web.infrastructure.security.util.UserCTX;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -59,7 +59,7 @@ public class AlgorithmJudgeAppServiceImpl implements AlgorithmJudgeAppService {
     private final AlgorithmJudgeJobRepository algorithmJudgeJobRepository;
     private final AlgorithmJudgeCaseResultRepository algorithmJudgeCaseResultRepository;
     private final AlgorithmJudgeJobPublisher algorithmJudgeJobPublisher;
-    private final JudgeLanguageLimitMapper judgeLanguageLimitMapper;
+    private final JudgeLanguageLimitRepository judgeLanguageLimitRepository;
 
     /**
      * 执行算法运行。
@@ -227,8 +227,10 @@ public class AlgorithmJudgeAppServiceImpl implements AlgorithmJudgeAppService {
     }
 
     private void validateFormalLanguageLimit(Long questionId, ProgrammingLanguage language) {
-        int count = judgeLanguageLimitMapper.countConfirmedByQuestionIdAndLanguage(questionId, language.getValue());
-        if (count == 0) {
+        boolean exists = judgeLanguageLimitRepository.existsConfirmedByQuestionIdAndLanguage(
+                questionId,
+                language.getValue());
+        if (!exists) {
             throw new BadRequest("该题当前语言尚未确认正式判题资源限制：" + language.getValue());
         }
     }

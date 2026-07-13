@@ -38,23 +38,19 @@ public class ArchitectureRulesTest {
             .should(notReturnTypesWithNameEnding(VO_SUFFIX))
             .because("Repository 接口不得返回名称以 VO 结尾的类型");
 
-    // TODO: 当前
-    // AlgorithmJudgeAppServiceImpl、AssessmentQuestionAppServiceImpl、JudgeProblemConfigAdminServiceImpl
-    // 直接依赖 Mapper，待重构为 Repository 后取消注释。
-    // @ArchTest
-    // static final ArchRule applicationServicesShouldNotDependOnMappers =
-    // ArchRuleDefinition
-    // .noClasses()
-    // .that()
-    // .resideInAnyPackage(
-    // "com.bluenet.web.application.service",
-    // "com.bluenet.web.application.service.impl..")
-    // .and()
-    // .haveSimpleNameEndingWith("Impl")
-    // .should()
-    // .dependOnClassesThat()
-    // .resideInAPackage("com.bluenet.web.infrastructure.repository.mapper..")
-    // .because("ApplicationService 实现类不得直接依赖 Mapper 接口，应通过 Repository 访问数据");
+    @ArchTest
+    static final ArchRule applicationServicesShouldNotDependOnMappers = ArchRuleDefinition
+            .noClasses()
+            .that()
+            .resideInAnyPackage(
+                    "com.bluenet.web.application.service",
+                    "com.bluenet.web.application.service.impl..")
+            .and()
+            .haveSimpleNameEndingWith("Impl")
+            .should()
+            .dependOnClassesThat()
+            .resideInAPackage("com.bluenet.web.infrastructure.repository.mapper..")
+            .because("ApplicationService 实现类不得直接依赖 Mapper 接口，应通过 Repository 访问数据");
 
     @ArchTest
     static final ArchRule domainServicesShouldNotDependOnApiResponseLayer = ArchRuleDefinition
