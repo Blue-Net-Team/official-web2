@@ -1,4 +1,4 @@
-package com.bluenet.web.api.controller;
+package com.bluenet.web.architecture;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
@@ -35,7 +36,7 @@ class PermissionAnnotationConventionTest {
 
         List<String> missing = new ArrayList<>();
 
-        for (var beanDefinition : scanner.findCandidateComponents(CONTROLLER_BASE_PACKAGE)) {
+        for (BeanDefinition beanDefinition : scanner.findCandidateComponents(CONTROLLER_BASE_PACKAGE)) {
             Class<?> controllerClass = Class.forName(beanDefinition.getBeanClassName());
             boolean classLevelPermission = AnnotatedElementUtils
                     .hasAnnotation(controllerClass, RequiresPermission.class);

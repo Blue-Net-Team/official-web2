@@ -1,4 +1,4 @@
-package com.bluenet.web.api.converter;
+package com.bluenet.web.architecture;
 
 import com.tngtech.archunit.core.domain.JavaClass;
 import com.tngtech.archunit.core.domain.JavaMethod;
