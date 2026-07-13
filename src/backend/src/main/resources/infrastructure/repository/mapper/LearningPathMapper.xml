@@ -33,7 +33,9 @@
         FROM tb_direction_learning_step
         WHERE direction = #{direction}
           AND step_number = #{stepNumber}
-          AND (#{excludeId} IS NULL OR id != #{excludeId})
+          <if test="excludeId != null">
+              AND id != #{excludeId}
+          </if>
     </select>
 
 </mapper>
