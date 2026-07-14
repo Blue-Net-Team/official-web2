@@ -18,10 +18,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * KnowledgeTagRepositoryImpl 集成测试。
- * <p>
- * 注意：当前 {@code tb_rag_tags.tag_vector} 列为 NOT NULL，但 {@link KnowledgeTagDO}
- * 未映射该字段，save 可能触发数据库非空约束异常。该问题属于生产代码缺陷，本测试保留以暴露此问题。
- * </p>
  */
 @DisplayName("KnowledgeTagRepositoryImpl 集成测试")
 class KnowledgeTagRepositoryImplIntegrationTest extends BaseIntegrationTest {

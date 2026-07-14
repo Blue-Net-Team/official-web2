@@ -48,6 +48,9 @@ public class KnowledgeTagRepositoryImpl implements KnowledgeTagRepository {
     public void save(KnowledgeTag tag) {
         KnowledgeTagDO dataObject = converter.toDataObject(tag);
         if (dataObject.getId() == null) {
+            if (dataObject.getTagVector() == null) {
+                dataObject.setTagVector(new float[VECTOR_DIMENSION]);
+            }
             knowledgeTagMapper.insert(dataObject);
             tag.setId(dataObject.getId());
         } else {
@@ -55,4 +58,6 @@ public class KnowledgeTagRepositoryImpl implements KnowledgeTagRepository {
         }
         log.debug("知识库标签保存成功: id={}", tag.getId());
     }
+
+    private static final int VECTOR_DIMENSION = 1024;
 }

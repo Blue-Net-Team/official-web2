@@ -1,8 +1,10 @@
 package com.bluenet.web.infrastructure.repository.dataobject;
 
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.bluenet.web.infrastructure.repository.handler.PgVectorTypeHandler;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -22,6 +24,9 @@ public class KnowledgeTagDO {
     private Long id;
 
     private String tagName;
+
+    @TableField(typeHandler = PgVectorTypeHandler.class)
+    private float[] tagVector;
 
     private String tagDescription;
 

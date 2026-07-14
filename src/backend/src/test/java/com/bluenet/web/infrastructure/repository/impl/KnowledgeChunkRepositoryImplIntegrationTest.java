@@ -23,13 +23,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * KnowledgeChunkRepositoryImpl 集成测试。
- * <p>
- * 注意：<br>
- * 1. {@link KnowledgeChunkRepository} 接口未定义 save 方法，测试数据通过
- * {@link KnowledgeChunkMapper} 直接准备。<br>
- * 2. 当前 {@code tb_rag_chunks.chunk_vector} 列为 NOT NULL，但
- * {@link KnowledgeChunkDO} 未映射该字段，直接插入可能触发数据库非空约束异常。该问题属于生产代码缺陷，本测试保留以暴露此问题。
- * </p>
  */
 @DisplayName("KnowledgeChunkRepositoryImpl 集成测试")
 class KnowledgeChunkRepositoryImplIntegrationTest extends BaseIntegrationTest {
@@ -59,12 +52,15 @@ class KnowledgeChunkRepositoryImplIntegrationTest extends BaseIntegrationTest {
     private KnowledgeChunkDO insertChunk(Long docId, String content) {
         KnowledgeChunkDO chunk = new KnowledgeChunkDO();
         chunk.setDocId(docId);
+        chunk.setChunkVector(new float[VECTOR_DIMENSION]);
         chunk.setContent(content);
         chunk.setTags(List.of("标签"));
         chunk.setSource("source");
         knowledgeChunkMapper.insert(chunk);
         return chunk;
     }
+
+    private static final int VECTOR_DIMENSION = 1024;
 
     @Test
     @DisplayName("findByDocId: 应按文档ID分页查询分段")
