@@ -2,11 +2,11 @@
 
 import Image from 'next/image'
 import { EquipmentDTO } from '@/apis/schema/type'
-import { API_BASE_URL } from '@/apis/config'
+import { PUBLIC_API_BASE_URL } from '@/apis/config'
 
 export function EquipmentCard({ equipment }: { equipment: EquipmentDTO }) {
   const imageUrl = equipment.imageFileId
-    ? `${API_BASE_URL}/file/download/${equipment.imageFileId}`
+    ? `${PUBLIC_API_BASE_URL}/file/download/${equipment.imageFileId}`
     : null
 
   return (

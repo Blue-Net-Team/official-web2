@@ -2,10 +2,12 @@
 
 import Image from 'next/image'
 import { VenueDTO } from '@/apis/schema/type'
-import { API_BASE_URL } from '@/apis/config'
+import { PUBLIC_API_BASE_URL } from '@/apis/config'
 
 export function VenueCard({ venue }: { venue: VenueDTO }) {
-  const imageUrl = venue.imageFileId ? `${API_BASE_URL}/file/download/${venue.imageFileId}` : null
+  const imageUrl = venue.imageFileId
+    ? `${PUBLIC_API_BASE_URL}/file/download/${venue.imageFileId}`
+    : null
 
   return (
     <div className="bg-white/[0.05] backdrop-blur-xl border border-white/10 rounded-2xl overflow-hidden shadow-[0_4px_24px_rgba(0,0,0,0.25)] transition-all hover:-translate-y-1 hover:shadow-[0_8px_32px_rgba(0,0,0,0.35)] hover:bg-white/[0.08]">

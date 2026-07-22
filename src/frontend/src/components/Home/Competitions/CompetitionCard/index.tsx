@@ -2,11 +2,11 @@ import { Card, Flex } from 'antd'
 import { CompetitionResponseDTO } from '@/apis/schema/type'
 import { FireOutlined } from '@ant-design/icons'
 import CompetitionLogo from './CompetitionLogo'
-import { API_BASE_URL } from '@/apis/config'
+import { PUBLIC_API_BASE_URL } from '@/apis/config'
 
 const CompetitionCard = ({ competition }: { competition: CompetitionResponseDTO }) => {
   const logoImageUrl = competition.logoFileId
-    ? `${API_BASE_URL}/file/download/${competition.logoFileId}`
+    ? `${PUBLIC_API_BASE_URL}/file/download/${competition.logoFileId}`
     : null
 
   return (

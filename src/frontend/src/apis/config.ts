@@ -6,6 +6,7 @@ const API_PREFIX = process.env.API_PREFIX || '/api/v1'
 const CLIENT_BACKEND_HOST = process.env.NEXT_PUBLIC_BACKEND_HOST || 'localhost'
 const CLIENT_BACKEND_PORT = process.env.NEXT_PUBLIC_BACKEND_PORT || '8080'
 const CLIENT_SSL_ENABLED = process.env.NEXT_PUBLIC_SSL_ENABLED === 'true'
+const CLIENT_API_PREFIX = process.env.NEXT_PUBLIC_API_PREFIX || '/api/v1'
 
 const isServer = typeof window === 'undefined'
 
@@ -16,6 +17,17 @@ const getApiBaseUrl = () => {
   const protocol = ssl ? 'https' : 'http'
 
   return `${protocol}://${host}:${port}${API_PREFIX}`
+}
+
+/**
+ * 浏览器可访问的公开 API 地址。
+ * 用于 <img> src、文件下载链接等始终由浏览器发起的场景。
+ * 只使用 NEXT_PUBLIC_* 变量，SSR 与客户端渲染结果一致，避免 hydration mismatch
+ * 导致服务端渲染的内网地址（如 api-service:8080）残留在页面中。
+ */
+const getPublicApiBaseUrl = () => {
+  const protocol = CLIENT_SSL_ENABLED ? 'https' : 'http'
+  return `${protocol}://${CLIENT_BACKEND_HOST}:${CLIENT_BACKEND_PORT}${CLIENT_API_PREFIX}`
 }
 
 const AI_SERVICE_HOST = process.env.NEXT_PUBLIC_AI_SERVICE_HOST || 'localhost'
@@ -32,4 +44,5 @@ const getAiChatBaseUrl = () => {
 }
 
 export const API_BASE_URL = getApiBaseUrl()
+export const PUBLIC_API_BASE_URL = getPublicApiBaseUrl()
 export const AI_CHAT_BASE_URL = getAiChatBaseUrl()
