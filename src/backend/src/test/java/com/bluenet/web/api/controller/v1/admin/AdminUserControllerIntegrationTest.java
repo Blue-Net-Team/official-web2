@@ -121,6 +121,7 @@ class AdminUserControllerIntegrationTest extends BaseIntegrationTest {
                 3L,
                 "MEMBER",
                 Direction.COMPUTER_VISION,
+                1L,
                 "计算机学院",
                 "计算机科学与技术",
                 Gender.MALE,

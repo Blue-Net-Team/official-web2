@@ -248,7 +248,7 @@ public class AdminUserAppServiceImpl implements AdminUserAppService {
         return new AdminUserResult.ListItem(
                 user.getId(), user.getStudentId(), user.getUsername(), user.getNickname(),
                 user.getEmail(), user.getRoleId(), roleName, user.getDirection(),
-                collegeName, user.getMajor(), user.getGender(), user.getJob(),
+                user.getCollegeId(), collegeName, user.getMajor(), user.getGender(), user.getJob(),
                 user.getDisable(), user.getAvatarId(), user.getAssessmentGradeYear());
     }
 
@@ -267,7 +267,7 @@ public class AdminUserAppServiceImpl implements AdminUserAppService {
         return new AdminUserResult.Detail(
                 user.getId(), user.getStudentId(), user.getUsername(), user.getNickname(),
                 user.getEmail(), user.getRoleId(), roleName, user.getDirection(),
-                collegeName, user.getMajor(), user.getGender(), user.getJob(),
+                user.getCollegeId(), collegeName, user.getMajor(), user.getGender(), user.getJob(),
                 user.getDisable(), user.getAvatarId(), user.getGithubUsername(),
                 user.getBio(), user.getAssessmentGradeYear(),
                 stats.experienceCount(), stats.achievementCount(),

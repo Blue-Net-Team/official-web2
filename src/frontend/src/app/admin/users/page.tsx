@@ -164,7 +164,7 @@ export default function AdminUserManagementPage() {
       username: user.username ?? undefined,
       nickname: user.nickname ?? undefined,
       email: user.email ?? undefined,
-      collegeId: undefined,
+      collegeId: user.collegeId ?? undefined,
       major: user.major ?? undefined,
       gender: user.gender ?? undefined,
       assessmentGradeYear: user.assessmentGradeYear ?? undefined,

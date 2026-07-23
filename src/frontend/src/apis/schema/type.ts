@@ -839,6 +839,7 @@ export interface AdminUserListItemDTO {
   roleId: number | null
   roleName: string | null
   direction: string | null
+  collegeId: number | null
   college: string | null
   major: string | null
   gender: string | null
@@ -857,6 +858,7 @@ export interface AdminUserDetailDTO {
   roleId: number | null
   roleName: string | null
   direction: string | null
+  collegeId: number | null
   college: string | null
   major: string | null
   gender: string | null
