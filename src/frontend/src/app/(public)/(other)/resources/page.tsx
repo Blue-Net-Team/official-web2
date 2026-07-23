@@ -125,7 +125,7 @@ function ResourceCard({ resource }: { resource: SoftwareResourceDTO }) {
       href={resource.externalUrl}
       target="_blank"
       rel="noopener noreferrer"
-      className="block p-5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors group"
+      className="block p-5 rounded-2xl bg-white/[0.05] backdrop-blur-xl border border-white/10 shadow-[0_4px_24px_rgba(0,0,0,0.25)] transition-all hover:-translate-y-1 hover:shadow-[0_8px_32px_rgba(0,0,0,0.35)] hover:bg-white/[0.08] group"
     >
       <div className="flex items-start justify-between gap-4">
         <div className="flex-1">
