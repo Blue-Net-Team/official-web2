@@ -27,7 +27,7 @@ export const MemberCard: React.FC<MemberCardProps> = ({ member, index }) => {
   return (
     <Link href={`/members/${member.id}`} className="no-underline text-inherit block">
       <div
-        className="relative overflow-hidden rounded-[20px] border border-white/[0.08] bg-white/[0.03] p-7 cursor-pointer transition-all duration-400 ease-[cubic-bezier(0.4,0,0.2,1)] max-md:p-5 before:content-[''] before:absolute before:top-0 before:left-0 before:right-0 before:h-[3px] before:bg-gradient-to-r before:from-[#6677ff] before:to-[#ff6b35] before:opacity-0 before:transition-opacity before:duration-300 hover:bg-white/[0.06] hover:border-white/[0.15] hover:-translate-y-2 hover:shadow-[0_20px_40px_rgba(0,0,0,0.4),0_0_60px_rgba(102,119,255,0.1)] hover:before:opacity-100 animate-[fadeInUp_0.5s_ease_forwards] opacity-0"
+        className="relative overflow-hidden rounded-[20px] border border-white/[0.08] bg-white/[0.05] backdrop-blur-xl p-7 cursor-pointer transition-all duration-400 ease-[cubic-bezier(0.4,0,0.2,1)] max-md:p-5 before:content-[''] before:absolute before:top-0 before:left-0 before:right-0 before:h-[3px] before:bg-gradient-to-r before:from-[#6677ff] before:to-[#ff6b35] before:opacity-0 before:transition-opacity before:duration-300 hover:bg-white/[0.08] hover:border-white/[0.15] hover:-translate-y-2 hover:shadow-[0_20px_40px_rgba(0,0,0,0.4),0_0_60px_rgba(102,119,255,0.1)] hover:before:opacity-100 animate-[fadeInUp_0.5s_ease_forwards] opacity-0"
         style={{ animationDelay: `${index * 0.05}s` }}
       >
         <div className="flex items-center gap-4 mb-5">

@@ -89,7 +89,7 @@ export const Members: React.FC<MembersProps> = ({ initialPage = 0 }) => {
   return (
     <>
       <section className="w-full px-16 pb-10 flex justify-center max-md:px-5 max-md:pb-6 max-[1024px]:px-10 max-[1024px]:pb-8">
-        <div className="flex gap-3 p-2 bg-white/[0.03] rounded-2xl border border-white/[0.08] flex-wrap justify-center max-md:gap-2">
+        <div className="flex gap-3 p-2 bg-white/[0.05] backdrop-blur-xl rounded-2xl border border-white/[0.08] flex-wrap justify-center max-md:gap-2">
           {filterTabs.map((tab) => (
             <button
               key={tab.key}
