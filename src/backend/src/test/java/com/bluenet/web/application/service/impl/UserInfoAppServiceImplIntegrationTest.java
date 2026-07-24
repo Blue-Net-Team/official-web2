@@ -111,6 +111,7 @@ class UserInfoAppServiceImplIntegrationTest extends BaseIntegrationTest {
         assertEquals("用户2024003001", result.username());
         assertEquals("大二", result.grade());
         assertEquals("计算机学院", result.college());
+        assertEquals(user.getInternalReferralCode(), result.internalReferralCode());
     }
 
     @Test

@@ -96,6 +96,7 @@ export default function ProfilePage() {
       profile.qrcodeFileId != null ? `${API_BASE_URL}/file/download/${profile.qrcodeFileId}` : null,
     roleName: profile.roleName,
     direction: profile.direction,
+    internalReferralCode: profile.internalReferralCode,
   }
 
   return (

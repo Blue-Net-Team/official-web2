@@ -11,11 +11,13 @@ import {
   CalendarOutlined,
   CameraOutlined,
   LoadingOutlined,
+  ShareAltOutlined,
 } from '@ant-design/icons'
-import { App, Tag, Modal } from 'antd'
+import { App, Tag, Modal, Button } from 'antd'
 import { QrcodeOutlined } from '@ant-design/icons'
 import Image, { type StaticImageData } from 'next/image'
 import AvatarCropModal from '../AvatarCropModal'
+import { ReferralPosterModal } from '../ReferralPoster'
 import cvIcon from '@/assets/icon/direction/cv_icon.png'
 import structIcon from '@/assets/icon/direction/struct_icon.png'
 import embedIcon from '@/assets/icon/direction/embed_icon.png'
@@ -38,6 +40,8 @@ export interface SidebarProfile {
   wechatQrcode: string | null
   roleName: string
   direction: Direction | null
+  /** 内推码 */
+  internalReferralCode?: string | null
 }
 
 interface ProfileSidebarProps {
@@ -150,6 +154,10 @@ export default function ProfileSidebar({
   }
 
   const [qrcodeModalOpen, setQrcodeModalOpen] = useState(false)
+  const [referralModalOpen, setReferralModalOpen] = useState(false)
+
+  const isMember = profile.roleName === 'MEMBER'
+  const hasReferralCode = Boolean(profile.internalReferralCode)
 
   return (
     <aside className="w-[340px] shrink-0 max-lg:w-full max-lg:shrink">
@@ -255,6 +263,22 @@ export default function ProfileSidebar({
           )}
         </div>
 
+        {isMember && hasReferralCode && (
+          <div className="mb-6 py-6 border-t border-b border-white/[0.05]">
+            <div className="text-xs font-semibold text-[rgba(140,140,141,1)] uppercase tracking-[0.5px] mb-4">
+              内推分享
+            </div>
+            <Button
+              type="primary"
+              icon={<ShareAltOutlined />}
+              onClick={() => setReferralModalOpen(true)}
+              className="w-full !rounded-[10px] !bg-[linear-gradient(135deg,#6677ff_0%,#2f27b0_100%)] !border-none"
+            >
+              我要内推
+            </Button>
+          </div>
+        )}
+
         {profile.direction && (
           <div className="mb-6 py-6 border-t border-b border-white/[0.05]">
             <div className="text-xs font-semibold text-[rgba(140,140,141,1)] uppercase tracking-[0.5px] mb-4">
@@ -331,6 +355,15 @@ export default function ProfileSidebar({
           />
         )}
       </Modal>
+
+      {profile.internalReferralCode && (
+        <ReferralPosterModal
+          open={referralModalOpen}
+          onClose={() => setReferralModalOpen(false)}
+          username={profile.username}
+          referralCode={profile.internalReferralCode}
+        />
+      )}
     </aside>
   )
 }

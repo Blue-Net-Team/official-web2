@@ -66,6 +66,8 @@ export interface UserInfo {
   githubUsername: string | null
   /** 微信二维码文件ID */
   qrcodeFileId: number | null
+  /** 内推码 */
+  internalReferralCode: string | null
 }
 
 /**

@@ -32,6 +32,11 @@ export function useEnrollForm() {
       setSelectedDirection(directionFromUrl)
       form.setFieldsValue({ direction: directionFromUrl })
     }
+
+    const referralFromUrl = searchParams.get('ref')
+    if (referralFromUrl) {
+      form.setFieldsValue({ internalReferralCode: referralFromUrl.toUpperCase() })
+    }
   }, [searchParams, form])
 
   useEffect(() => {

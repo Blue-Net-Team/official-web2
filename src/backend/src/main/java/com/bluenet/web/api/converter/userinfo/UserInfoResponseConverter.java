@@ -34,6 +34,7 @@ public class UserInfoResponseConverter {
                 .bio(result.bio())
                 .githubUsername(result.githubUsername())
                 .qrcodeFileId(result.wechatQrcode())
+                .internalReferralCode(result.internalReferralCode())
                 .build();
     }
 

@@ -63,7 +63,8 @@ class UserInfoControllerIntegrationTest extends BaseIntegrationTest {
                 Gender.MALE,
                 "简介",
                 "github",
-                200L);
+                200L,
+                "AB7K9L12");
         UserInfo userInfo = UserInfo.builder()
                 .id(1L)
                 .username("测试用户")

@@ -96,6 +96,7 @@ class AuthControllerIntegrationTest extends BaseIntegrationTest {
                 null,
                 null,
                 null,
+                null,
                 null);
         UserAuthResponseDTO responseDTO = new UserAuthResponseDTO();
         responseDTO.setCsrfToken("csrf-token");
@@ -158,6 +159,7 @@ class AuthControllerIntegrationTest extends BaseIntegrationTest {
                 "test@example.com",
                 null,
                 "MEMBER",
+                null,
                 null,
                 null,
                 null,
@@ -257,6 +259,7 @@ class AuthControllerIntegrationTest extends BaseIntegrationTest {
                 "test@example.com",
                 null,
                 "MEMBER",
+                null,
                 null,
                 null,
                 null,

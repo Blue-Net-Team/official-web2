@@ -79,6 +79,7 @@ class UserProfileControllerIntegrationTest extends BaseIntegrationTest {
                 null,
                 null,
                 null,
+                null,
                 null);
         UserInfo userInfo = UserInfo.builder()
                 .id(1L)

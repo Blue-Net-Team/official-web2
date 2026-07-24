@@ -243,8 +243,24 @@ const EnrollForm: React.FC<EnrollFormProps> = ({
               内推码
               <span className="text-white/40 text-[11px] ml-1">（选填）</span>
             </label>
-            <Form.Item name="internalReferralCode" className="mb-0">
-              <Input placeholder="如有内推码请填写" maxLength={8} />
+            <Form.Item
+              name="internalReferralCode"
+              className="mb-0"
+              rules={[
+                {
+                  pattern: /^[A-Z0-9]{8}$/,
+                  message: '内推码只能包含8位大写字母和数字',
+                },
+              ]}
+            >
+              <Input
+                placeholder="如有内推码请填写"
+                maxLength={8}
+                onChange={(e) => {
+                  const value = e.target.value.toUpperCase()
+                  form.setFieldsValue({ internalReferralCode: value })
+                }}
+              />
             </Form.Item>
           </div>
         </div>

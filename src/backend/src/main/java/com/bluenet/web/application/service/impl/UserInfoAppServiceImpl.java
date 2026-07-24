@@ -81,7 +81,8 @@ public class UserInfoAppServiceImpl implements UserInfoAppService {
                 user.getGender(),
                 user.getBio(),
                 user.getGithubUsername(),
-                user.getQrcodeId());
+                user.getQrcodeId(),
+                user.getInternalReferralCode());
     }
 
     private String resolveCollegeName(Long collegeId) {

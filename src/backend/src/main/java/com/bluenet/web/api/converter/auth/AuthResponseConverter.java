@@ -56,6 +56,7 @@ public class AuthResponseConverter {
                 .bio(result.bio())
                 .githubUsername(result.githubUsername())
                 .qrcodeFileId(result.wechatQrcode())
+                .internalReferralCode(result.internalReferralCode())
                 .build();
     }
 }

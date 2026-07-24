@@ -37,5 +37,7 @@ public record UserInfoResult(
         /** GitHub用户名 */
         String githubUsername,
         /** 微信二维码文件ID */
-        Long wechatQrcode) {
+        Long wechatQrcode,
+        /** 内推码 */
+        String internalReferralCode) {
 }
