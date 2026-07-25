@@ -4,6 +4,7 @@ import { useState, useRef, useCallback } from 'react'
 import type { TabCounts } from '@/apis/schema/type'
 import { DIRECTION_LABELS, ROLE_LABELS, getRoleTagColor, Direction } from '@/apis/schema/enumerate'
 import { API_BASE_URL } from '@/apis/config'
+import { getRoleLevel } from '@/utils/RoleUtils'
 import { fileService } from '@/apis/services/file.service'
 import {
   DesktopOutlined,
@@ -156,7 +157,7 @@ export default function ProfileSidebar({
   const [qrcodeModalOpen, setQrcodeModalOpen] = useState(false)
   const [referralModalOpen, setReferralModalOpen] = useState(false)
 
-  const isMember = profile.roleName === 'MEMBER'
+  const isMember = getRoleLevel(profile.roleName) >= 1
   const hasReferralCode = Boolean(profile.internalReferralCode)
 
   return (
