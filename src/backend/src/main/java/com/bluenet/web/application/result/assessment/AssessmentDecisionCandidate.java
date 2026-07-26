@@ -34,4 +34,20 @@ public class AssessmentDecisionCandidate {
     private Long teamId;
     private String teamName;
     private Boolean isLeader;
+    /** 考生报名时填写的内推码；未报名或未填写时为 null */
+    private String internalReferralCode;
+    /** 推荐人用户名；内推码为空或无效时为 null */
+    private String referralUserName;
+
+    /**
+     * 是否为内推考生（内推码匹配到了真实成员）。
+     * <p>
+     * 仅填写了内推码但码无效（未匹配到成员）时不视为内推，不展示也不参与置顶排序。
+     * </p>
+     *
+     * @return 内推码有效时返回 true。
+     */
+    public boolean isReferred() {
+        return referralUserName != null && !referralUserName.isBlank();
+    }
 }

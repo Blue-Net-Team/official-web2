@@ -44,6 +44,8 @@ public class EnrollResponseConverter {
                 .direction(result.direction())
                 .status(result.status())
                 .avatarFileId(result.avatarFileId())
+                .internalReferralCode(result.internalReferralCode())
+                .referralUserName(result.referralUserName())
                 .build();
     }
 

@@ -459,8 +459,11 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
                 .filter(candidate -> matchesDecisionStatus(candidate, decisionStatus))
                 .sorted(
                         Comparator.comparing(
-                                AssessmentDecisionCandidate::getStudentId,
-                                Comparator.nullsLast(String::compareTo)))
+                                AssessmentDecisionCandidate::isReferred,
+                                Comparator.reverseOrder())
+                                .thenComparing(
+                                        AssessmentDecisionCandidate::getStudentId,
+                                        Comparator.nullsLast(String::compareTo)))
                 .toList();
 
         AssessmentDecisionStatistics statistics = calculateDecisionStatistics(scoreboards, decisions);
@@ -687,6 +690,8 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
                             .teamId(first.getTeamId())
                             .teamName(first.getTeamName())
                             .isLeader(Boolean.TRUE.equals(first.getIsLeader()))
+                            .internalReferralCode(first.getInternalReferralCode())
+                            .referralUserName(first.getReferralUserName())
                             .build());
         }
         return result;
@@ -716,6 +721,8 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
                 .teamId(scoreboard.getTeamId())
                 .teamName(scoreboard.getTeamName())
                 .isLeader(scoreboard.getIsLeader())
+                .internalReferralCode(scoreboard.getInternalReferralCode())
+                .referralUserName(scoreboard.getReferralUserName())
                 .build();
     }
 

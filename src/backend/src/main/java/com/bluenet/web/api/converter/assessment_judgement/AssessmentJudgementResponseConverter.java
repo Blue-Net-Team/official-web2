@@ -125,6 +125,8 @@ public class AssessmentJudgementResponseConverter {
                 .teamId(vo.getTeamId())
                 .teamName(vo.getTeamName())
                 .isLeader(vo.getIsLeader())
+                .internalReferralCode(vo.getInternalReferralCode())
+                .referralUserName(vo.getReferralUserName())
                 .build();
     }
 
@@ -162,6 +164,8 @@ public class AssessmentJudgementResponseConverter {
                 .teamId(vo.getTeamId())
                 .teamName(vo.getTeamName())
                 .isLeader(vo.getIsLeader())
+                .internalReferralCode(vo.getInternalReferralCode())
+                .referralUserName(vo.getReferralUserName())
                 .build();
     }
 
@@ -221,6 +225,8 @@ public class AssessmentJudgementResponseConverter {
                 .teamId(vo.getTeamId())
                 .teamName(vo.getTeamName())
                 .isLeader(vo.getIsLeader())
+                .internalReferralCode(vo.getInternalReferralCode())
+                .referralUserName(vo.getReferralUserName())
                 .build();
     }
 

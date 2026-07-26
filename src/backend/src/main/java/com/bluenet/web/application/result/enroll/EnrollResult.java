@@ -79,7 +79,11 @@ public final class EnrollResult {
             /** 状态 */
             EnrollStatus status,
             /** 头像文件ID */
-            Long avatarFileId) {
+            Long avatarFileId,
+            /** 内推码 */
+            String internalReferralCode,
+            /** 推荐人用户名 */
+            String referralUserName) {
     }
 
     /**

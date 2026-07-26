@@ -128,4 +128,12 @@ public class AssessmentQuestionSubmissionQueryDO {
      * 是否为队伍队长。
      */
     private Boolean isLeader;
+    /**
+     * 考生报名时填写的内推码，来自 tb_enroll；未报名或未填写时为 null。
+     */
+    private String referralCode;
+    /**
+     * 推荐人用户名，由内推码 JOIN tb_user 反查得到；内推码为空或无效时为 null。
+     */
+    private String referralUsername;
 }

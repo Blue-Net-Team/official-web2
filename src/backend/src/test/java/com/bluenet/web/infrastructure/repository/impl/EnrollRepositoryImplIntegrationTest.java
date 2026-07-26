@@ -8,16 +8,21 @@ import com.bluenet.web.domain.model.enumerate.EnrollStatus;
 import com.bluenet.web.domain.model.enumerate.Gender;
 import com.bluenet.web.domain.repository.CollegeRepository;
 import com.bluenet.web.domain.repository.EnrollRepository;
+import com.bluenet.web.domain.repository.UserRepository;
 import com.bluenet.web.infrastructure.repository.dataobject.EnrollDO;
+import com.bluenet.web.infrastructure.repository.dataobject.query.EnrollBriefQueryDO;
 import com.bluenet.web.infrastructure.repository.mapper.EnrollMapper;
 import com.bluenet.web.testsupport.fixture.CollegeFixture;
+import com.bluenet.web.testsupport.fixture.UserFixture;
 import com.bluenet.web.application.result.enroll.EnrollStatistics;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -37,6 +42,12 @@ class EnrollRepositoryImplIntegrationTest extends BaseIntegrationTest {
 
     @Autowired
     private CollegeRepository collegeRepository;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     private final AtomicLong counter = new AtomicLong(1);
 
@@ -224,5 +235,106 @@ class EnrollRepositoryImplIntegrationTest extends BaseIntegrationTest {
         assertThat(statistics.getTotal()).isGreaterThanOrEqualTo(2);
         assertThat(statistics.getByStatus()).containsKey(EnrollStatus.PENDING.getValue());
         assertThat(statistics.getByDirection()).containsKey(Direction.COMPUTER_VISION);
+    }
+
+    /**
+     * 使用共享学号前缀创建报名，便于通过 keyword 精确隔离本测试的数据。
+     */
+    private Enroll createEnrollWithPrefix(String prefix, int seq, String referralCode) {
+        String studentId = prefix + seq;
+        Enroll enroll = Enroll.create(
+                "报名" + studentId,
+                studentId,
+                "encodedPassword",
+                referralCode,
+                null,
+                "计算机科学与技术",
+                Gender.MALE,
+                Direction.COMPUTER_VISION,
+                null,
+                studentId + "@example.com",
+                "自我介绍" + studentId);
+        enrollRepository.save(enroll);
+        return enroll;
+    }
+
+    private String createReferrer(String studentId, String username, String referralCode) {
+        UserFixture.member(studentId)
+                .withUsername(username)
+                .withInternalReferralCode(referralCode)
+                .save(userRepository, passwordEncoder);
+        return referralCode;
+    }
+
+    @Test
+    @DisplayName("search: 内推报名应排在非内推之前，组内按 id 倒序；无效码不视为内推")
+    void search_referredEnroll_shouldOrderFirst() {
+        String prefix = "209901";
+        createReferrer("20990190", "推荐人排序", "REFSORT1");
+        Enroll nonReferredFirst = createEnrollWithPrefix(prefix, 1, null);
+        Enroll referred = createEnrollWithPrefix(prefix, 2, "REFSORT1");
+        Enroll invalidCode = createEnrollWithPrefix(prefix, 3, "REFGONE9");
+        Enroll nonReferredSecond = createEnrollWithPrefix(prefix, 4, null);
+
+        Page<Enroll> page = enrollRepository.search(prefix, null, null, PageRequest.of(0, 10));
+
+        List<Enroll> content = page.getContent();
+        assertThat(content).hasSize(4);
+        // 有效内推码排最前
+        assertThat(content.get(0).getId()).isEqualTo(referred.getId());
+        // 无效码不视为内推，与其余非内推一起按 id 倒序
+        assertThat(content.get(1).getId()).isEqualTo(nonReferredSecond.getId());
+        assertThat(content.get(2).getId()).isEqualTo(invalidCode.getId());
+        assertThat(content.get(3).getId()).isEqualTo(nonReferredFirst.getId());
+    }
+
+    @Test
+    @DisplayName("search: 列表项应带出推荐人姓名，无效码或无码时为 null")
+    void search_shouldResolveReferralUserName() {
+        String prefix = "209902";
+        createReferrer("20990290", "推荐人甲", "REFNAME1");
+        Enroll validReferred = createEnrollWithPrefix(prefix, 1, "REFNAME1");
+        Enroll invalidReferred = createEnrollWithPrefix(prefix, 2, "REFNOEXIST");
+        Enroll nonReferred = createEnrollWithPrefix(prefix, 3, null);
+
+        Page<Enroll> page = enrollRepository.search(prefix, null, null, PageRequest.of(0, 10));
+
+        List<Enroll> content = page.getContent();
+        assertThat(content).hasSize(3);
+        Enroll valid = content.stream().filter(e -> e.getId().equals(validReferred.getId())).findFirst().orElseThrow();
+        assertThat(valid.getInternalReferralCode()).isEqualTo("REFNAME1");
+        assertThat(valid.getReferralUserName()).isEqualTo("推荐人甲");
+
+        Enroll invalid = content.stream()
+                .filter(e -> e.getId().equals(invalidReferred.getId()))
+                .findFirst()
+                .orElseThrow();
+        assertThat(invalid.getInternalReferralCode()).isEqualTo("REFNOEXIST");
+        assertThat(invalid.getReferralUserName()).isNull();
+
+        Enroll none = content.stream().filter(e -> e.getId().equals(nonReferred.getId())).findFirst().orElseThrow();
+        assertThat(none.getInternalReferralCode()).isNull();
+        assertThat(none.getReferralUserName()).isNull();
+    }
+
+    @Test
+    @DisplayName("selectPageByConditions: 单条 SQL 投影全部推荐人姓名，无逐行反查")
+    void selectPageByConditions_shouldProjectReferralNamesInSingleQuery() {
+        String prefix = "209903";
+        createReferrer("20990390", "推荐人乙", "REFPROJ1");
+        createReferrer("20990391", "推荐人丙", "REFPROJ2");
+        createEnrollWithPrefix(prefix, 1, "REFPROJ1");
+        createEnrollWithPrefix(prefix, 2, "REFPROJ2");
+
+        com.baomidou.mybatisplus.extension.plugins.pagination.Page<EnrollBriefQueryDO> page = new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>(
+                1, 10);
+        com.baomidou.mybatisplus.core.metadata.IPage<EnrollBriefQueryDO> result = enrollMapper
+                .selectPageByConditions(page, prefix, null, null);
+
+        // Mapper 单语句即返回全部推荐人姓名，仓储层无需也无法再做逐行反查
+        assertThat(result.getRecords()).hasSize(2);
+        assertThat(result.getRecords())
+                .extracting(EnrollBriefQueryDO::getReferralUsername)
+                .containsExactlyInAnyOrder("推荐人乙", "推荐人丙");
     }
 }

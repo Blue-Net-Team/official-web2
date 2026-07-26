@@ -42,4 +42,8 @@ public class AssessmentCandidateScoreboardDTO {
     private String teamName;
     @Schema(description = "是否为队长")
     private Boolean isLeader;
+    @Schema(description = "内推码（报名时填写）")
+    private String internalReferralCode;
+    @Schema(description = "推荐人姓名（内推码有效时返回）")
+    private String referralUserName;
 }

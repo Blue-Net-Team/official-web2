@@ -157,12 +157,16 @@
             dj.judged_at,
             t.id AS team_id,
             t.name AS team_name,
-            CASE WHEN t.leader_id = u.id THEN true ELSE false END AS is_leader
+            CASE WHEN t.leader_id = u.id THEN true ELSE false END AS is_leader,
+            e.internal_referral_code AS referral_code,
+            ru.username AS referral_username
         FROM tb_assessment_answer a
         JOIN tb_assessment_question q ON q.id = a.question_id
         JOIN tb_user u ON u.id = a.user_id
         LEFT JOIN tb_assessment_team_member tm ON tm.user_id = u.id
         LEFT JOIN tb_assessment_team t ON t.id = tm.team_id AND t.assessment_time_id = q.assessment_time_id
+        LEFT JOIN tb_enroll e ON e.student_id = u.student_id
+        LEFT JOIN tb_user ru ON ru.internal_referral_code = e.internal_referral_code
         LEFT JOIN display_judgement dj ON dj.question_id = q.id AND dj.user_id = u.id
         WHERE a.question_id = #{questionId}
         <if test="keyword != null and keyword != ''">
@@ -177,6 +181,7 @@
             AND dj.id IS NULL
         </if>
         ORDER BY t.id NULLS LAST,
+                 CASE WHEN ru.id IS NOT NULL THEN 0 ELSE 1 END,
                  CASE WHEN t.leader_id = u.id THEN 0 ELSE 1 END,
                  u.student_id ASC,
                  a.submit_time DESC,
@@ -294,14 +299,19 @@
             dj.judged_at,
             t.id AS team_id,
             t.name AS team_name,
-            CASE WHEN t.leader_id = u.id THEN true ELSE false END AS is_leader
+            CASE WHEN t.leader_id = u.id THEN true ELSE false END AS is_leader,
+            e.internal_referral_code AS referral_code,
+            ru.username AS referral_username
         FROM candidate_users u
         CROSS JOIN questions q
         LEFT JOIN tb_assessment_team_member tm ON tm.user_id = u.id
         LEFT JOIN tb_assessment_team t ON t.id = tm.team_id AND t.assessment_time_id = #{assessmentTimeId}
         LEFT JOIN tb_assessment_answer a ON a.user_id = u.id AND a.question_id = q.id
+        LEFT JOIN tb_enroll e ON e.student_id = u.student_id
+        LEFT JOIN tb_user ru ON ru.internal_referral_code = e.internal_referral_code
         LEFT JOIN display_judgement dj ON dj.user_id = u.id AND dj.question_id = q.id
         ORDER BY t.id NULLS LAST,
+                 CASE WHEN ru.id IS NOT NULL THEN 0 ELSE 1 END,
                  CASE WHEN t.leader_id = u.id THEN 0 ELSE 1 END,
                  u.student_id ASC,
                  q.question_no ASC,

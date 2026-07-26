@@ -17,6 +17,11 @@
         <result column="introduction" property="introduction"/>
     </resultMap>
 
+    <resultMap id="BriefResultMap" type="com.bluenet.web.infrastructure.repository.dataobject.query.EnrollBriefQueryDO"
+               extends="BaseResultMap">
+        <result column="referral_username" property="referralUsername"/>
+    </resultMap>
+
     <select id="selectByStudentId" resultMap="BaseResultMap">
         SELECT * FROM tb_enroll WHERE student_id = #{studentId}
     </select>
@@ -33,22 +38,24 @@
         WHERE student_id = #{studentId}
     </select>
 
-    <select id="selectPageByConditions" resultMap="BaseResultMap">
-        SELECT *
-        FROM tb_enroll
+    <select id="selectPageByConditions" resultMap="BriefResultMap">
+        SELECT e.*, ru.username AS referral_username
+        FROM tb_enroll e
+        LEFT JOIN tb_user ru ON ru.internal_referral_code = e.internal_referral_code
         <where>
             <if test="keyword != null and keyword.trim() != ''">
-                AND (username LIKE CONCAT('%', #{keyword,jdbcType=VARCHAR}, '%')
-                OR student_id LIKE CONCAT('%', #{keyword,jdbcType=VARCHAR}, '%'))
+                AND (e.username LIKE CONCAT('%', #{keyword,jdbcType=VARCHAR}, '%')
+                OR e.student_id LIKE CONCAT('%', #{keyword,jdbcType=VARCHAR}, '%'))
             </if>
             <if test="status != null">
-                AND status = #{status}
+                AND e.status = #{status}
             </if>
             <if test="direction != null">
-                AND direction = #{direction}
+                AND e.direction = #{direction}
             </if>
         </where>
-        ORDER BY id DESC
+        ORDER BY CASE WHEN ru.id IS NOT NULL THEN 0 ELSE 1 END,
+                 e.id DESC
     </select>
 
     <select id="countAll" resultType="long">

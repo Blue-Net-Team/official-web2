@@ -113,4 +113,12 @@ public class AssessmentCandidateScoreRowReadModel {
      * 是否为队伍队长。
      */
     private Boolean isLeader;
+    /**
+     * 考生报名时填写的内推码；未报名或未填写时为 null。
+     */
+    private String internalReferralCode;
+    /**
+     * 推荐人用户名；内推码为空或无效时为 null。
+     */
+    private String referralUserName;
 }

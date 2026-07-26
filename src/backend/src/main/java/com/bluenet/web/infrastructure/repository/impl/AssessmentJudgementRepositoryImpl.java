@@ -352,6 +352,8 @@ public class AssessmentJudgementRepositoryImpl implements AssessmentJudgementRep
                 .teamId(row.getTeamId())
                 .teamName(row.getTeamName())
                 .isLeader(row.getIsLeader())
+                .internalReferralCode(row.getReferralCode())
+                .referralUserName(row.getReferralUsername())
                 .build();
     }
 
@@ -387,6 +389,8 @@ public class AssessmentJudgementRepositoryImpl implements AssessmentJudgementRep
                 .teamId(row.getTeamId())
                 .teamName(row.getTeamName())
                 .isLeader(row.getIsLeader())
+                .internalReferralCode(row.getReferralCode())
+                .referralUserName(row.getReferralUsername())
                 .build();
     }
 }

@@ -19,8 +19,10 @@ import com.bluenet.web.domain.model.entity.AssessmentQuestion;
 import com.bluenet.web.domain.model.entity.AssessmentTeam;
 import com.bluenet.web.domain.model.entity.AssessmentTime;
 import com.bluenet.web.domain.model.entity.Comment;
+import com.bluenet.web.domain.model.entity.Enroll;
 import com.bluenet.web.domain.model.entity.User;
 import com.bluenet.web.domain.model.enumerate.Direction;
+import com.bluenet.web.domain.model.enumerate.Gender;
 import com.bluenet.web.domain.model.enumerate.JudgementSource;
 import com.bluenet.web.domain.model.enumerate.JudgementStatus;
 import com.bluenet.web.domain.model.enumerate.ObjectiveResultCode;
@@ -34,6 +36,7 @@ import com.bluenet.web.domain.repository.AssessmentQuestionRepository;
 import com.bluenet.web.domain.repository.AssessmentTeamRepository;
 import com.bluenet.web.domain.repository.AssessmentTimeRepository;
 import com.bluenet.web.domain.repository.CommentRepository;
+import com.bluenet.web.domain.repository.EnrollRepository;
 import com.bluenet.web.domain.repository.UserRepository;
 import com.bluenet.web.domain.service.AssessmentDecisionDomainService;
 import com.bluenet.web.infrastructure.security.principal.RoleTypeResolver;
@@ -92,6 +95,9 @@ class AssessmentJudgementAppServiceImplIntegrationTest extends BaseIntegrationTe
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private EnrollRepository enrollRepository;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -844,5 +850,177 @@ class AssessmentJudgementAppServiceImplIntegrationTest extends BaseIntegrationTe
                 null);
 
         assertFalse(result.isEmpty());
+    }
+
+    /**
+     * 为考生创建对应的报名记录，使考核查询能通过学号 JOIN 到内推信息。
+     */
+    private void createEnrollFor(User candidate, String referralCode) {
+        Enroll enroll = Enroll.create(
+                candidate.getUsername(),
+                candidate.getStudentId(),
+                "encodedPassword",
+                referralCode,
+                null,
+                "计算机科学与技术",
+                Gender.MALE,
+                candidate.getDirection(),
+                null,
+                candidate.getEmail(),
+                "自我介绍");
+        enrollRepository.save(enroll);
+    }
+
+    @Test
+    @DisplayName("listCandidateScoreboard: 组内内推优先于队长，独立考生组内内推优先")
+    void listCandidateScoreboard_referredFirstWithinGroup() {
+        User member = createMember(Direction.COMPUTER_VISION);
+        User referrer = UserFixture.member(nextStudentId("RF"))
+                .withDirection(Direction.COMPUTER_VISION)
+                .withUsername("推荐人丁")
+                .withInternalReferralCode("REFSB001")
+                .save(userRepository, passwordEncoder);
+        User leader = createCandidate(Direction.COMPUTER_VISION, 2024);
+        User referredMember = createCandidate(Direction.COMPUTER_VISION, 2024);
+        User referredIndependent = createCandidate(Direction.COMPUTER_VISION, 2024);
+        User plainIndependent = createCandidate(Direction.COMPUTER_VISION, 2024);
+        createEnrollFor(referredMember, "REFSB001");
+        createEnrollFor(referredIndependent, "REFSB001");
+
+        AssessmentTime time = createTeamAllowedTime(Direction.COMPUTER_VISION, 2024);
+        AssessmentFixture.questionBuilder()
+                .assessmentTime(time)
+                .singleChoice("A", "A", "B")
+                .score(new BigDecimal("100"))
+                .save(assessmentQuestionRepository);
+        AssessmentTeam team = AssessmentFixture.teamBuilder()
+                .assessmentTime(time)
+                .leader(leader)
+                .save(assessmentTeamRepository);
+        assessmentTeamRepository.addMember(team.getId(), referredMember.getId());
+        loginAs(member);
+
+        List<AssessmentCandidateScoreboard> result = assessmentJudgementAppService.listCandidateScoreboard(
+                time.getId(),
+                null);
+
+        assertEquals(4, result.size());
+        // 队伍组：内推队员排在队长之前
+        assertEquals(referredMember.getId(), result.get(0).getCandidateUserId());
+        assertEquals(leader.getId(), result.get(1).getCandidateUserId());
+        // 独立考生组：内推优先
+        assertEquals(referredIndependent.getId(), result.get(2).getCandidateUserId());
+        assertEquals(plainIndependent.getId(), result.get(3).getCandidateUserId());
+        // 内推字段透出
+        assertEquals("REFSB001", result.get(0).getInternalReferralCode());
+        assertEquals(referrer.getUsername(), result.get(0).getReferralUserName());
+        assertNull(result.get(3).getInternalReferralCode());
+        assertNull(result.get(3).getReferralUserName());
+    }
+
+    @Test
+    @DisplayName("listQuestionSubmissions: 组内内推考生排在队长之前")
+    void listQuestionSubmissions_referredFirstWithinTeam() {
+        User member = createMember(Direction.COMPUTER_VISION);
+        UserFixture.member(nextStudentId("RF"))
+                .withDirection(Direction.COMPUTER_VISION)
+                .withInternalReferralCode("REFSUB01")
+                .save(userRepository, passwordEncoder);
+        User leader = createCandidate(Direction.COMPUTER_VISION, 2024);
+        User referredMember = createCandidate(Direction.COMPUTER_VISION, 2024);
+        createEnrollFor(referredMember, "REFSUB01");
+
+        AssessmentTime time = createTeamAllowedTime(Direction.COMPUTER_VISION, 2024);
+        AssessmentQuestion question = AssessmentFixture.questionBuilder()
+                .assessmentTime(time)
+                .type(QuestionType.FILE_UPLOAD)
+                .score(new BigDecimal("100"))
+                .save(assessmentQuestionRepository);
+        AssessmentTeam team = AssessmentFixture.teamBuilder()
+                .assessmentTime(time)
+                .leader(leader)
+                .save(assessmentTeamRepository);
+        assessmentTeamRepository.addMember(team.getId(), referredMember.getId());
+        AssessmentFixture.answerBuilder().user(leader).question(question).save(assessmentAnswerRepository);
+        AssessmentFixture.answerBuilder().user(referredMember).question(question).save(assessmentAnswerRepository);
+        loginAs(member);
+
+        List<AssessmentQuestionSubmissionReadModel> result = assessmentJudgementAppService.listQuestionSubmissions(
+                question.getId(),
+                null,
+                null);
+
+        assertEquals(2, result.size());
+        assertEquals(referredMember.getId(), result.get(0).getCandidateUserId());
+        assertEquals(leader.getId(), result.get(1).getCandidateUserId());
+        assertEquals("REFSUB01", result.get(0).getInternalReferralCode());
+        assertNull(result.get(1).getInternalReferralCode());
+    }
+
+    @Test
+    @DisplayName("listCandidateScoreboard: 无报名记录考生字段为 null，无效码不视为内推")
+    void listCandidateScoreboard_edgeCases() {
+        User member = createMember(Direction.COMPUTER_VISION);
+        User invalidCodeCandidate = createCandidate(Direction.COMPUTER_VISION, 2024);
+        User noEnrollCandidate = createCandidate(Direction.COMPUTER_VISION, 2024);
+        createEnrollFor(invalidCodeCandidate, "REFGONE1");
+        // noEnrollCandidate 不创建报名记录
+
+        AssessmentTime time = createTime(Direction.COMPUTER_VISION, 2024);
+        AssessmentFixture.questionBuilder()
+                .assessmentTime(time)
+                .singleChoice("A", "A", "B")
+                .score(new BigDecimal("100"))
+                .save(assessmentQuestionRepository);
+        loginAs(member);
+
+        List<AssessmentCandidateScoreboard> result = assessmentJudgementAppService.listCandidateScoreboard(
+                time.getId(),
+                null);
+
+        assertEquals(2, result.size());
+        // 无效码不视为内推：两人均按非内推处理，按学号升序
+        assertEquals(invalidCodeCandidate.getId(), result.get(0).getCandidateUserId());
+        assertEquals("REFGONE1", result.get(0).getInternalReferralCode());
+        assertNull(result.get(0).getReferralUserName());
+        // 无报名记录的考生字段为 null
+        assertEquals(noEnrollCandidate.getId(), result.get(1).getCandidateUserId());
+        assertNull(result.get(1).getInternalReferralCode());
+        assertNull(result.get(1).getReferralUserName());
+    }
+
+    @Test
+    @DisplayName("getDecisionWorkspace: 内推考生排序优先于学号")
+    void getDecisionWorkspace_referredFirst() {
+        User admin = createDirectionAdmin(Direction.COMPUTER_VISION);
+        User referrer = UserFixture.member(nextStudentId("RF"))
+                .withDirection(Direction.COMPUTER_VISION)
+                .withUsername("推荐人戊")
+                .withInternalReferralCode("REFDC001")
+                .save(userRepository, passwordEncoder);
+        // 非内推考生学号更小，若按学号排序应在前；内推优先生效后应在后
+        User plainCandidate = createCandidate(Direction.COMPUTER_VISION, 2024);
+        User referredCandidate = createCandidate(Direction.COMPUTER_VISION, 2024);
+        createEnrollFor(referredCandidate, "REFDC001");
+
+        AssessmentTime time = createTime(Direction.COMPUTER_VISION, 2024);
+        AssessmentFixture.questionBuilder()
+                .assessmentTime(time)
+                .singleChoice("A", "A", "B")
+                .score(new BigDecimal("100"))
+                .save(assessmentQuestionRepository);
+        when(assessmentDecisionDomainService.isEliminatedFromPriorEpoch(any(), any(AssessmentTime.class)))
+                .thenReturn(false);
+        loginAs(admin);
+
+        AssessmentDecisionWorkspace workspace = assessmentJudgementAppService.getDecisionWorkspace(
+                time.getId(),
+                null,
+                null);
+
+        assertEquals(2, workspace.getCandidates().size());
+        assertEquals(referredCandidate.getId(), workspace.getCandidates().get(0).getCandidateUserId());
+        assertEquals(plainCandidate.getId(), workspace.getCandidates().get(1).getCandidateUserId());
+        assertEquals(referrer.getUsername(), workspace.getCandidates().get(0).getReferralUserName());
     }
 }

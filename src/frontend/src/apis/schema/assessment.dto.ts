@@ -611,6 +611,10 @@ export interface AssessmentQuestionSubmissionDTO {
   teamName: string | null
   /** 是否为队长 */
   isLeader: boolean
+  /** 内推码（报名时填写） */
+  internalReferralCode: string | null
+  /** 推荐人姓名（内推码有效时返回） */
+  referralUserName: string | null
 }
 
 /** 考生单题评分状态 */
@@ -665,6 +669,10 @@ export interface AssessmentCandidateScoreboardDTO {
   teamName: string | null
   /** 是否为队长 */
   isLeader: boolean
+  /** 内推码（报名时填写） */
+  internalReferralCode: string | null
+  /** 推荐人姓名（内推码有效时返回） */
+  referralUserName: string | null
 }
 
 /** 录用决策统计 */

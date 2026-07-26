@@ -88,6 +88,7 @@ export const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
 
       <div className="flex flex-wrap gap-2">
         <Tag color={statusCfg.color}>{statusCfg.label}</Tag>
+        {enrollment.referralUserName && <Tag color="gold">{enrollment.referralUserName} 内推</Tag>}
         {enrollment.status === 'PENDING' && (
           <>
             <Button

@@ -269,6 +269,10 @@ export interface EnrollmentBriefDTO {
   status: EnrollStatus
   /** 头像文件ID */
   avatarFileId: number | null
+  /** 内推码（报名时填写） */
+  internalReferralCode: string | null
+  /** 推荐人姓名（内推码有效时返回） */
+  referralUserName: string | null
 }
 
 /**

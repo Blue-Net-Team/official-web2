@@ -405,7 +405,9 @@ public class EnrollAppServiceImpl implements EnrollAppService {
                 enroll.getGender(),
                 enroll.getDirection(),
                 enroll.getStatus(),
-                enroll.getAvatarId());
+                enroll.getAvatarId(),
+                enroll.getInternalReferralCode(),
+                enroll.getReferralUserName());
     }
 
     private EnrollResult.Detail toDetailResult(Enroll enroll) {

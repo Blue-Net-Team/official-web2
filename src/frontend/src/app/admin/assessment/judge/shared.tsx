@@ -54,3 +54,14 @@ export function getDecisionTag(candidate: AssessmentDecisionCandidateDTO) {
   if (candidate.passed === false) return <Tag color="red">淘汰</Tag>
   return <Tag color="default">待决策</Tag>
 }
+
+interface ReferralInfo {
+  internalReferralCode: string | null
+  referralUserName: string | null
+}
+
+/** 渲染候选人的内推标签。仅内推码有效（匹配到推荐人）时展示，无效码不视为内推。 */
+export function getReferralTag(candidate: ReferralInfo) {
+  if (!candidate.referralUserName) return null
+  return <Tag color="gold">{candidate.referralUserName} 内推</Tag>
+}

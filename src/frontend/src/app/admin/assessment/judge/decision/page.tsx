@@ -28,7 +28,7 @@ import { adminAssessmentJudgementService } from '@/apis/services/admin-assessmen
 import { adminAssessmentTimeService } from '@/apis/services/admin-assessment-time.service'
 import { useAuth } from '@/hooks'
 import { getRoleLevel } from '@/utils/RoleUtils'
-import { formatScore, getDecisionTag } from '../shared'
+import { formatScore, getDecisionTag, getReferralTag } from '../shared'
 
 type DirectionOrGlobal = Direction | 'GLOBAL'
 
@@ -197,6 +197,7 @@ export default function AssessmentJudgementManagementPage() {
                 {record.teamName}
               </Tag>
             )}
+            {getReferralTag(record)}
           </div>
           <div className="text-xs text-white/35">{record.studentId}</div>
         </div>

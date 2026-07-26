@@ -79,7 +79,9 @@ class AdminEnrollControllerIntegrationTest extends BaseIntegrationTest {
                 Gender.MALE,
                 Direction.COMPUTER_VISION,
                 EnrollStatus.PENDING,
-                100L);
+                100L,
+                null,
+                null);
     }
 
     private EnrollmentBriefDTO stubBriefDTO() {
