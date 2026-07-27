@@ -86,4 +86,11 @@
             #{name}
         </foreach>
     </select>
+
+    <select id="selectByName" resultMap="BaseResultMap">
+        SELECT *
+        FROM tb_competition
+        WHERE name = #{name}
+        LIMIT 1
+    </select>
 </mapper>

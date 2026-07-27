@@ -55,9 +55,13 @@ class CompetitionAppServiceImplIntegrationTest extends BaseIntegrationTest {
     }
 
     private CompetitionCommands.CreateCompetitionCommand createCommand(Long logoFileId, Long coverFileId) {
+        return createCommand("蓝网杯", logoFileId, coverFileId);
+    }
+
+    private CompetitionCommands.CreateCompetitionCommand createCommand(String name, Long logoFileId, Long coverFileId) {
         return new CompetitionCommands.CreateCompetitionCommand(
-                "蓝网杯",
-                "蓝网杯",
+                name,
+                name,
                 logoFileId,
                 coverFileId,
                 "竞赛摘要",
@@ -77,7 +81,8 @@ class CompetitionAppServiceImplIntegrationTest extends BaseIntegrationTest {
         File logo = createNormalImage("competition-logo");
         File cover = createNormalImage("competition-cover");
 
-        CompetitionResult first = competitionAppService.createCompetition(createCommand(logo, cover));
+        CompetitionResult first = competitionAppService
+                .createCompetition(createCommand("竞赛A", logo.getId(), cover.getId()));
 
         assertThat(first).isNotNull();
         assertThat(first.id()).isNotNull();
@@ -86,7 +91,8 @@ class CompetitionAppServiceImplIntegrationTest extends BaseIntegrationTest {
         File logo2 = createNormalImage("competition-logo-2");
         File cover2 = createNormalImage("competition-cover-2");
 
-        CompetitionResult second = competitionAppService.createCompetition(createCommand(logo2, cover2));
+        CompetitionResult second = competitionAppService
+                .createCompetition(createCommand("竞赛B", logo2.getId(), cover2.getId()));
 
         assertThat(second.sortOrder()).isEqualTo(2);
         assertThat(competitionRepository.findById(second.id()))
@@ -133,15 +139,17 @@ class CompetitionAppServiceImplIntegrationTest extends BaseIntegrationTest {
     void getCompetitionResponseList_shouldClampLimitBetweenOneAndFifty() {
         File logo = createNormalImage("list-logo");
         File cover = createNormalImage("list-cover");
-        competitionAppService.createCompetition(createCommand(logo, cover));
+        competitionAppService.createCompetition(createCommand("列表竞赛A", logo.getId(), cover.getId()));
         competitionAppService.createCompetition(
                 createCommand(
-                        createNormalImage("list-logo-2"),
-                        createNormalImage("list-cover-2")));
+                        "列表竞赛B",
+                        createNormalImage("list-logo-2").getId(),
+                        createNormalImage("list-cover-2").getId()));
         competitionAppService.createCompetition(
                 createCommand(
-                        createNormalImage("list-logo-3"),
-                        createNormalImage("list-cover-3")));
+                        "列表竞赛C",
+                        createNormalImage("list-logo-3").getId(),
+                        createNormalImage("list-cover-3").getId()));
 
         List<CompetitionReadModel> lowerBound = competitionAppService.getCompetitionResponseList(0);
         List<CompetitionReadModel> limited = competitionAppService.getCompetitionResponseList(2);
@@ -159,8 +167,9 @@ class CompetitionAppServiceImplIntegrationTest extends BaseIntegrationTest {
         for (int i = 0; i < 3; i++) {
             competitionAppService.createCompetition(
                     createCommand(
-                            createNormalImage("page-logo-" + i),
-                            createNormalImage("page-cover-" + i)));
+                            "分页竞赛" + i,
+                            createNormalImage("page-logo-" + i).getId(),
+                            createNormalImage("page-cover-" + i).getId()));
         }
 
         Page<CompetitionReadModel> firstPage = competitionAppService.getCompetitionPage(0, 2);
@@ -279,12 +288,14 @@ class CompetitionAppServiceImplIntegrationTest extends BaseIntegrationTest {
     void batchUpdateSortOrder_shouldUpdateMultiple() {
         CompetitionResult first = competitionAppService.createCompetition(
                 createCommand(
-                        createNormalImage("batch-logo-1"),
-                        createNormalImage("batch-cover-1")));
+                        "批量竞赛A",
+                        createNormalImage("batch-logo-1").getId(),
+                        createNormalImage("batch-cover-1").getId()));
         CompetitionResult second = competitionAppService.createCompetition(
                 createCommand(
-                        createNormalImage("batch-logo-2"),
-                        createNormalImage("batch-cover-2")));
+                        "批量竞赛B",
+                        createNormalImage("batch-logo-2").getId(),
+                        createNormalImage("batch-cover-2").getId()));
 
         competitionAppService.batchUpdateSortOrder(
                 new CompetitionCommands.BatchUpdateSortOrderCommand(List.of(
@@ -324,16 +335,19 @@ class CompetitionAppServiceImplIntegrationTest extends BaseIntegrationTest {
     void moveCompetition_up_shouldSwapWithPrevious() {
         CompetitionResult first = competitionAppService.createCompetition(
                 createCommand(
-                        createNormalImage("move-up-logo-1"),
-                        createNormalImage("move-up-cover-1")));
+                        "移动竞赛A",
+                        createNormalImage("move-up-logo-1").getId(),
+                        createNormalImage("move-up-cover-1").getId()));
         CompetitionResult second = competitionAppService.createCompetition(
                 createCommand(
-                        createNormalImage("move-up-logo-2"),
-                        createNormalImage("move-up-cover-2")));
+                        "移动竞赛B",
+                        createNormalImage("move-up-logo-2").getId(),
+                        createNormalImage("move-up-cover-2").getId()));
         CompetitionResult third = competitionAppService.createCompetition(
                 createCommand(
-                        createNormalImage("move-up-logo-3"),
-                        createNormalImage("move-up-cover-3")));
+                        "移动竞赛C",
+                        createNormalImage("move-up-logo-3").getId(),
+                        createNormalImage("move-up-cover-3").getId()));
 
         competitionAppService.moveCompetition(
                 new CompetitionCommands.MoveCompetitionCommand(second.id(), "UP"));
@@ -355,16 +369,19 @@ class CompetitionAppServiceImplIntegrationTest extends BaseIntegrationTest {
     void moveCompetition_down_shouldSwapWithNext() {
         CompetitionResult first = competitionAppService.createCompetition(
                 createCommand(
-                        createNormalImage("move-down-logo-1"),
-                        createNormalImage("move-down-cover-1")));
+                        "下移竞赛A",
+                        createNormalImage("move-down-logo-1").getId(),
+                        createNormalImage("move-down-cover-1").getId()));
         CompetitionResult second = competitionAppService.createCompetition(
                 createCommand(
-                        createNormalImage("move-down-logo-2"),
-                        createNormalImage("move-down-cover-2")));
+                        "下移竞赛B",
+                        createNormalImage("move-down-logo-2").getId(),
+                        createNormalImage("move-down-cover-2").getId()));
         CompetitionResult third = competitionAppService.createCompetition(
                 createCommand(
-                        createNormalImage("move-down-logo-3"),
-                        createNormalImage("move-down-cover-3")));
+                        "下移竞赛C",
+                        createNormalImage("move-down-logo-3").getId(),
+                        createNormalImage("move-down-cover-3").getId()));
 
         competitionAppService.moveCompetition(
                 new CompetitionCommands.MoveCompetitionCommand(second.id(), "DOWN"));
@@ -402,12 +419,14 @@ class CompetitionAppServiceImplIntegrationTest extends BaseIntegrationTest {
     void moveCompetition_upAtFirst_shouldThrowIllegalArgument() {
         CompetitionResult first = competitionAppService.createCompetition(
                 createCommand(
-                        createNormalImage("move-first-logo-1"),
-                        createNormalImage("move-first-cover-1")));
+                        "首竞赛A",
+                        createNormalImage("move-first-logo-1").getId(),
+                        createNormalImage("move-first-cover-1").getId()));
         competitionAppService.createCompetition(
                 createCommand(
-                        createNormalImage("move-first-logo-2"),
-                        createNormalImage("move-first-cover-2")));
+                        "首竞赛B",
+                        createNormalImage("move-first-logo-2").getId(),
+                        createNormalImage("move-first-cover-2").getId()));
 
         assertThatThrownBy(
                 () -> competitionAppService.moveCompetition(
@@ -418,16 +437,96 @@ class CompetitionAppServiceImplIntegrationTest extends BaseIntegrationTest {
 
     @Test
     @WithSecurityPrincipal(userId = 1L, roleType = "SUPER_ADMIN")
+    @DisplayName("createCompetition: 竞赛名称重复应抛 BadRequest")
+    void createCompetition_duplicateName_shouldThrowBadRequest() {
+        File logo = createNormalImage("dup-logo-1");
+        File cover = createNormalImage("dup-cover-1");
+        competitionAppService.createCompetition(createCommand(logo, cover));
+
+        File logo2 = createNormalImage("dup-logo-2");
+        File cover2 = createNormalImage("dup-cover-2");
+        CompetitionCommands.CreateCompetitionCommand duplicateCommand = createCommand(logo2, cover2);
+
+        assertThatThrownBy(() -> competitionAppService.createCompetition(duplicateCommand))
+                .isInstanceOf(BadRequest.class)
+                .hasMessageContaining("竞赛名称已存在");
+    }
+
+    @Test
+    @WithSecurityPrincipal(userId = 1L, roleType = "SUPER_ADMIN")
+    @DisplayName("updateCompetition: 竞赛名称重复应抛 BadRequest")
+    void updateCompetition_duplicateName_shouldThrowBadRequest() {
+        CompetitionResult first = competitionAppService.createCompetition(
+                createCommand(
+                        createNormalImage("update-dup-logo-1"),
+                        createNormalImage("update-dup-cover-1")));
+        CompetitionResult second = competitionAppService.createCompetition(
+                new CompetitionCommands.CreateCompetitionCommand(
+                        "另一个竞赛",
+                        "另一个竞赛",
+                        createNormalImage("update-dup-logo-2").getId(),
+                        createNormalImage("update-dup-cover-2").getId(),
+                        "摘要",
+                        AwardLevel.PROVINCIAL,
+                        "10月",
+                        "主办方"));
+
+        CompetitionCommands.UpdateCompetitionCommand command = new CompetitionCommands.UpdateCompetitionCommand(
+                second.id(),
+                "蓝网杯",
+                "新简称",
+                null,
+                null,
+                "新摘要",
+                AwardLevel.NATIONAL,
+                "11月",
+                "新主办方");
+
+        assertThatThrownBy(() -> competitionAppService.updateCompetition(command))
+                .isInstanceOf(BadRequest.class)
+                .hasMessageContaining("竞赛名称已存在");
+    }
+
+    @Test
+    @WithSecurityPrincipal(userId = 1L, roleType = "SUPER_ADMIN")
+    @DisplayName("updateCompetition: 名称未修改时不应抛重复异常")
+    void updateCompetition_sameName_shouldNotThrow() {
+        CompetitionResult created = competitionAppService.createCompetition(
+                createCommand(
+                        createNormalImage("same-name-logo"),
+                        createNormalImage("same-name-cover")));
+
+        CompetitionCommands.UpdateCompetitionCommand command = new CompetitionCommands.UpdateCompetitionCommand(
+                created.id(),
+                "蓝网杯",
+                "更新后的简称",
+                null,
+                null,
+                "更新后的摘要",
+                AwardLevel.NATIONAL,
+                "12月",
+                "更新后的主办方");
+
+        CompetitionResult result = competitionAppService.updateCompetition(command);
+
+        assertThat(result.name()).isEqualTo("蓝网杯");
+        assertThat(result.shortName()).isEqualTo("更新后的简称");
+    }
+
+    @Test
+    @WithSecurityPrincipal(userId = 1L, roleType = "SUPER_ADMIN")
     @DisplayName("moveCompetition: 已是最后一个时 DOWN 应抛 IllegalArgumentException")
     void moveCompetition_downAtLast_shouldThrowIllegalArgument() {
         competitionAppService.createCompetition(
                 createCommand(
-                        createNormalImage("move-last-logo-1"),
-                        createNormalImage("move-last-cover-1")));
+                        "末竞赛A",
+                        createNormalImage("move-last-logo-1").getId(),
+                        createNormalImage("move-last-cover-1").getId()));
         CompetitionResult last = competitionAppService.createCompetition(
                 createCommand(
-                        createNormalImage("move-last-logo-2"),
-                        createNormalImage("move-last-cover-2")));
+                        "末竞赛B",
+                        createNormalImage("move-last-logo-2").getId(),
+                        createNormalImage("move-last-cover-2").getId()));
 
         assertThatThrownBy(
                 () -> competitionAppService.moveCompetition(

@@ -74,4 +74,13 @@ public interface CompetitionMapper extends BaseMapper<CompetitionDO> {
      * @return 满足条件的竞赛 结果集合。
      */
     List<CompetitionDO> selectByNames(@Param("names") List<String> names);
+
+    /**
+     * 按名称查询竞赛 数据行。
+     *
+     * @param name
+     *            竞赛名称。
+     * @return 匹配条件的竞赛 数据行；不存在时为 null。
+     */
+    CompetitionDO selectByName(@Param("name") String name);
 }

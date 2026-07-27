@@ -77,6 +77,10 @@ public class CompetitionAppServiceImpl implements CompetitionAppService {
         validateFileId(command.logoFileId(), "Logo");
         validateFileId(command.coverFileId(), "封面");
 
+        if (competitionRepository.existsByName(command.name())) {
+            throw new BadRequest("竞赛名称已存在");
+        }
+
         Integer maxSortOrder = competitionRepository.findMaxSortOrder();
         Integer sortOrder = maxSortOrder != null ? maxSortOrder + 1 : 1;
 
@@ -110,6 +114,11 @@ public class CompetitionAppServiceImpl implements CompetitionAppService {
 
         validateFileId(command.logoFileId(), "Logo");
         validateFileId(command.coverFileId(), "封面");
+
+        if (!competition.getName().equals(command.name())
+                && competitionRepository.existsByName(command.name())) {
+            throw new BadRequest("竞赛名称已存在");
+        }
 
         competition.update(
                 command.name(),

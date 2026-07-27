@@ -90,6 +90,17 @@ public class CompetitionRepositoryImpl implements CompetitionRepository {
     }
 
     @Override
+    public Optional<Competition> findByName(String name) {
+        CompetitionDO dataObject = competitionMapper.selectByName(name);
+        return Optional.ofNullable(converter.toEntity(dataObject));
+    }
+
+    @Override
+    public boolean existsByName(String name) {
+        return competitionMapper.selectByName(name) != null;
+    }
+
+    @Override
     public Optional<Competition> findAdjacent(Integer sortOrder, String direction) {
         CompetitionDO dataObject;
         if ("UP".equals(direction)) {

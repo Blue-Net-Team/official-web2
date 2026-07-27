@@ -109,6 +109,7 @@ public class AchievementRepositoryImpl implements AchievementRepository {
         List<String> competitionNames = achievements.stream()
                 .map(AchievementDO::getRelateTo)
                 .filter(Objects::nonNull)
+                .map(String::trim)
                 .distinct()
                 .toList();
         Map<String, CompetitionDO> competitions = competitionNames.isEmpty()
@@ -121,7 +122,8 @@ public class AchievementRepositoryImpl implements AchievementRepository {
                         achievement -> toVO(
                                 achievement,
                                 files.get(achievement.getFileId()),
-                                competitions.get(achievement.getRelateTo())))
+                                competitions.get(
+                                        achievement.getRelateTo() == null ? null : achievement.getRelateTo().trim())))
                 .toList();
     }
 

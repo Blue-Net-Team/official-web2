@@ -16,6 +16,7 @@ import { ACHIEVEMENT_TYPE_LABELS, AWARD_LEVEL_LABELS } from '@/apis/schema/enume
 import { API_BASE_URL } from '@/apis/config'
 import { fileService } from '@/apis/services/file.service'
 import { adminAchievementService } from '@/apis/services/admin-achievement.service'
+import { competitionService } from '@/apis/services/competition.service'
 
 export type DrawerMode = 'create' | 'edit'
 
@@ -54,6 +55,24 @@ export default function AchievementDrawer({
   const [fileUploading, setFileUploading] = useState(false)
   const [fileId, setFileId] = useState<number | null>(null)
   const [selectedType, setSelectedType] = useState<AchievementType | undefined>()
+  const [competitionOptions, setCompetitionOptions] = useState<{ value: string; label: string }[]>(
+    []
+  )
+
+  // 加载竞赛列表用于关联项选择
+  useEffect(() => {
+    const fetchCompetitions = async () => {
+      try {
+        const res = await competitionService.getAllCompetitions()
+        if (res.code === 200 && res.data) {
+          setCompetitionOptions(res.data.map((c) => ({ value: c.name, label: c.name })))
+        }
+      } catch (error) {
+        console.error('Failed to fetch competitions:', error)
+      }
+    }
+    fetchCompetitions()
+  }, [])
 
   // 当打开或数据/模式变化时重置表单
   useEffect(() => {
@@ -82,13 +101,14 @@ export default function AchievementDrawer({
     try {
       const values = await form.validateFields()
       const achieveAt = values.achieveAt ? dayjs(values.achieveAt).format('YYYY-MM-DD') : null
+      const relateTo = values.relateTo?.trim() || null
 
       setSaving(true)
       if (mode === 'create') {
         const payload: CreateAchievementRequestDTO = {
           title: values.title,
           type: values.type!,
-          relateTo: values.relateTo || null,
+          relateTo,
           achieveAt: achieveAt!,
           awardLevel: values.type === 'COMPETITION' ? values.awardLevel || null : null,
           awardName: values.type === 'COMPETITION' ? values.awardName || null : null,
@@ -100,7 +120,7 @@ export default function AchievementDrawer({
         const payload: UpdateAchievementRequestDTO = {
           title: values.title,
           type: values.type,
-          relateTo: values.relateTo || null,
+          relateTo,
           achieveAt: achieveAt ?? undefined,
           awardLevel: values.type === 'COMPETITION' ? values.awardLevel || null : null,
           awardName: values.type === 'COMPETITION' ? values.awardName || null : null,
@@ -112,7 +132,8 @@ export default function AchievementDrawer({
       onSuccess()
     } catch (error) {
       console.error('保存失败:', error)
-      messageApi.error('保存失败')
+      const err = error as { response?: { data?: { msg?: string } } }
+      messageApi.error(err.response?.data?.msg || '保存失败')
     } finally {
       setSaving(false)
     }
@@ -193,10 +214,27 @@ export default function AchievementDrawer({
         <Form.Item
           label="关联项"
           name="relateTo"
-          tooltip="竞赛为赛项名，论文为期刊名，专利可为空"
+          tooltip={
+            selectedType === 'COMPETITION'
+              ? '请选择已有竞赛或输入新的竞赛名称'
+              : '竞赛为赛项名，论文为期刊名，专利可为空'
+          }
           rules={[{ required: selectedType != 'PATENT', message: '请输入关联项' }]}
         >
-          <Input placeholder="例如：蓝桥杯、计算机学报" maxLength={100} />
+          {selectedType === 'COMPETITION' ? (
+            <Select
+              showSearch
+              allowClear
+              placeholder="请选择或输入竞赛名称"
+              options={competitionOptions}
+              filterOption={(input, option) =>
+                (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+              }
+              onChange={(value) => form.setFieldValue('relateTo', value)}
+            />
+          ) : (
+            <Input placeholder="例如：蓝桥杯、计算机学报" maxLength={100} />
+          )}
         </Form.Item>
 
         <Form.Item

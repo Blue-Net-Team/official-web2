@@ -83,6 +83,24 @@ public interface CompetitionRepository {
     Optional<Competition> findById(Long id);
 
     /**
+     * 按名称查询竞赛记录。
+     *
+     * @param name
+     *            竞赛名称。
+     * @return 查询到的竞赛实体；不存在时为 Optional.empty()。
+     */
+    Optional<Competition> findByName(String name);
+
+    /**
+     * 判断是否存在指定名称的竞赛记录。
+     *
+     * @param name
+     *            竞赛名称。
+     * @return 存在时返回 true，否则返回 false。
+     */
+    boolean existsByName(String name);
+
+    /**
      * 查询当前竞赛相邻位置的竞赛记录，用于排序调整。
      *
      * @param sortOrder
