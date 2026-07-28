@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   App,
   Button,
@@ -77,6 +77,7 @@ export default function AchievementDrawer({
   )
   const [memberOptions, setMemberOptions] = useState<{ value: string; label: string }[]>([])
   const [memberSearching, setMemberSearching] = useState(false)
+  const membersText = Form.useWatch('members', form) || ''
   // 展示名 → 用户ID 映射，用于提交时从 Mentions 文本反解 userIds
   const memberMapRef = useRef<Map<string, number>>(new Map())
   // 全量成员列表是否已加载（Mentions 的 onSearch 仅在输入 @ 时触发，搜索交由客户端过滤）
@@ -117,14 +118,17 @@ export default function AchievementDrawer({
     try {
       const res = await adminUserService.getList({ size: 100 })
       if (res.code === 200 && res.data) {
-        const options = res.data.content.map((user) => {
-          // 以姓名作为 @ 展示名，与成就回显的 members[].username 保持一致
-          const key = registerMember(user.id, user.username, user.studentId)
-          return {
-            value: key,
-            label: user.nickname ? `${key}（${user.nickname}）` : key,
-          }
-        })
+        const options = res.data.content
+          // 过滤内置 system 用户，避免被关联到成就
+          .filter((user) => user.username !== 'system')
+          .map((user) => {
+            // 以姓名作为 @ 展示名，与成就回显的 members[].username 保持一致
+            const key = registerMember(user.id, user.username, user.studentId)
+            return {
+              value: key,
+              label: user.nickname ? `${key}（${user.nickname}）` : key,
+            }
+          })
         setMemberOptions(options)
         membersLoadedRef.current = true
       }
@@ -134,6 +138,26 @@ export default function AchievementDrawer({
       setMemberSearching(false)
     }
   }
+
+  // 从当前 Mentions 文本中解析已选中的成员 ID，避免重复选择
+  const selectedMemberIds = useMemo(() => {
+    const ids = new Set<number>()
+    const text = String(membersText)
+    memberMapRef.current.forEach((id, display) => {
+      if (text.includes(`@${display}`)) {
+        ids.add(id)
+      }
+    })
+    return ids
+  }, [membersText])
+
+  // 下拉选项中排除已选成员
+  const availableMemberOptions = useMemo(() => {
+    return memberOptions.filter((option) => {
+      const id = memberMapRef.current.get(option.value)
+      return id !== undefined && !selectedMemberIds.has(id)
+    })
+  }, [memberOptions, selectedMemberIds])
 
   // 当打开或数据/模式变化时重置表单
   useEffect(() => {
@@ -364,7 +388,7 @@ export default function AchievementDrawer({
         >
           <Mentions
             placeholder="输入 @ 搜索系统内成员"
-            options={memberOptions}
+            options={availableMemberOptions}
             onSearch={handleMemberSearch}
             loading={memberSearching}
             autoSize={{ minRows: 2, maxRows: 4 }}
