@@ -308,10 +308,10 @@ export default function ProfileSidebar({
 
         {tabCounts && (
           <div className="grid grid-cols-3 gap-3 pt-6 border-t border-white/[0.05]">
-            {(['projects', 'competitions', 'internships'] as const).map((tab) => {
+            {(['projects', 'achievements', 'internships'] as const).map((tab) => {
               const labelMap = {
                 projects: '项目经历',
-                competitions: '竞赛经历',
+                achievements: '个人成就',
                 internships: '实习经历',
               }
               return (

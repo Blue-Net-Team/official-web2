@@ -3,13 +3,13 @@ package com.bluenet.web.application.service.impl;
 import com.bluenet.web.application.result.user.UserExperienceResult;
 import com.bluenet.web.application.command.userexperience.UserExperienceCommands;
 import com.bluenet.web.application.service.UserExperienceAppService;
+import com.bluenet.web.domain.exception.BadRequest;
 import com.bluenet.web.domain.exception.DataNotFound;
 import com.bluenet.web.domain.exception.Forbidden;
 import com.bluenet.web.domain.exception.Unauthorized;
 import com.bluenet.web.domain.model.entity.UserExperience;
 import com.bluenet.web.domain.model.enumerate.ExperienceType;
 import com.bluenet.web.domain.model.entity.User;
-import com.bluenet.web.domain.model.vo.experience_content.CompetitionContent;
 import com.bluenet.web.domain.model.vo.experience_content.InternshipContent;
 import com.bluenet.web.domain.model.vo.experience_content.ProjectContent;
 import com.bluenet.web.domain.repository.UserExperienceRepository;
@@ -47,11 +47,17 @@ public class UserExperienceAppServiceImpl implements UserExperienceAppService {
      *            经历类型
      * @return 用户经历结果列表
      */
+    private static final String COMPETITION_OFFLINE_MESSAGE = "竞赛经历已下线，请联系管理员在成就系统中维护";
+
     @Override
     public List<UserExperienceResult> getExperiences(String type) {
         Long userId = getCurrentUserId();
         List<UserExperience> experiences;
         if (type != null && !type.isBlank()) {
+            if (isCompetitionType(type)) {
+                // 竞赛经历已迁移到成就系统，返回空列表
+                return List.of();
+            }
             ExperienceType experienceType = parseExperienceType(type);
             experiences = userExperienceRepository.findByUserIdAndType(userId, experienceType);
         } else {
@@ -146,18 +152,24 @@ public class UserExperienceAppServiceImpl implements UserExperienceAppService {
         return user.getId();
     }
 
+    private boolean isCompetitionType(String type) {
+        return "COMPETITION".equalsIgnoreCase(type);
+    }
+
     private ExperienceType parseExperienceType(String type) {
+        if (isCompetitionType(type)) {
+            throw new BadRequest(COMPETITION_OFFLINE_MESSAGE);
+        }
         try {
-            return ExperienceType.valueOf(type);
+            return ExperienceType.valueOf(type.toUpperCase());
         } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("无效的经历类型: " + type);
+            throw new BadRequest("无效的经历类型: " + type);
         }
     }
 
     private String extractTitle(UserExperienceCommands.CreateExperienceCommand command, ExperienceType type) {
         return switch (type) {
             case PROJECT -> command.name();
-            case COMPETITION -> command.name();
             case INTERNSHIP -> command.company();
         };
     }
@@ -171,16 +183,6 @@ public class UserExperienceAppServiceImpl implements UserExperienceAppService {
                                 .description(command.description())
                                 .techStack(command.techStack())
                                 .demoUrl(command.demoUrl())
-                                .build());
-                case COMPETITION -> objectMapper.writeValueAsString(
-                        CompetitionContent.builder()
-                                .role(command.role())
-                                .date(command.date())
-                                .level(command.level())
-                                .award(command.award())
-                                .teamSize(command.teamSize())
-                                .description(command.description())
-                                .certificateUrl(command.certificateUrl())
                                 .build());
                 case INTERNSHIP -> objectMapper.writeValueAsString(
                         InternshipContent.builder()
@@ -205,16 +207,6 @@ public class UserExperienceAppServiceImpl implements UserExperienceAppService {
                                 .description(command.description())
                                 .techStack(command.techStack())
                                 .demoUrl(command.demoUrl())
-                                .build());
-                case COMPETITION -> objectMapper.writeValueAsString(
-                        CompetitionContent.builder()
-                                .role(command.role())
-                                .date(command.date())
-                                .level(command.level())
-                                .award(command.award())
-                                .teamSize(command.teamSize())
-                                .description(command.description())
-                                .certificateUrl(command.certificateUrl())
                                 .build());
                 case INTERNSHIP -> objectMapper.writeValueAsString(
                         InternshipContent.builder()

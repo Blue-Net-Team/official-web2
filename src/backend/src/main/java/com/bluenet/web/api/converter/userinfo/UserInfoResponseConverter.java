@@ -44,7 +44,7 @@ public class UserInfoResponseConverter {
     public TabCountsDTO toTabCountsDTO(TabCounts tabCounts) {
         return TabCountsDTO.builder()
                 .projects(tabCounts.getProjects())
-                .competitions(tabCounts.getCompetitions())
+                .achievements(tabCounts.getAchievements())
                 .internships(tabCounts.getInternships())
                 .build();
     }

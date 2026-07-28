@@ -4,6 +4,7 @@ import com.bluenet.web.BaseIntegrationTest;
 import com.bluenet.web.application.command.userexperience.UserExperienceCommands;
 import com.bluenet.web.application.result.user.UserExperienceResult;
 import com.bluenet.web.application.service.UserExperienceAppService;
+import com.bluenet.web.domain.exception.BadRequest;
 import com.bluenet.web.domain.exception.DataNotFound;
 import com.bluenet.web.domain.exception.Forbidden;
 import com.bluenet.web.domain.exception.Unauthorized;
@@ -84,11 +85,6 @@ class UserExperienceAppServiceImplIntegrationTest extends BaseIntegrationTest {
                 null,
                 null,
                 null,
-                null,
-                null,
-                null,
-                null,
-                null,
                 null);
 
         UserExperienceResult result = userExperienceAppService.createExperience(command);
@@ -115,6 +111,23 @@ class UserExperienceAppServiceImplIntegrationTest extends BaseIntegrationTest {
                 null,
                 null,
                 null,
+                null);
+
+        assertThrows(
+                BadRequest.class,
+                () -> userExperienceAppService.createExperience(command));
+    }
+
+    @Test
+    @DisplayName("createExperience: 竞赛类型已下线应抛异常")
+    void createExperience_competition_shouldThrow() {
+        UserExperienceCommands.CreateExperienceCommand command = new UserExperienceCommands.CreateExperienceCommand(
+                "COMPETITION",
+                "蓝桥杯",
+                "参赛者",
+                "2024.03",
+                null,
+                "描述",
                 null,
                 null,
                 null,
@@ -122,24 +135,35 @@ class UserExperienceAppServiceImplIntegrationTest extends BaseIntegrationTest {
                 null,
                 null);
 
-        assertThrows(
-                IllegalArgumentException.class,
+        BadRequest exception = assertThrows(
+                BadRequest.class,
                 () -> userExperienceAppService.createExperience(command));
+        assertEquals("竞赛经历已下线，请联系管理员在成就系统中维护", exception.getMessage());
     }
 
     @Test
     @DisplayName("getExperiences: 应按类型过滤")
     void getExperiences_shouldFilterByType() {
         createProject("项目A");
-        createCompetition("竞赛B");
+        createInternship("公司B");
 
         List<UserExperienceResult> projects = userExperienceAppService.getExperiences("PROJECT");
-        List<UserExperienceResult> competitions = userExperienceAppService.getExperiences("COMPETITION");
+        List<UserExperienceResult> internships = userExperienceAppService.getExperiences("INTERNSHIP");
 
         assertEquals(1, projects.size());
         assertEquals("项目A", projects.get(0).title());
-        assertEquals(1, competitions.size());
-        assertEquals("竞赛B", competitions.get(0).title());
+        assertEquals(1, internships.size());
+        assertEquals("公司B", internships.get(0).title());
+    }
+
+    @Test
+    @DisplayName("getExperiences: 查询竞赛类型应返回空列表")
+    void getExperiences_competition_shouldReturnEmpty() {
+        createProject("项目A");
+
+        List<UserExperienceResult> competitions = userExperienceAppService.getExperiences("COMPETITION");
+
+        assertTrue(competitions.isEmpty());
     }
 
     @Test
@@ -155,11 +179,6 @@ class UserExperienceAppServiceImplIntegrationTest extends BaseIntegrationTest {
                 "新描述",
                 List.of("Go"),
                 "https://new.example.com",
-                null,
-                null,
-                null,
-                null,
-                null,
                 null,
                 null,
                 null);
@@ -183,11 +202,6 @@ class UserExperienceAppServiceImplIntegrationTest extends BaseIntegrationTest {
         UserExperienceCommands.UpdateExperienceCommand command = new UserExperienceCommands.UpdateExperienceCommand(
                 created.id(),
                 "篡改",
-                null,
-                null,
-                null,
-                null,
-                null,
                 null,
                 null,
                 null,
@@ -242,33 +256,23 @@ class UserExperienceAppServiceImplIntegrationTest extends BaseIntegrationTest {
                 null,
                 null,
                 null,
-                null,
-                null,
-                null,
-                null,
-                null,
                 null);
         return userExperienceAppService.createExperience(command);
     }
 
-    private UserExperienceResult createCompetition(String name) {
+    private UserExperienceResult createInternship(String company) {
         UserExperienceCommands.CreateExperienceCommand command = new UserExperienceCommands.CreateExperienceCommand(
-                "COMPETITION",
-                name,
-                "参赛者",
+                "INTERNSHIP",
+                null,
+                null,
                 "2024.03",
                 null,
                 "描述",
                 null,
                 null,
-                "2024.04",
-                "国家级",
-                "一等奖",
-                3,
-                null,
-                null,
-                null,
-                null,
+                company,
+                "实习生",
+                "active",
                 null);
         return userExperienceAppService.createExperience(command);
     }

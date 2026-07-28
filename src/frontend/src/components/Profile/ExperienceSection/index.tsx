@@ -5,7 +5,6 @@ import type { UserExperience } from '@/apis/schema/type'
 import type { ExperienceType } from '@/apis/schema/enumerate'
 import {
   FolderOutlined,
-  TrophyOutlined,
   SolutionOutlined,
   EditOutlined,
   DeleteOutlined,
@@ -90,8 +89,6 @@ export default function ExperienceSection({
     switch (type) {
       case 'PROJECT':
         return <FolderOutlined />
-      case 'COMPETITION':
-        return <TrophyOutlined />
       case 'INTERNSHIP':
         return <SolutionOutlined />
     }
@@ -129,60 +126,6 @@ export default function ExperienceSection({
             </Form.Item>
             <Form.Item name="demoUrl" label="演示链接">
               <Input placeholder="https://..." />
-            </Form.Item>
-          </>
-        )
-      case 'COMPETITION':
-        return (
-          <>
-            <Form.Item name="name" label="竞赛名称" rules={[{ required: true }]}>
-              <Input placeholder="请输入竞赛名称" />
-            </Form.Item>
-            <Form.Item name="role" label="担任角色" rules={[{ required: true }]}>
-              <Input placeholder="如：团队负责人、技术负责人" />
-            </Form.Item>
-            <div className="flex gap-4">
-              <Form.Item name="startDate" label="开始时间" className="flex-1">
-                <Input placeholder="如：2024.08" />
-              </Form.Item>
-              <Form.Item name="endDate" label="结束时间" className="flex-1">
-                <Input placeholder="如：2024.08" />
-              </Form.Item>
-            </div>
-            <Form.Item name="date" label="参赛时间" rules={[{ required: true }]}>
-              <Input placeholder="如：2024年8月" />
-            </Form.Item>
-            <Form.Item name="level" label="竞赛级别">
-              <Select
-                options={[
-                  { value: '国家级', label: '国家级' },
-                  { value: '省级', label: '省级' },
-                  { value: '区域赛', label: '区域赛' },
-                  { value: '校级', label: '校级' },
-                ]}
-                placeholder="请选择竞赛级别"
-              />
-            </Form.Item>
-            <Form.Item name="award" label="获奖等级" rules={[{ required: true }]}>
-              <Select
-                options={[
-                  { value: '一等奖', label: '一等奖' },
-                  { value: '二等奖', label: '二等奖' },
-                  { value: '三等奖', label: '三等奖' },
-                  { value: '铜牌', label: '铜牌' },
-                  { value: '参与奖', label: '参与奖' },
-                ]}
-                placeholder="请选择获奖等级"
-              />
-            </Form.Item>
-            <Form.Item name="teamSize" label="团队人数" rules={[{ required: true }]}>
-              <Input type="number" placeholder="请输入团队人数" />
-            </Form.Item>
-            <Form.Item name="description" label="竞赛描述" rules={[{ required: true }]}>
-              <Input.TextArea rows={4} placeholder="描述参赛作品、你的贡献和收获" />
-            </Form.Item>
-            <Form.Item name="certificateUrl" label="获奖证书链接">
-              <Input placeholder="证书图片链接（如有）" />
             </Form.Item>
           </>
         )
@@ -264,7 +207,7 @@ export default function ExperienceSection({
             icon={<PlusOutlined />}
             onClick={() => handleOpenModal()}
           >
-            添加{type === 'PROJECT' ? '项目' : type === 'COMPETITION' ? '竞赛' : '实习'}
+            添加{type === 'PROJECT' ? '项目' : '实习'}
           </Button>
         )}
       </div>
@@ -281,7 +224,7 @@ export default function ExperienceSection({
             {getIcon()}
           </div>
           <h3 className="text-lg font-semibold text-white mb-2 m-0">
-            暂无{type === 'PROJECT' ? '项目' : type === 'COMPETITION' ? '竞赛' : '实习'}经历
+            暂无{type === 'PROJECT' ? '项目' : '实习'}经历
           </h3>
           {!readOnly && (
             <p className="text-sm text-[rgba(140,140,141,1)] m-0">点击上方按钮添加你的经历</p>

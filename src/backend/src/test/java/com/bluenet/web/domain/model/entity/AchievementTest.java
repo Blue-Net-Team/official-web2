@@ -6,6 +6,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -149,5 +150,95 @@ class AchievementTest {
                         null))
                                 .isInstanceOf(IllegalArgumentException.class)
                                 .hasMessageContaining("奖项级别");
+    }
+
+    @Test
+    @DisplayName("assignMembers: 应设置系统内成员和外部协作者")
+    void assignMembers_shouldSetMembers() {
+        Achievement achievement = Achievement.create(
+                "团队成就",
+                AchievementType.COMPETITION,
+                "竞赛",
+                LocalDate.of(2024, 5, 1),
+                AwardLevel.NATIONAL,
+                "一等奖",
+                1L);
+
+        achievement.assignMembers(List.of(1L, 2L), List.of("张三-外校", "李四-他队"));
+
+        assertThat(achievement.getMemberIds()).containsExactly(1L, 2L);
+        assertThat(achievement.getExternalMembers()).containsExactly("张三-外校", "李四-他队");
+    }
+
+    @Test
+    @DisplayName("assignMembers: 成员ID应去重并忽略null")
+    void assignMembers_shouldDeduplicateMemberIds() {
+        Achievement achievement = Achievement.create(
+                "团队成就",
+                AchievementType.COMPETITION,
+                "竞赛",
+                LocalDate.of(2024, 5, 1),
+                AwardLevel.NATIONAL,
+                "一等奖",
+                1L);
+
+        achievement.assignMembers(java.util.Arrays.asList(1L, null, 1L, 2L), null);
+
+        assertThat(achievement.getMemberIds()).containsExactly(1L, 2L);
+        assertThat(achievement.getExternalMembers()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("assignMembers: 外部协作者应trim、去空、去重")
+    void assignMembers_shouldNormalizeExternalMembers() {
+        Achievement achievement = Achievement.create(
+                "团队成就",
+                AchievementType.COMPETITION,
+                "竞赛",
+                LocalDate.of(2024, 5, 1),
+                AwardLevel.NATIONAL,
+                "一等奖",
+                1L);
+
+        achievement.assignMembers(null, java.util.Arrays.asList(" 张三 ", null, "", "   ", "张三", "李四"));
+
+        assertThat(achievement.getExternalMembers()).containsExactly("张三", "李四");
+    }
+
+    @Test
+    @DisplayName("assignMembers: 外部协作者姓名超长应抛异常")
+    void assignMembers_tooLongName_shouldThrow() {
+        Achievement achievement = Achievement.create(
+                "团队成就",
+                AchievementType.COMPETITION,
+                "竞赛",
+                LocalDate.of(2024, 5, 1),
+                AwardLevel.NATIONAL,
+                "一等奖",
+                1L);
+        String longName = "长".repeat(101);
+
+        assertThatThrownBy(() -> achievement.assignMembers(null, List.of(longName)))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("外部协作者姓名不能超过100字符");
+    }
+
+    @Test
+    @DisplayName("assignMembers: 全量替换旧关联")
+    void assignMembers_shouldReplaceExisting() {
+        Achievement achievement = Achievement.create(
+                "团队成就",
+                AchievementType.COMPETITION,
+                "竞赛",
+                LocalDate.of(2024, 5, 1),
+                AwardLevel.NATIONAL,
+                "一等奖",
+                1L);
+        achievement.assignMembers(List.of(1L, 2L), List.of("张三"));
+
+        achievement.assignMembers(List.of(3L), List.of("李四"));
+
+        assertThat(achievement.getMemberIds()).containsExactly(3L);
+        assertThat(achievement.getExternalMembers()).containsExactly("李四");
     }
 }

@@ -1,16 +1,23 @@
 package com.bluenet.web.api.controller.v1.member;
 
 import com.bluenet.web.BaseIntegrationTest;
+import com.bluenet.web.api.dto.achievement.AchievementDTO;
+import com.bluenet.web.api.dto.achievement.AchievementMemberDTO;
 import com.bluenet.web.api.dto.experience.ExperienceDTO;
 import com.bluenet.web.api.dto.member.DirectionLeaderDTO;
 import com.bluenet.web.api.dto.member.MemberBriefDTO;
 import com.bluenet.web.api.dto.member.MemberDetailDTO;
+import com.bluenet.web.api.converter.achievement.AchievementResponseConverter;
 import com.bluenet.web.api.converter.member.MemberResponseConverter;
 import com.bluenet.web.api.converter.userexperience.UserExperienceResponseConverter;
+import com.bluenet.web.application.result.achievement.AchievementMemberResult;
+import com.bluenet.web.application.result.achievement.AchievementResult;
 import com.bluenet.web.application.result.member.MemberResult;
 import com.bluenet.web.application.result.user.UserExperienceResult;
 import com.bluenet.web.application.service.MemberAppService;
 import com.bluenet.web.domain.exception.DataNotFound;
+import com.bluenet.web.domain.model.enumerate.AchievementType;
+import com.bluenet.web.domain.model.enumerate.AwardLevel;
 import com.bluenet.web.domain.model.enumerate.Direction;
 import com.bluenet.web.domain.model.enumerate.ExperienceType;
 import com.bluenet.web.domain.model.enumerate.Gender;
@@ -29,6 +36,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -57,6 +65,9 @@ class MemberControllerIntegrationTest extends BaseIntegrationTest {
 
     @MockitoBean
     private UserExperienceResponseConverter userExperienceResponseConverter;
+
+    @MockitoBean
+    private AchievementResponseConverter achievementResponseConverter;
 
     @AfterEach
     void tearDown() {
@@ -206,6 +217,73 @@ class MemberControllerIntegrationTest extends BaseIntegrationTest {
                 .thenThrow(new DataNotFound("成员不存在"));
 
         mockMvc.perform(get("/api/v1/members/{memberId}/experiences", 9999L))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value(404));
+    }
+
+    @Test
+    void getMemberAchievements_anonymous_returnsAchievements() throws Exception {
+        AchievementResult result = new AchievementResult(
+                1L,
+                "蓝桥杯全国一等奖",
+                AchievementType.COMPETITION,
+                "蓝桥杯",
+                LocalDate.of(2024, 4, 15),
+                AwardLevel.NATIONAL,
+                "国家级",
+                "一等奖",
+                "蓝桥杯",
+                "蓝桥杯",
+                100L,
+                200L,
+                "https://example.com/image.jpg",
+                List.of(new AchievementMemberResult(1L, "成员甲", 300L)),
+                List.of("张三-外校"));
+        AchievementDTO dto = AchievementDTO.builder()
+                .id(1L)
+                .title("蓝桥杯全国一等奖")
+                .type(AchievementType.COMPETITION)
+                .awardLevel(AwardLevel.NATIONAL)
+                .achieveAt(LocalDate.of(2024, 4, 15))
+                .members(
+                        List.of(
+                                AchievementMemberDTO.builder()
+                                        .userId(1L)
+                                        .username("成员甲")
+                                        .avatarFileId(300L)
+                                        .build()))
+                .externalMembers(List.of("张三-外校"))
+                .build();
+        when(memberAppService.getMemberAchievements(1L)).thenReturn(List.of(result));
+        when(achievementResponseConverter.toDTOList(any())).thenReturn(List.of(dto));
+
+        mockMvc.perform(get("/api/v1/members/{memberId}/achievements", 1L))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.data[0].title").value("蓝桥杯全国一等奖"))
+                .andExpect(jsonPath("$.data[0].members[0].userId").value(1))
+                .andExpect(jsonPath("$.data[0].members[0].username").value("成员甲"))
+                .andExpect(jsonPath("$.data[0].externalMembers[0]").value("张三-外校"));
+    }
+
+    @Test
+    void getMemberAchievements_noAchievements_returnsEmptyList() throws Exception {
+        when(memberAppService.getMemberAchievements(2L)).thenReturn(List.of());
+        when(achievementResponseConverter.toDTOList(any())).thenReturn(List.of());
+
+        mockMvc.perform(get("/api/v1/members/{memberId}/achievements", 2L))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.data").isArray())
+                .andExpect(jsonPath("$.data").isEmpty());
+    }
+
+    @Test
+    void getMemberAchievements_nonExistentMember_returnsNotFound() throws Exception {
+        when(memberAppService.getMemberAchievements(9999L))
+                .thenThrow(new DataNotFound("成员不存在"));
+
+        mockMvc.perform(get("/api/v1/members/{memberId}/achievements", 9999L))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.code").value(404));
     }

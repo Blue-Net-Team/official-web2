@@ -22,7 +22,7 @@ export function useProfileData(): ProfileData {
   const [profile, setProfile] = useState<UserInfo | null>(null)
   const [tabCounts, setTabCounts] = useState<TabCounts>({
     projects: 0,
-    competitions: 0,
+    achievements: 0,
     internships: 0,
   })
   const [assessments, setAssessments] = useState<AssessmentTimeDTO[]>([])

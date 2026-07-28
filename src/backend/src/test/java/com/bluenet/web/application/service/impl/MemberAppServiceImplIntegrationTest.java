@@ -172,15 +172,15 @@ class MemberAppServiceImplIntegrationTest extends BaseIntegrationTest {
                 "项目内容",
                 LocalDateTime.of(2024, 1, 1, 0, 0),
                 LocalDateTime.of(2024, 6, 1, 0, 0));
-        UserExperience competition = UserExperience.create(
+        UserExperience internship = UserExperience.create(
                 user.getId(),
-                ExperienceType.COMPETITION,
-                "竞赛经历",
-                "竞赛内容",
+                ExperienceType.INTERNSHIP,
+                "实习经历",
+                "实习内容",
                 LocalDateTime.of(2024, 2, 1, 0, 0),
                 LocalDateTime.of(2024, 7, 1, 0, 0));
         userExperienceRepository.save(project);
-        userExperienceRepository.save(competition);
+        userExperienceRepository.save(internship);
 
         List<UserExperienceResult> result = memberAppService.getMemberExperiences(
                 user.getId(),

@@ -19,4 +19,4 @@ export interface UserProfileWithStats {
   tabCounts: import('@/apis/schema/type').TabCounts
 }
 
-export type TabName = 'profile' | 'assessment' | 'projects' | 'competitions' | 'internships'
+export type TabName = 'profile' | 'assessment' | 'projects' | 'achievements' | 'internships'

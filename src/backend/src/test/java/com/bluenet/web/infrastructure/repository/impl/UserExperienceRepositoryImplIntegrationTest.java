@@ -67,12 +67,12 @@ class UserExperienceRepositoryImplIntegrationTest extends BaseIntegrationTest {
     @DisplayName("save: 新用户经历应插入并回写ID")
     void save_newExperience_shouldInsertAndReturnId() {
         Long userId = createUser();
-        UserExperience experience = createExperience(userId, ExperienceType.COMPETITION, "竞赛经历");
+        UserExperience experience = createExperience(userId, ExperienceType.INTERNSHIP, "实习经历");
 
         assertThat(experience.getId()).isNotNull();
         UserExperienceDO dataObject = userExperienceMapper.selectById(experience.getId());
         assertThat(dataObject).isNotNull();
-        assertThat(dataObject.getTitle()).isEqualTo("竞赛经历");
+        assertThat(dataObject.getTitle()).isEqualTo("实习经历");
         assertThat(dataObject.getUserId()).isEqualTo(userId);
     }
 
@@ -108,7 +108,7 @@ class UserExperienceRepositoryImplIntegrationTest extends BaseIntegrationTest {
     void findByUserId_shouldReturnExperiences() {
         Long userId1 = createUser();
         Long userId2 = createUser();
-        UserExperience experience1 = createExperience(userId1, ExperienceType.COMPETITION, "用户1竞赛");
+        UserExperience experience1 = createExperience(userId1, ExperienceType.INTERNSHIP, "用户1实习");
         createExperience(userId2, ExperienceType.PROJECT, "用户2项目");
 
         List<UserExperience> experiences = userExperienceRepository.findByUserId(userId1);
@@ -122,29 +122,29 @@ class UserExperienceRepositoryImplIntegrationTest extends BaseIntegrationTest {
     @DisplayName("findByUserIdAndType: 应按用户ID和类型查询经历")
     void findByUserIdAndType_shouldReturnTypedExperiences() {
         Long userId = createUser();
-        UserExperience competition = createExperience(userId, ExperienceType.COMPETITION, "竞赛1");
+        UserExperience internship = createExperience(userId, ExperienceType.INTERNSHIP, "实习1");
         createExperience(userId, ExperienceType.PROJECT, "项目1");
 
         List<UserExperience> experiences = userExperienceRepository
-                .findByUserIdAndType(userId, ExperienceType.COMPETITION);
+                .findByUserIdAndType(userId, ExperienceType.INTERNSHIP);
 
         assertThat(experiences)
                 .extracting(UserExperience::getId)
-                .containsExactly(competition.getId());
+                .containsExactly(internship.getId());
     }
 
     @Test
     @DisplayName("countByUserIdAndType: 应统计指定类型经历数量")
     void countByUserIdAndType_shouldCount() {
         Long userId = createUser();
-        createExperience(userId, ExperienceType.COMPETITION, "竞赛1");
-        createExperience(userId, ExperienceType.COMPETITION, "竞赛2");
+        createExperience(userId, ExperienceType.INTERNSHIP, "实习1");
+        createExperience(userId, ExperienceType.INTERNSHIP, "实习2");
         createExperience(userId, ExperienceType.PROJECT, "项目1");
 
-        int competitionCount = userExperienceRepository.countByUserIdAndType(userId, ExperienceType.COMPETITION);
+        int internshipCount = userExperienceRepository.countByUserIdAndType(userId, ExperienceType.INTERNSHIP);
         int projectCount = userExperienceRepository.countByUserIdAndType(userId, ExperienceType.PROJECT);
 
-        assertThat(competitionCount).isEqualTo(2);
+        assertThat(internshipCount).isEqualTo(2);
         assertThat(projectCount).isEqualTo(1);
     }
 
@@ -164,7 +164,7 @@ class UserExperienceRepositoryImplIntegrationTest extends BaseIntegrationTest {
     @DisplayName("deleteById: 应删除用户经历")
     void deleteById_shouldRemoveExperience() {
         Long userId = createUser();
-        UserExperience experience = createExperience(userId, ExperienceType.COMPETITION, "待删除");
+        UserExperience experience = createExperience(userId, ExperienceType.INTERNSHIP, "待删除");
         Long experienceId = experience.getId();
 
         userExperienceRepository.deleteById(experienceId);

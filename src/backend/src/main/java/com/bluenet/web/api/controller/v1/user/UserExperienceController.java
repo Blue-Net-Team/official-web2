@@ -25,7 +25,7 @@ import java.util.List;
 /**
  * 用户经历接口
  */
-@Tag(name = "用户经历", description = "用户经历管理接口（项目/竞赛/实习）")
+@Tag(name = "用户经历", description = "用户经历管理接口（项目/实习）")
 @RestController
 @RequestMapping("/api/v1/user/experiences")
 @RequiredArgsConstructor
@@ -43,11 +43,11 @@ class UserExperienceController {
     @RequiresPermission(name = "获取用户经历", value = "user:experience:read", access = AccessLevel.AUTHENTICATED)
     @GetMapping
     public ResponseMessage<List<ExperienceDTO>> getExperiences(
-            @Parameter(description = "经历类型：PROJECT/COMPETITION/INTERNSHIP") @RequestParam(required = false) String type) {
+            @Parameter(description = "经历类型：PROJECT/INTERNSHIP") @RequestParam(required = false) String type) {
         return ResponseMessage.success(responseConverter.toDTOList(userExperienceAppService.getExperiences(type)));
     }
 
-    @Operation(summary = "创建经历", description = "创建新的经历记录（项目/竞赛/实习）。需要MEMBER及以上角色权限。")
+    @Operation(summary = "创建经历", description = "创建新的经历记录（项目/实习）。需要MEMBER及以上角色权限。")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "成功创建经历"),
             @ApiResponse(responseCode = "401", description = "未登录或token无效", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseMessage.class))),

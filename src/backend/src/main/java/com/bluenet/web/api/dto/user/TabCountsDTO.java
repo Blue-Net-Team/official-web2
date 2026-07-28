@@ -15,8 +15,8 @@ public class TabCountsDTO {
     @Schema(description = "项目数")
     private Integer projects;
 
-    @Schema(description = "竞赛数")
-    private Integer competitions;
+    @Schema(description = "个人成就数")
+    private Integer achievements;
 
     @Schema(description = "实习数")
     private Integer internships;

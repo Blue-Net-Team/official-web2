@@ -353,7 +353,7 @@ class UserInfoAppServiceImplIntegrationTest extends BaseIntegrationTest {
         TabCounts tabCounts = userInfoAppService.getTabCounts(user.getId());
 
         assertEquals(0, tabCounts.getProjects());
-        assertEquals(0, tabCounts.getCompetitions());
+        assertEquals(0, tabCounts.getAchievements());
         assertEquals(0, tabCounts.getInternships());
     }
 }

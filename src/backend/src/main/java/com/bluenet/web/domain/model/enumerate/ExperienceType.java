@@ -4,7 +4,6 @@ import lombok.Getter;
 
 @Getter
 public enum ExperienceType implements ValueEnum {
-    COMPETITION("competition", "竞赛"),
     PROJECT("project", "项目"),
     INTERNSHIP("internship", "实习");
 

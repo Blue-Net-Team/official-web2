@@ -147,11 +147,13 @@ public class UserRepositoryImpl extends ServiceImpl<UserMapper, UserDO> implemen
     @Override
     public TabCounts getTabCounts(Long userId) {
         int projects = Math.toIntExact(userExperienceMapper.countByUserIdAndType(userId, ExperienceType.PROJECT));
-        int competitions = Math
-                .toIntExact(userExperienceMapper.countByUserIdAndType(userId, ExperienceType.COMPETITION));
+        int achievements = Math
+                .toIntExact(
+                        userAchievementMapper
+                                .selectCount(new QueryWrapper<UserAchievementDO>().eq("user_id", userId)));
         int internships = Math.toIntExact(userExperienceMapper.countByUserIdAndType(userId, ExperienceType.INTERNSHIP));
 
-        return new TabCounts(projects, competitions, internships);
+        return new TabCounts(projects, achievements, internships);
     }
 
     /**
@@ -242,6 +244,17 @@ public class UserRepositoryImpl extends ServiceImpl<UserMapper, UserDO> implemen
     @Override
     public List<Long> findUserIdsToDisableByElimination(LocalDateTime cutoffTime) {
         return userMapper.selectUserIdsToDisableByElimination(cutoffTime);
+    }
+
+    @Override
+    public List<Long> findExistingUserIds(List<Long> userIds) {
+        if (userIds == null || userIds.isEmpty()) {
+            return List.of();
+        }
+        return userMapper.selectBatchIds(userIds)
+                .stream()
+                .map(UserDO::getId)
+                .toList();
     }
 
     @Override

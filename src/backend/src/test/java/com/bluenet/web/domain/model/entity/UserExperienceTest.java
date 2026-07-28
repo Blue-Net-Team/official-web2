@@ -118,16 +118,16 @@ class UserExperienceTest {
         UserExperience experience = UserExperience.reconstruct(
                 10L,
                 2L,
-                ExperienceType.COMPETITION,
-                "竞赛",
+                ExperienceType.INTERNSHIP,
+                "公司",
                 "{}",
                 start,
                 null);
 
         assertEquals(10L, experience.getId());
         assertEquals(2L, experience.getUserId());
-        assertEquals(ExperienceType.COMPETITION, experience.getType());
-        assertEquals("竞赛", experience.getTitle());
+        assertEquals(ExperienceType.INTERNSHIP, experience.getType());
+        assertEquals("公司", experience.getTitle());
         assertEquals(start, experience.getStartTime());
     }
 }

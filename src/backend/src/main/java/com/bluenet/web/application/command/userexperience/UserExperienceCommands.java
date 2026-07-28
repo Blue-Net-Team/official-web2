@@ -37,16 +37,6 @@ public class UserExperienceCommands {
             List<String> techStack,
             /** 演示URL */
             String demoUrl,
-            /** 日期 */
-            String date,
-            /** 级别 */
-            String level,
-            /** 奖项 */
-            String award,
-            /** 团队规模 */
-            Integer teamSize,
-            /** 证书URL */
-            String certificateUrl,
             /** 公司 */
             String company,
             /** 职位 */
@@ -80,16 +70,6 @@ public class UserExperienceCommands {
             List<String> techStack,
             /** 演示URL */
             String demoUrl,
-            /** 日期 */
-            String date,
-            /** 级别 */
-            String level,
-            /** 奖项 */
-            String award,
-            /** 团队规模 */
-            Integer teamSize,
-            /** 证书URL */
-            String certificateUrl,
             /** 职位 */
             String position,
             /** 状态 */

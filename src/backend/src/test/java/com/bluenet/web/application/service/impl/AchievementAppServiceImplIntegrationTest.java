@@ -9,21 +9,26 @@ import com.bluenet.web.domain.exception.BadRequest;
 import com.bluenet.web.domain.exception.DataNotFound;
 import com.bluenet.web.domain.model.entity.Achievement;
 import com.bluenet.web.domain.model.entity.File;
+import com.bluenet.web.domain.model.entity.User;
 import com.bluenet.web.domain.model.enumerate.AchievementType;
 import com.bluenet.web.domain.model.enumerate.AwardLevel;
 import com.bluenet.web.domain.model.enumerate.FileType;
 import com.bluenet.web.domain.repository.AchievementRepository;
 import com.bluenet.web.domain.repository.FileRepository;
+import com.bluenet.web.domain.repository.UserRepository;
 import com.bluenet.web.infrastructure.security.principal.WithSecurityPrincipal;
 import com.bluenet.web.infrastructure.security.util.UserCTX;
 import com.bluenet.web.testsupport.fixture.FileFixture;
+import com.bluenet.web.testsupport.fixture.UserFixture;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDate;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -46,6 +51,12 @@ class AchievementAppServiceImplIntegrationTest extends BaseIntegrationTest {
 
     @Autowired
     private FileRepository fileRepository;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     @AfterEach
     void cleanupSecurityContext() {
@@ -75,7 +86,9 @@ class AchievementAppServiceImplIntegrationTest extends BaseIntegrationTest {
                 LocalDate.of(2024, 8, 15),
                 AwardLevel.NATIONAL,
                 "一等奖",
-                file.getId());
+                file.getId(),
+                null,
+                null);
 
         AchievementResult result = achievementAppService.createAchievement(command);
 
@@ -100,7 +113,9 @@ class AchievementAppServiceImplIntegrationTest extends BaseIntegrationTest {
                 LocalDate.of(2024, 6, 1),
                 null,
                 null,
-                file.getId());
+                file.getId(),
+                null,
+                null);
 
         AchievementResult result = achievementAppService.createAchievement(command);
 
@@ -120,7 +135,9 @@ class AchievementAppServiceImplIntegrationTest extends BaseIntegrationTest {
                 LocalDate.of(2024, 5, 1),
                 null,
                 null,
-                99999L);
+                99999L,
+                null,
+                null);
 
         assertThatThrownBy(() -> achievementAppService.createAchievement(command))
                 .isInstanceOf(DataNotFound.class)
@@ -139,7 +156,9 @@ class AchievementAppServiceImplIntegrationTest extends BaseIntegrationTest {
                 LocalDate.of(2024, 5, 1),
                 null,
                 null,
-                workFile.getId());
+                workFile.getId(),
+                null,
+                null);
 
         assertThatThrownBy(() -> achievementAppService.createAchievement(command))
                 .isInstanceOf(BadRequest.class)
@@ -158,7 +177,9 @@ class AchievementAppServiceImplIntegrationTest extends BaseIntegrationTest {
                 LocalDate.of(2024, 5, 1),
                 null,
                 null,
-                file.getId());
+                file.getId(),
+                null,
+                null);
 
         assertThatThrownBy(() -> achievementAppService.createAchievement(command))
                 .isInstanceOf(IllegalArgumentException.class)
@@ -178,7 +199,9 @@ class AchievementAppServiceImplIntegrationTest extends BaseIntegrationTest {
                         LocalDate.of(2023, 7, 1),
                         AwardLevel.PROVINCIAL,
                         "旧奖项",
-                        originalFile.getId()));
+                        originalFile.getId(),
+                        null,
+                        null));
         File newFile = createNormalImageFile("new-img");
         AchievementCommands.UpdateAchievementCommand command = new AchievementCommands.UpdateAchievementCommand(
                 created.id(),
@@ -188,7 +211,9 @@ class AchievementAppServiceImplIntegrationTest extends BaseIntegrationTest {
                 LocalDate.of(2024, 9, 1),
                 AwardLevel.NATIONAL,
                 "新奖项",
-                newFile.getId());
+                newFile.getId(),
+                null,
+                null);
 
         AchievementResult result = achievementAppService.updateAchievement(command);
 
@@ -213,7 +238,9 @@ class AchievementAppServiceImplIntegrationTest extends BaseIntegrationTest {
                 LocalDate.of(2024, 5, 1),
                 null,
                 null,
-                file.getId());
+                file.getId(),
+                null,
+                null);
 
         assertThatThrownBy(() -> achievementAppService.updateAchievement(command))
                 .isInstanceOf(DataNotFound.class)
@@ -233,7 +260,9 @@ class AchievementAppServiceImplIntegrationTest extends BaseIntegrationTest {
                         LocalDate.of(2024, 4, 1),
                         null,
                         null,
-                        file.getId()));
+                        file.getId(),
+                        null,
+                        null));
 
         achievementAppService.deleteAchievement(created.id());
 
@@ -361,5 +390,186 @@ class AchievementAppServiceImplIntegrationTest extends BaseIntegrationTest {
         assertThat(statistics.getNationalCount()).isEqualTo(1L);
         assertThat(statistics.getProvincialCount()).isEqualTo(2L);
         assertThat(statistics.getSchoolCount()).isEqualTo(1L);
+    }
+
+    @Test
+    @WithSecurityPrincipal(userId = 1L, roleType = "SUPER_ADMIN")
+    @DisplayName("createAchievement: 应写入系统内成员关联和外部协作者")
+    void createAchievement_withMembers_shouldPersistAssociations() {
+        User member1 = UserFixture.member("2026005001").save(userRepository, passwordEncoder);
+        User member2 = UserFixture.member("2026005002").save(userRepository, passwordEncoder);
+        File file = createNormalImageFile("member-img");
+        AchievementCommands.CreateAchievementCommand command = new AchievementCommands.CreateAchievementCommand(
+                "团队竞赛一等奖",
+                AchievementType.COMPETITION,
+                "全国大学生程序设计竞赛",
+                LocalDate.of(2024, 8, 15),
+                AwardLevel.NATIONAL,
+                "一等奖",
+                file.getId(),
+                List.of(member1.getId(), member2.getId()),
+                List.of(" 张三-外校 ", "李四-他队", "张三-外校"));
+
+        AchievementResult result = achievementAppService.createAchievement(command);
+
+        assertThat(result.members())
+                .extracting("userId")
+                .containsExactlyInAnyOrder(member1.getId(), member2.getId());
+        // 外部协作者 trim 并去重
+        assertThat(result.externalMembers()).containsExactly("张三-外校", "李四-他队");
+
+        Achievement persisted = achievementRepository.findById(result.id()).orElseThrow();
+        assertThat(persisted.getMemberIds())
+                .containsExactlyInAnyOrder(member1.getId(), member2.getId());
+        assertThat(persisted.getExternalMembers()).containsExactly("张三-外校", "李四-他队");
+    }
+
+    @Test
+    @WithSecurityPrincipal(userId = 1L, roleType = "SUPER_ADMIN")
+    @DisplayName("createAchievement: 关联不存在的用户应抛 BadRequest")
+    void createAchievement_invalidMember_shouldThrowBadRequest() {
+        File file = createNormalImageFile("invalid-member-img");
+        AchievementCommands.CreateAchievementCommand command = new AchievementCommands.CreateAchievementCommand(
+                "无效成员成就",
+                AchievementType.PAPER,
+                "期刊",
+                LocalDate.of(2024, 6, 1),
+                null,
+                null,
+                file.getId(),
+                List.of(99999L),
+                null);
+
+        assertThatThrownBy(() -> achievementAppService.createAchievement(command))
+                .isInstanceOf(BadRequest.class)
+                .hasMessageContaining("存在无效的成员用户");
+    }
+
+    @Test
+    @WithSecurityPrincipal(userId = 1L, roleType = "SUPER_ADMIN")
+    @DisplayName("updateAchievement: 应全量替换成员关联和外部协作者")
+    void updateAchievement_shouldReplaceAssociations() {
+        User member1 = UserFixture.member("2026005003").save(userRepository, passwordEncoder);
+        User member2 = UserFixture.member("2026005004").save(userRepository, passwordEncoder);
+        File file = createNormalImageFile("replace-img");
+        AchievementResult created = achievementAppService.createAchievement(
+                new AchievementCommands.CreateAchievementCommand(
+                        "旧成就",
+                        AchievementType.COMPETITION,
+                        "竞赛",
+                        LocalDate.of(2023, 7, 1),
+                        AwardLevel.PROVINCIAL,
+                        "二等奖",
+                        file.getId(),
+                        List.of(member1.getId()),
+                        List.of("王五-外校")));
+
+        AchievementResult updated = achievementAppService.updateAchievement(
+                new AchievementCommands.UpdateAchievementCommand(
+                        created.id(),
+                        "新成就",
+                        AchievementType.COMPETITION,
+                        "竞赛",
+                        LocalDate.of(2024, 9, 1),
+                        AwardLevel.NATIONAL,
+                        "一等奖",
+                        file.getId(),
+                        List.of(member2.getId()),
+                        List.of("赵六-外校")));
+
+        assertThat(updated.members())
+                .extracting("userId")
+                .containsExactly(member2.getId());
+        assertThat(updated.externalMembers()).containsExactly("赵六-外校");
+
+        Achievement persisted = achievementRepository.findById(created.id()).orElseThrow();
+        assertThat(persisted.getMemberIds()).containsExactly(member2.getId());
+        assertThat(persisted.getExternalMembers()).containsExactly("赵六-外校");
+    }
+
+    @Test
+    @WithSecurityPrincipal(userId = 1L, roleType = "SUPER_ADMIN")
+    @DisplayName("deleteAchievement: 应级联清理成员关联和外部协作者")
+    void deleteAchievement_shouldCascadeAssociations() {
+        User member = UserFixture.member("2026005005").save(userRepository, passwordEncoder);
+        File file = createNormalImageFile("cascade-img");
+        AchievementResult created = achievementAppService.createAchievement(
+                new AchievementCommands.CreateAchievementCommand(
+                        "待删除成就",
+                        AchievementType.COMPETITION,
+                        "竞赛",
+                        LocalDate.of(2024, 4, 1),
+                        AwardLevel.SCHOOL,
+                        "三等奖",
+                        file.getId(),
+                        List.of(member.getId()),
+                        List.of("外部-协作")));
+
+        achievementAppService.deleteAchievement(created.id());
+
+        assertThat(achievementRepository.findById(created.id())).isEmpty();
+        assertThat(achievementRepository.findMembersByAchievementIds(List.of(created.id()))).isEmpty();
+        assertThat(achievementRepository.findExternalMembersByAchievementIds(List.of(created.id()))).isEmpty();
+        assertThat(achievementRepository.findByUserId(member.getId())).isEmpty();
+    }
+
+    @Test
+    @WithSecurityPrincipal(userId = 1L, roleType = "MEMBER")
+    @DisplayName("getMemberAchievements: 应按获奖日期倒序返回成员成就")
+    void getMemberAchievements_shouldReturnOrderedList() {
+        User member = UserFixture.member("2026005006").save(userRepository, passwordEncoder);
+        User other = UserFixture.member("2026005007").save(userRepository, passwordEncoder);
+        File file = createNormalImageFile("member-achievements-img");
+        achievementAppService.createAchievement(
+                new AchievementCommands.CreateAchievementCommand(
+                        "较早成就",
+                        AchievementType.COMPETITION,
+                        "竞赛A",
+                        LocalDate.of(2023, 5, 1),
+                        AwardLevel.NATIONAL,
+                        "一等奖",
+                        file.getId(),
+                        List.of(member.getId()),
+                        null));
+        achievementAppService.createAchievement(
+                new AchievementCommands.CreateAchievementCommand(
+                        "较晚成就",
+                        AchievementType.PAPER,
+                        "期刊B",
+                        LocalDate.of(2024, 5, 1),
+                        null,
+                        null,
+                        file.getId(),
+                        List.of(member.getId()),
+                        null));
+        achievementAppService.createAchievement(
+                new AchievementCommands.CreateAchievementCommand(
+                        "他人成就",
+                        AchievementType.PAPER,
+                        "期刊C",
+                        LocalDate.of(2025, 5, 1),
+                        null,
+                        null,
+                        file.getId(),
+                        List.of(other.getId()),
+                        null));
+
+        List<AchievementResult> results = achievementAppService.getMemberAchievements(member.getId());
+
+        assertThat(results)
+                .extracting(AchievementResult::title)
+                .containsExactly("较晚成就", "较早成就");
+        assertThat(results.get(0).members())
+                .extracting("userId")
+                .contains(member.getId());
+    }
+
+    @Test
+    @WithSecurityPrincipal(userId = 1L, roleType = "MEMBER")
+    @DisplayName("getMemberAchievements: 用户不存在应抛 DataNotFound")
+    void getMemberAchievements_userNotFound_shouldThrowDataNotFound() {
+        assertThatThrownBy(() -> achievementAppService.getMemberAchievements(99999L))
+                .isInstanceOf(DataNotFound.class)
+                .hasMessageContaining("成员不存在");
     }
 }

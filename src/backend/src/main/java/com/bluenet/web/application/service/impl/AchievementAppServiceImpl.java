@@ -1,5 +1,6 @@
 package com.bluenet.web.application.service.impl;
 
+import com.bluenet.web.application.result.achievement.AchievementMemberResult;
 import com.bluenet.web.application.result.achievement.AchievementResult;
 import com.bluenet.web.application.command.achievement.AchievementCommands;
 import com.bluenet.web.application.service.AchievementAppService;
@@ -11,8 +12,10 @@ import com.bluenet.web.domain.model.enumerate.AchievementType;
 import com.bluenet.web.domain.model.enumerate.AwardLevel;
 import com.bluenet.web.domain.model.enumerate.FileType;
 import com.bluenet.web.application.result.achievement.AchievementStatistics;
+import com.bluenet.web.domain.model.readmodel.AchievementMemberReadModel;
 import com.bluenet.web.domain.model.readmodel.AchievementReadModel;
 import com.bluenet.web.domain.repository.AchievementRepository;
+import com.bluenet.web.domain.repository.UserRepository;
 import com.bluenet.web.domain.service.FileDomainService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -20,6 +23,10 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * 成就应用服务实现。
@@ -32,6 +39,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class AchievementAppServiceImpl implements AchievementAppService {
     private final AchievementRepository achievementRepository;
     private final FileDomainService fileDomainService;
+    private final UserRepository userRepository;
 
     /**
      * 分页查询成就列表。
@@ -81,6 +89,7 @@ public class AchievementAppServiceImpl implements AchievementAppService {
     @Transactional
     public AchievementResult createAchievement(AchievementCommands.CreateAchievementCommand command) {
         validateFile(command.fileId());
+        validateMemberIds(command.userIds());
 
         Achievement achievement = Achievement.create(
                 command.title(),
@@ -90,9 +99,10 @@ public class AchievementAppServiceImpl implements AchievementAppService {
                 command.awardLevel(),
                 command.awardName(),
                 command.fileId());
+        achievement.assignMembers(command.userIds(), command.externalMembers());
 
         achievementRepository.save(achievement);
-        return toResult(achievement);
+        return toResult(achievementRepository.findById(achievement.getId()).orElseThrow());
     }
 
     /**
@@ -106,6 +116,7 @@ public class AchievementAppServiceImpl implements AchievementAppService {
     @Transactional
     public AchievementResult updateAchievement(AchievementCommands.UpdateAchievementCommand command) {
         validateFile(command.fileId());
+        validateMemberIds(command.userIds());
 
         Achievement achievement = achievementRepository.findById(command.id())
                 .orElseThrow(() -> new DataNotFound("成就不存在"));
@@ -118,13 +129,17 @@ public class AchievementAppServiceImpl implements AchievementAppService {
                 command.awardLevel(),
                 command.awardName(),
                 command.fileId());
+        achievement.assignMembers(command.userIds(), command.externalMembers());
 
         achievementRepository.save(achievement);
-        return toResult(achievement);
+        return toResult(achievementRepository.findById(achievement.getId()).orElseThrow());
     }
 
     /**
      * 删除成就。
+     * <p>
+     * 仓储层级联清理成员关联与外部协作者。
+     * </p>
      *
      * @param id
      *            成就ID
@@ -137,6 +152,23 @@ public class AchievementAppServiceImpl implements AchievementAppService {
         achievementRepository.deleteById(id);
     }
 
+    /**
+     * 查询指定成员关联的成就列表，按获奖日期倒序。
+     *
+     * @param memberId
+     *            成员用户ID
+     * @return 成就结果列表
+     */
+    @Override
+    public List<AchievementResult> getMemberAchievements(Long memberId) {
+        userRepository.findById(memberId)
+                .orElseThrow(() -> new DataNotFound("成员不存在"));
+        return achievementRepository.findByUserId(memberId)
+                .stream()
+                .map(this::toResult)
+                .toList();
+    }
+
     private void validateFile(Long fileId) {
         File file = fileDomainService.getFileById(fileId);
         if (file == null) {
@@ -147,7 +179,21 @@ public class AchievementAppServiceImpl implements AchievementAppService {
         }
     }
 
+    private void validateMemberIds(List<Long> userIds) {
+        if (userIds == null || userIds.isEmpty()) {
+            return;
+        }
+        List<Long> distinctIds = userIds.stream().filter(id -> id != null).distinct().toList();
+        Set<Long> existingIds = new HashSet<>(userRepository.findExistingUserIds(distinctIds));
+        if (existingIds.size() != distinctIds.size()) {
+            throw new BadRequest("存在无效的成员用户");
+        }
+    }
+
     private AchievementResult toResult(Achievement achievement) {
+        List<AchievementMemberReadModel> members = achievementRepository
+                .findMembersByAchievementIds(List.of(achievement.getId()))
+                .getOrDefault(achievement.getId(), List.of());
         return new AchievementResult(
                 achievement.getId(),
                 achievement.getTitle(),
@@ -161,7 +207,9 @@ public class AchievementAppServiceImpl implements AchievementAppService {
                 null,
                 null,
                 achievement.getFileId(),
-                null);
+                null,
+                members.stream().map(this::toMemberResult).toList(),
+                achievement.getExternalMembers());
     }
 
     private AchievementResult toResult(AchievementReadModel vo) {
@@ -178,6 +226,14 @@ public class AchievementAppServiceImpl implements AchievementAppService {
                 vo.getCompetitionShortName(),
                 vo.getCompetitionLogoFileId(),
                 vo.getFileId(),
-                vo.getFileUrl());
+                vo.getFileUrl(),
+                vo.getMembers() == null
+                        ? List.of()
+                        : vo.getMembers().stream().map(this::toMemberResult).toList(),
+                vo.getExternalMembers() == null ? List.of() : vo.getExternalMembers());
+    }
+
+    private AchievementMemberResult toMemberResult(AchievementMemberReadModel member) {
+        return new AchievementMemberResult(member.getUserId(), member.getUsername(), member.getAvatarFileId());
     }
 }

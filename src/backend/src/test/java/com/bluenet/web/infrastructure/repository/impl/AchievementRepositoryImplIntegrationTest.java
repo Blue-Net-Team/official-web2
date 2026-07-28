@@ -3,23 +3,35 @@ package com.bluenet.web.infrastructure.repository.impl;
 import com.bluenet.web.BaseIntegrationTest;
 import com.bluenet.web.domain.model.entity.Achievement;
 import com.bluenet.web.domain.model.entity.File;
+import com.bluenet.web.domain.model.entity.User;
 import com.bluenet.web.domain.model.enumerate.AchievementType;
 import com.bluenet.web.domain.model.enumerate.AwardLevel;
 import com.bluenet.web.domain.model.enumerate.FileType;
 import com.bluenet.web.domain.repository.AchievementRepository;
 import com.bluenet.web.domain.repository.FileRepository;
+import com.bluenet.web.domain.repository.UserRepository;
+import com.bluenet.web.domain.model.readmodel.AchievementMemberReadModel;
 import com.bluenet.web.domain.model.readmodel.AchievementReadModel;
 import com.bluenet.web.application.result.achievement.AchievementStatistics;
 import com.bluenet.web.infrastructure.repository.dataobject.AchievementDO;
+import com.bluenet.web.infrastructure.repository.dataobject.AchievementExternalMemberDO;
+import com.bluenet.web.infrastructure.repository.dataobject.UserAchievementDO;
+import com.bluenet.web.infrastructure.repository.mapper.AchievementExternalMemberMapper;
 import com.bluenet.web.infrastructure.repository.mapper.AchievementMapper;
+import com.bluenet.web.infrastructure.repository.mapper.UserAchievementMapper;
 import com.bluenet.web.testsupport.fixture.FileFixture;
+import com.bluenet.web.testsupport.fixture.UserFixture;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDate;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -40,7 +52,25 @@ class AchievementRepositoryImplIntegrationTest extends BaseIntegrationTest {
     @Autowired
     private FileRepository fileRepository;
 
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private UserAchievementMapper userAchievementMapper;
+
+    @Autowired
+    private AchievementExternalMemberMapper externalMemberMapper;
+
     private final AtomicLong counter = new AtomicLong(1);
+    private final AtomicLong studentIdCounter = new AtomicLong(2026006000L);
+
+    private User createUser() {
+        return UserFixture.member(String.valueOf(studentIdCounter.getAndIncrement()))
+                .save(userRepository, passwordEncoder);
+    }
 
     private File createFile() {
         String name = "achievement-" + counter.getAndIncrement() + ".png";
@@ -146,5 +176,148 @@ class AchievementRepositoryImplIntegrationTest extends BaseIntegrationTest {
         assertThat(statistics.getTotalAchievements()).isGreaterThanOrEqualTo(3);
         assertThat(statistics.getNationalCount()).isGreaterThanOrEqualTo(1);
         assertThat(statistics.getProvincialCount()).isGreaterThanOrEqualTo(2);
+    }
+
+    @Test
+    @DisplayName("save: 应写入成员关联和外部协作者")
+    void save_withMembers_shouldPersistAssociations() {
+        User user1 = createUser();
+        User user2 = createUser();
+        Achievement achievement = createAchievement("团队成果", AchievementType.COMPETITION, AwardLevel.NATIONAL);
+        achievement.assignMembers(List.of(user1.getId(), user2.getId()), List.of("外部A", "外部B"));
+
+        achievementRepository.save(achievement);
+
+        List<UserAchievementDO> associations = userAchievementMapper.selectList(
+                new QueryWrapper<UserAchievementDO>().eq("achievement_id", achievement.getId()));
+        assertThat(associations)
+                .extracting(UserAchievementDO::getUserId)
+                .containsExactlyInAnyOrder(user1.getId(), user2.getId());
+        List<AchievementExternalMemberDO> externals = externalMemberMapper.selectList(
+                new QueryWrapper<AchievementExternalMemberDO>().eq("achievement_id", achievement.getId()));
+        assertThat(externals)
+                .extracting(AchievementExternalMemberDO::getName)
+                .containsExactlyInAnyOrder("外部A", "外部B");
+    }
+
+    @Test
+    @DisplayName("save: 重新保存应全量替换关联数据")
+    void save_resave_shouldReplaceAssociations() {
+        User user1 = createUser();
+        User user2 = createUser();
+        Achievement achievement = createAchievement("替换成果", AchievementType.COMPETITION, AwardLevel.NATIONAL);
+        achievement.assignMembers(List.of(user1.getId()), List.of("外部A"));
+        achievementRepository.save(achievement);
+
+        achievement.assignMembers(List.of(user2.getId()), List.of("外部B"));
+        achievementRepository.save(achievement);
+
+        List<UserAchievementDO> associations = userAchievementMapper.selectList(
+                new QueryWrapper<UserAchievementDO>().eq("achievement_id", achievement.getId()));
+        assertThat(associations)
+                .extracting(UserAchievementDO::getUserId)
+                .containsExactly(user2.getId());
+        List<AchievementExternalMemberDO> externals = externalMemberMapper.selectList(
+                new QueryWrapper<AchievementExternalMemberDO>().eq("achievement_id", achievement.getId()));
+        assertThat(externals)
+                .extracting(AchievementExternalMemberDO::getName)
+                .containsExactly("外部B");
+    }
+
+    @Test
+    @DisplayName("deleteById: 应级联删除成员关联和外部协作者")
+    void deleteById_shouldCascadeAssociations() {
+        User user = createUser();
+        Achievement achievement = createAchievement("级联删除成果", AchievementType.COMPETITION, AwardLevel.NATIONAL);
+        achievement.assignMembers(List.of(user.getId()), List.of("外部A"));
+        achievementRepository.save(achievement);
+
+        achievementRepository.deleteById(achievement.getId());
+
+        assertThat(achievementMapper.selectById(achievement.getId())).isNull();
+        assertThat(
+                userAchievementMapper.selectCount(
+                        new QueryWrapper<UserAchievementDO>().eq("achievement_id", achievement.getId()))).isZero();
+        assertThat(
+                externalMemberMapper.selectCount(
+                        new QueryWrapper<AchievementExternalMemberDO>().eq("achievement_id", achievement.getId())))
+                                .isZero();
+    }
+
+    @Test
+    @DisplayName("findById: 应回读成员关联和外部协作者")
+    void findById_shouldLoadAssociations() {
+        User user = createUser();
+        Achievement achievement = createAchievement("回读成果", AchievementType.COMPETITION, AwardLevel.NATIONAL);
+        achievement.assignMembers(List.of(user.getId()), List.of("外部A"));
+        achievementRepository.save(achievement);
+
+        Optional<Achievement> found = achievementRepository.findById(achievement.getId());
+
+        assertThat(found).isPresent();
+        assertThat(found.get().getMemberIds()).containsExactly(user.getId());
+        assertThat(found.get().getExternalMembers()).containsExactly("外部A");
+    }
+
+    @Test
+    @DisplayName("findMembersByAchievementIds: 应返回成员简要信息")
+    void findMembersByAchievementIds_shouldReturnMemberBriefs() {
+        User user = createUser();
+        Achievement achievement = createAchievement("成员查询成果", AchievementType.COMPETITION, AwardLevel.NATIONAL);
+        achievement.assignMembers(List.of(user.getId()), null);
+        achievementRepository.save(achievement);
+
+        Map<Long, List<AchievementMemberReadModel>> result = achievementRepository
+                .findMembersByAchievementIds(List.of(achievement.getId()));
+
+        assertThat(result).containsKey(achievement.getId());
+        List<AchievementMemberReadModel> members = result.get(achievement.getId());
+        assertThat(members).hasSize(1);
+        assertThat(members.get(0).getUserId()).isEqualTo(user.getId());
+        assertThat(members.get(0).getUsername()).isEqualTo(user.getUsername());
+    }
+
+    @Test
+    @DisplayName("findByUserId: 应按用户查询成就并按获奖日期倒序")
+    void findByUserId_shouldReturnOrderedAchievements() {
+        User user = createUser();
+        File file = createFile();
+        Achievement older = Achievement.create(
+                "较早成果",
+                AchievementType.COMPETITION,
+                "竞赛",
+                LocalDate.of(2023, 6, 1),
+                AwardLevel.NATIONAL,
+                "一等奖",
+                file.getId());
+        older.assignMembers(List.of(user.getId()), null);
+        achievementRepository.save(older);
+        Achievement newer = Achievement.create(
+                "较新成果",
+                AchievementType.COMPETITION,
+                "竞赛",
+                LocalDate.of(2024, 6, 1),
+                AwardLevel.NATIONAL,
+                "一等奖",
+                file.getId());
+        newer.assignMembers(List.of(user.getId()), null);
+        achievementRepository.save(newer);
+
+        List<AchievementReadModel> results = achievementRepository.findByUserId(user.getId());
+
+        assertThat(results)
+                .extracting(AchievementReadModel::getTitle)
+                .containsExactly("较新成果", "较早成果");
+        assertThat(results.get(0).getMembers())
+                .extracting(AchievementMemberReadModel::getUserId)
+                .contains(user.getId());
+    }
+
+    @Test
+    @DisplayName("findByUserId: 无关联成就应返回空列表")
+    void findByUserId_noAssociation_shouldReturnEmpty() {
+        User user = createUser();
+
+        assertThat(achievementRepository.findByUserId(user.getId())).isEmpty();
     }
 }

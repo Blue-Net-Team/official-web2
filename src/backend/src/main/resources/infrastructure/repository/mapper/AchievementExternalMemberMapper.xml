@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bluenet.web.infrastructure.repository.mapper.AchievementExternalMemberMapper">
+    <resultMap id="BaseResultMap" type="com.bluenet.web.infrastructure.repository.dataobject.AchievementExternalMemberDO">
+        <id column="id" property="id"/>
+        <result column="achievement_id" property="achievementId"/>
+        <result column="name" property="name"/>
+        <result column="display_order" property="displayOrder"/>
+    </resultMap>
+
+    <select id="selectByAchievementIds" resultMap="BaseResultMap">
+        SELECT id, achievement_id, name, display_order
+        FROM tb_achievement_external_member
+        WHERE achievement_id IN
+        <foreach collection="achievementIds" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        ORDER BY display_order ASC, id ASC
+    </select>
+</mapper>

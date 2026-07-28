@@ -1,8 +1,10 @@
 package com.bluenet.web.application.service.impl;
 
+import com.bluenet.web.application.result.achievement.AchievementResult;
 import com.bluenet.web.application.result.member.MemberResult;
 import com.bluenet.web.application.result.user.UserExperienceResult;
 import com.bluenet.web.application.query.member.GetMemberListQuery;
+import com.bluenet.web.application.service.AchievementAppService;
 import com.bluenet.web.application.service.MemberAppService;
 import com.bluenet.web.domain.exception.BadRequest;
 import com.bluenet.web.domain.exception.DataNotFound;
@@ -34,6 +36,7 @@ import java.util.List;
 public class MemberAppServiceImpl implements MemberAppService {
     private final MemberRepository memberRepository;
     private final UserExperienceRepository userExperienceRepository;
+    private final AchievementAppService achievementAppService;
 
     private static final int MAX_PAGE_SIZE = 100;
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy.MM");
@@ -104,6 +107,10 @@ public class MemberAppServiceImpl implements MemberAppService {
 
         List<com.bluenet.web.domain.model.entity.UserExperience> experiences;
         if (type != null && !type.isBlank()) {
+            if ("COMPETITION".equalsIgnoreCase(type)) {
+                // 竞赛经历已迁移到成就系统，返回空列表
+                return Collections.emptyList();
+            }
             ExperienceType experienceType = parseExperienceType(type);
             experiences = userExperienceRepository.findByUserIdAndType(memberId, experienceType);
         } else {
@@ -112,6 +119,21 @@ public class MemberAppServiceImpl implements MemberAppService {
         return experiences.stream()
                 .map(this::toUserExperienceResult)
                 .toList();
+    }
+
+    /**
+     * 查询成员关联的官方成就列表。
+     * <p>
+     * 用户存在性校验由成就应用服务完成（成员主页可能对非团队成员隐藏， 但个人中心需要支持任意已注册用户查询自己的成就）。
+     * </p>
+     *
+     * @param memberId
+     *            成员ID
+     * @return 成就结果列表
+     */
+    @Override
+    public List<AchievementResult> getMemberAchievements(Long memberId) {
+        return achievementAppService.getMemberAchievements(memberId);
     }
 
     private ExperienceType parseExperienceType(String type) {

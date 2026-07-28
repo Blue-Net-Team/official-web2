@@ -141,7 +141,7 @@ class UserProfileControllerIntegrationTest extends BaseIntegrationTest {
         TabCounts tabCounts = new TabCounts(1, 1, 0);
         TabCountsDTO dto = TabCountsDTO.builder()
                 .projects(1)
-                .competitions(1)
+                .achievements(1)
                 .internships(0)
                 .build();
         when(userInfoAppService.getTabCounts(1L)).thenReturn(tabCounts);
@@ -151,7 +151,7 @@ class UserProfileControllerIntegrationTest extends BaseIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.data.projects").value(1))
-                .andExpect(jsonPath("$.data.competitions").value(1))
+                .andExpect(jsonPath("$.data.achievements").value(1))
                 .andExpect(jsonPath("$.data.internships").value(0));
     }
 

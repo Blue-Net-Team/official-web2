@@ -4,6 +4,7 @@ import com.bluenet.web.domain.model.enumerate.AchievementType;
 import com.bluenet.web.domain.model.enumerate.AwardLevel;
 
 import java.time.LocalDate;
+import java.util.List;
 
 /**
  * 成就聚合的应用层结果对象。
@@ -37,5 +38,9 @@ public record AchievementResult(
         /** 文件ID */
         Long fileId,
         /** 文件URL地址 */
-        String fileUrl) {
+        String fileUrl,
+        /** 系统内成员列表 */
+        List<AchievementMemberResult> members,
+        /** 外部协作者姓名列表 */
+        List<String> externalMembers) {
 }

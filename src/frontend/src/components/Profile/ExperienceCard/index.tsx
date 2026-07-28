@@ -3,13 +3,7 @@
 import React from 'react'
 import { UserExperience } from '@/apis/schema/type'
 import type { InternshipStatus } from '@/apis/schema/enumerate'
-import {
-  FolderOutlined,
-  TrophyOutlined,
-  SolutionOutlined,
-  LinkOutlined,
-  FileTextOutlined,
-} from '@ant-design/icons'
+import { FolderOutlined, SolutionOutlined, LinkOutlined } from '@ant-design/icons'
 
 interface ExperienceCardProps {
   experience: UserExperience
@@ -18,25 +12,7 @@ interface ExperienceCardProps {
 
 const ICON_CLASS_MAP: Record<string, string> = {
   PROJECT: 'bg-gradient-to-br from-[#6677ff] to-[#2f27b0]',
-  COMPETITION: 'bg-gradient-to-br from-[#ff6b35] to-[#ff8c42]',
   INTERNSHIP: 'bg-gradient-to-br from-[#10b981] to-[#059669]',
-}
-
-function getAwardBadgeClass(award: string): string {
-  switch (award) {
-    case '一等奖':
-    case 'first':
-      return 'bg-[linear-gradient(135deg,#ffd700_0%,#ffa500_100%)] text-black'
-    case '二等奖':
-    case 'second':
-      return 'bg-[linear-gradient(135deg,#c0c0c0_0%,#a0a0a0_100%)] text-black'
-    case '三等奖':
-    case 'third':
-    case '铜牌':
-      return 'bg-[linear-gradient(135deg,#cd7f32_0%,#b87333_100%)] text-white'
-    default:
-      return ''
-  }
 }
 
 function getInternshipBadgeClass(status: InternshipStatus): string {
@@ -51,21 +27,18 @@ function getInternshipStatusText(status: InternshipStatus): string {
 
 export default function ExperienceCard({ experience, actions }: ExperienceCardProps) {
   const isProject = experience.type === 'PROJECT'
-  const isCompetition = experience.type === 'COMPETITION'
   const isInternship = experience.type === 'INTERNSHIP'
 
   const displayName = isInternship ? experience.company || experience.name : experience.name
   const displayRole = isInternship ? experience.position : experience.role
   const displayDate = experience.startDate
     ? `${experience.startDate} - ${experience.endDate || '至今'}`
-    : experience.date || ''
+    : ''
 
   const getIcon = () => {
     switch (experience.type) {
       case 'PROJECT':
         return <FolderOutlined />
-      case 'COMPETITION':
-        return <TrophyOutlined />
       case 'INTERNSHIP':
         return <SolutionOutlined />
     }
@@ -81,20 +54,8 @@ export default function ExperienceCard({ experience, actions }: ExperienceCardPr
         </div>
         <div className="flex-1 min-w-0">
           <div className="text-base font-semibold text-white mb-1">{displayName}</div>
-          {displayRole && (
-            <div className="text-[13px] text-[#6677ff]">
-              {displayRole}
-              {isCompetition && experience.award && ` · ${experience.award}`}
-            </div>
-          )}
+          {displayRole && <div className="text-[13px] text-[#6677ff]">{displayRole}</div>}
         </div>
-        {isCompetition && experience.award && (
-          <div
-            className={`px-3.5 py-1.5 rounded-[20px] text-xs font-semibold whitespace-nowrap shrink-0 ${getAwardBadgeClass(experience.award)}`}
-          >
-            {experience.award}
-          </div>
-        )}
         {isInternship && experience.status && (
           <div
             className={`px-3.5 py-1.5 rounded-[20px] text-xs font-semibold whitespace-nowrap shrink-0 max-[640px]:ml-auto ${getInternshipBadgeClass(experience.status)}`}
@@ -106,34 +67,6 @@ export default function ExperienceCard({ experience, actions }: ExperienceCardPr
           {displayDate}
         </div>
       </div>
-
-      {isCompetition && (experience.date || experience.teamSize) && (
-        <div className="flex gap-4 mb-3 text-[13px] text-[#8c8c8d]">
-          {experience.date && (
-            <div className="flex items-center gap-1.5">
-              <FileTextOutlined className="text-sm" />
-              <span>{experience.date}</span>
-            </div>
-          )}
-          {experience.teamSize && (
-            <div className="flex items-center gap-1.5">
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                className="w-[14px] h-[14px]"
-              >
-                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                <circle cx="9" cy="7" r="4" />
-                <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-                <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-              </svg>
-              <span>{experience.teamSize}人团队</span>
-            </div>
-          )}
-        </div>
-      )}
 
       {experience.description && (
         <p className="text-sm leading-[1.6] text-white/70 mb-3">{experience.description}</p>
@@ -163,17 +96,6 @@ export default function ExperienceCard({ experience, actions }: ExperienceCardPr
             >
               <LinkOutlined />
               项目演示
-            </a>
-          )}
-          {isCompetition && experience.certificateUrl && (
-            <a
-              href={experience.certificateUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1.5 text-[13px] text-[#6677ff] no-underline transition-all duration-300 hover:text-[#8895ff] [&_svg]:w-4 [&_svg]:h-4"
-            >
-              <FileTextOutlined />
-              获奖证书
             </a>
           )}
         </div>

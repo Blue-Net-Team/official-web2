@@ -372,16 +372,6 @@ export interface UserExperience {
   techStack?: string[]
   /** 演示链接 */
   demoUrl?: string
-  /** 竞赛时间 */
-  date?: string
-  /** 竞赛级别 */
-  level?: string
-  /** 获奖等级 */
-  award?: string
-  /** 团队人数 */
-  teamSize?: number
-  /** 证书链接 */
-  certificateUrl?: string
   /** 公司名称（实习） */
   company?: string
   /** 职位（实习） */
@@ -399,8 +389,8 @@ export interface UserExperience {
 export interface TabCounts {
   /** 项目经历数 */
   projects: number
-  /** 竞赛经历数 */
-  competitions: number
+  /** 个人成就数 */
+  achievements: number
   /** 实习经历数 */
   internships: number
 }
@@ -467,6 +457,19 @@ export interface PageDTO<T> {
 }
 
 /**
+ * 成就关联的系统内成员
+ * 对应后端 AchievementMemberDTO.java
+ */
+export interface AchievementMemberDTO {
+  /** 成员用户ID */
+  userId: number
+  /** 成员姓名 */
+  username: string
+  /** 头像文件ID */
+  avatarFileId: number | null
+}
+
+/**
  * 成就信息
  * 对应后端 AchievementDTO.java
  */
@@ -497,6 +500,10 @@ export interface AchievementDTO {
   fileId: number | null
   /** 成就图片URL */
   fileUrl: string | null
+  /** 关联的系统内成员 */
+  members: AchievementMemberDTO[]
+  /** 外部协作者姓名列表 */
+  externalMembers: string[]
 }
 
 /**
@@ -533,6 +540,10 @@ export interface CreateAchievementRequestDTO {
   awardName?: string | null
   /** 成就图片文件ID */
   fileId: number
+  /** 关联的系统内成员用户ID列表 */
+  userIds?: number[]
+  /** 外部协作者姓名列表 */
+  externalMembers?: string[]
 }
 
 /**
@@ -554,6 +565,10 @@ export interface UpdateAchievementRequestDTO {
   awardName?: string | null
   /** 成就图片文件ID */
   fileId?: number
+  /** 关联的系统内成员用户ID列表 */
+  userIds?: number[]
+  /** 外部协作者姓名列表 */
+  externalMembers?: string[]
 }
 
 /**

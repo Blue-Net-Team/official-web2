@@ -12,6 +12,7 @@ import {
   ProfileInfoDisplay,
   ProfileTabs,
   ExperienceSection,
+  MemberAchievements,
 } from '@/components/Profile'
 import type { SidebarProfile } from '@/components/Profile/ProfileSidebar'
 import type { ProfileDisplayData } from '@/components/Profile/ProfileInfoDisplay'
@@ -63,11 +64,11 @@ const TAB_CONFIG = [
     countKey: 'projects' as const,
   },
   {
-    key: 'competitions',
-    label: '竞赛经历',
+    key: 'achievements',
+    label: '个人成就',
     icon: <TrophyOutlined />,
     showCount: true,
-    countKey: 'competitions' as const,
+    countKey: 'achievements' as const,
   },
   {
     key: 'internships',
@@ -80,13 +81,11 @@ const TAB_CONFIG = [
 
 type ExperienceCache = {
   projects: UserExperience[] | null
-  competitions: UserExperience[] | null
   internships: UserExperience[] | null
 }
 
 type LoadingState = {
   projects: boolean
-  competitions: boolean
   internships: boolean
 }
 
@@ -98,7 +97,7 @@ export default function MemberProfilePage() {
   const [member, setMember] = useState<MemberDetailDTO | null>(null)
   const [tabCounts, setTabCounts] = useState<TabCounts>({
     projects: 0,
-    competitions: 0,
+    achievements: 0,
     internships: 0,
   })
   const [loading, setLoading] = useState(true)
@@ -107,12 +106,10 @@ export default function MemberProfilePage() {
 
   const [experienceCache, setExperienceCache] = useState<ExperienceCache>({
     projects: null,
-    competitions: null,
     internships: null,
   })
   const [expLoading, setExpLoading] = useState<LoadingState>({
     projects: false,
-    competitions: false,
     internships: false,
   })
 
@@ -149,7 +146,7 @@ export default function MemberProfilePage() {
   }, [memberId])
 
   const fetchExperience = useCallback(
-    async (type: 'projects' | 'competitions' | 'internships') => {
+    async (type: 'projects' | 'internships') => {
       if (experienceCache[type] !== null || expLoading[type] || !member) {
         return
       }
@@ -161,11 +158,6 @@ export default function MemberProfilePage() {
         switch (type) {
           case 'projects': {
             const res = await memberService.getMemberProjects(member.id)
-            data = res.data || []
-            break
-          }
-          case 'competitions': {
-            const res = await memberService.getMemberCompetitions(member.id)
             data = res.data || []
             break
           }
@@ -187,7 +179,7 @@ export default function MemberProfilePage() {
   )
 
   useEffect(() => {
-    if (activeTab === 'projects' || activeTab === 'competitions' || activeTab === 'internships') {
+    if (activeTab === 'projects' || activeTab === 'internships') {
       fetchExperience(activeTab)
     }
   }, [activeTab, fetchExperience])
@@ -195,7 +187,6 @@ export default function MemberProfilePage() {
   const getExperiencesByType = (type: ExperienceType): UserExperience[] => {
     const keyMap: Record<ExperienceType, keyof ExperienceCache> = {
       PROJECT: 'projects',
-      COMPETITION: 'competitions',
       INTERNSHIP: 'internships',
     }
     return experienceCache[keyMap[type]] || []
@@ -204,7 +195,6 @@ export default function MemberProfilePage() {
   const isExpLoading = (type: ExperienceType): boolean => {
     const keyMap: Record<ExperienceType, keyof LoadingState> = {
       PROJECT: 'projects',
-      COMPETITION: 'competitions',
       INTERNSHIP: 'internships',
     }
     return expLoading[keyMap[type]]
@@ -289,7 +279,7 @@ export default function MemberProfilePage() {
           />
           {activeTab === 'profile' && <ProfileInfoDisplay profile={displayData} />}
           {activeTab === 'projects' && renderExperience('PROJECT', '项目经历')}
-          {activeTab === 'competitions' && renderExperience('COMPETITION', '竞赛经历')}
+          {activeTab === 'achievements' && <MemberAchievements memberId={member.id} />}
           {activeTab === 'internships' && renderExperience('INTERNSHIP', '实习经历')}
         </div>
       </main>

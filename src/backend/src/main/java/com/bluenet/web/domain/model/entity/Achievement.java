@@ -7,6 +7,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * 成就聚合根
@@ -49,6 +51,14 @@ public class Achievement {
      * 关联文件记录标识。
      */
     private Long fileId;
+    /**
+     * 关联的系统内成员ID列表。
+     */
+    private List<Long> memberIds = new ArrayList<>();
+    /**
+     * 外部协作者姓名列表（非系统用户）。
+     */
+    private List<String> externalMembers = new ArrayList<>();
 
     private Achievement(Long id, String title, AchievementType type, String relateTo, LocalDate achieveAt,
             AwardLevel awardLevel, String awardName, Long fileId) {
@@ -149,5 +159,45 @@ public class Achievement {
         this.awardLevel = awardLevel;
         this.awardName = awardName;
         this.fileId = fileId;
+    }
+
+    /**
+     * 指派成就关联成员 —— 全量替换系统内成员与外部协作者
+     *
+     * @param userIds
+     *            系统内成员ID列表，自动去重，null 视为空
+     * @param externalMembers
+     *            外部协作者姓名列表，自动 trim、去空、去重，null 视为空
+     * @throws IllegalArgumentException
+     *             如果外部协作者姓名超过100个字符
+     */
+    public void assignMembers(List<Long> userIds, List<String> externalMembers) {
+        this.memberIds = userIds == null
+                ? new ArrayList<>()
+                : new ArrayList<>(userIds.stream().filter(id -> id != null).distinct().toList());
+        this.externalMembers = normalizeExternalMembers(externalMembers);
+    }
+
+    private static List<String> normalizeExternalMembers(List<String> names) {
+        List<String> normalized = new ArrayList<>();
+        if (names == null) {
+            return normalized;
+        }
+        for (String name : names) {
+            if (name == null) {
+                continue;
+            }
+            String trimmed = name.trim();
+            if (trimmed.isEmpty()) {
+                continue;
+            }
+            if (trimmed.length() > 100) {
+                throw new IllegalArgumentException("外部协作者姓名不能超过100字符");
+            }
+            if (!normalized.contains(trimmed)) {
+                normalized.add(trimmed);
+            }
+        }
+        return normalized;
     }
 }

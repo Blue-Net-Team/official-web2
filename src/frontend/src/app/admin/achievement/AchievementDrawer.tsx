@@ -1,7 +1,19 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { App, Button, Drawer, Form, Input, Select, DatePicker, Upload, Spin, Image } from 'antd'
+import { useEffect, useRef, useState } from 'react'
+import {
+  App,
+  Button,
+  Drawer,
+  Form,
+  Input,
+  Mentions,
+  Select,
+  DatePicker,
+  Upload,
+  Spin,
+  Image,
+} from 'antd'
 import { UploadOutlined } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import type { Dayjs } from 'dayjs'
@@ -16,6 +28,7 @@ import { ACHIEVEMENT_TYPE_LABELS, AWARD_LEVEL_LABELS } from '@/apis/schema/enume
 import { API_BASE_URL } from '@/apis/config'
 import { fileService } from '@/apis/services/file.service'
 import { adminAchievementService } from '@/apis/services/admin-achievement.service'
+import { adminUserService } from '@/apis/services/admin-user.service'
 import { competitionService } from '@/apis/services/competition.service'
 
 export type DrawerMode = 'create' | 'edit'
@@ -28,6 +41,10 @@ interface AchievementFormValues {
   awardLevel?: AwardLevel | null
   awardName?: string | null
   fileId?: number | null
+  /** Mentions 文本，形如 "@昵称1 @昵称2" */
+  members?: string
+  /** 外部协作者姓名标签 */
+  externalMembers?: string[]
 }
 
 interface AchievementDrawerProps {
@@ -58,6 +75,23 @@ export default function AchievementDrawer({
   const [competitionOptions, setCompetitionOptions] = useState<{ value: string; label: string }[]>(
     []
   )
+  const [memberOptions, setMemberOptions] = useState<{ value: string; label: string }[]>([])
+  const [memberSearching, setMemberSearching] = useState(false)
+  // 展示名 → 用户ID 映射，用于提交时从 Mentions 文本反解 userIds
+  const memberMapRef = useRef<Map<string, number>>(new Map())
+  // 全量成员列表是否已加载（Mentions 的 onSearch 仅在输入 @ 时触发，搜索交由客户端过滤）
+  const membersLoadedRef = useRef(false)
+
+  // 登记成员展示名映射，重名时追加 #学号 消歧
+  const registerMember = (id: number, display: string, studentId?: string) => {
+    let key = display
+    const existing = memberMapRef.current.get(key)
+    if (existing !== undefined && existing !== id) {
+      key = studentId ? `${display}#${studentId}` : `${display}#${id}`
+    }
+    memberMapRef.current.set(key, id)
+    return key
+  }
 
   // 加载竞赛列表用于关联项选择
   useEffect(() => {
@@ -74,6 +108,33 @@ export default function AchievementDrawer({
     fetchCompetitions()
   }, [])
 
+  // 首次输入 @ 时加载全量成员列表，后续按 Mentions 客户端过滤
+  const handleMemberSearch = async () => {
+    if (membersLoadedRef.current) {
+      return
+    }
+    setMemberSearching(true)
+    try {
+      const res = await adminUserService.getList({ size: 100 })
+      if (res.code === 200 && res.data) {
+        const options = res.data.content.map((user) => {
+          // 以姓名作为 @ 展示名，与成就回显的 members[].username 保持一致
+          const key = registerMember(user.id, user.username, user.studentId)
+          return {
+            value: key,
+            label: user.nickname ? `${key}（${user.nickname}）` : key,
+          }
+        })
+        setMemberOptions(options)
+        membersLoadedRef.current = true
+      }
+    } catch (error) {
+      console.error('Failed to search members:', error)
+    } finally {
+      setMemberSearching(false)
+    }
+  }
+
   // 当打开或数据/模式变化时重置表单
   useEffect(() => {
     if (open) {
@@ -82,6 +143,10 @@ export default function AchievementDrawer({
         setFileId(null)
         setSelectedType(undefined)
       } else if (record) {
+        // 回显系统内成员：登记姓名映射并拼接 Mentions 文本
+        const membersText = (record.members || [])
+          .map((member) => `@${registerMember(member.userId, member.username)}`)
+          .join(' ')
         form.setFieldsValue({
           title: record.title,
           type: record.type,
@@ -90,6 +155,8 @@ export default function AchievementDrawer({
           awardLevel: record.awardLevel,
           awardName: record.awardName,
           fileId: record.fileId,
+          members: membersText,
+          externalMembers: record.externalMembers || [],
         })
         setFileId(record.fileId)
         setSelectedType(record.type)
@@ -97,11 +164,26 @@ export default function AchievementDrawer({
     }
   }, [open, mode, record, form])
 
+  // 从 Mentions 文本中反解已选系统内成员的用户ID
+  const extractUserIds = (mentionsText: string): number[] => {
+    const userIds: number[] = []
+    memberMapRef.current.forEach((id, display) => {
+      if (mentionsText.includes(`@${display}`) && !userIds.includes(id)) {
+        userIds.push(id)
+      }
+    })
+    return userIds
+  }
+
   const handleSave = async () => {
     try {
       const values = await form.validateFields()
       const achieveAt = values.achieveAt ? dayjs(values.achieveAt).format('YYYY-MM-DD') : null
       const relateTo = values.relateTo?.trim() || null
+      const userIds = extractUserIds(values.members || '')
+      const externalMembers = (values.externalMembers || [])
+        .map((name) => name.trim())
+        .filter((name) => name.length > 0)
 
       setSaving(true)
       if (mode === 'create') {
@@ -113,6 +195,8 @@ export default function AchievementDrawer({
           awardLevel: values.type === 'COMPETITION' ? values.awardLevel || null : null,
           awardName: values.type === 'COMPETITION' ? values.awardName || null : null,
           fileId: fileId!,
+          userIds,
+          externalMembers,
         }
         await adminAchievementService.create(payload)
         messageApi.success('创建成功')
@@ -125,6 +209,8 @@ export default function AchievementDrawer({
           awardLevel: values.type === 'COMPETITION' ? values.awardLevel || null : null,
           awardName: values.type === 'COMPETITION' ? values.awardName || null : null,
           fileId: fileId ?? undefined,
+          userIds,
+          externalMembers,
         }
         await adminAchievementService.update(record.id, payload)
         messageApi.success('更新成功')
@@ -270,6 +356,35 @@ export default function AchievementDrawer({
             </Form.Item>
           </>
         )}
+
+        <Form.Item
+          label="系统内成员"
+          name="members"
+          tooltip="输入 @ 搜索并选择系统内成员，可关联多名成员"
+        >
+          <Mentions
+            placeholder="输入 @ 搜索系统内成员"
+            options={memberOptions}
+            onSearch={handleMemberSearch}
+            loading={memberSearching}
+            autoSize={{ minRows: 2, maxRows: 4 }}
+          />
+        </Form.Item>
+
+        <Form.Item
+          label="外部协作者"
+          name="externalMembers"
+          tooltip="非本系统用户的合作成员，输入姓名后回车添加"
+        >
+          <Select
+            mode="tags"
+            placeholder="输入姓名后回车添加，例如：张三-外校"
+            open={false}
+            suffixIcon={null}
+            tokenSeparators={[',', '，']}
+            maxCount={20}
+          />
+        </Form.Item>
 
         <Form.Item label="成就图片" extra="支持 JPG/PNG 格式，建议尺寸 800x600">
           <Spin spinning={fileUploading}>

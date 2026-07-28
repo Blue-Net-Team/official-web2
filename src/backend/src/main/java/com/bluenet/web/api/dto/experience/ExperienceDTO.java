@@ -20,11 +20,11 @@ public class ExperienceDTO {
     @Schema(description = "经历ID")
     private String id;
 
-    @Schema(description = "经历类型: project/competition/internhip")
+    @Schema(description = "经历类型: project/internship")
     private String type;
 
     // 通用字段
-    @Schema(description = "标题（项目名/竞赛名/公司名）")
+    @Schema(description = "标题（项目名/公司名）")
     private String name;
 
     @Schema(description = "开始时间")
@@ -45,22 +45,6 @@ public class ExperienceDTO {
 
     @Schema(description = "演示链接（项目类型）")
     private String demoUrl;
-
-    // 竞赛特有字段
-    @Schema(description = "参赛时间（竞赛类型）")
-    private String date;
-
-    @Schema(description = "竞赛级别（竞赛类型）")
-    private String level;
-
-    @Schema(description = "获奖等级（竞赛类型）")
-    private String award;
-
-    @Schema(description = "团队人数（竞赛类型）")
-    private Integer teamSize;
-
-    @Schema(description = "证书链接（竞赛类型）")
-    private String certificateUrl;
 
     // 实习特有字段
     @Schema(description = "公司名称（实习类型，同name）")

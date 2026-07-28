@@ -4,10 +4,13 @@ import com.bluenet.web.domain.model.entity.Achievement;
 import com.bluenet.web.domain.model.enumerate.AchievementType;
 import com.bluenet.web.domain.model.enumerate.AwardLevel;
 import com.bluenet.web.application.result.achievement.AchievementStatistics;
+import com.bluenet.web.domain.model.readmodel.AchievementMemberReadModel;
 import com.bluenet.web.domain.model.readmodel.AchievementReadModel;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public interface AchievementRepository {
@@ -53,9 +56,59 @@ public interface AchievementRepository {
 
     /**
      * 删除指定成果记录。
+     * <p>
+     * 级联清理成员关联与外部协作者记录。
+     * </p>
      *
      * @param id
      *            业务记录主键。
      */
     void deleteById(Long id);
+
+    /**
+     * 全量替换成就的系统内成员关联。
+     *
+     * @param achievementId
+     *            成就ID。
+     * @param userIds
+     *            系统内成员ID列表，空列表表示清空关联。
+     */
+    void saveMemberAssociations(Long achievementId, List<Long> userIds);
+
+    /**
+     * 全量替换成就的外部协作者。
+     *
+     * @param achievementId
+     *            成就ID。
+     * @param names
+     *            外部协作者姓名列表，空列表表示清空。
+     */
+    void saveExternalMembers(Long achievementId, List<String> names);
+
+    /**
+     * 按成就ID批量查询系统内成员简要信息。
+     *
+     * @param achievementIds
+     *            成就ID列表。
+     * @return 成就ID到成员简要信息列表的映射。
+     */
+    Map<Long, List<AchievementMemberReadModel>> findMembersByAchievementIds(List<Long> achievementIds);
+
+    /**
+     * 按成就ID批量查询外部协作者姓名。
+     *
+     * @param achievementIds
+     *            成就ID列表。
+     * @return 成就ID到外部协作者姓名列表的映射，按展示顺序排序。
+     */
+    Map<Long, List<String>> findExternalMembersByAchievementIds(List<Long> achievementIds);
+
+    /**
+     * 查询指定用户关联的成就列表，按获奖日期降序。
+     *
+     * @param userId
+     *            用户ID。
+     * @return 成就读模型列表，包含成员与外部协作者信息。
+     */
+    List<AchievementReadModel> findByUserId(Long userId);
 }

@@ -1,5 +1,6 @@
 package com.bluenet.web.application.service;
 
+import com.bluenet.web.application.result.achievement.AchievementResult;
 import com.bluenet.web.application.result.member.MemberResult;
 import com.bluenet.web.application.result.user.UserExperienceResult;
 import com.bluenet.web.application.query.member.GetMemberListQuery;
@@ -49,4 +50,13 @@ public interface MemberAppService {
      * @return 经历结果列表
      */
     List<UserExperienceResult> getMemberExperiences(Long memberId, String type);
+
+    /**
+     * 获取成员关联的官方成就列表，按获奖日期倒序。
+     *
+     * @param memberId
+     *            成员ID
+     * @return 成就结果列表
+     */
+    List<AchievementResult> getMemberAchievements(Long memberId);
 }

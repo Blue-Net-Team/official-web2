@@ -7,6 +7,7 @@ import lombok.Builder;
 import lombok.Data;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Data
 @AllArgsConstructor
@@ -60,4 +61,12 @@ public class AchievementReadModel {
      * 文件访问地址。
      */
     private String fileUrl;
+    /**
+     * 关联的系统内成员简要信息。
+     */
+    private List<AchievementMemberReadModel> members;
+    /**
+     * 外部协作者姓名列表。
+     */
+    private List<String> externalMembers;
 }

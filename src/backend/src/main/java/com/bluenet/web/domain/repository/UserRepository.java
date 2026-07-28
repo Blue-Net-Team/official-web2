@@ -123,6 +123,15 @@ public interface UserRepository {
     List<Long> findUserIdsToDisableByElimination(LocalDateTime cutoffTime);
 
     /**
+     * 批量查询存在的用户ID，用于校验成员关联的有效性。
+     *
+     * @param userIds
+     *            待校验的用户ID列表。
+     * @return 实际存在的用户ID列表。
+     */
+    List<Long> findExistingUserIds(List<Long> userIds);
+
+    /**
      * 用户关联数据统计
      */
     record UserStatistics(long experienceCount, long achievementCount, long answerCount, long commentCount) {

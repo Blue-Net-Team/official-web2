@@ -67,7 +67,9 @@ class AchievementControllerIntegrationTest extends BaseIntegrationTest {
                 "蓝桥杯",
                 10L,
                 20L,
-                "http://example.com/file");
+                "http://example.com/file",
+                List.of(),
+                List.of());
         AchievementDTO dto = AchievementDTO.builder()
                 .id(1L)
                 .title("全国一等奖")
@@ -101,7 +103,9 @@ class AchievementControllerIntegrationTest extends BaseIntegrationTest {
                 "ACM",
                 null,
                 null,
-                null);
+                null,
+                List.of(),
+                List.of());
         AchievementDTO dto = AchievementDTO.builder()
                 .id(2L)
                 .title("省级二等奖")

@@ -18,6 +18,7 @@ import {
   ProfileInfo,
   AssessmentList,
   ExperienceSection,
+  MemberAchievements,
 } from '@/components/Profile'
 import { API_BASE_URL } from '@/apis/config'
 import { Spin } from 'antd'
@@ -36,11 +37,11 @@ const PROFILE_TABS = [
     countKey: 'projects' as keyof TabCounts,
   },
   {
-    key: 'competitions' as TabName,
-    label: '竞赛经历',
+    key: 'achievements' as TabName,
+    label: '个人成就',
     icon: <TrophyOutlined />,
     showCount: true,
-    countKey: 'competitions' as keyof TabCounts,
+    countKey: 'achievements' as keyof TabCounts,
   },
   {
     key: 'internships' as TabName,
@@ -131,16 +132,7 @@ export default function ProfilePage() {
             />
           )}
 
-          {currentTab === 'competitions' && (
-            <ExperienceSection
-              type="COMPETITION"
-              title="竞赛经历"
-              data={getExperiencesByType('COMPETITION')}
-              onAdd={(data) => addExperience('COMPETITION', data)}
-              onUpdate={updateExperience}
-              onDelete={deleteExperience}
-            />
-          )}
+          {currentTab === 'achievements' && <MemberAchievements memberId={profile.id} />}
 
           {currentTab === 'internships' && (
             <ExperienceSection

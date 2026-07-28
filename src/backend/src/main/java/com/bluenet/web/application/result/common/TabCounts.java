@@ -20,9 +20,9 @@ public class TabCounts {
     private Integer projects;
 
     /**
-     * 竞赛经历数
+     * 个人成就数
      */
-    private Integer competitions;
+    private Integer achievements;
 
     /**
      * 实习经历数

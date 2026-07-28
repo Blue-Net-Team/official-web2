@@ -2,7 +2,6 @@ package com.bluenet.web.api.converter.userexperience;
 
 import com.bluenet.web.api.dto.experience.ExperienceDTO;
 import com.bluenet.web.application.result.user.UserExperienceResult;
-import com.bluenet.web.domain.model.vo.experience_content.CompetitionContent;
 import com.bluenet.web.domain.model.vo.experience_content.InternshipContent;
 import com.bluenet.web.domain.model.vo.experience_content.ProjectContent;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -45,16 +44,6 @@ public class UserExperienceResponseConverter {
                         dto.setDescription(content.getDescription());
                         dto.setTechStack(content.getTechStack());
                         dto.setDemoUrl(content.getDemoUrl());
-                    }
-                    case COMPETITION -> {
-                        CompetitionContent content = objectMapper.readValue(result.content(), CompetitionContent.class);
-                        dto.setRole(content.getRole());
-                        dto.setDate(content.getDate());
-                        dto.setLevel(content.getLevel());
-                        dto.setAward(content.getAward());
-                        dto.setTeamSize(content.getTeamSize());
-                        dto.setDescription(content.getDescription());
-                        dto.setCertificateUrl(content.getCertificateUrl());
                     }
                     case INTERNSHIP -> {
                         InternshipContent content = objectMapper.readValue(result.content(), InternshipContent.class);

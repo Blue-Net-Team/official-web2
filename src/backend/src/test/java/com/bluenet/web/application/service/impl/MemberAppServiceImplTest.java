@@ -97,10 +97,10 @@ class MemberAppServiceImplTest {
         Long memberId = 1L;
         Member member = createMember(memberId, "2026002001", RoleType.MEMBER);
         UserExperience project = createExperience(10L, memberId, ExperienceType.PROJECT, "项目A");
-        UserExperience competition = createExperience(11L, memberId, ExperienceType.COMPETITION, "竞赛B");
+        UserExperience internship = createExperience(11L, memberId, ExperienceType.INTERNSHIP, "公司B");
 
         when(memberRepository.findById(memberId)).thenReturn(Optional.of(member));
-        when(userExperienceRepository.findByUserId(memberId)).thenReturn(List.of(project, competition));
+        when(userExperienceRepository.findByUserId(memberId)).thenReturn(List.of(project, internship));
 
         List<UserExperienceResult> results = memberAppService.getMemberExperiences(memberId, null);
 
