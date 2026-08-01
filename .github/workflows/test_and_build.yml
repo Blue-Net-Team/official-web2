@@ -753,19 +753,33 @@ jobs:
     timeout-minutes: 5
 
     steps:
-    - name: Set judge deployment variables
-      id: judge_vars
+    # 按分支选择构建/健康检查变量：master 读 *_PROD，develop 读 *_DEV，
+    # 均未配置时回退到旧的不分环境变量（BACKEND_HOST 等），保证平滑迁移
+    - name: Set deployment variables
+      id: vars
       run: |
         if [ "${{ github.ref }}" = "refs/heads/master" ]; then
+          echo "backend_host=${{ vars.BACKEND_HOST_PROD || vars.BACKEND_HOST }}" >> $GITHUB_OUTPUT
+          echo "backend_port=${{ vars.BACKEND_PORT_PROD || vars.BACKEND_PORT }}" >> $GITHUB_OUTPUT
+          echo "ssl_enabled=${{ vars.SSL_ENABLED_PROD || vars.SSL_ENABLED }}" >> $GITHUB_OUTPUT
+          echo "ai_host=${{ vars.AI_SERVICE_HOST_PROD || vars.AI_SERVICE_HOST }}" >> $GITHUB_OUTPUT
+          echo "ai_port=${{ vars.AI_SERVICE_PORT_PROD || vars.AI_SERVICE_PORT }}" >> $GITHUB_OUTPUT
+          echo "ai_ssl_enabled=${{ vars.AI_SERVICE_SSL_ENABLED_PROD || vars.AI_SERVICE_SSL_ENABLED }}" >> $GITHUB_OUTPUT
           echo "judge_host=${{ secrets.JUDGE_DEPLOY_HOST_PROD }}" >> $GITHUB_OUTPUT
         else
+          echo "backend_host=${{ vars.BACKEND_HOST_DEV || vars.BACKEND_HOST }}" >> $GITHUB_OUTPUT
+          echo "backend_port=${{ vars.BACKEND_PORT_DEV || vars.BACKEND_PORT }}" >> $GITHUB_OUTPUT
+          echo "ssl_enabled=${{ vars.SSL_ENABLED_DEV || vars.SSL_ENABLED }}" >> $GITHUB_OUTPUT
+          echo "ai_host=${{ vars.AI_SERVICE_HOST_DEV || vars.AI_SERVICE_HOST }}" >> $GITHUB_OUTPUT
+          echo "ai_port=${{ vars.AI_SERVICE_PORT_DEV || vars.AI_SERVICE_PORT }}" >> $GITHUB_OUTPUT
+          echo "ai_ssl_enabled=${{ vars.AI_SERVICE_SSL_ENABLED_DEV || vars.AI_SERVICE_SSL_ENABLED }}" >> $GITHUB_OUTPUT
           echo "judge_host=${{ secrets.JUDGE_DEPLOY_HOST_DEV }}" >> $GITHUB_OUTPUT
         fi
 
     - name: Wait for api-service health check
       run: |
-        PROTOCOL="${{ vars.SSL_ENABLED == 'true' && 'https' || 'http' }}"
-        URL="${PROTOCOL}://${{ vars.BACKEND_HOST }}:${{ vars.BACKEND_PORT }}/api/v1/health"
+        PROTOCOL="${{ steps.vars.outputs.ssl_enabled == 'true' && 'https' || 'http' }}"
+        URL="${PROTOCOL}://${{ steps.vars.outputs.backend_host }}:${{ steps.vars.outputs.backend_port }}/api/v1/health"
         echo "Waiting for api-service at $URL to be healthy..."
 
         for i in {1..30}; do
@@ -784,7 +798,7 @@ jobs:
 
     - name: Wait for judge-service health check
       run: |
-        URL="http://${{ steps.judge_vars.outputs.judge_host }}:8090/api/v1/judge/health"
+        URL="http://${{ steps.vars.outputs.judge_host }}:8090/api/v1/judge/health"
         echo "Waiting for judge-service at $URL to be healthy..."
 
         for i in {1..30}; do
@@ -803,8 +817,8 @@ jobs:
 
     - name: Wait for ai-service health check
       run: |
-        PROTOCOL="${{ vars.AI_SERVICE_SSL_ENABLED == 'true' && 'https' || 'http' }}"
-        URL="${PROTOCOL}://${{ vars.AI_SERVICE_HOST }}:${{ vars.AI_SERVICE_PORT }}/ai/v1/health"
+        PROTOCOL="${{ steps.vars.outputs.ai_ssl_enabled == 'true' && 'https' || 'http' }}"
+        URL="${PROTOCOL}://${{ steps.vars.outputs.ai_host }}:${{ steps.vars.outputs.ai_port }}/ai/v1/health"
         echo "Waiting for ai-service at $URL to be healthy..."
 
         for i in {1..30}; do
@@ -844,9 +858,23 @@ jobs:
         if [ "${{ github.ref }}" = "refs/heads/master" ]; then
           echo "deploy_host=${{ secrets.DEPLOY_HOST_PROD }}" >> $GITHUB_OUTPUT
           echo "image_tag=latest" >> $GITHUB_OUTPUT
+          echo "backend_host=${{ vars.BACKEND_HOST_PROD || vars.BACKEND_HOST }}" >> $GITHUB_OUTPUT
+          echo "backend_port=${{ vars.BACKEND_PORT_PROD || vars.BACKEND_PORT }}" >> $GITHUB_OUTPUT
+          echo "ssl_enabled=${{ vars.SSL_ENABLED_PROD || vars.SSL_ENABLED }}" >> $GITHUB_OUTPUT
+          echo "ai_host=${{ vars.AI_SERVICE_HOST_PROD || vars.AI_SERVICE_HOST }}" >> $GITHUB_OUTPUT
+          echo "ai_port=${{ vars.AI_SERVICE_PORT_PROD || vars.AI_SERVICE_PORT }}" >> $GITHUB_OUTPUT
+          echo "ai_ssl_enabled=${{ vars.AI_SERVICE_SSL_ENABLED_PROD || vars.AI_SERVICE_SSL_ENABLED }}" >> $GITHUB_OUTPUT
+          echo "ai_prefix=${{ vars.AI_SERVICE_PREFIX_PROD || vars.AI_SERVICE_PREFIX }}" >> $GITHUB_OUTPUT
         else
           echo "deploy_host=${{ secrets.DEPLOY_HOST_DEV }}" >> $GITHUB_OUTPUT
           echo "image_tag=develop" >> $GITHUB_OUTPUT
+          echo "backend_host=${{ vars.BACKEND_HOST_DEV || vars.BACKEND_HOST }}" >> $GITHUB_OUTPUT
+          echo "backend_port=${{ vars.BACKEND_PORT_DEV || vars.BACKEND_PORT }}" >> $GITHUB_OUTPUT
+          echo "ssl_enabled=${{ vars.SSL_ENABLED_DEV || vars.SSL_ENABLED }}" >> $GITHUB_OUTPUT
+          echo "ai_host=${{ vars.AI_SERVICE_HOST_DEV || vars.AI_SERVICE_HOST }}" >> $GITHUB_OUTPUT
+          echo "ai_port=${{ vars.AI_SERVICE_PORT_DEV || vars.AI_SERVICE_PORT }}" >> $GITHUB_OUTPUT
+          echo "ai_ssl_enabled=${{ vars.AI_SERVICE_SSL_ENABLED_DEV || vars.AI_SERVICE_SSL_ENABLED }}" >> $GITHUB_OUTPUT
+          echo "ai_prefix=${{ vars.AI_SERVICE_PREFIX_DEV || vars.AI_SERVICE_PREFIX }}" >> $GITHUB_OUTPUT
         fi
 
     - name: Set up Docker Buildx
@@ -872,9 +900,11 @@ jobs:
     - name: Debug vars values
       run: |
         echo "=== 前端构建时变量 ==="
-        echo "BACKEND_HOST=${{ vars.BACKEND_HOST }}"
-        echo "BACKEND_PORT=${{ vars.BACKEND_PORT }}"
-        echo "SSL_ENABLED=${{ vars.SSL_ENABLED }}"
+        echo "BACKEND_HOST=${{ steps.vars.outputs.backend_host }}"
+        echo "BACKEND_PORT=${{ steps.vars.outputs.backend_port }}"
+        echo "SSL_ENABLED=${{ steps.vars.outputs.ssl_enabled }}"
+        echo "AI_SERVICE_HOST=${{ steps.vars.outputs.ai_host }}"
+        echo "AI_SERVICE_PORT=${{ steps.vars.outputs.ai_port }}"
 
     - name: Build frontend image
       uses: docker/build-push-action@v5
@@ -886,16 +916,16 @@ jobs:
         labels: ${{ steps.meta.outputs.labels }}
         build-args: |
           CACHE_BUST=${{ github.sha }}_${{ github.run_id }}
-          BUILD_BACKEND_HOST=${{ vars.BACKEND_HOST }}
-          BUILD_BACKEND_PORT=${{ vars.BACKEND_PORT }}
-          BUILD_SSL_ENABLED=${{ vars.SSL_ENABLED }}
-          NEXT_PUBLIC_BACKEND_HOST=${{ vars.BACKEND_HOST }}
-          NEXT_PUBLIC_BACKEND_PORT=${{ vars.BACKEND_PORT }}
-          NEXT_PUBLIC_SSL_ENABLED=${{ vars.SSL_ENABLED }}
-          NEXT_PUBLIC_AI_SERVICE_HOST=${{ vars.AI_SERVICE_HOST }}
-          NEXT_PUBLIC_AI_SERVICE_PORT=${{ vars.AI_SERVICE_PORT || '8000' }}
-          NEXT_PUBLIC_AI_SERVICE_SSL_ENABLED=${{ vars.AI_SERVICE_SSL_ENABLED || vars.SSL_ENABLED }}
-          NEXT_PUBLIC_AI_SERVICE_PREFIX=${{ vars.AI_SERVICE_PREFIX || '/ai/v1' }}
+          BUILD_BACKEND_HOST=${{ steps.vars.outputs.backend_host }}
+          BUILD_BACKEND_PORT=${{ steps.vars.outputs.backend_port }}
+          BUILD_SSL_ENABLED=${{ steps.vars.outputs.ssl_enabled }}
+          NEXT_PUBLIC_BACKEND_HOST=${{ steps.vars.outputs.backend_host }}
+          NEXT_PUBLIC_BACKEND_PORT=${{ steps.vars.outputs.backend_port }}
+          NEXT_PUBLIC_SSL_ENABLED=${{ steps.vars.outputs.ssl_enabled }}
+          NEXT_PUBLIC_AI_SERVICE_HOST=${{ steps.vars.outputs.ai_host }}
+          NEXT_PUBLIC_AI_SERVICE_PORT=${{ steps.vars.outputs.ai_port || '8000' }}
+          NEXT_PUBLIC_AI_SERVICE_SSL_ENABLED=${{ steps.vars.outputs.ai_ssl_enabled }}
+          NEXT_PUBLIC_AI_SERVICE_PREFIX=${{ steps.vars.outputs.ai_prefix || '/ai/v1' }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
 
