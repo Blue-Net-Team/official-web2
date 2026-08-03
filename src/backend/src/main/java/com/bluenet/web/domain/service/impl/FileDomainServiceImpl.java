@@ -262,9 +262,12 @@ public class FileDomainServiceImpl implements FileDomainService {
             throw new Forbidden("需要登录才能下载作品文件");
         }
 
-        AssessmentAnswer answer = getAnswerByFileId(file.getId());
+        // 校验答案存在（不存在时抛 DataNotFound）
+        getAnswerByFileId(file.getId());
 
-        if (answer.getUserId().equals(currentUser.getId())) {
+        // 组队场景下同一 fileId 对应队长与多名队员的多条答案记录，
+        // 只要其中任意一条属于当前用户即视为所有者，不能仅判断单条记录的归属
+        if (assessmentAnswerRepository.existsByFileIdAndUserId(file.getId(), currentUser.getId())) {
             return;
         }
 
