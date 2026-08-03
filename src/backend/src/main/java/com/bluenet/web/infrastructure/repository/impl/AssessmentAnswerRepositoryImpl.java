@@ -87,6 +87,11 @@ public class AssessmentAnswerRepositoryImpl implements AssessmentAnswerRepositor
     }
 
     @Override
+    public boolean existsByFileIdAndUserId(Long fileId, Long userId) {
+        return assessmentAnswerMapper.countByFileIdAndUserId(fileId, userId) > 0;
+    }
+
+    @Override
     public Optional<AssessmentAnswer> findByUserIdAndQuestionId(Long userId, Long questionId) {
         AssessmentAnswerDO dataObject = assessmentAnswerMapper.selectByUserIdAndQuestionId(userId, questionId);
         return Optional.ofNullable(converter.toEntity(dataObject));

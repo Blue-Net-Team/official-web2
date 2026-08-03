@@ -67,6 +67,19 @@ public interface AssessmentAnswerMapper extends BaseMapper<AssessmentAnswerDO> {
     AssessmentAnswerDO selectFirstByFileId(@Param("fileId") Long fileId);
 
     /**
+     * 统计指定文件下属于该用户的作答记录数量。
+     *
+     * 组队场景下同一 fileId 对应多条作答记录，用于下载鉴权时判断当前用户是否为其中一条记录的归属者。
+     *
+     * @param fileId
+     *            文件主键。
+     * @param userId
+     *            用户主键。
+     * @return 满足条件的记录数量。
+     */
+    int countByFileIdAndUserId(@Param("fileId") Long fileId, @Param("userId") Long userId);
+
+    /**
      * 按队伍和题目查询作答数据行。
      *
      * @param teamId

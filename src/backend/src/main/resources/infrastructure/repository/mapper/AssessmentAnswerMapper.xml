@@ -54,6 +54,13 @@
         LIMIT 1
     </select>
 
+    <select id="countByFileIdAndUserId" resultType="int">
+        SELECT COUNT(*)
+        FROM tb_assessment_answer
+        WHERE file_id = #{fileId}
+          AND user_id = #{userId}
+    </select>
+
     <select id="selectByTeamIdAndQuestionId" resultMap="BaseResultMap">
         SELECT *
         FROM tb_assessment_answer

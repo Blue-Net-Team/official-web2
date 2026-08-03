@@ -546,6 +546,37 @@ class FileDomainServiceImplTest {
                 LocalDateTime.now(),
                 null);
         when(assessmentAnswerRepository.findByFileId(fileId)).thenReturn(Optional.of(answer));
+        when(assessmentAnswerRepository.existsByFileIdAndUserId(fileId, userId)).thenReturn(true);
+
+        domainService.checkDownloadPermission(file, currentUser);
+    }
+
+    @Test
+    @DisplayName("checkDownloadPermission: WORK 组队文件中任意一条答案属于当前用户即可下载")
+    void checkDownloadPermission_workFileTeamMember_shouldAllow() {
+        Long fileId = 1L;
+        Long captainId = 100L;
+        Long memberId = 200L;
+        File file = File.reconstruct(
+                fileId,
+                "work-uuid.png",
+                FileType.WORK,
+                "url",
+                FileStatus.ACTIVE,
+                LocalDateTime.now());
+        User currentUser = User.reconstruct(memberId, "encoded");
+        // 组队答案同一 fileId 对应多条记录，findByFileId 可能命中队长那条
+        AssessmentAnswer captainAnswer = AssessmentAnswer.reconstruct(
+                10L,
+                captainId,
+                20L,
+                "content",
+                ProgrammingLanguage.JAVA,
+                fileId,
+                LocalDateTime.now(),
+                null);
+        when(assessmentAnswerRepository.findByFileId(fileId)).thenReturn(Optional.of(captainAnswer));
+        when(assessmentAnswerRepository.existsByFileIdAndUserId(fileId, memberId)).thenReturn(true);
 
         domainService.checkDownloadPermission(file, currentUser);
     }

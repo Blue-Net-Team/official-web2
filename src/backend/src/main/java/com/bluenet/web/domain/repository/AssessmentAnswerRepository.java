@@ -23,6 +23,12 @@ public interface AssessmentAnswerRepository {
      */
     Map<Long, Integer> countByUserIdAndAssessmentTimeIds(Long userId, List<Long> assessmentTimeIds);
     boolean existsByUserIdAndQuestionId(Long userId, Long questionId);
+    /**
+     * 判断指定文件是否存在属于该用户的答案记录。
+     *
+     * 组队场景下同一 fileId 会对应队长与多名队员的多条答案记录， 下载鉴权需按“任意一条记录属于当前用户”判断，不能使用单条记录的归属判断。
+     */
+    boolean existsByFileIdAndUserId(Long fileId, Long userId);
     Optional<AssessmentAnswer> findByUserIdAndQuestionId(Long userId, Long questionId);
     List<AssessmentAnswer> findByTeamIdAndQuestionId(Long teamId, Long questionId);
     void deleteByTeamId(Long teamId);
