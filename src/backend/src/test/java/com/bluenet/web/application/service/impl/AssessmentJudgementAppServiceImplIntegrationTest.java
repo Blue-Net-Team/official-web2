@@ -359,7 +359,8 @@ class AssessmentJudgementAppServiceImplIntegrationTest extends BaseIntegrationTe
 
         assertTrue(result.passed());
         AssessmentTime updated = assessmentTimeRepository.findById(time.getId()).orElseThrow();
-        assertTrue(updated.isResultsPublished());
+        // 仅保存决策不应标记结果已发布，发布状态由 publishDecisions 设置
+        assertFalse(updated.isResultsPublished());
     }
 
     @Test
@@ -397,6 +398,8 @@ class AssessmentJudgementAppServiceImplIntegrationTest extends BaseIntegrationTe
 
         assertEquals(1, sentCount);
         verify(publicationService).publish(any(AssessmentDecision.class), any(AssessmentTime.class));
+        AssessmentTime updated = assessmentTimeRepository.findById(time.getId()).orElseThrow();
+        assertTrue(updated.isResultsPublished());
     }
 
     @Test

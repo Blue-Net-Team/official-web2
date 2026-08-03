@@ -349,13 +349,6 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
                 });
         AssessmentDecisionResult result = toDecisionResult(decision);
 
-        AssessmentTime assessmentTime = assessmentTimeRepository.findById(command.assessmentTimeId())
-                .orElseThrow(() -> new DataNotFound("考核时间不存在，ID: " + command.assessmentTimeId()));
-        if (!assessmentTime.isResultsPublished()) {
-            assessmentTime.publishResults();
-            assessmentTimeRepository.save(assessmentTime);
-        }
-
         return result;
     }
 
