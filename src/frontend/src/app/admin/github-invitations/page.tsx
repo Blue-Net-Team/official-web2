@@ -7,7 +7,7 @@ import { GithubOutlined, SendOutlined } from '@ant-design/icons'
 import { usePagination, useAuth } from '@/hooks'
 import { adminUserService } from '@/apis/services/admin-user.service'
 import { adminGitHubOrgInvitationService } from '@/apis/services/admin-github-org-invitation.service'
-import { DIRECTION_LABELS } from '@/apis/schema/enumerate'
+import { DIRECTION_LABELS, ROLE_LABELS, getRoleTagColor } from '@/apis/schema/enumerate'
 import type { AdminUserListItemDTO, GitHubOrgBatchInviteResultDTO } from '@/apis/schema/type'
 import ErrorPage from '@/components/ErrorPage'
 import { ERROR_CONFIGS } from '@/components/ErrorPage/configs'
@@ -57,9 +57,9 @@ export default function AdminGitHubInvitationsPage() {
       const res = await adminGitHubOrgInvitationService.inviteUser(user.id)
       if (res.code === 200 && res.data) {
         if (res.data.success) {
-          messageApi.success(`${user.nickname || user.username}：${res.data.reason}`)
+          messageApi.success(`${user.username}：${res.data.reason}`)
         } else {
-          messageApi.error(`${user.nickname || user.username}：${res.data.reason}`)
+          messageApi.error(`${user.username}：${res.data.reason}`)
         }
       } else {
         messageApi.error(res.msg || '邀请失败')
@@ -121,7 +121,7 @@ export default function AdminGitHubInvitationsPage() {
     {
       title: '姓名',
       key: 'name',
-      render: (_, record) => record.nickname || record.username,
+      render: (_, record) => record.username,
     },
     {
       title: '邮箱',
@@ -145,7 +145,14 @@ export default function AdminGitHubInvitationsPage() {
       title: '角色',
       dataIndex: 'roleName',
       key: 'roleName',
-      render: (roleName: string | null) => roleName || '-',
+      render: (roleName: string | null) =>
+        roleName ? (
+          <Tag color={getRoleTagColor(roleName)} bordered={false}>
+            {ROLE_LABELS[roleName] || roleName}
+          </Tag>
+        ) : (
+          <Tag bordered={false}>-</Tag>
+        ),
     },
     {
       title: '操作',
@@ -157,7 +164,7 @@ export default function AdminGitHubInvitationsPage() {
   /** 批量结果弹窗中的用户昵称映射 */
   const userNameMap = useMemo(() => {
     const map = new Map<number, string>()
-    data.forEach((user) => map.set(user.id, user.nickname || user.username))
+    data.forEach((user) => map.set(user.id, user.username))
     return map
   }, [data])
 
