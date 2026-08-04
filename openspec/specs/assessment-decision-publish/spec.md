@@ -8,6 +8,12 @@ For global assessments (`direction = null, grade = null`):
 - The email notification SHALL handle `direction = null` gracefully: use a generic label (e.g., "全局") as the direction name
 - The email content SHALL still include candidate name, direction label, epoch number, pass/eliminate result as before
 
+When a candidate passes the global final assessment:
+- The system SHALL promote the candidate from CANDIDATE to MEMBER role
+- The system SHALL asynchronously send a GitHub organization invitation to the candidate
+- The GitHub invitation SHALL NOT block the role promotion or email notification
+- The GitHub invitation SHALL be sent by `githubId` if bound, otherwise by `email`
+
 #### Scenario: Direction administrator publishes results
 - **WHEN** a direction administrator calls the publish API with a valid `assessmentTimeId`
 - **AND** there are candidates with decisions (`passed` is not null) for that assessment time
@@ -42,6 +48,20 @@ For global assessments (`direction = null, grade = null`):
 - **WHEN** an individual email fails to send during publish
 - **THEN** the system SHALL log the failure and continue sending remaining emails
 - **AND** the returned count SHALL include only successfully dispatched emails
+
+#### Scenario: Candidate promoted and invited to GitHub
+- **WHEN** a candidate passes the global final assessment
+- **AND** the candidate is promoted from CANDIDATE to MEMBER
+- **THEN** the system SHALL asynchronously send a GitHub organization invitation
+- **AND** the invitation SHALL use `githubId` if the user has bound GitHub, otherwise use `email`
+- **AND** the candidate SHALL be assigned to the GitHub team matching their direction
+
+#### Scenario: GitHub invitation failure does not affect publish
+- **WHEN** a candidate passes the global final assessment
+- **AND** the GitHub organization invitation fails
+- **THEN** the role promotion SHALL still succeed
+- **AND** the email notification SHALL still be sent
+- **AND** the failure SHALL be logged
 
 ### Requirement: Frontend publish button integration
 The system SHALL replace the placeholder publish button notification with an actual API call that triggers email dispatch.

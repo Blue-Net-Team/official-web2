@@ -140,15 +140,29 @@ github:
     client-secret: ${GITHUB_CLIENT_SECRET:}
     callback-base-url: ${GITHUB_OAUTH_CALLBACK_BASE_URL:http://localhost:8080}
     frontend-base-url: ${GITHUB_FRONTEND_BASE_URL:http://localhost:3000}
-  app:    # github app 用于自动同步bug issue
-    app-id: ${GITHUB_APP_ID:}
-    private-key-path: ${GITHUB_APP_PRIVATE_KEY_PATH:}
-    owner: ${GITHUB_APP_OWNER:}
-    repo: ${GITHUB_APP_REPO:}
-    app-base-url: ${GITHUB_APP_APP_BASE_URL:http://localhost:8080}
-    webhook-secret: ${GITHUB_APP_WEBHOOK_SECRET:}
-    polling-enabled: ${GITHUB_APP_POLLING_ENABLED:true}
-    polling-since-days: ${GITHUB_APP_POLLING_SINCE_DAYS:7}
+  apps:
+    issue-sync:    # github app 用于自动同步bug issue
+      # 旧变量 GITHUB_APP_ID / GITHUB_APP_PRIVATE_KEY_PATH 已迁移为 GITHUB_ISSUE_*
+      app-id: ${GITHUB_ISSUE_APP_ID:}
+      private-key-path: ${GITHUB_ISSUE_PRIVATE_KEY_PATH:}
+      type: repository
+      enabled: true
+      owner: ${GITHUB_APP_OWNER:}
+      repo: ${GITHUB_APP_REPO:}
+      app-base-url: ${GITHUB_APP_APP_BASE_URL:http://localhost:8080}
+      webhook-secret: ${GITHUB_APP_WEBHOOK_SECRET:}
+      polling-enabled: ${GITHUB_APP_POLLING_ENABLED:true}
+      polling-since-days: ${GITHUB_APP_POLLING_SINCE_DAYS:7}
+    org-invitation:    # github app 用于邀请新成员加入组织
+      app-id: ${GITHUB_ORG_APP_ID:}
+      private-key-path: ${GITHUB_ORG_PRIVATE_KEY_PATH:}
+      type: organization
+      enabled: true
+      org: Blue-Net-Team
+      team-mapping:
+        COMPUTER_VISION: "Computer Vision"
+        EMBEDDED: "Embedded control"
+        STRUCTURAL_DESIGN: "Structure and Analysis"
 
 # CORS 配置
 cors:

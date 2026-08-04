@@ -26,6 +26,7 @@ import {
   BookOutlined,
   TagOutlined,
   CloudDownloadOutlined,
+  GithubOutlined,
 } from '@ant-design/icons'
 import type { MenuProps } from 'antd'
 
@@ -67,6 +68,13 @@ export const menuConfig: MenuItemConfig[] = [
     path: '/admin/users',
     icon: <UserOutlined />,
     minLevel: 3,
+  },
+  {
+    key: 'githubInvitations',
+    label: 'GitHub 邀请',
+    path: '/admin/github-invitations',
+    icon: <GithubOutlined />,
+    minLevel: 2,
   },
   {
     key: 'qrcode',

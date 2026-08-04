@@ -50,12 +50,19 @@ x-api-service-env: &api-service-env
 
   # GitHub App 配置（Bug 报告同步到 GitHub Issue）
   # 不配置或留空时，同步功能自动禁用
-  GITHUB_APP_ID: ${GITHUB_APP_ID:-}
-  # 注意：容器内路径固定为 /app/github-private-key.pem，通过 volumes 挂载注入
-  GITHUB_APP_PRIVATE_KEY_PATH: /app/github-private-key.pem
+  # 已由旧变量 GITHUB_APP_ID / GITHUB_APP_PRIVATE_KEY_PATH 迁移为以下新变量
+  GITHUB_ISSUE_APP_ID: ${GITHUB_ISSUE_APP_ID:-}
+  # 注意：容器内路径固定，通过 volumes 挂载注入
+  GITHUB_ISSUE_PRIVATE_KEY_PATH: /app/github-issue-private-key.pem
   GITHUB_APP_OWNER: ${GITHUB_APP_OWNER:-}
   GITHUB_APP_REPO: ${GITHUB_APP_REPO:-}
   GITHUB_APP_APP_BASE_URL: ${GITHUB_APP_APP_BASE_URL:-http://localhost:8080}
+
+  # GitHub App 配置（组织成员邀请）
+  # 不配置或留空时，邀请功能自动禁用
+  GITHUB_ORG_APP_ID: ${GITHUB_ORG_APP_ID:-}
+  # 注意：容器内路径固定，通过 volumes 挂载注入
+  GITHUB_ORG_PRIVATE_KEY_PATH: /app/github-org-private-key.pem
 
 x-frontend-env: &frontend-env
   # 服务端（SSR）访问后端地址：
@@ -87,9 +94,11 @@ services:
     environment:
       <<: *api-service-env
       TZ: Asia/Shanghai
-    # 启用 Bug 报告同步到 GitHub Issue 时，确保宿主机 .env 中 GITHUB_APP_PRIVATE_KEY_PATH 指向私钥文件
+    # 启用 Bug 报告同步到 GitHub Issue 时，确保宿主机 .env 中 GITHUB_ISSUE_PRIVATE_KEY_PATH 指向私钥文件
+    # 启用组织成员邀请时，确保宿主机 .env 中 GITHUB_ORG_PRIVATE_KEY_PATH 指向私钥文件
     volumes:
-      - ${GITHUB_APP_PRIVATE_KEY_PATH:-docker/null.pem}:/app/github-private-key.pem:ro
+      - ${GITHUB_ISSUE_PRIVATE_KEY_PATH:-docker/null.pem}:/app/github-issue-private-key.pem:ro
+      - ${GITHUB_ORG_PRIVATE_KEY_PATH:-docker/null.pem}:/app/github-org-private-key.pem:ro
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/api/v1/health"]
       interval: 10s

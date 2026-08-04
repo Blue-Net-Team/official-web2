@@ -46,4 +46,6 @@ public class AdminUserListItemResponseDTO {
     private Long avatarFileId;
     @Schema(description = "考核年级年份")
     private Integer assessmentGradeYear;
+    @Schema(description = "GitHub 登录名（未绑定为 null）")
+    private String githubUsername;
 }

@@ -1,10 +1,10 @@
 'use client'
 
 import React, { useState } from 'react'
-import { Form, Input, Select, Button, Spin } from 'antd'
+import { Form, Input, Select, Button, Spin, Tooltip } from 'antd'
 import type { MessageInstance } from 'antd/es/message/interface'
 import type { FormInstance } from 'antd/es/form'
-import { ArrowRightOutlined } from '@ant-design/icons'
+import { ArrowRightOutlined, QuestionCircleOutlined } from '@ant-design/icons'
 import Link from 'next/link'
 import { Direction } from '@/apis/schema/type'
 import type { CollegeDTO } from '@/apis/schema/type'
@@ -151,6 +151,9 @@ const EnrollForm: React.FC<EnrollFormProps> = ({
           <div className="flex flex-col gap-[6px]">
             <label className="text-[13px] font-medium text-white/70 flex items-center gap-1">
               邮箱 <span className="text-[#ff6b35]">*</span>
+              <Tooltip title="该邮箱将用于接收考核通知，并在通过最终考核后用于邀请你加入团队的 GitHub 组织。如果你有 GitHub 账号，请务必填写该 GitHub 账号绑定的邮箱地址。">
+                <QuestionCircleOutlined className="text-white/40 hover:text-white/70 cursor-help" />
+              </Tooltip>
             </label>
             <Form.Item
               name="email"

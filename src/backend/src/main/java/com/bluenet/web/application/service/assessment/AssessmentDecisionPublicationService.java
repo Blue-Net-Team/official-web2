@@ -12,6 +12,7 @@ import com.bluenet.web.domain.model.entity.User;
 import com.bluenet.web.domain.model.entity.Role;
 import com.bluenet.web.domain.repository.RoleRepository;
 import com.bluenet.web.domain.repository.UserRepository;
+import com.bluenet.web.domain.service.GitHubOrgInvitationService;
 import com.bluenet.web.infrastructure.security.principal.RoleTypeResolver;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,6 +35,7 @@ public class AssessmentDecisionPublicationService {
     private final MessageDispatcher messageDispatcher;
     private final AssessmentDecisionNotificationTemplate notificationTemplate;
     private final RoleTypeResolver roleTypeResolver;
+    private final GitHubOrgInvitationService gitHubOrgInvitationService;
 
     /**
      * 发布单个考生的决策结果。
@@ -58,6 +60,14 @@ public class AssessmentDecisionPublicationService {
             user.setRoleId(memberRoleId);
             userRepository.save(user);
             log.info("考生 {} 通过全局最终考核，角色已升级为 MEMBER", user.getId());
+
+            // 异步邀请加入 GitHub 组织；邀请失败只记录日志，不影响角色升级与邮件通知
+            // （线程池拒绝策略为 CallerRunsPolicy 时任务在调用线程执行，此处兜底捕获确保不阻塞主流程）
+            try {
+                gitHubOrgInvitationService.inviteAsync(user);
+            } catch (Exception e) {
+                log.error("触发 GitHub 组织邀请失败: userId={}", user.getId(), e);
+            }
         }
 
         sendDecisionEmail(user, assessmentTime, decision);

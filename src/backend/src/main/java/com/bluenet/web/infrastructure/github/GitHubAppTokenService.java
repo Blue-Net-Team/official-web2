@@ -1,77 +1,74 @@
 package com.bluenet.web.infrastructure.github;
 
-import com.bluenet.web.infrastructure.config.GitHubAppProperties;
+import com.bluenet.web.infrastructure.config.GitHubAppConfig;
+import com.bluenet.web.infrastructure.config.GitHubAppType;
+import com.bluenet.web.infrastructure.config.GitHubAppsProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.jsonwebtoken.Jwts;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.security.KeyFactory;
 import java.security.PrivateKey;
-import java.security.spec.PKCS8EncodedKeySpec;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.Base64;
-import java.util.Date;
 import java.util.Map;
 
+/**
+ * GitHub App Installation Access Token 服务，所有 GitHub App 共享。
+ * <p>
+ * 按 App 名称获取 Token：使用共享的 JWT 生成逻辑，根据 App 配置的安装类型（repository /
+ * organization）选择对应的 Installation 查询路径。
+ * </p>
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class GitHubAppTokenService {
 
-    private static final String GITHUB_INSTALLATION_URL_TEMPLATE = "%s/repos/%s/%s/installation";
+    private static final String REPO_INSTALLATION_URL_TEMPLATE = "%s/repos/%s/%s/installation";
+    private static final String ORG_INSTALLATION_URL_TEMPLATE = "%s/orgs/%s/installation";
     private static final String GITHUB_ACCESS_TOKEN_URL_TEMPLATE = "%s/app/installations/%s/access_tokens";
 
-    private final GitHubAppProperties properties;
+    private final GitHubAppsProperties appsProperties;
+    private final GitHubJwtGenerator jwtGenerator;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     /**
-     * 获取 GitHub App Installation Access Token。
+     * 获取指定 GitHub App 的 Installation Access Token。
      * <p>
-     * 流程： 1. 使用私钥生成 JWT 2. 通过 JWT 查询仓库对应的 installation id 3. 通过 JWT + installation
-     * id 换取 Access Token
+     * 流程： 1. 使用私钥生成 JWT 2. 通过 JWT 查询安装目标（仓库或组织）对应的 installation id 3. 通过 JWT +
+     * installation id 换取 Access Token
+     *
+     * @param appName
+     *            App 配置名称（如 issue-sync、org-invitation）
+     * @return Installation Access Token
      */
-    public String getInstallationAccessToken() {
-        if (!properties.isEnabled()) {
-            throw new IllegalStateException("GitHub App configuration is not enabled");
+    public String getAccessToken(String appName) {
+        GitHubAppConfig config = appsProperties.getApp(appName);
+        if (!config.isEnabled()) {
+            throw new IllegalStateException("GitHub App is not enabled: " + appName);
         }
 
-        PrivateKey privateKey = loadPrivateKey();
-        String jwt = generateJwt(privateKey);
+        PrivateKey privateKey = jwtGenerator.loadPrivateKey(config.getPrivateKeyPath());
+        String jwt = jwtGenerator.generateJwt(config.getAppId(), privateKey);
         RestTemplate restTemplate = createRestTemplate();
 
         try {
             // 1. 获取 installation id
-            long installationId = fetchInstallationId(restTemplate, jwt);
+            long installationId = fetchInstallationId(restTemplate, jwt, config);
 
             // 2. 换取 access token
-            return fetchAccessToken(restTemplate, jwt, installationId);
+            return fetchAccessToken(restTemplate, jwt, config.getApiBaseUrl(), installationId);
         } catch (RuntimeException e) {
-            log.error("Failed to get GitHub installation access token", e);
+            log.error("Failed to get GitHub installation access token: app={}", appName, e);
             throw e;
         }
     }
 
-    private long fetchInstallationId(RestTemplate restTemplate, String jwt) {
-        String url = String.format(
-                GITHUB_INSTALLATION_URL_TEMPLATE,
-                properties.getApiBaseUrl(),
-                properties.getOwner(),
-                properties.getRepo());
+    private long fetchInstallationId(RestTemplate restTemplate, String jwt, GitHubAppConfig config) {
+        String url = buildInstallationUrl(config);
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.setBearerAuth(jwt);
-        headers.setAccept(java.util.Collections.singletonList(MediaType.APPLICATION_JSON));
-        headers.set("User-Agent", "BlueNet-Bug-Sync");
-
-        HttpEntity<Void> request = new HttpEntity<>(headers);
+        HttpEntity<Void> request = new HttpEntity<>(createJwtHeaders(jwt));
         ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, request, String.class);
 
         if (response.getStatusCode() != HttpStatus.OK || response.getBody() == null) {
@@ -91,18 +88,29 @@ public class GitHubAppTokenService {
         }
     }
 
-    private String fetchAccessToken(RestTemplate restTemplate, String jwt, long installationId) {
-        String url = String.format(
-                GITHUB_ACCESS_TOKEN_URL_TEMPLATE,
-                properties.getApiBaseUrl(),
-                installationId);
+    /**
+     * 根据 App 安装类型构建 Installation 查询 URL。
+     */
+    private String buildInstallationUrl(GitHubAppConfig config) {
+        GitHubAppType type = config.getType() == null ? GitHubAppType.REPOSITORY : config.getType();
+        return switch (type) {
+            case REPOSITORY -> String.format(
+                    REPO_INSTALLATION_URL_TEMPLATE,
+                    config.getApiBaseUrl(),
+                    config.getOwner(),
+                    config.getRepo());
+            case ORGANIZATION -> String.format(
+                    ORG_INSTALLATION_URL_TEMPLATE,
+                    config.getApiBaseUrl(),
+                    config.getOrg());
+        };
+    }
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.setBearerAuth(jwt);
-        headers.setAccept(java.util.Collections.singletonList(MediaType.APPLICATION_JSON));
-        headers.set("User-Agent", "BlueNet-Bug-Sync");
+    private String fetchAccessToken(RestTemplate restTemplate, String jwt, String apiBaseUrl,
+            long installationId) {
+        String url = String.format(GITHUB_ACCESS_TOKEN_URL_TEMPLATE, apiBaseUrl, installationId);
 
-        HttpEntity<Void> request = new HttpEntity<>(headers);
+        HttpEntity<Void> request = new HttpEntity<>(createJwtHeaders(jwt));
         ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, request, String.class);
 
         if (response.getStatusCode() != HttpStatus.CREATED || response.getBody() == null) {
@@ -122,38 +130,12 @@ public class GitHubAppTokenService {
         }
     }
 
-    private String generateJwt(PrivateKey privateKey) {
-        Instant now = Instant.now();
-        Instant issuedAt = now.minus(60, ChronoUnit.SECONDS);
-        Instant expiration = now.plus(10, ChronoUnit.MINUTES);
-
-        return Jwts.builder()
-                .issuer(properties.getAppId().toString())
-                .issuedAt(Date.from(issuedAt))
-                .expiration(Date.from(expiration))
-                .signWith(privateKey, Jwts.SIG.RS256)
-                .compact();
-    }
-
-    PrivateKey loadPrivateKey() {
-        Path path = Paths.get(properties.getPrivateKeyPath());
-        if (!Files.exists(path)) {
-            throw new IllegalStateException("Private key file not found: " + path);
-        }
-
-        try {
-            String pem = Files.readString(path);
-            String base64 = pem.replaceAll("-----BEGIN[^-]+-----", "")
-                    .replaceAll("-----END[^-]+-----", "")
-                    .replaceAll("\\s", "");
-
-            byte[] decoded = Base64.getDecoder().decode(base64);
-            PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(decoded);
-            KeyFactory keyFactory = KeyFactory.getInstance("RSA");
-            return keyFactory.generatePrivate(spec);
-        } catch (Exception e) {
-            throw new IllegalStateException("Failed to load private key from: " + path, e);
-        }
+    private HttpHeaders createJwtHeaders(String jwt) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(jwt);
+        headers.setAccept(java.util.Collections.singletonList(MediaType.APPLICATION_JSON));
+        headers.set("User-Agent", "BlueNet-Backend");
+        return headers;
     }
 
     RestTemplate createRestTemplate() {

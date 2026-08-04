@@ -39,6 +39,7 @@ public class AdminUserResponseConverter {
                 .disable(item.disable())
                 .avatarFileId(item.avatarFileId())
                 .assessmentGradeYear(item.assessmentGradeYear())
+                .githubUsername(item.githubUsername())
                 .build();
     }
 

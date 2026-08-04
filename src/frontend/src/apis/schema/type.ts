@@ -868,6 +868,28 @@ export interface AdminUserListItemDTO {
   disable: boolean
   avatarFileId: number | null
   assessmentGradeYear: number | null
+  githubUsername: string | null
+}
+
+/**
+ * 单个用户 GitHub 组织邀请结果
+ * 对应后端 GitHubOrgInviteDetailResponseDTO.java
+ */
+export interface GitHubOrgInviteDetailDTO {
+  userId: number
+  success: boolean
+  reason: string
+}
+
+/**
+ * 批量 GitHub 组织邀请结果
+ * 对应后端 GitHubOrgBatchInviteResponseDTO.java
+ */
+export interface GitHubOrgBatchInviteResultDTO {
+  total: number
+  succeeded: number
+  failed: number
+  details: GitHubOrgInviteDetailDTO[]
 }
 
 export interface AdminUserDetailDTO {

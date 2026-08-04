@@ -30,7 +30,8 @@ public class AdminUserResult {
             String job,
             Boolean disable,
             Long avatarFileId,
-            Integer assessmentGradeYear) {
+            Integer assessmentGradeYear,
+            String githubUsername) {
     }
 
     /**
