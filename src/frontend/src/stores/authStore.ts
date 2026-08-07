@@ -58,6 +58,9 @@ const authStore = create<AuthState>()(
           }
         } catch (error) {
           set({ isLoading: false })
+          if (error instanceof AxiosError && error.response?.data?.msg) {
+            throw new Error(error.response.data.msg)
+          }
           throw error
         }
       },
