@@ -793,6 +793,19 @@ class FileDomainServiceImplTest {
     }
 
     @Test
+    @DisplayName("checkDownloadPermission: ENROLL_FORM 文件允许匿名下载")
+    void checkDownloadPermission_enrollForm_shouldAllow() {
+        File file = File.reconstruct(
+                1L,
+                "enroll_form-uuid.pdf",
+                FileType.ENROLL_FORM,
+                "url",
+                FileStatus.ACTIVE,
+                LocalDateTime.now());
+        domainService.checkDownloadPermission(file, null);
+    }
+
+    @Test
     @DisplayName("checkDownloadPermission: 未知文件类型应抛出 Forbidden")
     void checkDownloadPermission_unknownFileType_shouldForbid() {
         File file = File.reconstruct(

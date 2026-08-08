@@ -247,7 +247,7 @@ public class FileDomainServiceImpl implements FileDomainService {
             case ASSESSMENT_ATTACHMENT -> checkAssessmentAttachmentPermission(file, currentUser);
             case AVATAR -> {
             }
-            case NORMAL_IMG, QRCODE -> {
+            case NORMAL_IMG, QRCODE, ENROLL_FORM -> {
             }
             default -> {
                 log.warn("Unknown file type: {}", fileType);

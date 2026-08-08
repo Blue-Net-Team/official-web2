@@ -91,6 +91,13 @@ export const menuConfig: MenuItemConfig[] = [
     minLevel: 1,
   },
   {
+    key: 'enrollForm',
+    label: '报名表管理',
+    path: '/admin/enroll-form',
+    icon: <FileTextOutlined />,
+    minLevel: 2,
+  },
+  {
     key: 'competition',
     label: '竞赛管理',
     path: '/admin/competition',

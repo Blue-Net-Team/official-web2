@@ -104,7 +104,13 @@ export type EnrollStatus = 'PENDING' | 'APPROVED' | 'REJECTED'
  * 文件类型枚举
  * 对应后端 FileType.java
  */
-export type FileType = 'AVATAR' | 'NORMAL_IMG' | 'ASSESSMENT_ATTACHMENT' | 'WORK' | 'QRCODE'
+export type FileType =
+  | 'AVATAR'
+  | 'NORMAL_IMG'
+  | 'ASSESSMENT_ATTACHMENT'
+  | 'WORK'
+  | 'QRCODE'
+  | 'ENROLL_FORM'
 
 /**
  * 成就类型枚举

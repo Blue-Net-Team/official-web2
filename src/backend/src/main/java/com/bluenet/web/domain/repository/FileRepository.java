@@ -120,4 +120,24 @@ public interface FileRepository {
      * @return 孤儿文件领域对象列表。
      */
     java.util.List<File> findOrphanFiles();
+
+    /**
+     * 查询指定类型的最新一条 ACTIVE 文件记录。
+     *
+     * @param type
+     *            文件业务类型。
+     * @return 该类型下主键最大的 ACTIVE 文件；不存在时为空。
+     */
+    Optional<File> findLatestByType(FileType type);
+
+    /**
+     * 查询指定类型的最新一条 ACTIVE 文件记录，排除指定主键。
+     *
+     * @param type
+     *            文件业务类型。
+     * @param excludeId
+     *            需要排除的文件主键。
+     * @return 排除后该类型下主键最大的 ACTIVE 文件；不存在时为空。
+     */
+    Optional<File> findLatestByTypeExcludingId(FileType type, Long excludeId);
 }

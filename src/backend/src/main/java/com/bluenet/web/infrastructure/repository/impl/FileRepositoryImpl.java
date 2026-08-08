@@ -154,6 +154,34 @@ public class FileRepositoryImpl implements FileRepository {
     }
 
     /**
+     * 查询指定类型的最新一条 ACTIVE 文件记录。
+     *
+     * @param type
+     *            文件业务类型。
+     * @return 该类型下主键最大的 ACTIVE 文件；不存在时为空。
+     */
+    @Override
+    public Optional<File> findLatestByType(FileType type) {
+        FileDO dataObject = fileMapper.selectLatestByType(type);
+        return Optional.ofNullable(converter.toEntity(dataObject));
+    }
+
+    /**
+     * 查询指定类型的最新一条 ACTIVE 文件记录，排除指定主键。
+     *
+     * @param type
+     *            文件业务类型。
+     * @param excludeId
+     *            需要排除的文件主键。
+     * @return 排除后该类型下主键最大的 ACTIVE 文件；不存在时为空。
+     */
+    @Override
+    public Optional<File> findLatestByTypeExcludingId(FileType type, Long excludeId) {
+        FileDO dataObject = fileMapper.selectLatestByTypeExcludingId(type, excludeId);
+        return Optional.ofNullable(converter.toEntity(dataObject));
+    }
+
+    /**
      * 按文件主键删除文件元数据和对象存储内容。
      *
      * @param id

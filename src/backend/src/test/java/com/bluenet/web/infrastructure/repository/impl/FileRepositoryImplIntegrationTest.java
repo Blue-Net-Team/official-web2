@@ -159,4 +159,61 @@ class FileRepositoryImplIntegrationTest extends BaseIntegrationTest {
 
         assertThat(orphanFiles).anyMatch(f -> f.getId().equals(orphanFile.getId()));
     }
+
+    @Test
+    @DisplayName("findLatestByType: 多条同类型 ACTIVE 记录应返回主键最大的一条")
+    void findLatestByType_multipleActive_shouldReturnMaxId() {
+        File first = createMetadata(FileType.ENROLL_FORM);
+        fileRepository.save(FileFixture.withStatus(first, FileStatus.ACTIVE));
+        File second = createMetadata(FileType.ENROLL_FORM);
+        fileRepository.save(FileFixture.withStatus(second, FileStatus.ACTIVE));
+
+        Optional<File> latest = fileRepository.findLatestByType(FileType.ENROLL_FORM);
+
+        assertThat(latest).isPresent();
+        assertThat(latest.get().getId()).isEqualTo(second.getId());
+    }
+
+    @Test
+    @DisplayName("findLatestByType: PENDING 与 REJECTED 记录不应返回")
+    void findLatestByType_nonActive_shouldNotReturn() {
+        File pending = createMetadata(FileType.ENROLL_FORM);
+        fileRepository.save(FileFixture.withStatus(pending, FileStatus.PENDING));
+        File rejected = createMetadata(FileType.ENROLL_FORM);
+        fileRepository.save(FileFixture.withStatus(rejected, FileStatus.REJECTED));
+
+        Optional<File> latest = fileRepository.findLatestByType(FileType.ENROLL_FORM);
+
+        assertThat(latest).isEmpty();
+    }
+
+    @Test
+    @DisplayName("findLatestByType: 其他类型记录不应返回，无记录时返回空")
+    void findLatestByType_otherTypeAndEmpty_shouldReturnEmpty() {
+        File other = createMetadata(FileType.NORMAL_IMG);
+        fileRepository.save(FileFixture.withStatus(other, FileStatus.ACTIVE));
+
+        assertThat(fileRepository.findLatestByType(FileType.ENROLL_FORM)).isEmpty();
+    }
+
+    @Test
+    @DisplayName("findLatestByTypeExcludingId: 应返回排除指定主键后的最新 ACTIVE 记录")
+    void findLatestByTypeExcludingId_shouldReturnLatestExcludingId() {
+        File first = createMetadata(FileType.ENROLL_FORM);
+        fileRepository.save(FileFixture.withStatus(first, FileStatus.ACTIVE));
+        File second = createMetadata(FileType.ENROLL_FORM);
+        fileRepository.save(FileFixture.withStatus(second, FileStatus.ACTIVE));
+
+        Optional<File> latest = fileRepository.findLatestByTypeExcludingId(
+                FileType.ENROLL_FORM,
+                second.getId());
+
+        assertThat(latest).isPresent();
+        assertThat(latest.get().getId()).isEqualTo(first.getId());
+        assertThat(fileRepository.findLatestByTypeExcludingId(FileType.ENROLL_FORM, first.getId()))
+                .isPresent()
+                .get()
+                .extracting(File::getId)
+                .isEqualTo(second.getId());
+    }
 }

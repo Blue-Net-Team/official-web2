@@ -73,4 +73,16 @@ public class MockFileRepository implements FileRepository {
         log.debug("Mock findOrphanFiles called");
         return Collections.emptyList();
     }
+
+    @Override
+    public Optional<File> findLatestByType(FileType type) {
+        log.debug("Mock findLatestByType called: {}", type);
+        return Optional.empty();
+    }
+
+    @Override
+    public Optional<File> findLatestByTypeExcludingId(FileType type, Long excludeId) {
+        log.debug("Mock findLatestByTypeExcludingId called: {}, excludeId={}", type, excludeId);
+        return Optional.empty();
+    }
 }

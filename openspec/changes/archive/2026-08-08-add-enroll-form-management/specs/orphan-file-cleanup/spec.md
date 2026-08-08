@@ -1,4 +1,6 @@
-## ADDED Requirements
+# 孤儿文件清理（orphan-file-cleanup）变更
+
+## MODIFIED Requirements
 
 ### Requirement: System SHALL automatically clean up orphan file records
 The system SHALL provide a scheduled job that scans `tb_file` periodically and removes records that are no longer needed, along with their corresponding object storage objects. Records with `type = 'enroll-form'` SHALL be excluded from the ACTIVE-orphan check: enroll-form files are not referenced by any business table (no reference table by design) and their lifecycle is managed explicitly by the enroll-form management endpoints, so the cleanup job MUST NOT delete them.
@@ -34,24 +36,3 @@ The system SHALL provide a scheduled job that scans `tb_file` periodically and r
 - **WHEN** a file record has `status = ACTIVE` and `type = 'enroll-form'`
 - **THEN** the cleanup job SHALL NOT delete the file record regardless of business references
 - **AND** the file SHALL remain downloadable until explicitly deleted via the enroll-form management endpoint
-
-### Requirement: Cleanup job SHALL run on a configurable schedule
-The system SHALL execute the orphan file cleanup job according to a configurable cron expression.
-
-#### Scenario: Default schedule execution
-- **WHEN** the application is running and the cron expression triggers
-- **THEN** the cleanup job SHALL execute at the configured time
-
-### Requirement: Cleanup failures SHALL be isolated
-The system SHALL ensure that a failure to clean up one file does not prevent the cleanup of other files.
-
-#### Scenario: Object storage deletion fails for one file
-- **WHEN** the cleanup job attempts to delete an object from storage and the deletion fails
-- **THEN** the system SHALL log the failure
-- **AND** the system SHALL continue processing remaining orphan files
-
-#### Scenario: Database deletion fails for one file
-- **WHEN** the cleanup job attempts to delete a file record and the deletion fails
-- **THEN** the system SHALL log the failure
-- **AND** the system SHALL skip the object storage deletion for that file
-- **AND** the system SHALL continue processing remaining orphan files
