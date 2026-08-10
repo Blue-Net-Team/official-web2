@@ -53,18 +53,8 @@ public class BugReport {
      */
     public static BugReport create(String title, String description, String pageUrl,
             String environmentJson, String reporterEmail, List<Long> fileIds) {
-        if (title == null || title.isBlank()) {
-            throw new IllegalArgumentException("Bug 标题不能为空");
-        }
-        if (title.length() > MAX_TITLE_LENGTH) {
-            throw new IllegalArgumentException("Bug 标题最多 " + MAX_TITLE_LENGTH + " 字符");
-        }
-        if (description == null || description.isBlank()) {
-            throw new IllegalArgumentException("Bug 描述不能为空");
-        }
-        if (description.length() > MAX_DESCRIPTION_LENGTH) {
-            throw new IllegalArgumentException("Bug 描述最多 " + MAX_DESCRIPTION_LENGTH + " 字符");
-        }
+        title = requireNonBlankMaxLength(title, "标题", MAX_TITLE_LENGTH);
+        description = requireNonBlankMaxLength(description, "描述", MAX_DESCRIPTION_LENGTH);
         if (fileIds != null && fileIds.size() > MAX_IMAGES) {
             throw new IllegalArgumentException("最多上传 " + MAX_IMAGES + " 张截图");
         }
@@ -76,9 +66,19 @@ public class BugReport {
             }
         }
 
-        return new BugReport(null, title.trim(), description.trim(), pageUrl,
+        return new BugReport(null, title, description, pageUrl,
                 environmentJson, reporterEmail, BugReportStatus.PENDING,
                 null, null, imageList);
+    }
+
+    private static String requireNonBlankMaxLength(String value, String fieldName, int maxLength) {
+        if (value == null || value.isBlank()) {
+            throw new IllegalArgumentException("Bug " + fieldName + "不能为空");
+        }
+        if (value.length() > maxLength) {
+            throw new IllegalArgumentException("Bug " + fieldName + "最多 " + maxLength + " 字符");
+        }
+        return value.trim();
     }
 
     /**

@@ -61,14 +61,6 @@ public interface PermissionRepository {
     void save(Permission permission);
 
     /**
-     * 更新已有权限记录。
-     *
-     * @param permission
-     *            权限实体（id 必须非空）
-     */
-    void update(Permission permission);
-
-    /**
      * 删除指定权限记录。
      *
      * @param id

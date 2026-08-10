@@ -1,16 +1,14 @@
 package com.bluenet.web.application.service.impl;
 
-import com.bluenet.web.application.ConfirmUploadResult;
-import com.bluenet.web.application.FileDownloadResult;
-import com.bluenet.web.application.FileResult;
-import com.bluenet.web.application.PresignedUploadResult;
+import com.bluenet.web.application.result.file.FileDownloadResult;
+import com.bluenet.web.application.result.file.FileResult;
 import com.bluenet.web.application.command.file.FileCommands;
 import com.bluenet.web.application.service.FileAppService;
 import com.bluenet.web.domain.exception.DataNotFound;
 import com.bluenet.web.domain.model.enumerate.FileType;
-import com.bluenet.web.domain.model.vo.ConfirmUploadVO;
-import com.bluenet.web.domain.model.vo.FileVO;
-import com.bluenet.web.domain.model.vo.PresignedUploadVO;
+import com.bluenet.web.domain.model.entity.File;
+import com.bluenet.web.domain.model.result.ConfirmUploadResult;
+import com.bluenet.web.domain.model.result.PresignedUploadResult;
 import com.bluenet.web.domain.repository.FileRepository;
 import com.bluenet.web.domain.service.FileDomainService;
 import com.bluenet.web.infrastructure.security.util.UserCTX;
@@ -53,9 +51,10 @@ public class FileAppServiceImpl implements FileAppService {
         MultipartFile file = command.file();
         FileType type = command.type();
         String filename = fileDomainService.generateFilename(type, file.getOriginalFilename());
-        FileVO fileVO = saveFile(type, filename, file);
-        log.info("文件上传成功，文件id: {}, 类型: {}", fileVO.getId(), type);
-        return new FileResult(fileVO.getId(), fileVO.getName(), fileVO.getType(), fileVO.getUrl(), fileVO.getStatus());
+        File savedFile = saveFile(type, filename, file);
+        log.info("文件上传成功，文件id: {}, 类型: {}", savedFile.getId(), type);
+        return new FileResult(savedFile.getId(), savedFile.getName(), savedFile.getType(), savedFile.getUrl(),
+                savedFile.getStatus());
     }
 
     /**
@@ -67,22 +66,22 @@ public class FileAppServiceImpl implements FileAppService {
      */
     @Override
     public FileDownloadResult downloadFile(FileCommands.DownloadFileCommand command) {
-        FileVO fileVO = fileDomainService.getFileById(command.fileId());
+        File file = fileDomainService.getFileById(command.fileId());
 
-        fileDomainService.checkDownloadPermission(fileVO, UserCTX.getCurrentUser());
+        fileDomainService.checkDownloadPermission(file, UserCTX.getCurrentUser());
 
-        Resource resource = fileRepository.loadFile(fileVO.getName(), fileVO.getType());
+        Resource resource = fileRepository.loadFile(file.getName(), file.getType());
         if (resource == null || !resource.exists()) {
-            log.warn("File resource not found for file: {}", fileVO.getName());
+            log.warn("File resource not found for file: {}", file.getName());
             throw new DataNotFound("文件资源不存在");
         }
 
         log.info(
                 "File downloaded successfully: id={}, type={}, name={}",
                 command.fileId(),
-                fileVO.getType(),
-                fileVO.getName());
-        return new FileDownloadResult(resource, fileVO.getName());
+                file.getType(),
+                file.getName());
+        return new FileDownloadResult(resource, file.getName());
     }
 
     @Override
@@ -98,20 +97,20 @@ public class FileAppServiceImpl implements FileAppService {
 
             try (ZipOutputStream zos = new ZipOutputStream(outputStream)) {
                 for (FileCommands.BatchDownloadEntry entry : command.entries()) {
-                    FileVO fileVO = fileDomainService.getFileById(entry.fileId());
-                    fileDomainService.checkDownloadPermission(fileVO, UserCTX.getCurrentUser());
+                    File file = fileDomainService.getFileById(entry.fileId());
+                    fileDomainService.checkDownloadPermission(file, UserCTX.getCurrentUser());
 
-                    Resource resource = fileRepository.loadFile(fileVO.getName(), fileVO.getType());
+                    Resource resource = fileRepository.loadFile(file.getName(), file.getType());
                     if (resource == null || !resource.exists()) {
-                        log.warn("File resource not found for batch download: {}", fileVO.getName());
-                        throw new DataNotFound("文件资源不存在: " + fileVO.getName());
+                        log.warn("File resource not found for batch download: {}", file.getName());
+                        throw new DataNotFound("文件资源不存在: " + file.getName());
                     }
 
                     String entryName = entry.filename();
                     if (entryName == null || entryName.isBlank()) {
-                        entryName = fileVO.getName();
+                        entryName = file.getName();
                     } else if (!entryName.contains(".")) {
-                        String originalName = fileVO.getName();
+                        String originalName = file.getName();
                         int lastDot = originalName.lastIndexOf('.');
                         if (lastDot > 0) {
                             entryName = entryName + originalName.substring(lastDot);
@@ -140,27 +139,27 @@ public class FileAppServiceImpl implements FileAppService {
 
     @Override
     public PresignedUploadResult prepareUpload(FileCommands.PrepareUploadCommand command) {
-        PresignedUploadVO vo = fileDomainService
+        PresignedUploadResult vo = fileDomainService
                 .prepareUpload(command.type(), command.filename(), command.contentType(), command.size());
         return new PresignedUploadResult(vo.fileId(), vo.uploadUrl(), vo.callbackToken(), vo.filename(), vo.type());
     }
 
     @Override
     public ConfirmUploadResult confirmUpload(FileCommands.ConfirmUploadCommand command) {
-        ConfirmUploadVO vo = fileDomainService
+        ConfirmUploadResult vo = fileDomainService
                 .confirmUpload(command.fileId(), command.callbackToken(), command.md5(), command.size());
         return new ConfirmUploadResult(vo.fileId(), vo.filename(), vo.type(), vo.status());
     }
 
     @Override
     public String getPresignedDownloadUrl(FileCommands.DownloadFileCommand command) {
-        FileVO fileVO = fileDomainService.getFileById(command.fileId());
-        fileDomainService.checkDownloadPermission(fileVO, UserCTX.getCurrentUser());
-        return fileDomainService.getPresignedDownloadUrl(fileVO.getType(), fileVO.getName());
+        File file = fileDomainService.getFileById(command.fileId());
+        fileDomainService.checkDownloadPermission(file, UserCTX.getCurrentUser());
+        return fileDomainService.getPresignedDownloadUrl(file.getType(), file.getName());
     }
 
     @NotNull
-    private FileVO saveFile(FileType type, String filename, MultipartFile file) {
+    private File saveFile(FileType type, String filename, MultipartFile file) {
         try {
             return fileDomainService.saveFile(type, filename, file.getInputStream());
         } catch (IOException e) {

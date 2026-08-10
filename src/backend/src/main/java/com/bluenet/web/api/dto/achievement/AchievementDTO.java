@@ -9,6 +9,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Data
 @AllArgsConstructor
@@ -54,4 +55,10 @@ public class AchievementDTO {
 
     @Schema(description = "成就图片URL")
     private String fileUrl;
+
+    @Schema(description = "关联的系统内成员列表")
+    private List<AchievementMemberDTO> members;
+
+    @Schema(description = "外部协作者姓名列表")
+    private List<String> externalMembers;
 }

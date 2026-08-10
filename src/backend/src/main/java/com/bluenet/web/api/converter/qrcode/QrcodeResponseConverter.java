@@ -2,7 +2,7 @@ package com.bluenet.web.api.converter.qrcode;
 
 import com.bluenet.web.api.dto.qrcode.AssessmentQrcodeDTO;
 import com.bluenet.web.api.dto.qrcode.ConsultationQrcodeDTO;
-import com.bluenet.web.application.QrcodeResult;
+import com.bluenet.web.application.result.qrcode.QrcodeResult;
 import org.springframework.stereotype.Component;
 
 import java.util.List;

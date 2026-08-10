@@ -54,6 +54,13 @@
         LIMIT 1
     </select>
 
+    <select id="countByFileIdAndUserId" resultType="int">
+        SELECT COUNT(*)
+        FROM tb_assessment_answer
+        WHERE file_id = #{fileId}
+          AND user_id = #{userId}
+    </select>
+
     <select id="selectByTeamIdAndQuestionId" resultMap="BaseResultMap">
         SELECT *
         FROM tb_assessment_answer
@@ -86,18 +93,6 @@
         </foreach>
     </insert>
 
-    <!-- 批量更新队伍答案：通过 team_id + question_id 更新该队伍在该题目下的所有答案（含队长） -->
-    <update id="updateTeamMemberAnswers">
-        UPDATE tb_assessment_answer
-        SET
-            <if test="fileId != null">file_id = #{fileId},</if>
-            <if test="content != null">content = #{content},</if>
-            <if test="language != null">language = #{language},</if>
-            submit_time = #{submitTime}
-        WHERE team_id = #{teamId}
-          AND question_id = #{questionId}
-    </update>
-
     <select id="selectExistingAnswerUserIds" resultType="java.lang.Long">
         SELECT user_id
         FROM tb_assessment_answer
@@ -114,7 +109,7 @@
         JOIN tb_assessment_question q ON a.question_id = q.id
         WHERE q.assessment_time_id = #{assessmentTimeId}
           AND a.user_id = #{userId}
-          AND q.question_type = 'FILE_UPLOAD'
+          AND q.question_type = 'file_upload'
           AND a.team_id IS NULL
     </select>
 
@@ -124,7 +119,7 @@
         JOIN tb_assessment_question q ON a.question_id = q.id
         WHERE q.assessment_time_id = #{assessmentTimeId}
           AND a.user_id = #{userId}
-          AND q.question_type = 'FILE_UPLOAD'
+          AND q.question_type = 'file_upload'
           AND a.team_id IS NOT NULL
     </select>
 </mapper>

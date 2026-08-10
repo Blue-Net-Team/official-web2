@@ -1,6 +1,6 @@
 package com.bluenet.web.application.service;
 
-import com.bluenet.web.application.LearningPathResult;
+import com.bluenet.web.application.result.learningpath.LearningPathResult;
 import com.bluenet.web.application.command.learningpath.LearningPathCommands;
 
 import java.util.List;

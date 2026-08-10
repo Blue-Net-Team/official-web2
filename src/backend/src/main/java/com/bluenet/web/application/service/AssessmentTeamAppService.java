@@ -1,7 +1,7 @@
 package com.bluenet.web.application.service;
 
-import com.bluenet.web.application.TeamPreviewResult;
-import com.bluenet.web.application.TeamResult;
+import com.bluenet.web.application.result.team.TeamPreviewResult;
+import com.bluenet.web.application.result.team.TeamResult;
 
 /**
  * 考核队伍应用服务接口。

@@ -1,5 +1,7 @@
 package com.bluenet.web.domain.model.entity;
 
+import com.bluenet.web.domain.exception.BadRequest;
+import com.bluenet.web.domain.exception.Forbidden;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -47,8 +49,15 @@ public class Comment {
 
     /**
      * 构造新评论
+     *
+     * @param alreadyCommented
+     *            当前用户是否已对该答案发表过评论
      */
-    public static Comment create(Long answerId, Long userId, String content, BigDecimal score) {
+    public static Comment create(Long answerId, Long userId, String content, BigDecimal score,
+            boolean alreadyCommented) {
+        if (alreadyCommented) {
+            throw new BadRequest("您已对该答案发表过评论，不可重复评论");
+        }
         return new Comment(null, answerId, userId, content, score, LocalDateTime.now());
     }
 
@@ -60,15 +69,29 @@ public class Comment {
         return new Comment(id, answerId, userId, content, score, commentTime);
     }
 
+    private void ensureAuthor(Long actingUserId, String action) {
+        if (!userId.equals(actingUserId)) {
+            throw new Forbidden("只能" + action + "自己的评论");
+        }
+    }
+
     /**
-     * 更新评论内容
+     * 更新评论内容（仅限评论者本人）
      */
-    public void update(String content, BigDecimal score) {
+    public void update(Long actingUserId, String content, BigDecimal score) {
+        ensureAuthor(actingUserId, "修改");
         if (content != null) {
             this.content = content;
         }
         if (score != null) {
             this.score = score;
         }
+    }
+
+    /**
+     * 删除评论校验（仅限评论者本人）
+     */
+    public void delete(Long actingUserId) {
+        ensureAuthor(actingUserId, "删除");
     }
 }

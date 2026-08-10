@@ -1,6 +1,8 @@
 package com.bluenet.web.infrastructure.github;
 
-import com.bluenet.web.infrastructure.config.GitHubAppProperties;
+import com.bluenet.web.infrastructure.config.GitHubAppConfig;
+import com.bluenet.web.infrastructure.config.GitHubAppType;
+import com.bluenet.web.infrastructure.config.GitHubAppsProperties;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -26,7 +28,9 @@ import static org.mockito.Mockito.*;
 class GitHubAppTokenServiceTest {
 
     @Mock
-    private GitHubAppProperties properties;
+    private GitHubAppsProperties appsProperties;
+
+    private final GitHubJwtGenerator jwtGenerator = new GitHubJwtGenerator();
 
     private GitHubAppTokenService service;
 
@@ -35,18 +39,23 @@ class GitHubAppTokenServiceTest {
 
     private Path validPrivateKeyPath;
 
+    private GitHubAppConfig repoAppConfig;
+
     @BeforeEach
     void setUp() throws Exception {
-        lenient().when(properties.getAppId()).thenReturn(123456L);
-        lenient().when(properties.getOwner()).thenReturn("bluenet-team");
-        lenient().when(properties.getRepo()).thenReturn("bluenet-issues");
-        lenient().when(properties.getApiBaseUrl()).thenReturn("https://api.github.com");
-        lenient().when(properties.isEnabled()).thenReturn(true);
-
         validPrivateKeyPath = generateTestPrivateKeyFile();
-        lenient().when(properties.getPrivateKeyPath()).thenReturn(validPrivateKeyPath.toString());
 
-        service = new GitHubAppTokenService(properties);
+        repoAppConfig = new GitHubAppConfig();
+        repoAppConfig.setAppId(123456L);
+        repoAppConfig.setPrivateKeyPath(validPrivateKeyPath.toString());
+        repoAppConfig.setType(GitHubAppType.REPOSITORY);
+        repoAppConfig.setOwner("bluenet-team");
+        repoAppConfig.setRepo("bluenet-issues");
+        repoAppConfig.setApiBaseUrl("https://api.github.com");
+
+        lenient().when(appsProperties.getApp("issue-sync")).thenReturn(repoAppConfig);
+
+        service = new GitHubAppTokenService(appsProperties, jwtGenerator);
     }
 
     private Path generateTestPrivateKeyFile() throws Exception {
@@ -68,49 +77,94 @@ class GitHubAppTokenServiceTest {
         return path;
     }
 
+    private RestTemplate mockRestTemplateWithToken(String installationUrl) {
+        RestTemplate mockRestTemplate = mock(RestTemplate.class);
+
+        String installationResponse = "{\"id\": 98765432}";
+        ResponseEntity<String> installationEntity = new ResponseEntity<>(installationResponse, HttpStatus.OK);
+        when(
+                mockRestTemplate.exchange(
+                        eq(installationUrl),
+                        eq(HttpMethod.GET),
+                        any(HttpEntity.class),
+                        eq(String.class)))
+                                .thenReturn(installationEntity);
+
+        String tokenResponse = "{\"token\": \"ghs_testInstallationToken123\", \"expires_at\": \"2099-01-01T00:00:00Z\"}";
+        ResponseEntity<String> tokenEntity = new ResponseEntity<>(tokenResponse, HttpStatus.CREATED);
+        when(
+                mockRestTemplate.exchange(
+                        eq("https://api.github.com/app/installations/98765432/access_tokens"),
+                        eq(HttpMethod.POST),
+                        any(HttpEntity.class),
+                        eq(String.class)))
+                                .thenReturn(tokenEntity);
+
+        return mockRestTemplate;
+    }
+
     @Nested
-    @DisplayName("getInstallationAccessToken 方法测试")
-    class GetInstallationAccessTokenTest {
+    @DisplayName("getAccessToken 方法测试")
+    class GetAccessTokenTest {
 
         @Test
-        @DisplayName("TC-005: 有效私钥应成功生成 Installation Access Token")
-        void getInstallationAccessToken_validKey_shouldReturnToken() {
-            RestTemplate mockRestTemplate = mock(RestTemplate.class);
-
-            // Mock GET /repos/{owner}/{repo}/installation
-            String installationResponse = "{\"id\": 98765432}";
-            ResponseEntity<String> installationEntity = new ResponseEntity<>(installationResponse, HttpStatus.OK);
-            when(
-                    mockRestTemplate.exchange(
-                            eq("https://api.github.com/repos/bluenet-team/bluenet-issues/installation"),
-                            eq(HttpMethod.GET),
-                            any(HttpEntity.class),
-                            eq(String.class)))
-                                    .thenReturn(installationEntity);
-
-            // Mock POST /app/installations/{id}/access_tokens
-            String tokenResponse = "{\"token\": \"ghs_testInstallationToken123\", \"expires_at\": \"2099-01-01T00:00:00Z\"}";
-            ResponseEntity<String> tokenEntity = new ResponseEntity<>(tokenResponse, HttpStatus.CREATED);
-            when(
-                    mockRestTemplate.exchange(
-                            eq("https://api.github.com/app/installations/98765432/access_tokens"),
-                            eq(HttpMethod.POST),
-                            any(HttpEntity.class),
-                            eq(String.class)))
-                                    .thenReturn(tokenEntity);
+        @DisplayName("TC-005: 仓库级 App 应通过 repos installation 路径获取 Token")
+        void getAccessToken_repositoryApp_shouldReturnToken() {
+            RestTemplate mockRestTemplate = mockRestTemplateWithToken(
+                    "https://api.github.com/repos/bluenet-team/bluenet-issues/installation");
 
             GitHubAppTokenService spyService = spy(service);
             doReturn(mockRestTemplate).when(spyService).createRestTemplate();
 
-            String token = spyService.getInstallationAccessToken();
+            String token = spyService.getAccessToken("issue-sync");
 
             assertNotNull(token);
             assertEquals("ghs_testInstallationToken123", token);
         }
 
         @Test
+        @DisplayName("组织级 App 应通过 orgs installation 路径获取 Token")
+        void getAccessToken_organizationApp_shouldUseOrgInstallationUrl() {
+            GitHubAppConfig orgAppConfig = new GitHubAppConfig();
+            orgAppConfig.setAppId(654321L);
+            orgAppConfig.setPrivateKeyPath(validPrivateKeyPath.toString());
+            orgAppConfig.setType(GitHubAppType.ORGANIZATION);
+            orgAppConfig.setOrg("Blue-Net-Team");
+            orgAppConfig.setApiBaseUrl("https://api.github.com");
+            when(appsProperties.getApp("org-invitation")).thenReturn(orgAppConfig);
+
+            RestTemplate mockRestTemplate = mockRestTemplateWithToken(
+                    "https://api.github.com/orgs/Blue-Net-Team/installation");
+
+            GitHubAppTokenService spyService = spy(service);
+            doReturn(mockRestTemplate).when(spyService).createRestTemplate();
+
+            String token = spyService.getAccessToken("org-invitation");
+
+            assertEquals("ghs_testInstallationToken123", token);
+            verify(mockRestTemplate).exchange(
+                    eq("https://api.github.com/orgs/Blue-Net-Team/installation"),
+                    eq(HttpMethod.GET),
+                    any(HttpEntity.class),
+                    eq(String.class));
+        }
+
+        @Test
+        @DisplayName("App 配置不完整时应抛出 IllegalStateException")
+        void getAccessToken_appNotEnabled_shouldThrowException() {
+            GitHubAppConfig incompleteConfig = new GitHubAppConfig();
+            incompleteConfig.setAppId(null);
+            when(appsProperties.getApp("issue-sync")).thenReturn(incompleteConfig);
+
+            IllegalStateException ex = assertThrows(
+                    IllegalStateException.class,
+                    () -> service.getAccessToken("issue-sync"));
+            assertTrue(ex.getMessage().contains("not enabled"));
+        }
+
+        @Test
         @DisplayName("TC-009: GitHub API 返回 401 应抛出 RuntimeException")
-        void getInstallationAccessToken_unauthorized_shouldThrowException() {
+        void getAccessToken_unauthorized_shouldThrowException() {
             RestTemplate mockRestTemplate = mock(RestTemplate.class);
 
             String installationResponse = "{\"id\": 98765432}";
@@ -137,7 +191,7 @@ class GitHubAppTokenServiceTest {
 
             RuntimeException ex = assertThrows(
                     RuntimeException.class,
-                    () -> spyService.getInstallationAccessToken());
+                    () -> spyService.getAccessToken("issue-sync"));
             assertTrue(ex.getMessage().contains("GitHub API error"));
         }
     }
@@ -149,12 +203,11 @@ class GitHubAppTokenServiceTest {
         @Test
         @DisplayName("TC-006: 私钥文件不存在应抛出 IllegalStateException")
         void privateKeyFileNotExists_shouldThrowException() {
-            when(properties.getPrivateKeyPath()).thenReturn(tempDir.resolve("nonexistent.pem").toString());
-            service = new GitHubAppTokenService(properties);
+            repoAppConfig.setPrivateKeyPath(tempDir.resolve("nonexistent.pem").toString());
 
             IllegalStateException ex = assertThrows(
                     IllegalStateException.class,
-                    () -> service.getInstallationAccessToken());
+                    () -> service.getAccessToken("issue-sync"));
             assertTrue(ex.getMessage().contains("Private key file not found"));
         }
 
@@ -163,12 +216,11 @@ class GitHubAppTokenServiceTest {
         void invalidPrivateKeyContent_shouldThrowException() throws Exception {
             Path invalidKeyPath = tempDir.resolve("invalid.pem");
             Files.writeString(invalidKeyPath, "not-a-valid-pem");
-            when(properties.getPrivateKeyPath()).thenReturn(invalidKeyPath.toString());
-            service = new GitHubAppTokenService(properties);
+            repoAppConfig.setPrivateKeyPath(invalidKeyPath.toString());
 
             IllegalStateException ex = assertThrows(
                     IllegalStateException.class,
-                    () -> service.getInstallationAccessToken());
+                    () -> service.getAccessToken("issue-sync"));
             assertTrue(ex.getMessage().contains("Failed to load private key"));
         }
     }

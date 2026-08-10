@@ -1,8 +1,9 @@
-import { Card, Flex, Tag } from 'antd'
+import { Avatar, Card, Flex, Tag } from 'antd'
 import { AchievementDTO } from '@/apis/schema/type'
 import { AWARD_LEVEL_LABELS } from '@/apis/schema/enumerate'
-import { TrophyOutlined, BulbOutlined, FileTextOutlined } from '@ant-design/icons'
+import { TrophyOutlined, BulbOutlined, FileTextOutlined, UserOutlined } from '@ant-design/icons'
 import Image from 'next/image'
+import Link from 'next/link'
 import { API_BASE_URL } from '@/apis/config'
 
 interface AchievementCardProps {
@@ -45,6 +46,9 @@ const AchievementCard = ({ achievement }: AchievementCardProps) => {
   }
 
   const year = achievement.achieveAt ? new Date(achievement.achieveAt).getFullYear() : null
+
+  const members = achievement.members ?? []
+  const externalMembers = achievement.externalMembers ?? []
 
   const isCompetition = achievement.type === 'COMPETITION'
 
@@ -108,6 +112,36 @@ const AchievementCard = ({ achievement }: AchievementCardProps) => {
           <Flex align="center" gap={16} className="mt-2">
             {year && <span className="text-xs text-white/50">{year}年</span>}
           </Flex>
+          {(members.length > 0 || externalMembers.length > 0) && (
+            <Flex align="center" gap={8} wrap="wrap" className="mt-2">
+              {members.map((member) => (
+                <Link
+                  key={member.userId}
+                  href={`/members/${member.userId}`}
+                  className="hover:opacity-80"
+                >
+                  <Flex align="center" gap={4}>
+                    <Avatar
+                      size={20}
+                      icon={<UserOutlined />}
+                      src={
+                        member.avatarFileId
+                          ? `${API_BASE_URL}/file/download/${member.avatarFileId}`
+                          : undefined
+                      }
+                    />
+                    <span className="text-xs text-white/70">{member.username}</span>
+                  </Flex>
+                </Link>
+              ))}
+              {externalMembers.map((name) => (
+                <Flex key={name} align="center" gap={4}>
+                  <Avatar size={20} icon={<UserOutlined />} />
+                  <span className="text-xs text-white/60">{name}</span>
+                </Flex>
+              ))}
+            </Flex>
+          )}
         </Flex>
       </Flex>
     </Card>

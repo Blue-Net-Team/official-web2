@@ -1,6 +1,6 @@
 package com.bluenet.web.application.service.impl;
 
-import com.bluenet.web.application.AlgorithmJudgeResult;
+import com.bluenet.web.application.result.algorithm_judge.AlgorithmJudgeResult;
 import com.bluenet.web.application.command.algorithm_judge.AlgorithmJudgeCommands;
 import com.bluenet.web.application.service.AlgorithmJudgeAppService;
 import com.bluenet.web.domain.exception.BadRequest;
@@ -15,20 +15,20 @@ import com.bluenet.web.domain.model.enumerate.JudgeJobStatus;
 import com.bluenet.web.domain.model.enumerate.ProgrammingLanguage;
 import com.bluenet.web.domain.model.enumerate.QuestionType;
 import com.bluenet.web.domain.model.entity.AssessmentAnswer;
-import com.bluenet.web.domain.model.vo.AssessmentJudgementVO;
+import com.bluenet.web.domain.model.entity.AssessmentJudgement;
 import com.bluenet.web.domain.model.entity.AssessmentQuestion;
 import com.bluenet.web.domain.model.entity.AssessmentTime;
-import com.bluenet.web.domain.model.vo.UserVO;
-import com.bluenet.web.domain.model.vo.evaluation.AlgorithmContent;
+import com.bluenet.web.domain.model.entity.User;
+import com.bluenet.web.domain.model.vo.question_content.AlgorithmContent;
 import com.bluenet.web.domain.repository.AlgorithmJudgeCaseResultRepository;
 import com.bluenet.web.domain.repository.AlgorithmJudgeJobRepository;
 import com.bluenet.web.domain.repository.AssessmentAnswerRepository;
 import com.bluenet.web.domain.repository.AssessmentSessionRepository;
-import com.bluenet.web.domain.service.AssessmentJudgementDomainService;
+import com.bluenet.web.domain.repository.AssessmentJudgementRepository;
 import com.bluenet.web.domain.repository.AssessmentQuestionRepository;
 import com.bluenet.web.domain.repository.AssessmentTimeRepository;
+import com.bluenet.web.domain.repository.JudgeLanguageLimitRepository;
 import com.bluenet.web.infrastructure.judge.AlgorithmJudgeJobPublisher;
-import com.bluenet.web.infrastructure.repository.mapper.JudgeLanguageLimitMapper;
 import com.bluenet.web.infrastructure.security.util.UserCTX;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -53,13 +53,13 @@ public class AlgorithmJudgeAppServiceImpl implements AlgorithmJudgeAppService {
     private final AssessmentQuestionRepository assessmentQuestionRepository;
     private final AssessmentTimeRepository assessmentTimeRepository;
 
-    private final AssessmentJudgementDomainService assessmentJudgementDomainService;
+    private final AssessmentJudgementRepository assessmentJudgementRepository;
     private final AssessmentAnswerRepository assessmentAnswerRepository;
     private final AssessmentSessionRepository assessmentSessionRepository;
     private final AlgorithmJudgeJobRepository algorithmJudgeJobRepository;
     private final AlgorithmJudgeCaseResultRepository algorithmJudgeCaseResultRepository;
     private final AlgorithmJudgeJobPublisher algorithmJudgeJobPublisher;
-    private final JudgeLanguageLimitMapper judgeLanguageLimitMapper;
+    private final JudgeLanguageLimitRepository judgeLanguageLimitRepository;
 
     /**
      * 执行算法运行。
@@ -71,7 +71,7 @@ public class AlgorithmJudgeAppServiceImpl implements AlgorithmJudgeAppService {
     @Override
     @Transactional
     public AlgorithmJudgeResult.SubmitResult run(AlgorithmJudgeCommands.RunCommand command) {
-        UserVO currentUser = getCurrentUser();
+        User currentUser = getCurrentUser();
         AssessmentQuestion question = assessmentQuestionRepository.findById(command.questionId())
                 .orElseThrow(() -> new DataNotFound("题目不存在，ID: " + command.questionId()));
         AlgorithmContent content = validateAlgorithmQuestion(question);
@@ -114,7 +114,7 @@ public class AlgorithmJudgeAppServiceImpl implements AlgorithmJudgeAppService {
     @Override
     @Transactional
     public AlgorithmJudgeResult.SubmitResult submit(AlgorithmJudgeCommands.SubmitCommand command) {
-        UserVO currentUser = getCurrentUser();
+        User currentUser = getCurrentUser();
         AssessmentQuestion question = assessmentQuestionRepository.findById(command.questionId())
                 .orElseThrow(() -> new DataNotFound("题目不存在，ID: " + command.questionId()));
         AlgorithmContent content = validateAlgorithmQuestion(question);
@@ -149,7 +149,7 @@ public class AlgorithmJudgeAppServiceImpl implements AlgorithmJudgeAppService {
      */
     @Override
     public AlgorithmJudgeResult.PollResult getJob(Long jobId) {
-        UserVO currentUser = getCurrentUser();
+        User currentUser = getCurrentUser();
         AlgorithmJudgeJob job = algorithmJudgeJobRepository.findById(jobId)
                 .orElseThrow(() -> new DataNotFound("判题任务不存在"));
         if (!job.getUserId().equals(currentUser.getId())) {
@@ -177,8 +177,8 @@ public class AlgorithmJudgeAppServiceImpl implements AlgorithmJudgeAppService {
                 findJudgement(job));
     }
 
-    private UserVO getCurrentUser() {
-        UserVO currentUser = UserCTX.getCurrentUser();
+    private User getCurrentUser() {
+        User currentUser = UserCTX.getCurrentUser();
         if (currentUser == null) {
             throw new SecurityException("未登录");
         }
@@ -193,7 +193,7 @@ public class AlgorithmJudgeAppServiceImpl implements AlgorithmJudgeAppService {
         return content;
     }
 
-    private void validateCandidateCanUseQuestion(UserVO user, AssessmentQuestion question) {
+    private void validateCandidateCanUseQuestion(User user, AssessmentQuestion question) {
         AssessmentTime time = assessmentTimeRepository.findById(question.getAssessmentTimeId())
                 .orElseThrow(() -> new BadRequest("考核时间不存在"));
         if (user.getDirection() != null && !user.getDirection().equals(time.getDirection())) {
@@ -227,14 +227,16 @@ public class AlgorithmJudgeAppServiceImpl implements AlgorithmJudgeAppService {
     }
 
     private void validateFormalLanguageLimit(Long questionId, ProgrammingLanguage language) {
-        int count = judgeLanguageLimitMapper.countConfirmedByQuestionIdAndLanguage(questionId, language.getValue());
-        if (count == 0) {
+        boolean exists = judgeLanguageLimitRepository.existsConfirmedByQuestionIdAndLanguage(
+                questionId,
+                language.getValue());
+        if (!exists) {
             throw new BadRequest("该题当前语言尚未确认正式判题资源限制：" + language.getValue());
         }
     }
 
     private AssessmentAnswer saveOrUpdateAnswer(
-            UserVO user,
+            User user,
             AssessmentQuestion question,
             AlgorithmJudgeCommands.SubmitCommand command) {
         Optional<AssessmentAnswer> existing = assessmentAnswerRepository
@@ -244,7 +246,7 @@ public class AlgorithmJudgeAppServiceImpl implements AlgorithmJudgeAppService {
             answer.setContent(command.content());
             answer.setLanguage(command.language());
             answer.setSubmitTime(LocalDateTime.now());
-            assessmentAnswerRepository.update(answer);
+            assessmentAnswerRepository.save(answer);
             return assessmentAnswerRepository.findById(answer.getId())
                     .orElseThrow(() -> new GlobalException("更新算法题答案后查询失败"));
         }
@@ -278,24 +280,25 @@ public class AlgorithmJudgeAppServiceImpl implements AlgorithmJudgeAppService {
         if (job.getAnswerId() == null || job.getStatus() != JudgeJobStatus.SUCCEEDED) {
             return null;
         }
-        try {
-            AssessmentJudgementVO judgement = assessmentJudgementDomainService.getLatestByAnswerId(job.getAnswerId());
-            return new AlgorithmJudgeResult.JudgementInfo(
-                    judgement.getId(),
-                    judgement.getAnswerId(),
-                    judgement.getQuestionId(),
-                    judgement.getAssessmentTimeId(),
-                    judgement.getUserId(),
-                    judgement.getScore(),
-                    judgement.getMaxScore(),
-                    judgement.getStatus(),
-                    judgement.getResultCode(),
-                    judgement.getSource(),
-                    judgement.getReviewerId(),
-                    judgement.getReviewerType(),
-                    judgement.getJudgedAt());
-        } catch (DataNotFound ignored) {
-            return null;
-        }
+        return assessmentJudgementRepository.findLatestByAnswerId(job.getAnswerId())
+                .map(this::toJudgementInfo)
+                .orElse(null);
+    }
+
+    private AlgorithmJudgeResult.JudgementInfo toJudgementInfo(AssessmentJudgement judgement) {
+        return new AlgorithmJudgeResult.JudgementInfo(
+                judgement.getId(),
+                judgement.getAnswerId(),
+                judgement.getQuestionId(),
+                judgement.getAssessmentTimeId(),
+                judgement.getUserId(),
+                judgement.getScore(),
+                judgement.getMaxScore(),
+                judgement.getStatus(),
+                judgement.getResultCode(),
+                judgement.getSource(),
+                judgement.getReviewerId(),
+                judgement.getReviewerType(),
+                judgement.getJudgedAt());
     }
 }

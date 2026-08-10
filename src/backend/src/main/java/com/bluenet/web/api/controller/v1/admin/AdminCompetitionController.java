@@ -3,7 +3,7 @@ package com.bluenet.web.api.controller.v1.admin;
 import com.bluenet.web.api.dto.ResponseMessage;
 import com.bluenet.web.api.dto.competition.*;
 import com.bluenet.web.api.converter.competition.CompetitionRequestConverter;
-import com.bluenet.web.application.CompetitionResult;
+import com.bluenet.web.application.result.competition.CompetitionResult;
 import com.bluenet.web.application.command.competition.CompetitionCommands;
 import com.bluenet.web.application.service.CompetitionAppService;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;

@@ -6,6 +6,7 @@ import type {
   SoftwareResourceDTO,
   CreateSoftwareResourceRequestDTO,
   UpdateSoftwareResourceRequestDTO,
+  BatchSortRequestDTO,
 } from '../schema/type'
 
 export const adminSoftwareResourceService = {
@@ -59,6 +60,18 @@ export const adminSoftwareResourceService = {
   async delete(id: number): Promise<ResponseMessage<void>> {
     const response = await apiClient.delete<ResponseMessage<void>>(
       `/admin/software-resources/${id}`
+    )
+    return response.data
+  },
+
+  /**
+   * 批量调整软件资源排序
+   * PUT /admin/software-resources/sort
+   */
+  async batchUpdateSortOrder(data: BatchSortRequestDTO): Promise<ResponseMessage<void>> {
+    const response = await apiClient.put<ResponseMessage<void>>(
+      '/admin/software-resources/sort',
+      data
     )
     return response.data
   },

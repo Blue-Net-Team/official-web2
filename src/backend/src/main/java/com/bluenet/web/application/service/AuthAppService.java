@@ -1,6 +1,6 @@
 package com.bluenet.web.application.service;
 
-import com.bluenet.web.application.AuthResult;
+import com.bluenet.web.application.result.auth.AuthResult;
 import com.bluenet.web.application.command.auth.AuthCommands;
 
 import jakarta.servlet.http.HttpServletResponse;

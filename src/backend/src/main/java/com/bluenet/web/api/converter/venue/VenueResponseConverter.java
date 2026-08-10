@@ -1,7 +1,7 @@
 package com.bluenet.web.api.converter.venue;
 
 import com.bluenet.web.api.dto.venue.VenueDTO;
-import com.bluenet.web.application.VenueResult;
+import com.bluenet.web.application.result.venue.VenueResult;
 import org.springframework.stereotype.Component;
 
 import java.util.List;

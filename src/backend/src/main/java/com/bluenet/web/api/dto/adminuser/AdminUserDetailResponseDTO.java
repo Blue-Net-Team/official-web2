@@ -30,6 +30,8 @@ public class AdminUserDetailResponseDTO {
     private String roleName;
     @Schema(description = "方向")
     private Direction direction;
+    @Schema(description = "学院ID")
+    private Long collegeId;
     @Schema(description = "学院")
     private String college;
     @Schema(description = "专业")

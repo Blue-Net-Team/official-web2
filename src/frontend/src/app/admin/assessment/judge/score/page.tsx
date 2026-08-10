@@ -53,6 +53,7 @@ import {
   formatTime,
   getResultColor,
   getDecisionTag,
+  getReferralTag,
 } from '../shared'
 
 const sanitizeFilenameSegment = (value: string) => value.replace(/[\\/:*?"<>|]/g, '_').trim()
@@ -599,7 +600,10 @@ export default function AssessmentJudgementManagementPage() {
       title: '考生',
       render: (_, record) => (
         <div>
-          <div className="text-white/85">{record.username}</div>
+          <div className="flex items-center gap-1.5">
+            <span className="text-white/85">{record.username}</span>
+            {getReferralTag(record)}
+          </div>
           <div className="text-xs text-white/35">{record.studentId}</div>
         </div>
       ),
@@ -665,6 +669,7 @@ export default function AssessmentJudgementManagementPage() {
                   {record.teamName}
                 </Tag>
               )}
+              {getReferralTag(record)}
             </div>
             <div className="text-xs text-white/35">{record.studentId}</div>
           </div>
@@ -918,7 +923,10 @@ export default function AssessmentJudgementManagementPage() {
       title: '考生',
       render: (_, record) => (
         <div>
-          <div className="text-white/85">{record.username}</div>
+          <div className="flex items-center gap-1.5">
+            <span className="text-white/85">{record.username}</span>
+            {getReferralTag(record)}
+          </div>
           <div className="text-xs text-white/35">{record.studentId}</div>
         </div>
       ),
@@ -954,7 +962,10 @@ export default function AssessmentJudgementManagementPage() {
       title: '候选人',
       render: (_, record) => (
         <div>
-          <div className="text-white/85">{record.username}</div>
+          <div className="flex items-center gap-1.5">
+            <span className="text-white/85">{record.username}</span>
+            {getReferralTag(record)}
+          </div>
           <div className="text-xs text-white/35">{record.studentId}</div>
         </div>
       ),

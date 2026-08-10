@@ -31,7 +31,7 @@ interface ProfileTabsProps {
 export default function ProfileTabs({
   activeTab,
   tabs,
-  tabCounts = { projects: 0, competitions: 0, internships: 0 },
+  tabCounts = { projects: 0, achievements: 0, internships: 0 },
   onTabChange,
 }: ProfileTabsProps) {
   const getCount = (tab: TabConfig): number => {

@@ -1,7 +1,7 @@
 package com.bluenet.web.api.converter.assessment_session;
 
 import com.bluenet.web.api.dto.assessment_session.AssessmentSessionDTO;
-import com.bluenet.web.application.AssessmentSessionResult;
+import com.bluenet.web.application.result.assessment.AssessmentSessionResult;
 import org.springframework.stereotype.Component;
 
 /**

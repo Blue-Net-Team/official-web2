@@ -1,6 +1,6 @@
 package com.bluenet.web.application.service.impl;
 
-import com.bluenet.web.application.AssessmentSessionResult;
+import com.bluenet.web.application.result.assessment.AssessmentSessionResult;
 import com.bluenet.web.application.command.assessment_session.AssessmentSessionCommands;
 import com.bluenet.web.application.service.AssessmentSessionAppService;
 import com.bluenet.web.domain.model.entity.AssessmentSession;

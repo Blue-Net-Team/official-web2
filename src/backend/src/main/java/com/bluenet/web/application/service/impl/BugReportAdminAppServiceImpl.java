@@ -1,7 +1,7 @@
 package com.bluenet.web.application.service.impl;
 
-import com.bluenet.web.application.BugReportResult;
-import com.bluenet.web.application.command.bugreport.BugReportCommands;
+import com.bluenet.web.application.result.bugreport.BugReportResult;
+import com.bluenet.web.application.query.bugreport.GetBugReportListQuery;
 import com.bluenet.web.application.service.BugReportAdminAppService;
 import com.bluenet.web.domain.exception.DataNotFound;
 import com.bluenet.web.domain.model.entity.BugReport;
@@ -25,12 +25,12 @@ public class BugReportAdminAppServiceImpl implements BugReportAdminAppService {
     private final BugReportRepository bugReportRepository;
 
     @Override
-    public Page<BugReportResult.Brief> getBugReportList(BugReportCommands.GetBugReportListCommand command) {
-        int page = command.page() != null ? command.page() : 0;
-        int size = command.size() != null ? Math.min(command.size(), 100) : 20;
+    public Page<BugReportResult.Brief> getBugReportList(GetBugReportListQuery query) {
+        int page = query.page() != null ? query.page() : 0;
+        int size = query.size() != null ? Math.min(query.size(), 100) : 20;
         Pageable pageable = PageRequest.of(page, size);
 
-        Page<BugReport> reportPage = bugReportRepository.findPage(pageable, command.status());
+        Page<BugReport> reportPage = bugReportRepository.findPage(pageable, query.status());
         return reportPage.map(this::toBriefResult);
     }
 
@@ -43,15 +43,11 @@ public class BugReportAdminAppServiceImpl implements BugReportAdminAppService {
 
     private BugReportResult.Brief toBriefResult(BugReport bugReport) {
         int imageCount = bugReport.getImages() != null ? bugReport.getImages().size() : 0;
-        String description = bugReport.getDescription();
-        if (description != null && description.length() > 100) {
-            description = description.substring(0, 100) + "...";
-        }
 
         return new BugReportResult.Brief(
                 bugReport.getId(),
                 bugReport.getTitle(),
-                description,
+                bugReport.getDescription(),
                 bugReport.getPageUrl(),
                 bugReport.getReporterEmail(),
                 bugReport.getStatus(),

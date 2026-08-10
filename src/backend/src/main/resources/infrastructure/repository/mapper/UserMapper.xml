@@ -41,18 +41,6 @@
         WHERE internal_referral_code = #{code}
     </select>
 
-    <update id="updateAvatarId">
-        UPDATE tb_user
-        SET avatar_id = #{avatarId}
-        WHERE id = #{id}
-    </update>
-
-    <update id="updateQrcodeId">
-        UPDATE tb_user
-        SET qrcode_id = #{qrcodeId}
-        WHERE id = #{id}
-    </update>
-
     <select id="selectByRoleNamesAndDirection" resultMap="BaseResultMap">
         SELECT u.*
         FROM tb_user u
@@ -77,65 +65,11 @@
         ORDER BY u.student_id DESC, u.id ASC
     </select>
 
-    <update id="updateProfile">
-        UPDATE tb_user
-        <set>
-            <if test="username != null">
-                username = #{username},
-            </if>
-            <if test="nickname != null">
-                nickname = #{nickname},
-            </if>
-            <if test="college != null">
-                college_id = (SELECT id FROM tb_college WHERE name = #{college} LIMIT 1),
-            </if>
-            <if test="major != null">
-                major = #{major},
-            </if>
-            <if test="direction != null">
-                direction = #{direction},
-            </if>
-            <if test="gender != null">
-                gender = #{gender},
-            </if>
-            <if test="bio != null">
-                bio = #{bio},
-            </if>
-        </set>
-        WHERE id = #{userId}
-    </update>
-
     <select id="selectByGithubId" resultMap="BaseResultMap">
         SELECT *
         FROM tb_user
         WHERE github_id = #{githubId}
     </select>
-
-    <update id="updateGithubBinding">
-        UPDATE tb_user
-        SET github_id = #{githubId},
-            github_username = #{githubUsername}
-        WHERE id = #{userId}
-    </update>
-
-    <update id="clearGithubBinding">
-        UPDATE tb_user
-        SET github_id = NULL,
-            github_username = NULL
-        WHERE id = #{userId}
-    </update>
-
-    <update id="updateEmail">
-        UPDATE tb_user
-        SET email = #{email}
-        WHERE id = #{userId}
-    </update>
-
-    <update id="updatePassword">
-        UPDATE tb_user
-        SET password = #{password}
-        WHERE id = #{userId}
-    </update>
 
     <select id="countByCollegeId" resultType="long">
         SELECT COUNT(*)

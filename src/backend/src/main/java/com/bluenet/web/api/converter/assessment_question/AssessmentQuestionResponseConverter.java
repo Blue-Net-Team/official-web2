@@ -3,8 +3,8 @@ package com.bluenet.web.api.converter.assessment_question;
 import com.bluenet.web.api.dto.PageDTO;
 import com.bluenet.web.api.dto.assessment_question.AssessmentQuestionDTO;
 import com.bluenet.web.api.dto.assessment_question.UserQuestionListResponse;
-import com.bluenet.web.application.AssessmentQuestionResult;
-import com.bluenet.web.application.UserQuestionListResult;
+import com.bluenet.web.application.result.assessment.AssessmentQuestionResult;
+import com.bluenet.web.application.result.user.UserQuestionListResult;
 import org.springframework.stereotype.Component;
 
 /**

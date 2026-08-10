@@ -1,7 +1,7 @@
 package com.bluenet.web.application.service.impl;
 
-import com.bluenet.web.application.AssessmentDecisionResult;
-import com.bluenet.web.application.AssessmentJudgementResult;
+import com.bluenet.web.application.result.assessment.AssessmentDecisionResult;
+import com.bluenet.web.application.result.assessment.AssessmentJudgementResult;
 import com.bluenet.web.application.command.assessment_judgement.AssessmentJudgementCommands;
 import com.bluenet.web.application.service.assessment.AssessmentDecisionPublicationService;
 import com.bluenet.web.application.service.assessment.AssessmentJudgementAccessGuard;
@@ -15,22 +15,22 @@ import com.bluenet.web.domain.model.enumerate.QuestionType;
 import com.bluenet.web.domain.model.enumerate.ReviewerType;
 import com.bluenet.web.domain.model.enumerate.RoleType;
 import com.bluenet.web.domain.model.entity.AssessmentAnswer;
+import com.bluenet.web.domain.model.entity.AssessmentDecision;
 import com.bluenet.web.domain.model.entity.AssessmentJudgement;
 import com.bluenet.web.domain.model.entity.AssessmentTeam;
-import com.bluenet.web.domain.model.vo.AssessmentCandidateScoreRowVO;
-import com.bluenet.web.domain.model.vo.AssessmentCandidateScoreboardVO;
-import com.bluenet.web.domain.model.vo.AssessmentCandidateQuestionScoreVO;
-import com.bluenet.web.domain.model.vo.AssessmentDecisionCandidateVO;
-import com.bluenet.web.domain.model.vo.AssessmentDecisionStatisticsVO;
-import com.bluenet.web.domain.model.vo.AssessmentDecisionVO;
-import com.bluenet.web.domain.model.vo.AssessmentDecisionWorkspaceVO;
-import com.bluenet.web.domain.model.vo.AssessmentJudgementVO;
-import com.bluenet.web.domain.model.vo.AssessmentQuestionScoreboardVO;
-import com.bluenet.web.domain.model.vo.AssessmentQuestionSubmissionHistoryVO;
-import com.bluenet.web.domain.model.vo.AssessmentQuestionSubmissionVO;
+import com.bluenet.web.domain.model.readmodel.AssessmentCandidateScoreRowReadModel;
+import com.bluenet.web.application.result.assessment.AssessmentCandidateQuestionScore;
+import com.bluenet.web.application.result.assessment.AssessmentCandidateScoreboard;
+import com.bluenet.web.application.result.assessment.AssessmentDecisionCandidate;
+import com.bluenet.web.application.result.assessment.AssessmentDecisionStatistics;
+import com.bluenet.web.application.result.assessment.AssessmentDecisionWorkspace;
+import com.bluenet.web.application.result.assessment.AssessmentQuestionScoreboard;
+import com.bluenet.web.domain.model.readmodel.AssessmentQuestionSubmissionHistoryReadModel;
+import com.bluenet.web.domain.model.readmodel.AssessmentQuestionSubmissionReadModel;
 import com.bluenet.web.domain.model.entity.AssessmentQuestion;
 import com.bluenet.web.domain.model.entity.AssessmentTime;
-import com.bluenet.web.domain.model.vo.UserVO;
+import com.bluenet.web.domain.model.entity.User;
+import com.bluenet.web.infrastructure.security.principal.RoleTypeResolver;
 import com.bluenet.web.domain.repository.AssessmentAnswerRepository;
 import com.bluenet.web.domain.repository.AssessmentDecisionRepository;
 import com.bluenet.web.domain.repository.AssessmentJudgementRepository;
@@ -38,9 +38,9 @@ import com.bluenet.web.domain.repository.AssessmentQuestionRepository;
 import com.bluenet.web.domain.repository.AssessmentTeamRepository;
 import com.bluenet.web.domain.repository.AssessmentTimeRepository;
 import com.bluenet.web.domain.repository.CommentRepository;
+import com.bluenet.web.domain.repository.UserRepository;
 import com.bluenet.web.domain.service.AssessmentDecisionDomainService;
 import com.bluenet.web.domain.service.AssessmentJudgementDomainService;
-import com.bluenet.web.domain.service.UserDomainService;
 import com.bluenet.web.domain.model.policy.RoleHierarchy;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -75,10 +75,11 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
     private final AssessmentJudgementRepository assessmentJudgementRepository;
     private final AssessmentDecisionRepository assessmentDecisionRepository;
     private final AssessmentTeamRepository assessmentTeamRepository;
-    private final UserDomainService userDomainService;
+    private final UserRepository userRepository;
     private final AssessmentJudgementAccessGuard accessGuard;
     private final AssessmentDecisionPublicationService publicationService;
     private final CommentRepository commentRepository;
+    private final RoleTypeResolver roleTypeResolver;
 
     /**
      * 保留原应用服务依赖入口，内部组合访问 guard 和通知模板，降低调用方和单测构造成本。
@@ -99,8 +100,8 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
      *            考核决策仓储
      * @param assessmentTeamRepository
      *            考核队伍仓储
-     * @param userDomainService
-     *            用户领域服务
+     * @param userRepository
+     *            用户仓储
      * @param publicationService
      *            决策发布服务
      * @param commentRepository
@@ -115,9 +116,10 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
             AssessmentJudgementRepository assessmentJudgementRepository,
             AssessmentDecisionRepository assessmentDecisionRepository,
             AssessmentTeamRepository assessmentTeamRepository,
-            UserDomainService userDomainService,
+            UserRepository userRepository,
             AssessmentDecisionPublicationService publicationService,
-            CommentRepository commentRepository) {
+            CommentRepository commentRepository,
+            RoleTypeResolver roleTypeResolver) {
         this.assessmentJudgementDomainService = assessmentJudgementDomainService;
         this.assessmentDecisionDomainService = assessmentDecisionDomainService;
         this.assessmentAnswerRepository = assessmentAnswerRepository;
@@ -126,10 +128,11 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
         this.assessmentJudgementRepository = assessmentJudgementRepository;
         this.assessmentDecisionRepository = assessmentDecisionRepository;
         this.assessmentTeamRepository = assessmentTeamRepository;
-        this.userDomainService = userDomainService;
-        this.accessGuard = new AssessmentJudgementAccessGuard(assessmentTimeRepository);
+        this.userRepository = userRepository;
+        this.accessGuard = new AssessmentJudgementAccessGuard(assessmentTimeRepository, roleTypeResolver);
         this.publicationService = publicationService;
         this.commentRepository = commentRepository;
+        this.roleTypeResolver = roleTypeResolver;
     }
 
     /**
@@ -141,7 +144,9 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
      */
     @Override
     public AssessmentJudgementResult getLatestByAnswerId(Long answerId) {
-        return toResult(assessmentJudgementDomainService.getLatestByAnswerId(answerId));
+        return assessmentJudgementRepository.findLatestByAnswerId(answerId)
+                .map(this::entityToResult)
+                .orElseThrow(() -> new DataNotFound("该答案暂无评判记录，ID: " + answerId));
     }
 
     /**
@@ -153,9 +158,9 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
      */
     @Override
     public List<AssessmentJudgementResult> listByQuestionId(Long questionId) {
-        return assessmentJudgementDomainService.listByQuestionId(questionId)
+        return assessmentJudgementRepository.findAllByQuestionId(questionId)
                 .stream()
-                .map(this::toResult)
+                .map(this::entityToResult)
                 .toList();
     }
 
@@ -169,7 +174,7 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
     @Override
     @Transactional
     public AssessmentJudgementResult finalizeScore(AssessmentJudgementCommands.FinalizeScoreCommand command) {
-        UserVO currentUser = accessGuard.requireCurrentUser();
+        User currentUser = accessGuard.requireCurrentUser();
         RoleType roleType = accessGuard.requireRole(currentUser);
         if (!RoleHierarchy.isDirectionAdminOrAbove(roleType)) {
             throw new Forbidden("只有方向管理员及以上权限可以确认最终评分");
@@ -224,23 +229,23 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
             AssessmentAnswer answer,
             AssessmentQuestion question,
             AssessmentJudgementCommands.FinalizeScoreCommand command,
-            UserVO currentUser,
+            User currentUser,
             RoleType roleType,
             LocalDateTime judgedAt) {
-        AssessmentJudgementVO judgement = AssessmentJudgementVO.builder()
-                .answerId(answer.getId())
-                .questionId(question.getId())
-                .assessmentTimeId(question.getAssessmentTimeId())
-                .userId(answer.getUserId())
-                .score(command.score())
-                .maxScore(question.getScore())
-                .status(JudgementStatus.JUDGED)
-                .source(JudgementSource.ADMIN_FINALIZED)
-                .reviewerId(currentUser.getId())
-                .reviewerType(resolveReviewerType(roleType))
-                .judgedAt(judgedAt)
-                .build();
-        return toResult(assessmentJudgementDomainService.finalizeJudgement(judgement));
+        AssessmentJudgement judgement = AssessmentJudgement.create(
+                answer.getId(),
+                question.getId(),
+                question.getAssessmentTimeId(),
+                answer.getUserId(),
+                command.score(),
+                question.getScore(),
+                JudgementStatus.JUDGED,
+                null,
+                JudgementSource.ADMIN_FINALIZED,
+                currentUser.getId(),
+                resolveReviewerType(roleType),
+                judgedAt);
+        return entityToResult(assessmentJudgementDomainService.finalizeJudgement(judgement));
     }
 
     /**
@@ -250,7 +255,7 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
             AssessmentAnswer leaderAnswer,
             AssessmentQuestion question,
             AssessmentJudgementCommands.FinalizeScoreCommand command,
-            UserVO currentUser,
+            User currentUser,
             RoleType roleType,
             AssessmentTeam team) {
         LocalDateTime now = LocalDateTime.now();
@@ -318,27 +323,31 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
     @Override
     @Transactional
     public AssessmentDecisionResult decideAssessment(AssessmentJudgementCommands.DecideAssessmentCommand command) {
-        UserVO currentUser = accessGuard.requireCurrentUser();
+        User currentUser = accessGuard.requireCurrentUser();
         RoleType roleType = accessGuard.requireRole(currentUser);
         if (!RoleHierarchy.isDirectionAdminOrAbove(roleType)) {
             throw new Forbidden("只有方向管理员及以上权限可以设置最终通过决策");
         }
 
-        AssessmentDecisionVO decision = AssessmentDecisionVO.builder()
-                .userId(command.userId())
-                .assessmentTimeId(command.assessmentTimeId())
-                .passed(command.passed())
-                .decidedBy(currentUser.getId())
-                .decisionComment(command.decisionComment())
-                .build();
-        AssessmentDecisionResult result = toDecisionResult(assessmentDecisionDomainService.saveDecision(decision));
-
-        AssessmentTime assessmentTime = assessmentTimeRepository.findById(command.assessmentTimeId())
-                .orElseThrow(() -> new DataNotFound("考核时间不存在，ID: " + command.assessmentTimeId()));
-        if (!assessmentTime.isResultsPublished()) {
-            assessmentTime.publishResults();
-            assessmentTimeRepository.update(assessmentTime);
-        }
+        AssessmentDecision decision = assessmentDecisionRepository
+                .findByUserIdAndAssessmentTimeId(command.userId(), command.assessmentTimeId())
+                .map(existing -> {
+                    existing.updatePassed(command.passed(), currentUser.getId(), command.decisionComment());
+                    assessmentDecisionRepository.save(existing);
+                    return existing;
+                })
+                .orElseGet(() -> {
+                    AssessmentDecision created = AssessmentDecision.create(
+                            command.userId(),
+                            command.assessmentTimeId(),
+                            command.passed(),
+                            currentUser.getId(),
+                            command.decisionComment());
+                    created.decideNow();
+                    assessmentDecisionRepository.save(created);
+                    return created;
+                });
+        AssessmentDecisionResult result = toDecisionResult(decision);
 
         return result;
     }
@@ -355,7 +364,7 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
      * @return 题目评分汇总 DTO 列表
      */
     @Override
-    public List<AssessmentQuestionScoreboardVO> listQuestionScoreboard(
+    public List<AssessmentQuestionScoreboard> listQuestionScoreboard(
             Long assessmentTimeId,
             QuestionType questionType,
             String keyword) {
@@ -376,12 +385,12 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
      * @return 提交评分 DTO 列表，每条附带评判历史
      */
     @Override
-    public List<AssessmentQuestionSubmissionVO> listQuestionSubmissions(Long questionId, String keyword,
+    public List<AssessmentQuestionSubmissionReadModel> listQuestionSubmissions(Long questionId, String keyword,
             String status) {
         AssessmentQuestion question = assessmentQuestionRepository.findById(questionId)
                 .orElseThrow(() -> new DataNotFound("题目不存在，ID: " + questionId));
         accessGuard.requireMemberScope(question.getAssessmentTimeId());
-        List<AssessmentQuestionSubmissionVO> submissions = assessmentJudgementRepository
+        List<AssessmentQuestionSubmissionReadModel> submissions = assessmentJudgementRepository
                 .findQuestionSubmissions(questionId, normalizeKeyword(keyword), validateJudgementStatus(status));
         attachSubmissionHistories(questionId, submissions);
         return submissions;
@@ -397,9 +406,9 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
      * @return 考生评分汇总 DTO 列表
      */
     @Override
-    public List<AssessmentCandidateScoreboardVO> listCandidateScoreboard(Long assessmentTimeId, String keyword) {
+    public List<AssessmentCandidateScoreboard> listCandidateScoreboard(Long assessmentTimeId, String keyword) {
         accessGuard.requireMemberScope(assessmentTimeId);
-        List<AssessmentCandidateScoreRowVO> rows = assessmentJudgementRepository
+        List<AssessmentCandidateScoreRowReadModel> rows = assessmentJudgementRepository
                 .findCandidateScoreRows(assessmentTimeId, normalizeKeyword(keyword));
         return buildCandidateScoreboards(assessmentTimeId, rows);
     }
@@ -416,26 +425,26 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
      * @return 决策工作台 DTO，包含统计和候选人列表
      */
     @Override
-    public AssessmentDecisionWorkspaceVO getDecisionWorkspace(
+    public AssessmentDecisionWorkspace getDecisionWorkspace(
             Long assessmentTimeId,
             String keyword,
             String decisionStatus) {
         accessGuard.requireDecisionScope(assessmentTimeId);
         AssessmentTime assessmentTime = assessmentTimeRepository.findById(assessmentTimeId)
                 .orElseThrow(() -> new DataNotFound("考核时间不存在，ID: " + assessmentTimeId));
-        List<AssessmentCandidateScoreboardVO> scoreboards = listCandidateScoreboard(assessmentTimeId, keyword)
+        List<AssessmentCandidateScoreboard> scoreboards = listCandidateScoreboard(assessmentTimeId, keyword)
                 .stream()
                 .filter(
                         scoreboard -> !assessmentDecisionDomainService.isEliminatedFromPriorEpoch(
                                 scoreboard.getCandidateUserId(),
                                 assessmentTime))
                 .toList();
-        Map<Long, AssessmentDecisionVO> decisions = assessmentDecisionRepository
+        Map<Long, AssessmentDecision> decisions = assessmentDecisionRepository
                 .findByAssessmentTimeId(assessmentTimeId)
                 .stream()
-                .collect(Collectors.toMap(AssessmentDecisionVO::getUserId, Function.identity()));
+                .collect(Collectors.toMap(AssessmentDecision::getUserId, Function.identity()));
 
-        List<AssessmentDecisionCandidateVO> candidates = scoreboards.stream()
+        List<AssessmentDecisionCandidate> candidates = scoreboards.stream()
                 .map(
                         scoreboard -> convertDecisionCandidate(
                                 scoreboard,
@@ -443,12 +452,15 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
                 .filter(candidate -> matchesDecisionStatus(candidate, decisionStatus))
                 .sorted(
                         Comparator.comparing(
-                                AssessmentDecisionCandidateVO::getStudentId,
-                                Comparator.nullsLast(String::compareTo)))
+                                AssessmentDecisionCandidate::isReferred,
+                                Comparator.reverseOrder())
+                                .thenComparing(
+                                        AssessmentDecisionCandidate::getStudentId,
+                                        Comparator.nullsLast(String::compareTo)))
                 .toList();
 
-        AssessmentDecisionStatisticsVO statistics = calculateDecisionStatistics(scoreboards, decisions);
-        return AssessmentDecisionWorkspaceVO.builder()
+        AssessmentDecisionStatistics statistics = calculateDecisionStatistics(scoreboards, decisions);
+        return AssessmentDecisionWorkspace.builder()
                 .statistics(statistics)
                 .candidates(candidates)
                 .build();
@@ -469,16 +481,16 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
 
         if (!assessmentTime.isResultsPublished()) {
             assessmentTime.publishResults();
-            assessmentTimeRepository.update(assessmentTime);
+            assessmentTimeRepository.save(assessmentTime);
         }
 
-        List<AssessmentDecisionVO> decisions = assessmentDecisionRepository
+        List<AssessmentDecision> decisions = assessmentDecisionRepository
                 .findByAssessmentTimeId(assessmentTimeId)
                 .stream()
                 .filter(d -> d.getPassed() != null)
                 .toList();
         int sentCount = 0;
-        for (AssessmentDecisionVO decision : decisions) {
+        for (AssessmentDecision decision : decisions) {
             try {
                 publicationService.publish(decision, assessmentTime);
                 sentCount++;
@@ -574,19 +586,19 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
      * @param submissions
      *            需要附加历史的提交 VO 列表
      */
-    private void attachSubmissionHistories(Long questionId, List<AssessmentQuestionSubmissionVO> submissions) {
+    private void attachSubmissionHistories(Long questionId, List<AssessmentQuestionSubmissionReadModel> submissions) {
         if (submissions.isEmpty()) {
             return;
         }
         List<Long> userIds = submissions.stream()
-                .map(AssessmentQuestionSubmissionVO::getCandidateUserId)
+                .map(AssessmentQuestionSubmissionReadModel::getCandidateUserId)
                 .filter(Objects::nonNull)
                 .distinct()
                 .toList();
         if (userIds.isEmpty()) {
             return;
         }
-        Map<Long, List<AssessmentQuestionSubmissionHistoryVO>> historiesByUser = assessmentJudgementRepository
+        Map<Long, List<AssessmentQuestionSubmissionHistoryReadModel>> historiesByUser = assessmentJudgementRepository
                 .findQuestionSubmissionHistories(questionId, userIds)
                 .stream()
                 .collect(
@@ -608,7 +620,7 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
      *            决策状态筛选值
      * @return 是否匹配
      */
-    private boolean matchesDecisionStatus(AssessmentDecisionCandidateVO candidate, String decisionStatus) {
+    private boolean matchesDecisionStatus(AssessmentDecisionCandidate candidate, String decisionStatus) {
         String normalized = validateDecisionStatus(decisionStatus);
         if (normalized == null) {
             return true;
@@ -626,27 +638,27 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
     /**
      * 将考生维度扁平行数据按考生聚合，计算总分、已评和待评数量。
      */
-    private List<AssessmentCandidateScoreboardVO> buildCandidateScoreboards(
+    private List<AssessmentCandidateScoreboard> buildCandidateScoreboards(
             Long assessmentTimeId,
-            List<AssessmentCandidateScoreRowVO> rows) {
-        Map<Long, List<AssessmentCandidateScoreRowVO>> grouped = rows.stream()
+            List<AssessmentCandidateScoreRowReadModel> rows) {
+        Map<Long, List<AssessmentCandidateScoreRowReadModel>> grouped = rows.stream()
                 .collect(
                         Collectors.groupingBy(
-                                AssessmentCandidateScoreRowVO::getCandidateUserId,
+                                AssessmentCandidateScoreRowReadModel::getCandidateUserId,
                                 LinkedHashMap::new,
                                 Collectors.toList()));
-        List<AssessmentCandidateScoreboardVO> result = new ArrayList<>();
-        for (List<AssessmentCandidateScoreRowVO> candidateRows : grouped.values()) {
-            AssessmentCandidateScoreRowVO first = candidateRows.get(0);
-            List<AssessmentCandidateQuestionScoreVO> questionScores = candidateRows.stream()
+        List<AssessmentCandidateScoreboard> result = new ArrayList<>();
+        for (List<AssessmentCandidateScoreRowReadModel> candidateRows : grouped.values()) {
+            AssessmentCandidateScoreRowReadModel first = candidateRows.get(0);
+            List<AssessmentCandidateQuestionScore> questionScores = candidateRows.stream()
                     .map(row -> convertQuestionScore(assessmentTimeId, row))
                     .toList();
             BigDecimal totalScore = questionScores.stream()
-                    .map(AssessmentCandidateQuestionScoreVO::getScore)
+                    .map(AssessmentCandidateQuestionScore::getScore)
                     .filter(Objects::nonNull)
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
             BigDecimal maxScore = questionScores.stream()
-                    .map(AssessmentCandidateQuestionScoreVO::getMaxScore)
+                    .map(AssessmentCandidateQuestionScore::getMaxScore)
                     .filter(Objects::nonNull)
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
             long judgedCount = questionScores.stream()
@@ -658,7 +670,7 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
                                     && !Boolean.TRUE.equals(score.getJudged()))
                     .count();
             result.add(
-                    AssessmentCandidateScoreboardVO.builder()
+                    AssessmentCandidateScoreboard.builder()
                             .candidateUserId(first.getCandidateUserId())
                             .studentId(first.getStudentId())
                             .username(first.getUsername())
@@ -671,6 +683,8 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
                             .teamId(first.getTeamId())
                             .teamName(first.getTeamName())
                             .isLeader(Boolean.TRUE.equals(first.getIsLeader()))
+                            .internalReferralCode(first.getInternalReferralCode())
+                            .referralUserName(first.getReferralUserName())
                             .build());
         }
         return result;
@@ -679,10 +693,10 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
     /**
      * 将评分汇总和决策记录组合为候选人 VO。
      */
-    private AssessmentDecisionCandidateVO convertDecisionCandidate(
-            AssessmentCandidateScoreboardVO scoreboard,
-            AssessmentDecisionVO decision) {
-        return AssessmentDecisionCandidateVO.builder()
+    private AssessmentDecisionCandidate convertDecisionCandidate(
+            AssessmentCandidateScoreboard scoreboard,
+            AssessmentDecision decision) {
+        return AssessmentDecisionCandidate.builder()
                 .candidateUserId(scoreboard.getCandidateUserId())
                 .studentId(scoreboard.getStudentId())
                 .username(scoreboard.getUsername())
@@ -700,15 +714,17 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
                 .teamId(scoreboard.getTeamId())
                 .teamName(scoreboard.getTeamName())
                 .isLeader(scoreboard.getIsLeader())
+                .internalReferralCode(scoreboard.getInternalReferralCode())
+                .referralUserName(scoreboard.getReferralUserName())
                 .build();
     }
 
     /**
      * 根据评分矩阵和决策记录计算候选人、待决策、通过和淘汰的统计数据。
      */
-    private AssessmentDecisionStatisticsVO calculateDecisionStatistics(
-            List<AssessmentCandidateScoreboardVO> scoreboards,
-            Map<Long, AssessmentDecisionVO> decisions) {
+    private AssessmentDecisionStatistics calculateDecisionStatistics(
+            List<AssessmentCandidateScoreboard> scoreboards,
+            Map<Long, AssessmentDecision> decisions) {
         long candidates = scoreboards.size();
         long passed = scoreboards.stream()
                 .map(scoreboard -> decisions.get(scoreboard.getCandidateUserId()))
@@ -720,7 +736,7 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
                 .filter(Objects::nonNull)
                 .filter(decision -> Boolean.FALSE.equals(decision.getPassed()))
                 .count();
-        return AssessmentDecisionStatisticsVO.builder()
+        return AssessmentDecisionStatistics.builder()
                 .candidates(candidates)
                 .pending(candidates - passed - eliminated)
                 .passed(passed)
@@ -731,12 +747,12 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
     /**
      * 将考生单题评分行 VO 转换为单题评分 VO。
      */
-    private AssessmentCandidateQuestionScoreVO convertQuestionScore(
+    private AssessmentCandidateQuestionScore convertQuestionScore(
             Long assessmentTimeId,
-            AssessmentCandidateScoreRowVO row) {
+            AssessmentCandidateScoreRowReadModel row) {
         boolean submitted = row.getAnswerId() != null;
         boolean judged = row.getJudgementId() != null;
-        return AssessmentCandidateQuestionScoreVO.builder()
+        return AssessmentCandidateQuestionScore.builder()
                 .questionId(row.getQuestionId())
                 .questionNo(row.getQuestionNo())
                 .questionTitle(row.getQuestionTitle())
@@ -752,51 +768,32 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
     }
 
     /**
-     * 从考生评分行 VO 中提取评判信息转换为 VO。
+     * 从考生评分行 VO 中提取评判信息转换为实体。
      */
-    private AssessmentJudgementVO convertJudgementFromScoreRow(Long assessmentTimeId,
-            AssessmentCandidateScoreRowVO row) {
+    private AssessmentJudgement convertJudgementFromScoreRow(Long assessmentTimeId,
+            AssessmentCandidateScoreRowReadModel row) {
         if (row.getJudgementId() == null) {
             return null;
         }
-        return AssessmentJudgementVO.builder()
-                .id(row.getJudgementId())
-                .answerId(row.getAnswerId())
-                .questionId(row.getQuestionId())
-                .assessmentTimeId(assessmentTimeId)
-                .userId(row.getCandidateUserId())
-                .score(row.getJudgementScore())
-                .maxScore(row.getJudgementMaxScore())
-                .status(row.getJudgementStatus())
-                .resultCode(row.getResultCode())
-                .source(row.getSource())
-                .reviewerId(row.getReviewerId())
-                .reviewerType(row.getReviewerType())
-                .judgedAt(row.getJudgedAt())
-                .build();
+        return AssessmentJudgement.reconstruct(
+                row.getJudgementId(),
+                row.getAnswerId(),
+                row.getQuestionId(),
+                assessmentTimeId,
+                row.getCandidateUserId(),
+                row.getJudgementScore(),
+                row.getJudgementMaxScore(),
+                row.getJudgementStatus(),
+                row.getResultCode(),
+                row.getSource(),
+                row.getReviewerId(),
+                row.getReviewerType(),
+                row.getJudgedAt(),
+                null,
+                null);
     }
 
     // ========== 结果转换 ==========
-
-    private AssessmentJudgementResult toResult(AssessmentJudgementVO judgement) {
-        if (judgement == null) {
-            return null;
-        }
-        return new AssessmentJudgementResult(
-                judgement.getId(),
-                judgement.getAnswerId(),
-                judgement.getQuestionId(),
-                judgement.getAssessmentTimeId(),
-                judgement.getUserId(),
-                judgement.getScore(),
-                judgement.getMaxScore(),
-                judgement.getStatus(),
-                judgement.getResultCode(),
-                judgement.getSource(),
-                judgement.getReviewerId(),
-                judgement.getReviewerType(),
-                judgement.getJudgedAt());
-    }
 
     private AssessmentJudgementResult entityToResult(AssessmentJudgement entity) {
         if (entity == null) {
@@ -818,7 +815,7 @@ public class AssessmentJudgementAppServiceImpl implements AssessmentJudgementApp
                 entity.getJudgedAt());
     }
 
-    private AssessmentDecisionResult toDecisionResult(AssessmentDecisionVO decision) {
+    private AssessmentDecisionResult toDecisionResult(AssessmentDecision decision) {
         if (decision == null) {
             return null;
         }

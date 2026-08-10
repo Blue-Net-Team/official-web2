@@ -87,27 +87,6 @@ public class BugReportRepositoryImpl implements BugReportRepository {
     }
 
     @Override
-    public int updateStatus(Long id, BugReportStatus status) {
-        BugReportDO dataObject = new BugReportDO();
-        dataObject.setId(id);
-        dataObject.setStatus(status);
-        int influence = bugReportMapper.updateById(dataObject);
-        log.info("更新 Bug 报告状态: id={}, status={}, influence={}", id, status, influence);
-        return influence;
-    }
-
-    @Override
-    public int updateGithubIssueInfo(Long id, String githubIssueUrl, Integer githubIssueNumber) {
-        BugReportDO dataObject = new BugReportDO();
-        dataObject.setId(id);
-        dataObject.setGithubIssueUrl(githubIssueUrl);
-        dataObject.setGithubIssueNumber(githubIssueNumber);
-        int influence = bugReportMapper.updateById(dataObject);
-        log.info("更新 Bug 报告 GitHub Issue: id={}, issueNumber={}, influence={}", id, githubIssueNumber, influence);
-        return influence;
-    }
-
-    @Override
     public Optional<BugReport> findByGithubIssueNumber(Integer githubIssueNumber) {
         QueryWrapper<BugReportDO> wrapper = new QueryWrapper<>();
         wrapper.eq("github_issue_number", githubIssueNumber);

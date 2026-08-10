@@ -4,7 +4,7 @@ import com.bluenet.web.api.dto.PageDTO;
 import com.bluenet.web.api.dto.adminuser.AdminUserCreateResponseDTO;
 import com.bluenet.web.api.dto.adminuser.AdminUserDetailResponseDTO;
 import com.bluenet.web.api.dto.adminuser.AdminUserListItemResponseDTO;
-import com.bluenet.web.application.AdminUserResult;
+import com.bluenet.web.application.result.adminuser.AdminUserResult;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
 
@@ -31,6 +31,7 @@ public class AdminUserResponseConverter {
                 .roleId(item.roleId())
                 .roleName(item.roleName())
                 .direction(item.direction())
+                .collegeId(item.collegeId())
                 .college(item.college())
                 .major(item.major())
                 .gender(item.gender())
@@ -38,6 +39,7 @@ public class AdminUserResponseConverter {
                 .disable(item.disable())
                 .avatarFileId(item.avatarFileId())
                 .assessmentGradeYear(item.assessmentGradeYear())
+                .githubUsername(item.githubUsername())
                 .build();
     }
 
@@ -60,6 +62,7 @@ public class AdminUserResponseConverter {
                 .roleId(detail.roleId())
                 .roleName(detail.roleName())
                 .direction(detail.direction())
+                .collegeId(detail.collegeId())
                 .college(detail.college())
                 .major(detail.major())
                 .gender(detail.gender())

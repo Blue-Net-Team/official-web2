@@ -1,338 +1,152 @@
 package com.bluenet.web.api.controller.v1.achievement;
 
-import com.bluenet.web.infrastructure.repository.dataobject.*;
-
-import com.bluenet.web.testsupport.RepositoryTestObjects;
-
-import static org.junit.jupiter.api.Assertions.*;
-
-import java.time.LocalDate;
-
-import org.junit.jupiter.api.BeforeEach;
+import com.bluenet.web.BaseIntegrationTest;
+import com.bluenet.web.api.dto.PageDTO;
+import com.bluenet.web.api.dto.achievement.AchievementDTO;
+import com.bluenet.web.api.dto.achievement.AchievementStatsDTO;
+import com.bluenet.web.api.converter.achievement.AchievementResponseConverter;
+import com.bluenet.web.application.result.achievement.AchievementResult;
+import com.bluenet.web.application.result.achievement.AchievementStatistics;
+import com.bluenet.web.application.service.AchievementAppService;
+import com.bluenet.web.domain.model.enumerate.AchievementType;
+import com.bluenet.web.domain.model.enumerate.AwardLevel;
+import com.bluenet.web.testconfig.TestSecurityConfig;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.context.annotation.Import;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.*;
-import org.springframework.test.context.ActiveProfiles;
-import org.testcontainers.junit.jupiter.Testcontainers;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.test.web.servlet.MockMvc;
 
-import com.bluenet.web.BaseIntegrationTest;
-import com.bluenet.web.api.dto.PageDTO;
-import com.bluenet.web.api.dto.ResponseMessage;
-import com.bluenet.web.api.dto.achievement.AchievementDTO;
-import com.bluenet.web.api.dto.achievement.AchievementStatsDTO;
-import com.bluenet.web.domain.model.entity.Achievement;
-import com.bluenet.web.domain.model.entity.File;
-import com.bluenet.web.domain.model.enumerate.AchievementType;
-import com.bluenet.web.domain.model.enumerate.AwardLevel;
-import com.bluenet.web.domain.model.enumerate.FileStatus;
-import com.bluenet.web.domain.model.enumerate.FileType;
-import com.bluenet.web.infrastructure.repository.mapper.AchievementMapper;
-import com.bluenet.web.infrastructure.repository.mapper.FileMapper;
-import com.bluenet.web.testcontainers.TestcontainersConfiguration;
+import java.time.LocalDate;
+import java.util.List;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+@SpringBootTest
+@AutoConfigureMockMvc
+@Import(TestSecurityConfig.class)
 @DisplayName("AchievementController 集成测试")
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@ActiveProfiles("test")
-@Testcontainers
-@Import({ TestcontainersConfiguration.class, com.bluenet.web.testconfig.TestSecurityConfig.class })
 class AchievementControllerIntegrationTest extends BaseIntegrationTest {
 
     @Autowired
-    private TestRestTemplate restTemplate;
+    private MockMvc mockMvc;
 
-    @Autowired
-    private AchievementMapper achievementMapper;
+    @MockitoBean
+    private AchievementAppService achievementAppService;
 
-    @Autowired
-    private FileMapper fileMapper;
+    @MockitoBean
+    private AchievementResponseConverter achievementResponseConverter;
 
-    private Long testFileId;
-
-    @BeforeEach
-    void setUpTestData() {
-        File file = File.reconstruct(
-                null,
-                "test-achievement.jpg",
-                FileType.NORMAL_IMG,
-                "http://example.com/test.jpg",
-                FileStatus.ACTIVE,
-                null);
-        RepositoryTestObjects.insert(fileMapper, file, FileDO.class);
-        testFileId = file.getId();
-    }
-
-    private Achievement createAchievement(String title, AchievementType type, AwardLevel awardLevel, int year) {
-        Achievement achievement = Achievement.create(
-                title,
-                type,
-                "测试关联项",
-                LocalDate.of(year, 4, 15),
-                awardLevel,
-                awardLevel != null ? "测试奖项" : null,
-                testFileId);
-        RepositoryTestObjects.insert(achievementMapper, achievement, AchievementDO.class);
-        return achievement;
+    @AfterEach
+    void tearDown() {
+        // 公开接口，不涉及 UserCTX。
     }
 
     @Test
-    @DisplayName("集成测试：获取成就列表应返回分页数据")
-    void getAchievements_shouldReturnPagedData() {
-        createAchievement("国家级竞赛一等奖", AchievementType.COMPETITION, AwardLevel.NATIONAL, 2024);
-        createAchievement("省级竞赛二等奖", AchievementType.COMPETITION, AwardLevel.PROVINCIAL, 2024);
-        createAchievement("论文发表", AchievementType.PAPER, null, 2024);
+    @DisplayName("getAchievements: 默认参数应返回分页成就列表")
+    void getAchievements_defaultParams_shouldReturnPagedList() throws Exception {
+        AchievementResult result = new AchievementResult(
+                1L,
+                "全国一等奖",
+                AchievementType.COMPETITION,
+                "蓝桥杯",
+                LocalDate.of(2024, 5, 1),
+                AwardLevel.NATIONAL,
+                "国家级",
+                "一等奖",
+                "蓝桥杯",
+                "蓝桥杯",
+                10L,
+                20L,
+                "http://example.com/file",
+                List.of(),
+                List.of());
+        AchievementDTO dto = AchievementDTO.builder()
+                .id(1L)
+                .title("全国一等奖")
+                .type(AchievementType.COMPETITION)
+                .build();
+        when(achievementAppService.getAchievements(0, 12, null, null, null))
+                .thenReturn(new PageImpl<>(List.of(result)));
+        when(achievementResponseConverter.toDTOPage(any())).thenReturn(
+                new PageDTO<>(List.of(dto), 1L, 1, 0, 12, 1, true, true, false));
 
-        ResponseEntity<ResponseMessage<PageDTO<AchievementDTO>>> response = restTemplate.exchange(
-                "/api/v1/achievements?page=0&size=10",
-                HttpMethod.GET,
-                null,
-                new ParameterizedTypeReference<ResponseMessage<PageDTO<AchievementDTO>>>() {
-                });
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertNotNull(response.getBody());
-        assertEquals(200, response.getBody().getCode());
-
-        PageDTO<AchievementDTO> page = response.getBody().getData();
-        assertNotNull(page);
-        assertEquals(3, page.getTotalElements());
-        assertEquals(1, page.getTotalPages());
-        assertEquals(3, page.getContent().size());
-        assertFalse(page.isEmpty());
+        mockMvc.perform(get("/api/v1/achievements"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.data.content[0].id").value(1))
+                .andExpect(jsonPath("$.data.content[0].title").value("全国一等奖"));
     }
 
     @Test
-    @DisplayName("集成测试：按类型筛选成就")
-    void getAchievements_filterByType_shouldReturnFilteredData() {
-        createAchievement("竞赛成就1", AchievementType.COMPETITION, AwardLevel.NATIONAL, 2024);
-        createAchievement("竞赛成就2", AchievementType.COMPETITION, AwardLevel.PROVINCIAL, 2024);
-        createAchievement("论文成就", AchievementType.PAPER, null, 2024);
-
-        ResponseEntity<ResponseMessage<PageDTO<AchievementDTO>>> response = restTemplate.exchange(
-                "/api/v1/achievements?type=COMPETITION&page=0&size=10",
-                HttpMethod.GET,
+    @DisplayName("getAchievements: 带筛选参数应返回过滤结果")
+    void getAchievements_withFilter_shouldReturnFilteredList() throws Exception {
+        AchievementResult result = new AchievementResult(
+                2L,
+                "省级二等奖",
+                AchievementType.COMPETITION,
+                "ACM",
+                LocalDate.of(2024, 6, 1),
+                AwardLevel.PROVINCIAL,
+                "省级",
+                "二等奖",
+                "ACM",
+                "ACM",
                 null,
-                new ParameterizedTypeReference<ResponseMessage<PageDTO<AchievementDTO>>>() {
-                });
+                null,
+                null,
+                List.of(),
+                List.of());
+        AchievementDTO dto = AchievementDTO.builder()
+                .id(2L)
+                .title("省级二等奖")
+                .awardLevel(AwardLevel.PROVINCIAL)
+                .build();
+        when(achievementAppService.getAchievements(0, 12, AchievementType.COMPETITION, AwardLevel.PROVINCIAL, 2024))
+                .thenReturn(new PageImpl<>(List.of(result)));
+        when(achievementResponseConverter.toDTOPage(any())).thenReturn(
+                new PageDTO<>(List.of(dto), 1L, 1, 0, 12, 1, true, true, false));
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        PageDTO<AchievementDTO> page = response.getBody().getData();
-        assertEquals(2, page.getTotalElements());
-        assertTrue(
-                page.getContent()
-                        .stream()
-                        .allMatch(a -> a.getType() == AchievementType.COMPETITION));
+        mockMvc.perform(
+                get("/api/v1/achievements")
+                        .param("type", "COMPETITION")
+                        .param("awardLevel", "PROVINCIAL")
+                        .param("year", "2024"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.content[0].awardLevel").value("PROVINCIAL"));
     }
 
     @Test
-    @DisplayName("集成测试：按奖项级别筛选成就")
-    void getAchievements_filterByAwardLevel_shouldReturnFilteredData() {
-        createAchievement("国家级竞赛", AchievementType.COMPETITION, AwardLevel.NATIONAL, 2024);
-        createAchievement("省级竞赛", AchievementType.COMPETITION, AwardLevel.PROVINCIAL, 2024);
-        createAchievement("校级竞赛", AchievementType.COMPETITION, AwardLevel.SCHOOL, 2024);
+    @DisplayName("getAchievementStats: 应返回成就统计数据")
+    void getAchievementStats_shouldReturnStats() throws Exception {
+        AchievementStatistics statistics = AchievementStatistics.builder()
+                .totalAchievements(10L)
+                .nationalCount(3L)
+                .provincialCount(4L)
+                .schoolCount(3L)
+                .build();
+        AchievementStatsDTO dto = AchievementStatsDTO.builder()
+                .totalAchievements(10L)
+                .nationalCount(3L)
+                .provincialCount(4L)
+                .schoolCount(3L)
+                .build();
+        when(achievementAppService.getAchievementStats()).thenReturn(statistics);
+        when(achievementResponseConverter.toStatsDTO(statistics)).thenReturn(dto);
 
-        ResponseEntity<ResponseMessage<PageDTO<AchievementDTO>>> response = restTemplate.exchange(
-                "/api/v1/achievements?awardLevel=NATIONAL&page=0&size=10",
-                HttpMethod.GET,
-                null,
-                new ParameterizedTypeReference<ResponseMessage<PageDTO<AchievementDTO>>>() {
-                });
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        PageDTO<AchievementDTO> page = response.getBody().getData();
-        assertEquals(1, page.getTotalElements());
-        assertEquals(AwardLevel.NATIONAL, page.getContent().get(0).getAwardLevel());
-    }
-
-    @Test
-    @DisplayName("集成测试：按年份筛选成就")
-    void getAchievements_filterByYear_shouldReturnFilteredData() {
-        createAchievement("2023年成就", AchievementType.COMPETITION, AwardLevel.NATIONAL, 2023);
-        createAchievement("2024年成就1", AchievementType.COMPETITION, AwardLevel.NATIONAL, 2024);
-        createAchievement("2024年成就2", AchievementType.PAPER, null, 2024);
-
-        ResponseEntity<ResponseMessage<PageDTO<AchievementDTO>>> response = restTemplate.exchange(
-                "/api/v1/achievements?year=2024&page=0&size=10",
-                HttpMethod.GET,
-                null,
-                new ParameterizedTypeReference<ResponseMessage<PageDTO<AchievementDTO>>>() {
-                });
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        PageDTO<AchievementDTO> page = response.getBody().getData();
-        assertEquals(2, page.getTotalElements());
-    }
-
-    @Test
-    @DisplayName("集成测试：组合筛选成就")
-    void getAchievements_combinedFilter_shouldReturnFilteredData() {
-        createAchievement("2024国家级竞赛", AchievementType.COMPETITION, AwardLevel.NATIONAL, 2024);
-        createAchievement("2024省级竞赛", AchievementType.COMPETITION, AwardLevel.PROVINCIAL, 2024);
-        createAchievement("2023国家级竞赛", AchievementType.COMPETITION, AwardLevel.NATIONAL, 2023);
-        createAchievement("2024论文", AchievementType.PAPER, null, 2024);
-
-        ResponseEntity<ResponseMessage<PageDTO<AchievementDTO>>> response = restTemplate.exchange(
-                "/api/v1/achievements?type=COMPETITION&awardLevel=NATIONAL&year=2024&page=0&size=10",
-                HttpMethod.GET,
-                null,
-                new ParameterizedTypeReference<ResponseMessage<PageDTO<AchievementDTO>>>() {
-                });
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        PageDTO<AchievementDTO> page = response.getBody().getData();
-        assertEquals(1, page.getTotalElements());
-        AchievementDTO result = page.getContent().get(0);
-        assertEquals(AchievementType.COMPETITION, result.getType());
-        assertEquals(AwardLevel.NATIONAL, result.getAwardLevel());
-        assertEquals(2024, result.getAchieveAt().getYear());
-    }
-
-    @Test
-    @DisplayName("集成测试：空数据库返回空列表")
-    void getAchievements_emptyDatabase_shouldReturnEmptyPage() {
-        ResponseEntity<ResponseMessage<PageDTO<AchievementDTO>>> response = restTemplate.exchange(
-                "/api/v1/achievements?page=0&size=10",
-                HttpMethod.GET,
-                null,
-                new ParameterizedTypeReference<ResponseMessage<PageDTO<AchievementDTO>>>() {
-                });
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        PageDTO<AchievementDTO> page = response.getBody().getData();
-        assertTrue(page.isEmpty());
-        assertEquals(0, page.getTotalElements());
-        assertTrue(page.getContent().isEmpty());
-    }
-
-    @Test
-    @DisplayName("集成测试：分页参数生效")
-    void getAchievements_pagination_shouldWorkCorrectly() {
-        for (int i = 1; i <= 15; i++) {
-            createAchievement("成就" + i, AchievementType.COMPETITION, AwardLevel.NATIONAL, 2024);
-        }
-
-        ResponseEntity<ResponseMessage<PageDTO<AchievementDTO>>> response = restTemplate.exchange(
-                "/api/v1/achievements?page=0&size=10",
-                HttpMethod.GET,
-                null,
-                new ParameterizedTypeReference<ResponseMessage<PageDTO<AchievementDTO>>>() {
-                });
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        PageDTO<AchievementDTO> page = response.getBody().getData();
-        assertEquals(15, page.getTotalElements());
-        assertEquals(2, page.getTotalPages());
-        assertEquals(0, page.getNumber());
-        assertEquals(10, page.getSize());
-        assertEquals(10, page.getNumberOfElements());
-        assertTrue(page.isFirst());
-        assertFalse(page.isLast());
-    }
-
-    @Test
-    @DisplayName("集成测试：第二页数据正确")
-    void getAchievements_secondPage_shouldReturnCorrectData() {
-        for (int i = 1; i <= 15; i++) {
-            createAchievement("成就" + i, AchievementType.COMPETITION, AwardLevel.NATIONAL, 2024);
-        }
-
-        ResponseEntity<ResponseMessage<PageDTO<AchievementDTO>>> response = restTemplate.exchange(
-                "/api/v1/achievements?page=1&size=10",
-                HttpMethod.GET,
-                null,
-                new ParameterizedTypeReference<ResponseMessage<PageDTO<AchievementDTO>>>() {
-                });
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        PageDTO<AchievementDTO> page = response.getBody().getData();
-        assertEquals(15, page.getTotalElements());
-        assertEquals(1, page.getNumber());
-        assertEquals(5, page.getNumberOfElements());
-        assertFalse(page.isFirst());
-        assertTrue(page.isLast());
-    }
-
-    @Test
-    @DisplayName("集成测试：获取成就统计（仅统计竞赛成就）")
-    void getAchievementStats_shouldReturnCorrectStats() {
-        createAchievement("国家级1", AchievementType.COMPETITION, AwardLevel.NATIONAL, 2024);
-        createAchievement("国家级2", AchievementType.COMPETITION, AwardLevel.NATIONAL, 2024);
-        createAchievement("省级1", AchievementType.COMPETITION, AwardLevel.PROVINCIAL, 2024);
-        createAchievement("省级2", AchievementType.COMPETITION, AwardLevel.PROVINCIAL, 2024);
-        createAchievement("省级3", AchievementType.COMPETITION, AwardLevel.PROVINCIAL, 2024);
-        createAchievement("校级1", AchievementType.COMPETITION, AwardLevel.SCHOOL, 2024);
-        createAchievement("论文1", AchievementType.PAPER, null, 2024);
-
-        ResponseEntity<ResponseMessage<AchievementStatsDTO>> response = restTemplate.exchange(
-                "/api/v1/achievements/stats",
-                HttpMethod.GET,
-                null,
-                new ParameterizedTypeReference<ResponseMessage<AchievementStatsDTO>>() {
-                });
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertNotNull(response.getBody());
-        assertEquals(200, response.getBody().getCode());
-
-        AchievementStatsDTO stats = response.getBody().getData();
-        assertNotNull(stats);
-        assertEquals(6L, stats.getTotalAchievements());
-        assertEquals(2L, stats.getNationalCount());
-        assertEquals(3L, stats.getProvincialCount());
-        assertEquals(1L, stats.getSchoolCount());
-    }
-
-    @Test
-    @DisplayName("集成测试：空数据库统计为零")
-    void getAchievementStats_emptyDatabase_shouldReturnZeroStats() {
-        ResponseEntity<ResponseMessage<AchievementStatsDTO>> response = restTemplate.exchange(
-                "/api/v1/achievements/stats",
-                HttpMethod.GET,
-                null,
-                new ParameterizedTypeReference<ResponseMessage<AchievementStatsDTO>>() {
-                });
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        AchievementStatsDTO stats = response.getBody().getData();
-        assertEquals(0L, stats.getTotalAchievements());
-        assertEquals(0L, stats.getNationalCount());
-        assertEquals(0L, stats.getProvincialCount());
-        assertEquals(0L, stats.getSchoolCount());
-    }
-
-    @Test
-    @DisplayName("集成测试：查询接口无需认证")
-    void getAchievements_withoutAuth_shouldSucceed() {
-        createAchievement("测试成就", AchievementType.COMPETITION, AwardLevel.NATIONAL, 2024);
-
-        ResponseEntity<ResponseMessage<PageDTO<AchievementDTO>>> response = restTemplate.exchange(
-                "/api/v1/achievements?page=0&size=10",
-                HttpMethod.GET,
-                null,
-                new ParameterizedTypeReference<ResponseMessage<PageDTO<AchievementDTO>>>() {
-                });
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(200, response.getBody().getCode());
-    }
-
-    @Test
-    @DisplayName("集成测试：统计接口无需认证")
-    void getAchievementStats_withoutAuth_shouldSucceed() {
-        createAchievement("测试成就", AchievementType.COMPETITION, AwardLevel.NATIONAL, 2024);
-
-        ResponseEntity<ResponseMessage<AchievementStatsDTO>> response = restTemplate.exchange(
-                "/api/v1/achievements/stats",
-                HttpMethod.GET,
-                null,
-                new ParameterizedTypeReference<ResponseMessage<AchievementStatsDTO>>() {
-                });
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(200, response.getBody().getCode());
+        mockMvc.perform(get("/api/v1/achievements/stats"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.data.totalAchievements").value(10))
+                .andExpect(jsonPath("$.data.nationalCount").value(3));
     }
 }

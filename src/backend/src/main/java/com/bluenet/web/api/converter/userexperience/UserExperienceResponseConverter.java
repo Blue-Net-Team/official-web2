@@ -1,11 +1,9 @@
 package com.bluenet.web.api.converter.userexperience;
 
 import com.bluenet.web.api.dto.experience.ExperienceDTO;
-import com.bluenet.web.application.UserExperienceResult;
-import com.bluenet.web.domain.model.vo.ExperienceVO;
-import com.bluenet.web.domain.model.vo.content.CompetitionContent;
-import com.bluenet.web.domain.model.vo.content.InternshipContent;
-import com.bluenet.web.domain.model.vo.content.ProjectContent;
+import com.bluenet.web.application.result.user.UserExperienceResult;
+import com.bluenet.web.domain.model.vo.experience_content.InternshipContent;
+import com.bluenet.web.domain.model.vo.experience_content.ProjectContent;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -47,16 +45,6 @@ public class UserExperienceResponseConverter {
                         dto.setTechStack(content.getTechStack());
                         dto.setDemoUrl(content.getDemoUrl());
                     }
-                    case COMPETITION -> {
-                        CompetitionContent content = objectMapper.readValue(result.content(), CompetitionContent.class);
-                        dto.setRole(content.getRole());
-                        dto.setDate(content.getDate());
-                        dto.setLevel(content.getLevel());
-                        dto.setAward(content.getAward());
-                        dto.setTeamSize(content.getTeamSize());
-                        dto.setDescription(content.getDescription());
-                        dto.setCertificateUrl(content.getCertificateUrl());
-                    }
                     case INTERNSHIP -> {
                         InternshipContent content = objectMapper.readValue(result.content(), InternshipContent.class);
                         dto.setPosition(content.getPosition());
@@ -75,58 +63,6 @@ public class UserExperienceResponseConverter {
 
     public List<ExperienceDTO> toDTOList(List<UserExperienceResult> results) {
         return results.stream()
-                .map(this::toDTO)
-                .toList();
-    }
-
-    public ExperienceDTO toDTO(ExperienceVO vo) {
-        ExperienceDTO dto = ExperienceDTO.builder()
-                .id(String.valueOf(vo.getId()))
-                .type(vo.getType().name())
-                .startDate(vo.getStartTime())
-                .endDate(vo.getEndTime())
-                .build();
-
-        dto.setNameByType(vo.getType().name(), vo.getTitle());
-
-        if (vo.getContent() != null) {
-            try {
-                switch (vo.getType()) {
-                    case PROJECT -> {
-                        ProjectContent content = objectMapper.readValue(vo.getContent(), ProjectContent.class);
-                        dto.setRole(content.getRole());
-                        dto.setDescription(content.getDescription());
-                        dto.setTechStack(content.getTechStack());
-                        dto.setDemoUrl(content.getDemoUrl());
-                    }
-                    case COMPETITION -> {
-                        CompetitionContent content = objectMapper.readValue(vo.getContent(), CompetitionContent.class);
-                        dto.setRole(content.getRole());
-                        dto.setDate(content.getDate());
-                        dto.setLevel(content.getLevel());
-                        dto.setAward(content.getAward());
-                        dto.setTeamSize(content.getTeamSize());
-                        dto.setDescription(content.getDescription());
-                        dto.setCertificateUrl(content.getCertificateUrl());
-                    }
-                    case INTERNSHIP -> {
-                        InternshipContent content = objectMapper.readValue(vo.getContent(), InternshipContent.class);
-                        dto.setPosition(content.getPosition());
-                        dto.setDescription(content.getDescription());
-                        dto.setAchievements(content.getAchievements());
-                        dto.setStatus(content.getStatus());
-                    }
-                }
-            } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
-                log.error("解析经历内容失败: id={}", vo.getId(), e);
-            }
-        }
-
-        return dto;
-    }
-
-    public List<ExperienceDTO> toDTOListFromVO(List<ExperienceVO> vos) {
-        return vos.stream()
                 .map(this::toDTO)
                 .toList();
     }

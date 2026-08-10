@@ -1,6 +1,6 @@
 package com.bluenet.web.domain.repository;
 
-import com.bluenet.web.domain.model.vo.VerifyCodeVO;
+import com.bluenet.web.domain.model.entity.VerifyCode;
 
 import java.util.Optional;
 
@@ -12,9 +12,9 @@ public interface VerificationCodeRepository {
      *            邮箱地址，用于定位用户或验证码。
      * @param code
      *            验证码或推荐码。
-     * @return 查询到的验证码 结果；不存在时为空。
+     * @return 查询到的验证码实体；不存在时为空。
      */
-    Optional<VerifyCodeVO> findByEmailAndCode(String email, String code);
+    Optional<VerifyCode> findByEmailAndCode(String email, String code);
 
     /**
      * 按邮箱、验证码和场景查询验证码记录。
@@ -25,17 +25,17 @@ public interface VerificationCodeRepository {
      *            验证码或推荐码。
      * @param scene
      *            验证码使用场景。
-     * @return 查询到的验证码 结果；不存在时为空。
+     * @return 查询到的验证码实体；不存在时为空。
      */
-    Optional<VerifyCodeVO> findByEmailAndCodeAndScene(String email, String code, String scene);
+    Optional<VerifyCode> findByEmailAndCodeAndScene(String email, String code, String scene);
 
     /**
-     * 保存新的验证码 记录。
+     * 保存新的验证码记录。
      *
-     * @param verifyCodeVO
-     *            验证码视图对象。
+     * @param verifyCode
+     *            验证码实体。
      */
-    void save(VerifyCodeVO verifyCodeVO);
+    void save(VerifyCode verifyCode);
 
     /**
      * 将匹配的验证码记录标记为已使用。

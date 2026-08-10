@@ -1,7 +1,7 @@
 package com.bluenet.web.api.converter.equipment;
 
 import com.bluenet.web.api.dto.equipment.EquipmentDTO;
-import com.bluenet.web.application.EquipmentResult;
+import com.bluenet.web.application.result.equipment.EquipmentResult;
 import org.springframework.stereotype.Component;
 
 import java.util.List;

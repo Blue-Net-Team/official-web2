@@ -48,7 +48,7 @@ export default async function ResourcesPage({ searchParams }: PageProps) {
   return (
     <div className="w-full min-h-screen bg-[#0a0a0a] text-white relative overflow-x-hidden">
       <div className="fixed inset-0 z-0">
-        <DarkVeil hueShift={40} speed={0.6} offsetY={0.2} />
+        <DarkVeil hueShift={-130} speed={0.6} offsetY={0.2} />
       </div>
       <main className="flex flex-col items-center w-full min-h-screen py-8 px-[147px] max-lg:px-10 max-md:px-4 box-border relative z-1">
         <section className="text-center mb-8 w-full pt-8">
@@ -125,7 +125,7 @@ function ResourceCard({ resource }: { resource: SoftwareResourceDTO }) {
       href={resource.externalUrl}
       target="_blank"
       rel="noopener noreferrer"
-      className="block p-5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors group"
+      className="block p-5 rounded-2xl bg-white/[0.05] backdrop-blur-xl border border-white/10 shadow-[0_4px_24px_rgba(0,0,0,0.25)] transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] hover:shadow-[0_8px_32px_rgba(0,0,0,0.35)] hover:bg-white/[0.08] group"
     >
       <div className="flex items-start justify-between gap-4">
         <div className="flex-1">

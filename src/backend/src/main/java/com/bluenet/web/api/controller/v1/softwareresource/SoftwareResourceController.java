@@ -6,7 +6,7 @@ import com.bluenet.web.api.dto.softwareresource.SoftwareResourceDTO;
 import com.bluenet.web.api.dto.softwareresource.SoftwareResourceListRequestDTO;
 import com.bluenet.web.api.converter.softwareresource.SoftwareResourceRequestConverter;
 import com.bluenet.web.api.converter.softwareresource.SoftwareResourceResponseConverter;
-import com.bluenet.web.application.SoftwareResourceResult;
+import com.bluenet.web.application.result.softwareresource.SoftwareResourceResult;
 import com.bluenet.web.application.service.SoftwareResourceAppService;
 import com.bluenet.web.domain.model.enumerate.SoftwareResourceDirection;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;

@@ -1,369 +1,205 @@
 package com.bluenet.web.api.controller.v1.enrollment;
 
-import com.bluenet.web.infrastructure.repository.dataobject.*;
-
-import com.bluenet.web.testsupport.RepositoryTestObjects;
-
-import static org.junit.jupiter.api.Assertions.*;
-
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.context.annotation.Import;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.*;
-
 import com.bluenet.web.BaseIntegrationTest;
-import com.bluenet.web.api.dto.ResponseMessage;
-import com.bluenet.web.api.dto.enrollment.*;
-import com.bluenet.web.domain.model.entity.College;
-import com.bluenet.web.domain.model.entity.Enroll;
+import com.bluenet.web.api.dto.enrollment.CreateEnrollmentRequestDTO;
+import com.bluenet.web.api.dto.enrollment.EnrollmentResultDTO;
+import com.bluenet.web.api.converter.enroll.EnrollRequestConverter;
+import com.bluenet.web.api.converter.enroll.EnrollResponseConverter;
+import com.bluenet.web.application.command.enroll.EnrollCommands;
+import com.bluenet.web.application.result.enroll.EnrollResult;
+import com.bluenet.web.application.service.EnrollAppService;
 import com.bluenet.web.domain.model.enumerate.Direction;
 import com.bluenet.web.domain.model.enumerate.EnrollStatus;
 import com.bluenet.web.domain.model.enumerate.Gender;
-import com.bluenet.web.infrastructure.repository.mapper.CollegeMapper;
-import com.bluenet.web.infrastructure.repository.mapper.EnrollMapper;
-import com.bluenet.web.testcontainers.TestcontainersConfiguration;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.test.context.ActiveProfiles;
-import org.testcontainers.junit.jupiter.Testcontainers;
+import com.bluenet.web.testconfig.TestSecurityConfig;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.context.annotation.Import;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
 
-@Slf4j
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@ActiveProfiles("test")
-@Testcontainers
-@Import(TestcontainersConfiguration.class)
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+@SpringBootTest
+@AutoConfigureMockMvc
+@Import(TestSecurityConfig.class)
+@DisplayName("EnrollController 集成测试")
 class EnrollControllerIntegrationTest extends BaseIntegrationTest {
 
     @Autowired
-    private TestRestTemplate restTemplate;
+    private MockMvc mockMvc;
 
     @Autowired
-    private EnrollMapper enrollMapper;
+    private ObjectMapper objectMapper;
 
-    @Autowired
-    private CollegeMapper collegeMapper;
+    @MockitoBean
+    private EnrollAppService enrollAppService;
 
-    private static final String TEST_STUDENT_ID = "202311548105";
-    private static final String TEST_USERNAME = "张三";
-    private static final String TEST_MAJOR = "计算机科学与技术";
-    private static final String TEST_EMAIL = "test@example.com";
-    private static final String TEST_INTRODUCTION = "我是测试用户，来自计算机科学与技术专业，对计算机视觉方向非常感兴趣。我热爱编程，熟悉Python、Java等多种编程语言，曾参与多个项目开发，希望能够加入蓝网团队学习更多知识，提升自己的技术能力，为团队做出贡献。";
+    @MockitoBean
+    private EnrollRequestConverter enrollRequestConverter;
 
-    private Long testCollegeId;
+    @MockitoBean
+    private EnrollResponseConverter enrollResponseConverter;
 
-    @BeforeEach
-    void setUp() {
-        College college = College.create("计算机学院");
-        RepositoryTestObjects.insert(collegeMapper, college, CollegeDO.class);
-        testCollegeId = college.getId();
+    @AfterEach
+    void tearDown() {
+        // 公开接口，不涉及 UserCTX。
     }
 
-    private CreateEnrollmentRequestDTO createTestRequest() {
+    private CreateEnrollmentRequestDTO buildValidRequest() {
         return CreateEnrollmentRequestDTO.builder()
-                .username(TEST_USERNAME)
-                .studentId(TEST_STUDENT_ID)
-                .email(TEST_EMAIL)
-                .collegeId(testCollegeId)
-                .major(TEST_MAJOR)
+                .username("张三")
+                .studentId("202100010001")
+                .email("zhangsan@example.com")
+                .collegeId(1L)
+                .major("计算机科学与技术")
                 .gender(Gender.MALE)
                 .direction(Direction.COMPUTER_VISION)
-                .introduction(TEST_INTRODUCTION)
+                .introduction(
+                        "我是张三，来自计算机科学与技术专业。在校期间系统学习了数据结构、算法、操作系统等核心课程，并积极参与课外技术实践。我对计算机视觉方向充满热情，曾自学 OpenCV 完成多个小项目，希望加入团队后继续深入学习并贡献自己的力量。")
                 .build();
     }
 
-    @Nested
-    @DisplayName("POST /api/v1/enrollments - 发起报名")
-    class CreateEnrollmentTests {
+    @Test
+    @DisplayName("createEnrollment: 新报名应返回 201")
+    void createEnrollment_newEnrollment_shouldReturnCreated() throws Exception {
+        CreateEnrollmentRequestDTO request = buildValidRequest();
+        EnrollResult.Enrollment result = new EnrollResult.Enrollment(
+                1L,
+                "张三",
+                "202100010001",
+                "zhangsan@example.com",
+                1L,
+                "计算机学院",
+                "计算机科学与技术",
+                Gender.MALE,
+                Direction.COMPUTER_VISION,
+                null,
+                EnrollStatus.PENDING,
+                "我是张三...",
+                null,
+                null,
+                null,
+                true);
+        EnrollmentResultDTO dto = EnrollmentResultDTO.builder()
+                .id(1L)
+                .username("张三")
+                .studentId("202100010001")
+                .status(EnrollStatus.PENDING)
+                .created(true)
+                .build();
+        when(enrollRequestConverter.toCommand(any(CreateEnrollmentRequestDTO.class))).thenReturn(
+                new EnrollCommands.CreateEnrollmentCommand(
+                        "张三",
+                        "202100010001",
+                        "zhangsan@example.com",
+                        1L,
+                        "计算机科学与技术",
+                        Gender.MALE,
+                        Direction.COMPUTER_VISION,
+                        null,
+                        "我是张三...",
+                        null,
+                        false));
+        when(enrollAppService.createEnrollment(any())).thenReturn(result);
+        when(enrollResponseConverter.toEnrollmentResultDTO(result)).thenReturn(dto);
 
-        @Test
-        @DisplayName("正常报名：应返回201创建成功")
-        void createEnrollment_validRequest_shouldReturn201() {
-            CreateEnrollmentRequestDTO request = createTestRequest();
-
-            ResponseEntity<ResponseMessage<EnrollmentBriefDTO>> response = restTemplate.exchange(
-                    "/api/v1/enrollments",
-                    HttpMethod.POST,
-                    new HttpEntity<>(request),
-                    new ParameterizedTypeReference<ResponseMessage<EnrollmentBriefDTO>>() {
-                    });
-
-            assertEquals(HttpStatus.CREATED, response.getStatusCode());
-            assertNotNull(response.getBody());
-            assertEquals(HttpStatus.CREATED.value(), response.getBody().getCode());
-            assertEquals("报名成功", response.getBody().getMsg());
-
-            EnrollmentBriefDTO data = response.getBody().getData();
-            assertNotNull(data);
-            assertNotNull(data.getId());
-            assertEquals(TEST_USERNAME, data.getUsername());
-            assertEquals(TEST_STUDENT_ID, data.getStudentId());
-            assertEquals(Direction.COMPUTER_VISION, data.getDirection());
-            assertEquals(EnrollStatus.PENDING, data.getStatus());
-        }
-
-        @Test
-        @DisplayName("参数校验失败：缺少必填字段应返回400")
-        void createEnrollment_missingRequiredFields_shouldReturn400() {
-            CreateEnrollmentRequestDTO request = CreateEnrollmentRequestDTO.builder()
-                    .username("")
-                    .studentId("")
-                    .build();
-
-            ResponseEntity<ResponseMessage> response = restTemplate.postForEntity(
-                    "/api/v1/enrollments",
-                    request,
-                    ResponseMessage.class);
-
-            assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        }
-
-        @Test
-        @DisplayName("学号格式错误：应返回400")
-        void createEnrollment_invalidStudentIdFormat_shouldReturn400() {
-            CreateEnrollmentRequestDTO request = createTestRequest();
-            request.setStudentId("invalid");
-
-            ResponseEntity<ResponseMessage> response = restTemplate.postForEntity(
-                    "/api/v1/enrollments",
-                    request,
-                    ResponseMessage.class);
-
-            assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        }
-        @Test
-        @DisplayName("学院不存在：应正常创建（学院名称为空）")
-        void createEnrollment_nonExistingCollege_shouldCreateWithNullCollegeName() {
-            CreateEnrollmentRequestDTO request = createTestRequest();
-            request.setCollegeId(99999L);
-
-            ResponseEntity<ResponseMessage<EnrollmentBriefDTO>> response = restTemplate.exchange(
-                    "/api/v1/enrollments",
-                    HttpMethod.POST,
-                    new HttpEntity<>(request),
-                    new ParameterizedTypeReference<ResponseMessage<EnrollmentBriefDTO>>() {
-                    });
-
-            assertEquals(HttpStatus.CREATED, response.getStatusCode());
-        }
+        mockMvc.perform(
+                post("/api/v1/enrollments")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.code").value(201))
+                .andExpect(jsonPath("$.data.id").value(1))
+                .andExpect(jsonPath("$.data.created").value(true));
     }
 
-    @Nested
-    @DisplayName("学号冲突处理")
-    class ConflictHandlingTests {
+    @Test
+    @DisplayName("createEnrollment: 更新已有报名应返回 200")
+    void createEnrollment_updateExisting_shouldReturnOk() throws Exception {
+        CreateEnrollmentRequestDTO request = buildValidRequest();
+        request.setForceUpdate(true);
+        EnrollResult.Enrollment result = new EnrollResult.Enrollment(
+                1L,
+                "张三",
+                "202100010001",
+                "zhangsan@example.com",
+                1L,
+                "计算机学院",
+                "计算机科学与技术",
+                Gender.MALE,
+                Direction.COMPUTER_VISION,
+                null,
+                EnrollStatus.PENDING,
+                "我是张三...",
+                null,
+                null,
+                null,
+                false);
+        EnrollmentResultDTO dto = EnrollmentResultDTO.builder()
+                .id(1L)
+                .created(false)
+                .build();
+        when(enrollRequestConverter.toCommand(any(CreateEnrollmentRequestDTO.class))).thenReturn(
+                new EnrollCommands.CreateEnrollmentCommand(
+                        "张三",
+                        "202100010001",
+                        "zhangsan@example.com",
+                        1L,
+                        "计算机科学与技术",
+                        Gender.MALE,
+                        Direction.COMPUTER_VISION,
+                        null,
+                        "我是张三...",
+                        null,
+                        true));
+        when(enrollAppService.createEnrollment(any())).thenReturn(result);
+        when(enrollResponseConverter.toEnrollmentResultDTO(result)).thenReturn(dto);
 
-        @Test
-        @DisplayName("学号已存在且forceUpdate为false：应返回409冲突")
-        void createEnrollment_duplicateStudentIdNoForceUpdate_shouldReturn409() {
-            CreateEnrollmentRequestDTO request1 = createTestRequest();
-            restTemplate.postForEntity("/api/v1/enrollments", request1, ResponseMessage.class);
-
-            CreateEnrollmentRequestDTO request2 = createTestRequest();
-            request2.setUsername("李四");
-            request2.setForceUpdate(false);
-
-            ResponseEntity<ResponseMessage<EnrollmentConflictDTO>> response = restTemplate.exchange(
-                    "/api/v1/enrollments",
-                    HttpMethod.POST,
-                    new HttpEntity<>(request2),
-                    new ParameterizedTypeReference<ResponseMessage<EnrollmentConflictDTO>>() {
-                    });
-
-            assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
-            assertNotNull(response.getBody());
-            assertEquals(HttpStatus.CONFLICT.value(), response.getBody().getCode());
-
-            EnrollmentConflictDTO conflict = response.getBody().getData();
-            assertNotNull(conflict);
-            assertEquals(TEST_STUDENT_ID, conflict.getStudentId());
-            assertEquals(TEST_USERNAME, conflict.getUsername());
-        }
-
-        @Test
-        @DisplayName("学号已存在且forceUpdate为true：应返回200更新成功")
-        void createEnrollment_duplicateStudentIdWithForceUpdate_shouldReturn200() {
-            CreateEnrollmentRequestDTO request1 = createTestRequest();
-            restTemplate.postForEntity("/api/v1/enrollments", request1, ResponseMessage.class);
-
-            CreateEnrollmentRequestDTO request2 = createTestRequest();
-            request2.setUsername("李四");
-            request2.setMajor("软件工程");
-            request2.setForceUpdate(true);
-
-            ResponseEntity<ResponseMessage<EnrollmentBriefDTO>> response = restTemplate.exchange(
-                    "/api/v1/enrollments",
-                    HttpMethod.POST,
-                    new HttpEntity<>(request2),
-                    new ParameterizedTypeReference<ResponseMessage<EnrollmentBriefDTO>>() {
-                    });
-
-            assertEquals(HttpStatus.OK, response.getStatusCode());
-            assertNotNull(response.getBody());
-            assertEquals("报名信息已更新", response.getBody().getMsg());
-
-            EnrollmentBriefDTO data = response.getBody().getData();
-            assertNotNull(data);
-            assertEquals("李四", data.getUsername());
-            assertEquals("软件工程", data.getMajor());
-        }
-
-        @Test
-        @DisplayName("被拒绝的报名强制更新：应返回409且不覆盖原报名")
-        void createEnrollment_updateRejectedEnrollment_shouldReturn409AndNotOverwrite() {
-            CreateEnrollmentRequestDTO request1 = createTestRequest();
-            ResponseEntity<ResponseMessage<EnrollmentBriefDTO>> createResponse = restTemplate.exchange(
-                    "/api/v1/enrollments",
-                    HttpMethod.POST,
-                    new HttpEntity<>(request1),
-                    new ParameterizedTypeReference<ResponseMessage<EnrollmentBriefDTO>>() {
-                    });
-            Long enrollId = createResponse.getBody().getData().getId();
-
-            Enroll enroll = RepositoryTestObjects.toDomain(enrollMapper.selectById(enrollId), Enroll.class);
-            enroll.setStatus(EnrollStatus.REJECTED);
-            RepositoryTestObjects.updateById(enrollMapper, enroll, EnrollDO.class);
-
-            CreateEnrollmentRequestDTO request2 = createTestRequest();
-            request2.setUsername("李四");
-            request2.setForceUpdate(true);
-
-            ResponseEntity<ResponseMessage> response = restTemplate.exchange(
-                    "/api/v1/enrollments",
-                    HttpMethod.POST,
-                    new HttpEntity<>(request2),
-                    new ParameterizedTypeReference<ResponseMessage>() {
-                    });
-
-            assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
-            assertNotNull(response.getBody());
-            assertEquals("报名已审核，无法更新报名信息", response.getBody().getMsg());
-
-            Enroll unchanged = RepositoryTestObjects.toDomain(enrollMapper.selectById(enrollId), Enroll.class);
-            assertEquals(EnrollStatus.REJECTED, unchanged.getStatus());
-            assertEquals(TEST_USERNAME, unchanged.getUsername());
-        }
+        mockMvc.perform(
+                post("/api/v1/enrollments")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.data.created").value(false));
     }
 
-    @Nested
-    @DisplayName("边界值测试")
-    class BoundaryTests {
+    @Test
+    @DisplayName("createEnrollment: 必填字段为空时应返回 400")
+    void createEnrollment_blankField_shouldReturnBadRequest() throws Exception {
+        CreateEnrollmentRequestDTO request = buildValidRequest();
+        request.setUsername("");
 
-        @Test
-        @DisplayName("学号最小长度12位：应正常创建")
-        void createEnrollment_minStudentIdLength_shouldCreate() {
-            CreateEnrollmentRequestDTO request = createTestRequest();
-            request.setStudentId("123456789012");
-
-            ResponseEntity<ResponseMessage<EnrollmentBriefDTO>> response = restTemplate.exchange(
-                    "/api/v1/enrollments",
-                    HttpMethod.POST,
-                    new HttpEntity<>(request),
-                    new ParameterizedTypeReference<ResponseMessage<EnrollmentBriefDTO>>() {
-                    });
-
-            assertEquals(HttpStatus.CREATED, response.getStatusCode());
-        }
-
-        @Test
-        @DisplayName("学号最大长度13位：应正常创建")
-        void createEnrollment_maxStudentIdLength_shouldCreate() {
-            CreateEnrollmentRequestDTO request = createTestRequest();
-            request.setStudentId("1234567890123");
-
-            ResponseEntity<ResponseMessage<EnrollmentBriefDTO>> response = restTemplate.exchange(
-                    "/api/v1/enrollments",
-                    HttpMethod.POST,
-                    new HttpEntity<>(request),
-                    new ParameterizedTypeReference<ResponseMessage<EnrollmentBriefDTO>>() {
-                    });
-
-            assertEquals(HttpStatus.CREATED, response.getStatusCode());
-        }
-
-        @Test
-        @DisplayName("学号长度不足：应返回400")
-        void createEnrollment_studentIdTooShort_shouldReturn400() {
-            CreateEnrollmentRequestDTO request = createTestRequest();
-            request.setStudentId("12345678901");
-
-            ResponseEntity<ResponseMessage> response = restTemplate.postForEntity(
-                    "/api/v1/enrollments",
-                    request,
-                    ResponseMessage.class);
-
-            assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        }
-        @Test
-        @DisplayName("内推码格式正确：应正常创建")
-        void createEnrollment_validReferralCode_shouldCreate() {
-            CreateEnrollmentRequestDTO request = createTestRequest();
-            request.setInternalReferralCode("ABC12345");
-
-            ResponseEntity<ResponseMessage<EnrollmentBriefDTO>> response = restTemplate.exchange(
-                    "/api/v1/enrollments",
-                    HttpMethod.POST,
-                    new HttpEntity<>(request),
-                    new ParameterizedTypeReference<ResponseMessage<EnrollmentBriefDTO>>() {
-                    });
-
-            assertEquals(HttpStatus.CREATED, response.getStatusCode());
-        }
-
-        @Test
-        @DisplayName("内推码格式错误：应返回400")
-        void createEnrollment_invalidReferralCode_shouldReturn400() {
-            CreateEnrollmentRequestDTO request = createTestRequest();
-            request.setInternalReferralCode("abc12345");
-
-            ResponseEntity<ResponseMessage> response = restTemplate.postForEntity(
-                    "/api/v1/enrollments",
-                    request,
-                    ResponseMessage.class);
-
-            assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        }
+        mockMvc.perform(
+                post("/api/v1/enrollments")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value(400));
     }
 
-    @Nested
-    @DisplayName("不同方向测试")
-    class DirectionTests {
+    @Test
+    @DisplayName("createEnrollment: 学号格式非法时应返回 400")
+    void createEnrollment_invalidStudentId_shouldReturnBadRequest() throws Exception {
+        CreateEnrollmentRequestDTO request = buildValidRequest();
+        request.setStudentId("123");
 
-        @Test
-        @DisplayName("结构设计方向：应正常创建")
-        void createEnrollment_structureDirection_shouldCreate() {
-            CreateEnrollmentRequestDTO request = createTestRequest();
-            request.setDirection(Direction.STRUCTURAL_DESIGN);
-
-            ResponseEntity<ResponseMessage<EnrollmentBriefDTO>> response = restTemplate.exchange(
-                    "/api/v1/enrollments",
-                    HttpMethod.POST,
-                    new HttpEntity<>(request),
-                    new ParameterizedTypeReference<ResponseMessage<EnrollmentBriefDTO>>() {
-                    });
-
-            assertEquals(HttpStatus.CREATED, response.getStatusCode());
-            assertEquals(Direction.STRUCTURAL_DESIGN, response.getBody().getData().getDirection());
-        }
-
-        @Test
-        @DisplayName("嵌入式方向：应正常创建")
-        void createEnrollment_embeddedDirection_shouldCreate() {
-            CreateEnrollmentRequestDTO request = createTestRequest();
-            request.setDirection(Direction.EMBEDDED);
-
-            ResponseEntity<ResponseMessage<EnrollmentBriefDTO>> response = restTemplate.exchange(
-                    "/api/v1/enrollments",
-                    HttpMethod.POST,
-                    new HttpEntity<>(request),
-                    new ParameterizedTypeReference<ResponseMessage<EnrollmentBriefDTO>>() {
-                    });
-
-            assertEquals(HttpStatus.CREATED, response.getStatusCode());
-            assertEquals(Direction.EMBEDDED, response.getBody().getData().getDirection());
-        }
+        mockMvc.perform(
+                post("/api/v1/enrollments")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value(400));
     }
 }

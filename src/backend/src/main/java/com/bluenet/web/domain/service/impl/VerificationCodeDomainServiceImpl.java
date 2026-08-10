@@ -5,7 +5,7 @@ import java.time.LocalDateTime;
 
 import org.springframework.stereotype.Service;
 
-import com.bluenet.web.domain.model.vo.VerifyCodeVO;
+import com.bluenet.web.domain.model.entity.VerifyCode;
 import com.bluenet.web.domain.service.VerificationCodeDomainService;
 
 import lombok.extern.slf4j.Slf4j;
@@ -27,19 +27,13 @@ public class VerificationCodeDomainServiceImpl implements VerificationCodeDomain
     private final SecureRandom secureRandom = new SecureRandom();
 
     @Override
-    public VerifyCodeVO generateCode(String email, String scene) {
+    public VerifyCode generateCode(String email, String scene) {
         String code = generateSixDigitCode();
         LocalDateTime expireAt = LocalDateTime.now().plusMinutes(CODE_VALIDITY_MINUTES);
 
         log.debug("验证码已生成 - target={}, scene={}, code={}, expireAt={}", email, scene, code, expireAt);
 
-        return VerifyCodeVO.builder()
-                .target(email)
-                .code(code)
-                .expireAt(expireAt)
-                .used(false)
-                .scene(scene)
-                .build();
+        return VerifyCode.create(email, code, expireAt, scene);
     }
 
     private String generateSixDigitCode() {

@@ -1,7 +1,6 @@
 package com.bluenet.web.application.command.enroll;
 
 import com.bluenet.web.domain.model.enumerate.Direction;
-import com.bluenet.web.domain.model.enumerate.EnrollStatus;
 import com.bluenet.web.domain.model.enumerate.Gender;
 
 /**
@@ -106,30 +105,6 @@ public class EnrollCommands {
             }
             if (internalReferralCode != null) {
                 internalReferralCode = internalReferralCode.trim();
-            }
-        }
-    }
-
-    /**
-     * 查询报名列表命令。
-     * <p>
-     * 用于分页查询报名列表。
-     * </p>
-     */
-    public record GetEnrollmentListCommand(
-            /** 页码 */
-            Integer page,
-            /** 每页大小 */
-            Integer size,
-            /** 关键词 */
-            String keyword,
-            /** 状态 */
-            EnrollStatus status,
-            /** 方向 */
-            Direction direction) {
-        public GetEnrollmentListCommand {
-            if (keyword != null) {
-                keyword = keyword.trim();
             }
         }
     }

@@ -1,10 +1,10 @@
 package com.bluenet.web.application.service;
 
-import com.bluenet.web.application.ConfirmUploadResult;
-import com.bluenet.web.application.FileDownloadResult;
-import com.bluenet.web.application.FileResult;
-import com.bluenet.web.application.PresignedUploadResult;
+import com.bluenet.web.application.result.file.FileDownloadResult;
+import com.bluenet.web.application.result.file.FileResult;
 import com.bluenet.web.application.command.file.FileCommands;
+import com.bluenet.web.domain.model.result.ConfirmUploadResult;
+import com.bluenet.web.domain.model.result.PresignedUploadResult;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 /**

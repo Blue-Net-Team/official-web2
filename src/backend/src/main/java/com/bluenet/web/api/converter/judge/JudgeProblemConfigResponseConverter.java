@@ -3,9 +3,9 @@ package com.bluenet.web.api.converter.judge;
 import com.bluenet.web.api.dto.judge.JudgeProblemConfigDTO;
 import com.bluenet.web.api.dto.judge.JudgeStandardSolutionDTO;
 import com.bluenet.web.api.dto.judge.JudgeTestcaseConfigDTO;
-import com.bluenet.web.application.JudgeProblemConfigResult;
-import com.bluenet.web.application.JudgeStandardSolutionResult;
-import com.bluenet.web.application.JudgeTestcaseConfigResult;
+import com.bluenet.web.application.result.judge.JudgeProblemConfigResult;
+import com.bluenet.web.application.result.judge.JudgeStandardSolutionResult;
+import com.bluenet.web.application.result.judge.JudgeTestcaseConfigResult;
 import org.springframework.stereotype.Component;
 
 import java.util.List;

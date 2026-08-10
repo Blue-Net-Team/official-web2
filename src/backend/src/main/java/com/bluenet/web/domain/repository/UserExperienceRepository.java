@@ -51,14 +51,6 @@ public interface UserExperienceRepository {
     void save(UserExperience entity);
 
     /**
-     * 更新已有用户经历记录。
-     *
-     * @param entity
-     *            用户经历实体（id 必须非空）
-     */
-    void update(UserExperience entity);
-
-    /**
      * 删除指定用户经历记录。
      *
      * @param id

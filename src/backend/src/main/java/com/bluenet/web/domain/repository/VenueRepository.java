@@ -15,7 +15,6 @@ public interface VenueRepository {
     /**
      * 按展示排序倒序查询全部场地。
      *
-     * @return 场地实体集合。
      */
     List<Venue> findAllOrderBySortOrderDesc();
 
@@ -24,7 +23,6 @@ public interface VenueRepository {
      *
      * @param id
      *            业务记录主键。
-     * @return 查询到的场地实体；不存在时为 Optional.empty()。
      */
     Optional<Venue> findById(Long id);
 
@@ -33,17 +31,8 @@ public interface VenueRepository {
      *
      * @param venue
      *            场地实体。
-     * @return 新记录的主键。
      */
-    Long save(Venue venue);
-
-    /**
-     * 更新已有场地记录。
-     *
-     * @param venue
-     *            场地实体（id 必须非空）。
-     */
-    void update(Venue venue);
+    void save(Venue venue);
 
     /**
      * 删除指定场地记录。
@@ -58,17 +47,7 @@ public interface VenueRepository {
      *
      * @param id
      *            业务记录主键。
-     * @return 满足条件时返回 true，否则返回 false。
      */
     boolean existsById(Long id);
 
-    /**
-     * 更新场地展示图片文件关联。
-     *
-     * @param id
-     *            业务记录主键。
-     * @param imageFileId
-     *            展示图片文件主键。
-     */
-    void updateImage(Long id, Long imageFileId);
 }

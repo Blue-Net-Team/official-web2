@@ -4,7 +4,6 @@ import com.bluenet.web.infrastructure.repository.converter.RoleRepositoryConvert
 
 import com.bluenet.web.infrastructure.repository.dataobject.*;
 
-import com.bluenet.web.domain.model.vo.RoleVO;
 import com.bluenet.web.domain.repository.RoleRepository;
 import com.bluenet.web.infrastructure.repository.mapper.RoleMapper;
 import com.bluenet.web.domain.model.entity.Role;
@@ -23,6 +22,18 @@ public class RoleRepositoryImpl implements RoleRepository {
     private final RoleRepositoryConverter converter;
 
     /**
+     * 按主键查询角色实体。
+     *
+     * @param id
+     *            角色主键。
+     * @return 查询到的角色实体；不存在时为空。
+     */
+    @Override
+    public Optional<Role> findById(Long id) {
+        return Optional.ofNullable(converter.toEntity(roleMapper.selectById(id)));
+    }
+
+    /**
      * 按名称查询角色 记录。
      *
      * @param name
@@ -30,15 +41,7 @@ public class RoleRepositoryImpl implements RoleRepository {
      * @return 查询到的角色 结果；不存在时为空。
      */
     @Override
-    public Optional<RoleVO> findByName(String name) {
-        Role role = converter.toEntity(roleMapper.selectByName(name));
-        if (role == null) {
-            return Optional.empty();
-        }
-        return Optional.of(
-                RoleVO.builder()
-                        .id(role.getId())
-                        .name(role.getName())
-                        .build());
+    public Optional<Role> findByName(String name) {
+        return Optional.ofNullable(converter.toEntity(roleMapper.selectByName(name)));
     }
 }

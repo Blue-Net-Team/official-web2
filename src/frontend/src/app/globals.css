@@ -183,6 +183,30 @@
   bottom: 0 !important;
 }
 
+/* Mentions 下拉列表半透明滚动条 */
+.ant-mentions-dropdown-menu::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.ant-mentions-dropdown-menu::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.ant-mentions-dropdown-menu::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.3);
+  border-radius: 3px;
+}
+
+.ant-mentions-dropdown-menu::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(255, 255, 255, 0.5);
+}
+
+.ant-mentions-dropdown-menu {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+}
+
 @keyframes fadeInUp {
   from {
     opacity: 0;

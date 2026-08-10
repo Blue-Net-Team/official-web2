@@ -2,7 +2,7 @@ package com.bluenet.web.api.converter.competition;
 
 import com.bluenet.web.api.dto.PageDTO;
 import com.bluenet.web.api.dto.competition.CompetitionResponseDTO;
-import com.bluenet.web.domain.model.vo.CompetitionVO;
+import com.bluenet.web.domain.model.readmodel.CompetitionReadModel;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
 
@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
 @Component
 public class CompetitionResponseConverter {
 
-    public CompetitionResponseDTO toDTO(CompetitionVO vo) {
+    public CompetitionResponseDTO toDTO(CompetitionReadModel vo) {
         return CompetitionResponseDTO.builder()
                 .id(vo.getId())
                 .name(vo.getName())
@@ -33,15 +33,15 @@ public class CompetitionResponseConverter {
                 .build();
     }
 
-    public List<CompetitionResponseDTO> toDTOList(List<CompetitionVO> voList) {
+    public List<CompetitionResponseDTO> toDTOList(List<CompetitionReadModel> voList) {
         return voList.stream().map(this::toDTO).collect(Collectors.toList());
     }
 
-    public Page<CompetitionResponseDTO> toDTOPage(Page<CompetitionVO> voPage) {
+    public Page<CompetitionResponseDTO> toDTOPage(Page<CompetitionReadModel> voPage) {
         return voPage.map(this::toDTO);
     }
 
-    public PageDTO<CompetitionResponseDTO> toPageDTO(Page<CompetitionVO> voPage) {
+    public PageDTO<CompetitionResponseDTO> toPageDTO(Page<CompetitionReadModel> voPage) {
         return PageDTO.from(voPage.map(this::toDTO));
     }
 }

@@ -1,5 +1,6 @@
 import { publicClient } from '../client'
 import {
+  AchievementDTO,
   PageDTO,
   MemberBriefDTO,
   MemberDetailDTO,
@@ -49,7 +50,7 @@ export const memberService = {
    * 获取成员经历列表
    * 公开接口，无需认证
    * @param memberId 成员ID
-   * @param type 经历类型（可选）：project/competition/internship
+   * @param type 经历类型（可选）：project/internship
    */
   getMemberExperiences: async (
     memberId: number,
@@ -65,17 +66,33 @@ export const memberService = {
   },
 
   /**
-   * 获取成员经历统计（项目/竞赛/实习数量）
+   * 获取成员关联的官方成就列表
    * 公开接口，无需认证
-   * 通过获取所有经历后计算各类型数量
+   * @param memberId 成员ID
+   */
+  getMemberAchievements: async (memberId: number): Promise<ResponseMessage<AchievementDTO[]>> => {
+    const response = await publicClient.get<ResponseMessage<AchievementDTO[]>>(
+      `/members/${memberId}/achievements`
+    )
+    return response.data
+  },
+
+  /**
+   * 获取成员经历统计（项目/个人成就/实习数量）
+   * 公开接口，无需认证
+   * 通过获取所有经历与成就后计算各类型数量
    * @param memberId 成员ID
    */
   getMemberTabCounts: async (memberId: number): Promise<TabCounts> => {
-    const response = await memberService.getMemberExperiences(memberId)
-    const experiences = response.data || []
+    const [experiencesResponse, achievementsResponse] = await Promise.all([
+      memberService.getMemberExperiences(memberId),
+      memberService.getMemberAchievements(memberId),
+    ])
+    const experiences = experiencesResponse.data || []
+    const achievements = achievementsResponse.data || []
     return {
       projects: experiences.filter((e) => e.type === 'PROJECT').length,
-      competitions: experiences.filter((e) => e.type === 'COMPETITION').length,
+      achievements: achievements.length,
       internships: experiences.filter((e) => e.type === 'INTERNSHIP').length,
     }
   },
@@ -87,15 +104,6 @@ export const memberService = {
    */
   getMemberProjects: async (memberId: number): Promise<ResponseMessage<UserExperience[]>> => {
     return memberService.getMemberExperiences(memberId, 'PROJECT')
-  },
-
-  /**
-   * 获取成员竞赛经历
-   * 公开接口，无需认证
-   * @param memberId 成员ID
-   */
-  getMemberCompetitions: async (memberId: number): Promise<ResponseMessage<UserExperience[]>> => {
-    return memberService.getMemberExperiences(memberId, 'COMPETITION')
   },
 
   /**

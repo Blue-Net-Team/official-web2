@@ -72,16 +72,13 @@ public class PermissionRepositoryImpl implements PermissionRepository {
     @Override
     public void save(Permission permission) {
         PermissionDO dataObject = converter.toDataObject(permission);
-        permissionMapper.insert(dataObject);
-        permission.setId(dataObject.getId());
+        if (dataObject.getId() == null) {
+            permissionMapper.insert(dataObject);
+            permission.setId(dataObject.getId());
+        } else {
+            permissionMapper.updateById(dataObject);
+        }
     }
-
-    @Override
-    public void update(Permission permission) {
-        PermissionDO dataObject = converter.toDataObject(permission);
-        permissionMapper.updateById(dataObject);
-    }
-
     @Override
     public void deleteById(Long id) {
         permissionMapper.deleteById(id);

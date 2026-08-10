@@ -1,7 +1,8 @@
 package com.bluenet.web.application.service;
 
-import com.bluenet.web.application.AdminUserResult;
+import com.bluenet.web.application.result.adminuser.AdminUserResult;
 import com.bluenet.web.application.command.adminuser.AdminUserCommands;
+import com.bluenet.web.application.query.adminuser.GetUserListQuery;
 import org.springframework.data.domain.Page;
 
 /**
@@ -12,7 +13,7 @@ public interface AdminUserAppService {
     /**
      * 分页查询用户列表
      */
-    Page<AdminUserResult.ListItem> getUserList(AdminUserCommands.GetUserListCommand command);
+    Page<AdminUserResult.ListItem> getUserList(GetUserListQuery query);
 
     /**
      * 获取用户详情

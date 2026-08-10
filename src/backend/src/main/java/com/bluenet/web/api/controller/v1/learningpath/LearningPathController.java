@@ -2,7 +2,7 @@ package com.bluenet.web.api.controller.v1.learningpath;
 
 import com.bluenet.web.api.dto.ResponseMessage;
 import com.bluenet.web.api.dto.learningpath.DirectionLearningPathDTO;
-import com.bluenet.web.application.LearningPathResult;
+import com.bluenet.web.application.result.learningpath.LearningPathResult;
 import com.bluenet.web.api.converter.learningpath.LearningPathResponseConverter;
 import com.bluenet.web.application.service.LearningPathAppService;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;

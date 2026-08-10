@@ -26,10 +26,17 @@ public class AssessmentAnswerRepositoryImpl implements AssessmentAnswerRepositor
 
     @Override
     public void save(AssessmentAnswer assessmentAnswer) {
-        log.info("save assessment answer {}", assessmentAnswer);
         AssessmentAnswerDO dataObject = converter.toDataObject(assessmentAnswer);
-        assessmentAnswerMapper.insert(dataObject);
-        assessmentAnswer.setId(dataObject.getId());
+        if (dataObject.getId() == null) {
+            assessmentAnswerMapper.insert(dataObject);
+            assessmentAnswer.setId(dataObject.getId());
+        } else {
+            int influence = assessmentAnswerMapper.updateById(dataObject);
+            if (influence == 0) {
+                log.warn("更新答题失败，保存到数据库时没有影响任何行，answerId {}", assessmentAnswer.getId());
+                throw new GlobalException("更新答题失败");
+            }
+        }
     }
 
     @Override
@@ -47,17 +54,6 @@ public class AssessmentAnswerRepositoryImpl implements AssessmentAnswerRepositor
         AssessmentAnswerDO dataObject = assessmentAnswerMapper.selectFirstByFileId(fileId);
         return Optional.ofNullable(converter.toEntity(dataObject));
     }
-
-    @Override
-    public void update(AssessmentAnswer assessmentAnswer) {
-        AssessmentAnswerDO dataObject = converter.toDataObject(assessmentAnswer);
-        int influence = assessmentAnswerMapper.updateById(dataObject);
-        if (influence == 0) {
-            log.warn("更新答题失败，保存到数据库时没有影响任何行，answerId {}", assessmentAnswer.getId());
-            throw new GlobalException("更新答题失败");
-        }
-    }
-
     @Override
     public int countByUserIdAndAssessmentTimeId(Long userId, Long assessmentTimeId) {
         return assessmentAnswerMapper.countByUserIdAndAssessmentTimeId(userId, assessmentTimeId);
@@ -88,6 +84,11 @@ public class AssessmentAnswerRepositoryImpl implements AssessmentAnswerRepositor
     @Override
     public boolean existsByUserIdAndQuestionId(Long userId, Long questionId) {
         return assessmentAnswerMapper.countByUserIdAndQuestionId(userId, questionId) > 0;
+    }
+
+    @Override
+    public boolean existsByFileIdAndUserId(Long fileId, Long userId) {
+        return assessmentAnswerMapper.countByFileIdAndUserId(fileId, userId) > 0;
     }
 
     @Override
@@ -126,19 +127,6 @@ public class AssessmentAnswerRepositoryImpl implements AssessmentAnswerRepositor
         assessmentAnswerMapper.batchInsert(dataObjects);
         // Note: batch insert does not populate IDs automatically for MySQL/PostgreSQL
         // The caller should not rely on IDs being set after batch insert
-    }
-
-    @Override
-    public int updateTeamMemberAnswers(Long teamId, Long questionId, Long fileId,
-            String content, com.bluenet.web.domain.model.enumerate.ProgrammingLanguage language,
-            java.time.LocalDateTime submitTime) {
-        return assessmentAnswerMapper.updateTeamMemberAnswers(
-                teamId,
-                questionId,
-                fileId,
-                content,
-                language,
-                submitTime);
     }
 
     @Override

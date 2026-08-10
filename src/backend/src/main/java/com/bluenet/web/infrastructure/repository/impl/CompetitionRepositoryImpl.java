@@ -3,7 +3,7 @@ package com.bluenet.web.infrastructure.repository.impl;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bluenet.web.domain.model.entity.Competition;
-import com.bluenet.web.domain.model.vo.CompetitionVO;
+import com.bluenet.web.domain.model.readmodel.CompetitionReadModel;
 import com.bluenet.web.domain.repository.CompetitionRepository;
 import com.bluenet.web.infrastructure.repository.converter.CompetitionRepositoryConverter;
 import com.bluenet.web.infrastructure.repository.dataobject.CompetitionDO;
@@ -30,7 +30,7 @@ public class CompetitionRepositoryImpl implements CompetitionRepository {
     private final CompetitionRepositoryConverter converter;
 
     @Override
-    public List<CompetitionVO> findCompetitionsWithLimit(int limit) {
+    public List<CompetitionReadModel> findCompetitionsWithLimit(int limit) {
         List<CompetitionDO> competitions = competitionMapper.selectCompetitionsWithLimit(limit);
         Map<Long, FileDO> files = loadLogoFiles(competitions);
         return competitions.stream()
@@ -39,7 +39,7 @@ public class CompetitionRepositoryImpl implements CompetitionRepository {
     }
 
     @Override
-    public org.springframework.data.domain.Page<CompetitionVO> findCompetitionsPage(
+    public org.springframework.data.domain.Page<CompetitionReadModel> findCompetitionsPage(
             org.springframework.data.domain.Pageable pageable) {
         Page<CompetitionDO> page = new Page<>(pageable.getPageNumber() + 1, pageable.getPageSize());
         IPage<CompetitionDO> result = competitionMapper.selectCompetitionsPage(page);
@@ -53,16 +53,13 @@ public class CompetitionRepositoryImpl implements CompetitionRepository {
     @Override
     public void save(Competition competition) {
         CompetitionDO dataObject = converter.toDataObject(competition);
-        competitionMapper.insert(dataObject);
-        competition.setId(dataObject.getId());
+        if (dataObject.getId() == null) {
+            competitionMapper.insert(dataObject);
+            competition.setId(dataObject.getId());
+        } else {
+            competitionMapper.updateById(dataObject);
+        }
     }
-
-    @Override
-    public void update(Competition competition) {
-        CompetitionDO dataObject = converter.toDataObject(competition);
-        competitionMapper.updateById(dataObject);
-    }
-
     @Override
     public void deleteById(Long id) {
         competitionMapper.deleteById(id);
@@ -80,13 +77,27 @@ public class CompetitionRepositoryImpl implements CompetitionRepository {
 
     @Override
     public void batchUpdateSortOrder(List<CompetitionRepository.SortItem> sortItems) {
-        sortItems.forEach(item -> competitionMapper.updateSortOrderById(item.id(), item.sortOrder()));
+        if (sortItems.isEmpty()) {
+            return;
+        }
+        competitionMapper.batchUpdateSortOrder(sortItems);
     }
 
     @Override
     public Optional<Competition> findById(Long id) {
         CompetitionDO dataObject = competitionMapper.selectById(id);
         return Optional.ofNullable(converter.toEntity(dataObject));
+    }
+
+    @Override
+    public Optional<Competition> findByName(String name) {
+        CompetitionDO dataObject = competitionMapper.selectByName(name);
+        return Optional.ofNullable(converter.toEntity(dataObject));
+    }
+
+    @Override
+    public boolean existsByName(String name) {
+        return competitionMapper.selectByName(name) != null;
     }
 
     @Override
@@ -113,8 +124,8 @@ public class CompetitionRepositoryImpl implements CompetitionRepository {
                         .collect(Collectors.toMap(FileDO::getId, Function.identity()));
     }
 
-    private CompetitionVO toVO(CompetitionDO competition, FileDO logoFile) {
-        return CompetitionVO.builder()
+    private CompetitionReadModel toVO(CompetitionDO competition, FileDO logoFile) {
+        return CompetitionReadModel.builder()
                 .id(competition.getId())
                 .name(competition.getName())
                 .shortName(competition.getShortName())

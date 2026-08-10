@@ -1,6 +1,6 @@
 package com.bluenet.web.application.service.impl;
 
-import com.bluenet.web.application.ResetPasswordResult;
+import com.bluenet.web.application.result.resetpassword.ResetPasswordResult;
 import com.bluenet.web.application.command.resetpassword.ResetPasswordCommands;
 import com.bluenet.web.application.message.MessageDispatcher;
 import com.bluenet.web.application.message.MessageRequest;
@@ -9,9 +9,8 @@ import com.bluenet.web.application.message.template.VerificationCodeScene;
 import com.bluenet.web.application.service.ResetPasswordAppService;
 import com.bluenet.web.domain.exception.BadRequest;
 import com.bluenet.web.domain.model.entity.User;
+import com.bluenet.web.domain.model.entity.VerifyCode;
 import com.bluenet.web.domain.model.enumerate.MessageChannel;
-import com.bluenet.web.domain.model.vo.UserVO;
-import com.bluenet.web.domain.model.vo.VerifyCodeVO;
 import com.bluenet.web.domain.repository.UserRepository;
 import com.bluenet.web.domain.repository.VerificationCodeRepository;
 import com.bluenet.web.domain.service.VerificationCodeDomainService;
@@ -61,12 +60,12 @@ public class ResetPasswordAppServiceImpl implements ResetPasswordAppService {
      */
     @Override
     public ResetPasswordResult.VerifyStudent verifyStudent(ResetPasswordCommands.VerifyStudentCommand command) {
-        Optional<UserVO> userOpt = userRepository.findByStudentId(command.studentId());
+        Optional<User> userOpt = userRepository.findByStudentId(command.studentId());
         if (userOpt.isEmpty()) {
             throw new BadRequest("学号不存在");
         }
 
-        UserVO user = userOpt.get();
+        User user = userOpt.get();
         String resetToken = stateService.create(command.studentId(), user.getId());
         log.info("Password reset initiated for student: {}", command.studentId());
         return new ResetPasswordResult.VerifyStudent(resetToken);
@@ -84,12 +83,12 @@ public class ResetPasswordAppServiceImpl implements ResetPasswordAppService {
         validateToken(command.resetToken(), 1);
 
         String studentId = stateService.getField(command.resetToken(), "studentId");
-        Optional<UserVO> userOpt = userRepository.findByStudentId(studentId);
+        Optional<User> userOpt = userRepository.findByStudentId(studentId);
         if (userOpt.isEmpty()) {
             throw new BadRequest("用户不存在");
         }
 
-        UserVO user = userOpt.get();
+        User user = userOpt.get();
         if (!command.email().equals(user.getEmail())) {
             throw new BadRequest("邮箱与学号不匹配");
         }
@@ -118,12 +117,12 @@ public class ResetPasswordAppServiceImpl implements ResetPasswordAppService {
             throw new BadRequest("重置流程状态异常，请重新开始");
         }
 
-        VerifyCodeVO verifyCodeVO = verificationCodeDomainService.generateCode(email, SCENE);
-        verificationCodeRepository.save(verifyCodeVO);
+        VerifyCode verifyCode = verificationCodeDomainService.generateCode(email, SCENE);
+        verificationCodeRepository.save(verifyCode);
 
         String subject = "蓝网密码重置验证码";
         String htmlContent = emailVerificationCodeTemplate
-                .buildHtml(VerificationCodeScene.RESET_PASSWORD, verifyCodeVO.getCode());
+                .buildHtml(VerificationCodeScene.RESET_PASSWORD, verifyCode.getCode());
         messageDispatcher.dispatchAsync(MessageRequest.html(MessageChannel.EMAIL, email, subject, htmlContent));
 
         Map<String, String> updates = new HashMap<>();
@@ -148,16 +147,16 @@ public class ResetPasswordAppServiceImpl implements ResetPasswordAppService {
             throw new BadRequest("重置流程状态异常，请重新开始");
         }
 
-        Optional<VerifyCodeVO> codeOpt = verificationCodeRepository
+        Optional<VerifyCode> codeOpt = verificationCodeRepository
                 .findByEmailAndCodeAndScene(email, command.code(), SCENE);
         if (codeOpt.isEmpty()) {
             throw new BadRequest("验证码错误");
         }
-        VerifyCodeVO verifyCodeVO = codeOpt.get();
-        if (verifyCodeVO.isUsed()) {
+        VerifyCode verifyCode = codeOpt.get();
+        if (verifyCode.isUsed()) {
             throw new BadRequest("验证码已使用");
         }
-        if (verifyCodeVO.getExpireAt() != null && verifyCodeVO.getExpireAt().isBefore(java.time.LocalDateTime.now())) {
+        if (verifyCode.isExpired()) {
             throw new BadRequest("验证码已过期");
         }
 
@@ -187,11 +186,10 @@ public class ResetPasswordAppServiceImpl implements ResetPasswordAppService {
         }
 
         Long userId = Long.parseLong(userIdStr);
-        UserVO userVO = userRepository.findById(userId)
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BadRequest("用户不存在"));
-        User user = User.reconstruct(userVO.getId(), userVO.getPassword());
         user.changePassword(passwordEncoder.encode(command.newPassword()));
-        userRepository.updatePassword(user.getId(), user.getPassword());
+        userRepository.save(user);
 
         authTokenService.revokeAllUserTokens(userId);
         stateService.delete(command.resetToken());

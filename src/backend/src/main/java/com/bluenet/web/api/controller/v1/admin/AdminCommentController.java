@@ -4,8 +4,8 @@ import com.bluenet.web.api.dto.ResponseMessage;
 import com.bluenet.web.api.dto.assessment_judgement.CommentDTO;
 import com.bluenet.web.api.dto.assessment_judgement.CommentRequestDTO;
 import com.bluenet.web.api.converter.assessment_judgement.CommentResponseConverter;
+import com.bluenet.web.application.result.comment.CommentResult;
 import com.bluenet.web.application.service.CommentAppService;
-import com.bluenet.web.domain.model.vo.CommentVO;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
 import com.bluenet.web.infrastructure.security.annotation.RequiresPermission;
 import com.bluenet.web.infrastructure.security.util.UserCTX;
@@ -36,7 +36,7 @@ public class AdminCommentController {
     @PostMapping
     public ResponseMessage<CommentDTO> addComment(@Valid @RequestBody CommentRequestDTO request) {
         Long userId = UserCTX.getCurrentUserId();
-        CommentVO comment = commentAppService
+        CommentResult comment = commentAppService
                 .addComment(userId, request.getAnswerId(), request.getContent(), request.getScore());
         return ResponseMessage.success(commentResponseConverter.toDTO(comment));
     }
@@ -46,7 +46,7 @@ public class AdminCommentController {
     @GetMapping
     public ResponseMessage<List<CommentDTO>> listComments(
             @Parameter(description = "答案ID", required = true) @RequestParam Long answerId) {
-        List<CommentVO> comments = commentAppService.listComments(answerId);
+        List<CommentResult> comments = commentAppService.listComments(answerId);
         return ResponseMessage.success(
                 comments.stream()
                         .map(commentResponseConverter::toDTO)
@@ -60,7 +60,7 @@ public class AdminCommentController {
             @Parameter(description = "评论ID", required = true) @PathVariable Long id,
             @Valid @RequestBody CommentRequestDTO request) {
         Long userId = UserCTX.getCurrentUserId();
-        CommentVO comment = commentAppService.updateComment(userId, id, request.getContent(), request.getScore());
+        CommentResult comment = commentAppService.updateComment(userId, id, request.getContent(), request.getScore());
         return ResponseMessage.success(commentResponseConverter.toDTO(comment));
     }
 

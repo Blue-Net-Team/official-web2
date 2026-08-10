@@ -2,7 +2,6 @@ package com.bluenet.web.infrastructure.repository.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.bluenet.web.domain.model.entity.Comment;
-import com.bluenet.web.domain.model.vo.CommentVO;
 import com.bluenet.web.domain.repository.CommentRepository;
 import com.bluenet.web.infrastructure.repository.converter.CommentRepositoryConverter;
 import com.bluenet.web.infrastructure.repository.dataobject.CommentDO;
@@ -24,7 +23,11 @@ public class CommentRepositoryImpl implements CommentRepository {
     @Override
     public void save(Comment comment) {
         CommentDO dataObject = converter.toDataObject(comment);
-        commentMapper.insert(dataObject);
+        if (comment.getId() == null) {
+            commentMapper.insert(dataObject);
+        } else {
+            commentMapper.updateById(dataObject);
+        }
         comment.setId(dataObject.getId());
     }
 
@@ -35,10 +38,10 @@ public class CommentRepositoryImpl implements CommentRepository {
     }
 
     @Override
-    public List<CommentVO> findByAnswerId(Long answerId) {
+    public List<Comment> findByAnswerId(Long answerId) {
         List<CommentDO> dataObjects = commentMapper.selectByAnswerIdWithUsername(answerId);
         return dataObjects.stream()
-                .map(do_ -> converter.toVO(converter.toEntity(do_), do_.getUsername()))
+                .map(converter::toEntity)
                 .toList();
     }
 
@@ -48,11 +51,6 @@ public class CommentRepositoryImpl implements CommentRepository {
                 new QueryWrapper<CommentDO>()
                         .eq("answer_id", answerId)
                         .eq("user_id", userId));
-    }
-
-    @Override
-    public void update(Comment comment) {
-        commentMapper.updateById(converter.toDataObject(comment));
     }
 
     @Override

@@ -1,6 +1,8 @@
 package com.bluenet.web.infrastructure.repository.dataobject;
 
+import com.baomidou.mybatisplus.annotation.FieldStrategy;
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.bluenet.web.domain.model.enumerate.Direction;
@@ -55,6 +57,7 @@ public class UserDO {
     /**
      * 用户、报名或统计记录所属学院标识。
      */
+    @TableField(updateStrategy = FieldStrategy.ALWAYS)
     private Long collegeId;
     /**
      * 用户所在专业。
@@ -95,11 +98,13 @@ public class UserDO {
     /**
      * 绑定的 GitHub 用户唯一标识。
      */
+    @TableField(updateStrategy = FieldStrategy.ALWAYS)
     private String githubId;
 
     /**
      * 绑定的 GitHub 登录名。
      */
+    @TableField(updateStrategy = FieldStrategy.ALWAYS)
     private String githubUsername;
     /**
      * 用户或报名使用的内部推荐码。

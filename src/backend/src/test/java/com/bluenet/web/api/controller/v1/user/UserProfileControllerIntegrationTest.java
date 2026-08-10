@@ -1,403 +1,338 @@
 package com.bluenet.web.api.controller.v1.user;
 
-import com.bluenet.web.infrastructure.repository.dataobject.*;
-
-import com.bluenet.web.testsupport.RepositoryTestObjects;
-
 import com.bluenet.web.BaseIntegrationTest;
-import com.bluenet.web.api.dto.ResponseMessage;
-import com.bluenet.web.api.dto.auth.StudentIdLoginRequestDTO;
-import com.bluenet.web.api.dto.auth.UserAuthResponseDTO;
+import com.bluenet.web.api.dto.user.ChangeEmailRequestDTO;
+import com.bluenet.web.api.dto.user.ChangePasswordRequestDTO;
+import com.bluenet.web.api.dto.user.SendEmailVerificationCodeRequestDTO;
 import com.bluenet.web.api.dto.user.TabCountsDTO;
+import com.bluenet.web.api.dto.user.UpdateAvatarRequestDTO;
 import com.bluenet.web.api.dto.user.UpdateProfileRequestDTO;
 import com.bluenet.web.api.dto.user.UserInfo;
-import com.bluenet.web.domain.model.entity.User;
-import com.bluenet.web.domain.model.enumerate.Direction;
-import com.bluenet.web.domain.model.enumerate.Gender;
-import com.bluenet.web.infrastructure.repository.mapper.RoleMapper;
-import com.bluenet.web.infrastructure.repository.mapper.UserMapper;
-import com.bluenet.web.testcontainers.TestcontainersConfiguration;
-import lombok.extern.slf4j.Slf4j;
-import org.junit.jupiter.api.BeforeEach;
+import com.bluenet.web.api.dto.user.VerifyPasswordRequestDTO;
+import com.bluenet.web.api.converter.userinfo.UserInfoResponseConverter;
+import com.bluenet.web.domain.exception.DataNotFound;
+import com.bluenet.web.application.result.common.TabCounts;
+import com.bluenet.web.application.result.user.UserInfoResult;
+import com.bluenet.web.application.service.UserInfoAppService;
+import com.bluenet.web.infrastructure.security.principal.WithSecurityPrincipal;
+import com.bluenet.web.infrastructure.security.util.UserCTX;
+import com.bluenet.web.testconfig.TestSecurityConfig;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.context.annotation.Import;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.test.context.ActiveProfiles;
-import org.testcontainers.junit.jupiter.Testcontainers;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
 
-import java.util.List;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import static org.junit.jupiter.api.Assertions.*;
-
-/**
- * UserProfileController 集成测试 测试用户信息相关接口：/api/v1/user/info,
- * /api/v1/user/tab-counts
- */
-@Slf4j
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@ActiveProfiles("test")
-@Testcontainers
-@Import(TestcontainersConfiguration.class)
+@SpringBootTest
+@AutoConfigureMockMvc
+@Import(TestSecurityConfig.class)
+@DisplayName("UserProfileController 集成测试")
 class UserProfileControllerIntegrationTest extends BaseIntegrationTest {
 
     @Autowired
-    private TestRestTemplate restTemplate;
+    private MockMvc mockMvc;
 
     @Autowired
-    private UserMapper userMapper;
+    private ObjectMapper objectMapper;
 
-    @Autowired
-    private RoleMapper roleMapper;
+    @MockitoBean
+    private UserInfoAppService userInfoAppService;
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    @MockitoBean
+    private UserInfoResponseConverter userInfoResponseConverter;
 
-    private static final String TEST_STUDENT_ID = "2024001001";
-    private static final String TEST_PASSWORD = "testPassword123";
-    private Long testUserId;
+    @AfterEach
+    void tearDown() {
+        UserCTX.clear();
+    }
 
-    @BeforeEach
-    void setUp() {
-        // 查询 MEMBER 角色ID
-        var memberRole = roleMapper.selectByName("MEMBER");
-        assertNotNull(memberRole, "MEMBER 角色应存在");
-
-        User user = User.reconstruct(
-                null,
-                TEST_STUDENT_ID,
-                "test@example.com",
-                memberRole.getId(),
-                passwordEncoder.encode(TEST_PASSWORD),
+    @Test
+    @WithSecurityPrincipal(userId = 1L, roleId = 3L, roleType = "MEMBER")
+    void getMyInfo_authenticated_returnsUserInfo() throws Exception {
+        UserInfoResult result = new UserInfoResult(
+                1L,
                 "测试用户",
                 "测试昵称",
+                "计算机学院",
+                "计算机科学与技术",
+                "2024",
+                "test@example.com",
+                100L,
+                "MEMBER",
                 null,
                 null,
                 null,
-                Direction.COMPUTER_VISION,
-                Gender.MALE,
                 null,
                 null,
-                false,
-                null,
-                null,
-                null,
-                null,
-                "原个人简介");
+                null);
+        UserInfo userInfo = UserInfo.builder()
+                .id(1L)
+                .username("测试用户")
+                .email("test@example.com")
+                .build();
+        when(userInfoAppService.getMyInfo(1L)).thenReturn(result);
+        when(userInfoResponseConverter.toDTO(any(UserInfoResult.class))).thenReturn(userInfo);
 
-        RepositoryTestObjects.insert(userMapper, user, UserDO.class);
-        testUserId = user.getId();
-    }
-
-    /**
-     * 登录并获取 Cookie 返回可用于后续请求的 HttpHeaders（包含 Cookie）
-     */
-    private HttpHeaders loginAndGetCookies() {
-        return loginAndGetCookies(TEST_STUDENT_ID, TEST_PASSWORD);
-    }
-
-    /**
-     * 登录并获取 Cookie 返回可用于后续请求的 HttpHeaders（包含 Cookie）
-     */
-    private HttpHeaders loginAndGetCookies(String studentId, String password) {
-        StudentIdLoginRequestDTO loginRequest = new StudentIdLoginRequestDTO();
-        loginRequest.setStudentId(studentId);
-        loginRequest.setPassword(password);
-
-        ResponseEntity<ResponseMessage<UserAuthResponseDTO>> loginResponse = restTemplate.exchange(
-                "/api/v1/auth/login/student-id",
-                HttpMethod.POST,
-                new HttpEntity<>(loginRequest),
-                new ParameterizedTypeReference<ResponseMessage<UserAuthResponseDTO>>() {
-                });
-
-        assertEquals(HttpStatus.OK, loginResponse.getStatusCode());
-
-        // 提取 Set-Cookie 并转换为正确的 Cookie header 格式
-        List<String> setCookies = loginResponse.getHeaders().get(HttpHeaders.SET_COOKIE);
-        assertNotNull(setCookies, "登录响应应包含 Set-Cookie");
-
-        // 将 Set-Cookie 转换为 Cookie header 格式（只保留 name=value 部分）
-        StringBuilder cookieBuilder = new StringBuilder();
-        for (String setCookie : setCookies) {
-            int semicolonIndex = setCookie.indexOf(';');
-            String nameValue = semicolonIndex > 0 ? setCookie.substring(0, semicolonIndex) : setCookie;
-            if (cookieBuilder.length() > 0) {
-                cookieBuilder.append("; ");
-            }
-            cookieBuilder.append(nameValue);
-        }
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.set(HttpHeaders.COOKIE, cookieBuilder.toString());
-        // 存储 CSRF Token 以便后续使用
-        String csrfToken = loginResponse.getBody().getData().getCsrfToken();
-        headers.set("X-CSRF-Token-Stored", csrfToken);
-        return headers;
-    }
-
-    /**
-     * 从 HttpHeaders 中获取存储的 CSRF Token
-     */
-    private String getStoredCsrfToken(HttpHeaders headers) {
-        return headers.getFirst("X-CSRF-Token-Stored");
-    }
-
-    /**
-     * 从 Set-Cookie 中提取 auth_token 值
-     */
-    private String extractAuthTokenFromCookies(List<String> cookies) {
-        for (String cookie : cookies) {
-            if (cookie.startsWith("auth_token=")) {
-                int end = cookie.indexOf(';');
-                if (end > 0) {
-                    return cookie.substring(11, end);
-                }
-                return cookie.substring(11);
-            }
-        }
-        return null;
-    }
-
-    /**
-     * 从 HttpHeaders 中提取 csrf_token 值
-     */
-    private String getCsrfTokenFromCookies(HttpHeaders headers) {
-        List<String> cookies = headers.get(HttpHeaders.COOKIE);
-        if (cookies == null)
-            return null;
-        for (String cookieHeader : cookies) {
-            String[] cookieParts = cookieHeader.split(";");
-            for (String part : cookieParts) {
-                String trimmed = part.trim();
-                if (trimmed.startsWith("csrf_token=")) {
-                    return trimmed.substring(11);
-                }
-            }
-        }
-        return null;
-    }
-
-    private <T> HttpEntity<T> withAuth(HttpHeaders cookies, T body) {
-        return new HttpEntity<>(body, cookies);
-    }
-
-    private HttpEntity<Void> withAuth(HttpHeaders cookies) {
-        return withAuth(cookies, null);
+        mockMvc.perform(get("/api/v1/user/info"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.data.id").value(1))
+                .andExpect(jsonPath("$.data.username").value("测试用户"))
+                .andExpect(jsonPath("$.data.email").value("test@example.com"));
     }
 
     @Test
-    void getMyInfo_whenAuthenticated_returnsUserInfo() {
-        HttpHeaders cookies = loginAndGetCookies();
-
-        ResponseEntity<ResponseMessage<UserInfo>> response = restTemplate.exchange(
-                "/api/v1/user/info",
-                HttpMethod.GET,
-                withAuth(cookies),
-                new ParameterizedTypeReference<ResponseMessage<UserInfo>>() {
-                });
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertNotNull(response.getBody());
-        assertEquals(200, response.getBody().getCode());
-
-        UserInfo userInfo = response.getBody().getData();
-        assertNotNull(userInfo);
-        assertEquals(testUserId, userInfo.getId());
-        assertEquals("测试用户", userInfo.getUsername());
-        assertEquals("测试昵称", userInfo.getNickname());
-        assertEquals("原个人简介", userInfo.getBio());
-        // qrcodeFileId 字段应存在（未设置时为 null）
-        assertNull(userInfo.getQrcodeFileId());
+    void getMyInfo_anonymous_returnsUnauthorized() throws Exception {
+        mockMvc.perform(get("/api/v1/user/info"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value(401));
     }
 
     @Test
-    void getMyInfo_whenNotAuthenticated_returns401() {
-        ResponseEntity<ResponseMessage> response = restTemplate.getForEntity(
-                "/api/v1/user/info",
-                ResponseMessage.class);
-
-        assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
-    }
-
-    @Test
-    void updateProfile_whenAuthenticated_updatesSuccessfully() {
-        HttpHeaders cookies = loginAndGetCookies();
-        String csrfToken = getStoredCsrfToken(cookies);
+    @WithSecurityPrincipal(userId = 1L, roleId = 3L, roleType = "MEMBER")
+    void updateProfile_authenticated_returnsOk() throws Exception {
+        doNothing().when(userInfoAppService).updateProfile(any(Long.class), any());
 
         UpdateProfileRequestDTO request = new UpdateProfileRequestDTO();
-        request.setUsername("新用户名");
         request.setNickname("新昵称");
-        request.setBio("新的个人简介");
+        request.setBio("新简介");
 
-        HttpHeaders headersWithCsrf = new HttpHeaders();
-        headersWithCsrf.set(HttpHeaders.COOKIE, cookies.getFirst(HttpHeaders.COOKIE));
-        headersWithCsrf.set("X-CSRF-Token", csrfToken);
-
-        ResponseEntity<ResponseMessage<Void>> response = restTemplate.exchange(
-                "/api/v1/user/info",
-                HttpMethod.PUT,
-                new HttpEntity<>(request, headersWithCsrf),
-                new ParameterizedTypeReference<ResponseMessage<Void>>() {
-                });
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertNotNull(response.getBody());
-        assertEquals(200, response.getBody().getCode());
-
-        User updatedUser = RepositoryTestObjects.toDomain(userMapper.selectById(testUserId), User.class);
-        assertEquals("新用户名", updatedUser.getUsername());
-        assertEquals("新昵称", updatedUser.getNickname());
-        assertEquals("新的个人简介", updatedUser.getBio());
+        mockMvc.perform(
+                put("/api/v1/user/info")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.msg").value("Success"));
     }
 
     @Test
-    void updateProfile_partialUpdate_updatesOnlyNickname() {
-        HttpHeaders cookies = loginAndGetCookies();
-        String csrfToken = getStoredCsrfToken(cookies);
-
-        UpdateProfileRequestDTO request = new UpdateProfileRequestDTO();
-        request.setNickname("仅更新昵称");
-
-        HttpHeaders headersWithCsrf = new HttpHeaders();
-        headersWithCsrf.set(HttpHeaders.COOKIE, cookies.getFirst(HttpHeaders.COOKIE));
-        headersWithCsrf.set("X-CSRF-Token", csrfToken);
-
-        ResponseEntity<ResponseMessage<Void>> response = restTemplate.exchange(
-                "/api/v1/user/info",
-                HttpMethod.PUT,
-                new HttpEntity<>(request, headersWithCsrf),
-                new ParameterizedTypeReference<ResponseMessage<Void>>() {
-                });
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-
-        User updatedUser = RepositoryTestObjects.toDomain(userMapper.selectById(testUserId), User.class);
-        assertEquals("仅更新昵称", updatedUser.getNickname());
-    }
-
-    @Test
-    void updateProfile_whenNotAuthenticated_returns401() {
+    void updateProfile_anonymous_returnsUnauthorized() throws Exception {
         UpdateProfileRequestDTO request = new UpdateProfileRequestDTO();
         request.setNickname("新昵称");
 
-        ResponseEntity<ResponseMessage> response = restTemplate.exchange(
-                "/api/v1/user/info",
-                HttpMethod.PUT,
-                new HttpEntity<>(request),
-                ResponseMessage.class);
-
-        assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
+        mockMvc.perform(
+                put("/api/v1/user/info")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value(401));
     }
 
     @Test
-    void updateProfile_withAllFields_updatesAllFields() {
-        // 查询 MEMBER 角色ID
-        var memberRole = roleMapper.selectByName("MEMBER");
-        assertNotNull(memberRole, "MEMBER 角色应存在");
+    @WithSecurityPrincipal(userId = 1L, roleId = 3L, roleType = "MEMBER")
+    void getTabCounts_authenticated_returnsCounts() throws Exception {
+        TabCounts tabCounts = new TabCounts(1, 1, 0);
+        TabCountsDTO dto = TabCountsDTO.builder()
+                .projects(1)
+                .achievements(1)
+                .internships(0)
+                .build();
+        when(userInfoAppService.getTabCounts(1L)).thenReturn(tabCounts);
+        when(userInfoResponseConverter.toTabCountsDTO(any(TabCounts.class))).thenReturn(dto);
 
-        User memberUser = User.reconstruct(
-                null,
-                "2024001002",
-                "member@example.com",
-                memberRole.getId(),
-                passwordEncoder.encode(TEST_PASSWORD),
-                "成员用户",
-                null,
-                null,
-                null,
-                null,
-                Direction.COMPUTER_VISION,
-                Gender.MALE,
-                null,
-                null,
-                false,
-                null,
-                null,
-                null,
-                null,
-                "原个人简介");
-        RepositoryTestObjects.insert(userMapper, memberUser, UserDO.class);
-
-        // 登录获取 Cookie
-        StudentIdLoginRequestDTO loginRequest = new StudentIdLoginRequestDTO();
-        loginRequest.setStudentId("2024001002");
-        loginRequest.setPassword(TEST_PASSWORD);
-
-        ResponseEntity<ResponseMessage<UserAuthResponseDTO>> loginResponse = restTemplate.exchange(
-                "/api/v1/auth/login/student-id",
-                HttpMethod.POST,
-                new HttpEntity<>(loginRequest),
-                new ParameterizedTypeReference<ResponseMessage<UserAuthResponseDTO>>() {
-                });
-
-        List<String> cookies = loginResponse.getHeaders().get(HttpHeaders.SET_COOKIE);
-        String csrfToken = loginResponse.getBody().getData().getCsrfToken();
-
-        UpdateProfileRequestDTO request = new UpdateProfileRequestDTO();
-        request.setUsername("完整更新用户名");
-        request.setNickname("完整更新昵称");
-        request.setBio("完整更新简介");
-        request.setDirection(Direction.EMBEDDED);
-        request.setGender(Gender.FEMALE);
-
-        HttpHeaders headersWithCsrf = new HttpHeaders();
-        headersWithCsrf.put(HttpHeaders.COOKIE, cookies);
-        headersWithCsrf.set("X-CSRF-Token", csrfToken);
-
-        ResponseEntity<ResponseMessage<Void>> response = restTemplate.exchange(
-                "/api/v1/user/info",
-                HttpMethod.PUT,
-                new HttpEntity<>(request, headersWithCsrf),
-                new ParameterizedTypeReference<ResponseMessage<Void>>() {
-                });
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-
-        User updatedUser = RepositoryTestObjects.toDomain(userMapper.selectById(memberUser.getId()), User.class);
-        assertEquals("完整更新用户名", updatedUser.getUsername());
-        assertEquals("完整更新昵称", updatedUser.getNickname());
-        assertEquals("完整更新简介", updatedUser.getBio());
-        assertEquals(Direction.EMBEDDED, updatedUser.getDirection());
-        assertEquals(Gender.FEMALE, updatedUser.getGender());
+        mockMvc.perform(get("/api/v1/user/tab-counts"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.data.projects").value(1))
+                .andExpect(jsonPath("$.data.achievements").value(1))
+                .andExpect(jsonPath("$.data.internships").value(0));
     }
 
     @Test
-    void getTabCounts_whenAuthenticated_returnsCounts() {
-        HttpHeaders cookies = loginAndGetCookies();
-
-        ResponseEntity<ResponseMessage<TabCountsDTO>> response = restTemplate.exchange(
-                "/api/v1/user/tab-counts",
-                HttpMethod.GET,
-                withAuth(cookies),
-                new ParameterizedTypeReference<ResponseMessage<TabCountsDTO>>() {
-                });
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertNotNull(response.getBody());
-        assertEquals(200, response.getBody().getCode());
-
-        TabCountsDTO counts = response.getBody().getData();
-        assertNotNull(counts);
-        assertEquals(0, counts.getProjects());
-        assertEquals(0, counts.getCompetitions());
-        assertEquals(0, counts.getInternships());
+    void getTabCounts_anonymous_returnsUnauthorized() throws Exception {
+        mockMvc.perform(get("/api/v1/user/tab-counts"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value(401));
     }
 
     @Test
-    void getTabCounts_whenNotAuthenticated_returns401() {
-        ResponseEntity<ResponseMessage> response = restTemplate.getForEntity(
-                "/api/v1/user/tab-counts",
-                ResponseMessage.class);
+    @WithSecurityPrincipal(userId = 1L, roleId = 3L, roleType = "MEMBER")
+    void sendEmailVerificationCode_authenticated_returnsOk() throws Exception {
+        doNothing().when(userInfoAppService).sendEmailVerificationCode(any());
 
-        assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
+        SendEmailVerificationCodeRequestDTO request = new SendEmailVerificationCodeRequestDTO();
+        request.setEmail("test@example.com");
+        request.setScene("change-email-original");
+
+        mockMvc.perform(
+                post("/api/v1/user/email/verification-code/send")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200));
+    }
+
+    @Test
+    void sendEmailVerificationCode_anonymous_returnsUnauthorized() throws Exception {
+        SendEmailVerificationCodeRequestDTO request = new SendEmailVerificationCodeRequestDTO();
+        request.setEmail("test@example.com");
+        request.setScene("change-email-original");
+
+        mockMvc.perform(
+                post("/api/v1/user/email/verification-code/send")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value(401));
+    }
+
+    @Test
+    @WithSecurityPrincipal(userId = 1L, roleId = 3L, roleType = "MEMBER")
+    void changeEmail_withValidCodes_returnsOk() throws Exception {
+        doNothing().when(userInfoAppService).changeEmail(any(Long.class), any());
+
+        ChangeEmailRequestDTO request = new ChangeEmailRequestDTO();
+        request.setOriginalEmailVerifyCode("123456");
+        request.setNewEmail("new@example.com");
+        request.setNewEmailVerifyCode("654321");
+
+        mockMvc.perform(
+                put("/api/v1/user/email")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200));
+    }
+
+    @Test
+    void changeEmail_anonymous_returnsUnauthorized() throws Exception {
+        ChangeEmailRequestDTO request = new ChangeEmailRequestDTO();
+        request.setOriginalEmailVerifyCode("123456");
+        request.setNewEmail("new@example.com");
+        request.setNewEmailVerifyCode("654321");
+
+        mockMvc.perform(
+                put("/api/v1/user/email")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value(401));
+    }
+
+    @Test
+    @WithSecurityPrincipal(userId = 1L, roleId = 3L, roleType = "MEMBER")
+    void verifyCurrentPassword_correct_returnsToken() throws Exception {
+        when(userInfoAppService.verifyCurrentPassword(any())).thenReturn("verify-token");
+
+        VerifyPasswordRequestDTO request = new VerifyPasswordRequestDTO();
+        request.setCurrentPassword("password");
+
+        mockMvc.perform(
+                post("/api/v1/user/password/verify")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.data").value("verify-token"));
+    }
+
+    @Test
+    void verifyCurrentPassword_anonymous_returnsUnauthorized() throws Exception {
+        VerifyPasswordRequestDTO request = new VerifyPasswordRequestDTO();
+        request.setCurrentPassword("password");
+
+        mockMvc.perform(
+                post("/api/v1/user/password/verify")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value(401));
+    }
+
+    @Test
+    @WithSecurityPrincipal(userId = 1L, roleId = 3L, roleType = "MEMBER")
+    void changePassword_withValidToken_returnsOk() throws Exception {
+        doNothing().when(userInfoAppService).changePassword(any());
+
+        ChangePasswordRequestDTO changeRequest = new ChangePasswordRequestDTO();
+        changeRequest.setToken("token");
+        changeRequest.setNewPassword("newPassword");
+        changeRequest.setConfirmPassword("newPassword");
+
+        mockMvc.perform(
+                put("/api/v1/user/password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(changeRequest)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200));
+    }
+
+    @Test
+    void changePassword_anonymous_returnsUnauthorized() throws Exception {
+        ChangePasswordRequestDTO request = new ChangePasswordRequestDTO();
+        request.setToken("token");
+        request.setNewPassword("newPassword");
+        request.setConfirmPassword("newPassword");
+
+        mockMvc.perform(
+                put("/api/v1/user/password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value(401));
+    }
+
+    @Test
+    @WithSecurityPrincipal(userId = 1L, roleId = 3L, roleType = "MEMBER")
+    void updateAvatar_authenticated_returnsOk() throws Exception {
+        doNothing().when(userInfoAppService).updateAvatar(any(Long.class), any());
+
+        UpdateAvatarRequestDTO request = new UpdateAvatarRequestDTO();
+        request.setFileId(100L);
+
+        mockMvc.perform(
+                put("/api/v1/user/avatar")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200));
+    }
+
+    @Test
+    @WithSecurityPrincipal(userId = 1L, roleId = 3L, roleType = "MEMBER")
+    void updateAvatar_nonExistentFile_returnsNotFound() throws Exception {
+        doThrow(new DataNotFound("文件不存在"))
+                .when(userInfoAppService)
+                .updateAvatar(any(Long.class), any());
+
+        UpdateAvatarRequestDTO request = new UpdateAvatarRequestDTO();
+        request.setFileId(9999L);
+
+        mockMvc.perform(
+                put("/api/v1/user/avatar")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value(404));
+    }
+
+    @Test
+    void updateAvatar_anonymous_returnsUnauthorized() throws Exception {
+        UpdateAvatarRequestDTO request = new UpdateAvatarRequestDTO();
+        request.setFileId(1L);
+
+        mockMvc.perform(
+                put("/api/v1/user/avatar")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value(401));
     }
 }

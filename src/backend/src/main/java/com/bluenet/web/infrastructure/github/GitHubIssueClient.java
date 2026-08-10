@@ -1,6 +1,7 @@
 package com.bluenet.web.infrastructure.github;
 
 import com.bluenet.web.infrastructure.config.GitHubAppProperties;
+import com.bluenet.web.infrastructure.config.GitHubAppsProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -41,7 +42,7 @@ public class GitHubIssueClient {
      * @return 创建结果，包含 number 和 html_url
      */
     public GitHubIssueCreateResult createIssue(String title, String body) {
-        String accessToken = tokenService.getInstallationAccessToken();
+        String accessToken = tokenService.getAccessToken(GitHubAppsProperties.ISSUE_SYNC_APP_NAME);
         RestTemplate restTemplate = createRestTemplate();
 
         String url = String.format(
@@ -92,7 +93,7 @@ public class GitHubIssueClient {
      * @return Issue 列表，按更新时间降序排列（不包含 Pull Request）
      */
     public List<GitHubIssueListResult> listIssues(Instant since) {
-        String accessToken = tokenService.getInstallationAccessToken();
+        String accessToken = tokenService.getAccessToken(GitHubAppsProperties.ISSUE_SYNC_APP_NAME);
         RestTemplate restTemplate = createRestTemplate();
 
         String sinceParam = ISO_INSTANT_FORMATTER.format(since);

@@ -154,7 +154,7 @@ export default function ChangePasswordPage() {
     <ConfigProvider theme={stepTheme}>
       <div className="min-h-screen bg-[#0a0a0a] flex flex-col relative overflow-hidden">
         <div className="fixed inset-0 z-0">
-          <DarkVeil hueShift={40} speed={0.6} offsetY={0.2} />
+          <DarkVeil hueShift={-130} speed={0.6} offsetY={0.2} />
         </div>
         {/* Content */}
         <div className="flex-1 flex items-center justify-center px-10 py-12 relative z-1">

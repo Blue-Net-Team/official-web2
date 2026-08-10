@@ -1,6 +1,6 @@
 package com.bluenet.web.application.service;
 
-import com.bluenet.web.application.VenueResult;
+import com.bluenet.web.application.result.venue.VenueResult;
 import com.bluenet.web.application.command.venue.VenueCommands;
 
 import java.util.List;

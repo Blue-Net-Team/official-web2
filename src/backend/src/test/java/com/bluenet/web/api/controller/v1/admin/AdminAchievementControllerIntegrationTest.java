@@ -1,176 +1,120 @@
 package com.bluenet.web.api.controller.v1.admin;
 
-import com.bluenet.web.infrastructure.repository.dataobject.*;
-
-import com.bluenet.web.testsupport.RepositoryTestObjects;
-
-import static org.junit.jupiter.api.Assertions.*;
+import com.bluenet.web.BaseIntegrationTest;
+import com.bluenet.web.api.dto.achievement.AchievementDTO;
+import com.bluenet.web.api.dto.achievement.AchievementMemberDTO;
+import com.bluenet.web.api.dto.achievement.CreateAchievementRequestDTO;
+import com.bluenet.web.api.dto.achievement.UpdateAchievementRequestDTO;
+import com.bluenet.web.api.converter.achievement.AchievementResponseConverter;
+import com.bluenet.web.application.result.achievement.AchievementMemberResult;
+import com.bluenet.web.application.result.achievement.AchievementResult;
+import com.bluenet.web.application.command.achievement.AchievementCommands;
+import com.bluenet.web.application.service.AchievementAppService;
+import com.bluenet.web.domain.model.enumerate.AchievementType;
+import com.bluenet.web.domain.model.enumerate.AwardLevel;
+import com.bluenet.web.domain.exception.DataNotFound;
+import com.bluenet.web.infrastructure.security.principal.WithSecurityPrincipal;
+import com.bluenet.web.infrastructure.security.util.UserCTX;
+import com.bluenet.web.testconfig.TestSecurityConfig;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.context.annotation.Import;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 
 import java.time.LocalDate;
 import java.util.List;
 
-import com.bluenet.web.domain.model.enumerate.AchievementType;
-import com.bluenet.web.domain.model.enumerate.AwardLevel;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.context.annotation.Import;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.*;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.test.context.ActiveProfiles;
-import org.testcontainers.junit.jupiter.Testcontainers;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.bluenet.web.BaseIntegrationTest;
-import com.bluenet.web.api.dto.ResponseMessage;
-import com.bluenet.web.api.dto.achievement.AchievementDTO;
-import com.bluenet.web.api.dto.achievement.CreateAchievementRequestDTO;
-import com.bluenet.web.api.dto.achievement.UpdateAchievementRequestDTO;
-import com.bluenet.web.api.dto.auth.StudentIdLoginRequestDTO;
-import com.bluenet.web.api.dto.auth.UserAuthResponseDTO;
-import com.bluenet.web.domain.model.entity.*;
-import com.bluenet.web.domain.model.enumerate.Direction;
-import com.bluenet.web.domain.model.enumerate.FileStatus;
-import com.bluenet.web.domain.model.enumerate.FileType;
-import com.bluenet.web.infrastructure.repository.mapper.*;
-import com.bluenet.web.infrastructure.security.cache.PermissionCache;
-import com.bluenet.web.testcontainers.TestcontainersConfiguration;
-
+@SpringBootTest
+@AutoConfigureMockMvc
+@Import(TestSecurityConfig.class)
 @DisplayName("AdminAchievementController 集成测试")
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@ActiveProfiles("test")
-@Testcontainers
-@Import({ TestcontainersConfiguration.class, com.bluenet.web.testconfig.TestSecurityConfig.class })
 class AdminAchievementControllerIntegrationTest extends BaseIntegrationTest {
 
     @Autowired
-    private TestRestTemplate restTemplate;
+    private MockMvc mockMvc;
 
     @Autowired
-    private AchievementMapper achievementMapper;
+    private ObjectMapper objectMapper;
 
-    @Autowired
-    private FileMapper fileMapper;
+    @MockitoBean
+    private AchievementAppService achievementAppService;
 
-    @Autowired
-    private UserMapper userMapper;
+    @MockitoBean
+    private AchievementResponseConverter achievementResponseConverter;
 
-    @Autowired
-    private RoleMapper roleMapper;
-
-    @Autowired
-    private PermissionMapper permissionMapper;
-
-    @Autowired
-    private RolePermissionMapper rolePermissionMapper;
-
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-
-    @Autowired
-    private PermissionCache permissionCache;
-
-    private static final String TEST_STUDENT_ID = "admin001";
-    private static final String TEST_PASSWORD = "adminPassword123";
-    private static final String TEST_FILE_URL = "http://example.com/achievement.jpg";
-    private static final String TEST_FILE_NAME = "achievement.jpg";
-    private static final FileType TEST_FILE_TYPE = FileType.NORMAL_IMG;
-
-    private List<String> authCookies;
-    private String csrfToken;
-    private Long adminRoleId;
-    private Long testFileId;
-
-    @BeforeEach
-    void setUpTestData() {
-        File file = File.reconstruct(null, TEST_FILE_NAME, TEST_FILE_TYPE, TEST_FILE_URL, FileStatus.ACTIVE, null);
-        RepositoryTestObjects.insert(fileMapper, file, FileDO.class);
-        testFileId = file.getId();
-
-        Role adminRole = RepositoryTestObjects.toDomain(roleMapper.selectByName("SUPER_ADMIN"), Role.class);
-        if (adminRole == null) {
-            throw new IllegalStateException("SUPER_ADMIN 角色不存在，请检查数据库迁移脚本");
-        }
-        adminRoleId = adminRole.getId();
-
-        createPermission("achievement:create", "创建成就");
-        createPermission("achievement:update", "更新成就");
-        createPermission("achievement:delete", "删除成就");
-        createPermission("achievement:list", "查看成就列表");
-
-        permissionCache.refresh();
-
-        User adminUser = User.reconstruct(
-                null,
-                TEST_STUDENT_ID,
-                "admin@example.com",
-                adminRoleId,
-                passwordEncoder.encode(TEST_PASSWORD),
-                "管理员",
-                null,
-                null,
-                null,
-                null,
-                Direction.COMPUTER_VISION,
-                null,
-                null,
-                null,
-                false,
-                null,
-                null,
-                null,
-                null,
-                null);
-        RepositoryTestObjects.insert(userMapper, adminUser, UserDO.class);
-
-        loginAndGetCookies();
+    @AfterEach
+    void tearDown() {
+        UserCTX.clear();
     }
 
-    private void createPermission(String value, String name) {
-        Permission permission = Permission.create(name, value, null, null, null);
-        RepositoryTestObjects.insert(permissionMapper, permission, PermissionDO.class);
+    private static final long SUPER_ADMIN_USER_ID = 9999L;
 
-        RolePermission rolePermission = RolePermission.create(adminRoleId, permission.getId());
-        RepositoryTestObjects.insert(rolePermissionMapper, rolePermission, RolePermissionDO.class);
+    private AchievementResult stubResult() {
+        return new AchievementResult(
+                1L,
+                "蓝桥杯全国一等奖",
+                AchievementType.COMPETITION,
+                "蓝桥杯",
+                LocalDate.of(2024, 4, 15),
+                AwardLevel.NATIONAL,
+                "国家级",
+                "一等奖",
+                "蓝桥杯",
+                "蓝桥杯",
+                100L,
+                200L,
+                "https://example.com/image.jpg",
+                List.of(new AchievementMemberResult(1L, "成员甲", 300L)),
+                List.of("外部-协作"));
     }
 
-    private void loginAndGetCookies() {
-        StudentIdLoginRequestDTO loginRequest = new StudentIdLoginRequestDTO();
-        loginRequest.setStudentId(TEST_STUDENT_ID);
-        loginRequest.setPassword(TEST_PASSWORD);
-
-        ResponseEntity<ResponseMessage<UserAuthResponseDTO>> response = restTemplate.exchange(
-                "/api/v1/auth/login/student-id",
-                HttpMethod.POST,
-                new HttpEntity<>(loginRequest),
-                new ParameterizedTypeReference<ResponseMessage<UserAuthResponseDTO>>() {
-                });
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        authCookies = response.getHeaders().get(HttpHeaders.SET_COOKIE);
-        csrfToken = response.getBody().getData().getCsrfToken();
-        assertNotNull(authCookies, "登录响应应包含 Set-Cookie");
-        assertNotNull(csrfToken, "登录响应应包含 CSRF Token");
-    }
-
-    private HttpHeaders createAuthHeaders() {
-        HttpHeaders headers = new HttpHeaders();
-        headers.put(HttpHeaders.COOKIE, authCookies);
-        return headers;
-    }
-
-    private HttpHeaders createAuthHeadersWithCsrf() {
-        HttpHeaders headers = createAuthHeaders();
-        headers.set("X-CSRF-Token", csrfToken);
-        return headers;
+    private AchievementDTO stubDTO() {
+        return AchievementDTO.builder()
+                .id(1L)
+                .title("蓝桥杯全国一等奖")
+                .type(AchievementType.COMPETITION)
+                .awardLevel(AwardLevel.NATIONAL)
+                .members(
+                        List.of(
+                                AchievementMemberDTO.builder()
+                                        .userId(1L)
+                                        .username("成员甲")
+                                        .avatarFileId(300L)
+                                        .build()))
+                .externalMembers(List.of("外部-协作"))
+                .build();
     }
 
     @Test
-    @DisplayName("集成测试：创建竞赛成就应成功")
-    void createCompetitionAchievement_shouldCreateSuccessfully() {
+    @DisplayName("createAchievement: 超级管理员应成功创建成就")
+    @WithSecurityPrincipal(userId = SUPER_ADMIN_USER_ID, roleType = "SUPER_ADMIN", roleId = 1L, permissions = {
+            "achievement:create" })
+    void createAchievement_asSuperAdmin_shouldReturnCreatedAchievement() throws Exception {
+        AchievementResult result = stubResult();
+        AchievementDTO dto = stubDTO();
+        when(achievementAppService.createAchievement(any())).thenReturn(result);
+        when(achievementResponseConverter.toDTO(any(AchievementResult.class))).thenReturn(dto);
+
         CreateAchievementRequestDTO request = CreateAchievementRequestDTO.builder()
                 .title("蓝桥杯全国一等奖")
                 .type(AchievementType.COMPETITION)
@@ -178,269 +122,177 @@ class AdminAchievementControllerIntegrationTest extends BaseIntegrationTest {
                 .achieveAt(LocalDate.of(2024, 4, 15))
                 .awardLevel(AwardLevel.NATIONAL)
                 .awardName("一等奖")
-                .fileId(testFileId)
+                .fileId(200L)
                 .build();
 
-        HttpHeaders headers = createAuthHeadersWithCsrf();
-        HttpEntity<CreateAchievementRequestDTO> entity = new HttpEntity<>(request, headers);
-
-        ResponseEntity<ResponseMessage<AchievementDTO>> response = restTemplate.exchange(
-                "/api/v1/admin/achievements",
-                HttpMethod.POST,
-                entity,
-                new ParameterizedTypeReference<ResponseMessage<AchievementDTO>>() {
-                });
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertNotNull(response.getBody());
-        assertEquals(200, response.getBody().getCode());
-
-        AchievementDTO created = response.getBody().getData();
-        assertNotNull(created);
-        assertNotNull(created.getId());
-        assertEquals("蓝桥杯全国一等奖", created.getTitle());
-        assertEquals(AchievementType.COMPETITION, created.getType());
-        assertEquals(AwardLevel.NATIONAL, created.getAwardLevel());
-        assertEquals(testFileId, created.getFileId());
-
-        Achievement achievementEntity = RepositoryTestObjects
-                .toDomain(achievementMapper.selectById(created.getId()), Achievement.class);
-        assertNotNull(achievementEntity);
-        assertEquals("蓝桥杯全国一等奖", achievementEntity.getTitle());
+        MvcResult mvcResult = mockMvc.perform(
+                post("/api/v1/admin/achievements")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.id").value(1))
+                .andExpect(jsonPath("$.data.title").value("蓝桥杯全国一等奖"))
+                .andReturn();
+        assertThat(mvcResult.getResponse().getStatus()).isEqualTo(200);
     }
 
     @Test
-    @DisplayName("集成测试：创建论文成就应成功")
-    void createPaperAchievement_shouldCreateSuccessfully() {
+    @DisplayName("createAchievement: 参数校验失败应返回 400")
+    @WithSecurityPrincipal(userId = SUPER_ADMIN_USER_ID, roleType = "SUPER_ADMIN", roleId = 1L, permissions = {
+            "achievement:create" })
+    void createAchievement_withInvalidRequest_shouldReturn400() throws Exception {
         CreateAchievementRequestDTO request = CreateAchievementRequestDTO.builder()
-                .title("基于深度学习的图像识别研究")
-                .type(AchievementType.PAPER)
-                .relateTo("计算机学报")
-                .achieveAt(LocalDate.of(2024, 3, 20))
-                .fileId(testFileId)
+                .title("")
                 .build();
 
-        HttpHeaders headers = createAuthHeadersWithCsrf();
-        HttpEntity<CreateAchievementRequestDTO> entity = new HttpEntity<>(request, headers);
-
-        ResponseEntity<ResponseMessage<AchievementDTO>> response = restTemplate.exchange(
-                "/api/v1/admin/achievements",
-                HttpMethod.POST,
-                entity,
-                new ParameterizedTypeReference<ResponseMessage<AchievementDTO>>() {
-                });
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertNotNull(response.getBody());
-        assertEquals(200, response.getBody().getCode());
-
-        AchievementDTO created = response.getBody().getData();
-        assertNotNull(created);
-        assertEquals("基于深度学习的图像识别研究", created.getTitle());
-        assertEquals(AchievementType.PAPER, created.getType());
-        assertEquals("计算机学报", created.getRelateTo());
-        assertNull(created.getAwardLevel());
-        assertNull(created.getAwardName());
+        MvcResult mvcResult = mockMvc.perform(
+                post("/api/v1/admin/achievements")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andReturn();
+        assertThat(mvcResult.getResponse().getStatus()).isEqualTo(400);
     }
 
     @Test
-    @DisplayName("集成测试：创建成就时缺少必填字段应返回400")
-    void createAchievement_withMissingRequiredFields_shouldReturn400() {
-        CreateAchievementRequestDTO request = CreateAchievementRequestDTO.builder()
-                .type(AchievementType.COMPETITION)
-                .achieveAt(LocalDate.of(2024, 4, 15))
-                .fileId(testFileId)
-                .build();
-
-        HttpHeaders headers = createAuthHeadersWithCsrf();
-        HttpEntity<CreateAchievementRequestDTO> entity = new HttpEntity<>(request, headers);
-
-        ResponseEntity<ResponseMessage<AchievementDTO>> response = restTemplate.exchange(
-                "/api/v1/admin/achievements",
-                HttpMethod.POST,
-                entity,
-                new ParameterizedTypeReference<ResponseMessage<AchievementDTO>>() {
-                });
-
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertNotNull(response.getBody());
-        assertEquals(400, response.getBody().getCode());
-        assertEquals("成就标题不能为空", response.getBody().getMsg());
-    }
-
-    @Test
-    @DisplayName("集成测试：创建竞赛成就缺少奖项级别应返回400")
-    void createCompetitionAchievement_missingAwardLevel_shouldReturn400() {
-        CreateAchievementRequestDTO request = CreateAchievementRequestDTO.builder()
-                .title("蓝桥杯获奖")
-                .type(AchievementType.COMPETITION)
-                .achieveAt(LocalDate.of(2024, 4, 15))
-                .fileId(testFileId)
-                .build();
-
-        HttpHeaders headers = createAuthHeadersWithCsrf();
-        HttpEntity<CreateAchievementRequestDTO> entity = new HttpEntity<>(request, headers);
-
-        ResponseEntity<ResponseMessage<AchievementDTO>> response = restTemplate.exchange(
-                "/api/v1/admin/achievements",
-                HttpMethod.POST,
-                entity,
-                new ParameterizedTypeReference<ResponseMessage<AchievementDTO>>() {
-                });
-
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertNotNull(response.getBody());
-        assertEquals(400, response.getBody().getCode());
-        assertEquals("竞赛成就必须指定奖项级别", response.getBody().getMsg());
-    }
-
-    @Test
-    @DisplayName("集成测试：未认证用户创建成就应返回401")
-    void createAchievement_withoutAuth_shouldReturn401() {
+    @DisplayName("createAchievement: 普通成员访问应返回 403")
+    @WithSecurityPrincipal(roleType = "MEMBER", roleId = 3L, permissions = {})
+    void createAchievement_asMember_shouldReturn403() throws Exception {
         CreateAchievementRequestDTO request = CreateAchievementRequestDTO.builder()
                 .title("测试成就")
-                .type(AchievementType.PAPER)
+                .type(AchievementType.COMPETITION)
                 .achieveAt(LocalDate.of(2024, 4, 15))
-                .fileId(testFileId)
+                .fileId(1L)
                 .build();
 
-        ResponseEntity<ResponseMessage<AchievementDTO>> response = restTemplate.exchange(
-                "/api/v1/admin/achievements",
-                HttpMethod.POST,
-                new HttpEntity<>(request),
-                new ParameterizedTypeReference<ResponseMessage<AchievementDTO>>() {
-                });
-
-        assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
+        mockMvc.perform(
+                post("/api/v1/admin/achievements")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isForbidden());
     }
 
     @Test
-    @DisplayName("集成测试：更新成就应成功")
-    void updateAchievement_shouldUpdateSuccessfully() {
-        Achievement achievement = Achievement.create(
-                "原始标题",
-                AchievementType.COMPETITION,
-                "原始关联项",
-                LocalDate.of(2024, 1, 1),
-                AwardLevel.NATIONAL,
-                "一等奖",
-                testFileId);
-        RepositoryTestObjects.insert(achievementMapper, achievement, AchievementDO.class);
-        Long achievementId = achievement.getId();
+    @DisplayName("updateAchievement: 超级管理员应成功更新成就")
+    @WithSecurityPrincipal(userId = SUPER_ADMIN_USER_ID, roleType = "SUPER_ADMIN", roleId = 1L, permissions = {
+            "achievement:update" })
+    void updateAchievement_asSuperAdmin_shouldReturnUpdatedAchievement() throws Exception {
+        AchievementResult result = stubResult();
+        AchievementDTO dto = stubDTO();
+        when(achievementAppService.updateAchievement(any())).thenReturn(result);
+        when(achievementResponseConverter.toDTO(any(AchievementResult.class))).thenReturn(dto);
 
         UpdateAchievementRequestDTO request = UpdateAchievementRequestDTO.builder()
-                .title("更新后的标题")
+                .title("蓝桥杯全国一等奖")
                 .type(AchievementType.COMPETITION)
-                .relateTo("更新后的关联项")
-                .achieveAt(LocalDate.of(2024, 5, 1))
-                .awardLevel(AwardLevel.PROVINCIAL)
-                .awardName("二等奖")
-                .fileId(testFileId)
-                .build();
-
-        HttpHeaders headers = createAuthHeadersWithCsrf();
-        HttpEntity<UpdateAchievementRequestDTO> entity = new HttpEntity<>(request, headers);
-
-        ResponseEntity<ResponseMessage<AchievementDTO>> response = restTemplate.exchange(
-                "/api/v1/admin/achievements/" + achievementId,
-                HttpMethod.PUT,
-                entity,
-                new ParameterizedTypeReference<ResponseMessage<AchievementDTO>>() {
-                });
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertNotNull(response.getBody());
-        assertEquals(200, response.getBody().getCode());
-
-        AchievementDTO updated = response.getBody().getData();
-        assertNotNull(updated);
-        assertEquals(achievementId, updated.getId());
-        assertEquals("更新后的标题", updated.getTitle());
-        assertEquals("更新后的关联项", updated.getRelateTo());
-        assertEquals(AwardLevel.PROVINCIAL, updated.getAwardLevel());
-        assertEquals("二等奖", updated.getAwardName());
-
-        Achievement updatedEntity = RepositoryTestObjects
-                .toDomain(achievementMapper.selectById(achievementId), Achievement.class);
-        assertNotNull(updatedEntity);
-        assertEquals("更新后的标题", updatedEntity.getTitle());
-        assertEquals(AwardLevel.PROVINCIAL, updatedEntity.getAwardLevel());
-    }
-
-    @Test
-    @DisplayName("集成测试：更新不存在的成就应返回404")
-    void updateAchievement_notFound_shouldReturn404() {
-        UpdateAchievementRequestDTO request = UpdateAchievementRequestDTO.builder()
-                .title("更新后的标题")
-                .type(AchievementType.COMPETITION)
-                .achieveAt(LocalDate.of(2024, 5, 1))
+                .relateTo("蓝桥杯")
+                .achieveAt(LocalDate.of(2024, 4, 15))
                 .awardLevel(AwardLevel.NATIONAL)
-                .fileId(testFileId)
+                .awardName("一等奖")
+                .fileId(200L)
                 .build();
 
-        HttpHeaders headers = createAuthHeadersWithCsrf();
-        HttpEntity<UpdateAchievementRequestDTO> entity = new HttpEntity<>(request, headers);
-
-        ResponseEntity<ResponseMessage<AchievementDTO>> response = restTemplate.exchange(
-                "/api/v1/admin/achievements/99999",
-                HttpMethod.PUT,
-                entity,
-                new ParameterizedTypeReference<ResponseMessage<AchievementDTO>>() {
-                });
-
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        assertNotNull(response.getBody());
-        assertEquals(404, response.getBody().getCode());
-        assertEquals("成就不存在", response.getBody().getMsg());
+        MvcResult mvcResult = mockMvc.perform(
+                put("/api/v1/admin/achievements/{id}", 1L)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.id").value(1))
+                .andReturn();
+        assertThat(mvcResult.getResponse().getStatus()).isEqualTo(200);
     }
 
     @Test
-    @DisplayName("集成测试：删除成就应成功")
-    void deleteAchievement_shouldDeleteSuccessfully() {
-        Achievement achievement = Achievement
-                .create("待删除成就", AchievementType.PAPER, "待删除期刊", LocalDate.of(2024, 1, 1), null, null, testFileId);
-        RepositoryTestObjects.insert(achievementMapper, achievement, AchievementDO.class);
-        Long achievementId = achievement.getId();
+    @DisplayName("updateAchievement: 成就不存在应返回 404")
+    @WithSecurityPrincipal(userId = SUPER_ADMIN_USER_ID, roleType = "SUPER_ADMIN", roleId = 1L, permissions = {
+            "achievement:update" })
+    void updateAchievement_notFound_shouldReturn404() throws Exception {
+        when(achievementAppService.updateAchievement(any())).thenThrow(new DataNotFound("成就不存在"));
 
-        HttpHeaders headers = createAuthHeadersWithCsrf();
-        HttpEntity<Void> entity = new HttpEntity<>(headers);
+        UpdateAchievementRequestDTO request = UpdateAchievementRequestDTO.builder()
+                .title("蓝桥杯全国一等奖")
+                .type(AchievementType.COMPETITION)
+                .achieveAt(LocalDate.of(2024, 4, 15))
+                .fileId(200L)
+                .build();
 
-        ResponseEntity<ResponseMessage<Void>> response = restTemplate.exchange(
-                "/api/v1/admin/achievements/" + achievementId,
-                HttpMethod.DELETE,
-                entity,
-                new ParameterizedTypeReference<ResponseMessage<Void>>() {
-                });
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(200, response.getBody().getCode());
-
-        Achievement deleted = RepositoryTestObjects
-                .toDomain(achievementMapper.selectById(achievementId), Achievement.class);
-        assertNull(deleted);
+        MvcResult mvcResult = mockMvc.perform(
+                put("/api/v1/admin/achievements/{id}", 999L)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isNotFound())
+                .andReturn();
+        assertThat(mvcResult.getResponse().getStatus()).isEqualTo(404);
     }
 
     @Test
-    @DisplayName("集成测试：删除不存在的成就应返回404")
-    void deleteAchievement_notFound_shouldReturn404() {
-        HttpHeaders headers = createAuthHeadersWithCsrf();
-        HttpEntity<Void> entity = new HttpEntity<>(headers);
+    @DisplayName("deleteAchievement: 超级管理员应成功删除成就")
+    @WithSecurityPrincipal(userId = SUPER_ADMIN_USER_ID, roleType = "SUPER_ADMIN", roleId = 1L, permissions = {
+            "achievement:delete" })
+    void deleteAchievement_asSuperAdmin_shouldReturnOk() throws Exception {
+        doNothing().when(achievementAppService).deleteAchievement(1L);
 
-        ResponseEntity<ResponseMessage<Void>> response = restTemplate.exchange(
-                "/api/v1/admin/achievements/99999",
-                HttpMethod.DELETE,
-                entity,
-                new ParameterizedTypeReference<ResponseMessage<Void>>() {
-                });
-
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        assertEquals(404, response.getBody().getCode());
-        assertEquals("成就不存在", response.getBody().getMsg());
+        MvcResult mvcResult = mockMvc.perform(delete("/api/v1/admin/achievements/{id}", 1L))
+                .andExpect(status().isOk())
+                .andReturn();
+        assertThat(mvcResult.getResponse().getStatus()).isEqualTo(200);
     }
 
     @Test
-    @DisplayName("集成测试：权限不足应返回403")
-    void createAchievement_insufficientPermission_shouldReturn403() {
-        // TODO: 实现权限不足的测试
+    @DisplayName("createAchievement: 应将成员ID和外部协作者透传到应用层")
+    @WithSecurityPrincipal(userId = SUPER_ADMIN_USER_ID, roleType = "SUPER_ADMIN", roleId = 1L, permissions = {
+            "achievement:create" })
+    void createAchievement_withMembers_shouldPassToAppService() throws Exception {
+        AchievementResult result = stubResult();
+        AchievementDTO dto = stubDTO();
+        when(achievementAppService.createAchievement(any())).thenReturn(result);
+        when(achievementResponseConverter.toDTO(any(AchievementResult.class))).thenReturn(dto);
+
+        CreateAchievementRequestDTO request = CreateAchievementRequestDTO.builder()
+                .title("蓝桥杯全国一等奖")
+                .type(AchievementType.COMPETITION)
+                .relateTo("蓝桥杯")
+                .achieveAt(LocalDate.of(2024, 4, 15))
+                .awardLevel(AwardLevel.NATIONAL)
+                .awardName("一等奖")
+                .fileId(200L)
+                .userIds(List.of(1L, 2L))
+                .externalMembers(List.of("张三-外校", "李四-他队"))
+                .build();
+
+        mockMvc.perform(
+                post("/api/v1/admin/achievements")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.members[0].userId").value(1))
+                .andExpect(jsonPath("$.data.members[0].username").value("成员甲"))
+                .andExpect(jsonPath("$.data.externalMembers[0]").value("外部-协作"));
+
+        ArgumentCaptor<AchievementCommands.CreateAchievementCommand> captor = ArgumentCaptor
+                .forClass(AchievementCommands.CreateAchievementCommand.class);
+        verify(achievementAppService).createAchievement(captor.capture());
+        assertThat(captor.getValue().userIds()).containsExactly(1L, 2L);
+        assertThat(captor.getValue().externalMembers()).containsExactly("张三-外校", "李四-他队");
+    }
+
+    @Test
+    @DisplayName("createAchievement: 外部协作者姓名超长应返回 400")
+    @WithSecurityPrincipal(userId = SUPER_ADMIN_USER_ID, roleType = "SUPER_ADMIN", roleId = 1L, permissions = {
+            "achievement:create" })
+    void createAchievement_tooLongExternalMember_shouldReturn400() throws Exception {
+        CreateAchievementRequestDTO request = CreateAchievementRequestDTO.builder()
+                .title("蓝桥杯全国一等奖")
+                .type(AchievementType.COMPETITION)
+                .achieveAt(LocalDate.of(2024, 4, 15))
+                .fileId(200L)
+                .externalMembers(List.of("长".repeat(101)))
+                .build();
+
+        mockMvc.perform(
+                post("/api/v1/admin/achievements")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
     }
 }

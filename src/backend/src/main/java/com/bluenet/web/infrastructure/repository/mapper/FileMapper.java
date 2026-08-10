@@ -30,4 +30,24 @@ public interface FileMapper extends BaseMapper<FileDO> {
      * @return 孤儿文件数据行列表。
      */
     List<FileDO> selectOrphanFiles(@Param("pendingThreshold") LocalDateTime pendingThreshold);
+
+    /**
+     * 查询指定类型的最新一条 ACTIVE 文件记录。
+     *
+     * @param fileType
+     *            文件业务类型。
+     * @return 该类型下主键最大的 ACTIVE 文件数据行；不存在时为 null。
+     */
+    FileDO selectLatestByType(@Param("fileType") FileType fileType);
+
+    /**
+     * 查询指定类型的最新一条 ACTIVE 文件记录，排除指定主键。
+     *
+     * @param fileType
+     *            文件业务类型。
+     * @param excludeId
+     *            需要排除的文件主键。
+     * @return 排除后该类型下主键最大的 ACTIVE 文件数据行；不存在时为 null。
+     */
+    FileDO selectLatestByTypeExcludingId(@Param("fileType") FileType fileType, @Param("excludeId") Long excludeId);
 }

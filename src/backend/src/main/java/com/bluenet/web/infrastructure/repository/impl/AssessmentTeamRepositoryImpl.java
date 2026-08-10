@@ -51,33 +51,25 @@ public class AssessmentTeamRepositoryImpl implements AssessmentTeamRepository {
     @Override
     public void save(AssessmentTeam team) {
         AssessmentTeamDO dataObject = converter.toDataObject(team);
-        assessmentTeamMapper.insert(dataObject);
-        team.setId(dataObject.getId());
+        if (dataObject.getId() == null) {
+            assessmentTeamMapper.insert(dataObject);
+            team.setId(dataObject.getId());
 
-        AssessmentTeamMemberDO leaderMember = AssessmentTeamMemberDO.builder()
-                .teamId(dataObject.getId())
-                .userId(team.getLeaderId())
-                .build();
-        assessmentTeamMemberMapper.insert(leaderMember);
+            AssessmentTeamMemberDO leaderMember = AssessmentTeamMemberDO.builder()
+                    .teamId(dataObject.getId())
+                    .userId(team.getLeaderId())
+                    .build();
+            assessmentTeamMemberMapper.insert(leaderMember);
+        } else {
+            assessmentTeamMapper.updateById(dataObject);
+        }
     }
-
-    @Override
-    public void update(AssessmentTeam team) {
-        AssessmentTeamDO dataObject = converter.toDataObject(team);
-        assessmentTeamMapper.updateById(dataObject);
-    }
-
     @Override
     public void deleteById(Long id) {
         assessmentTeamMemberMapper.delete(
                 new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<AssessmentTeamMemberDO>()
                         .eq(AssessmentTeamMemberDO::getTeamId, id));
         assessmentTeamMapper.deleteById(id);
-    }
-
-    @Override
-    public void updateLeader(Long teamId, Long newLeaderId) {
-        assessmentTeamMapper.updateLeader(teamId, newLeaderId);
     }
 
     @Override

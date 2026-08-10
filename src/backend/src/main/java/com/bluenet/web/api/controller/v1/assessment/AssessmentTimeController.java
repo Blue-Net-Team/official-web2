@@ -6,7 +6,7 @@ import com.bluenet.web.api.dto.assessment_time.AssessmentProgressDTO;
 import com.bluenet.web.api.dto.assessment_time.AssessmentTimeDTO;
 import com.bluenet.web.api.dto.assessment_time.ResponseMessageAssessmentTimeList;
 import com.bluenet.web.api.converter.assessment_time.AssessmentTimeResponseConverter;
-import com.bluenet.web.application.AssessmentTimeResult;
+import com.bluenet.web.application.result.assessment.AssessmentTimeResult;
 import com.bluenet.web.application.service.AssessmentTimeAppService;
 import org.springframework.data.domain.Page;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;

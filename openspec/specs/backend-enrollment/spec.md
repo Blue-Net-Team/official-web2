@@ -7,6 +7,11 @@ Enrollment system for external users to apply for team membership with student I
 ### Requirement: Enrollment application entity
 The Enroll entity SHALL represent external user applications with student ID as unique identifier.
 
+The enrollment form SHALL display a tooltip or hint next to the email field explaining that:
+- The email will be used for assessment notifications
+- The email will be used for GitHub organization invitation upon passing the final assessment
+- If the applicant has a GitHub account, the email SHOULD be the one associated with that GitHub account
+
 #### Scenario: Enrollment data validation
 - **WHEN** creating an Enrollment
 - **THEN** student_id MUST be 12-13 characters and unique
@@ -14,6 +19,11 @@ The Enroll entity SHALL represent external user applications with student ID as 
 - **THEN** direction MUST be one of: computer_vision, structural_design, embedded
 - **THEN** avatar_id MAY reference a File entity
 - **THEN** college_id MUST reference an existing College
+
+#### Scenario: Email field GitHub hint
+- **WHEN** a user views the enrollment form
+- **THEN** the email field SHALL display a hint explaining its use for GitHub organization invitation
+- **AND** the hint SHALL advise using the GitHub-associated email if the user has a GitHub account
 
 ### Requirement: Enrollment status lifecycle
 The system SHALL support enrollment status transitions from pending to approved or rejected.

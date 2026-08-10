@@ -25,7 +25,9 @@ public class AchievementRequestConverter {
                 dto.getAchieveAt(),
                 dto.getAwardLevel(),
                 dto.getAwardName(),
-                dto.getFileId());
+                dto.getFileId(),
+                dto.getUserIds(),
+                dto.getExternalMembers());
     }
 
     /**
@@ -40,6 +42,8 @@ public class AchievementRequestConverter {
                 dto.getAchieveAt(),
                 dto.getAwardLevel(),
                 dto.getAwardName(),
-                dto.getFileId());
+                dto.getFileId(),
+                dto.getUserIds(),
+                dto.getExternalMembers());
     }
 }

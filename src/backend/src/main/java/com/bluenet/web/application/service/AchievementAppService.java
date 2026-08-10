@@ -1,7 +1,10 @@
 package com.bluenet.web.application.service;
 
-import com.bluenet.web.application.AchievementResult;
+import com.bluenet.web.application.result.achievement.AchievementResult;
+import com.bluenet.web.application.result.achievement.AchievementStatistics;
 import com.bluenet.web.application.command.achievement.AchievementCommands;
+
+import java.util.List;
 
 /**
  * 成就应用服务接口。
@@ -35,7 +38,7 @@ public interface AchievementAppService {
      *
      * @return 成就统计数据
      */
-    com.bluenet.web.domain.model.vo.AchievementStatsVO getAchievementStats();
+    AchievementStatistics getAchievementStats();
 
     /**
      * 创建成就
@@ -62,4 +65,13 @@ public interface AchievementAppService {
      *            成就ID
      */
     void deleteAchievement(Long id);
+
+    /**
+     * 查询指定成员关联的成就列表，按获奖日期倒序。
+     *
+     * @param memberId
+     *            成员用户ID
+     * @return 成就结果列表
+     */
+    List<AchievementResult> getMemberAchievements(Long memberId);
 }

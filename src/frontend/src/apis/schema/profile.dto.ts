@@ -29,11 +29,6 @@ export interface CreateExperienceRequestDTO {
   description?: string
   techStack?: string[]
   demoUrl?: string
-  date?: string
-  level?: string
-  award?: string
-  teamSize?: number
-  certificateUrl?: string
   company?: string
   position?: string
   status?: InternshipStatus
@@ -52,11 +47,6 @@ export interface UpdateExperienceRequestDTO {
   role?: string
   techStack?: string[]
   demoUrl?: string
-  date?: string
-  level?: string
-  award?: string
-  teamSize?: number
-  certificateUrl?: string
   company?: string
   position?: string
   status?: InternshipStatus

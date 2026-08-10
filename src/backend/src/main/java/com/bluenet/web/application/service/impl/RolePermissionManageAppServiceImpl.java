@@ -1,12 +1,12 @@
 package com.bluenet.web.application.service.impl;
 
-import com.bluenet.web.application.RolePermissionManageResult;
+import com.bluenet.web.application.result.rolepermission.RolePermissionManageResult;
 import com.bluenet.web.application.command.rolepermission.RolePermissionCommands;
 import com.bluenet.web.application.service.RolePermissionManageAppService;
 import com.bluenet.web.domain.exception.DataNotFound;
 import com.bluenet.web.domain.model.enumerate.RoleType;
 import com.bluenet.web.domain.model.entity.Permission;
-import com.bluenet.web.domain.model.vo.RoleVO;
+import com.bluenet.web.domain.model.entity.Role;
 import com.bluenet.web.domain.repository.PermissionRepository;
 import com.bluenet.web.domain.repository.RolePermissionRepository;
 import com.bluenet.web.domain.repository.RoleRepository;
@@ -41,7 +41,7 @@ public class RolePermissionManageAppServiceImpl implements RolePermissionManageA
      */
     @Override
     public List<String> getRolePermissions(String roleName) {
-        RoleVO role = resolveRoleIncludeSuperAdmin(roleName);
+        Role role = resolveRoleIncludeSuperAdmin(roleName);
         List<Long> permissionIds = rolePermissionRepository.findPermissionIdsByRoleId(role.getId());
         if (permissionIds.isEmpty()) {
             return List.of();
@@ -64,7 +64,7 @@ public class RolePermissionManageAppServiceImpl implements RolePermissionManageA
     @Transactional
     public RolePermissionManageResult assignPermissionsToRole(
             RolePermissionCommands.AssignPermissionsToRoleCommand command) {
-        RoleVO role = resolveRole(command.roleName());
+        Role role = resolveRole(command.roleName());
         List<Long> validatedIds = resolvePermissionIds(command.permissionIds());
         int count = rolePermissionRepository.batchAssignPermissionsToRole(role.getId(), validatedIds);
         permissionCache.refresh();
@@ -84,7 +84,7 @@ public class RolePermissionManageAppServiceImpl implements RolePermissionManageA
     @Transactional
     public RolePermissionManageResult removePermissionsFromRole(
             RolePermissionCommands.RemovePermissionsFromRoleCommand command) {
-        RoleVO role = resolveRole(command.roleName());
+        Role role = resolveRole(command.roleName());
         List<Long> validatedIds = resolvePermissionIds(command.permissionIds());
         int count = rolePermissionRepository.batchRemovePermissionsFromRole(role.getId(), validatedIds);
         permissionCache.refresh();
@@ -139,13 +139,13 @@ public class RolePermissionManageAppServiceImpl implements RolePermissionManageA
         return RolePermissionManageResult.ofRoles(count, currentRoles);
     }
 
-    private RoleVO resolveRole(String roleName) {
+    private Role resolveRole(String roleName) {
         validateNotSuperAdmin(roleName);
         return roleRepository.findByName(roleName)
                 .orElseThrow(() -> new DataNotFound("角色不存在: " + roleName));
     }
 
-    private RoleVO resolveRoleIncludeSuperAdmin(String roleName) {
+    private Role resolveRoleIncludeSuperAdmin(String roleName) {
         return roleRepository.findByName(roleName)
                 .orElseThrow(() -> new DataNotFound("角色不存在: " + roleName));
     }
@@ -173,7 +173,7 @@ public class RolePermissionManageAppServiceImpl implements RolePermissionManageA
                 .map(
                         name -> roleRepository.findByName(name)
                                 .orElseThrow(() -> new DataNotFound("角色不存在: " + name)))
-                .map(RoleVO::getId)
+                .map(Role::getId)
                 .toList();
     }
 

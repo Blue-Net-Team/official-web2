@@ -1,12 +1,12 @@
 # CLAUDE.md
 
-This file guides Claude Code (claude.ai/code) when working in this repository.
+This file guides AI assistants / agents when working in this repository.
 
 ## 项目速览
 
 蓝网官方网站（BlueNet）是高校科技创新团队的综合管理平台，Monorepo 结构。后端 Spring Boot 3.5.10 + Java 21 + DDD，前端 Next.js 15 + React 19 + TypeScript + Ant Design 6。
 
-详细背景见 [docs/项目概述.md](./docs/项目概述.md)。
+详细背景见 [docs/02-项目概述/02-01-项目简介.md](./docs/02-项目概述/02-01-项目简介.md)。
 
 ## AI 开发工作流
 
@@ -113,7 +113,7 @@ lsof -i :3000
 | Application | DTO / `PageDTO<DTO>` | — |
 | Controller | `ResponseMessage<DTO>` | — |
 
-例外：为性能须在 SQL 层做投影时，Mapper 可返回 VO/DTO，但必须在方法注释中说明。详见 [docs/layer-contracts.md](./docs/layer-contracts.md)。
+例外：为性能须在 SQL 层做投影时，Mapper 可返回 VO/DTO，但必须在方法注释中说明。详见 [docs/03-开发指南/03-05-层间约定.md](./docs/03-开发指南/03-05-层间约定.md)。
 
 ### 分页接口
 
@@ -207,9 +207,12 @@ type: description
 
 | 文档 | 内容 |
 |------|------|
-| [docs/项目概述.md](./docs/项目概述.md) | 项目背景、技术架构、核心功能 |
-| [docs/后端开发手册.md](./docs/后端开发手册.md) | DDD 分层详解、命名规范、类型转换链、Entity 行为化、测试规范 |
-| [docs/前端开发手册.md](./docs/前端开发手册.md) | 页面清单、枚举规范、ISR 规范、文件上传对接 |
-| [docs/环境配置指南.md](./docs/环境配置指南.md) | 完整环境搭建、Docker 部署、环境变量详解、常见问题 |
-| [docs/数据库设计.md](./docs/数据库设计.md) | 表结构、字段定义、关系说明 |
-| [docs/layer-contracts.md](./docs/layer-contracts.md) | 层间返回类型约定详细版 |
+| [docs/00-文档导航.md](./docs/00-文档导航.md) | 全文档索引与阅读路径 |
+| [docs/02-项目概述/02-01-项目简介.md](./docs/02-项目概述/02-01-项目简介.md) | 项目背景、技术架构、核心功能 |
+| [docs/03-开发指南/03-02-后端开发规范.md](./docs/03-开发指南/03-02-后端开发规范.md) | DDD 分层详解、命名规范、类型转换链、Entity 行为化 |
+| [docs/03-开发指南/03-03-前端开发规范.md](./docs/03-开发指南/03-03-前端开发规范.md) | 页面清单、枚举规范、ISR 规范、文件上传对接 |
+| [docs/03-开发指南/03-08-测试规范手册.md](./docs/03-开发指南/03-08-测试规范手册.md) | 各层测试策略、Mock 边界、ArchUnit |
+| [docs/04-运维部署/04-01-环境配置.md](./docs/04-运维部署/04-01-环境配置.md) | 完整环境搭建、环境变量详解、常见问题 |
+| [docs/04-运维部署/04-02-Docker部署.md](./docs/04-运维部署/04-02-Docker部署.md) | Docker Compose 部署 |
+| [docs/05-参考手册/05-01-数据库设计.md](./docs/05-参考手册/05-01-数据库设计.md) | 表结构、字段定义、关系说明 |
+| [docs/03-开发指南/03-05-层间约定.md](./docs/03-开发指南/03-05-层间约定.md) | 层间返回类型约定详细版 |

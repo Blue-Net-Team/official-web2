@@ -2,9 +2,10 @@ package com.bluenet.web.api.converter.achievement;
 
 import com.bluenet.web.api.dto.PageDTO;
 import com.bluenet.web.api.dto.achievement.AchievementDTO;
+import com.bluenet.web.api.dto.achievement.AchievementMemberDTO;
 import com.bluenet.web.api.dto.achievement.AchievementStatsDTO;
-import com.bluenet.web.application.AchievementResult;
-import com.bluenet.web.domain.model.vo.AchievementStatsVO;
+import com.bluenet.web.application.result.achievement.AchievementResult;
+import com.bluenet.web.application.result.achievement.AchievementStatistics;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
 
@@ -40,6 +41,19 @@ public class AchievementResponseConverter {
                 .competitionLogoFileId(result.competitionLogoFileId())
                 .fileId(result.fileId())
                 .fileUrl(result.fileUrl())
+                .members(
+                        result.members() == null
+                                ? List.of()
+                                : result.members()
+                                        .stream()
+                                        .map(
+                                                member -> AchievementMemberDTO.builder()
+                                                        .userId(member.userId())
+                                                        .username(member.username())
+                                                        .avatarFileId(member.avatarFileId())
+                                                        .build())
+                                        .toList())
+                .externalMembers(result.externalMembers() == null ? List.of() : result.externalMembers())
                 .build();
     }
 
@@ -69,7 +83,7 @@ public class AchievementResponseConverter {
     /**
      * 将统计 VO 转换为统计 DTO
      */
-    public AchievementStatsDTO toStatsDTO(AchievementStatsVO vo) {
+    public AchievementStatsDTO toStatsDTO(AchievementStatistics vo) {
         if (vo == null) {
             return null;
         }

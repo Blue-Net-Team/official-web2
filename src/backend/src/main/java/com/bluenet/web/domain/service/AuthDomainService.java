@@ -2,8 +2,8 @@ package com.bluenet.web.domain.service;
 
 import java.util.Optional;
 
+import com.bluenet.web.domain.model.entity.User;
 import com.bluenet.web.domain.model.enumerate.LocalLoginType;
-import com.bluenet.web.domain.model.vo.UserVO;
 
 public interface AuthDomainService {
 
@@ -16,7 +16,7 @@ public interface AuthDomainService {
      *            认证凭证（如用户密码）
      * @param localLoginType
      *            本地登录类型
-     * @return 如果合法，返回对应的用户信息；否则返回空
+     * @return 如果合法，返回对应的用户实体；否则返回空
      */
-    Optional<UserVO> checkLocalValid(String userSign, String principal, LocalLoginType localLoginType);
+    Optional<User> checkLocalValid(String userSign, String principal, LocalLoginType localLoginType);
 }

@@ -1,14 +1,14 @@
 package com.bluenet.web.application.service.impl;
 
-import com.bluenet.web.application.CompetitionResult;
+import com.bluenet.web.application.result.competition.CompetitionResult;
 import com.bluenet.web.application.command.competition.CompetitionCommands;
 import com.bluenet.web.application.service.CompetitionAppService;
 import com.bluenet.web.domain.exception.BadRequest;
 import com.bluenet.web.domain.exception.DataNotFound;
 import com.bluenet.web.domain.model.entity.Competition;
+import com.bluenet.web.domain.model.entity.File;
 import com.bluenet.web.domain.model.enumerate.FileType;
-import com.bluenet.web.domain.model.vo.CompetitionVO;
-import com.bluenet.web.domain.model.vo.FileVO;
+import com.bluenet.web.domain.model.readmodel.CompetitionReadModel;
 import com.bluenet.web.domain.repository.CompetitionRepository;
 import com.bluenet.web.domain.service.FileDomainService;
 import lombok.RequiredArgsConstructor;
@@ -41,7 +41,7 @@ public class CompetitionAppServiceImpl implements CompetitionAppService {
      * @return 竞赛VO列表
      */
     @Override
-    public List<CompetitionVO> getCompetitionResponseList(int limit) {
+    public List<CompetitionReadModel> getCompetitionResponseList(int limit) {
         int validLimit = Math.min(Math.max(limit, 1), 50);
         return competitionRepository.findCompetitionsWithLimit(validLimit);
     }
@@ -56,7 +56,7 @@ public class CompetitionAppServiceImpl implements CompetitionAppService {
      * @return 竞赛分页结果
      */
     @Override
-    public Page<CompetitionVO> getCompetitionPage(Integer page, Integer size) {
+    public Page<CompetitionReadModel> getCompetitionPage(Integer page, Integer size) {
         int pageNum = page != null ? page : 0;
         int pageSize = size != null ? size : 10;
         pageSize = Math.min(Math.max(pageSize, 1), 50);
@@ -76,6 +76,10 @@ public class CompetitionAppServiceImpl implements CompetitionAppService {
     public CompetitionResult createCompetition(CompetitionCommands.CreateCompetitionCommand command) {
         validateFileId(command.logoFileId(), "Logo");
         validateFileId(command.coverFileId(), "封面");
+
+        if (competitionRepository.existsByName(command.name())) {
+            throw new BadRequest("竞赛名称已存在");
+        }
 
         Integer maxSortOrder = competitionRepository.findMaxSortOrder();
         Integer sortOrder = maxSortOrder != null ? maxSortOrder + 1 : 1;
@@ -111,6 +115,11 @@ public class CompetitionAppServiceImpl implements CompetitionAppService {
         validateFileId(command.logoFileId(), "Logo");
         validateFileId(command.coverFileId(), "封面");
 
+        if (!competition.getName().equals(command.name())
+                && competitionRepository.existsByName(command.name())) {
+            throw new BadRequest("竞赛名称已存在");
+        }
+
         competition.update(
                 command.name(),
                 command.shortName(),
@@ -121,7 +130,7 @@ public class CompetitionAppServiceImpl implements CompetitionAppService {
                 command.month(),
                 command.organizer());
 
-        competitionRepository.update(competition);
+        competitionRepository.save(competition);
         return toResult(competition);
     }
 
@@ -151,7 +160,7 @@ public class CompetitionAppServiceImpl implements CompetitionAppService {
         Competition competition = competitionRepository.findById(command.id())
                 .orElseThrow(() -> new DataNotFound("竞赛不存在"));
         competition.updateSortOrder(command.sortOrder());
-        competitionRepository.update(competition);
+        competitionRepository.save(competition);
     }
 
     /**
@@ -205,19 +214,21 @@ public class CompetitionAppServiceImpl implements CompetitionAppService {
         Integer tempSortOrder = currentSortOrder;
         competition.updateSortOrder(adjacent.getSortOrder());
         adjacent.updateSortOrder(tempSortOrder);
-        competitionRepository.update(competition);
-        competitionRepository.update(adjacent);
+        competitionRepository.save(competition);
+        competitionRepository.save(adjacent);
     }
 
     private void validateFileId(Long fileId, String fieldName) {
         if (fileId == null) {
             return;
         }
-        FileVO fileVO = fileDomainService.getFileById(fileId);
-        if (fileVO == null) {
+        File file;
+        try {
+            file = fileDomainService.getFileById(fileId);
+        } catch (DataNotFound e) {
             throw new DataNotFound(fieldName + "文件不存在");
         }
-        if (fileVO.getType() != FileType.NORMAL_IMG) {
+        if (file.getType() != FileType.NORMAL_IMG) {
             throw new BadRequest(fieldName + "文件类型不匹配，期望 NORMAL_IMG");
         }
     }

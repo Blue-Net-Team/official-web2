@@ -1,7 +1,7 @@
 package com.bluenet.web.application.service.impl;
 
-import com.bluenet.web.application.AssessmentProgressResult;
-import com.bluenet.web.application.AssessmentTimeResult;
+import com.bluenet.web.application.result.assessment.AssessmentProgressResult;
+import com.bluenet.web.application.result.assessment.AssessmentTimeResult;
 import com.bluenet.web.application.command.assessment_time.AssessmentTimeCommands;
 import com.bluenet.web.application.service.AssessmentTimeAppService;
 import com.bluenet.web.domain.exception.DataConflict;
@@ -12,14 +12,15 @@ import com.bluenet.web.domain.model.entity.AssessmentTime;
 import com.bluenet.web.domain.model.enumerate.Direction;
 import com.bluenet.web.domain.model.enumerate.RoleType;
 import com.bluenet.web.domain.model.policy.RoleHierarchy;
-import com.bluenet.web.domain.model.vo.AssessmentDecisionVO;
-import com.bluenet.web.domain.model.vo.UserVO;
+import com.bluenet.web.domain.model.entity.AssessmentDecision;
+import com.bluenet.web.domain.model.entity.User;
+import com.bluenet.web.infrastructure.security.principal.RoleTypeResolver;
 import com.bluenet.web.domain.repository.AssessmentAnswerRepository;
 import com.bluenet.web.domain.repository.AssessmentDecisionRepository;
 import com.bluenet.web.domain.repository.AssessmentQuestionRepository;
 import com.bluenet.web.domain.repository.AssessmentTimeRepository;
+import com.bluenet.web.domain.repository.UserRepository;
 import com.bluenet.web.domain.service.AssessmentDecisionDomainService;
-import com.bluenet.web.domain.service.UserDomainService;
 import com.bluenet.web.domain.util.GradeCalculator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -46,13 +47,14 @@ public class AssessmentTimeAppServiceImpl implements AssessmentTimeAppService {
     private final AssessmentAnswerRepository assessmentAnswerRepository;
     private final AssessmentDecisionRepository assessmentDecisionRepository;
     private final AssessmentDecisionDomainService assessmentDecisionDomainService;
-    private final UserDomainService userDomainService;
+    private final UserRepository userRepository;
+    private final RoleTypeResolver roleTypeResolver;
 
     @Override
     @Transactional
     public AssessmentTimeResult createAssessmentTime(Long userId,
             AssessmentTimeCommands.CreateAssessmentTimeCommand command) {
-        UserVO currentUser = userDomainService.getUser(userId)
+        User currentUser = userRepository.findById(userId)
                 .orElseThrow(() -> new Unauthorized("用户不存在"));
         validateDirectionPermission(currentUser, command.direction());
 
@@ -100,7 +102,7 @@ public class AssessmentTimeAppServiceImpl implements AssessmentTimeAppService {
         AssessmentTime existing = assessmentTimeRepository.findById(command.id())
                 .orElseThrow(() -> new DataNotFound("考核时间不存在"));
 
-        UserVO currentUser = userDomainService.getUser(userId)
+        User currentUser = userRepository.findById(userId)
                 .orElseThrow(() -> new Unauthorized("用户不存在"));
         validateDirectionPermission(currentUser, existing.getDirection());
 
@@ -168,7 +170,7 @@ public class AssessmentTimeAppServiceImpl implements AssessmentTimeAppService {
                 newTimeLimit,
                 newTimeLimitMinutes,
                 newAllowTeam);
-        assessmentTimeRepository.update(existing);
+        assessmentTimeRepository.save(existing);
         return toResult(existing);
     }
 
@@ -178,7 +180,7 @@ public class AssessmentTimeAppServiceImpl implements AssessmentTimeAppService {
         AssessmentTime existing = assessmentTimeRepository.findById(id)
                 .orElseThrow(() -> new DataNotFound("考核时间不存在"));
 
-        UserVO currentUser = userDomainService.getUser(userId)
+        User currentUser = userRepository.findById(userId)
                 .orElseThrow(() -> new Unauthorized("用户不存在"));
         validateDirectionPermission(currentUser, existing.getDirection());
 
@@ -193,8 +195,8 @@ public class AssessmentTimeAppServiceImpl implements AssessmentTimeAppService {
      * 校验 DIRECTION_ADMIN 方向权限：只能操作自己方向的考核时间；全局考核（targetDirection == null）仅
      * SUPER_ADMIN 可操作
      */
-    private void validateDirectionPermission(UserVO currentUser, Direction targetDirection) {
-        RoleType roleType = RoleType.fromName(currentUser.getRoleName());
+    private void validateDirectionPermission(User currentUser, Direction targetDirection) {
+        RoleType roleType = roleTypeResolver.resolve(currentUser.getRoleId());
         if (roleType == RoleType.DIRECTION_ADMIN) {
             if (targetDirection == null) {
                 throw new Forbidden("方向管理员不能创建跨方向考核");
@@ -210,12 +212,12 @@ public class AssessmentTimeAppServiceImpl implements AssessmentTimeAppService {
         int pageNum = page != null ? page : 0;
         int pageSize = size != null ? size : 5;
 
-        UserVO currentUser = userDomainService.getUser(userId)
+        User currentUser = userRepository.findById(userId)
                 .orElseThrow(() -> new Unauthorized("用户不存在"));
         Direction direction = null;
         Integer grade = null;
 
-        RoleType roleType = RoleType.fromName(currentUser.getRoleName());
+        RoleType roleType = roleTypeResolver.resolve(currentUser.getRoleId());
         if (roleType != null && !RoleHierarchy.isDirectionAdminOrAbove(roleType)) {
             direction = currentUser.getDirection();
 
@@ -238,7 +240,7 @@ public class AssessmentTimeAppServiceImpl implements AssessmentTimeAppService {
         int pageNum = page != null ? page : 0;
         int pageSize = size != null ? size : 5;
 
-        UserVO currentUser = userDomainService.getUser(userId)
+        User currentUser = userRepository.findById(userId)
                 .orElseThrow(() -> new Unauthorized("用户不存在"));
 
         Integer enrollmentYear = GradeCalculator.resolveAssessmentYear(
@@ -252,7 +254,7 @@ public class AssessmentTimeAppServiceImpl implements AssessmentTimeAppService {
                 enrollmentYear,
                 PageRequest.of(pageNum, pageSize));
 
-        RoleType roleType = RoleType.fromName(currentUser.getRoleName());
+        RoleType roleType = roleTypeResolver.resolve(currentUser.getRoleId());
         boolean isCandidate = roleType == RoleType.CANDIDATE;
 
         List<Long> assessmentTimeIds = entityPage.getContent()
@@ -265,11 +267,11 @@ public class AssessmentTimeAppServiceImpl implements AssessmentTimeAppService {
         Map<Long, Integer> completedQuestionCounts = assessmentAnswerRepository
                 .countByUserIdAndAssessmentTimeIds(currentUser.getId(), assessmentTimeIds);
 
-        List<AssessmentDecisionVO> eliminatedDecisions = isCandidate
+        List<AssessmentDecision> eliminatedDecisions = isCandidate
                 ? assessmentDecisionRepository.findEliminatedDecisionsByUserId(currentUser.getId())
                 : List.of();
         List<Long> decisionTimeIds = eliminatedDecisions.stream()
-                .map(AssessmentDecisionVO::getAssessmentTimeId)
+                .map(AssessmentDecision::getAssessmentTimeId)
                 .distinct()
                 .toList();
         Map<Long, AssessmentTime> decisionTimeMap = assessmentTimeRepository.findAllById(decisionTimeIds)

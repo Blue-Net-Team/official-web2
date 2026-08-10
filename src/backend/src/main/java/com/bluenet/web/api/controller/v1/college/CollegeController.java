@@ -3,7 +3,7 @@ package com.bluenet.web.api.controller.v1.college;
 import com.bluenet.web.api.dto.ResponseMessage;
 import com.bluenet.web.api.dto.college.CollegeDTO;
 import com.bluenet.web.api.dto.college.ResponseMessageCollegeList;
-import com.bluenet.web.application.CollegeResult;
+import com.bluenet.web.application.result.college.CollegeResult;
 import com.bluenet.web.api.converter.college.CollegeResponseConverter;
 import com.bluenet.web.application.service.CollegeAppService;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;

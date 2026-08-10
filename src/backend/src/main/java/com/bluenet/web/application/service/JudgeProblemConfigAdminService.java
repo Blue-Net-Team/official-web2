@@ -1,6 +1,6 @@
 package com.bluenet.web.application.service;
 
-import com.bluenet.web.application.JudgeProblemConfigResult;
+import com.bluenet.web.application.result.judge.JudgeProblemConfigResult;
 import com.bluenet.web.application.command.judge.JudgeProblemConfigCommands;
 
 import java.util.Optional;

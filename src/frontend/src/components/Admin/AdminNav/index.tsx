@@ -26,6 +26,7 @@ import {
   BookOutlined,
   TagOutlined,
   CloudDownloadOutlined,
+  GithubOutlined,
 } from '@ant-design/icons'
 import type { MenuProps } from 'antd'
 
@@ -69,6 +70,13 @@ export const menuConfig: MenuItemConfig[] = [
     minLevel: 3,
   },
   {
+    key: 'githubInvitations',
+    label: 'GitHub 邀请',
+    path: '/admin/github-invitations',
+    icon: <GithubOutlined />,
+    minLevel: 2,
+  },
+  {
     key: 'qrcode',
     label: '二维码管理',
     path: '/admin/qrcode',
@@ -81,6 +89,13 @@ export const menuConfig: MenuItemConfig[] = [
     path: '/admin/enroll',
     icon: <UserAddOutlined />,
     minLevel: 1,
+  },
+  {
+    key: 'enrollForm',
+    label: '报名表管理',
+    path: '/admin/enroll-form',
+    icon: <FileTextOutlined />,
+    minLevel: 2,
   },
   {
     key: 'competition',

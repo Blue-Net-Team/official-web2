@@ -1,13 +1,13 @@
 package com.bluenet.web.application.service;
 
-import com.bluenet.web.application.AssessmentDecisionResult;
-import com.bluenet.web.application.AssessmentJudgementResult;
+import com.bluenet.web.application.result.assessment.AssessmentDecisionResult;
+import com.bluenet.web.application.result.assessment.AssessmentJudgementResult;
 import com.bluenet.web.application.command.assessment_judgement.AssessmentJudgementCommands;
 import com.bluenet.web.domain.model.enumerate.QuestionType;
-import com.bluenet.web.domain.model.vo.AssessmentCandidateScoreboardVO;
-import com.bluenet.web.domain.model.vo.AssessmentDecisionWorkspaceVO;
-import com.bluenet.web.domain.model.vo.AssessmentQuestionScoreboardVO;
-import com.bluenet.web.domain.model.vo.AssessmentQuestionSubmissionVO;
+import com.bluenet.web.application.result.assessment.AssessmentCandidateScoreboard;
+import com.bluenet.web.application.result.assessment.AssessmentDecisionWorkspace;
+import com.bluenet.web.application.result.assessment.AssessmentQuestionScoreboard;
+import com.bluenet.web.domain.model.readmodel.AssessmentQuestionSubmissionReadModel;
 
 import java.util.List;
 
@@ -57,7 +57,7 @@ public interface AssessmentJudgementAppService {
      *            关键词
      * @return 题目评分汇总列表
      */
-    List<AssessmentQuestionScoreboardVO> listQuestionScoreboard(
+    List<AssessmentQuestionScoreboard> listQuestionScoreboard(
             Long assessmentTimeId,
             QuestionType questionType,
             String keyword);
@@ -73,7 +73,7 @@ public interface AssessmentJudgementAppService {
      *            状态
      * @return 题目提交与评判列表
      */
-    List<AssessmentQuestionSubmissionVO> listQuestionSubmissions(Long questionId, String keyword, String status);
+    List<AssessmentQuestionSubmissionReadModel> listQuestionSubmissions(Long questionId, String keyword, String status);
 
     /**
      * 查询指定考核时间下的考生评分矩阵。
@@ -84,7 +84,7 @@ public interface AssessmentJudgementAppService {
      *            关键词
      * @return 考生评分矩阵列表
      */
-    List<AssessmentCandidateScoreboardVO> listCandidateScoreboard(Long assessmentTimeId, String keyword);
+    List<AssessmentCandidateScoreboard> listCandidateScoreboard(Long assessmentTimeId, String keyword);
 
     /**
      * 查询指定考核时间下的录用决策工作台数据。
@@ -97,7 +97,7 @@ public interface AssessmentJudgementAppService {
      *            决策状态
      * @return 录用决策工作台数据
      */
-    AssessmentDecisionWorkspaceVO getDecisionWorkspace(Long assessmentTimeId, String keyword, String decisionStatus);
+    AssessmentDecisionWorkspace getDecisionWorkspace(Long assessmentTimeId, String keyword, String decisionStatus);
 
     /**
      * 发布指定考核轮次的决策结果邮件通知。

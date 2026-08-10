@@ -2,9 +2,9 @@ package com.bluenet.web.api.converter.knowledge;
 
 import com.bluenet.web.api.dto.PageDTO;
 import com.bluenet.web.api.dto.knowledge.*;
-import com.bluenet.web.application.knowledge.KnowledgeChunkResult;
-import com.bluenet.web.application.knowledge.KnowledgeDocResult;
-import com.bluenet.web.application.knowledge.KnowledgeTagResult;
+import com.bluenet.web.application.result.knowledge.KnowledgeChunkResult;
+import com.bluenet.web.application.result.knowledge.KnowledgeDocResult;
+import com.bluenet.web.application.result.knowledge.KnowledgeTagResult;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
 

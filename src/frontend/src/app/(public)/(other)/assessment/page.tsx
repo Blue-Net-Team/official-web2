@@ -44,7 +44,7 @@ export default function AssessmentPage() {
     return (
       <div className="min-h-screen bg-[#0a0a0a] p-10 max-sm:p-6 relative overflow-x-hidden">
         <div className="fixed inset-0 z-0">
-          <DarkVeil hueShift={40} speed={0.6} offsetY={0.2} />
+          <DarkVeil hueShift={-130} speed={0.6} offsetY={0.2} />
         </div>
         <div className="flex justify-center items-center min-h-[300px] relative z-1">
           <Spin size="large" />
@@ -56,7 +56,7 @@ export default function AssessmentPage() {
   return (
     <div className="min-h-screen bg-[#0a0a0a] p-10 max-sm:p-6 relative overflow-x-hidden">
       <div className="fixed inset-0 z-0">
-        <DarkVeil hueShift={40} speed={0.6} offsetY={0.2} />
+        <DarkVeil hueShift={-130} speed={0.6} offsetY={0.2} />
       </div>
       <div className="max-w-[960px] mx-auto relative z-1">
         <div className="mb-10">

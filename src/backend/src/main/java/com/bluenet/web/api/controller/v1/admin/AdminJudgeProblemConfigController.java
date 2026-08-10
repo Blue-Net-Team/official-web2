@@ -6,7 +6,7 @@ import com.bluenet.web.api.dto.judge.JudgeProblemConfigDTO;
 import com.bluenet.web.api.dto.judge.UpsertJudgeProblemConfigRequestDTO;
 import com.bluenet.web.api.converter.judge.JudgeProblemConfigRequestConverter;
 import com.bluenet.web.api.converter.judge.JudgeProblemConfigResponseConverter;
-import com.bluenet.web.application.JudgeProblemConfigResult;
+import com.bluenet.web.application.result.judge.JudgeProblemConfigResult;
 import com.bluenet.web.application.service.JudgeProblemConfigAdminService;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
 import com.bluenet.web.infrastructure.security.annotation.RequiresPermission;

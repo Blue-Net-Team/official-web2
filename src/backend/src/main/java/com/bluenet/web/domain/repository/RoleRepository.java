@@ -1,6 +1,6 @@
 package com.bluenet.web.domain.repository;
 
-import com.bluenet.web.domain.model.vo.RoleVO;
+import com.bluenet.web.domain.model.entity.Role;
 
 import java.util.Optional;
 
@@ -13,11 +13,20 @@ import java.util.Optional;
 public interface RoleRepository {
 
     /**
+     * 按主键查询角色实体。
+     *
+     * @param id
+     *            角色主键。
+     * @return 查询到的角色实体；不存在时为空。
+     */
+    Optional<Role> findById(Long id);
+
+    /**
      * 按名称查询角色 记录。
      *
      * @param name
      *            业务对象名称。
      * @return 查询到的角色 结果；不存在时为空。
      */
-    Optional<RoleVO> findByName(String name);
+    Optional<Role> findByName(String name);
 }

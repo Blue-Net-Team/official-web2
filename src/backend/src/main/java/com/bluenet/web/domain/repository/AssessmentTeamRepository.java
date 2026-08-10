@@ -24,11 +24,7 @@ public interface AssessmentTeamRepository {
 
     void save(AssessmentTeam team);
 
-    void update(AssessmentTeam team);
-
     void deleteById(Long id);
-
-    void updateLeader(Long teamId, Long newLeaderId);
 
     void addMember(Long teamId, Long userId);
 

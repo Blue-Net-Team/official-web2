@@ -2,16 +2,18 @@ package com.bluenet.web.api.controller.v1.member;
 
 import com.bluenet.web.api.dto.PageDTO;
 import com.bluenet.web.api.dto.ResponseMessage;
+import com.bluenet.web.api.dto.achievement.AchievementDTO;
 import com.bluenet.web.api.dto.experience.ExperienceDTO;
 import com.bluenet.web.api.dto.member.DirectionLeaderDTO;
 import com.bluenet.web.api.dto.member.MemberBriefDTO;
 import com.bluenet.web.api.dto.member.MemberDetailDTO;
 import com.bluenet.web.api.dto.member.MemberListQueryDTO;
+import com.bluenet.web.api.converter.achievement.AchievementResponseConverter;
 import com.bluenet.web.api.converter.member.MemberRequestConverter;
 import com.bluenet.web.api.converter.member.MemberResponseConverter;
 import com.bluenet.web.api.converter.userexperience.UserExperienceResponseConverter;
-import com.bluenet.web.application.MemberResult;
-import com.bluenet.web.application.command.member.MemberCommands;
+import com.bluenet.web.application.result.member.MemberResult;
+import com.bluenet.web.application.query.member.GetMemberListQuery;
 import com.bluenet.web.application.service.MemberAppService;
 import com.bluenet.web.domain.model.enumerate.Direction;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
@@ -38,6 +40,7 @@ public class MemberController {
     private final MemberRequestConverter memberRequestConverter;
     private final MemberResponseConverter memberResponseConverter;
     private final UserExperienceResponseConverter userExperienceResponseConverter;
+    private final AchievementResponseConverter achievementResponseConverter;
 
     @Operation(summary = "获取团队成员列表", description = "分页查询团队成员列表，支持按方向筛选，按入学年份降序排列（新人在前）")
     @ApiResponses({
@@ -49,13 +52,13 @@ public class MemberController {
             @Parameter(description = "页码，从0开始") @RequestParam(required = false) Integer page,
             @Parameter(description = "每页数量，默认20，最大100") @RequestParam(required = false) Integer size,
             @Parameter(description = "方向筛选") @RequestParam(required = false) Direction direction) {
-        MemberListQueryDTO query = MemberListQueryDTO.builder()
+        MemberListQueryDTO listQueryDTO = MemberListQueryDTO.builder()
                 .page(page)
                 .size(size)
                 .direction(direction)
                 .build();
-        MemberCommands.GetMemberListCommand command = memberRequestConverter.toCommand(query);
-        Page<MemberResult> resultPage = memberAppService.getMemberList(command);
+        GetMemberListQuery query = memberRequestConverter.toQuery(listQueryDTO);
+        Page<MemberResult> resultPage = memberAppService.getMemberList(query);
         Page<MemberBriefDTO> dtoPage = resultPage.map(memberResponseConverter::toBriefDTO);
         return ResponseMessage.success(PageDTO.from(dtoPage));
     }
@@ -93,9 +96,22 @@ public class MemberController {
     @GetMapping("/{memberId}/experiences")
     public ResponseMessage<List<ExperienceDTO>> getMemberExperiences(
             @Parameter(description = "成员ID") @PathVariable Long memberId,
-            @Parameter(description = "经历类型：PROJECT/COMPETITION/INTERNSHIP") @RequestParam(required = false) String type) {
+            @Parameter(description = "经历类型：PROJECT/INTERNSHIP") @RequestParam(required = false) String type) {
         return ResponseMessage.success(
                 userExperienceResponseConverter
-                        .toDTOListFromVO(memberAppService.getMemberExperiences(memberId, type)));
+                        .toDTOList(memberAppService.getMemberExperiences(memberId, type)));
+    }
+
+    @Operation(summary = "获取成员成就", description = "获取指定成员关联的官方成就列表，按获奖日期倒序（公开接口，无需登录）")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "成功返回成员成就列表"),
+            @ApiResponse(responseCode = "404", description = "成员不存在", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseMessage.class)))
+    })
+    @RequiresPermission(name = "查看成员成就", value = "member:achievements:view", access = AccessLevel.PUBLIC)
+    @GetMapping("/{memberId}/achievements")
+    public ResponseMessage<List<AchievementDTO>> getMemberAchievements(
+            @Parameter(description = "成员ID") @PathVariable Long memberId) {
+        return ResponseMessage.success(
+                achievementResponseConverter.toDTOList(memberAppService.getMemberAchievements(memberId)));
     }
 }

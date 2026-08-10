@@ -51,8 +51,17 @@
         SELECT MAX(sort_order) FROM tb_competition
     </select>
 
-    <update id="updateSortOrderById">
-        UPDATE tb_competition SET sort_order = #{sortOrder} WHERE id = #{id}
+    <update id="batchUpdateSortOrder">
+        UPDATE tb_competition
+        SET sort_order = CASE id
+        <foreach collection="items" item="item">
+            WHEN #{item.id} THEN #{item.sortOrder}
+        </foreach>
+        END
+        WHERE id IN
+        <foreach collection="items" item="item" open="(" separator="," close=")">
+            #{item.id}
+        </foreach>
     </update>
 
     <select id="selectAdjacentUp" resultMap="BaseResultMap">
@@ -76,5 +85,12 @@
         <foreach collection="names" item="name" open="(" separator="," close=")">
             #{name}
         </foreach>
+    </select>
+
+    <select id="selectByName" resultMap="BaseResultMap">
+        SELECT *
+        FROM tb_competition
+        WHERE name = #{name}
+        LIMIT 1
     </select>
 </mapper>

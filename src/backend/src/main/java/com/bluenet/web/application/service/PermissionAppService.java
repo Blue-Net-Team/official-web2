@@ -1,7 +1,7 @@
 package com.bluenet.web.application.service;
 
-import com.bluenet.web.application.PermissionResult;
-import com.bluenet.web.application.command.permission.PermissionCommands;
+import com.bluenet.web.application.result.permission.PermissionResult;
+import com.bluenet.web.application.query.permission.GetPermissionsQuery;
 import org.springframework.data.domain.Page;
 
 import java.util.List;
@@ -17,11 +17,11 @@ public interface PermissionAppService {
     /**
      * 分页查询权限列表
      *
-     * @param command
-     *            查询命令
+     * @param query
+     *            查询参数
      * @return 分页权限结果
      */
-    Page<PermissionResult> getPermissions(PermissionCommands.GetPermissionsCommand command);
+    Page<PermissionResult> getPermissions(GetPermissionsQuery query);
 
     /**
      * 获取权限详情

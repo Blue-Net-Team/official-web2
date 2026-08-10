@@ -13,6 +13,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Data
 @AllArgsConstructor
@@ -48,4 +49,11 @@ public class UpdateAchievementRequestDTO {
     @NotNull(message = "成就图片不能为空")
     @Schema(description = "成就图片文件ID", required = true, example = "123")
     private Long fileId;
+
+    @Schema(description = "关联的系统内成员用户ID列表", example = "[1, 2]")
+    private List<Long> userIds;
+
+    @Size(max = 20, message = "外部协作者最多20个")
+    @Schema(description = "外部协作者姓名列表（非系统用户）", example = "[\"张三-外校\", \"李四-他队\"]")
+    private List<@Size(max = 100, message = "外部协作者姓名不能超过100字符") String> externalMembers;
 }

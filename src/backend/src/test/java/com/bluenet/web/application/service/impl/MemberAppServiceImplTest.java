@@ -1,26 +1,20 @@
 package com.bluenet.web.application.service.impl;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-
-import com.bluenet.web.application.MemberResult;
-import com.bluenet.web.application.command.member.MemberCommands;
+import com.bluenet.web.api.dto.PageDTO;
+import com.bluenet.web.application.query.member.GetMemberListQuery;
+import com.bluenet.web.application.result.member.MemberResult;
+import com.bluenet.web.application.result.user.UserExperienceResult;
+import com.bluenet.web.domain.exception.BadRequest;
 import com.bluenet.web.domain.exception.DataNotFound;
 import com.bluenet.web.domain.model.entity.Member;
+import com.bluenet.web.domain.model.entity.UserExperience;
 import com.bluenet.web.domain.model.enumerate.Direction;
 import com.bluenet.web.domain.model.enumerate.ExperienceType;
 import com.bluenet.web.domain.model.enumerate.Gender;
 import com.bluenet.web.domain.model.enumerate.RoleType;
-import com.bluenet.web.domain.model.vo.ExperienceVO;
 import com.bluenet.web.domain.repository.MemberRepository;
-import com.bluenet.web.domain.service.UserExperienceDomainService;
+import com.bluenet.web.domain.repository.UserExperienceRepository;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -28,301 +22,174 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
 
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+/**
+ * MemberAppServiceImpl 单元测试。
+ *
+ * <p>
+ * Application 层仅编排查询逻辑，无事务与多 Repository 写操作，因此 mock 下层 Repository，
+ * 验证应用服务层的编排、参数传递、异常抛出与结果转换。
+ * </p>
+ */
 @DisplayName("MemberAppServiceImpl 单元测试")
 @ExtendWith(MockitoExtension.class)
 class MemberAppServiceImplTest {
+
+    @InjectMocks
+    private MemberAppServiceImpl memberAppService;
 
     @Mock
     private MemberRepository memberRepository;
 
     @Mock
-    private UserExperienceDomainService userExperienceDomainService;
+    private UserExperienceRepository userExperienceRepository;
 
-    @InjectMocks
-    private MemberAppServiceImpl memberAppService;
-
-    private static final Long TEST_ID = 1L;
-    private static final String TEST_USERNAME = "张三";
-    private static final String TEST_NICKNAME = "小张";
-    private static final Direction TEST_DIRECTION = Direction.COMPUTER_VISION;
-    private static final Integer TEST_ENROLLMENT_YEAR = 2021;
-
-    private Member createTestMember() {
-        return Member.reconstruct(
-                TEST_ID,
-                "2021010001",
-                TEST_USERNAME,
-                TEST_NICKNAME,
-                TEST_DIRECTION,
-                "后端开发",
-                123L,
-                "计算机学院",
-                "计算机科学与技术",
-                Gender.MALE,
-                RoleType.MEMBER,
-                "MEMBER",
-                "热爱编程",
-                "zhangsan",
-                456L,
-                TEST_ENROLLMENT_YEAR,
-                null);
-    }
-
-    private Member createTestMember(Long id, String username, Direction direction, Integer enrollmentYear) {
+    private Member createMember(Long id, String studentId, RoleType role) {
         return Member.reconstruct(
                 id,
-                null,
-                username,
-                username + "昵称",
-                direction,
+                studentId,
+                "用户" + studentId,
+                "昵称" + studentId,
+                Direction.COMPUTER_VISION,
                 "开发",
                 null,
+                "计算机学院",
+                "计算机",
+                Gender.MALE,
+                role,
+                role.getName(),
+                "bio",
                 null,
                 null,
-                null,
-                RoleType.MEMBER,
-                "MEMBER",
-                null,
-                null,
-                null,
-                enrollmentYear,
+                2024,
+                2024);
+    }
+
+    private UserExperience createExperience(Long id, Long userId, ExperienceType type, String title) {
+        return UserExperience.reconstruct(
+                id,
+                userId,
+                type,
+                title,
+                "{}",
+                LocalDateTime.of(2024, 1, 1, 0, 0),
                 null);
     }
 
-    @Nested
-    @DisplayName("getMemberList 方法测试")
-    class GetMemberListTests {
+    @Test
+    @DisplayName("getMemberExperiences: 应返回成员经历列表")
+    void getMemberExperiences_shouldReturnExperiences() {
+        Long memberId = 1L;
+        Member member = createMember(memberId, "2026002001", RoleType.MEMBER);
+        UserExperience project = createExperience(10L, memberId, ExperienceType.PROJECT, "项目A");
+        UserExperience internship = createExperience(11L, memberId, ExperienceType.INTERNSHIP, "公司B");
 
-        @Test
-        @DisplayName("正常情况：应返回分页成员结果")
-        void getMemberList_validCommand_shouldReturnPagedResults() {
-            List<Member> members = new ArrayList<>();
-            members.add(createTestMember());
+        when(memberRepository.findById(memberId)).thenReturn(Optional.of(member));
+        when(userExperienceRepository.findByUserId(memberId)).thenReturn(List.of(project, internship));
 
-            Page<Member> memberPage = new PageImpl<>(members);
+        List<UserExperienceResult> results = memberAppService.getMemberExperiences(memberId, null);
 
-            MemberCommands.GetMemberListCommand command = new MemberCommands.GetMemberListCommand(null, 0, 20);
-
-            when(memberRepository.findAll(isNull(), any(Pageable.class))).thenReturn(memberPage);
-
-            Page<MemberResult> result = memberAppService.getMemberList(command);
-
-            assertNotNull(result);
-            assertEquals(1, result.getContent().size());
-            assertEquals(TEST_ID, result.getContent().get(0).id());
-            verify(memberRepository).findAll(isNull(), any(Pageable.class));
-        }
-
-        @Test
-        @DisplayName("方向筛选：应传递方向参数")
-        void getMemberList_withDirection_shouldPassDirection() {
-            List<Member> members = new ArrayList<>();
-            members.add(createTestMember());
-
-            Page<Member> memberPage = new PageImpl<>(members);
-
-            MemberCommands.GetMemberListCommand command = new MemberCommands.GetMemberListCommand(
-                    Direction.COMPUTER_VISION, 0, 20);
-
-            when(memberRepository.findAll(eq(Direction.COMPUTER_VISION), any(Pageable.class)))
-                    .thenReturn(memberPage);
-
-            Page<MemberResult> result = memberAppService.getMemberList(command);
-
-            assertNotNull(result);
-            verify(memberRepository).findAll(eq(Direction.COMPUTER_VISION), any(Pageable.class));
-        }
-
-        @Test
-        @DisplayName("分页参数：默认值应正确设置")
-        void getMemberList_defaultParams_shouldUseDefaults() {
-            List<Member> members = new ArrayList<>();
-            Page<Member> memberPage = new PageImpl<>(members);
-
-            MemberCommands.GetMemberListCommand command = new MemberCommands.GetMemberListCommand(null, null, null);
-
-            when(memberRepository.findAll(isNull(), any(Pageable.class))).thenReturn(memberPage);
-
-            memberAppService.getMemberList(command);
-
-            verify(memberRepository).findAll(
-                    isNull(),
-                    argThat((Pageable pageable) -> pageable.getPageNumber() == 0 && pageable.getPageSize() == 20));
-        }
-
-        @Test
-        @DisplayName("分页参数：超过最大值应被限制")
-        void getMemberList_exceedMaxSize_shouldBeLimited() {
-            List<Member> members = new ArrayList<>();
-            Page<Member> memberPage = new PageImpl<>(members);
-
-            MemberCommands.GetMemberListCommand command = new MemberCommands.GetMemberListCommand(null, 0, 200);
-
-            when(memberRepository.findAll(isNull(), any(Pageable.class))).thenReturn(memberPage);
-
-            memberAppService.getMemberList(command);
-
-            verify(memberRepository).findAll(isNull(), argThat((Pageable pageable) -> pageable.getPageSize() == 100));
-        }
-
-        @Test
-        @DisplayName("空数据：应返回空页")
-        void getMemberList_noMembers_shouldReturnEmptyPage() {
-            Page<Member> memberPage = new PageImpl<>(new ArrayList<>());
-
-            MemberCommands.GetMemberListCommand command = new MemberCommands.GetMemberListCommand(null, 0, 20);
-
-            when(memberRepository.findAll(isNull(), any(Pageable.class))).thenReturn(memberPage);
-
-            Page<MemberResult> result = memberAppService.getMemberList(command);
-
-            assertNotNull(result);
-            assertTrue(result.getContent().isEmpty());
-        }
+        assertEquals(2, results.size());
     }
 
-    @Nested
-    @DisplayName("getMemberById 方法测试")
-    class GetMemberByIdTests {
+    @Test
+    @DisplayName("getMemberExperiences: 应按类型过滤")
+    void getMemberExperiences_shouldFilterByType() {
+        Long memberId = 2L;
+        Member member = createMember(memberId, "2026002002", RoleType.MEMBER);
+        UserExperience project = createExperience(20L, memberId, ExperienceType.PROJECT, "项目A");
 
-        @Test
-        @DisplayName("正常情况：应返回成员结果")
-        void getMemberById_existingMember_shouldReturnResult() {
-            Member member = createTestMember();
+        when(memberRepository.findById(memberId)).thenReturn(Optional.of(member));
+        when(userExperienceRepository.findByUserIdAndType(memberId, ExperienceType.PROJECT))
+                .thenReturn(List.of(project));
 
-            when(memberRepository.findById(TEST_ID)).thenReturn(Optional.of(member));
+        List<UserExperienceResult> results = memberAppService.getMemberExperiences(memberId, "PROJECT");
 
-            MemberResult result = memberAppService.getMemberById(TEST_ID);
-
-            assertNotNull(result);
-            assertEquals(TEST_ID, result.id());
-            assertEquals(TEST_USERNAME, result.username());
-            verify(memberRepository).findById(TEST_ID);
-        }
-
-        @Test
-        @DisplayName("成员不存在：应抛出GlobalException")
-        void getMemberById_nonExistingMember_shouldThrowException() {
-            when(memberRepository.findById(TEST_ID)).thenReturn(Optional.empty());
-
-            DataNotFound exception = assertThrows(
-                    DataNotFound.class,
-                    () -> memberAppService.getMemberById(TEST_ID));
-
-            assertEquals(HttpStatus.NOT_FOUND, exception.getCode());
-            assertEquals("成员不存在", exception.getMessage());
-            verify(memberRepository).findById(TEST_ID);
-        }
+        assertEquals(1, results.size());
+        assertEquals("项目A", results.get(0).title());
+        verify(userExperienceRepository, never()).findByUserId(memberId);
     }
 
-    @Nested
-    @DisplayName("getDirectionLeaders 方法测试")
-    class GetDirectionLeadersTests {
+    @Test
+    @DisplayName("getMemberExperiences: 无效类型应抛异常")
+    void getMemberExperiences_invalidType_shouldThrow() {
+        Long memberId = 3L;
+        Member member = createMember(memberId, "2026002003", RoleType.MEMBER);
 
-        @Test
-        @DisplayName("正常情况：应返回所有方向负责人结果列表")
-        void getDirectionLeaders_withLeaders_shouldReturnResults() {
-            List<Member> leaders = new ArrayList<>();
-            leaders.add(createTestMember(1L, "张组长", Direction.COMPUTER_VISION, 2020));
-            leaders.add(createTestMember(2L, "李组长", Direction.STRUCTURAL_DESIGN, 2019));
-            leaders.add(createTestMember(3L, "王组长", Direction.EMBEDDED, 2020));
+        when(memberRepository.findById(memberId)).thenReturn(Optional.of(member));
 
-            when(memberRepository.findDirectionLeaders()).thenReturn(leaders);
-
-            List<MemberResult> result = memberAppService.getDirectionLeaders();
-
-            assertNotNull(result);
-            assertEquals(3, result.size());
-            verify(memberRepository).findDirectionLeaders();
-        }
-
-        @Test
-        @DisplayName("无负责人：应返回空列表")
-        void getDirectionLeaders_noLeaders_shouldReturnEmptyList() {
-            when(memberRepository.findDirectionLeaders()).thenReturn(new ArrayList<>());
-
-            List<MemberResult> result = memberAppService.getDirectionLeaders();
-
-            assertNotNull(result);
-            assertTrue(result.isEmpty());
-            verify(memberRepository).findDirectionLeaders();
-        }
+        assertThrows(
+                BadRequest.class,
+                () -> memberAppService.getMemberExperiences(memberId, "INVALID"));
     }
 
-    @Nested
-    @DisplayName("getMemberExperiences 方法测试")
-    class GetMemberExperiencesTests {
+    @Test
+    @DisplayName("getMemberExperiences: 非团队成员应返回空列表")
+    void getMemberExperiences_nonTeamMember_shouldReturnEmpty() {
+        Long candidateId = 4L;
+        Member candidate = createMember(candidateId, "2026002004", RoleType.CANDIDATE);
 
-        @Test
-        @DisplayName("正常情况：应返回经历列表")
-        void getMemberExperiences_existingMember_shouldReturnExperiences() {
-            Member member = createTestMember();
-            List<ExperienceVO> experiences = List.of(
-                    ExperienceVO.builder()
-                            .id(1L)
-                            .type(ExperienceType.PROJECT)
-                            .title("测试项目")
-                            .startTime("2023-01")
-                            .endTime("2023-06")
-                            .content(
-                                    "{\"role\":\"开发\",\"description\":\"测试\",\"techStack\":[\"Java\"],\"demoUrl\":\"\"}")
-                            .build());
+        when(memberRepository.findById(candidateId)).thenReturn(Optional.of(candidate));
 
-            when(memberRepository.findById(TEST_ID)).thenReturn(Optional.of(member));
-            when(userExperienceDomainService.getExperiences(TEST_ID)).thenReturn(experiences);
+        List<UserExperienceResult> results = memberAppService.getMemberExperiences(candidateId, null);
 
-            var result = memberAppService.getMemberExperiences(TEST_ID, null);
+        assertTrue(results.isEmpty());
+        verify(userExperienceRepository, never()).findByUserId(any());
+        verify(userExperienceRepository, never()).findByUserIdAndType(any(), any());
+    }
 
-            assertNotNull(result);
-            assertEquals(1, result.size());
-            verify(memberRepository).findById(TEST_ID);
-            verify(userExperienceDomainService).getExperiences(TEST_ID);
-        }
+    @Test
+    @DisplayName("getMemberExperiences: 成员不存在应抛异常")
+    void getMemberExperiences_memberNotFound_shouldThrow() {
+        when(memberRepository.findById(-1L)).thenReturn(Optional.empty());
 
-        @Test
-        @DisplayName("成员不存在：应抛出异常")
-        void getMemberExperiences_nonExistingMember_shouldThrowException() {
-            when(memberRepository.findById(TEST_ID)).thenReturn(Optional.empty());
+        assertThrows(
+                DataNotFound.class,
+                () -> memberAppService.getMemberExperiences(-1L, null));
+    }
 
-            DataNotFound exception = assertThrows(
-                    DataNotFound.class,
-                    () -> memberAppService.getMemberExperiences(TEST_ID, null));
+    @Test
+    @DisplayName("getMemberById: 应返回成员详情")
+    void getMemberById_shouldReturnMember() {
+        Long memberId = 5L;
+        Member member = createMember(memberId, "2026002005", RoleType.MEMBER);
 
-            assertEquals("成员不存在", exception.getMessage());
-        }
+        when(memberRepository.findById(memberId)).thenReturn(Optional.of(member));
 
-        @Test
-        @DisplayName("非团队成员：应返回空列表")
-        void getMemberExperiences_nonTeamMember_shouldReturnEmptyList() {
-            Member candidate = Member.reconstruct(
-                    TEST_ID,
-                    null,
-                    TEST_USERNAME,
-                    TEST_NICKNAME,
-                    TEST_DIRECTION,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    RoleType.CANDIDATE,
-                    "CANDIDATE",
-                    null,
-                    null,
-                    null,
-                    null,
-                    null);
+        MemberResult result = memberAppService.getMemberById(memberId);
 
-            when(memberRepository.findById(TEST_ID)).thenReturn(Optional.of(candidate));
+        assertEquals(memberId, result.id());
+        assertEquals("用户2026002005", result.username());
+    }
 
-            var result = memberAppService.getMemberExperiences(TEST_ID, null);
+    @Test
+    @DisplayName("getMemberList: 应分页返回成员列表")
+    void getMemberList_shouldReturnPage() {
+        Long memberId = 6L;
+        Member member = createMember(memberId, "2026002006", RoleType.MEMBER);
+        Pageable pageable = PageRequest.of(0, 20);
+        Page<Member> memberPage = new PageImpl<>(List.of(member), pageable, 1);
 
-            assertNotNull(result);
-            assertTrue(result.isEmpty());
-            verify(userExperienceDomainService, never()).getExperiences(any());
-        }
+        when(memberRepository.findAll(eq((Direction) null), any(Pageable.class))).thenReturn(memberPage);
+
+        PageDTO<MemberResult> page = PageDTO.from(
+                memberAppService.getMemberList(new GetMemberListQuery(null, 0, 20)));
+
+        assertEquals(1, page.getTotalElements());
     }
 }

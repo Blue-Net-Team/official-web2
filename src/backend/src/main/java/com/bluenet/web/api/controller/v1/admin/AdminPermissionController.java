@@ -5,8 +5,8 @@ import com.bluenet.web.api.dto.ResponseMessage;
 import com.bluenet.web.api.dto.permission.*;
 import com.bluenet.web.api.converter.permission.PermissionRequestConverter;
 import com.bluenet.web.api.converter.rolepermission.RolePermissionManageRequestConverter;
-import com.bluenet.web.application.PermissionResult;
-import com.bluenet.web.application.RolePermissionManageResult;
+import com.bluenet.web.application.result.permission.PermissionResult;
+import com.bluenet.web.application.result.rolepermission.RolePermissionManageResult;
 import com.bluenet.web.api.converter.permission.PermissionResponseConverter;
 import com.bluenet.web.application.service.PermissionAppService;
 import com.bluenet.web.application.service.RolePermissionManageAppService;
@@ -48,7 +48,7 @@ public class AdminPermissionController {
     @GetMapping
     public ResponseMessage<PageDTO<PermissionDTO>> getPermissions(@Valid PermissionQueryDTO query) {
         Page<PermissionResult> resultPage = permissionAppService
-                .getPermissions(permissionRequestConverter.toCommand(query));
+                .getPermissions(permissionRequestConverter.toQuery(query));
         List<PermissionDTO> dtoList = resultPage.getContent()
                 .stream()
                 .map(permissionResponseConverter::toDTO)

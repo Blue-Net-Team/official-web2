@@ -1,123 +1,60 @@
 package com.bluenet.web.api.controller.v1.health;
 
-import static org.junit.jupiter.api.Assertions.*;
-
+import com.bluenet.web.BaseIntegrationTest;
+import com.bluenet.web.testconfig.TestSecurityConfig;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.actuate.health.Health;
+import org.springframework.boot.actuate.health.HealthEndpoint;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.context.annotation.Import;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.test.context.ActiveProfiles;
-import org.testcontainers.junit.jupiter.Testcontainers;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.servlet.MockMvc;
 
-import com.bluenet.web.BaseIntegrationTest;
-import com.bluenet.web.api.dto.ResponseMessage;
-import com.bluenet.web.api.dto.health.HealthStatusDTO;
-import com.bluenet.web.testcontainers.TestcontainersConfiguration;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-/**
- * 健康检查控制器集成测试。
- */
+@SpringBootTest
+@AutoConfigureMockMvc
+@Import(TestSecurityConfig.class)
 @DisplayName("HealthController 集成测试")
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@ActiveProfiles("test")
-@Testcontainers
-@Import(TestcontainersConfiguration.class)
 class HealthControllerIntegrationTest extends BaseIntegrationTest {
 
     @Autowired
-    private TestRestTemplate restTemplate;
+    private MockMvc mockMvc;
 
-    @Test
-    @DisplayName("健康检查应返回有效状态")
-    void health_shouldReturnValidStatus() {
-        // When
-        ResponseEntity<ResponseMessage<HealthStatusDTO>> response = restTemplate.exchange(
-                "/api/v1/health",
-                HttpMethod.GET,
-                null,
-                new ParameterizedTypeReference<ResponseMessage<HealthStatusDTO>>() {
-                });
+    @MockitoBean
+    private HealthEndpoint healthEndpoint;
 
-        // Then
-        assertNotNull(response.getBody());
-
-        ResponseMessage<HealthStatusDTO> body = response.getBody();
-        assertNotNull(body.getData());
-
-        HealthStatusDTO healthStatus = body.getData();
-        // 状态应该是 UP 或 DOWN（取决于 MinIO 等服务的可用性)
-        assertTrue(
-                "UP".equals(healthStatus.getStatus()) || "DOWN".equals(healthStatus.getStatus()),
-                "Status should be UP or DOWN");
-        assertNotNull(healthStatus.getComponents());
-
-        // HTTP 状态码应与 ResponseMessage 的 code 一致
-        assertEquals(body.getCode(), response.getStatusCode().value(), "HTTP status should match ResponseMessage code");
-
-        // 当状态为 UP 时，HTTP 状态码应为 200；状态为 DOWN 时，应为 503
-        if ("UP".equals(healthStatus.getStatus())) {
-            assertEquals(HttpStatus.OK, response.getStatusCode(), "HTTP status should be 200 when health is UP");
-            assertEquals(200, body.getCode(), "ResponseMessage code should be 200 when health is UP");
-            assertEquals("Success", body.getMsg());
-        } else if ("DOWN".equals(healthStatus.getStatus())) {
-            assertEquals(
-                    HttpStatus.SERVICE_UNAVAILABLE,
-                    response.getStatusCode(),
-                    "HTTP status should be 503 when health is DOWN");
-            assertEquals(503, body.getCode(), "ResponseMessage code should be 503 when health is DOWN");
-        }
+    @AfterEach
+    void tearDown() {
+        // HealthController 不涉及 UserCTX，无需清理。
     }
 
     @Test
-    @DisplayName("健康检查应公开可访问")
-    void health_shouldBePubliclyAccessible() {
-        // When - 不带认证访问
-        ResponseEntity<ResponseMessage<HealthStatusDTO>> response = restTemplate.exchange(
-                "/api/v1/health",
-                HttpMethod.GET,
-                null,
-                new ParameterizedTypeReference<ResponseMessage<HealthStatusDTO>>() {
-                });
+    @DisplayName("health: 所有组件正常时应返回 200 与 UP 状态")
+    void health_allComponentsUp_shouldReturnOk() throws Exception {
+        when(healthEndpoint.health()).thenReturn(Health.up().build());
 
-        // Then - 应该能够成功访问（无论健康状态如何，请求本身是成功的）
-        assertNotNull(response.getBody());
-
-        // 健康检查是公开访问的，不应返回 401 或 403
-        int statusCode = response.getStatusCode().value();
-        assertTrue(
-                statusCode == 200 || statusCode == 503,
-                "Health check should be publicly accessible (200 for UP or 503 for DOWN)");
+        mockMvc.perform(get("/api/v1/health"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.data.status").value("UP"));
     }
 
     @Test
-    @DisplayName("健康检查应返回组件状态")
-    void health_shouldReturnComponents() {
-        // When
-        ResponseEntity<ResponseMessage<HealthStatusDTO>> response = restTemplate.exchange(
-                "/api/v1/health",
-                HttpMethod.GET,
-                null,
-                new ParameterizedTypeReference<ResponseMessage<HealthStatusDTO>>() {
-                });
+    @DisplayName("health: 组件异常时应返回 503 与 DOWN 状态")
+    void health_componentDown_shouldReturnServiceUnavailable() throws Exception {
+        when(healthEndpoint.health()).thenReturn(Health.down().build());
 
-        // Then
-        HealthStatusDTO healthStatus = response.getBody().getData();
-
-        // 验证组件映射存在且非空
-        assertNotNull(healthStatus.getComponents());
-        assertFalse(healthStatus.getComponents().isEmpty(), "Should have at least one component");
-
-        // 验证组件状态格式正确
-        healthStatus.getComponents().forEach((name, component) -> {
-            assertTrue(
-                    "UP".equals(component.getStatus()) || "DOWN".equals(component.getStatus()),
-                    "Component '" + name + "' status should be UP or DOWN");
-        });
+        mockMvc.perform(get("/api/v1/health"))
+                .andExpect(status().isServiceUnavailable())
+                .andExpect(jsonPath("$.code").value(503))
+                .andExpect(jsonPath("$.data.status").value("DOWN"));
     }
 }

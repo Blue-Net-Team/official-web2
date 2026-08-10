@@ -5,6 +5,7 @@ import com.bluenet.web.domain.model.enumerate.SoftwareResourceDirection;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -20,7 +21,6 @@ public interface SoftwareResourceRepository {
      *
      * @param id
      *            业务记录主键。
-     * @return 查询到的软件资源实体；不存在时为 Optional.empty()。
      */
     Optional<SoftwareResource> findById(Long id);
 
@@ -33,7 +33,6 @@ public interface SoftwareResourceRepository {
      *            搜索关键词；为 null 或空时忽略。
      * @param pageable
      *            分页参数。
-     * @return 分页的软件资源实体。
      */
     Page<SoftwareResource> findActiveByDirection(SoftwareResourceDirection direction, String keyword,
             Pageable pageable);
@@ -43,17 +42,8 @@ public interface SoftwareResourceRepository {
      *
      * @param softwareResource
      *            软件资源实体。
-     * @return 新记录的主键。
      */
-    Long save(SoftwareResource softwareResource);
-
-    /**
-     * 更新已有软件资源记录。
-     *
-     * @param softwareResource
-     *            软件资源实体（id 必须非空）。
-     */
-    void update(SoftwareResource softwareResource);
+    void save(SoftwareResource softwareResource);
 
     /**
      * 删除指定软件资源记录。
@@ -68,7 +58,34 @@ public interface SoftwareResourceRepository {
      *
      * @param pageable
      *            分页参数。
-     * @return 分页的软件资源实体。
      */
     Page<SoftwareResource> findAllForAdmin(Pageable pageable);
+
+    /**
+     * 判断指定主键的软件资源是否存在。
+     *
+     * @param id
+     *            业务记录主键。
+     */
+    boolean existsById(Long id);
+
+    /**
+     * 查询当前最大的排序号。
+     *
+     */
+    Integer findMaxSortOrder();
+
+    /**
+     * 批量更新软件资源排序号。
+     *
+     * @param sortItems
+     *            排序项列表（id 与目标排序号）。
+     */
+    void batchUpdateSortOrder(List<SortItem> sortItems);
+
+    /**
+     * 排序项：软件资源主键及其目标排序号。
+     */
+    record SortItem(Long id, Integer sortOrder) {
+    }
 }

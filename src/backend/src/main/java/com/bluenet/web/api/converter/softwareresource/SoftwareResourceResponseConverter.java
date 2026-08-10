@@ -2,7 +2,7 @@ package com.bluenet.web.api.converter.softwareresource;
 
 import com.bluenet.web.api.dto.PageDTO;
 import com.bluenet.web.api.dto.softwareresource.SoftwareResourceDTO;
-import com.bluenet.web.application.SoftwareResourceResult;
+import com.bluenet.web.application.result.softwareresource.SoftwareResourceResult;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
 

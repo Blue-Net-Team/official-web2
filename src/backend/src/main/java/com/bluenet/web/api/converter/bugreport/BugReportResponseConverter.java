@@ -3,7 +3,7 @@ package com.bluenet.web.api.converter.bugreport;
 import com.bluenet.web.api.dto.bugreport.BugReportBriefDTO;
 import com.bluenet.web.api.dto.bugreport.BugReportCreatedDTO;
 import com.bluenet.web.api.dto.bugreport.BugReportDetailDTO;
-import com.bluenet.web.application.BugReportResult;
+import com.bluenet.web.application.result.bugreport.BugReportResult;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
 

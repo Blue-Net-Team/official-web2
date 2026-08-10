@@ -14,6 +14,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * 知识库标签仓储实现。
@@ -38,9 +39,25 @@ public class KnowledgeTagRepositoryImpl implements KnowledgeTagRepository {
     }
 
     @Override
-    public int updateDescription(Long id, String description) {
-        int rows = knowledgeTagMapper.updateDescription(id, description);
-        log.debug("知识库标签描述更新成功: id={}", id);
-        return rows;
+    public Optional<KnowledgeTag> findById(Long id) {
+        KnowledgeTagDO dataObject = knowledgeTagMapper.selectById(id);
+        return Optional.ofNullable(converter.toEntity(dataObject));
     }
+
+    @Override
+    public void save(KnowledgeTag tag) {
+        KnowledgeTagDO dataObject = converter.toDataObject(tag);
+        if (dataObject.getId() == null) {
+            if (dataObject.getTagVector() == null) {
+                dataObject.setTagVector(new float[VECTOR_DIMENSION]);
+            }
+            knowledgeTagMapper.insert(dataObject);
+            tag.setId(dataObject.getId());
+        } else {
+            knowledgeTagMapper.updateById(dataObject);
+        }
+        log.debug("知识库标签保存成功: id={}", tag.getId());
+    }
+
+    private static final int VECTOR_DIMENSION = 1024;
 }

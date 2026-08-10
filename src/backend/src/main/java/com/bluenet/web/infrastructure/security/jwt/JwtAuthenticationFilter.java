@@ -1,12 +1,14 @@
 package com.bluenet.web.infrastructure.security.jwt;
 
-import com.bluenet.web.domain.exception.GlobalException;
 import com.bluenet.web.domain.exception.Unauthorized;
-import com.bluenet.web.domain.model.vo.UserVO;
+import com.bluenet.web.domain.model.entity.User;
 import com.bluenet.web.domain.repository.UserRepository;
 import com.bluenet.web.infrastructure.config.CookieProperties;
 import com.bluenet.web.infrastructure.config.FailAuthEntryPoint;
 import com.bluenet.web.infrastructure.security.auth.AuthTokenService;
+import com.bluenet.web.infrastructure.security.cache.PermissionCache;
+import com.bluenet.web.infrastructure.security.principal.RoleTypeResolver;
+import com.bluenet.web.infrastructure.security.principal.SecurityPrincipal;
 import com.bluenet.web.infrastructure.security.util.UserCTX;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -38,6 +40,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final UserRepository userRepository;
     private final FailAuthEntryPoint failAuthEntryPoint;
     private final CookieProperties cookieProperties;
+    private final PermissionCache permissionCache;
+    private final RoleTypeResolver roleTypeResolver;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
@@ -57,22 +61,26 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                     if (userId.isPresent() && userId.get().equals(payload.getUserId())) {
                         // 取出用户
-                        Optional<UserVO> userVoOp = userRepository.findById(userId.get());
-                        if (userVoOp.isEmpty()) {
+                        Optional<User> userOpt = userRepository.findById(userId.get());
+                        if (userOpt.isEmpty()) {
                             log.warn("User not found for userId: {}", userId.get());
-                            failAuthEntryPoint.commence(request, response, new GlobalException("用户不存在"));
+                            failAuthEntryPoint.commence(request, response, new Unauthorized("用户不存在"));
                             return; // 校验失败后直接返回
                         }
 
-                        UserVO userVO = userVoOp.get();
+                        User user = userOpt.get();
+                        SecurityPrincipal principal = new SecurityPrincipal(
+                                user,
+                                roleTypeResolver.resolve(user.getRoleId()),
+                                permissionCache.getPermissionsByRole(user.getRoleId()));
 
                         // 4. 设置Spring Security上下文
                         UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                                userVO, payload, Collections.emptyList());
+                                principal, payload, Collections.emptyList());
                         SecurityContextHolder.getContext().setAuthentication(authentication);
 
                         // 5. 设置自定义SecurityContext
-                        UserCTX.setCurrentUser(userVO);
+                        UserCTX.setPrincipal(principal);
 
                         log.debug("JWT authenticated for user: {}", payload.getUserId());
                     } else {

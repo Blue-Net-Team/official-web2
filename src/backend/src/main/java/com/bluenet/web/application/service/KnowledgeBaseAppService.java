@@ -1,7 +1,7 @@
 package com.bluenet.web.application.service;
 
 import com.bluenet.web.application.command.knowledge.KnowledgeCommands;
-import com.bluenet.web.application.knowledge.KnowledgeDocResult;
+import com.bluenet.web.application.result.knowledge.KnowledgeDocResult;
 
 /**
  * 知识库应用服务接口。

@@ -18,6 +18,7 @@ import {
   ProfileInfo,
   AssessmentList,
   ExperienceSection,
+  MemberAchievements,
 } from '@/components/Profile'
 import { API_BASE_URL } from '@/apis/config'
 import { Spin } from 'antd'
@@ -36,11 +37,11 @@ const PROFILE_TABS = [
     countKey: 'projects' as keyof TabCounts,
   },
   {
-    key: 'competitions' as TabName,
-    label: '竞赛经历',
+    key: 'achievements' as TabName,
+    label: '个人成就',
     icon: <TrophyOutlined />,
     showCount: true,
-    countKey: 'competitions' as keyof TabCounts,
+    countKey: 'achievements' as keyof TabCounts,
   },
   {
     key: 'internships' as TabName,
@@ -96,12 +97,13 @@ export default function ProfilePage() {
       profile.qrcodeFileId != null ? `${API_BASE_URL}/file/download/${profile.qrcodeFileId}` : null,
     roleName: profile.roleName,
     direction: profile.direction,
+    internalReferralCode: profile.internalReferralCode,
   }
 
   return (
     <div className="w-full min-h-screen bg-[#0a0a0a] text-white relative overflow-x-hidden">
       <div className="fixed inset-0 z-0">
-        <DarkVeil hueShift={40} speed={0.6} offsetY={0.2} />
+        <DarkVeil hueShift={-130} speed={0.6} offsetY={0.2} />
       </div>
 
       <main className="flex max-w-[1400px] mx-auto pt-[104px] px-16 pb-10 gap-8 relative z-1 flex-row max-lg:flex-col md:px-6 max-sm:pt-20 max-sm:px-4 max-sm:pb-6">
@@ -130,16 +132,7 @@ export default function ProfilePage() {
             />
           )}
 
-          {currentTab === 'competitions' && (
-            <ExperienceSection
-              type="COMPETITION"
-              title="竞赛经历"
-              data={getExperiencesByType('COMPETITION')}
-              onAdd={(data) => addExperience('COMPETITION', data)}
-              onUpdate={updateExperience}
-              onDelete={deleteExperience}
-            />
-          )}
+          {currentTab === 'achievements' && <MemberAchievements memberId={profile.id} />}
 
           {currentTab === 'internships' && (
             <ExperienceSection

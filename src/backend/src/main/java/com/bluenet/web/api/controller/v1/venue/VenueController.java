@@ -2,7 +2,7 @@ package com.bluenet.web.api.controller.v1.venue;
 
 import com.bluenet.web.api.dto.ResponseMessage;
 import com.bluenet.web.api.dto.venue.VenueDTO;
-import com.bluenet.web.application.VenueResult;
+import com.bluenet.web.application.result.venue.VenueResult;
 import com.bluenet.web.api.converter.venue.VenueResponseConverter;
 import com.bluenet.web.application.service.VenueAppService;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;

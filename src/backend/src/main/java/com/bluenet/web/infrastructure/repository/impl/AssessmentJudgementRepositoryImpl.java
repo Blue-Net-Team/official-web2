@@ -4,11 +4,10 @@ import com.bluenet.web.domain.exception.GlobalException;
 import com.bluenet.web.domain.model.entity.AssessmentJudgement;
 import com.bluenet.web.domain.model.enumerate.JudgementSource;
 import com.bluenet.web.domain.model.enumerate.QuestionType;
-import com.bluenet.web.domain.model.vo.AssessmentCandidateScoreRowVO;
-import com.bluenet.web.domain.model.vo.AssessmentJudgementVO;
-import com.bluenet.web.domain.model.vo.AssessmentQuestionScoreboardVO;
-import com.bluenet.web.domain.model.vo.AssessmentQuestionSubmissionHistoryVO;
-import com.bluenet.web.domain.model.vo.AssessmentQuestionSubmissionVO;
+import com.bluenet.web.domain.model.readmodel.AssessmentCandidateScoreRowReadModel;
+import com.bluenet.web.application.result.assessment.AssessmentQuestionScoreboard;
+import com.bluenet.web.domain.model.readmodel.AssessmentQuestionSubmissionHistoryReadModel;
+import com.bluenet.web.domain.model.readmodel.AssessmentQuestionSubmissionReadModel;
 import com.bluenet.web.domain.repository.AssessmentJudgementRepository;
 import com.bluenet.web.infrastructure.repository.converter.AssessmentJudgementRepositoryConverter;
 import com.bluenet.web.infrastructure.repository.dataobject.AssessmentJudgementDO;
@@ -38,10 +37,17 @@ public class AssessmentJudgementRepositoryImpl implements AssessmentJudgementRep
      */
     @Override
     public void save(AssessmentJudgement judgement) {
-        log.info("save assessment judgement {}", judgement);
         AssessmentJudgementDO dataObject = converter.toDataObject(judgement);
-        assessmentJudgementMapper.insert(dataObject);
-        judgement.setId(dataObject.getId());
+        if (dataObject.getId() == null) {
+            assessmentJudgementMapper.insert(dataObject);
+            judgement.setId(dataObject.getId());
+        } else {
+            int influence = assessmentJudgementMapper.updateById(dataObject);
+            if (influence == 0) {
+                log.warn("更新考核评判记录失败，judgementId {}", judgement.getId());
+                throw new GlobalException("更新考核评判记录失败");
+            }
+        }
     }
 
     /**
@@ -63,16 +69,6 @@ public class AssessmentJudgementRepositoryImpl implements AssessmentJudgementRep
      * @param judgement
      *            考核评审结果实体。
      */
-    @Override
-    public void update(AssessmentJudgement judgement) {
-        AssessmentJudgementDO dataObject = converter.toDataObject(judgement);
-        int influence = assessmentJudgementMapper.updateById(dataObject);
-        if (influence == 0) {
-            log.warn("更新考核评判记录失败，judgementId {}", judgement.getId());
-            throw new GlobalException("更新考核评判记录失败");
-        }
-    }
-
     /**
      * 查询指定作答的最新评审结果。
      *
@@ -173,7 +169,7 @@ public class AssessmentJudgementRepositoryImpl implements AssessmentJudgementRep
      * @return 满足条件的考核评审结果 结果集合。
      */
     @Override
-    public List<AssessmentQuestionScoreboardVO> findQuestionScoreboard(Long assessmentTimeId,
+    public List<AssessmentQuestionScoreboard> findQuestionScoreboard(Long assessmentTimeId,
             QuestionType questionType, String keyword) {
         return assessmentJudgementMapper.selectQuestionScoreboard(assessmentTimeId, questionType, keyword)
                 .stream()
@@ -193,7 +189,7 @@ public class AssessmentJudgementRepositoryImpl implements AssessmentJudgementRep
      * @return 满足条件的考核评审结果 结果集合。
      */
     @Override
-    public List<AssessmentQuestionSubmissionVO> findQuestionSubmissions(Long questionId, String keyword,
+    public List<AssessmentQuestionSubmissionReadModel> findQuestionSubmissions(Long questionId, String keyword,
             String status) {
         return assessmentJudgementMapper.selectQuestionSubmissions(questionId, keyword, status)
                 .stream()
@@ -211,7 +207,7 @@ public class AssessmentJudgementRepositoryImpl implements AssessmentJudgementRep
      * @return 满足条件的考核评审结果 结果集合。
      */
     @Override
-    public List<AssessmentQuestionSubmissionHistoryVO> findQuestionSubmissionHistories(Long questionId,
+    public List<AssessmentQuestionSubmissionHistoryReadModel> findQuestionSubmissionHistories(Long questionId,
             List<Long> userIds) {
         return assessmentJudgementMapper.selectQuestionSubmissionHistories(questionId, userIds)
                 .stream()
@@ -229,7 +225,7 @@ public class AssessmentJudgementRepositoryImpl implements AssessmentJudgementRep
      * @return 满足条件的考核评审结果 结果集合。
      */
     @Override
-    public List<AssessmentCandidateScoreRowVO> findCandidateScoreRows(Long assessmentTimeId, String keyword) {
+    public List<AssessmentCandidateScoreRowReadModel> findCandidateScoreRows(Long assessmentTimeId, String keyword) {
         return assessmentJudgementMapper.selectCandidateScoreRows(assessmentTimeId, keyword)
                 .stream()
                 .map(this::convertCandidateScoreRowToVO)
@@ -270,27 +266,28 @@ public class AssessmentJudgementRepositoryImpl implements AssessmentJudgementRep
      *            Mapper 返回的投影数据行。
      * @return 转换后的目标模型对象。
      */
-    private AssessmentQuestionSubmissionHistoryVO convertSubmissionHistoryToVO(
+    private AssessmentQuestionSubmissionHistoryReadModel convertSubmissionHistoryToVO(
             AssessmentQuestionSubmissionQueryDO row) {
-        AssessmentJudgementVO judgement = null;
+        AssessmentJudgement judgement = null;
         if (row.getJudgementId() != null) {
-            judgement = AssessmentJudgementVO.builder()
-                    .id(row.getJudgementId())
-                    .answerId(row.getAnswerId())
-                    .questionId(row.getQuestionId())
-                    .assessmentTimeId(row.getAssessmentTimeId())
-                    .userId(row.getCandidateUserId())
-                    .score(row.getJudgementScore())
-                    .maxScore(row.getJudgementMaxScore())
-                    .status(row.getJudgementStatus())
-                    .resultCode(row.getResultCode())
-                    .source(row.getSource())
-                    .reviewerId(row.getReviewerId())
-                    .reviewerType(row.getReviewerType())
-                    .judgedAt(row.getJudgedAt())
-                    .build();
+            judgement = AssessmentJudgement.reconstruct(
+                    row.getJudgementId(),
+                    row.getAnswerId(),
+                    row.getQuestionId(),
+                    row.getAssessmentTimeId(),
+                    row.getCandidateUserId(),
+                    row.getJudgementScore(),
+                    row.getJudgementMaxScore(),
+                    row.getJudgementStatus(),
+                    row.getResultCode(),
+                    row.getSource(),
+                    row.getReviewerId(),
+                    row.getReviewerType(),
+                    row.getJudgedAt(),
+                    null,
+                    null);
         }
-        return AssessmentQuestionSubmissionHistoryVO.builder()
+        return AssessmentQuestionSubmissionHistoryReadModel.builder()
                 .judgement(judgement)
                 .selectedBest(Boolean.TRUE.equals(row.getSelectedBest()))
                 .build();
@@ -303,8 +300,8 @@ public class AssessmentJudgementRepositoryImpl implements AssessmentJudgementRep
      *            Mapper 返回的投影数据行。
      * @return 转换后的目标模型对象。
      */
-    private AssessmentQuestionScoreboardVO convertScoreboardToVO(AssessmentQuestionScoreboardQueryDO row) {
-        return AssessmentQuestionScoreboardVO.builder()
+    private AssessmentQuestionScoreboard convertScoreboardToVO(AssessmentQuestionScoreboardQueryDO row) {
+        return AssessmentQuestionScoreboard.builder()
                 .questionId(row.getQuestionId())
                 .assessmentTimeId(row.getAssessmentTimeId())
                 .questionNo(row.getQuestionNo())
@@ -325,8 +322,8 @@ public class AssessmentJudgementRepositoryImpl implements AssessmentJudgementRep
      *            Mapper 返回的投影数据行。
      * @return 转换后的目标模型对象。
      */
-    private AssessmentQuestionSubmissionVO convertSubmissionToVO(AssessmentQuestionSubmissionQueryDO row) {
-        return AssessmentQuestionSubmissionVO.builder()
+    private AssessmentQuestionSubmissionReadModel convertSubmissionToVO(AssessmentQuestionSubmissionQueryDO row) {
+        return AssessmentQuestionSubmissionReadModel.builder()
                 .answerId(row.getAnswerId())
                 .questionId(row.getQuestionId())
                 .assessmentTimeId(row.getAssessmentTimeId())
@@ -355,6 +352,8 @@ public class AssessmentJudgementRepositoryImpl implements AssessmentJudgementRep
                 .teamId(row.getTeamId())
                 .teamName(row.getTeamName())
                 .isLeader(row.getIsLeader())
+                .internalReferralCode(row.getReferralCode())
+                .referralUserName(row.getReferralUsername())
                 .build();
     }
 
@@ -365,8 +364,8 @@ public class AssessmentJudgementRepositoryImpl implements AssessmentJudgementRep
      *            Mapper 返回的投影数据行。
      * @return 转换后的目标模型对象。
      */
-    private AssessmentCandidateScoreRowVO convertCandidateScoreRowToVO(AssessmentCandidateScoreQueryDO row) {
-        return AssessmentCandidateScoreRowVO.builder()
+    private AssessmentCandidateScoreRowReadModel convertCandidateScoreRowToVO(AssessmentCandidateScoreQueryDO row) {
+        return AssessmentCandidateScoreRowReadModel.builder()
                 .candidateUserId(row.getCandidateUserId())
                 .studentId(row.getStudentId())
                 .username(row.getUsername())
@@ -390,6 +389,8 @@ public class AssessmentJudgementRepositoryImpl implements AssessmentJudgementRep
                 .teamId(row.getTeamId())
                 .teamName(row.getTeamName())
                 .isLeader(row.getIsLeader())
+                .internalReferralCode(row.getReferralCode())
+                .referralUserName(row.getReferralUsername())
                 .build();
     }
 }

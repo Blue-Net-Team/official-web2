@@ -5,7 +5,7 @@ import com.bluenet.web.api.dto.equipment.CreateEquipmentRequestDTO;
 import com.bluenet.web.api.dto.equipment.EquipmentDTO;
 import com.bluenet.web.api.dto.equipment.UpdateEquipmentRequestDTO;
 import com.bluenet.web.api.converter.equipment.EquipmentRequestConverter;
-import com.bluenet.web.application.EquipmentResult;
+import com.bluenet.web.application.result.equipment.EquipmentResult;
 import com.bluenet.web.application.command.equipment.EquipmentCommands;
 import com.bluenet.web.api.converter.equipment.EquipmentResponseConverter;
 import com.bluenet.web.application.service.EquipmentAppService;

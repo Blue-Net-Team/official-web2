@@ -30,6 +30,8 @@ public class AdminUserListItemResponseDTO {
     private String roleName;
     @Schema(description = "方向")
     private Direction direction;
+    @Schema(description = "学院ID")
+    private Long collegeId;
     @Schema(description = "学院")
     private String college;
     @Schema(description = "专业")
@@ -44,4 +46,6 @@ public class AdminUserListItemResponseDTO {
     private Long avatarFileId;
     @Schema(description = "考核年级年份")
     private Integer assessmentGradeYear;
+    @Schema(description = "GitHub 登录名（未绑定为 null）")
+    private String githubUsername;
 }

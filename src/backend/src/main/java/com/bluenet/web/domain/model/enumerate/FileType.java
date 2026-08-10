@@ -9,7 +9,8 @@ public enum FileType implements ValueEnum {
     ASSESSMENT_ATTACHMENT("assessment-attachment", "考题附件"),
     WORK("work", "考生作品"),
     QRCODE("qrcode", "二维码"),
-    KNOWLEDGE("knowledge", "知识库文档");
+    KNOWLEDGE("knowledge", "知识库文档"),
+    ENROLL_FORM("enroll-form", "报名表");
 
     private final String value;
     private final String description;

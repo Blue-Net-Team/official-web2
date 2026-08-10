@@ -1,15 +1,17 @@
 package com.bluenet.web.application.service.impl;
 
-import com.bluenet.web.application.MemberResult;
-import com.bluenet.web.application.command.member.MemberCommands;
+import com.bluenet.web.application.result.achievement.AchievementResult;
+import com.bluenet.web.application.result.member.MemberResult;
+import com.bluenet.web.application.result.user.UserExperienceResult;
+import com.bluenet.web.application.query.member.GetMemberListQuery;
+import com.bluenet.web.application.service.AchievementAppService;
 import com.bluenet.web.application.service.MemberAppService;
 import com.bluenet.web.domain.exception.BadRequest;
 import com.bluenet.web.domain.exception.DataNotFound;
 import com.bluenet.web.domain.model.entity.Member;
 import com.bluenet.web.domain.model.enumerate.ExperienceType;
-import com.bluenet.web.domain.model.vo.ExperienceVO;
 import com.bluenet.web.domain.repository.MemberRepository;
-import com.bluenet.web.domain.service.UserExperienceDomainService;
+import com.bluenet.web.domain.repository.UserExperienceRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -17,6 +19,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.List;
 
@@ -31,24 +35,26 @@ import java.util.List;
 @RequiredArgsConstructor
 public class MemberAppServiceImpl implements MemberAppService {
     private final MemberRepository memberRepository;
-    private final UserExperienceDomainService userExperienceDomainService;
+    private final UserExperienceRepository userExperienceRepository;
+    private final AchievementAppService achievementAppService;
 
     private static final int MAX_PAGE_SIZE = 100;
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy.MM");
 
     /**
      * 查询成员列表。
      *
-     * @param command
-     *            查询成员列表命令
+     * @param query
+     *            查询成员列表参数
      * @return 成员分页结果
      */
     @Override
-    public Page<MemberResult> getMemberList(MemberCommands.GetMemberListCommand command) {
-        int page = command.page() != null ? command.page() : 0;
-        int size = command.size() != null ? Math.min(command.size(), MAX_PAGE_SIZE) : 20;
+    public Page<MemberResult> getMemberList(GetMemberListQuery query) {
+        int page = query.page() != null ? query.page() : 0;
+        int size = query.size() != null ? Math.min(query.size(), MAX_PAGE_SIZE) : 20;
 
         Pageable pageable = PageRequest.of(page, size);
-        Page<Member> memberPage = memberRepository.findAll(command.direction(), pageable);
+        Page<Member> memberPage = memberRepository.findAll(query.direction(), pageable);
 
         return memberPage.map(this::toResult);
     }
@@ -87,10 +93,10 @@ public class MemberAppServiceImpl implements MemberAppService {
      *            成员ID
      * @param type
      *            经历类型
-     * @return 经历VO列表
+     * @return 经历结果列表
      */
     @Override
-    public List<ExperienceVO> getMemberExperiences(Long memberId, String type) {
+    public List<UserExperienceResult> getMemberExperiences(Long memberId, String type) {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new DataNotFound("成员不存在"));
 
@@ -99,12 +105,35 @@ public class MemberAppServiceImpl implements MemberAppService {
             return Collections.emptyList();
         }
 
+        List<com.bluenet.web.domain.model.entity.UserExperience> experiences;
         if (type != null && !type.isBlank()) {
+            if ("COMPETITION".equalsIgnoreCase(type)) {
+                // 竞赛经历已迁移到成就系统，返回空列表
+                return Collections.emptyList();
+            }
             ExperienceType experienceType = parseExperienceType(type);
-            return userExperienceDomainService.getExperiencesByType(memberId, experienceType);
+            experiences = userExperienceRepository.findByUserIdAndType(memberId, experienceType);
         } else {
-            return userExperienceDomainService.getExperiences(memberId);
+            experiences = userExperienceRepository.findByUserId(memberId);
         }
+        return experiences.stream()
+                .map(this::toUserExperienceResult)
+                .toList();
+    }
+
+    /**
+     * 查询成员关联的官方成就列表。
+     * <p>
+     * 用户存在性校验由成就应用服务完成（成员主页可能对非团队成员隐藏， 但个人中心需要支持任意已注册用户查询自己的成就）。
+     * </p>
+     *
+     * @param memberId
+     *            成员ID
+     * @return 成就结果列表
+     */
+    @Override
+    public List<AchievementResult> getMemberAchievements(Long memberId) {
+        return achievementAppService.getMemberAchievements(memberId);
     }
 
     private ExperienceType parseExperienceType(String type) {
@@ -113,6 +142,23 @@ public class MemberAppServiceImpl implements MemberAppService {
         } catch (IllegalArgumentException e) {
             throw new BadRequest("无效的经历类型: " + type);
         }
+    }
+
+    private UserExperienceResult toUserExperienceResult(com.bluenet.web.domain.model.entity.UserExperience experience) {
+        return new UserExperienceResult(
+                experience.getId(),
+                experience.getType(),
+                experience.getTitle(),
+                formatDateTime(experience.getStartTime()),
+                formatDateTime(experience.getEndTime()),
+                experience.getContent());
+    }
+
+    private String formatDateTime(LocalDateTime dateTime) {
+        if (dateTime == null) {
+            return null;
+        }
+        return dateTime.format(DATE_FORMATTER);
     }
 
     private MemberResult toResult(Member member) {

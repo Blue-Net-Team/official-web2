@@ -177,4 +177,50 @@ class OrphanFileCleanupIntegrationTest extends BaseIntegrationTest {
         assertFalse(orphanIds.contains(referenced.getId()), "不应包含被引用的 ACTIVE 文件");
         assertEquals(3, orphanIds.size(), "应返回 3 个孤儿文件");
     }
+
+    @Test
+    @DisplayName("findOrphanFiles excludes ACTIVE enroll-form files regardless of references")
+    void findOrphanFiles_ActiveEnrollFormExcluded() {
+        FileDO enrollForm = FileDO.builder()
+                .name("enroll_form-uuid.pdf")
+                .type(FileType.ENROLL_FORM)
+                .url("/uploads/enroll_form-uuid.pdf")
+                .status(FileStatus.ACTIVE)
+                .createdAt(LocalDateTime.now())
+                .build();
+        fileMapper.insert(enrollForm);
+
+        List<File> orphans = fileRepository.findOrphanFiles();
+
+        List<Long> orphanIds = orphans.stream().map(File::getId).toList();
+        assertFalse(orphanIds.contains(enrollForm.getId()), "ACTIVE 的报名表文件不应被识别为孤儿");
+    }
+
+    @Test
+    @DisplayName("findOrphanFiles still returns PENDING-timeout and REJECTED enroll-form files")
+    void findOrphanFiles_NonActiveEnrollFormStillOrphan() {
+        FileDO oldPending = FileDO.builder()
+                .name("enroll_form-pending.pdf")
+                .type(FileType.ENROLL_FORM)
+                .url("/uploads/enroll_form-pending.pdf")
+                .status(FileStatus.PENDING)
+                .createdAt(LocalDateTime.now().minusHours(2))
+                .build();
+        fileMapper.insert(oldPending);
+
+        FileDO rejected = FileDO.builder()
+                .name("enroll_form-rejected.pdf")
+                .type(FileType.ENROLL_FORM)
+                .url("/uploads/enroll_form-rejected.pdf")
+                .status(FileStatus.REJECTED)
+                .createdAt(LocalDateTime.now())
+                .build();
+        fileMapper.insert(rejected);
+
+        List<File> orphans = fileRepository.findOrphanFiles();
+
+        List<Long> orphanIds = orphans.stream().map(File::getId).toList();
+        assertTrue(orphanIds.contains(oldPending.getId()), "PENDING 超时的报名表文件仍应被清理");
+        assertTrue(orphanIds.contains(rejected.getId()), "REJECTED 的报名表文件仍应被清理");
+    }
 }

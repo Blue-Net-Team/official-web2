@@ -47,18 +47,14 @@ public class UserExperienceRepositoryImpl implements UserExperienceRepository {
     @Override
     public void save(UserExperience entity) {
         UserExperienceDO dataObject = converter.toDataObject(entity);
-        userExperienceMapper.insert(dataObject);
-        entity.setId(dataObject.getId());
-        log.info("Created experience: id={}, userId={}, type={}", entity.getId(), entity.getUserId(), entity.getType());
+        if (dataObject.getId() == null) {
+            userExperienceMapper.insert(dataObject);
+            entity.setId(dataObject.getId());
+        } else {
+            userExperienceMapper.updateById(dataObject);
+        }
+        log.info("Saved experience: id={}, userId={}, type={}", entity.getId(), entity.getUserId(), entity.getType());
     }
-
-    @Override
-    public void update(UserExperience entity) {
-        UserExperienceDO dataObject = converter.toDataObject(entity);
-        userExperienceMapper.updateById(dataObject);
-        log.info("Updated experience: id={}", entity.getId());
-    }
-
     @Override
     public void deleteById(Long id) {
         userExperienceMapper.deleteById(id);

@@ -6,14 +6,14 @@ import com.bluenet.web.domain.model.entity.AssessmentAnswer;
 import com.bluenet.web.domain.model.entity.AssessmentQuestion;
 import com.bluenet.web.domain.model.entity.AssessmentTime;
 import com.bluenet.web.domain.model.entity.File;
+import com.bluenet.web.domain.model.entity.User;
 import com.bluenet.web.domain.model.enumerate.FileStatus;
 import com.bluenet.web.domain.model.enumerate.FileType;
 import com.bluenet.web.domain.model.enumerate.RoleType;
 import com.bluenet.web.domain.model.policy.RoleHierarchy;
-import com.bluenet.web.domain.model.vo.ConfirmUploadVO;
-import com.bluenet.web.domain.model.vo.FileVO;
-import com.bluenet.web.domain.model.vo.PresignedUploadVO;
-import com.bluenet.web.domain.model.vo.UserVO;
+import com.bluenet.web.domain.model.result.ConfirmUploadResult;
+import com.bluenet.web.domain.model.result.PresignedUploadResult;
+import com.bluenet.web.infrastructure.security.principal.RoleTypeResolver;
 import com.bluenet.web.domain.repository.AssessmentAnswerRepository;
 import com.bluenet.web.domain.repository.AssessmentQuestionRepository;
 import com.bluenet.web.domain.repository.AssessmentTimeRepository;
@@ -49,12 +49,12 @@ public class FileDomainServiceImpl implements FileDomainService {
     private final PresignedUploadTokenService presignedUploadTokenService;
     private final FileMagicChecker fileMagicChecker;
     private final StorageProperties storageProperties;
+    private final RoleTypeResolver roleTypeResolver;
 
     @Override
-    public FileVO getFileById(Long fileId) {
-        File file = fileRepository.findById(fileId)
+    public File getFileById(Long fileId) {
+        return fileRepository.findById(fileId)
                 .orElseThrow(() -> new DataNotFound("文件不存在，ID: " + fileId));
-        return convertToVO(file);
     }
 
     @Override
@@ -94,7 +94,7 @@ public class FileDomainServiceImpl implements FileDomainService {
 
     @Override
     @Transactional
-    public FileVO saveFile(FileType fileType, String filename, InputStream inputStream) {
+    public File saveFile(FileType fileType, String filename, InputStream inputStream) {
         String newFilename = generateFilename(fileType, getFileExtension(filename));
 
         File file = File.reconstruct(
@@ -106,7 +106,7 @@ public class FileDomainServiceImpl implements FileDomainService {
                 java.time.LocalDateTime.now());
         File savedFile = fileRepository.saveFile(inputStream, file);
 
-        return convertToVO(savedFile);
+        return savedFile;
     }
 
     @Override
@@ -116,7 +116,8 @@ public class FileDomainServiceImpl implements FileDomainService {
 
     @Override
     @Transactional
-    public PresignedUploadVO prepareUpload(FileType fileType, String originalFilename, String contentType, long size) {
+    public PresignedUploadResult prepareUpload(FileType fileType, String originalFilename, String contentType,
+            long size) {
         String extension = getFileExtension(originalFilename);
         String filename = generateFilename(fileType, extension);
 
@@ -144,12 +145,12 @@ public class FileDomainServiceImpl implements FileDomainService {
                 storageProperties.getPresignedUploadExpiry());
 
         log.info("预签名上传准备完成，fileId={}, type={}, filename={}", fileId, fileType, filename);
-        return new PresignedUploadVO(fileId, uploadUrl, callbackToken, filename, fileType);
+        return new PresignedUploadResult(fileId, uploadUrl, callbackToken, filename, fileType);
     }
 
     @Override
     @Transactional
-    public ConfirmUploadVO confirmUpload(Long fileId, String callbackToken, String expectedMd5, long expectedSize) {
+    public ConfirmUploadResult confirmUpload(Long fileId, String callbackToken, String expectedMd5, long expectedSize) {
         Long tokenFileId = presignedUploadTokenService.getFileId(callbackToken);
         if (tokenFileId == null || !tokenFileId.equals(fileId)) {
             log.warn("预签名上传确认失败，Token 无效或 fileId 不匹配: fileId={}", fileId);
@@ -161,7 +162,7 @@ public class FileDomainServiceImpl implements FileDomainService {
 
         if (file.getStatus() == FileStatus.ACTIVE) {
             log.info("预签名上传确认幂等，文件已是 ACTIVE 状态: fileId={}", fileId);
-            return new ConfirmUploadVO(fileId, file.getName(), file.getType(), FileStatus.ACTIVE);
+            return new ConfirmUploadResult(fileId, file.getName(), file.getType(), FileStatus.ACTIVE);
         }
 
         if (file.getStatus() != FileStatus.PENDING) {
@@ -175,7 +176,7 @@ public class FileDomainServiceImpl implements FileDomainService {
         } catch (DataNotFound e) {
             log.warn("预签名上传确认失败，OSS 对象不存在: fileId={}, filename={}", fileId, file.getName());
             updateFileStatus(file, FileStatus.REJECTED);
-            return new ConfirmUploadVO(fileId, file.getName(), file.getType(), FileStatus.REJECTED);
+            return new ConfirmUploadResult(fileId, file.getName(), file.getType(), FileStatus.REJECTED);
         }
 
         String actualEtag = sanitizeEtag(metadata.etag());
@@ -195,7 +196,7 @@ public class FileDomainServiceImpl implements FileDomainService {
         if (md5Match && sizeMatch && magicMatch) {
             updateFileStatus(file, FileStatus.ACTIVE);
             log.info("预签名上传确认成功，fileId={}, filename={}, etag={}", fileId, file.getName(), actualEtag);
-            return new ConfirmUploadVO(fileId, file.getName(), file.getType(), FileStatus.ACTIVE);
+            return new ConfirmUploadResult(fileId, file.getName(), file.getType(), FileStatus.ACTIVE);
         } else {
             log.warn(
                     "预签名上传确认失败，校验不通过: fileId={}, expectedMd5={}, actualEtag={}, expectedSize={}, actualSize={}, magicMatch={}",
@@ -211,7 +212,7 @@ public class FileDomainServiceImpl implements FileDomainService {
                 log.error("清理 OSS 对象失败: fileId={}, filename={}", fileId, file.getName(), e);
             }
             updateFileStatus(file, FileStatus.REJECTED);
-            return new ConfirmUploadVO(fileId, file.getName(), file.getType(), FileStatus.REJECTED);
+            return new ConfirmUploadResult(fileId, file.getName(), file.getType(), FileStatus.REJECTED);
         }
     }
 
@@ -223,7 +224,7 @@ public class FileDomainServiceImpl implements FileDomainService {
 
     private void updateFileStatus(File file, FileStatus status) {
         file.setStatus(status);
-        fileRepository.updateFileMetadata(file);
+        fileRepository.save(file);
     }
 
     private String sanitizeEtag(String etag) {
@@ -237,26 +238,16 @@ public class FileDomainServiceImpl implements FileDomainService {
         return sanitized;
     }
 
-    private FileVO convertToVO(File file) {
-        return FileVO.builder()
-                .id(file.getId())
-                .name(file.getName())
-                .type(file.getType())
-                .url(file.getUrl())
-                .status(file.getStatus())
-                .build();
-    }
-
     @Override
-    public void checkDownloadPermission(FileVO fileVO, UserVO currentUser) {
-        FileType fileType = fileVO.getType();
+    public void checkDownloadPermission(File file, User currentUser) {
+        FileType fileType = file.getType();
 
         switch (fileType) {
-            case WORK -> checkWorkPermission(fileVO, currentUser);
-            case ASSESSMENT_ATTACHMENT -> checkAssessmentAttachmentPermission(fileVO, currentUser);
+            case WORK -> checkWorkPermission(file, currentUser);
+            case ASSESSMENT_ATTACHMENT -> checkAssessmentAttachmentPermission(file, currentUser);
             case AVATAR -> {
             }
-            case NORMAL_IMG, QRCODE -> {
+            case NORMAL_IMG, QRCODE, ENROLL_FORM -> {
             }
             default -> {
                 log.warn("Unknown file type: {}", fileType);
@@ -265,33 +256,36 @@ public class FileDomainServiceImpl implements FileDomainService {
         }
     }
 
-    private void checkWorkPermission(FileVO fileVO, UserVO currentUser) {
+    private void checkWorkPermission(File file, User currentUser) {
         if (currentUser == null) {
             log.warn("User not authenticated for WORK file download");
             throw new Forbidden("需要登录才能下载作品文件");
         }
 
-        AssessmentAnswer answer = getAnswerByFileId(fileVO.getId());
+        // 校验答案存在（不存在时抛 DataNotFound）
+        getAnswerByFileId(file.getId());
 
-        if (answer.getUserId().equals(currentUser.getId())) {
+        // 组队场景下同一 fileId 对应队长与多名队员的多条答案记录，
+        // 只要其中任意一条属于当前用户即视为所有者，不能仅判断单条记录的归属
+        if (assessmentAnswerRepository.existsByFileIdAndUserId(file.getId(), currentUser.getId())) {
             return;
         }
 
         if (!hasRoleAtLeast(currentUser, RoleType.MEMBER)) {
-            log.warn("User {} does not have permission to download work file {}", currentUser.getId(), fileVO.getId());
+            log.warn("User {} does not have permission to download work file {}", currentUser.getId(), file.getId());
             throw new Forbidden("权限不够，需要 MEMBER 及以上权限");
         }
     }
 
-    private void checkAssessmentAttachmentPermission(FileVO fileVO, UserVO currentUser) {
+    private void checkAssessmentAttachmentPermission(File file, User currentUser) {
         if (currentUser == null) {
             log.warn("User not authenticated for ASSESSMENT_ATTACHMENT file download");
             throw new Forbidden("需要登录才能下载考题附件");
         }
 
-        AssessmentQuestion question = getQuestionByAttachmentId(fileVO.getId());
+        AssessmentQuestion question = getQuestionByAttachmentId(file.getId());
         if (question == null) {
-            log.warn("No question found for assessment attachment: {}", fileVO.getId());
+            log.warn("No question found for assessment attachment: {}", file.getId());
             throw new Forbidden("考题附件不存在");
         }
 
@@ -305,14 +299,9 @@ public class FileDomainServiceImpl implements FileDomainService {
         }
     }
 
-    private boolean hasRoleAtLeast(UserVO user, RoleType minRole) {
-        String userRoleName = user.getRoleName();
-        if (userRoleName == null || minRole == null) {
-            return false;
-        }
-
-        RoleType userRole = RoleType.fromName(userRoleName);
-        if (userRole == null) {
+    private boolean hasRoleAtLeast(User user, RoleType minRole) {
+        RoleType userRole = roleTypeResolver.resolve(user.getRoleId());
+        if (userRole == null || minRole == null) {
             return false;
         }
 

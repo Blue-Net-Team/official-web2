@@ -42,14 +42,6 @@ public interface AssessmentTimeRepository {
     void save(AssessmentTime assessmentTime);
 
     /**
-     * 更新已有考核场次记录。
-     *
-     * @param assessmentTime
-     *            考核时间实体（id 必须非空）。
-     */
-    void update(AssessmentTime assessmentTime);
-
-    /**
      * 删除指定考核场次记录。
      *
      * @param id

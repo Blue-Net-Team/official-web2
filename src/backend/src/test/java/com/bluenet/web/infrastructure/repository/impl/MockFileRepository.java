@@ -60,13 +60,29 @@ public class MockFileRepository implements FileRepository {
     }
 
     @Override
-    public void updateFileMetadata(File file) {
-        log.debug("Mock updating file metadata: {}", file.getId());
+    public File save(File file) {
+        log.debug("Mock saving file metadata: {}", file.getId());
+        if (file.getId() == null) {
+            file.setId(idGenerator.getAndIncrement());
+        }
+        return file;
     }
 
     @Override
     public List<File> findOrphanFiles() {
         log.debug("Mock findOrphanFiles called");
         return Collections.emptyList();
+    }
+
+    @Override
+    public Optional<File> findLatestByType(FileType type) {
+        log.debug("Mock findLatestByType called: {}", type);
+        return Optional.empty();
+    }
+
+    @Override
+    public Optional<File> findLatestByTypeExcludingId(FileType type, Long excludeId) {
+        log.debug("Mock findLatestByTypeExcludingId called: {}, excludeId={}", type, excludeId);
+        return Optional.empty();
     }
 }

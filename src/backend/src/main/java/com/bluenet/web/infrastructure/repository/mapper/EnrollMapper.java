@@ -3,6 +3,7 @@ package com.bluenet.web.infrastructure.repository.mapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.bluenet.web.infrastructure.repository.dataobject.EnrollDO;
+import com.bluenet.web.infrastructure.repository.dataobject.query.EnrollBriefQueryDO;
 import com.bluenet.web.domain.model.enumerate.Direction;
 import com.bluenet.web.domain.model.enumerate.EnrollStatus;
 import org.apache.ibatis.annotations.Mapper;
@@ -38,7 +39,8 @@ public interface EnrollMapper extends BaseMapper<EnrollDO> {
     long countByCollegeId(@Param("collegeId") Long collegeId);
 
     /**
-     * 查询报名申请 数据行。
+     * 分页查询报名申请列表，并在 SQL 层投影推荐人用户名（层间约定的性能投影例外： 为避免逐行反查推荐人造成 N+1，此处直接 JOIN tb_user
+     * 返回 projection，而非 DO）。 排序规则：内推报名（internal_referral_code 非空）优先，组内按 id 倒序。
      *
      * @param page
      *            分页请求或 MyBatis-Plus 分页对象。
@@ -48,9 +50,9 @@ public interface EnrollMapper extends BaseMapper<EnrollDO> {
      *            业务状态过滤条件。
      * @param direction
      *            技术方向过滤条件。
-     * @return 分页后的报名申请 结果。
+     * @return 分页后的报名申请投影结果，附带推荐人用户名。
      */
-    IPage<EnrollDO> selectPageByConditions(IPage<EnrollDO> page,
+    IPage<EnrollBriefQueryDO> selectPageByConditions(IPage<EnrollBriefQueryDO> page,
             @Param("keyword") String keyword,
             @Param("status") EnrollStatus status,
             @Param("direction") Direction direction);

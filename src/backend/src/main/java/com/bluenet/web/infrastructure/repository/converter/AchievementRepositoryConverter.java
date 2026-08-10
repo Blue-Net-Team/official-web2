@@ -1,7 +1,9 @@
 package com.bluenet.web.infrastructure.repository.converter;
 
 import com.bluenet.web.domain.model.entity.Achievement;
+import com.bluenet.web.domain.model.entity.AchievementExternalMember;
 import com.bluenet.web.infrastructure.repository.dataobject.AchievementDO;
+import com.bluenet.web.infrastructure.repository.dataobject.AchievementExternalMemberDO;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -62,5 +64,35 @@ public class AchievementRepositoryConverter {
         return dataObjects.stream()
                 .map(this::toEntity)
                 .toList();
+    }
+
+    /**
+     * 外部协作者 DO → Entity
+     */
+    public AchievementExternalMember toExternalMemberEntity(AchievementExternalMemberDO dataObject) {
+        if (dataObject == null) {
+            return null;
+        }
+        AchievementExternalMember member = new AchievementExternalMember();
+        member.setId(dataObject.getId());
+        member.setAchievementId(dataObject.getAchievementId());
+        member.setName(dataObject.getName());
+        member.setDisplayOrder(dataObject.getDisplayOrder());
+        return member;
+    }
+
+    /**
+     * 外部协作者 Entity → DO
+     */
+    public AchievementExternalMemberDO toExternalMemberDataObject(AchievementExternalMember entity) {
+        if (entity == null) {
+            return null;
+        }
+        return AchievementExternalMemberDO.builder()
+                .id(entity.getId())
+                .achievementId(entity.getAchievementId())
+                .name(entity.getName())
+                .displayOrder(entity.getDisplayOrder())
+                .build();
     }
 }

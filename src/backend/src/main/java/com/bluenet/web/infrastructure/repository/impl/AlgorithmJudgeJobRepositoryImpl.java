@@ -25,19 +25,17 @@ public class AlgorithmJudgeJobRepositoryImpl implements AlgorithmJudgeJobReposit
     @Override
     public void save(AlgorithmJudgeJob job) {
         AlgorithmJudgeJobDO dataObject = converter.toDataObject(job);
-        algorithmJudgeJobMapper.insert(dataObject);
-        job.setId(dataObject.getId());
+        if (dataObject.getId() == null) {
+            algorithmJudgeJobMapper.insert(dataObject);
+            job.setId(dataObject.getId());
+        } else {
+            algorithmJudgeJobMapper.updateById(dataObject);
+        }
     }
 
     @Override
     public Optional<AlgorithmJudgeJob> findById(Long id) {
         AlgorithmJudgeJobDO dataObject = algorithmJudgeJobMapper.selectById(id);
         return Optional.ofNullable(converter.toEntity(dataObject));
-    }
-
-    @Override
-    public void update(AlgorithmJudgeJob job) {
-        AlgorithmJudgeJobDO dataObject = converter.toDataObject(job);
-        algorithmJudgeJobMapper.updateById(dataObject);
     }
 }

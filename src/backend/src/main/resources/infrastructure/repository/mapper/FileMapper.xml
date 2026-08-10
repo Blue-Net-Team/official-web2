@@ -17,6 +17,25 @@
           AND type = #{fileType.value}
     </select>
 
+    <select id="selectLatestByType" resultMap="BaseResultMap">
+        SELECT *
+        FROM tb_file
+        WHERE type = #{fileType.value}
+          AND status = 'active'
+        ORDER BY id DESC
+        LIMIT 1
+    </select>
+
+    <select id="selectLatestByTypeExcludingId" resultMap="BaseResultMap">
+        SELECT *
+        FROM tb_file
+        WHERE type = #{fileType.value}
+          AND status = 'active'
+          AND id != #{excludeId}
+        ORDER BY id DESC
+        LIMIT 1
+    </select>
+
     <select id="selectOrphanFiles" resultMap="BaseResultMap">
         SELECT *
         FROM tb_file f
@@ -24,6 +43,7 @@
            OR (f.status = 'pending' AND f.created_at &lt; #{pendingThreshold})
            OR (
                f.status = 'active'
+               AND f.type != 'enroll-form'
                AND NOT EXISTS (SELECT 1 FROM tb_user u WHERE u.avatar_id = f.id)
                AND NOT EXISTS (SELECT 1 FROM tb_user u WHERE u.qrcode_id = f.id)
                AND NOT EXISTS (SELECT 1 FROM tb_enroll e WHERE e.avatar_id = f.id)

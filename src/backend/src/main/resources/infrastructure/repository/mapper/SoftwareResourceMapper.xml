@@ -55,4 +55,21 @@
         FROM tb_software_resource
         ORDER BY sort_order ASC, id ASC
     </select>
+
+    <select id="selectMaxSortOrder" resultType="java.lang.Integer">
+        SELECT MAX(sort_order) FROM tb_software_resource
+    </select>
+
+    <update id="batchUpdateSortOrder">
+        UPDATE tb_software_resource
+        SET sort_order = CASE id
+        <foreach collection="items" item="item">
+            WHEN #{item.id} THEN #{item.sortOrder}
+        </foreach>
+        END
+        WHERE id IN
+        <foreach collection="items" item="item" open="(" separator="," close=")">
+            #{item.id}
+        </foreach>
+    </update>
 </mapper>

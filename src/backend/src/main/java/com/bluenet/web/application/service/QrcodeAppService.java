@@ -1,6 +1,6 @@
 package com.bluenet.web.application.service;
 
-import com.bluenet.web.application.QrcodeResult;
+import com.bluenet.web.application.result.qrcode.QrcodeResult;
 import com.bluenet.web.application.command.qrcode.QrcodeCommands;
 
 import java.util.List;

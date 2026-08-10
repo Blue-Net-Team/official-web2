@@ -5,11 +5,11 @@ import com.bluenet.web.api.dto.ResponseMessage;
 import com.bluenet.web.api.dto.achievement.AchievementDTO;
 import com.bluenet.web.api.dto.achievement.AchievementStatsDTO;
 import com.bluenet.web.api.converter.achievement.AchievementResponseConverter;
-import com.bluenet.web.application.AchievementResult;
+import com.bluenet.web.application.result.achievement.AchievementResult;
 import com.bluenet.web.application.service.AchievementAppService;
 import com.bluenet.web.domain.model.enumerate.AchievementType;
 import com.bluenet.web.domain.model.enumerate.AwardLevel;
-import com.bluenet.web.domain.model.vo.AchievementStatsVO;
+import com.bluenet.web.application.result.achievement.AchievementStatistics;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
 import com.bluenet.web.infrastructure.security.annotation.RequiresPermission;
 import io.swagger.v3.oas.annotations.Operation;
@@ -56,7 +56,7 @@ public class AchievementController {
     @RequiresPermission(name = "获取成就统计", value = "achievement:stats", access = AccessLevel.PUBLIC)
     @GetMapping("/stats")
     public ResponseMessage<AchievementStatsDTO> getAchievementStats() {
-        AchievementStatsVO statsVO = achievementAppService.getAchievementStats();
+        AchievementStatistics statsVO = achievementAppService.getAchievementStats();
         AchievementStatsDTO stats = achievementResponseConverter.toStatsDTO(statsVO);
         return ResponseMessage.success(stats);
     }

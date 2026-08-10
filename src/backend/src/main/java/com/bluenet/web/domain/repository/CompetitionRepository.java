@@ -1,7 +1,7 @@
 package com.bluenet.web.domain.repository;
 
 import com.bluenet.web.domain.model.entity.Competition;
-import com.bluenet.web.domain.model.vo.CompetitionVO;
+import com.bluenet.web.domain.model.readmodel.CompetitionReadModel;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -22,7 +22,7 @@ public interface CompetitionRepository {
      *            最大返回数量。
      * @return 竞赛简要信息列表
      */
-    List<CompetitionVO> findCompetitionsWithLimit(int limit);
+    List<CompetitionReadModel> findCompetitionsWithLimit(int limit);
 
     /**
      * 按展示排序分页查询竞赛视图。
@@ -31,7 +31,7 @@ public interface CompetitionRepository {
      *            Spring 分页请求对象。
      * @return 分页后的竞赛结果。
      */
-    Page<CompetitionVO> findCompetitionsPage(Pageable pageable);
+    Page<CompetitionReadModel> findCompetitionsPage(Pageable pageable);
 
     /**
      * 保存新的竞赛记录。
@@ -40,14 +40,6 @@ public interface CompetitionRepository {
      *            竞赛实体。
      */
     void save(Competition competition);
-
-    /**
-     * 更新已有竞赛记录。
-     *
-     * @param competition
-     *            竞赛实体（id 必须非空）。
-     */
-    void update(Competition competition);
 
     /**
      * 删除指定竞赛记录。
@@ -89,6 +81,24 @@ public interface CompetitionRepository {
      * @return 查询到的竞赛实体；不存在时为 Optional.empty()。
      */
     Optional<Competition> findById(Long id);
+
+    /**
+     * 按名称查询竞赛记录。
+     *
+     * @param name
+     *            竞赛名称。
+     * @return 查询到的竞赛实体；不存在时为 Optional.empty()。
+     */
+    Optional<Competition> findByName(String name);
+
+    /**
+     * 判断是否存在指定名称的竞赛记录。
+     *
+     * @param name
+     *            竞赛名称。
+     * @return 存在时返回 true，否则返回 false。
+     */
+    boolean existsByName(String name);
 
     /**
      * 查询当前竞赛相邻位置的竞赛记录，用于排序调整。

@@ -44,4 +44,10 @@ public class EnrollmentBriefDTO {
 
     @Schema(description = "头像文件ID", example = "456")
     private Long avatarFileId;
+
+    @Schema(description = "内推码（报名时填写）", example = "ABC12345")
+    private String internalReferralCode;
+
+    @Schema(description = "推荐人姓名（内推码有效时返回）", example = "李四")
+    private String referralUserName;
 }

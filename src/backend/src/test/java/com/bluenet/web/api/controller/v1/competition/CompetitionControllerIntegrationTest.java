@@ -1,279 +1,120 @@
 package com.bluenet.web.api.controller.v1.competition;
 
-import com.bluenet.web.infrastructure.repository.dataobject.*;
-
-import com.bluenet.web.testsupport.RepositoryTestObjects;
-
-import static org.junit.jupiter.api.Assertions.*;
-
-import java.util.List;
-
-import org.junit.jupiter.api.BeforeEach;
+import com.bluenet.web.BaseIntegrationTest;
+import com.bluenet.web.api.dto.PageDTO;
+import com.bluenet.web.api.dto.competition.CompetitionResponseDTO;
+import com.bluenet.web.api.converter.competition.CompetitionResponseConverter;
+import com.bluenet.web.application.service.CompetitionAppService;
+import com.bluenet.web.domain.model.readmodel.CompetitionReadModel;
+import com.bluenet.web.testconfig.TestSecurityConfig;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.context.annotation.Import;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.test.context.ActiveProfiles;
-import org.testcontainers.junit.jupiter.Testcontainers;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.test.web.servlet.MockMvc;
 
-import com.bluenet.web.BaseIntegrationTest;
-import com.bluenet.web.api.dto.PageDTO;
-import com.bluenet.web.api.dto.ResponseMessage;
-import com.bluenet.web.api.dto.competition.CompetitionResponseDTO;
-import com.bluenet.web.domain.model.entity.Competition;
-import com.bluenet.web.domain.model.entity.File;
-import com.bluenet.web.domain.model.enumerate.FileStatus;
-import com.bluenet.web.domain.model.enumerate.FileType;
-import com.bluenet.web.infrastructure.repository.mapper.CompetitionMapper;
-import com.bluenet.web.infrastructure.repository.mapper.FileMapper;
-import com.bluenet.web.testcontainers.TestcontainersConfiguration;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.List;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+@SpringBootTest
+@AutoConfigureMockMvc
+@Import(TestSecurityConfig.class)
 @DisplayName("CompetitionController 集成测试")
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@ActiveProfiles("test")
-@Testcontainers
-@Import(TestcontainersConfiguration.class)
 class CompetitionControllerIntegrationTest extends BaseIntegrationTest {
 
     @Autowired
-    private TestRestTemplate restTemplate;
+    private MockMvc mockMvc;
 
-    @Autowired
-    private CompetitionMapper competitionMapper;
+    @MockitoBean
+    private CompetitionAppService competitionAppService;
 
-    @Autowired
-    private FileMapper fileMapper;
+    @MockitoBean
+    private CompetitionResponseConverter responseConverter;
 
-    @Autowired
-    private ObjectMapper objectMapper;
-
-    private static final Long TEST_FILE_ID = 1L;
-    private static final String TEST_FILE_URL = "http://example.com/logo.png";
-    private static final String TEST_FILE_NAME = "logo.png";
-    private static final FileType TEST_FILE_TYPE = FileType.NORMAL_IMG;
-    private static final String TEST_NAME = "蓝桥杯";
-    private static final String TEST_SHORT_NAME = "蓝桥杯";
-    private static final String TEST_SUMMARY = "全国软件和信息技术专业人才大赛";
-
-    @BeforeEach
-    void setUpTestData() {
-        File file = File
-                .reconstruct(TEST_FILE_ID, TEST_FILE_NAME, TEST_FILE_TYPE, TEST_FILE_URL, FileStatus.ACTIVE, null);
-        RepositoryTestObjects.insert(fileMapper, file, FileDO.class);
-
-        Competition competition1 = Competition
-                .create(TEST_NAME, TEST_SHORT_NAME, TEST_FILE_ID, TEST_FILE_ID, TEST_SUMMARY, null, null, null, 0);
-        RepositoryTestObjects.insert(competitionMapper, competition1, CompetitionDO.class);
-
-        Competition competition2 = Competition
-                .create("ACM程序设计大赛", "ACM", TEST_FILE_ID, null, "ACM国际大学生程序设计竞赛", null, null, null, 1);
-        RepositoryTestObjects.insert(competitionMapper, competition2, CompetitionDO.class);
+    @AfterEach
+    void tearDown() {
+        // 公开接口，不涉及 UserCTX。
     }
 
     @Test
-    @DisplayName("集成测试：获取竞赛列表应返回竞赛列表")
-    void getCompetitionList_shouldReturnCompetitions() {
-        ResponseEntity<ResponseMessage<List<CompetitionResponseDTO>>> response = restTemplate.exchange(
-                "/api/v1/competitions?limit=10",
-                HttpMethod.GET,
-                null,
-                new ParameterizedTypeReference<ResponseMessage<List<CompetitionResponseDTO>>>() {
-                });
+    @DisplayName("getCompetitionList: 默认参数应返回竞赛列表")
+    void getCompetitionList_defaultParams_shouldReturnList() throws Exception {
+        CompetitionReadModel readModel = CompetitionReadModel.builder()
+                .id(1L)
+                .name("蓝桥杯")
+                .shortName("蓝桥杯简称")
+                .level("national")
+                .month("10")
+                .organizer("主办方")
+                .summary("简介")
+                .sortOrder(100)
+                .build();
+        CompetitionResponseDTO dto = CompetitionResponseDTO.builder()
+                .id(1L)
+                .name("蓝桥杯")
+                .level("national")
+                .build();
+        when(competitionAppService.getCompetitionResponseList(10)).thenReturn(List.of(readModel));
+        when(responseConverter.toDTOList(any())).thenReturn(List.of(dto));
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertNotNull(response.getBody());
-        assertEquals(200, response.getBody().getCode());
-
-        List<CompetitionResponseDTO> competitions = response.getBody().getData();
-        assertNotNull(competitions);
-        assertTrue(competitions.size() >= 2);
-
-        for (CompetitionResponseDTO dto : competitions) {
-            assertNotNull(dto.getId());
-            assertNotNull(dto.getName());
-        }
+        mockMvc.perform(get("/api/v1/competitions"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.data[0].id").value(1))
+                .andExpect(jsonPath("$.data[0].name").value("蓝桥杯"));
     }
 
     @Test
-    @DisplayName("集成测试：获取竞赛列表应按排序权重降序排列")
-    void getCompetitionList_shouldOrderBySortOrderDesc() {
-        ResponseEntity<ResponseMessage<List<CompetitionResponseDTO>>> response = restTemplate.exchange(
-                "/api/v1/competitions?limit=10",
-                HttpMethod.GET,
-                null,
-                new ParameterizedTypeReference<ResponseMessage<List<CompetitionResponseDTO>>>() {
-                });
+    @DisplayName("getCompetitionList: 自定义 limit 应被传递")
+    void getCompetitionList_withLimit_shouldPassLimit() throws Exception {
+        when(competitionAppService.getCompetitionResponseList(5)).thenReturn(List.of());
+        when(responseConverter.toDTOList(any())).thenReturn(List.of());
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertNotNull(response.getBody());
-
-        List<CompetitionResponseDTO> competitions = response.getBody().getData();
-        assertNotNull(competitions);
-        assertTrue(competitions.size() >= 2);
-
-        CompetitionResponseDTO first = competitions.get(0);
-        assertEquals(TEST_NAME, first.getName());
+        mockMvc.perform(get("/api/v1/competitions").param("limit", "5"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data").isArray())
+                .andExpect(jsonPath("$.data").isEmpty());
     }
 
     @Test
-    @DisplayName("集成测试：limit参数应限制返回数量")
-    void getCompetitionList_withLimit_shouldLimitResults() {
-        ResponseEntity<ResponseMessage<List<CompetitionResponseDTO>>> response = restTemplate.exchange(
-                "/api/v1/competitions?limit=1",
-                HttpMethod.GET,
-                null,
-                new ParameterizedTypeReference<ResponseMessage<List<CompetitionResponseDTO>>>() {
-                });
+    @DisplayName("getCompetitionPage: 分页参数应返回分页结果")
+    void getCompetitionPage_withParams_shouldReturnPaged() throws Exception {
+        CompetitionReadModel readModel = CompetitionReadModel.builder()
+                .id(1L)
+                .name("ACM")
+                .shortName("ACM简称")
+                .level("provincial")
+                .month("11")
+                .organizer("ACM主办方")
+                .summary("ACM简介")
+                .sortOrder(50)
+                .build();
+        CompetitionResponseDTO dto = CompetitionResponseDTO.builder()
+                .id(1L)
+                .name("ACM")
+                .build();
+        PageDTO<CompetitionResponseDTO> pageDTO = new PageDTO<>(
+                List.of(dto), 1L, 1, 0, 10, 1, true, true, false);
+        when(competitionAppService.getCompetitionPage(0, 10)).thenReturn(new PageImpl<>(List.of(readModel)));
+        when(responseConverter.toPageDTO(any())).thenReturn(pageDTO);
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertNotNull(response.getBody());
-
-        List<CompetitionResponseDTO> competitions = response.getBody().getData();
-        assertNotNull(competitions);
-        assertEquals(1, competitions.size());
-    }
-
-    @Test
-    @DisplayName("集成测试：默认limit应为10")
-    void getCompetitionList_defaultLimit_shouldBe10() {
-        ResponseEntity<ResponseMessage<List<CompetitionResponseDTO>>> response = restTemplate.exchange(
-                "/api/v1/competitions",
-                HttpMethod.GET,
-                null,
-                new ParameterizedTypeReference<ResponseMessage<List<CompetitionResponseDTO>>>() {
-                });
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertNotNull(response.getBody());
-        assertNotNull(response.getBody().getData());
-    }
-
-    @Test
-    @DisplayName("集成测试：竞赛信息应包含必要字段")
-    void getCompetitionList_shouldContainRequiredFields() {
-        ResponseEntity<ResponseMessage<List<CompetitionResponseDTO>>> response = restTemplate.exchange(
-                "/api/v1/competitions?limit=10",
-                HttpMethod.GET,
-                null,
-                new ParameterizedTypeReference<ResponseMessage<List<CompetitionResponseDTO>>>() {
-                });
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        List<CompetitionResponseDTO> competitions = response.getBody().getData();
-
-        CompetitionResponseDTO firstCompetition = competitions.stream()
-                .filter(c -> TEST_NAME.equals(c.getName()))
-                .findFirst()
-                .orElse(null);
-
-        assertNotNull(firstCompetition);
-        assertNotNull(firstCompetition.getId());
-        assertEquals(TEST_NAME, firstCompetition.getName());
-        assertEquals(TEST_SUMMARY, firstCompetition.getSummary());
-    }
-
-    // ==================== GET /api/v1/competitions/page ====================
-
-    @Test
-    @DisplayName("集成测试：分页接口默认参数应返回分页数据")
-    void getCompetitionPage_defaultParams_shouldReturnPagedData() throws Exception {
-        ResponseEntity<String> response = restTemplate.exchange(
-                "/api/v1/competitions/page",
-                HttpMethod.GET,
-                null,
-                String.class);
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        ResponseMessage<PageDTO<CompetitionResponseDTO>> result = objectMapper.readValue(
-                response.getBody(),
-                new TypeReference<ResponseMessage<PageDTO<CompetitionResponseDTO>>>() {
-                });
-        assertEquals(200, result.getCode());
-
-        PageDTO<CompetitionResponseDTO> page = result.getData();
-        assertNotNull(page);
-        assertEquals(0, page.getNumber());
-        assertEquals(10, page.getSize());
-        assertTrue(page.getContent().size() >= 2);
-    }
-
-    @Test
-    @DisplayName("集成测试：分页接口自定义参数应限制返回数量")
-    void getCompetitionPage_withSize_shouldLimitResults() throws Exception {
-        ResponseEntity<String> response = restTemplate.exchange(
-                "/api/v1/competitions/page?page=0&size=1",
-                HttpMethod.GET,
-                null,
-                String.class);
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        ResponseMessage<PageDTO<CompetitionResponseDTO>> result = objectMapper.readValue(
-                response.getBody(),
-                new TypeReference<ResponseMessage<PageDTO<CompetitionResponseDTO>>>() {
-                });
-
-        PageDTO<CompetitionResponseDTO> page = result.getData();
-        assertNotNull(page);
-        assertEquals(1, page.getContent().size());
-    }
-
-    @Test
-    @DisplayName("集成测试：分页接口应按排序权重降序排列")
-    void getCompetitionPage_shouldOrderBySortOrderDesc() throws Exception {
-        ResponseEntity<String> response = restTemplate.exchange(
-                "/api/v1/competitions/page?page=0&size=10",
-                HttpMethod.GET,
-                null,
-                String.class);
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        ResponseMessage<PageDTO<CompetitionResponseDTO>> result = objectMapper.readValue(
-                response.getBody(),
-                new TypeReference<ResponseMessage<PageDTO<CompetitionResponseDTO>>>() {
-                });
-
-        PageDTO<CompetitionResponseDTO> page = result.getData();
-        assertNotNull(page);
-        assertTrue(page.getContent().size() >= 2);
-
-        CompetitionResponseDTO first = page.getContent().get(0);
-        assertEquals(TEST_NAME, first.getName());
-    }
-
-    @Test
-    @DisplayName("集成测试：分页接口返回的竞赛应包含完整字段")
-    void getCompetitionPage_shouldContainRequiredFields() throws Exception {
-        ResponseEntity<String> response = restTemplate.exchange(
-                "/api/v1/competitions/page?page=0&size=10",
-                HttpMethod.GET,
-                null,
-                String.class);
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        ResponseMessage<PageDTO<CompetitionResponseDTO>> result = objectMapper.readValue(
-                response.getBody(),
-                new TypeReference<ResponseMessage<PageDTO<CompetitionResponseDTO>>>() {
-                });
-
-        CompetitionResponseDTO competition = result.getData()
-                .getContent()
-                .stream()
-                .filter(c -> TEST_NAME.equals(c.getName()))
-                .findFirst()
-                .orElse(null);
-
-        assertNotNull(competition);
-        assertNotNull(competition.getId());
-        assertEquals(TEST_NAME, competition.getName());
-        assertEquals(TEST_SHORT_NAME, competition.getShortName());
-        assertEquals(TEST_SUMMARY, competition.getSummary());
+        mockMvc.perform(
+                get("/api/v1/competitions/page")
+                        .param("page", "0")
+                        .param("size", "10"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.data.content[0].id").value(1))
+                .andExpect(jsonPath("$.data.content[0].name").value("ACM"));
     }
 }

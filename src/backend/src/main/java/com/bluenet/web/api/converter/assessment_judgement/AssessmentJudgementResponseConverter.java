@@ -10,18 +10,17 @@ import com.bluenet.web.api.dto.assessment_judgement.AssessmentJudgementDTO;
 import com.bluenet.web.api.dto.assessment_judgement.AssessmentQuestionScoreboardDTO;
 import com.bluenet.web.api.dto.assessment_judgement.AssessmentQuestionSubmissionDTO;
 import com.bluenet.web.api.dto.assessment_judgement.AssessmentQuestionSubmissionHistoryDTO;
-import com.bluenet.web.application.AssessmentDecisionResult;
-import com.bluenet.web.application.AssessmentJudgementResult;
-import com.bluenet.web.domain.model.vo.AssessmentCandidateQuestionScoreVO;
-import com.bluenet.web.domain.model.vo.AssessmentCandidateScoreboardVO;
-import com.bluenet.web.domain.model.vo.AssessmentDecisionCandidateVO;
-import com.bluenet.web.domain.model.vo.AssessmentDecisionStatisticsVO;
-import com.bluenet.web.domain.model.vo.AssessmentDecisionVO;
-import com.bluenet.web.domain.model.vo.AssessmentDecisionWorkspaceVO;
-import com.bluenet.web.domain.model.vo.AssessmentJudgementVO;
-import com.bluenet.web.domain.model.vo.AssessmentQuestionScoreboardVO;
-import com.bluenet.web.domain.model.vo.AssessmentQuestionSubmissionHistoryVO;
-import com.bluenet.web.domain.model.vo.AssessmentQuestionSubmissionVO;
+import com.bluenet.web.application.result.assessment.AssessmentDecisionResult;
+import com.bluenet.web.application.result.assessment.AssessmentJudgementResult;
+import com.bluenet.web.application.result.assessment.AssessmentCandidateQuestionScore;
+import com.bluenet.web.application.result.assessment.AssessmentCandidateScoreboard;
+import com.bluenet.web.application.result.assessment.AssessmentDecisionCandidate;
+import com.bluenet.web.application.result.assessment.AssessmentDecisionStatistics;
+import com.bluenet.web.application.result.assessment.AssessmentDecisionWorkspace;
+import com.bluenet.web.application.result.assessment.AssessmentQuestionScoreboard;
+import com.bluenet.web.domain.model.entity.AssessmentJudgement;
+import com.bluenet.web.domain.model.readmodel.AssessmentQuestionSubmissionHistoryReadModel;
+import com.bluenet.web.domain.model.readmodel.AssessmentQuestionSubmissionReadModel;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -80,7 +79,7 @@ public class AssessmentJudgementResponseConverter {
     /**
      * 将题目评分汇总 VO 转换为接口 DTO
      */
-    public AssessmentQuestionScoreboardDTO convertScoreboardToDTO(AssessmentQuestionScoreboardVO vo) {
+    public AssessmentQuestionScoreboardDTO convertScoreboardToDTO(AssessmentQuestionScoreboard vo) {
         return AssessmentQuestionScoreboardDTO.builder()
                 .questionId(vo.getQuestionId())
                 .assessmentTimeId(vo.getAssessmentTimeId())
@@ -98,7 +97,7 @@ public class AssessmentJudgementResponseConverter {
     /**
      * 将题目提交 VO 转换为接口 DTO
      */
-    public AssessmentQuestionSubmissionDTO convertSubmissionToDTO(AssessmentQuestionSubmissionVO vo) {
+    public AssessmentQuestionSubmissionDTO convertSubmissionToDTO(AssessmentQuestionSubmissionReadModel vo) {
         List<AssessmentQuestionSubmissionHistoryDTO> histories = vo.getHistories() == null
                 ? List.of()
                 : vo.getHistories()
@@ -126,6 +125,8 @@ public class AssessmentJudgementResponseConverter {
                 .teamId(vo.getTeamId())
                 .teamName(vo.getTeamName())
                 .isLeader(vo.getIsLeader())
+                .internalReferralCode(vo.getInternalReferralCode())
+                .referralUserName(vo.getReferralUserName())
                 .build();
     }
 
@@ -133,7 +134,7 @@ public class AssessmentJudgementResponseConverter {
      * 将评判历史 VO 转换为接口 DTO
      */
     public AssessmentQuestionSubmissionHistoryDTO convertSubmissionHistoryToDTO(
-            AssessmentQuestionSubmissionHistoryVO vo) {
+            AssessmentQuestionSubmissionHistoryReadModel vo) {
         return AssessmentQuestionSubmissionHistoryDTO.builder()
                 .judgement(convertToDTO(vo.getJudgement()))
                 .selectedBest(Boolean.TRUE.equals(vo.getSelectedBest()))
@@ -143,7 +144,7 @@ public class AssessmentJudgementResponseConverter {
     /**
      * 将考生评分汇总 VO 转换为接口 DTO
      */
-    public AssessmentCandidateScoreboardDTO convertCandidateScoreboardToDTO(AssessmentCandidateScoreboardVO vo) {
+    public AssessmentCandidateScoreboardDTO convertCandidateScoreboardToDTO(AssessmentCandidateScoreboard vo) {
         return AssessmentCandidateScoreboardDTO.builder()
                 .candidateUserId(vo.getCandidateUserId())
                 .studentId(vo.getStudentId())
@@ -163,13 +164,15 @@ public class AssessmentJudgementResponseConverter {
                 .teamId(vo.getTeamId())
                 .teamName(vo.getTeamName())
                 .isLeader(vo.getIsLeader())
+                .internalReferralCode(vo.getInternalReferralCode())
+                .referralUserName(vo.getReferralUserName())
                 .build();
     }
 
     /**
      * 将录用决策工作台 VO 转换为接口 DTO
      */
-    public AssessmentDecisionWorkspaceDTO convertDecisionWorkspaceToDTO(AssessmentDecisionWorkspaceVO vo) {
+    public AssessmentDecisionWorkspaceDTO convertDecisionWorkspaceToDTO(AssessmentDecisionWorkspace vo) {
         return AssessmentDecisionWorkspaceDTO.builder()
                 .statistics(convertDecisionStatisticsToDTO(vo.getStatistics()))
                 .candidates(
@@ -185,7 +188,7 @@ public class AssessmentJudgementResponseConverter {
     /**
      * 将录用决策统计 VO 转换为接口 DTO
      */
-    public AssessmentDecisionStatisticsDTO convertDecisionStatisticsToDTO(AssessmentDecisionStatisticsVO vo) {
+    public AssessmentDecisionStatisticsDTO convertDecisionStatisticsToDTO(AssessmentDecisionStatistics vo) {
         return AssessmentDecisionStatisticsDTO.builder()
                 .candidates(vo.getCandidates())
                 .pending(vo.getPending())
@@ -197,7 +200,7 @@ public class AssessmentJudgementResponseConverter {
     /**
      * 将录用决策候选人 VO 转换为接口 DTO
      */
-    public AssessmentDecisionCandidateDTO convertDecisionCandidateToDTO(AssessmentDecisionCandidateVO vo) {
+    public AssessmentDecisionCandidateDTO convertDecisionCandidateToDTO(AssessmentDecisionCandidate vo) {
         return AssessmentDecisionCandidateDTO.builder()
                 .candidateUserId(vo.getCandidateUserId())
                 .studentId(vo.getStudentId())
@@ -222,13 +225,15 @@ public class AssessmentJudgementResponseConverter {
                 .teamId(vo.getTeamId())
                 .teamName(vo.getTeamName())
                 .isLeader(vo.getIsLeader())
+                .internalReferralCode(vo.getInternalReferralCode())
+                .referralUserName(vo.getReferralUserName())
                 .build();
     }
 
     /**
      * 将考生单题评分 VO 转换为接口 DTO
      */
-    public AssessmentCandidateQuestionScoreDTO convertQuestionScoreToDTO(AssessmentCandidateQuestionScoreVO vo) {
+    public AssessmentCandidateQuestionScoreDTO convertQuestionScoreToDTO(AssessmentCandidateQuestionScore vo) {
         return AssessmentCandidateQuestionScoreDTO.builder()
                 .questionId(vo.getQuestionId())
                 .questionNo(vo.getQuestionNo())
@@ -245,9 +250,9 @@ public class AssessmentJudgementResponseConverter {
     }
 
     /**
-     * 将评判 VO 转换为接口 DTO
+     * 将评判实体转换为接口 DTO
      */
-    public AssessmentJudgementDTO convertToDTO(AssessmentJudgementVO judgement) {
+    public AssessmentJudgementDTO convertToDTO(AssessmentJudgement judgement) {
         if (judgement == null) {
             return null;
         }
@@ -268,25 +273,7 @@ public class AssessmentJudgementResponseConverter {
                 .build();
     }
 
-    /**
-     * 将决策 VO 转换为接口 DTO
-     */
-    public AssessmentDecisionDTO convertToDTO(AssessmentDecisionVO decision) {
-        if (decision == null) {
-            return null;
-        }
-        return AssessmentDecisionDTO.builder()
-                .id(decision.getId())
-                .userId(decision.getUserId())
-                .assessmentTimeId(decision.getAssessmentTimeId())
-                .passed(decision.getPassed())
-                .decidedBy(decision.getDecidedBy())
-                .decisionComment(decision.getDecisionComment())
-                .decidedAt(decision.getDecidedAt())
-                .build();
-    }
-
-    private AssessmentJudgementDTO convertJudgementFromSubmission(AssessmentQuestionSubmissionVO vo) {
+    private AssessmentJudgementDTO convertJudgementFromSubmission(AssessmentQuestionSubmissionReadModel vo) {
         if (vo.getJudgementId() == null) {
             return null;
         }

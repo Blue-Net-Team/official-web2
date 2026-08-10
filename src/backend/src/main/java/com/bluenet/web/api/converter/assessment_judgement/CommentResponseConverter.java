@@ -1,24 +1,24 @@
 package com.bluenet.web.api.converter.assessment_judgement;
 
 import com.bluenet.web.api.dto.assessment_judgement.CommentDTO;
-import com.bluenet.web.domain.model.vo.CommentVO;
+import com.bluenet.web.application.result.comment.CommentResult;
 import org.springframework.stereotype.Component;
 
 @Component
 public class CommentResponseConverter {
 
-    public CommentDTO toDTO(CommentVO vo) {
-        if (vo == null) {
+    public CommentDTO toDTO(CommentResult result) {
+        if (result == null) {
             return null;
         }
         return CommentDTO.builder()
-                .id(vo.getId())
-                .answerId(vo.getAnswerId())
-                .userId(vo.getUserId())
-                .username(vo.getUsername())
-                .content(vo.getContent())
-                .score(vo.getScore())
-                .commentTime(vo.getCommentTime())
+                .id(result.id())
+                .answerId(result.answerId())
+                .userId(result.userId())
+                .username(result.username())
+                .content(result.content())
+                .score(result.score())
+                .commentTime(result.commentTime())
                 .build();
     }
 }

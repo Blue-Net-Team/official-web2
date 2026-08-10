@@ -6,7 +6,7 @@ import com.bluenet.web.domain.model.entity.Enroll;
 import com.bluenet.web.domain.model.entity.User;
 import com.bluenet.web.domain.model.enumerate.Direction;
 import com.bluenet.web.domain.model.enumerate.EnrollStatus;
-import com.bluenet.web.domain.model.vo.EnrollStatisticsVO;
+import com.bluenet.web.application.result.enroll.EnrollStatistics;
 import com.bluenet.web.domain.repository.EnrollRepository;
 import com.bluenet.web.infrastructure.repository.converter.CollegeRepositoryConverter;
 import com.bluenet.web.infrastructure.repository.converter.EnrollRepositoryConverter;
@@ -14,6 +14,7 @@ import com.bluenet.web.domain.model.entity.College;
 import com.bluenet.web.infrastructure.repository.dataobject.CollegeDO;
 import com.bluenet.web.infrastructure.repository.dataobject.EnrollDO;
 import com.bluenet.web.infrastructure.repository.dataobject.UserDO;
+import com.bluenet.web.infrastructure.repository.dataobject.query.EnrollBriefQueryDO;
 import com.bluenet.web.infrastructure.repository.mapper.CollegeMapper;
 import com.bluenet.web.infrastructure.repository.mapper.EnrollMapper;
 import com.bluenet.web.infrastructure.repository.mapper.UserMapper;
@@ -56,56 +57,54 @@ public class EnrollRepositoryImpl implements EnrollRepository {
     @Override
     public void save(Enroll enroll) {
         EnrollDO dataObject = converter.toDataObject(enroll);
-        enrollMapper.insert(dataObject);
-        enroll.setId(dataObject.getId());
+        if (dataObject.getId() == null) {
+            enrollMapper.insert(dataObject);
+            enroll.setId(dataObject.getId());
+        } else {
+            enrollMapper.updateById(dataObject);
+        }
     }
-
-    @Override
-    public void update(Enroll enroll) {
-        EnrollDO dataObject = converter.toDataObject(enroll);
-        enrollMapper.updateById(dataObject);
-    }
-
     @Override
     public org.springframework.data.domain.Page<Enroll> findAll(Pageable pageable) {
-        Page<EnrollDO> page = new Page<>(pageable.getPageNumber() + 1, pageable.getPageSize());
-        IPage<EnrollDO> result = enrollMapper.selectPageByConditions(page, null, null, null);
+        Page<EnrollBriefQueryDO> page = new Page<>(pageable.getPageNumber() + 1, pageable.getPageSize());
+        IPage<EnrollBriefQueryDO> result = enrollMapper.selectPageByConditions(page, null, null, null);
         return convertToEntityPage(result, pageable);
     }
 
     @Override
     public org.springframework.data.domain.Page<Enroll> findByStatus(EnrollStatus status, Pageable pageable) {
-        Page<EnrollDO> page = new Page<>(pageable.getPageNumber() + 1, pageable.getPageSize());
-        IPage<EnrollDO> result = enrollMapper.selectPageByConditions(page, null, status, null);
+        Page<EnrollBriefQueryDO> page = new Page<>(pageable.getPageNumber() + 1, pageable.getPageSize());
+        IPage<EnrollBriefQueryDO> result = enrollMapper.selectPageByConditions(page, null, status, null);
         return convertToEntityPage(result, pageable);
     }
 
     @Override
     public org.springframework.data.domain.Page<Enroll> findByDirection(Direction direction, Pageable pageable) {
-        Page<EnrollDO> page = new Page<>(pageable.getPageNumber() + 1, pageable.getPageSize());
-        IPage<EnrollDO> result = enrollMapper.selectPageByConditions(page, null, null, direction);
+        Page<EnrollBriefQueryDO> page = new Page<>(pageable.getPageNumber() + 1, pageable.getPageSize());
+        IPage<EnrollBriefQueryDO> result = enrollMapper.selectPageByConditions(page, null, null, direction);
         return convertToEntityPage(result, pageable);
     }
 
     @Override
     public org.springframework.data.domain.Page<Enroll> findByStatusAndDirection(EnrollStatus status,
             Direction direction, Pageable pageable) {
-        Page<EnrollDO> page = new Page<>(pageable.getPageNumber() + 1, pageable.getPageSize());
-        IPage<EnrollDO> result = enrollMapper.selectPageByConditions(page, null, status, direction);
+        Page<EnrollBriefQueryDO> page = new Page<>(pageable.getPageNumber() + 1, pageable.getPageSize());
+        IPage<EnrollBriefQueryDO> result = enrollMapper.selectPageByConditions(page, null, status, direction);
         return convertToEntityPage(result, pageable);
     }
 
     @Override
     public org.springframework.data.domain.Page<Enroll> search(String keyword, EnrollStatus status, Direction direction,
             Pageable pageable) {
-        Page<EnrollDO> page = new Page<>(pageable.getPageNumber() + 1, pageable.getPageSize());
+        Page<EnrollBriefQueryDO> page = new Page<>(pageable.getPageNumber() + 1, pageable.getPageSize());
         String normalizedKeyword = keyword == null ? null : keyword.trim();
-        IPage<EnrollDO> result = enrollMapper.selectPageByConditions(page, normalizedKeyword, status, direction);
+        IPage<EnrollBriefQueryDO> result = enrollMapper
+                .selectPageByConditions(page, normalizedKeyword, status, direction);
         return convertToEntityPage(result, pageable);
     }
 
     @Override
-    public EnrollStatisticsVO getStatistics() {
+    public EnrollStatistics getStatistics() {
         long total = enrollMapper.countAll();
 
         Map<String, Long> byStatus = new HashMap<>();
@@ -118,19 +117,28 @@ public class EnrollRepositoryImpl implements EnrollRepository {
             byDirection.put(direction, enrollMapper.countByDirection(direction));
         }
 
-        return EnrollStatisticsVO.builder()
+        return EnrollStatistics.builder()
                 .total(total)
                 .byStatus(byStatus)
                 .byDirection(byDirection)
                 .build();
     }
 
-    private org.springframework.data.domain.Page<Enroll> convertToEntityPage(IPage<EnrollDO> page, Pageable pageable) {
+    private org.springframework.data.domain.Page<Enroll> convertToEntityPage(IPage<EnrollBriefQueryDO> page,
+            Pageable pageable) {
         List<Enroll> content = page.getRecords()
                 .stream()
-                .map(doObj -> toEntity(doObj, false))
+                .map(this::toBriefEntity)
                 .collect(Collectors.toList());
         return new PageImpl<>(content, pageable, page.getTotal());
+    }
+
+    /**
+     * 列表场景转换：推荐人姓名已由 SQL 投影带出，直接透传，不再逐行反查（避免 N+1）。
+     */
+    private Enroll toBriefEntity(EnrollBriefQueryDO queryObject) {
+        String collegeName = getCollegeName(queryObject.getCollegeId());
+        return converter.toEntity(queryObject, collegeName, null, queryObject.getReferralUsername());
     }
 
     private Enroll toEntity(EnrollDO dataObject, boolean includeReferral) {

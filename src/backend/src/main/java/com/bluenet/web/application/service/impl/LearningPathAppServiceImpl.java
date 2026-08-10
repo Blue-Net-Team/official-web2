@@ -1,6 +1,6 @@
 package com.bluenet.web.application.service.impl;
 
-import com.bluenet.web.application.LearningPathResult;
+import com.bluenet.web.application.result.learningpath.LearningPathResult;
 import com.bluenet.web.application.command.learningpath.LearningPathCommands;
 import com.bluenet.web.application.service.LearningPathAppService;
 import com.bluenet.web.domain.model.entity.DirectionLearningStep;
@@ -83,7 +83,7 @@ public class LearningPathAppServiceImpl implements LearningPathAppService {
         step.updateStepNumber(command.stepNumber());
         step.updateTitle(command.title());
         step.updateVideoUrl(command.videoUrl());
-        learningPathRepository.update(step);
+        learningPathRepository.save(step);
         return toResult(step);
     }
 

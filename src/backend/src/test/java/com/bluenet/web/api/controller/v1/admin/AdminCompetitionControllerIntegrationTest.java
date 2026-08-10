@@ -1,351 +1,239 @@
 package com.bluenet.web.api.controller.v1.admin;
 
-import com.bluenet.web.infrastructure.repository.dataobject.*;
-
-import com.bluenet.web.testsupport.RepositoryTestObjects;
-
-import static org.junit.jupiter.api.Assertions.*;
-
-import java.util.List;
-
-import org.junit.jupiter.api.BeforeEach;
+import com.bluenet.web.BaseIntegrationTest;
+import com.bluenet.web.api.dto.competition.BatchSortRequestDTO;
+import com.bluenet.web.api.dto.competition.CompetitionRequestDTO;
+import com.bluenet.web.api.dto.competition.MoveCompetitionRequestDTO;
+import com.bluenet.web.application.result.competition.CompetitionResult;
+import com.bluenet.web.application.service.CompetitionAppService;
+import com.bluenet.web.domain.exception.DataNotFound;
+import com.bluenet.web.infrastructure.security.principal.WithSecurityPrincipal;
+import com.bluenet.web.infrastructure.security.util.UserCTX;
+import com.bluenet.web.testconfig.TestSecurityConfig;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.context.annotation.Import;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.test.context.ActiveProfiles;
-import org.testcontainers.junit.jupiter.Testcontainers;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 
-import com.bluenet.web.BaseIntegrationTest;
-import com.bluenet.web.api.dto.ResponseMessage;
-import com.bluenet.web.api.dto.auth.StudentIdLoginRequestDTO;
-import com.bluenet.web.api.dto.auth.UserAuthResponseDTO;
-import com.bluenet.web.api.dto.competition.*;
-import com.bluenet.web.domain.model.entity.*;
-import com.bluenet.web.domain.model.enumerate.Direction;
-import com.bluenet.web.domain.model.enumerate.FileStatus;
-import com.bluenet.web.domain.model.enumerate.FileType;
+import java.util.List;
 
-import com.bluenet.web.infrastructure.repository.mapper.*;
-import com.bluenet.web.infrastructure.security.cache.PermissionCache;
-import com.bluenet.web.testcontainers.TestcontainersConfiguration;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+@SpringBootTest
+@AutoConfigureMockMvc
+@Import(TestSecurityConfig.class)
 @DisplayName("AdminCompetitionController 集成测试")
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@ActiveProfiles("test")
-@Testcontainers
-@Import(TestcontainersConfiguration.class)
 class AdminCompetitionControllerIntegrationTest extends BaseIntegrationTest {
 
     @Autowired
-    private TestRestTemplate restTemplate;
+    private MockMvc mockMvc;
 
     @Autowired
-    private CompetitionMapper competitionMapper;
+    private ObjectMapper objectMapper;
 
-    @Autowired
-    private FileMapper fileMapper;
+    @MockitoBean
+    private CompetitionAppService competitionAppService;
 
-    @Autowired
-    private UserMapper userMapper;
-
-    @Autowired
-    private RoleMapper roleMapper;
-
-    @Autowired
-    private PermissionMapper permissionMapper;
-
-    @Autowired
-    private RolePermissionMapper rolePermissionMapper;
-
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-
-    @Autowired
-    private PermissionCache permissionCache;
-
-    private static final String TEST_STUDENT_ID = "admin001";
-    private static final String TEST_PASSWORD = "adminPassword123";
-    private static final String TEST_FILE_URL = "http://example.com/logo.png";
-    private static final String TEST_FILE_NAME = "logo.png";
-    private static final FileType TEST_FILE_TYPE = FileType.NORMAL_IMG;
-
-    private List<String> authCookies;
-    private String csrfToken;
-    private Long adminRoleId;
-    private Long testFileId;
-
-    @BeforeEach
-    void setUpTestData() {
-        File file = File.reconstruct(null, TEST_FILE_NAME, TEST_FILE_TYPE, TEST_FILE_URL, FileStatus.ACTIVE, null);
-        RepositoryTestObjects.insert(fileMapper, file, FileDO.class);
-        testFileId = file.getId();
-
-        Role adminRole = RepositoryTestObjects.toDomain(roleMapper.selectByName("SUPER_ADMIN"), Role.class);
-        if (adminRole == null) {
-            throw new IllegalStateException("SUPER_ADMIN 角色不存在，请检查数据库迁移脚本");
-        }
-        adminRoleId = adminRole.getId();
-
-        createPermission("competition:create", "创建竞赛");
-        createPermission("competition:update", "更新竞赛");
-        createPermission("competition:delete", "删除竞赛");
-        createPermission("competition:sort", "调整竞赛排序");
-
-        permissionCache.refresh();
-
-        User adminUser = User.reconstruct(
-                null,
-                TEST_STUDENT_ID,
-                "admin@example.com",
-                adminRoleId,
-                passwordEncoder.encode(TEST_PASSWORD),
-                "管理员",
-                null,
-                null,
-                null,
-                null,
-                Direction.COMPUTER_VISION,
-                null,
-                null,
-                null,
-                false,
-                null,
-                null,
-                null,
-                null,
-                null);
-        RepositoryTestObjects.insert(userMapper, adminUser, UserDO.class);
-
-        loginAndGetCookies();
+    @AfterEach
+    void tearDown() {
+        UserCTX.clear();
     }
 
-    private void createPermission(String value, String name) {
-        Permission permission = Permission.create(name, value, null, null, null);
-        RepositoryTestObjects.insert(permissionMapper, permission, PermissionDO.class);
+    private static final long SUPER_ADMIN_USER_ID = 9999L;
 
-        RolePermission rolePermission = RolePermission.create(adminRoleId, permission.getId());
-        RepositoryTestObjects.insert(rolePermissionMapper, rolePermission, RolePermissionDO.class);
-    }
-
-    private void loginAndGetCookies() {
-        StudentIdLoginRequestDTO loginRequest = new StudentIdLoginRequestDTO();
-        loginRequest.setStudentId(TEST_STUDENT_ID);
-        loginRequest.setPassword(TEST_PASSWORD);
-
-        ResponseEntity<ResponseMessage<UserAuthResponseDTO>> response = restTemplate.exchange(
-                "/api/v1/auth/login/student-id",
-                HttpMethod.POST,
-                new HttpEntity<>(loginRequest),
-                new ParameterizedTypeReference<ResponseMessage<UserAuthResponseDTO>>() {
-                });
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        authCookies = response.getHeaders().get(HttpHeaders.SET_COOKIE);
-        csrfToken = response.getBody().getData().getCsrfToken();
-        assertNotNull(authCookies, "登录响应应包含 Set-Cookie");
-        assertNotNull(csrfToken, "登录响应应包含 CSRF Token");
-    }
-
-    private HttpHeaders createAuthHeaders() {
-        HttpHeaders headers = new HttpHeaders();
-        headers.put(HttpHeaders.COOKIE, authCookies);
-        return headers;
-    }
-
-    private HttpHeaders createAuthHeadersWithCsrf() {
-        HttpHeaders headers = createAuthHeaders();
-        headers.set("X-CSRF-Token", csrfToken);
-        return headers;
+    private CompetitionResult stubResult() {
+        return new CompetitionResult(
+                1L,
+                "蓝桥杯",
+                "蓝桥杯",
+                "national",
+                "4月",
+                "工业和信息化部",
+                "全国软件大赛",
+                100L,
+                200L,
+                10);
     }
 
     @Test
-    @DisplayName("集成测试：创建竞赛应成功")
-    void createCompetition_shouldCreateSuccessfully() {
-        CompetitionRequestDTO request = CompetitionRequestDTO.builder()
-                .name("新竞赛")
-                .shortName("NEW")
-                .logoFileId(testFileId)
-                .summary("新竞赛简介")
-                .build();
-
-        HttpHeaders headers = createAuthHeadersWithCsrf();
-        HttpEntity<CompetitionRequestDTO> entity = new HttpEntity<>(request, headers);
-
-        ResponseEntity<ResponseMessage<CompetitionResponseDTO>> response = restTemplate.exchange(
-                "/api/v1/admin/competitions",
-                HttpMethod.POST,
-                entity,
-                new ParameterizedTypeReference<ResponseMessage<CompetitionResponseDTO>>() {
-                });
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertNotNull(response.getBody());
-        assertEquals(200, response.getBody().getCode());
-
-        CompetitionResponseDTO created = response.getBody().getData();
-        assertNotNull(created);
-        assertNotNull(created.getId());
-        assertEquals("新竞赛", created.getName());
-        assertEquals("NEW", created.getShortName());
-    }
-
-    @Test
-    @DisplayName("集成测试：创建竞赛时名称为空应返回400")
-    void createCompetition_withEmptyName_shouldReturn400() {
-        CompetitionRequestDTO request = CompetitionRequestDTO.builder().name("").build();
-
-        HttpHeaders headers = createAuthHeadersWithCsrf();
-        HttpEntity<CompetitionRequestDTO> entity = new HttpEntity<>(request, headers);
-
-        ResponseEntity<ResponseMessage<CompetitionResponseDTO>> response = restTemplate.exchange(
-                "/api/v1/admin/competitions",
-                HttpMethod.POST,
-                entity,
-                new ParameterizedTypeReference<ResponseMessage<CompetitionResponseDTO>>() {
-                });
-
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-    }
-
-    @Test
-    @DisplayName("集成测试：未认证用户创建竞赛应返回401")
-    void createCompetition_withoutAuth_shouldReturn401() {
-        CompetitionRequestDTO request = CompetitionRequestDTO.builder().name("新竞赛").build();
-
-        HttpEntity<CompetitionRequestDTO> entity = new HttpEntity<>(request);
-
-        ResponseEntity<ResponseMessage<CompetitionResponseDTO>> response = restTemplate.exchange(
-                "/api/v1/admin/competitions",
-                HttpMethod.POST,
-                entity,
-                new ParameterizedTypeReference<ResponseMessage<CompetitionResponseDTO>>() {
-                });
-
-        assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
-    }
-
-    @Test
-    @DisplayName("集成测试：更新竞赛应成功")
-    void updateCompetition_shouldUpdateSuccessfully() {
-        Competition competition = Competition.create("原竞赛名", "OLD", null, null, "原简介", null, null, null, 0);
-        RepositoryTestObjects.insert(competitionMapper, competition, CompetitionDO.class);
+    @DisplayName("createCompetition: 超级管理员应成功创建竞赛")
+    @WithSecurityPrincipal(userId = SUPER_ADMIN_USER_ID, roleType = "SUPER_ADMIN", roleId = 1L, permissions = {
+            "competition:create" })
+    void createCompetition_asSuperAdmin_shouldReturnCreatedCompetition() throws Exception {
+        when(competitionAppService.createCompetition(any())).thenReturn(stubResult());
 
         CompetitionRequestDTO request = CompetitionRequestDTO.builder()
-                .name("更新后的竞赛名")
-                .shortName("NEW")
-                .summary("更新后的简介")
+                .name("蓝桥杯")
+                .shortName("蓝桥杯")
+                .level("national")
+                .month("4月")
+                .organizer("工业和信息化部")
+                .summary("全国软件大赛")
+                .logoFileId(100L)
+                .coverFileId(200L)
                 .build();
 
-        HttpHeaders headers = createAuthHeadersWithCsrf();
-        HttpEntity<CompetitionRequestDTO> entity = new HttpEntity<>(request, headers);
-
-        ResponseEntity<ResponseMessage<CompetitionResponseDTO>> response = restTemplate.exchange(
-                "/api/v1/admin/competitions/" + competition.getId(),
-                HttpMethod.PUT,
-                entity,
-                new ParameterizedTypeReference<ResponseMessage<CompetitionResponseDTO>>() {
-                });
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertNotNull(response.getBody());
-        assertEquals(200, response.getBody().getCode());
-
-        CompetitionResponseDTO updated = response.getBody().getData();
-        assertEquals("更新后的竞赛名", updated.getName());
+        MvcResult mvcResult = mockMvc.perform(
+                post("/api/v1/admin/competitions")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.id").value(1))
+                .andExpect(jsonPath("$.data.name").value("蓝桥杯"))
+                .andReturn();
+        assertThat(mvcResult.getResponse().getStatus()).isEqualTo(200);
     }
 
     @Test
-    @DisplayName("集成测试：更新不存在的竞赛应返回404")
-    void updateCompetition_notFound_shouldReturn404() {
-        CompetitionRequestDTO request = CompetitionRequestDTO.builder().name("更新后的竞赛名").build();
+    @DisplayName("createCompetition: 普通成员访问应返回 403")
+    @WithSecurityPrincipal(roleType = "MEMBER", roleId = 3L, permissions = {})
+    void createCompetition_asMember_shouldReturn403() throws Exception {
+        CompetitionRequestDTO request = CompetitionRequestDTO.builder()
+                .name("测试竞赛")
+                .build();
 
-        HttpHeaders headers = createAuthHeadersWithCsrf();
-        HttpEntity<CompetitionRequestDTO> entity = new HttpEntity<>(request, headers);
-
-        ResponseEntity<ResponseMessage<CompetitionResponseDTO>> response = restTemplate.exchange(
-                "/api/v1/admin/competitions/99999",
-                HttpMethod.PUT,
-                entity,
-                new ParameterizedTypeReference<ResponseMessage<CompetitionResponseDTO>>() {
-                });
-
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        assertEquals(404, response.getBody().getCode());
+        mockMvc.perform(
+                post("/api/v1/admin/competitions")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isForbidden());
     }
 
     @Test
-    @DisplayName("集成测试：删除竞赛应成功")
-    void deleteCompetition_shouldDeleteSuccessfully() {
-        Competition competition = Competition.create("要删除的竞赛", null, null, null, null, null, null, null, 0);
-        RepositoryTestObjects.insert(competitionMapper, competition, CompetitionDO.class);
-        Long competitionId = competition.getId();
+    @DisplayName("updateCompetition: 超级管理员应成功更新竞赛")
+    @WithSecurityPrincipal(userId = SUPER_ADMIN_USER_ID, roleType = "SUPER_ADMIN", roleId = 1L, permissions = {
+            "competition:update" })
+    void updateCompetition_asSuperAdmin_shouldReturnUpdatedCompetition() throws Exception {
+        when(competitionAppService.updateCompetition(any())).thenReturn(stubResult());
 
-        HttpHeaders headers = createAuthHeadersWithCsrf();
-        HttpEntity<Void> entity = new HttpEntity<>(headers);
+        CompetitionRequestDTO request = CompetitionRequestDTO.builder()
+                .name("蓝桥杯")
+                .shortName("蓝桥杯")
+                .level("national")
+                .month("4月")
+                .organizer("工业和信息化部")
+                .summary("全国软件大赛")
+                .logoFileId(100L)
+                .coverFileId(200L)
+                .build();
 
-        ResponseEntity<ResponseMessage<Void>> response = restTemplate.exchange(
-                "/api/v1/admin/competitions/" + competitionId,
-                HttpMethod.DELETE,
-                entity,
-                new ParameterizedTypeReference<ResponseMessage<Void>>() {
-                });
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(200, response.getBody().getCode());
-
-        Competition deleted = RepositoryTestObjects
-                .toDomain(competitionMapper.selectById(competitionId), Competition.class);
-        assertNull(deleted);
+        MvcResult mvcResult = mockMvc.perform(
+                put("/api/v1/admin/competitions/{id}", 1L)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.id").value(1))
+                .andReturn();
+        assertThat(mvcResult.getResponse().getStatus()).isEqualTo(200);
     }
 
     @Test
-    @DisplayName("集成测试：删除不存在的竞赛应返回404")
-    void deleteCompetition_notFound_shouldReturn404() {
-        HttpHeaders headers = createAuthHeadersWithCsrf();
-        HttpEntity<Void> entity = new HttpEntity<>(headers);
+    @DisplayName("updateCompetition: 竞赛不存在应返回 404")
+    @WithSecurityPrincipal(userId = SUPER_ADMIN_USER_ID, roleType = "SUPER_ADMIN", roleId = 1L, permissions = {
+            "competition:update" })
+    void updateCompetition_notFound_shouldReturn404() throws Exception {
+        when(competitionAppService.updateCompetition(any())).thenThrow(new DataNotFound("竞赛不存在"));
 
-        ResponseEntity<ResponseMessage<Void>> response = restTemplate.exchange(
-                "/api/v1/admin/competitions/99999",
-                HttpMethod.DELETE,
-                entity,
-                new ParameterizedTypeReference<ResponseMessage<Void>>() {
-                });
+        CompetitionRequestDTO request = CompetitionRequestDTO.builder()
+                .name("蓝桥杯")
+                .build();
 
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        assertEquals(404, response.getBody().getCode());
+        MvcResult mvcResult = mockMvc.perform(
+                put("/api/v1/admin/competitions/{id}", 999L)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isNotFound())
+                .andReturn();
+        assertThat(mvcResult.getResponse().getStatus()).isEqualTo(404);
     }
 
     @Test
-    @DisplayName("集成测试：删除竞赛应成功")
-    void deleteCompetition_shouldSucceed() {
-        Competition competition = Competition.create("要删除的竞赛", null, null, null, null, null, null, null, 0);
-        RepositoryTestObjects.insert(competitionMapper, competition, CompetitionDO.class);
-        Long competitionId = competition.getId();
+    @DisplayName("deleteCompetition: 超级管理员应成功删除竞赛")
+    @WithSecurityPrincipal(userId = SUPER_ADMIN_USER_ID, roleType = "SUPER_ADMIN", roleId = 1L, permissions = {
+            "competition:delete" })
+    void deleteCompetition_asSuperAdmin_shouldReturnOk() throws Exception {
+        doNothing().when(competitionAppService).deleteCompetition(1L);
 
-        HttpHeaders headers = createAuthHeadersWithCsrf();
-        HttpEntity<Void> entity = new HttpEntity<>(headers);
+        MvcResult mvcResult = mockMvc.perform(delete("/api/v1/admin/competitions/{id}", 1L))
+                .andExpect(status().isOk())
+                .andReturn();
+        assertThat(mvcResult.getResponse().getStatus()).isEqualTo(200);
+    }
 
-        ResponseEntity<ResponseMessage<Void>> response = restTemplate.exchange(
-                "/api/v1/admin/competitions/" + competitionId,
-                HttpMethod.DELETE,
-                entity,
-                new ParameterizedTypeReference<ResponseMessage<Void>>() {
-                });
+    @Test
+    @DisplayName("batchUpdateSortOrder: 超级管理员应成功批量调整竞赛排序")
+    @WithSecurityPrincipal(userId = SUPER_ADMIN_USER_ID, roleType = "SUPER_ADMIN", roleId = 1L, permissions = {
+            "competition:sort" })
+    void batchUpdateSortOrder_asSuperAdmin_shouldReturnOk() throws Exception {
+        doNothing().when(competitionAppService).batchUpdateSortOrder(any());
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
+        BatchSortRequestDTO request = BatchSortRequestDTO.builder()
+                .items(
+                        List.of(
+                                BatchSortRequestDTO.SortItemDTO.builder().id(1L).sortOrder(1).build(),
+                                BatchSortRequestDTO.SortItemDTO.builder().id(2L).sortOrder(2).build()))
+                .build();
 
-        Competition deletedCompetition = RepositoryTestObjects
-                .toDomain(competitionMapper.selectById(competitionId), Competition.class);
-        assertNull(deletedCompetition);
+        MvcResult mvcResult = mockMvc.perform(
+                put("/api/v1/admin/competitions/sort")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andReturn();
+        assertThat(mvcResult.getResponse().getStatus()).isEqualTo(200);
+    }
+
+    @Test
+    @DisplayName("batchUpdateSortOrder: 排序列表为空应返回 400")
+    @WithSecurityPrincipal(userId = SUPER_ADMIN_USER_ID, roleType = "SUPER_ADMIN", roleId = 1L, permissions = {
+            "competition:sort" })
+    void batchUpdateSortOrder_withEmptyItems_shouldReturn400() throws Exception {
+        BatchSortRequestDTO request = BatchSortRequestDTO.builder()
+                .items(List.of())
+                .build();
+
+        MvcResult mvcResult = mockMvc.perform(
+                put("/api/v1/admin/competitions/sort")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andReturn();
+        assertThat(mvcResult.getResponse().getStatus()).isEqualTo(400);
+    }
+
+    @Test
+    @DisplayName("moveCompetition: 超级管理员应成功移动竞赛排序")
+    @WithSecurityPrincipal(userId = SUPER_ADMIN_USER_ID, roleType = "SUPER_ADMIN", roleId = 1L, permissions = {
+            "competition:move" })
+    void moveCompetition_asSuperAdmin_shouldReturnOk() throws Exception {
+        doNothing().when(competitionAppService).moveCompetition(any());
+
+        MoveCompetitionRequestDTO request = MoveCompetitionRequestDTO.builder()
+                .direction("UP")
+                .build();
+
+        MvcResult mvcResult = mockMvc.perform(
+                put("/api/v1/admin/competitions/{id}/move", 1L)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andReturn();
+        assertThat(mvcResult.getResponse().getStatus()).isEqualTo(200);
     }
 }

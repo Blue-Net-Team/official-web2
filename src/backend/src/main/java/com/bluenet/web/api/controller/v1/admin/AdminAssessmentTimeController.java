@@ -9,7 +9,7 @@ import com.bluenet.web.api.dto.assessment_time.ResponseMessageAssessmentTimeList
 import com.bluenet.web.api.dto.assessment_time.UpdateAssessmentTimeRequestDTO;
 import com.bluenet.web.api.converter.assessment_time.AssessmentTimeRequestConverter;
 import com.bluenet.web.api.converter.assessment_time.AssessmentTimeResponseConverter;
-import com.bluenet.web.application.AssessmentTimeResult;
+import com.bluenet.web.application.result.assessment.AssessmentTimeResult;
 import com.bluenet.web.application.command.assessment_time.AssessmentTimeCommands;
 import com.bluenet.web.application.service.AssessmentTimeAppService;
 import org.springframework.data.domain.Page;

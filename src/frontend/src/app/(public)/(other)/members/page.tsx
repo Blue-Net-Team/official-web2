@@ -5,7 +5,7 @@ export default function MembersPage() {
   return (
     <div className="w-full min-h-screen bg-[#0a0a0a] text-white relative overflow-x-hidden">
       <div className="fixed inset-0 z-0">
-        <DarkVeil hueShift={40} speed={0.6} offsetY={0.2} />
+        <DarkVeil hueShift={-130} speed={0.6} offsetY={0.2} />
       </div>
       <main className="w-full pt-16 min-h-screen relative z-1">
         <section className="w-full py-20 md:py-[60px] px-16 md:px-10 text-center max-sm:py-12 max-sm:px-5">

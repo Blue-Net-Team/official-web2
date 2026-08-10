@@ -113,7 +113,10 @@ public class SoftwareResource {
         this.category = category;
         this.description = description;
         this.externalUrl = externalUrl.trim();
-        this.sortOrder = sortOrder != null ? sortOrder : 0;
+        // 排序号由拖拽维护，编辑表单不再传值；为 null 时保留原有排序，避免被重置。
+        if (sortOrder != null) {
+            this.sortOrder = sortOrder;
+        }
         if (status != null) {
             this.status = status;
         }

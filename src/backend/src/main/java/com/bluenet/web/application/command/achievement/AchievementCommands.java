@@ -4,6 +4,7 @@ import com.bluenet.web.domain.model.enumerate.AchievementType;
 import com.bluenet.web.domain.model.enumerate.AwardLevel;
 
 import java.time.LocalDate;
+import java.util.List;
 
 /**
  * 成就聚合的命令对象集合。
@@ -37,7 +38,11 @@ public class AchievementCommands {
             /** 奖项名称 */
             String awardName,
             /** 文件ID */
-            Long fileId) {
+            Long fileId,
+            /** 系统内成员ID列表 */
+            List<Long> userIds,
+            /** 外部协作者姓名列表 */
+            List<String> externalMembers) {
     }
 
     /**
@@ -62,6 +67,10 @@ public class AchievementCommands {
             /** 奖项名称 */
             String awardName,
             /** 文件ID */
-            Long fileId) {
+            Long fileId,
+            /** 系统内成员ID列表 */
+            List<Long> userIds,
+            /** 外部协作者姓名列表 */
+            List<String> externalMembers) {
     }
 }

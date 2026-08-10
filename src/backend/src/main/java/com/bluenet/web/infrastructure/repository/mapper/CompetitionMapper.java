@@ -1,6 +1,7 @@
 package com.bluenet.web.infrastructure.repository.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.bluenet.web.domain.repository.CompetitionRepository;
 import com.bluenet.web.infrastructure.repository.dataobject.CompetitionDO;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -37,14 +38,15 @@ public interface CompetitionMapper extends BaseMapper<CompetitionDO> {
     Integer selectMaxSortOrder();
 
     /**
-     * 处理竞赛 仓储职责中的业务数据访问逻辑。
+     * 批量更新竞赛展示排序值。
+     * <p>
+     * 使用单条 {@code CASE WHEN} SQL 一次性更新多条记录的排序值，避免逐条循环执行 SQL。
+     * </p>
      *
-     * @param id
-     *            业务记录主键。
-     * @param sortOrder
-     *            展示排序值。
+     * @param items
+     *            排序项列表（id 与目标排序值）。
      */
-    void updateSortOrderById(@Param("id") Long id, @Param("sortOrder") Integer sortOrder);
+    void batchUpdateSortOrder(@Param("items") List<CompetitionRepository.SortItem> items);
 
     /**
      * 查询竞赛 数据行。
@@ -72,4 +74,13 @@ public interface CompetitionMapper extends BaseMapper<CompetitionDO> {
      * @return 满足条件的竞赛 结果集合。
      */
     List<CompetitionDO> selectByNames(@Param("names") List<String> names);
+
+    /**
+     * 按名称查询竞赛 数据行。
+     *
+     * @param name
+     *            竞赛名称。
+     * @return 匹配条件的竞赛 数据行；不存在时为 null。
+     */
+    CompetitionDO selectByName(@Param("name") String name);
 }

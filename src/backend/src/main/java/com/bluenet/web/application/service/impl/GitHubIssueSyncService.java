@@ -1,5 +1,6 @@
 package com.bluenet.web.application.service.impl;
 
+import com.bluenet.web.infrastructure.util.StringUtils;
 import com.bluenet.web.domain.model.entity.BugReport;
 import com.bluenet.web.domain.repository.BugReportRepository;
 import com.bluenet.web.infrastructure.config.GitHubAppProperties;
@@ -16,8 +17,6 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class GitHubIssueSyncService {
-
-    private static final int MAX_TITLE_LENGTH = 100;
 
     private final GitHubIssueClient gitHubIssueClient;
     private final BugReportRepository bugReportRepository;
@@ -41,10 +40,10 @@ public class GitHubIssueSyncService {
 
         try {
             GitHubIssueCreateResult result = gitHubIssueClient.createIssue(title, body);
-            bugReportRepository.updateGithubIssueInfo(
-                    bugReport.getId(),
-                    result.htmlUrl(),
-                    result.number());
+            BugReport savedBugReport = bugReportRepository.findById(bugReport.getId())
+                    .orElseThrow(() -> new IllegalStateException("Bug 报告不存在，ID: " + bugReport.getId()));
+            savedBugReport.updateGithubIssueInfo(result.htmlUrl(), result.number());
+            bugReportRepository.save(savedBugReport);
             log.info(
                     "Bug 报告同步到 GitHub Issue 成功: bugReportId={}, issueNumber={}, issueUrl={}",
                     bugReport.getId(),
@@ -67,10 +66,7 @@ public class GitHubIssueSyncService {
         if (title == null || title.isBlank()) {
             return "Bug Report";
         }
-        if (title.length() <= MAX_TITLE_LENGTH) {
-            return title;
-        }
-        return title.substring(0, MAX_TITLE_LENGTH) + "...";
+        return StringUtils.truncateWithEllipsis(title, BugReport.MAX_TITLE_LENGTH);
     }
 
     private String buildBody(BugReport bugReport) {

@@ -1,7 +1,8 @@
 package com.bluenet.web.application.service.impl;
 
-import com.bluenet.web.application.AdminUserResult;
+import com.bluenet.web.application.result.adminuser.AdminUserResult;
 import com.bluenet.web.application.command.adminuser.AdminUserCommands;
+import com.bluenet.web.application.query.adminuser.GetUserListQuery;
 import com.bluenet.web.application.service.AdminUserAppService;
 import com.bluenet.web.domain.exception.BadRequest;
 import com.bluenet.web.domain.exception.DataNotFound;
@@ -9,12 +10,12 @@ import com.bluenet.web.domain.model.entity.College;
 import com.bluenet.web.domain.model.entity.User;
 import com.bluenet.web.domain.model.enumerate.Gender;
 import com.bluenet.web.domain.model.enumerate.RoleType;
+import com.bluenet.web.domain.model.entity.Role;
 import com.bluenet.web.domain.repository.CollegeRepository;
+import com.bluenet.web.domain.repository.RoleRepository;
 import com.bluenet.web.domain.repository.UserRepository;
 import com.bluenet.web.domain.service.ReferralCodeGenerator;
 import com.bluenet.web.infrastructure.config.properties.SystemUserProperties;
-import com.bluenet.web.infrastructure.repository.dataobject.RoleDO;
-import com.bluenet.web.infrastructure.repository.mapper.RoleMapper;
 import com.bluenet.web.infrastructure.security.util.UserCTX;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,7 +34,7 @@ import java.util.List;
 public class AdminUserAppServiceImpl implements AdminUserAppService {
 
     private final UserRepository userRepository;
-    private final RoleMapper roleMapper;
+    private final RoleRepository roleRepository;
     private final CollegeRepository collegeRepository;
     private final PasswordEncoder passwordEncoder;
     private final ReferralCodeGenerator referralCodeGenerator;
@@ -42,22 +43,22 @@ public class AdminUserAppServiceImpl implements AdminUserAppService {
     private static final int MAX_BATCH_SIZE = 50;
 
     @Override
-    public Page<AdminUserResult.ListItem> getUserList(AdminUserCommands.GetUserListCommand command) {
+    public Page<AdminUserResult.ListItem> getUserList(GetUserListQuery query) {
         Pageable pageable = PageRequest.of(
-                command.page() != null ? command.page() : 0,
-                command.size() != null ? command.size() : 20);
+                query.page() != null ? query.page() : 0,
+                query.size() != null ? query.size() : 20);
         Page<User> userPage = userRepository.findPage(
                 pageable,
-                command.roleId(),
-                command.direction(),
-                command.collegeId(),
-                command.keyword());
+                query.roleId(),
+                query.direction(),
+                query.collegeId(),
+                query.keyword());
         return userPage.map(this::toListItem);
     }
 
     @Override
     public AdminUserResult.Detail getUserDetail(Long userId) {
-        User user = userRepository.findEntityById(userId)
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new DataNotFound("用户不存在"));
         UserRepository.UserStatistics stats = userRepository.getStatistics(userId);
         return toDetail(user, stats);
@@ -66,7 +67,7 @@ public class AdminUserAppServiceImpl implements AdminUserAppService {
     @Override
     @Transactional
     public void updateUser(AdminUserCommands.UpdateUserCommand command) {
-        User user = userRepository.findEntityById(command.userId())
+        User user = userRepository.findById(command.userId())
                 .orElseThrow(() -> new DataNotFound("用户不存在"));
         user.updateAdminFields(
                 command.roleId(),
@@ -81,35 +82,26 @@ public class AdminUserAppServiceImpl implements AdminUserAppService {
                 command.major(),
                 command.gender(),
                 command.assessmentGradeYear());
-        userRepository.updateAdminFields(
-                command.userId(),
-                command.roleId(),
-                command.direction(),
-                command.disable(),
-                command.job(),
-                command.studentId(),
-                command.email(),
-                command.username(),
-                command.nickname(),
-                command.collegeId(),
-                command.major(),
-                command.gender(),
-                command.assessmentGradeYear());
+        userRepository.save(user);
     }
 
     @Override
     @Transactional
     public void resetPassword(AdminUserCommands.ResetPasswordCommand command) {
-        User user = userRepository.findEntityById(command.userId())
+        User user = userRepository.findById(command.userId())
                 .orElseThrow(() -> new DataNotFound("用户不存在"));
-        user.resetPassword(command.newPassword(), command.confirmPassword());
-        userRepository.updatePassword(command.userId(), passwordEncoder.encode(user.getPassword()));
+        if (!command.newPassword().equals(command.confirmPassword())) {
+            throw new IllegalArgumentException("两次输入的密码不一致");
+        }
+        String encodedPassword = passwordEncoder.encode(command.newPassword());
+        user.changePassword(encodedPassword);
+        userRepository.save(user);
     }
 
     @Override
     @Transactional
     public void deleteUser(Long userId) {
-        User user = userRepository.findEntityById(userId)
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new DataNotFound("用户不存在"));
         preventProtectedUserDeletion(user);
         userRepository.deleteByIdWithCascade(userId);
@@ -120,32 +112,47 @@ public class AdminUserAppServiceImpl implements AdminUserAppService {
     public void batchDelete(AdminUserCommands.BatchOperateCommand command) {
         validateBatchSize(command.userIds());
         for (Long userId : command.userIds()) {
-            User user = userRepository.findEntityById(userId).orElse(null);
+            User user = userRepository.findById(userId).orElse(null);
             if (user != null) {
                 preventProtectedUserDeletion(user);
+                userRepository.deleteByIdWithCascade(userId);
             }
         }
-        userRepository.batchDeleteByIds(command.userIds());
     }
 
     @Override
     @Transactional
     public void batchDisable(AdminUserCommands.BatchOperateCommand command, Boolean disable) {
         validateBatchSize(command.userIds());
+        List<User> usersToUpdate = new java.util.ArrayList<>();
         for (Long userId : command.userIds()) {
-            User user = userRepository.findEntityById(userId).orElse(null);
+            User user = userRepository.findById(userId).orElse(null);
             if (user != null) {
                 preventSuperAdminModification(user);
+                user.setDisable(disable);
+                usersToUpdate.add(user);
             }
         }
-        userRepository.batchUpdateDisable(command.userIds(), disable);
+        if (!usersToUpdate.isEmpty()) {
+            userRepository.saveAll(usersToUpdate);
+        }
     }
 
     @Override
     @Transactional
     public void batchUpdateRole(AdminUserCommands.BatchUpdateRoleCommand command) {
         validateBatchSize(command.userIds());
-        userRepository.batchUpdateRole(command.userIds(), command.roleId());
+        List<User> usersToUpdate = new java.util.ArrayList<>();
+        for (Long userId : command.userIds()) {
+            User user = userRepository.findById(userId).orElse(null);
+            if (user != null) {
+                user.setRoleId(command.roleId());
+                usersToUpdate.add(user);
+            }
+        }
+        if (!usersToUpdate.isEmpty()) {
+            userRepository.saveAll(usersToUpdate);
+        }
     }
 
     @Override
@@ -157,7 +164,7 @@ public class AdminUserAppServiceImpl implements AdminUserAppService {
         }
 
         // 校验角色存在性
-        RoleDO role = roleMapper.selectById(command.roleId());
+        Role role = roleRepository.findById(command.roleId()).orElse(null);
         if (role == null) {
             throw new BadRequest("角色不存在");
         }
@@ -209,7 +216,7 @@ public class AdminUserAppServiceImpl implements AdminUserAppService {
     }
 
     private void preventSuperAdminModification(User user) {
-        RoleDO role = roleMapper.selectById(user.getRoleId());
+        Role role = roleRepository.findById(user.getRoleId()).orElse(null);
         if (role != null && RoleType.SUPER_ADMIN.getName().equals(role.getName())) {
             throw new BadRequest("不能对超级管理员执行此操作");
         }
@@ -229,7 +236,7 @@ public class AdminUserAppServiceImpl implements AdminUserAppService {
     private AdminUserResult.ListItem toListItem(User user) {
         String roleName = null;
         if (user.getRoleId() != null) {
-            RoleDO role = roleMapper.selectById(user.getRoleId());
+            Role role = roleRepository.findById(user.getRoleId()).orElse(null);
             roleName = role != null ? role.getName() : null;
         }
         String collegeName = null;
@@ -241,14 +248,15 @@ public class AdminUserAppServiceImpl implements AdminUserAppService {
         return new AdminUserResult.ListItem(
                 user.getId(), user.getStudentId(), user.getUsername(), user.getNickname(),
                 user.getEmail(), user.getRoleId(), roleName, user.getDirection(),
-                collegeName, user.getMajor(), user.getGender(), user.getJob(),
-                user.getDisable(), user.getAvatarId(), user.getAssessmentGradeYear());
+                user.getCollegeId(), collegeName, user.getMajor(), user.getGender(), user.getJob(),
+                user.getDisable(), user.getAvatarId(), user.getAssessmentGradeYear(),
+                user.getGithubUsername());
     }
 
     private AdminUserResult.Detail toDetail(User user, UserRepository.UserStatistics stats) {
         String roleName = null;
         if (user.getRoleId() != null) {
-            RoleDO role = roleMapper.selectById(user.getRoleId());
+            Role role = roleRepository.findById(user.getRoleId()).orElse(null);
             roleName = role != null ? role.getName() : null;
         }
         String collegeName = null;
@@ -260,7 +268,7 @@ public class AdminUserAppServiceImpl implements AdminUserAppService {
         return new AdminUserResult.Detail(
                 user.getId(), user.getStudentId(), user.getUsername(), user.getNickname(),
                 user.getEmail(), user.getRoleId(), roleName, user.getDirection(),
-                collegeName, user.getMajor(), user.getGender(), user.getJob(),
+                user.getCollegeId(), collegeName, user.getMajor(), user.getGender(), user.getJob(),
                 user.getDisable(), user.getAvatarId(), user.getGithubUsername(),
                 user.getBio(), user.getAssessmentGradeYear(),
                 stats.experienceCount(), stats.achievementCount(),

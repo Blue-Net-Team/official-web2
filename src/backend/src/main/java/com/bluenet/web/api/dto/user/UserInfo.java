@@ -53,4 +53,7 @@ public class UserInfo {
 
     @Schema(description = "微信二维码文件ID")
     private Long qrcodeFileId;
+
+    @Schema(description = "内推码")
+    private String internalReferralCode;
 }

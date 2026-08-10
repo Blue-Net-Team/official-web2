@@ -6,16 +6,18 @@ import com.bluenet.web.application.message.template.AssessmentDecisionNotificati
 import com.bluenet.web.domain.exception.DataNotFound;
 import com.bluenet.web.domain.model.enumerate.MessageChannel;
 import com.bluenet.web.domain.model.enumerate.RoleType;
+import com.bluenet.web.domain.model.entity.AssessmentDecision;
 import com.bluenet.web.domain.model.entity.AssessmentTime;
-import com.bluenet.web.domain.model.vo.AssessmentDecisionVO;
-import com.bluenet.web.domain.model.vo.UserVO;
+import com.bluenet.web.domain.model.entity.User;
+import com.bluenet.web.domain.model.entity.Role;
+import com.bluenet.web.domain.repository.RoleRepository;
 import com.bluenet.web.domain.repository.UserRepository;
+import com.bluenet.web.domain.service.GitHubOrgInvitationService;
+import com.bluenet.web.infrastructure.security.principal.RoleTypeResolver;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 /**
  * 考核决策发布服务。
@@ -29,8 +31,11 @@ import java.util.List;
 public class AssessmentDecisionPublicationService {
 
     private final UserRepository userRepository;
+    private final RoleRepository roleRepository;
     private final MessageDispatcher messageDispatcher;
     private final AssessmentDecisionNotificationTemplate notificationTemplate;
+    private final RoleTypeResolver roleTypeResolver;
+    private final GitHubOrgInvitationService gitHubOrgInvitationService;
 
     /**
      * 发布单个考生的决策结果。
@@ -44,13 +49,25 @@ public class AssessmentDecisionPublicationService {
      *            考核时间
      */
     @Transactional
-    public void publish(AssessmentDecisionVO decision, AssessmentTime assessmentTime) {
-        UserVO user = userRepository.findById(decision.getUserId())
+    public void publish(AssessmentDecision decision, AssessmentTime assessmentTime) {
+        User user = userRepository.findById(decision.getUserId())
                 .orElseThrow(() -> new DataNotFound("用户不存在，ID: " + decision.getUserId()));
 
         if (shouldPromoteToMember(decision, assessmentTime, user)) {
-            userRepository.batchUpdateRole(List.of(user.getId()), RoleType.MEMBER);
+            Long memberRoleId = roleRepository.findByName(RoleType.MEMBER.getName())
+                    .map(Role::getId)
+                    .orElseThrow(() -> new DataNotFound("角色不存在: " + RoleType.MEMBER.getName()));
+            user.setRoleId(memberRoleId);
+            userRepository.save(user);
             log.info("考生 {} 通过全局最终考核，角色已升级为 MEMBER", user.getId());
+
+            // 异步邀请加入 GitHub 组织；邀请失败只记录日志，不影响角色升级与邮件通知
+            // （线程池拒绝策略为 CallerRunsPolicy 时任务在调用线程执行，此处兜底捕获确保不阻塞主流程）
+            try {
+                gitHubOrgInvitationService.inviteAsync(user);
+            } catch (Exception e) {
+                log.error("触发 GitHub 组织邀请失败: userId={}", user.getId(), e);
+            }
         }
 
         sendDecisionEmail(user, assessmentTime, decision);
@@ -59,16 +76,16 @@ public class AssessmentDecisionPublicationService {
     /**
      * 判断是否需要将考生升级为组员。
      */
-    private boolean shouldPromoteToMember(AssessmentDecisionVO decision, AssessmentTime assessmentTime, UserVO user) {
+    private boolean shouldPromoteToMember(AssessmentDecision decision, AssessmentTime assessmentTime, User user) {
         return assessmentTime.isGlobalFinalAssessment()
                 && Boolean.TRUE.equals(decision.getPassed())
-                && RoleType.CANDIDATE.getName().equals(user.getRoleName());
+                && RoleType.CANDIDATE == roleTypeResolver.resolve(user.getRoleId());
     }
 
     /**
      * 发送决策结果邮件。
      */
-    private void sendDecisionEmail(UserVO user, AssessmentTime assessmentTime, AssessmentDecisionVO decision) {
+    private void sendDecisionEmail(User user, AssessmentTime assessmentTime, AssessmentDecision decision) {
         if (user.getEmail() == null || user.getEmail().isBlank()) {
             log.warn("跳过无邮箱用户：userId={}", user.getId());
             return;

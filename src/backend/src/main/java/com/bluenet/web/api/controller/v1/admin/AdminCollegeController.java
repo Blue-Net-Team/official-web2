@@ -6,7 +6,7 @@ import com.bluenet.web.api.dto.college.CreateCollegeRequestDTO;
 import com.bluenet.web.api.dto.college.ResponseMessageCollege;
 import com.bluenet.web.api.dto.college.UpdateCollegeRequestDTO;
 import com.bluenet.web.api.converter.college.CollegeRequestConverter;
-import com.bluenet.web.application.CollegeResult;
+import com.bluenet.web.application.result.college.CollegeResult;
 import com.bluenet.web.application.command.college.CollegeCommands;
 import com.bluenet.web.api.converter.college.CollegeResponseConverter;
 import com.bluenet.web.application.service.CollegeAppService;

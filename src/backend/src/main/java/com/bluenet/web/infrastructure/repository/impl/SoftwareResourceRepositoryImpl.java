@@ -55,19 +55,15 @@ public class SoftwareResourceRepositoryImpl implements SoftwareResourceRepositor
     }
 
     @Override
-    public Long save(SoftwareResource softwareResource) {
+    public void save(SoftwareResource softwareResource) {
         SoftwareResourceDO dataObject = converter.toDataObject(softwareResource);
-        softwareResourceMapper.insert(dataObject);
-        softwareResource.setId(dataObject.getId());
-        return dataObject.getId();
+        if (dataObject.getId() == null) {
+            softwareResourceMapper.insert(dataObject);
+            softwareResource.setId(dataObject.getId());
+        } else {
+            softwareResourceMapper.updateById(dataObject);
+        }
     }
-
-    @Override
-    public void update(SoftwareResource softwareResource) {
-        SoftwareResourceDO dataObject = converter.toDataObject(softwareResource);
-        softwareResourceMapper.updateById(dataObject);
-    }
-
     @Override
     public void deleteById(Long id) {
         softwareResourceMapper.deleteById(id);
@@ -79,5 +75,23 @@ public class SoftwareResourceRepositoryImpl implements SoftwareResourceRepositor
         IPage<SoftwareResourceDO> result = softwareResourceMapper.selectAllForAdmin(page);
         List<SoftwareResource> content = converter.toEntityList(result.getRecords());
         return new PageImpl<>(content, pageable, result.getTotal());
+    }
+
+    @Override
+    public boolean existsById(Long id) {
+        return softwareResourceMapper.selectById(id) != null;
+    }
+
+    @Override
+    public Integer findMaxSortOrder() {
+        return softwareResourceMapper.selectMaxSortOrder();
+    }
+
+    @Override
+    public void batchUpdateSortOrder(List<SortItem> sortItems) {
+        if (sortItems.isEmpty()) {
+            return;
+        }
+        softwareResourceMapper.batchUpdateSortOrder(sortItems);
     }
 }

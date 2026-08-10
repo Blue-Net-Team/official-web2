@@ -2,7 +2,7 @@ package com.bluenet.web.api.controller.v1.equipment;
 
 import com.bluenet.web.api.dto.ResponseMessage;
 import com.bluenet.web.api.dto.equipment.EquipmentDTO;
-import com.bluenet.web.application.EquipmentResult;
+import com.bluenet.web.application.result.equipment.EquipmentResult;
 import com.bluenet.web.api.converter.equipment.EquipmentResponseConverter;
 import com.bluenet.web.application.service.EquipmentAppService;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;

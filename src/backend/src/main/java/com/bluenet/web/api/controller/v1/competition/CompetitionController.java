@@ -6,7 +6,7 @@ import com.bluenet.web.api.dto.competition.CompetitionResponseDTO;
 import com.bluenet.web.api.dto.competition.ResponseMessageCompetitionList;
 import com.bluenet.web.api.converter.competition.CompetitionResponseConverter;
 import com.bluenet.web.application.service.CompetitionAppService;
-import com.bluenet.web.domain.model.vo.CompetitionVO;
+import com.bluenet.web.domain.model.readmodel.CompetitionReadModel;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
 import com.bluenet.web.infrastructure.security.annotation.RequiresPermission;
 import io.swagger.v3.oas.annotations.Operation;
@@ -36,7 +36,7 @@ public class CompetitionController {
     @GetMapping
     public ResponseMessage<List<CompetitionResponseDTO>> getCompetitionList(
             @Parameter(description = "返回数量限制，默认10，最大50", example = "10") @RequestParam(defaultValue = "10") int limit) {
-        List<CompetitionVO> competitions = competitionAppService.getCompetitionResponseList(limit);
+        List<CompetitionReadModel> competitions = competitionAppService.getCompetitionResponseList(limit);
         return ResponseMessage.success(responseConverter.toDTOList(competitions));
     }
 
@@ -46,7 +46,7 @@ public class CompetitionController {
     public ResponseMessage<PageDTO<CompetitionResponseDTO>> getCompetitionPage(
             @Parameter(description = "页码，从0开始，默认0", example = "0") @RequestParam(required = false) Integer page,
             @Parameter(description = "每页数量，默认10，最大50", example = "10") @RequestParam(required = false) Integer size) {
-        org.springframework.data.domain.Page<CompetitionVO> result = competitionAppService
+        org.springframework.data.domain.Page<CompetitionReadModel> result = competitionAppService
                 .getCompetitionPage(page, size);
         return ResponseMessage.success(responseConverter.toPageDTO(result));
     }

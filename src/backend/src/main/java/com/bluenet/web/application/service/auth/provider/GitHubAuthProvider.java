@@ -9,9 +9,9 @@ import com.bluenet.web.application.service.auth.strategy.AbstractAuthProvider;
 import com.bluenet.web.application.service.auth.strategy.AuthProviderType;
 import com.bluenet.web.domain.exception.BadRequest;
 import com.bluenet.web.domain.exception.Unauthorized;
+import com.bluenet.web.domain.model.entity.User;
 import com.bluenet.web.domain.model.vo.GitHubUserInfo;
 import com.bluenet.web.domain.model.vo.OAuthState;
-import com.bluenet.web.domain.model.vo.UserVO;
 import com.bluenet.web.domain.repository.UserRepository;
 import com.bluenet.web.domain.service.GitHubOAuthService;
 import com.bluenet.web.infrastructure.config.GitHubOAuthProperties;
@@ -67,7 +67,7 @@ public class GitHubAuthProvider extends AbstractAuthProvider<GitHubCallbackCrede
      * @return GitHub 授权地址。
      */
     public String initiateBind(String callbackBaseUrl) {
-        UserVO currentUser = requireCurrentUser();
+        User currentUser = requireCurrentUser();
         String state = newState();
         oauthStateStore.store(state, "bind", currentUser.getId());
         return gitHubOAuthService.buildAuthorizeUrl(state, buildRedirectUri(callbackBaseUrl));
@@ -140,48 +140,55 @@ public class GitHubAuthProvider extends AbstractAuthProvider<GitHubCallbackCrede
      * 解绑当前用户的 GitHub 账号。
      */
     public void unbind() {
-        UserVO currentUser = requireCurrentUser();
+        User currentUser = requireCurrentUser();
         if (currentUser.getGithubUsername() == null) {
             throw new BadRequest("未绑定 GitHub 账号");
         }
-        userRepository.clearGithubBinding(currentUser.getId());
-        log.info("GitHub unbind success for userId {}", currentUser.getId());
+        User user = userRepository.findById(currentUser.getId())
+                .orElseThrow(() -> new Unauthorized("用户不存在"));
+        user.clearGithubBinding();
+        userRepository.save(user);
+        log.info("GitHub unbind success for userId {}", user.getId());
     }
 
     private void handleLoginFlow(String githubId, GitHubUserInfo githubUser, HttpServletResponse response) {
-        Optional<UserVO> userOpt = userRepository.findByGithubId(githubId);
+        Optional<User> userOpt = userRepository.findByGithubId(githubId);
         if (userOpt.isEmpty()) {
             log.info("GitHub login failed: no user bound to githubId {}", githubId);
             redirectToFrontend(response, "/login", "github=unbound");
             return;
         }
 
-        UserVO userVO = userOpt.get();
-        if (githubUser.getLogin() != null && !githubUser.getLogin().equals(userVO.getGithubUsername())) {
-            userRepository.updateGithubBinding(userVO.getId(), githubId, githubUser.getLogin());
+        User user = userOpt.get();
+        if (githubUser.getLogin() != null && !githubUser.getLogin().equals(user.getGithubUsername())) {
+            user.bindGithub(githubId, githubUser.getLogin());
+            userRepository.save(user);
         }
 
-        authSessionIssuer.issueCookies(userVO, response);
-        log.info("GitHub login success for userId {}", userVO.getId());
+        authSessionIssuer.issueCookies(user, response);
+        log.info("GitHub login success for userId {}", user.getId());
         redirectToFrontend(response, "/login", "github=success");
     }
 
     private void handleBindFlow(OAuthState oauthState, String githubId, GitHubUserInfo githubUser,
             HttpServletResponse response) {
-        Optional<UserVO> existingUser = userRepository.findByGithubId(githubId);
+        Optional<User> existingUser = userRepository.findByGithubId(githubId);
         if (existingUser.isPresent() && !existingUser.get().getId().equals(oauthState.getUserId())) {
             log.warn("GitHub bind failed: githubId {} already bound to user {}", githubId, existingUser.get().getId());
             redirectToFrontend(response, "/profile", "github=already_bound");
             return;
         }
 
-        userRepository.updateGithubBinding(oauthState.getUserId(), githubId, githubUser.getLogin());
-        log.info("GitHub bind success for userId {}", oauthState.getUserId());
+        User user = userRepository.findById(oauthState.getUserId())
+                .orElseThrow(() -> new Unauthorized("用户不存在"));
+        user.bindGithub(githubId, githubUser.getLogin());
+        userRepository.save(user);
+        log.info("GitHub bind success for userId {}", user.getId());
         redirectToFrontend(response, "/profile", "github=binding_success");
     }
 
-    private UserVO requireCurrentUser() {
-        UserVO currentUser = UserCTX.getCurrentUser();
+    private User requireCurrentUser() {
+        User currentUser = UserCTX.getCurrentUser();
         if (currentUser == null) {
             throw new Unauthorized("未登录");
         }

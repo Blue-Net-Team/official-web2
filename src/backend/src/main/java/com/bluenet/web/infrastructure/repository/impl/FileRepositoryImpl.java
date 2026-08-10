@@ -134,10 +134,16 @@ public class FileRepositoryImpl implements FileRepository {
 
     @Override
     @Transactional
-    public void updateFileMetadata(File file) {
+    public File save(File file) {
         FileDO dataObject = converter.toDataObject(file);
-        fileMapper.updateById(dataObject);
-        log.debug("File metadata updated successfully: id={}, status={}", file.getId(), file.getStatus());
+        if (dataObject.getId() == null) {
+            fileMapper.insert(dataObject);
+            file.setId(dataObject.getId());
+        } else {
+            fileMapper.updateById(dataObject);
+        }
+        log.debug("File metadata saved successfully: id={}, status={}", file.getId(), file.getStatus());
+        return file;
     }
 
     @Override
@@ -145,6 +151,34 @@ public class FileRepositoryImpl implements FileRepository {
         LocalDateTime pendingThreshold = LocalDateTime.now().minus(75, ChronoUnit.MINUTES);
         List<FileDO> orphanFiles = fileMapper.selectOrphanFiles(pendingThreshold);
         return converter.toEntityList(orphanFiles);
+    }
+
+    /**
+     * 查询指定类型的最新一条 ACTIVE 文件记录。
+     *
+     * @param type
+     *            文件业务类型。
+     * @return 该类型下主键最大的 ACTIVE 文件；不存在时为空。
+     */
+    @Override
+    public Optional<File> findLatestByType(FileType type) {
+        FileDO dataObject = fileMapper.selectLatestByType(type);
+        return Optional.ofNullable(converter.toEntity(dataObject));
+    }
+
+    /**
+     * 查询指定类型的最新一条 ACTIVE 文件记录，排除指定主键。
+     *
+     * @param type
+     *            文件业务类型。
+     * @param excludeId
+     *            需要排除的文件主键。
+     * @return 排除后该类型下主键最大的 ACTIVE 文件；不存在时为空。
+     */
+    @Override
+    public Optional<File> findLatestByTypeExcludingId(FileType type, Long excludeId) {
+        FileDO dataObject = fileMapper.selectLatestByTypeExcludingId(type, excludeId);
+        return Optional.ofNullable(converter.toEntity(dataObject));
     }
 
     /**

@@ -2,148 +2,202 @@ package com.bluenet.web.domain.model.entity;
 
 import com.bluenet.web.domain.model.enumerate.SoftwareResourceDirection;
 import com.bluenet.web.domain.model.enumerate.SoftwareResourceStatus;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+/**
+ * SoftwareResource 领域实体单元测试。
+ */
+@DisplayName("SoftwareResource 领域实体测试")
 class SoftwareResourceTest {
 
     @Test
-    void create_shouldInitializeFields() {
+    @DisplayName("create: 应创建启用的软件资源")
+    void create_shouldCreateActiveResource() {
         SoftwareResource resource = SoftwareResource.create(
-                "VS Code",
+                "  IntelliJ IDEA  ",
                 SoftwareResourceDirection.GENERAL,
                 "IDE",
-                "轻量级编辑器",
-                "https://code.visualstudio.com/",
+                "Java 集成开发环境",
+                "  https://jetbrains.com/idea  ",
                 10);
 
-        assertEquals("VS Code", resource.getName());
-        assertEquals(SoftwareResourceDirection.GENERAL, resource.getDirection());
-        assertEquals("IDE", resource.getCategory());
-        assertEquals("https://code.visualstudio.com/", resource.getExternalUrl());
-        assertEquals(10, resource.getSortOrder());
-        assertEquals(SoftwareResourceStatus.ACTIVE, resource.getStatus());
+        assertThat(resource.getId()).isNull();
+        assertThat(resource.getName()).isEqualTo("IntelliJ IDEA");
+        assertThat(resource.getDirection()).isEqualTo(SoftwareResourceDirection.GENERAL);
+        assertThat(resource.getCategory()).isEqualTo("IDE");
+        assertThat(resource.getDescription()).isEqualTo("Java 集成开发环境");
+        assertThat(resource.getExternalUrl()).isEqualTo("https://jetbrains.com/idea");
+        assertThat(resource.getSortOrder()).isEqualTo(10);
+        assertThat(resource.getStatus()).isEqualTo(SoftwareResourceStatus.ACTIVE);
     }
 
     @Test
+    @DisplayName("create: 排序为空应默认0")
     void create_withNullSortOrder_shouldDefaultToZero() {
         SoftwareResource resource = SoftwareResource.create(
-                "Clion",
+                "软件",
                 SoftwareResourceDirection.COMPUTER_VISION,
-                "IDE",
-                "C++ IDE",
-                "https://www.jetbrains.com/clion/",
+                null,
+                null,
+                "https://example.com",
                 null);
 
-        assertEquals(0, resource.getSortOrder());
+        assertThat(resource.getSortOrder()).isZero();
     }
 
     @Test
+    @DisplayName("create: 名称为空应抛异常")
     void create_withBlankName_shouldThrow() {
-        IllegalArgumentException exception = assertThrows(
-                IllegalArgumentException.class,
+        assertThatThrownBy(
                 () -> SoftwareResource.create(
-                        "  ",
-                        SoftwareResourceDirection.GENERAL,
-                        "IDE",
-                        "desc",
-                        "https://example.com",
-                        1));
-        assertEquals("软件名称不能为空", exception.getMessage());
-    }
-
-    @Test
-    void create_withNullDirection_shouldThrow() {
-        IllegalArgumentException exception = assertThrows(
-                IllegalArgumentException.class,
-                () -> SoftwareResource.create(
-                        "Tool",
-                        null,
-                        "tool",
-                        "desc",
-                        "https://example.com",
-                        1));
-        assertEquals("方向不能为空", exception.getMessage());
-    }
-
-    @Test
-    void create_withBlankExternalUrl_shouldThrow() {
-        IllegalArgumentException exception = assertThrows(
-                IllegalArgumentException.class,
-                () -> SoftwareResource.create(
-                        "Tool",
-                        SoftwareResourceDirection.GENERAL,
-                        "tool",
-                        "desc",
                         "   ",
-                        1));
-        assertEquals("外部链接不能为空", exception.getMessage());
+                        SoftwareResourceDirection.GENERAL,
+                        null,
+                        null,
+                        "https://example.com",
+                        null))
+                                .isInstanceOf(IllegalArgumentException.class)
+                                .hasMessageContaining("软件名称不能为空");
     }
 
     @Test
-    void update_shouldChangeFields() {
+    @DisplayName("create: 方向为空应抛异常")
+    void create_withNullDirection_shouldThrow() {
+        assertThatThrownBy(
+                () -> SoftwareResource.create(
+                        "软件",
+                        null,
+                        null,
+                        null,
+                        "https://example.com",
+                        null))
+                                .isInstanceOf(IllegalArgumentException.class)
+                                .hasMessageContaining("方向不能为空");
+    }
+
+    @Test
+    @DisplayName("create: 外部链接为空应抛异常")
+    void create_withBlankExternalUrl_shouldThrow() {
+        assertThatThrownBy(
+                () -> SoftwareResource.create(
+                        "软件",
+                        SoftwareResourceDirection.GENERAL,
+                        null,
+                        null,
+                        "   ",
+                        null))
+                                .isInstanceOf(IllegalArgumentException.class)
+                                .hasMessageContaining("外部链接不能为空");
+    }
+
+    @Test
+    @DisplayName("update: 应更新字段")
+    void update_shouldUpdateFields() {
         SoftwareResource resource = SoftwareResource.create(
-                "Old",
-                SoftwareResourceDirection.GENERAL,
-                "tool",
-                "desc",
+                "旧软件",
+                SoftwareResourceDirection.EMBEDDED,
+                "旧分类",
+                "旧描述",
                 "https://old.example.com",
-                1);
+                5);
 
         resource.update(
-                "New",
-                SoftwareResourceDirection.EMBEDDED,
-                "IDE",
-                "new desc",
-                "https://new.example.com",
-                2,
+                "  新软件  ",
+                SoftwareResourceDirection.STRUCTURAL_DESIGN,
+                "新分类",
+                "新描述",
+                "  https://new.example.com  ",
+                null,
                 SoftwareResourceStatus.DISABLED);
 
-        assertEquals("New", resource.getName());
-        assertEquals(SoftwareResourceDirection.EMBEDDED, resource.getDirection());
-        assertEquals("IDE", resource.getCategory());
-        assertEquals("new desc", resource.getDescription());
-        assertEquals("https://new.example.com", resource.getExternalUrl());
-        assertEquals(2, resource.getSortOrder());
-        assertEquals(SoftwareResourceStatus.DISABLED, resource.getStatus());
+        assertThat(resource.getName()).isEqualTo("新软件");
+        assertThat(resource.getDirection()).isEqualTo(SoftwareResourceDirection.STRUCTURAL_DESIGN);
+        assertThat(resource.getCategory()).isEqualTo("新分类");
+        assertThat(resource.getDescription()).isEqualTo("新描述");
+        assertThat(resource.getExternalUrl()).isEqualTo("https://new.example.com");
+        assertThat(resource.getSortOrder()).isEqualTo(5);
+        assertThat(resource.getStatus()).isEqualTo(SoftwareResourceStatus.DISABLED);
     }
 
     @Test
-    void update_withNullStatus_shouldKeepCurrentStatus() {
+    @DisplayName("update: null 排序不应覆盖原值")
+    void update_withNullSortOrder_shouldPreserveOriginal() {
         SoftwareResource resource = SoftwareResource.create(
-                "Tool",
+                "软件",
                 SoftwareResourceDirection.GENERAL,
-                "tool",
-                "desc",
+                null,
+                null,
                 "https://example.com",
-                1);
+                5);
 
         resource.update(
-                "Tool",
+                "软件2",
                 SoftwareResourceDirection.GENERAL,
-                "tool",
-                "desc",
-                "https://example.com",
-                1,
+                null,
+                null,
+                "https://example2.com",
+                null,
                 null);
 
-        assertEquals(SoftwareResourceStatus.ACTIVE, resource.getStatus());
+        assertThat(resource.getSortOrder()).isEqualTo(5);
     }
 
     @Test
+    @DisplayName("changeStatus: 应切换状态")
     void changeStatus_shouldToggleStatus() {
         SoftwareResource resource = SoftwareResource.create(
-                "Tool",
+                "软件",
                 SoftwareResourceDirection.GENERAL,
-                "tool",
-                "desc",
+                null,
+                null,
                 "https://example.com",
-                1);
+                null);
 
         resource.changeStatus(SoftwareResourceStatus.DISABLED);
 
-        assertEquals(SoftwareResourceStatus.DISABLED, resource.getStatus());
+        assertThat(resource.getStatus()).isEqualTo(SoftwareResourceStatus.DISABLED);
+    }
+
+    @Test
+    @DisplayName("changeStatus: 状态为空应抛异常")
+    void changeStatus_withNullStatus_shouldThrow() {
+        SoftwareResource resource = SoftwareResource.create(
+                "软件",
+                SoftwareResourceDirection.GENERAL,
+                null,
+                null,
+                "https://example.com",
+                null);
+
+        assertThatThrownBy(() -> resource.changeStatus(null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("状态不能为空");
+    }
+
+    @Test
+    @DisplayName("reconstruct: 应保留所有字段")
+    void reconstruct_shouldPreserveAllFields() {
+        SoftwareResource resource = SoftwareResource.reconstruct(
+                100L,
+                "软件",
+                SoftwareResourceDirection.COMPUTER_VISION,
+                "分类",
+                "描述",
+                "https://example.com",
+                20,
+                SoftwareResourceStatus.DISABLED);
+
+        assertThat(resource.getId()).isEqualTo(100L);
+        assertThat(resource.getName()).isEqualTo("软件");
+        assertThat(resource.getDirection()).isEqualTo(SoftwareResourceDirection.COMPUTER_VISION);
+        assertThat(resource.getCategory()).isEqualTo("分类");
+        assertThat(resource.getDescription()).isEqualTo("描述");
+        assertThat(resource.getExternalUrl()).isEqualTo("https://example.com");
+        assertThat(resource.getSortOrder()).isEqualTo(20);
+        assertThat(resource.getStatus()).isEqualTo(SoftwareResourceStatus.DISABLED);
     }
 }

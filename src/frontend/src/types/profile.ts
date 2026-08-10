@@ -19,18 +19,4 @@ export interface UserProfileWithStats {
   tabCounts: import('@/apis/schema/type').TabCounts
 }
 
-export interface Assessment {
-  id: string
-  title: string
-  round: string
-  status: AssessmentStatus
-  startDate: string
-  endDate: string
-  totalQuestions: number
-  completedQuestions: number
-  score?: number
-  remainingTime?: string
-  daysUntilStart?: number
-}
-
-export type TabName = 'profile' | 'assessment' | 'projects' | 'competitions' | 'internships'
+export type TabName = 'profile' | 'assessment' | 'projects' | 'achievements' | 'internships'

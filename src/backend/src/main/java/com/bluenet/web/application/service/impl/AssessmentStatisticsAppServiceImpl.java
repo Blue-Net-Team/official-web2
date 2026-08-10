@@ -1,6 +1,6 @@
 package com.bluenet.web.application.service.impl;
 
-import com.bluenet.web.application.AssessmentStatisticsResult;
+import com.bluenet.web.application.result.assessment.AssessmentStatisticsResult;
 import com.bluenet.web.application.service.AssessmentQuestionAppService;
 import com.bluenet.web.application.service.AssessmentStatisticsAppService;
 import com.bluenet.web.domain.exception.BadRequest;

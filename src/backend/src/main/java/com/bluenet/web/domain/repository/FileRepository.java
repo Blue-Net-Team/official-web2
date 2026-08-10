@@ -106,12 +106,13 @@ public interface FileRepository {
     File saveFileMetadata(File file);
 
     /**
-     * 更新文件元数据。
+     * 保存或更新文件元数据，不操作对象存储。
      *
      * @param file
      *            文件领域对象
+     * @return 保存后的文件领域对象
      */
-    void updateFileMetadata(File file);
+    File save(File file);
 
     /**
      * 查询所有孤儿文件。
@@ -119,4 +120,24 @@ public interface FileRepository {
      * @return 孤儿文件领域对象列表。
      */
     java.util.List<File> findOrphanFiles();
+
+    /**
+     * 查询指定类型的最新一条 ACTIVE 文件记录。
+     *
+     * @param type
+     *            文件业务类型。
+     * @return 该类型下主键最大的 ACTIVE 文件；不存在时为空。
+     */
+    Optional<File> findLatestByType(FileType type);
+
+    /**
+     * 查询指定类型的最新一条 ACTIVE 文件记录，排除指定主键。
+     *
+     * @param type
+     *            文件业务类型。
+     * @param excludeId
+     *            需要排除的文件主键。
+     * @return 排除后该类型下主键最大的 ACTIVE 文件；不存在时为空。
+     */
+    Optional<File> findLatestByTypeExcludingId(FileType type, Long excludeId);
 }

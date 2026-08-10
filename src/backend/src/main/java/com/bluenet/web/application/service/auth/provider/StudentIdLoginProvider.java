@@ -6,8 +6,8 @@ import com.bluenet.web.application.command.auth.AuthCommands;
 import com.bluenet.web.application.service.auth.strategy.AbstractAuthProvider;
 import com.bluenet.web.application.service.auth.strategy.AuthProviderType;
 import com.bluenet.web.domain.exception.Unauthorized;
+import com.bluenet.web.domain.model.entity.User;
 import com.bluenet.web.domain.model.enumerate.LocalLoginType;
-import com.bluenet.web.domain.model.vo.UserVO;
 import com.bluenet.web.domain.service.AuthDomainService;
 
 import lombok.extern.slf4j.Slf4j;
@@ -16,7 +16,7 @@ import lombok.extern.slf4j.Slf4j;
  * 学号密码登录凭证校验 provider。
  */
 @Slf4j
-public class StudentIdLoginProvider extends AbstractAuthProvider<AuthCommands.StudentIdLoginCommand, UserVO> {
+public class StudentIdLoginProvider extends AbstractAuthProvider<AuthCommands.StudentIdLoginCommand, User> {
     private final AuthDomainService authDomainService;
 
     public StudentIdLoginProvider(AuthDomainService authDomainService) {
@@ -29,14 +29,14 @@ public class StudentIdLoginProvider extends AbstractAuthProvider<AuthCommands.St
      *
      * @param command
      *            登录命令。
-     * @return 通过校验的用户。
+     * @return 通过校验的用户实体。
      */
-    public UserVO authenticate(AuthCommands.StudentIdLoginCommand command) {
-        Optional<UserVO> userVOOptional = authDomainService.checkLocalValid(
+    public User authenticate(AuthCommands.StudentIdLoginCommand command) {
+        Optional<User> userOptional = authDomainService.checkLocalValid(
                 command.studentId(),
                 command.password(),
                 LocalLoginType.STUDENT_ID);
-        return userVOOptional.orElseThrow(() -> {
+        return userOptional.orElseThrow(() -> {
             log.warn("Login failed: invalid credentials - {}", command.studentId());
             return new Unauthorized("学号或密码错误");
         });

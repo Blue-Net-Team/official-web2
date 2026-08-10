@@ -6,7 +6,7 @@ import com.bluenet.web.api.dto.enrollment.EnrollmentConflictDTO;
 import com.bluenet.web.api.dto.enrollment.EnrollmentResultDTO;
 import com.bluenet.web.api.converter.enroll.EnrollRequestConverter;
 import com.bluenet.web.api.converter.enroll.EnrollResponseConverter;
-import com.bluenet.web.application.EnrollResult;
+import com.bluenet.web.application.result.enroll.EnrollResult;
 import com.bluenet.web.application.service.EnrollAppService;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
 import com.bluenet.web.infrastructure.security.annotation.RequiresPermission;

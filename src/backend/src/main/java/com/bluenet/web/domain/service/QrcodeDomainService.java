@@ -1,8 +1,8 @@
 package com.bluenet.web.domain.service;
 
+import com.bluenet.web.domain.model.entity.File;
 import com.bluenet.web.domain.model.entity.Qrcode;
 import com.bluenet.web.domain.model.enumerate.QrcodeType;
-import com.bluenet.web.domain.model.vo.FileVO;
 
 import java.util.List;
 
@@ -14,12 +14,12 @@ public interface QrcodeDomainService {
     /**
      * 保存二维码
      *
-     * @param fileVO
-     *            文件VO
+     * @param file
+     *            文件实体
      * @param type
      *            二维码类型
      */
-    void saveQrcode(FileVO fileVO, QrcodeType type);
+    void saveQrcode(File file, QrcodeType type);
 
     /**
      * 获取咨询群二维码列表（按ID升序）
@@ -33,10 +33,10 @@ public interface QrcodeDomainService {
      *
      * @param id
      *            二维码ID
-     * @param fileVO
-     *            新的文件VO
+     * @param file
+     *            新的文件实体
      */
-    void updateConsultationQrcode(Long id, FileVO fileVO);
+    void updateConsultationQrcode(Long id, File file);
 
     /**
      * 根据ID删除咨询群二维码（含关联文件删除）
@@ -70,8 +70,8 @@ public interface QrcodeDomainService {
      *
      * @param id
      *            二维码ID
-     * @param fileVO
-     *            新的文件VO（可选）
+     * @param file
+     *            新的文件实体（可选）
      * @param direction
      *            方向（可选）
      * @param epoch
@@ -79,7 +79,7 @@ public interface QrcodeDomainService {
      * @param isShared
      *            是否共用（可选）
      */
-    void updateAssessmentQrcode(Long id, FileVO fileVO, String direction,
+    void updateAssessmentQrcode(Long id, File file, String direction,
             Integer epoch, Boolean isShared);
 
     /**

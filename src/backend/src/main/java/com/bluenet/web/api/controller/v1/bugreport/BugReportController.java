@@ -4,7 +4,7 @@ import com.bluenet.web.api.dto.ResponseMessage;
 import com.bluenet.web.api.dto.bugreport.BugReportCreatedDTO;
 import com.bluenet.web.api.dto.bugreport.CreateBugReportRequestDTO;
 import com.bluenet.web.api.converter.bugreport.BugReportRequestConverter;
-import com.bluenet.web.application.BugReportResult;
+import com.bluenet.web.application.result.bugreport.BugReportResult;
 import com.bluenet.web.api.converter.bugreport.BugReportResponseConverter;
 import com.bluenet.web.application.service.BugReportAppService;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;

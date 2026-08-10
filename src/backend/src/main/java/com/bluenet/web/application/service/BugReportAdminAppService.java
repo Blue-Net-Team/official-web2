@@ -1,7 +1,7 @@
 package com.bluenet.web.application.service;
 
-import com.bluenet.web.application.BugReportResult;
-import com.bluenet.web.application.command.bugreport.BugReportCommands;
+import com.bluenet.web.application.result.bugreport.BugReportResult;
+import com.bluenet.web.application.query.bugreport.GetBugReportListQuery;
 import org.springframework.data.domain.Page;
 
 /**
@@ -15,11 +15,11 @@ public interface BugReportAdminAppService {
     /**
      * 分页查询 Bug 报告列表
      *
-     * @param command
-     *            查询命令
+     * @param query
+     *            查询参数
      * @return 分页后的报告摘要结果
      */
-    Page<BugReportResult.Brief> getBugReportList(BugReportCommands.GetBugReportListCommand command);
+    Page<BugReportResult.Brief> getBugReportList(GetBugReportListQuery query);
 
     /**
      * 获取 Bug 报告详情

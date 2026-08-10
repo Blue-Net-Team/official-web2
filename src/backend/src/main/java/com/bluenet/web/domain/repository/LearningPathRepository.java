@@ -40,14 +40,6 @@ public interface LearningPathRepository {
     void save(DirectionLearningStep step);
 
     /**
-     * 更新已有学习路径记录。
-     *
-     * @param step
-     *            学习路径步骤实体（id 必须非空）。
-     */
-    void update(DirectionLearningStep step);
-
-    /**
      * 删除指定学习路径记录。
      *
      * @param id

@@ -3,7 +3,6 @@ package com.bluenet.web.infrastructure.repository.impl;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bluenet.web.domain.model.entity.KnowledgeDoc;
-import com.bluenet.web.domain.model.enumerate.DocParseStatus;
 import com.bluenet.web.domain.repository.KnowledgeDocRepository;
 import com.bluenet.web.infrastructure.repository.converter.KnowledgeDocRepositoryConverter;
 import com.bluenet.web.infrastructure.repository.dataobject.KnowledgeDocDO;
@@ -46,34 +45,20 @@ public class KnowledgeDocRepositoryImpl implements KnowledgeDocRepository {
     }
 
     @Override
-    public KnowledgeDoc save(KnowledgeDoc doc) {
+    public void save(KnowledgeDoc doc) {
         KnowledgeDocDO dataObject = converter.toDataObject(doc);
-        knowledgeDocMapper.insert(dataObject);
-        doc.setId(dataObject.getId());
+        if (dataObject.getId() == null) {
+            knowledgeDocMapper.insert(dataObject);
+            doc.setId(dataObject.getId());
+        } else {
+            knowledgeDocMapper.updateById(dataObject);
+        }
         log.debug("知识库文档保存成功: id={}", doc.getId());
-        return doc;
     }
-
-    @Override
-    public void update(KnowledgeDoc doc) {
-        KnowledgeDocDO dataObject = converter.toDataObject(doc);
-        knowledgeDocMapper.updateById(dataObject);
-        log.debug("知识库文档更新成功: id={}", doc.getId());
-    }
-
     @Override
     public void deleteById(Long id) {
         knowledgeDocMapper.deleteById(id);
         log.debug("知识库文档删除成功: id={}", id);
     }
 
-    @Override
-    public void updateStatus(Long id, DocParseStatus status, Integer chunkCount, String errorMessage) {
-        knowledgeDocMapper.updateStatus(
-                id,
-                status,
-                chunkCount != null ? chunkCount : 0,
-                errorMessage != null ? errorMessage : "");
-        log.debug("知识库文档状态更新成功: id={}, status={}", id, status.getValue());
-    }
 }

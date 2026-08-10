@@ -1,6 +1,6 @@
 package com.bluenet.web.application.service.impl;
 
-import com.bluenet.web.application.CollegeResult;
+import com.bluenet.web.application.result.college.CollegeResult;
 import com.bluenet.web.application.command.college.CollegeCommands;
 import com.bluenet.web.application.service.CollegeAppService;
 import com.bluenet.web.domain.exception.DataNotFound;
@@ -70,7 +70,7 @@ public class CollegeAppServiceImpl implements CollegeAppService {
             throw new IllegalArgumentException("学院名称已存在");
         }
         college.rename(command.name());
-        collegeRepository.update(college);
+        collegeRepository.save(college);
         return toResult(college);
     }
 

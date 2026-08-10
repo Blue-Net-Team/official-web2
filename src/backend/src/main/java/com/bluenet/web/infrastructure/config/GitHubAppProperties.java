@@ -1,50 +1,79 @@
 package com.bluenet.web.infrastructure.config;
 
-import lombok.Data;
-import org.springframework.boot.context.properties.ConfigurationProperties;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
-@Data
+/**
+ * Issue 同步 App 配置的过渡层（兼容旧代码）。
+ * <p>
+ * 配置已迁移至 {@code github.apps.issue-sync.*}，由 {@link GitHubAppsProperties} 统一承载。
+ * 本类仅为保留原有注入点与方法的委托 shim，新代码请直接使用 {@link GitHubAppsProperties}。
+ * </p>
+ */
 @Component
-@ConfigurationProperties(prefix = "github.app")
+@RequiredArgsConstructor
 public class GitHubAppProperties {
 
-    private Long appId;
+    private static final GitHubAppConfig EMPTY = new GitHubAppConfig();
 
-    private String privateKeyPath;
+    private final GitHubAppsProperties appsProperties;
 
-    private String owner;
+    private GitHubAppConfig config() {
+        GitHubAppConfig config = appsProperties.findApp(GitHubAppsProperties.ISSUE_SYNC_APP_NAME);
+        return config != null ? config : EMPTY;
+    }
 
-    private String repo;
+    public Long getAppId() {
+        return config().getAppId();
+    }
 
-    private String apiBaseUrl = "https://api.github.com";
+    public String getPrivateKeyPath() {
+        return config().getPrivateKeyPath();
+    }
+
+    public String getOwner() {
+        return config().getOwner();
+    }
+
+    public String getRepo() {
+        return config().getRepo();
+    }
+
+    public String getApiBaseUrl() {
+        return config().getApiBaseUrl();
+    }
 
     /** 应用自身域名，用于生成截图下载链接 */
-    private String appBaseUrl = "http://localhost:8080";
+    public String getAppBaseUrl() {
+        return config().getAppBaseUrl();
+    }
 
     /** Webhook Secret，用于验证 GitHub Webhook 请求的 HMAC-SHA256 签名 */
-    private String webhookSecret;
+    public String getWebhookSecret() {
+        return config().getWebhookSecret();
+    }
 
-    /** 是否启用定时轮询同步。默认 true */
-    private Boolean pollingEnabled = true;
+    public Boolean getPollingEnabled() {
+        return config().getPollingEnabled();
+    }
 
-    /** 轮询回溯天数。默认 7 天 */
-    private Integer pollingSinceDays = 7;
+    /** 轮询回溯天数 */
+    public Integer getPollingSinceDays() {
+        return config().getPollingSinceDays();
+    }
 
     /**
-     * 是否启用 GitHub Issue 同步。 当 appId 和 privateKeyPath 都配置时自动启用。
+     * 是否启用 GitHub Issue 同步。当 appId 和 privateKeyPath 都配置时自动启用。
      */
     public boolean isEnabled() {
-        return appId != null && appId > 0
-                && privateKeyPath != null && !privateKeyPath.isBlank()
-                && owner != null && !owner.isBlank()
-                && repo != null && !repo.isBlank();
+        return config().isEnabled();
     }
 
     /**
      * 是否启用 GitHub Webhook 接收。当 webhookSecret 配置时启用。
      */
     public boolean isWebhookEnabled() {
+        String webhookSecret = config().getWebhookSecret();
         return webhookSecret != null && !webhookSecret.isBlank();
     }
 
@@ -52,6 +81,6 @@ public class GitHubAppProperties {
      * 是否启用定时轮询同步。当 pollingEnabled 为 true 且 GitHub App 基本配置完整时启用。
      */
     public boolean isPollingEnabled() {
-        return Boolean.TRUE.equals(pollingEnabled) && isEnabled();
+        return Boolean.TRUE.equals(config().getPollingEnabled()) && isEnabled();
     }
 }

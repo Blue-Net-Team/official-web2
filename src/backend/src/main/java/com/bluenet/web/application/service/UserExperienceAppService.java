@@ -1,6 +1,6 @@
 package com.bluenet.web.application.service;
 
-import com.bluenet.web.application.UserExperienceResult;
+import com.bluenet.web.application.result.user.UserExperienceResult;
 import com.bluenet.web.application.command.userexperience.UserExperienceCommands;
 
 import java.util.List;

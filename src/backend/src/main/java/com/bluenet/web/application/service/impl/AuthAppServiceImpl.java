@@ -1,6 +1,6 @@
 package com.bluenet.web.application.service.impl;
 
-import com.bluenet.web.application.AuthResult;
+import com.bluenet.web.application.result.auth.AuthResult;
 import com.bluenet.web.application.command.auth.AuthCommands;
 import com.bluenet.web.application.message.MessageRequest;
 import com.bluenet.web.application.message.MessageDispatcher;
@@ -14,9 +14,9 @@ import com.bluenet.web.application.service.auth.provider.StudentIdLoginProvider;
 import com.bluenet.web.application.service.auth.session.AuthSessionIssuer;
 import com.bluenet.web.application.service.auth.strategy.AuthProviderRegistry;
 import com.bluenet.web.application.service.auth.strategy.AuthProviderType;
+import com.bluenet.web.domain.model.entity.User;
+import com.bluenet.web.domain.model.entity.VerifyCode;
 import com.bluenet.web.domain.model.enumerate.MessageChannel;
-import com.bluenet.web.domain.model.vo.UserVO;
-import com.bluenet.web.domain.model.vo.VerifyCodeVO;
 import com.bluenet.web.domain.repository.UserRepository;
 import com.bluenet.web.domain.repository.VerificationCodeRepository;
 import com.bluenet.web.domain.service.AuthDomainService;
@@ -142,10 +142,10 @@ public class AuthAppServiceImpl implements AuthAppService {
     @Override
     @Transactional(readOnly = true)
     public AuthResult.Login login(AuthCommands.StudentIdLoginCommand command, HttpServletResponse response) {
-        UserVO userVO = authProviderRegistry.authenticate(AuthProviderType.STUDENT_ID, command);
-        String csrfToken = authSessionIssuer.issueCookies(userVO, response);
+        User user = authProviderRegistry.authenticate(AuthProviderType.STUDENT_ID, command);
+        String csrfToken = authSessionIssuer.issueCookies(user, response);
         log.info("User logged in successfully: {}", command.studentId());
-        return new AuthResult.Login(csrfToken, userVO);
+        return new AuthResult.Login(user.getId(), csrfToken);
     }
 
     /**
@@ -160,10 +160,10 @@ public class AuthAppServiceImpl implements AuthAppService {
     @Override
     @Transactional
     public AuthResult.Login loginWithEmail(AuthCommands.EmailLoginCommand command, HttpServletResponse response) {
-        UserVO userVO = authProviderRegistry.authenticate(AuthProviderType.EMAIL_CODE, command);
-        String csrfToken = authSessionIssuer.issueCookies(userVO, response);
+        User user = authProviderRegistry.authenticate(AuthProviderType.EMAIL_CODE, command);
+        String csrfToken = authSessionIssuer.issueCookies(user, response);
         log.info("User logged in via email successfully: {}", command.email());
-        return new AuthResult.Login(csrfToken, userVO);
+        return new AuthResult.Login(user.getId(), csrfToken);
     }
 
     /**
@@ -177,12 +177,12 @@ public class AuthAppServiceImpl implements AuthAppService {
         String email = command.email();
         String scene = command.scene() != null ? command.scene() : "login";
 
-        VerifyCodeVO verifyCodeVO = verificationCodeDomainService.generateCode(email, scene);
-        verificationCodeRepository.save(verifyCodeVO);
+        VerifyCode verifyCode = verificationCodeDomainService.generateCode(email, scene);
+        verificationCodeRepository.save(verifyCode);
 
         String subject = "蓝网登录验证码";
         String htmlContent = emailVerificationCodeTemplate
-                .buildHtml(VerificationCodeScene.LOGIN, verifyCodeVO.getCode());
+                .buildHtml(VerificationCodeScene.LOGIN, verifyCode.getCode());
         messageDispatcher.dispatchAsync(MessageRequest.html(MessageChannel.EMAIL, email, subject, htmlContent));
 
         log.info("验证码已发送 - email={}, scene={}", email, scene);
@@ -196,8 +196,8 @@ public class AuthAppServiceImpl implements AuthAppService {
      */
     @Override
     public void logout(HttpServletResponse response) {
-        UserVO currentUser = UserCTX.getCurrentUser();
-        if (currentUser != null) {
+        Long currentUserId = UserCTX.getCurrentUserId();
+        if (currentUserId != null) {
             JwtPayload payload = (JwtPayload) SecurityContextHolder.getContext().getAuthentication().getCredentials();
             if (payload != null && payload.getJti() != null) {
                 // Token 撤销仍由底层 token 服务负责，门面只处理登出流程编排。
@@ -220,15 +220,14 @@ public class AuthAppServiceImpl implements AuthAppService {
      */
     @Override
     public AuthResult.AuthMe getAuthMe(HttpServletResponse response) {
-        UserVO currentUser = UserCTX.getCurrentUser();
-        if (currentUser == null) {
-            return new AuthResult.AuthMe(false, null, null);
+        if (!UserCTX.isAuthenticated()) {
+            return new AuthResult.AuthMe(false, null);
         }
 
         String csrfToken = csrfTokenService.generateCsrfToken();
         cookieService.setCsrfTokenCookie(response, csrfToken);
 
-        return new AuthResult.AuthMe(true, currentUser, csrfToken);
+        return new AuthResult.AuthMe(true, csrfToken);
     }
 
     /**

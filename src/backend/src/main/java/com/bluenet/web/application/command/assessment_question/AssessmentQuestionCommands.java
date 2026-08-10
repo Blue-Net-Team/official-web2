@@ -1,7 +1,7 @@
 package com.bluenet.web.application.command.assessment_question;
 
 import com.bluenet.web.domain.model.enumerate.QuestionType;
-import com.bluenet.web.domain.model.vo.evaluation.QuestionContent;
+import com.bluenet.web.domain.model.vo.question_content.QuestionContent;
 
 import java.math.BigDecimal;
 

@@ -1,12 +1,12 @@
 package com.bluenet.web.application.service.impl;
 
-import com.bluenet.web.application.AssessmentQuestionResult;
-import com.bluenet.web.application.UserQuestionListResult;
+import com.bluenet.web.application.result.assessment.AssessmentQuestionResult;
+import com.bluenet.web.application.result.user.UserQuestionListResult;
 import com.bluenet.web.application.command.assessment_question.AssessmentQuestionCommands;
 import com.bluenet.web.application.service.AssessmentQuestionAppService;
 import com.bluenet.web.application.service.AssessmentSessionAppService;
 import com.bluenet.web.application.command.assessment_session.AssessmentSessionCommands;
-import com.bluenet.web.application.AssessmentSessionResult;
+import com.bluenet.web.application.result.assessment.AssessmentSessionResult;
 import com.bluenet.web.domain.exception.BadRequest;
 import com.bluenet.web.domain.exception.DataConflict;
 import com.bluenet.web.domain.exception.DataNotFound;
@@ -16,16 +16,17 @@ import com.bluenet.web.domain.model.enumerate.QuestionType;
 import com.bluenet.web.domain.model.enumerate.RoleType;
 import com.bluenet.web.domain.model.entity.AssessmentTime;
 import com.bluenet.web.domain.model.entity.File;
-import com.bluenet.web.domain.model.vo.UserVO;
-import com.bluenet.web.domain.model.vo.evaluation.AlgorithmContent;
+import com.bluenet.web.domain.model.entity.JudgeProblemConfig;
+import com.bluenet.web.domain.model.entity.User;
+import com.bluenet.web.domain.model.vo.question_content.AlgorithmContent;
 import com.bluenet.web.domain.repository.AssessmentAnswerRepository;
 import com.bluenet.web.domain.repository.AssessmentQuestionRepository;
 import com.bluenet.web.domain.repository.AssessmentTimeRepository;
 import com.bluenet.web.domain.repository.FileRepository;
+import com.bluenet.web.domain.repository.JudgeProblemConfigRepository;
 import com.bluenet.web.domain.service.AssessmentDecisionDomainService;
 import com.bluenet.web.domain.util.GradeCalculator;
-import com.bluenet.web.infrastructure.repository.mapper.JudgeProblemConfigMapper;
-import com.bluenet.web.infrastructure.repository.dataobject.JudgeProblemConfigDO;
+import com.bluenet.web.infrastructure.security.principal.RoleTypeResolver;
 import com.bluenet.web.infrastructure.storage.JudgeAssetStorage;
 import com.bluenet.web.infrastructure.security.util.UserCTX;
 import lombok.RequiredArgsConstructor;
@@ -58,8 +59,9 @@ public class AssessmentQuestionAppServiceImpl implements AssessmentQuestionAppSe
     private final AssessmentTimeRepository assessmentTimeRepository;
     private final AssessmentSessionAppService assessmentSessionAppService;
     private final AssessmentAnswerRepository assessmentAnswerRepository;
+    private final RoleTypeResolver roleTypeResolver;
     private final FileRepository fileRepository;
-    private final JudgeProblemConfigMapper judgeProblemConfigMapper;
+    private final JudgeProblemConfigRepository judgeProblemConfigRepository;
     private final JudgeAssetStorage judgeAssetStorage;
     private final AssessmentDecisionDomainService assessmentDecisionDomainService;
 
@@ -145,7 +147,7 @@ public class AssessmentQuestionAppServiceImpl implements AssessmentQuestionAppSe
                 command.attachmentId(),
                 command.score());
 
-        assessmentQuestionRepository.update(existing);
+        assessmentQuestionRepository.save(existing);
         return toResult(existing, null);
     }
 
@@ -168,19 +170,19 @@ public class AssessmentQuestionAppServiceImpl implements AssessmentQuestionAppSe
                 .orElseThrow(() -> new DataNotFound("考题不存在，ID: " + id));
 
         if (existing.getQuestionType() == QuestionType.ALGORITHM) {
-            JudgeProblemConfigDO config = judgeProblemConfigMapper.selectByQuestionId(id);
-            if (config != null) {
-                deleteJudgeAssets(config);
-                judgeProblemConfigMapper.deleteByQuestionId(id);
-                log.info("delete judge problem config for questionId={}", id);
-            }
+            judgeProblemConfigRepository.findByQuestionId(id)
+                    .ifPresent(config -> {
+                        deleteJudgeAssets(config);
+                        judgeProblemConfigRepository.deleteByQuestionId(id);
+                        log.info("delete judge problem config for questionId={}", id);
+                    });
         }
 
         assessmentQuestionRepository.deleteById(id);
         log.info("delete question success id {}", id);
     }
 
-    private void deleteJudgeAssets(JudgeProblemConfigDO config) {
+    private void deleteJudgeAssets(JudgeProblemConfig config) {
         Long questionId = config.getQuestionId();
 
         try {
@@ -271,9 +273,9 @@ public class AssessmentQuestionAppServiceImpl implements AssessmentQuestionAppSe
         AssessmentTime time = assessmentTimeRepository.findById(assessmentTimeId)
                 .orElseThrow(() -> new IllegalArgumentException("考核时间不存在"));
 
-        UserVO currentUser = UserCTX.getCurrentUser();
+        User currentUser = UserCTX.getCurrentUser();
         if (currentUser != null) {
-            RoleType roleType = RoleType.fromName(currentUser.getRoleName());
+            RoleType roleType = roleTypeResolver.resolve(currentUser.getRoleId());
             if (roleType == RoleType.CANDIDATE) {
                 if (time.getDirection() != null && !currentUser.getDirection().equals(time.getDirection())) {
                     throw new SecurityException("无权查看该考核的题目");
@@ -342,10 +344,10 @@ public class AssessmentQuestionAppServiceImpl implements AssessmentQuestionAppSe
         AssessmentQuestion entity = assessmentQuestionRepository.findById(id)
                 .orElseThrow(() -> new DataNotFound("考题不存在，ID: " + id));
 
-        UserVO currentUser = UserCTX.getCurrentUser();
+        User currentUser = UserCTX.getCurrentUser();
 
         if (currentUser != null) {
-            RoleType roleType = RoleType.fromName(currentUser.getRoleName());
+            RoleType roleType = roleTypeResolver.resolve(currentUser.getRoleId());
             if (roleType == RoleType.CANDIDATE) {
                 AssessmentTime time = assessmentTimeRepository.findById(entity.getAssessmentTimeId())
                         .orElseThrow(() -> new IllegalArgumentException("考核时间不存在"));
@@ -401,12 +403,19 @@ public class AssessmentQuestionAppServiceImpl implements AssessmentQuestionAppSe
             throw new BadRequest("文件类型不匹配，期望 ASSESSMENT_ATTACHMENT");
         }
 
-        assessmentQuestionRepository.updateAttachmentId(questionId, fileId);
+        question.update(
+                question.getQuestionNo(),
+                question.getQuestionType(),
+                question.getTitle(),
+                question.getContent(),
+                fileId,
+                question.getScore());
+        assessmentQuestionRepository.save(question);
         log.info("题目附件更新成功 - questionId={}, fileId={}", questionId, fileId);
     }
 
     private void validateQuestionContent(QuestionType questionType,
-            com.bluenet.web.domain.model.vo.evaluation.QuestionContent content) {
+            com.bluenet.web.domain.model.vo.question_content.QuestionContent content) {
         if (questionType != QuestionType.ALGORITHM) {
             return;
         }

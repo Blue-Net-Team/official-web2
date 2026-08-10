@@ -1,11 +1,12 @@
 package com.bluenet.web.application.service.impl;
 
-import com.bluenet.web.application.AuditStatisticsResult;
-import com.bluenet.web.application.command.auditstatistics.AuditStatisticsCommands;
+import com.bluenet.web.application.query.auditstatistics.GetEndpointLatencyRankingQuery;
+import com.bluenet.web.application.query.auditstatistics.GetEndpointRankingQuery;
+import com.bluenet.web.application.query.auditstatistics.GetTrendsQuery;
 import com.bluenet.web.application.service.AuditStatisticsAppService;
-import com.bluenet.web.domain.model.vo.AuditEndpointLatencyVO;
-import com.bluenet.web.domain.model.vo.AuditEndpointRankingVO;
-import com.bluenet.web.domain.model.vo.AuditTrendPointVO;
+import com.bluenet.web.application.result.audit.AuditEndpointLatency;
+import com.bluenet.web.application.result.audit.AuditEndpointRanking;
+import com.bluenet.web.application.result.audit.AuditTrendPoint;
 import com.bluenet.web.domain.repository.AuditRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -28,64 +29,41 @@ public class AuditStatisticsAppServiceImpl implements AuditStatisticsAppService 
     /**
      * 查询趋势统计。
      *
-     * @param command
-     *            查询趋势命令
+     * @param query
+     *            查询趋势参数
      * @return 趋势点列表
      */
     @Override
     @Transactional(readOnly = true)
-    public List<AuditStatisticsResult.TrendPoint> getTrends(AuditStatisticsCommands.GetTrendsCommand command) {
-        return auditRepository.queryTrends(command.period())
-                .stream()
-                .map(this::toTrendPoint)
-                .toList();
+    public List<AuditTrendPoint> getTrends(GetTrendsQuery query) {
+        return auditRepository.queryTrends(query.period());
     }
 
     /**
      * 查询端点排行。
      *
-     * @param command
-     *            查询端点排行命令
+     * @param query
+     *            查询端点排行参数
      * @return 端点排行列表
      */
     @Override
     @Transactional(readOnly = true)
-    public List<AuditStatisticsResult.EndpointRanking> getEndpointRanking(
-            AuditStatisticsCommands.GetEndpointRankingCommand command) {
-        return auditRepository.queryEndpointRanking(command.period(), command.limit())
-                .stream()
-                .map(this::toEndpointRanking)
-                .toList();
+    public List<AuditEndpointRanking> getEndpointRanking(
+            GetEndpointRankingQuery query) {
+        return auditRepository.queryEndpointRanking(query.period(), query.limit());
     }
 
     /**
      * 查询端点延迟排行。
      *
-     * @param command
-     *            查询端点延迟命令
+     * @param query
+     *            查询端点延迟参数
      * @return 端点延迟排行列表
      */
     @Override
     @Transactional(readOnly = true)
-    public List<AuditStatisticsResult.EndpointLatency> getEndpointLatencyRanking(
-            AuditStatisticsCommands.GetEndpointLatencyRankingCommand command) {
-        return auditRepository.queryEndpointLatencyRanking(command.period(), command.limit())
-                .stream()
-                .map(this::toEndpointLatency)
-                .toList();
-    }
-
-    private AuditStatisticsResult.TrendPoint toTrendPoint(AuditTrendPointVO vo) {
-        return new AuditStatisticsResult.TrendPoint(vo.getTime(), vo.getCount());
-    }
-
-    private AuditStatisticsResult.EndpointRanking toEndpointRanking(AuditEndpointRankingVO vo) {
-        return new AuditStatisticsResult.EndpointRanking(vo.getPattern(), vo.getCount(), vo.getAvgDurationMs(),
-                vo.getErrorCount());
-    }
-
-    private AuditStatisticsResult.EndpointLatency toEndpointLatency(AuditEndpointLatencyVO vo) {
-        return new AuditStatisticsResult.EndpointLatency(vo.getPattern(), vo.getAvgDurationMs(), vo.getMaxDurationMs(),
-                vo.getCount());
+    public List<AuditEndpointLatency> getEndpointLatencyRanking(
+            GetEndpointLatencyRankingQuery query) {
+        return auditRepository.queryEndpointLatencyRanking(query.period(), query.limit());
     }
 }

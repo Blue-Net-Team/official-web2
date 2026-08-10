@@ -82,4 +82,22 @@ public class VerifyCode {
             LocalDateTime usedAt, String scene) {
         return new VerifyCode(id, target, code, expireAt, usedAt, scene);
     }
+
+    /**
+     * 判断验证码是否已被使用。
+     *
+     * @return 已使用时返回 true
+     */
+    public boolean isUsed() {
+        return usedAt != null;
+    }
+
+    /**
+     * 判断验证码是否已过期。
+     *
+     * @return 已过期时返回 true
+     */
+    public boolean isExpired() {
+        return LocalDateTime.now().isAfter(expireAt);
+    }
 }

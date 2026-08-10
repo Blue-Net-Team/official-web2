@@ -3,7 +3,7 @@ package com.bluenet.web.domain.repository;
 import com.bluenet.web.domain.model.entity.Enroll;
 import com.bluenet.web.domain.model.enumerate.Direction;
 import com.bluenet.web.domain.model.enumerate.EnrollStatus;
-import com.bluenet.web.domain.model.vo.EnrollStatisticsVO;
+import com.bluenet.web.application.result.enroll.EnrollStatistics;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -50,14 +50,6 @@ public interface EnrollRepository {
      *            报名实体。
      */
     void save(Enroll enroll);
-
-    /**
-     * 更新已有报名申请记录。
-     *
-     * @param enroll
-     *            报名实体（id 必须非空）。
-     */
-    void update(Enroll enroll);
 
     /**
      * 查询全部报名申请记录。
@@ -123,5 +115,5 @@ public interface EnrollRepository {
      *
      * @return 统计数据。
      */
-    EnrollStatisticsVO getStatistics();
+    EnrollStatistics getStatistics();
 }
