@@ -52,6 +52,13 @@ class Settings(BaseSettings):
     LLM_TEMPERATURE: float = 0.7
     LLM_TIMEOUT: int = 60
 
+    # 意图识别 / 安全围栏配置
+    INTENT_GUARD_ENABLED: bool = True
+    INTENT_LLM_PROVIDER: str = ""  # 空 = 复用 LLM_PROVIDER
+    INTENT_LLM_MODEL: str = ""  # 空 = 复用 LLM_MODEL
+    INTENT_LLM_TEMPERATURE: float = 0.0
+    INTENT_LLM_TIMEOUT: int = 30
+
     # Reranker 模型配置
     RERANKER_PROVIDER: str = "siliconflow"  # "siliconflow" | "ollama"
     RERANKER_MODEL: str = ""
