@@ -4,7 +4,7 @@ import { Footer } from 'antd/lib/layout/layout'
 const GITHUB_ORG_URL = 'https://github.com/Blue-Net-Team'
 const ICP_URL = 'https://beian.miit.gov.cn/'
 const POLICE_RECORD_URL =
-  'http://www.beian.gov.cn/portal/registerSystemInfo?recordcode=44081102000111'
+  'http://www.beian.gov.cn/portal/registerSystemInfo?recordcode=44050702001659'
 
 export default function AppFooter() {
   return (
@@ -23,7 +23,7 @@ export default function AppFooter() {
             rel="noopener noreferrer"
             className="transition-colors duration-200 hover:text-white/80"
           >
-            粤ICP备2026040294号-1
+            粤ICP备2026112458号
           </a>
           <a
             href={POLICE_RECORD_URL}
@@ -32,7 +32,7 @@ export default function AppFooter() {
             className="inline-flex items-center gap-1 transition-colors duration-200 hover:text-white/80"
           >
             <SafetyOutlined className="text-[#00b96b]" />
-            粤公网安备44081102000111号
+            粤公网安备44050702001659号
           </a>
           <a
             href={GITHUB_ORG_URL}
