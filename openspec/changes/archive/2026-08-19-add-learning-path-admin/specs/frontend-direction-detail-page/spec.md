@@ -1,10 +1,6 @@
-# direction-detail-page Specification
+# frontend-direction-detail-page Delta
 
-## Purpose
-
-方向详情公开展示页（`/direction/[slug]`），ISR 渲染。学习路径区块完全由后端数据驱动，前端不硬编码步骤。
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Learning Path display
 

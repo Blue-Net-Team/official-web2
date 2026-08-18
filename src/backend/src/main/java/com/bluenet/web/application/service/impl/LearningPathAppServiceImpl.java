@@ -57,7 +57,7 @@ public class LearningPathAppServiceImpl implements LearningPathAppService {
         }
 
         DirectionLearningStep step = DirectionLearningStep
-                .create(direction, command.stepNumber(), command.title(), command.videoUrl());
+                .create(direction, command.stepNumber(), command.title(), command.relatedUrl());
         learningPathRepository.save(step);
         return toResult(step);
     }
@@ -82,7 +82,7 @@ public class LearningPathAppServiceImpl implements LearningPathAppService {
 
         step.updateStepNumber(command.stepNumber());
         step.updateTitle(command.title());
-        step.updateVideoUrl(command.videoUrl());
+        step.updateRelatedUrl(command.relatedUrl());
         learningPathRepository.save(step);
         return toResult(step);
     }
@@ -108,6 +108,6 @@ public class LearningPathAppServiceImpl implements LearningPathAppService {
                 step.getDirection(),
                 step.getStepNumber(),
                 step.getTitle(),
-                step.getVideoUrl());
+                step.getRelatedUrl());
     }
 }

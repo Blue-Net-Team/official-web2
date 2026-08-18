@@ -32,12 +32,6 @@ const cvData: DirectionData = {
     { name: 'PyTorch', description: '深度学习框架' },
     { name: 'YOLO', description: '目标检测算法' },
   ],
-  learningPath: [
-    { step: 1, title: 'Python基础', videoLink: '' },
-    { step: 2, title: 'OpenCV图像处理基础', videoLink: '' },
-    { step: 3, title: 'Linux开发板的使用', videoLink: '' },
-    { step: 4, title: '深度学习与目标检测', videoLink: '' },
-  ],
   careers: [
     {
       title: '核心岗位',
@@ -86,12 +80,6 @@ const embedData: DirectionData = {
     { name: 'PCB/原理图设计', description: '硬件电路设计与仿真' },
     { name: '信号分析', description: '电路信号调试与优化' },
     { name: 'FreeRTOS', description: '实时操作系统' },
-  ],
-  learningPath: [
-    { step: 1, title: 'C语言基础', videoLink: '' },
-    { step: 2, title: '单片机基础', videoLink: '' },
-    { step: 3, title: '外设通信与控制', videoLink: '' },
-    { step: 4, title: 'PCB设计与绘制', videoLink: '' },
   ],
   careers: [
     {
@@ -142,12 +130,6 @@ const structData: DirectionData = {
     { name: 'AutoCAD', description: '工程制图' },
     { name: 'ANSYS / Altair Inspire', description: '有限元分析与轻量化设计' },
     { name: '3D打印', description: '快速原型制作' },
-  ],
-  learningPath: [
-    { step: 1, title: '机械制图基础', videoLink: '' },
-    { step: 2, title: '三维建模入门', videoLink: '' },
-    { step: 3, title: '装配与工程图', videoLink: '' },
-    { step: 4, title: '仿真与优化', videoLink: '' },
   ],
   careers: [
     {

@@ -26,7 +26,7 @@ class DirectionLearningStepTest {
         assertThat(step.getDirection()).isEqualTo(Direction.COMPUTER_VISION);
         assertThat(step.getStepNumber()).isEqualTo(1);
         assertThat(step.getTitle()).isEqualTo("OpenCV 基础");
-        assertThat(step.getVideoUrl()).isEqualTo("https://example.com/video");
+        assertThat(step.getRelatedUrl()).isEqualTo("https://example.com/video");
     }
 
     @Test
@@ -98,13 +98,13 @@ class DirectionLearningStepTest {
     }
 
     @Test
-    @DisplayName("updateVideoUrl: 应更新视频链接")
-    void updateVideoUrl_shouldUpdateVideoUrl() {
+    @DisplayName("updateRelatedUrl: 应更新相关链接")
+    void updateRelatedUrl_shouldUpdateRelatedUrl() {
         DirectionLearningStep step = DirectionLearningStep.create(Direction.EMBEDDED, 1, "标题", null);
 
-        step.updateVideoUrl("https://new.example.com");
+        step.updateRelatedUrl("https://new.example.com");
 
-        assertThat(step.getVideoUrl()).isEqualTo("https://new.example.com");
+        assertThat(step.getRelatedUrl()).isEqualTo("https://new.example.com");
     }
 
     @Test
@@ -121,6 +121,6 @@ class DirectionLearningStepTest {
         assertThat(step.getDirection()).isEqualTo(Direction.STRUCTURAL_DESIGN);
         assertThat(step.getStepNumber()).isEqualTo(3);
         assertThat(step.getTitle()).isEqualTo("标题");
-        assertThat(step.getVideoUrl()).isEqualTo("https://example.com");
+        assertThat(step.getRelatedUrl()).isEqualTo("https://example.com");
     }
 }

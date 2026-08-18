@@ -1,10 +1,6 @@
-# direction-learning-path Specification
+# backend-direction-learning-path Delta
 
-## Purpose
-
-方向学习路径的存储与查询/管理 API。学习步骤包含方向、序号、标题与"相关链接"（related_url，任意资料链接，不限于视频），公开接口供展示页使用，管理接口供后台维护。
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Learning path data storage
 
@@ -68,55 +64,7 @@ The system SHALL provide admin API endpoints for CRUD operations on learning pat
 
 ---
 
-### Requirement: Direction slug to enum mapping
-
-The system SHALL map frontend slugs (cv, embed, struct) to backend Direction enum values.
-
-#### Scenario: CV slug mapping
-- **WHEN** API receives slug "cv"
-- **THEN** system maps to Direction.COMPUTER_VISION
-
-#### Scenario: Embed slug mapping
-- **WHEN** API receives slug "embed"
-- **THEN** system maps to Direction.EMBEDDED
-
-#### Scenario: Struct slug mapping
-- **WHEN** API receives slug "struct"
-- **THEN** system maps to Direction.STRUCTURAL_DESIGN
-
----
-
-### Requirement: Permission control for learning path management
-
-The system SHALL enforce permission checks on learning path management endpoints.
-
-#### Scenario: Public endpoint access
-- **WHEN** any user accesses `GET /api/v1/directions/{slug}/learning-path`
-- **THEN** system allows access without authentication
-
-#### Scenario: Admin endpoint access
-- **WHEN** admin accesses management endpoints
-- **THEN** system requires `direction-learning-path:create/update/delete` permission
-
----
-
-### Requirement: Initial data migration
-
-The system SHALL initialize default learning path data for all three directions during migration.
-
-#### Scenario: Default data for computer vision
-- **WHEN** migration executes
-- **THEN** system inserts 4 learning steps for COMPUTER_VISION direction
-
-#### Scenario: Default data for embedded
-- **WHEN** migration executes
-- **THEN** system inserts 4 learning steps for EMBEDDED direction
-
-#### Scenario: Default data for structural design
-- **WHEN** migration executes
-- **THEN** system inserts 4 learning steps for STRUCTURAL_DESIGN direction
-
----
+## ADDED Requirements
 
 ### Requirement: Seed titles synchronized with current display copy
 

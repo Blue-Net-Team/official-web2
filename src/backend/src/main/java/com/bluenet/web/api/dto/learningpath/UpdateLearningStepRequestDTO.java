@@ -32,6 +32,6 @@ public class UpdateLearningStepRequestDTO {
     @Schema(description = "步骤标题", example = "Python基础", required = true)
     private String title;
 
-    @Schema(description = "视频链接URL", example = "https://example.com/video.mp4")
-    private String videoUrl;
+    @Schema(description = "相关链接URL", example = "https://example.com/resource")
+    private String relatedLink;
 }

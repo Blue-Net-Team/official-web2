@@ -25,8 +25,8 @@ public class LearningPathCommands {
             Integer stepNumber,
             /** 标题 */
             String title,
-            /** 视频URL */
-            String videoUrl) {
+            /** 相关链接URL */
+            String relatedUrl) {
     }
 
     /**
@@ -42,7 +42,7 @@ public class LearningPathCommands {
             Integer stepNumber,
             /** 标题 */
             String title,
-            /** 视频URL */
-            String videoUrl) {
+            /** 相关链接URL */
+            String relatedUrl) {
     }
 }

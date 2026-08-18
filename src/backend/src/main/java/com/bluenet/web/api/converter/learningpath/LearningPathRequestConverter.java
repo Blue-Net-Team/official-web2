@@ -19,7 +19,7 @@ public class LearningPathRequestConverter {
      */
     public LearningPathCommands.CreateLearningStepCommand toCommand(String slug, CreateLearningStepRequestDTO dto) {
         return new LearningPathCommands.CreateLearningStepCommand(slug, dto.getStepNumber(), dto.getTitle(),
-                dto.getVideoUrl());
+                dto.getRelatedLink());
     }
 
     /**
@@ -27,6 +27,6 @@ public class LearningPathRequestConverter {
      */
     public LearningPathCommands.UpdateLearningStepCommand toCommand(Long id, UpdateLearningStepRequestDTO dto) {
         return new LearningPathCommands.UpdateLearningStepCommand(id, dto.getStepNumber(), dto.getTitle(),
-                dto.getVideoUrl());
+                dto.getRelatedLink());
     }
 }

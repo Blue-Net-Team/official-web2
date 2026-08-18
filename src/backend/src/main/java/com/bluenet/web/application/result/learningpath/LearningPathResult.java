@@ -17,6 +17,6 @@ public record LearningPathResult(
         Integer stepNumber,
         /** 标题 */
         String title,
-        /** 视频URL地址 */
-        String videoUrl) {
+        /** 相关链接URL地址 */
+        String relatedUrl) {
 }

@@ -90,7 +90,7 @@ class AdminLearningPathControllerIntegrationTest extends BaseIntegrationTest {
         CreateLearningStepRequestDTO request = CreateLearningStepRequestDTO.builder()
                 .stepNumber(1)
                 .title("Python基础")
-                .videoUrl("https://example.com/video.mp4")
+                .relatedLink("https://example.com/video.mp4")
                 .build();
 
         MvcResult mvcResult = mockMvc.perform(
@@ -152,7 +152,7 @@ class AdminLearningPathControllerIntegrationTest extends BaseIntegrationTest {
         UpdateLearningStepRequestDTO request = UpdateLearningStepRequestDTO.builder()
                 .stepNumber(1)
                 .title("Python基础")
-                .videoUrl("https://example.com/video.mp4")
+                .relatedLink("https://example.com/video.mp4")
                 .build();
 
         MvcResult mvcResult = mockMvc.perform(

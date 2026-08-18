@@ -27,6 +27,6 @@ public class LearningStepDTO {
     @Schema(description = "步骤标题")
     private String title;
 
-    @Schema(description = "视频链接URL")
-    private String videoLink;
+    @Schema(description = "相关链接URL")
+    private String relatedLink;
 }

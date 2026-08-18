@@ -15,11 +15,12 @@ export interface TechItem {
   description: string
 }
 
-/** 学习路径步骤 */
+/** 学习路径步骤（与后端 LearningStepDTO 对齐） */
 export interface LearningStep {
-  step: number
+  id: number
+  stepNumber: number
   title: string
-  videoLink?: string
+  relatedLink?: string | null
 }
 
 /** 职业卡片 */
@@ -41,7 +42,6 @@ export interface DirectionData {
   subtitle: string
   theme: ThemeColors
   techStack: TechItem[]
-  learningPath: LearningStep[]
   careers: CareerCard[]
   recruitment: RecruitmentInfo
 }

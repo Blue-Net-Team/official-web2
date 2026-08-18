@@ -27,7 +27,7 @@ public class LearningPathRepositoryConverter {
                 .direction(entity.getDirection())
                 .stepNumber(entity.getStepNumber())
                 .title(entity.getTitle())
-                .videoUrl(entity.getVideoUrl())
+                .relatedUrl(entity.getRelatedUrl())
                 .build();
     }
 
@@ -43,7 +43,7 @@ public class LearningPathRepositoryConverter {
                 dataObject.getDirection(),
                 dataObject.getStepNumber(),
                 dataObject.getTitle(),
-                dataObject.getVideoUrl());
+                dataObject.getRelatedUrl());
     }
 
     /**

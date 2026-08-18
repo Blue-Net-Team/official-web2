@@ -43,19 +43,14 @@ export default async function DirectionPage({ params }: PageProps) {
     notFound()
   }
 
-  let learningPathWithVideos: LearningStep[] = direction.learningPath
+  // 学习路径完全由后端数据驱动；后端不可用时渲染空区块
+  let learningSteps: LearningStep[] = []
 
   try {
     const response = await directionService.getLearningPath(slug)
 
     if (response.code === 200 && response.data?.steps) {
-      learningPathWithVideos = direction.learningPath.map((step) => {
-        const videoData = response.data!.steps.find((v) => v.stepNumber === step.step)
-        return {
-          ...step,
-          videoLink: videoData?.videoLink || undefined,
-        }
-      })
+      learningSteps = response.data.steps
     }
   } catch (error) {
     console.error('Failed to fetch learning path data:', error)
@@ -72,7 +67,7 @@ export default async function DirectionPage({ params }: PageProps) {
     <div className="min-h-screen bg-black text-white" style={themeStyle}>
       <HeroSection data={direction} />
       <TechStack data={direction.techStack} />
-      <LearningPath data={learningPathWithVideos} />
+      <LearningPath data={learningSteps} />
       <CareerSection data={direction.careers} />
       <RecruitmentInfo data={direction.recruitment} directionSlug={direction.slug} />
     </div>

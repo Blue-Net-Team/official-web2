@@ -38,7 +38,7 @@ public class DirectionLearningStepDO {
      */
     private String title;
     /**
-     * 视频演示或介绍地址。
+     * 相关资料链接地址。
      */
-    private String videoUrl;
+    private String relatedUrl;
 }

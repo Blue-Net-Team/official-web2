@@ -27,6 +27,7 @@ import {
   TagOutlined,
   CloudDownloadOutlined,
   GithubOutlined,
+  NodeIndexOutlined,
 } from '@ant-design/icons'
 import type { MenuProps } from 'antd'
 
@@ -138,6 +139,13 @@ export const menuConfig: MenuItemConfig[] = [
     path: '/admin/message-template',
     icon: <MailOutlined />,
     minLevel: 3,
+  },
+  {
+    key: 'learningPath',
+    label: '学习路线管理',
+    path: '/admin/learning-path',
+    icon: <NodeIndexOutlined />,
+    minLevel: 2,
   },
   {
     key: 'permission',

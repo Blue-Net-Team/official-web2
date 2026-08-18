@@ -36,22 +36,23 @@ public class DirectionLearningStep {
     private String title;
 
     /**
-     * 视频链接URL
+     * 相关链接URL
      */
-    private String videoUrl;
+    private String relatedUrl;
 
-    private DirectionLearningStep(Long id, Direction direction, Integer stepNumber, String title, String videoUrl) {
+    private DirectionLearningStep(Long id, Direction direction, Integer stepNumber, String title, String relatedUrl) {
         this.id = id;
         this.direction = direction;
         this.stepNumber = stepNumber;
         this.title = title;
-        this.videoUrl = videoUrl;
+        this.relatedUrl = relatedUrl;
     }
 
     /**
      * 构造新学习步骤 —— 带领域校验
      */
-    public static DirectionLearningStep create(Direction direction, Integer stepNumber, String title, String videoUrl) {
+    public static DirectionLearningStep create(Direction direction, Integer stepNumber, String title,
+            String relatedUrl) {
         if (direction == null) {
             throw new IllegalArgumentException("方向不能为空");
         }
@@ -61,15 +62,15 @@ public class DirectionLearningStep {
         if (title == null || title.isBlank()) {
             throw new IllegalArgumentException("标题不能为空");
         }
-        return new DirectionLearningStep(null, direction, stepNumber, title.trim(), videoUrl);
+        return new DirectionLearningStep(null, direction, stepNumber, title.trim(), relatedUrl);
     }
 
     /**
      * 从数据库重建 —— 跳过创建校验
      */
     public static DirectionLearningStep reconstruct(Long id, Direction direction, Integer stepNumber, String title,
-            String videoUrl) {
-        return new DirectionLearningStep(id, direction, stepNumber, title, videoUrl);
+            String relatedUrl) {
+        return new DirectionLearningStep(id, direction, stepNumber, title, relatedUrl);
     }
 
     /**
@@ -93,9 +94,9 @@ public class DirectionLearningStep {
     }
 
     /**
-     * 更新视频链接
+     * 更新相关链接
      */
-    public void updateVideoUrl(String videoUrl) {
-        this.videoUrl = videoUrl;
+    public void updateRelatedUrl(String relatedUrl) {
+        this.relatedUrl = relatedUrl;
     }
 }

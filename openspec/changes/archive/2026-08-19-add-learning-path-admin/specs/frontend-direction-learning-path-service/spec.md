@@ -1,28 +1,6 @@
-# direction-learning-path-service Specification
+# frontend-direction-learning-path-service Delta
 
-## Purpose
-
-前端与方向学习路径后端 API 交互的 service 模块与 DTO 类型定义，包含公开查询与后台管理（CRUD）方法。
-
-## Requirements
-
-### Requirement: API service for direction learning path
-
-The system SHALL provide a service module to interact with backend direction learning path API.
-
-#### Scenario: Service module structure
-- **WHEN** the service is imported
-- **THEN** system exposes `getLearningPath(slug)` function
-
-#### Scenario: API endpoint configuration
-- **WHEN** service calls backend
-- **THEN** system uses `publicClient` to call `/directions/{slug}/learning-path`
-
-#### Scenario: Response type definition
-- **WHEN** service returns data
-- **THEN** data conforms to `DirectionLearningPathDTO` type with direction, directionName, and steps array
-
----
+## MODIFIED Requirements
 
 ### Requirement: DTO type definitions
 
@@ -37,6 +15,8 @@ The system SHALL define TypeScript types matching backend DTOs for direction lea
 - **THEN** type includes direction (string), directionName (string), steps (LearningStepDTO[])
 
 ---
+
+## ADDED Requirements
 
 ### Requirement: Admin service methods for learning step management
 

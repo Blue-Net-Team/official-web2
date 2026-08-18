@@ -26,7 +26,7 @@ public class LearningPathResponseConverter {
                 .id(result.id())
                 .stepNumber(result.stepNumber())
                 .title(result.title())
-                .videoLink(result.videoUrl())
+                .relatedLink(result.relatedUrl())
                 .build();
     }
 

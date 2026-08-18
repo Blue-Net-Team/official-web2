@@ -9,7 +9,7 @@
             direction,
             step_number AS stepNumber,
             title,
-            video_url AS videoUrl
+            related_url AS relatedUrl
         FROM tb_direction_learning_step
         WHERE direction = #{direction}
         ORDER BY step_number ASC
@@ -22,7 +22,7 @@
             direction,
             step_number AS stepNumber,
             title,
-            video_url AS videoUrl
+            related_url AS relatedUrl
         FROM tb_direction_learning_step
         WHERE id = #{id}
     </select>

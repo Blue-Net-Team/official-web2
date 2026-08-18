@@ -92,14 +92,14 @@ class LearningPathAppServiceImplIntegrationTest extends BaseIntegrationTest {
         assertThat(result.direction()).isEqualTo(VALID_DIRECTION);
         assertThat(result.stepNumber()).isEqualTo(10);
         assertThat(result.title()).isEqualTo("计算机视觉进阶");
-        assertThat(result.videoUrl()).isEqualTo("http://example.com/cv-10");
+        assertThat(result.relatedUrl()).isEqualTo("http://example.com/cv-10");
         assertThat(learningPathRepository.findById(result.id()))
                 .isPresent()
                 .hasValueSatisfying(step -> {
                     assertThat(step.getDirection()).isEqualTo(VALID_DIRECTION);
                     assertThat(step.getStepNumber()).isEqualTo(10);
                     assertThat(step.getTitle()).isEqualTo("计算机视觉进阶");
-                    assertThat(step.getVideoUrl()).isEqualTo("http://example.com/cv-10");
+                    assertThat(step.getRelatedUrl()).isEqualTo("http://example.com/cv-10");
                 });
     }
 
@@ -120,8 +120,8 @@ class LearningPathAppServiceImplIntegrationTest extends BaseIntegrationTest {
 
     @Test
     @WithSecurityPrincipal(userId = 1L, roleType = "SUPER_ADMIN")
-    @DisplayName("updateStep: 应更新步骤序号、标题和视频链接")
-    void updateStep_shouldUpdateStepNumberTitleAndVideoUrl() {
+    @DisplayName("updateStep: 应更新步骤序号、标题和相关链接")
+    void updateStep_shouldUpdateStepNumberTitleAndRelatedUrl() {
         DirectionLearningStep step = DirectionLearningStep
                 .create(VALID_DIRECTION, 10, "旧标题", "http://example.com/old");
         learningPathRepository.save(step);
@@ -132,13 +132,13 @@ class LearningPathAppServiceImplIntegrationTest extends BaseIntegrationTest {
 
         assertThat(result.stepNumber()).isEqualTo(20);
         assertThat(result.title()).isEqualTo("新标题");
-        assertThat(result.videoUrl()).isEqualTo("http://example.com/new");
+        assertThat(result.relatedUrl()).isEqualTo("http://example.com/new");
         assertThat(learningPathRepository.findById(step.getId()))
                 .isPresent()
                 .hasValueSatisfying(updated -> {
                     assertThat(updated.getStepNumber()).isEqualTo(20);
                     assertThat(updated.getTitle()).isEqualTo("新标题");
-                    assertThat(updated.getVideoUrl()).isEqualTo("http://example.com/new");
+                    assertThat(updated.getRelatedUrl()).isEqualTo("http://example.com/new");
                 });
     }
 
