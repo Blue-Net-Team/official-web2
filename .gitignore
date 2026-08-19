@@ -105,6 +105,25 @@ docker/volumes/
 **/mcp.json
 !.mcp.json.example
 
+# ==================== AI 工具配置（不提交） ====================
+
+.ai/
+.aiassistant/
+.claude/
+.codebuddy/
+.codex/
+.cursor/
+.gemini/
+.opencode/
+.qoder/
+.qwen/
+.trae/
+.playwright-mcp/
+
+# GitHub 上的 AI 工具配置（保留 workflows / 模板）
+.github/prompts/
+.github/skills/
+
 # ==================== 其他 ====================
 
 **.local.json
