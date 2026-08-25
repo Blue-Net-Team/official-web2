@@ -4,15 +4,17 @@
 
 ## 简介
 
-BlueNet 是蓝网实验室的官方门户系统，用于展示实验室信息、管理招新报名、进行考核评估、维护成员资料等。项目采用 Monorepo 结构，包含后端（Spring Boot + Java 21）和前端（Next.js + React 19）。
+BlueNet 是蓝网实验室的官方门户系统，用于展示实验室信息、管理招新报名、进行考核评估、维护成员资料等。项目采用 Monorepo 结构，包含 API 服务（Spring Boot + Java 21）、独立判题服务（Spring Boot + Java 21）、AI 服务（Python FastAPI + LangGraph）和前端（Next.js 15 + React 19）。
 
 ## Monorepo 结构
 
 ```
 bluenet_web2.2/
 ├── src/
-│   ├── backend/           # Spring Boot 3.5.10 + Java 21
-│   └── frontend/          # Next.js 15 + React 19
+│   ├── backend/           # API 服务（Spring Boot 3.5.10 + Java 21）
+│   ├── judge-service/     # 判题服务（Spring Boot + Java 21，RabbitMQ 消费者 + isolate 沙箱）
+│   ├── ai-service/        # AI 服务（Python FastAPI + LangGraph，RAG 问答）
+│   └── frontend/          # 前端（Next.js 15 + React 19 + Ant Design 6）
 ├── docker/                # Docker 配置
 ├── docs/                  # 项目文档
 ├── openspec/              # OpenSpec 变更管理
@@ -33,6 +35,7 @@ bluenet_web2.2/
 
 - [01-快速开始](docs/01-快速开始.md) — 15 分钟运行项目
 - [02-01-项目简介](docs/02-项目概述/02-01-项目简介.md) — 项目背景与技术栈
+- [target-项目目标与现状](docs/target-项目目标与现状.md) — 项目目标、蓝图与当前现状
 - [03-02-后端开发规范](docs/03-开发指南/03-02-后端开发规范.md) — DDD 分层、命名、转换链
 - [03-03-前端开发规范](docs/03-开发指南/03-03-前端开发规范.md) — 页面、ISR、枚举、上传
 - [04-01-环境配置](docs/04-运维部署/04-01-环境配置.md) — 依赖安装与变量说明
