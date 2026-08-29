@@ -131,14 +131,20 @@ services:
     container_name: bluenet-frontend
     ports:
       - "3000:3000"
-    environment: *frontend-env
+    environment:
+      <<: *frontend-env
+      # 限制 V8 堆上限，避免按整机内存放大堆导致 RSS 偏高；GC 会在 384MB 附近积极回收
+      NODE_OPTIONS: --max-old-space-size=384
+    # 内存兜底：稳态由上面的堆上限控制，mem_limit 只防瞬时尖峰误伤
+    mem_limit: 640m
+    mem_reservation: 384m
     depends_on:
       api-service:
         condition: service_healthy
     profiles:
       - full
       - app
-    restart: ${RESTART_POLICY:-no}
+    restart: ${RESTART_POLICY:-unless-stopped}
     networks:
       - network
 

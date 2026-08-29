@@ -14,6 +14,8 @@ function normalizePort(port: string | undefined): string {
 
 const nextConfig: NextConfig = {
   output: 'standalone',
+  // 限制进程内内存缓存（ISR 页 / 优化后图片）从默认 50MB 收到 16MB，降低 RSS 峰值
+  cacheMaxMemorySize: 16 * 1024 * 1024,
   images: {
     remotePatterns: [
       {
