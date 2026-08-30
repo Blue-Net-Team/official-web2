@@ -1,7 +1,11 @@
-# 临时诊断工作流：隔离可复用工作流调用问题，诊断完成后删除
+# 临时诊断工作流：验证 workflow_run + workflow_dispatch 事件组合是否可调用可复用工作流
 name: Test Caller
 
 on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [master, main, develop]
   workflow_dispatch:
 
 permissions:
