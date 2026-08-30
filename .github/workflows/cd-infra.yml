@@ -30,11 +30,11 @@ jobs:
       run: |
         ENV="${{ inputs.environment }}"
         if [ "$ENV" = "prod" ]; then
-          echo "deploy_host=${{ secrets.DATABASE_DEPLOY_HOST_PROD }}" >> "$GITHUB_OUTPUT"
+          echo "deploy_host=${{ secrets.DATABASE_HOST_PROD || secrets.DEPLOY_HOST_PROD }}" >> "$GITHUB_OUTPUT"
           echo "deploy_path=${{ secrets.DATABASE_DEPLOY_PATH_PROD }}" >> "$GITHUB_OUTPUT"
           echo "env_name=production" >> "$GITHUB_OUTPUT"
         else
-          echo "deploy_host=${{ secrets.DATABASE_DEPLOY_HOST_DEV }}" >> "$GITHUB_OUTPUT"
+          echo "deploy_host=${{ secrets.DATABASE_HOST_DEV || secrets.DEPLOY_HOST_DEV }}" >> "$GITHUB_OUTPUT"
           echo "deploy_path=${{ secrets.DATABASE_DEPLOY_PATH_DEV }}" >> "$GITHUB_OUTPUT"
           echo "env_name=development" >> "$GITHUB_OUTPUT"
         fi
@@ -78,11 +78,11 @@ jobs:
       run: |
         ENV="${{ inputs.environment }}"
         if [ "$ENV" = "prod" ]; then
-          echo "deploy_host=${{ secrets.RABBITMQ_DEPLOY_HOST_PROD }}" >> "$GITHUB_OUTPUT"
+          echo "deploy_host=${{ secrets.RABBITMQ_HOST_PROD || secrets.DEPLOY_HOST_PROD }}" >> "$GITHUB_OUTPUT"
           echo "deploy_path=${{ secrets.RABBITMQ_DEPLOY_PATH_PROD }}" >> "$GITHUB_OUTPUT"
           echo "env_name=production" >> "$GITHUB_OUTPUT"
         else
-          echo "deploy_host=${{ secrets.RABBITMQ_DEPLOY_HOST_DEV }}" >> "$GITHUB_OUTPUT"
+          echo "deploy_host=${{ secrets.RABBITMQ_HOST_DEV || secrets.DEPLOY_HOST_DEV }}" >> "$GITHUB_OUTPUT"
           echo "deploy_path=${{ secrets.RABBITMQ_DEPLOY_PATH_DEV }}" >> "$GITHUB_OUTPUT"
           echo "env_name=development" >> "$GITHUB_OUTPUT"
         fi
