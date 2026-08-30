@@ -1,4 +1,4 @@
-# 临时诊断工作流：验证 workflow_run + workflow_dispatch 事件组合是否可调用可复用工作流
+# 临时诊断工作流：复制 cd-deploy 的剩余关键结构定位 startup_failure 根因
 name: Test Caller
 
 on:
@@ -15,14 +15,24 @@ on:
 
 permissions:
   contents: read
-  packages: write
+  actions: read
 
 concurrency:
   group: cd-${{ github.event.workflow_run.head_branch || github.ref }}
   cancel-in-progress: true
 
 jobs:
+  resolve-context:
+    runs-on: ubuntu-latest
+    outputs:
+      api_enabled: ${{ steps.resolve.outputs.api_enabled }}
+    steps:
+    - id: resolve
+      run: echo "api_enabled=true" >> "$GITHUB_OUTPUT"
+
   test-api:
+    needs: [resolve-context]
+    if: needs.resolve-context.outputs.api_enabled == 'true'
     uses: ./.github/workflows/cd-api.yml
     with:
       environment: dev
