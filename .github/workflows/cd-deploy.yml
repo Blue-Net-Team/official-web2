@@ -30,6 +30,9 @@ jobs:
 
   resolve-context:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
     outputs:
       environment: ${{ steps.resolve.outputs.environment }}
       api_enabled: ${{ steps.resolve.outputs.api_enabled }}
