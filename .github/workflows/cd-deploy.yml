@@ -133,6 +133,7 @@ jobs:
     uses: ./.github/workflows/cd-infra.yml
     with:
       environment: ${{ needs.resolve-context.outputs.environment }}
+    secrets: inherit
 
   # ==================== 后端服务 CD ====================
 
@@ -143,6 +144,7 @@ jobs:
     with:
       environment: ${{ needs.resolve-context.outputs.environment }}
       image_tag: ${{ needs.resolve-context.outputs.api_tag }}
+    secrets: inherit
 
   cd-judge:
     needs: [resolve-context, cd-infra]
@@ -151,6 +153,7 @@ jobs:
     with:
       environment: ${{ needs.resolve-context.outputs.environment }}
       image_tag: ${{ needs.resolve-context.outputs.judge_tag }}
+    secrets: inherit
 
   cd-ai:
     needs: [resolve-context, cd-infra]
@@ -159,6 +162,7 @@ jobs:
     with:
       environment: ${{ needs.resolve-context.outputs.environment }}
       image_tag: ${{ needs.resolve-context.outputs.ai_tag }}
+    secrets: inherit
 
   # ==================== 后端健康门控（前端部署前） ====================
   # 若 api 在本次 CD 中则等其完成；若不在（只改前端）则直接验证既有后端健康。
@@ -193,3 +197,4 @@ jobs:
     uses: ./.github/workflows/cd-frontend.yml
     with:
       environment: ${{ needs.resolve-context.outputs.environment }}
+    secrets: inherit
