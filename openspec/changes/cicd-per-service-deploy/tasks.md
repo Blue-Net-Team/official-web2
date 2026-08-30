@@ -51,5 +51,5 @@
 - [ ] 6.6 删除 `trigger/frontend` 文件并 bump 其他服务版本 push：确认前端 CD 被跳过
 - [ ] 6.7 在 Actions 页面手动 `workflow_dispatch` 触发 CD：确认部署 `latest`/`develop` 浮动 tag 镜像
 - [ ] 6.8 将 `trigger/api` 内容改为非法版本（如 `abc`）并 push：确认 api 构建失败并报版本号格式错误
-- [ ] 6.9 灰度验证全部通过后，删除 `.github/workflows/test_and_build.yml`
+- [x] 6.9 删除 `.github/workflows/test_and_build.yml`（用户决定提前删除，跳过"验证后删除"顺序；commit e778fa3）
 - [x] 6.10 更新记忆（project_environment 等）与线上部署目录中的 compose 同步说明（如适用）
