@@ -15,7 +15,7 @@ on:
 
 permissions:
   contents: read
-  actions: read
+  packages: write
 
 concurrency:
   group: cd-${{ github.event.workflow_run.head_branch || github.ref }}
