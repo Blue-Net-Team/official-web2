@@ -7,6 +7,11 @@ on:
     types: [completed]
     branches: [master, main, develop]
   workflow_dispatch:
+    inputs:
+      target_service:
+        type: choice
+        options: [all, api, frontend, judge, ai, infra]
+        default: all
 
 permissions:
   contents: read
