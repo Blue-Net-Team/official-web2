@@ -1,0 +1,463 @@
+# CI 流水线：每次推送自动测试 + 构建镜像（路径级过滤，只处理实际变更的服务）
+# 前端镜像不在此构建（由 cd-frontend.yml 在后端健康后构建）。
+# 不可变镜像 tag = trigger/<svc> 中的语义化版本号（x.y.z），另有浮动 latest(master/main)/develop(develop)。
+
+name: CI
+
+on:
+  push:
+    branches: [master, main, develop]
+    paths-ignore:
+      - 'docs/**'
+      - '**/*.md'
+      - '.claude/**'
+      - 'scripts/hooks/**'
+  pull_request:
+    branches: [master, main, develop]
+
+env:
+  REGISTRY: ghcr.io
+
+jobs:
+  # ==================== 变更检测 ====================
+  # 计算本次变更涉及哪些服务；同时产出 changed-services.json 供 CD 编排器读取。
+
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      api_code: ${{ steps.filter.outputs.api == 'true' || steps.filter.outputs.all == 'true' }}
+      api_release: ${{ steps.filter.outputs.api_trigger == 'true' || steps.filter.outputs.all == 'true' }}
+      frontend_code: ${{ steps.filter.outputs.frontend == 'true' || steps.filter.outputs.all == 'true' }}
+      frontend_release: ${{ steps.filter.outputs.frontend_trigger == 'true' || steps.filter.outputs.all == 'true' }}
+      judge_code: ${{ steps.filter.outputs.judge == 'true' || steps.filter.outputs.all == 'true' }}
+      judge_release: ${{ steps.filter.outputs.judge_trigger == 'true' || steps.filter.outputs.all == 'true' }}
+      ai_code: ${{ steps.filter.outputs.ai == 'true' || steps.filter.outputs.all == 'true' }}
+      ai_release: ${{ steps.filter.outputs.ai_trigger == 'true' || steps.filter.outputs.all == 'true' }}
+      infra_code: ${{ steps.filter.outputs.infra == 'true' || steps.filter.outputs.all == 'true' }}
+      infra_release: ${{ steps.filter.outputs.infra_trigger == 'true' || steps.filter.outputs.all == 'true' }}
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Detect changed services
+      id: filter
+      uses: dorny/paths-filter@v3
+      with:
+        filters: |
+          api:
+            - 'src/backend/**'
+            - 'docker/api-service.Dockerfile'
+          api_trigger:
+            - 'trigger/api'
+          frontend:
+            - 'src/frontend/**'
+            - 'docker/frontend.Dockerfile'
+          frontend_trigger:
+            - 'trigger/frontend'
+          judge:
+            - 'src/judge-service/**'
+            - 'docker/judge-service.Dockerfile'
+          judge_trigger:
+            - 'trigger/judge'
+          ai:
+            - 'src/ai-service/**'
+            - 'docker/ai-service.Dockerfile'
+          ai_trigger:
+            - 'trigger/ai'
+          infra:
+            - 'docker/docker-compose.yml'
+            - 'docker/.env*'
+          infra_trigger:
+            - 'trigger/infra'
+          all:
+            - '.github/workflows/**'
+            - 'docker/docker-compose.yml'
+
+    - name: Generate changed-services.json
+      run: |
+        cat > changed-services.json <<'EOF'
+        {
+          "api":      { "codeChanged": "${{ steps.filter.outputs.api == 'true' || steps.filter.outputs.all == 'true' }}", "versionBumped": "${{ steps.filter.outputs.api_trigger == 'true' || steps.filter.outputs.all == 'true' }}" },
+          "frontend": { "codeChanged": "${{ steps.filter.outputs.frontend == 'true' || steps.filter.outputs.all == 'true' }}", "versionBumped": "${{ steps.filter.outputs.frontend_trigger == 'true' || steps.filter.outputs.all == 'true' }}" },
+          "judge":    { "codeChanged": "${{ steps.filter.outputs.judge == 'true' || steps.filter.outputs.all == 'true' }}", "versionBumped": "${{ steps.filter.outputs.judge_trigger == 'true' || steps.filter.outputs.all == 'true' }}" },
+          "ai":       { "codeChanged": "${{ steps.filter.outputs.ai == 'true' || steps.filter.outputs.all == 'true' }}", "versionBumped": "${{ steps.filter.outputs.ai_trigger == 'true' || steps.filter.outputs.all == 'true' }}" },
+          "infra":    { "codeChanged": "${{ steps.filter.outputs.infra == 'true' || steps.filter.outputs.all == 'true' }}", "versionBumped": "${{ steps.filter.outputs.infra_trigger == 'true' || steps.filter.outputs.all == 'true' }}" }
+        }
+        EOF
+
+    - name: Upload changed-services.json
+      uses: actions/upload-artifact@v4
+      with:
+        name: changed-services
+        path: changed-services.json
+        retention-days: 1
+
+  # ==================== API 服务测试 ====================
+
+  api-service-test:
+    if: needs.changes.outputs.api_code == 'true'
+    runs-on: ubuntu-latest
+    needs: [changes]
+    defaults:
+      run:
+        working-directory: src/backend
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up JDK 21
+      uses: actions/setup-java@v4
+      with:
+        java-version: '21'
+        distribution: 'temurin'
+        cache: maven
+
+    - name: Make mvnw executable
+      run: chmod +x ./mvnw
+
+    - name: Compile api-service
+      run: ./mvnw -B clean compile
+
+    - name: Run api-service tests
+      run: ./mvnw -B test
+
+  # ==================== 前端测试 ====================
+
+  frontend-test:
+    if: needs.changes.outputs.frontend_code == 'true'
+    runs-on: ubuntu-latest
+    needs: [changes]
+    defaults:
+      run:
+        working-directory: src/frontend
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install pnpm
+      uses: pnpm/action-setup@v3
+      with:
+        version: 9
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'pnpm'
+        cache-dependency-path: src/frontend/pnpm-lock.yaml
+
+    - name: Install dependencies
+      run: pnpm install --frozen-lockfile
+
+    - name: TypeScript check
+      run: npx tsc --noEmit
+
+    - name: Lint check
+      run: pnpm lint
+
+  # ==================== 判题服务测试 ====================
+
+  judge-service-test:
+    if: needs.changes.outputs.judge_code == 'true'
+    runs-on: ubuntu-latest
+    needs: [changes]
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up JDK 21
+      uses: actions/setup-java@v4
+      with:
+        java-version: '21'
+        distribution: 'temurin'
+        cache: maven
+
+    - name: Make mvnw executable
+      run: chmod +x src/backend/mvnw
+
+    - name: Compile judge-service
+      run: src/backend/mvnw -B clean compile -f src/judge-service/pom.xml
+
+    - name: Run judge-service tests
+      run: src/backend/mvnw -B test -f src/judge-service/pom.xml
+
+  # ==================== AI 服务测试 ====================
+
+  ai-service-test:
+    if: needs.changes.outputs.ai_code == 'true'
+    runs-on: ubuntu-latest
+    needs: [changes]
+    defaults:
+      run:
+        working-directory: src/ai-service
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@v5
+      with:
+        version: "0.6.x"
+
+    - name: Sync dependencies
+      run: uv sync --frozen --no-dev
+
+    - name: Ruff check
+      run: uv run ruff check .
+
+  # ==================== 构建 API 服务 ====================
+  # tag：trigger/api 版本号（不可变）+ sha + 分支 + latest(master/main)
+
+  build-api-service:
+    if: github.event_name != 'pull_request' && needs.changes.outputs.api_code == 'true'
+    runs-on: ubuntu-latest
+    needs: [changes, api-service-test]
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set image name
+      id: image
+      run: echo "name=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
+
+    - name: Read api version from trigger/api
+      id: version
+      run: |
+        if [ ! -f trigger/api ]; then
+          echo "::warning::trigger/api 不存在，跳过 api 镜像构建（该服务自动 CD 已关闭）"
+          echo "skip_build=true" >> "$GITHUB_OUTPUT"
+          exit 0
+        fi
+        VERSION=$(tr -d '[:space:]' < trigger/api)
+        if ! echo "$VERSION" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+          echo "❌ trigger/api 版本号格式非法: '$VERSION'（应为 x.y.z）"
+          exit 1
+        fi
+        echo "skip_build=false" >> "$GITHUB_OUTPUT"
+        echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+    - name: Set up JDK 21
+      if: steps.version.outputs.skip_build != 'true'
+      uses: actions/setup-java@v4
+      with:
+        java-version: '21'
+        distribution: 'temurin'
+        cache: maven
+
+    - name: Build api-service JAR
+      if: steps.version.outputs.skip_build != 'true'
+      working-directory: src/backend
+      run: |
+        chmod +x ./mvnw
+        ./mvnw clean package -DskipTests -B
+
+    - name: Set up Docker Buildx
+      if: steps.version.outputs.skip_build != 'true'
+      uses: docker/setup-buildx-action@v3
+
+    - name: Login to GitHub Container Registry
+      if: steps.version.outputs.skip_build != 'true'
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Extract metadata
+      if: steps.version.outputs.skip_build != 'true'
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.REGISTRY }}/${{ steps.image.outputs.name }}/bluenet-api-service
+        tags: |
+          type=raw,value=${{ steps.version.outputs.version }}
+          type=sha,prefix=sha-
+          type=ref,event=branch
+          type=raw,value=latest,enable=${{ github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main' }}
+
+    - name: Build api-service image
+      if: steps.version.outputs.skip_build != 'true'
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: docker/api-service.Dockerfile
+        load: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+    - name: Push api-service image to ghcr.io
+      if: steps.version.outputs.skip_build != 'true'
+      run: |
+        echo '${{ steps.meta.outputs.tags }}' | while read -r tag; do
+          [ -n "$tag" ] && docker push "$tag"
+        done
+
+  # ==================== 构建判题服务 ====================
+
+  build-judge-service:
+    if: github.event_name != 'pull_request' && needs.changes.outputs.judge_code == 'true'
+    runs-on: ubuntu-latest
+    needs: [changes, judge-service-test]
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set image name
+      id: image
+      run: echo "name=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
+
+    - name: Read judge version from trigger/judge
+      id: version
+      run: |
+        if [ ! -f trigger/judge ]; then
+          echo "::warning::trigger/judge 不存在，跳过 judge 镜像构建（该服务自动 CD 已关闭）"
+          echo "skip_build=true" >> "$GITHUB_OUTPUT"
+          exit 0
+        fi
+        VERSION=$(tr -d '[:space:]' < trigger/judge)
+        if ! echo "$VERSION" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+          echo "❌ trigger/judge 版本号格式非法: '$VERSION'（应为 x.y.z）"
+          exit 1
+        fi
+        echo "skip_build=false" >> "$GITHUB_OUTPUT"
+        echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+    - name: Set up JDK 21
+      if: steps.version.outputs.skip_build != 'true'
+      uses: actions/setup-java@v4
+      with:
+        java-version: '21'
+        distribution: 'temurin'
+        cache: maven
+
+    - name: Build judge-service JAR
+      if: steps.version.outputs.skip_build != 'true'
+      run: |
+        chmod +x src/backend/mvnw
+        src/backend/mvnw clean package -DskipTests -B -f src/judge-service/pom.xml
+
+    - name: Set up Docker Buildx
+      if: steps.version.outputs.skip_build != 'true'
+      uses: docker/setup-buildx-action@v3
+
+    - name: Login to GitHub Container Registry
+      if: steps.version.outputs.skip_build != 'true'
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Extract metadata
+      if: steps.version.outputs.skip_build != 'true'
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.REGISTRY }}/${{ steps.image.outputs.name }}/bluenet-judge-service
+        tags: |
+          type=raw,value=${{ steps.version.outputs.version }}
+          type=sha,prefix=sha-
+          type=ref,event=branch
+          type=raw,value=latest,enable=${{ github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main' }}
+
+    - name: Build judge-service image
+      if: steps.version.outputs.skip_build != 'true'
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: docker/judge-service.Dockerfile
+        load: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+    - name: Push judge-service image to ghcr.io
+      if: steps.version.outputs.skip_build != 'true'
+      run: |
+        echo '${{ steps.meta.outputs.tags }}' | while read -r tag; do
+          [ -n "$tag" ] && docker push "$tag"
+        done
+
+  # ==================== 构建 AI 服务 ====================
+
+  build-ai-service:
+    if: github.event_name != 'pull_request' && needs.changes.outputs.ai_code == 'true'
+    runs-on: ubuntu-latest
+    needs: [changes, ai-service-test]
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set image name
+      id: image
+      run: echo "name=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
+
+    - name: Read ai version from trigger/ai
+      id: version
+      run: |
+        if [ ! -f trigger/ai ]; then
+          echo "::warning::trigger/ai 不存在，跳过 ai 镜像构建（该服务自动 CD 已关闭）"
+          echo "skip_build=true" >> "$GITHUB_OUTPUT"
+          exit 0
+        fi
+        VERSION=$(tr -d '[:space:]' < trigger/ai)
+        if ! echo "$VERSION" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+          echo "❌ trigger/ai 版本号格式非法: '$VERSION'（应为 x.y.z）"
+          exit 1
+        fi
+        echo "skip_build=false" >> "$GITHUB_OUTPUT"
+        echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+    - name: Set up Docker Buildx
+      if: steps.version.outputs.skip_build != 'true'
+      uses: docker/setup-buildx-action@v3
+
+    - name: Login to GitHub Container Registry
+      if: steps.version.outputs.skip_build != 'true'
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Extract metadata
+      if: steps.version.outputs.skip_build != 'true'
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.REGISTRY }}/${{ steps.image.outputs.name }}/bluenet-ai-service
+        tags: |
+          type=raw,value=${{ steps.version.outputs.version }}
+          type=sha,prefix=sha-
+          type=ref,event=branch
+          type=raw,value=latest,enable=${{ github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main' }}
+
+    - name: Build ai-service image
+      if: steps.version.outputs.skip_build != 'true'
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: docker/ai-service.Dockerfile
+        load: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+    - name: Push ai-service image to ghcr.io
+      if: steps.version.outputs.skip_build != 'true'
+      run: |
+        echo '${{ steps.meta.outputs.tags }}' | while read -r tag; do
+          [ -n "$tag" ] && docker push "$tag"
+        done

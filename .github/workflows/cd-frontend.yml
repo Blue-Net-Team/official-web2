@@ -1,0 +1,190 @@
+# CD Frontend 可复用工作流：等后端健康 → 构建前端镜像（SSR 预渲染访问新后端）→ 推 ghcr → 部署
+# 前端镜像在 CD 阶段构建（不在 ci.yml 构建）；不可变 tag = trigger/frontend 版本号。
+
+name: CD Frontend
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        required: true
+        type: string
+  workflow_dispatch:
+    inputs:
+      environment:
+        type: choice
+        options: [prod, dev]
+        default: dev
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Resolve deployment variables
+      id: vars
+      run: |
+        ENV="${{ inputs.environment }}"
+        if [ "$ENV" = "prod" ]; then
+          echo "deploy_host=${{ secrets.DEPLOY_HOST_PROD }}" >> "$GITHUB_OUTPUT"
+          echo "deploy_path=${{ secrets.DEPLOY_PATH_PROD }}" >> "$GITHUB_OUTPUT"
+          echo "float_tag=latest" >> "$GITHUB_OUTPUT"
+        else
+          echo "deploy_host=${{ secrets.DEPLOY_HOST_DEV }}" >> "$GITHUB_OUTPUT"
+          echo "deploy_path=${{ secrets.DEPLOY_PATH_DEV }}" >> "$GITHUB_OUTPUT"
+          echo "float_tag=develop" >> "$GITHUB_OUTPUT"
+        fi
+        echo "deploy_user=${{ secrets.DEPLOY_USER }}" >> "$GITHUB_OUTPUT"
+        echo "deploy_key=${{ secrets.DEPLOY_KEY }}" >> "$GITHUB_OUTPUT"
+        echo "deploy_port=${{ secrets.DEPLOY_PORT || '22' }}" >> "$GITHUB_OUTPUT"
+        echo "env_name=$ENV" >> "$GITHUB_OUTPUT"
+
+    - name: Wait for backend health before building frontend
+      run: |
+        PROTOCOL="${{ vars.SSL_ENABLED == 'true' && 'https' || 'http' }}"
+        URL="${PROTOCOL}://${{ vars.BACKEND_HOST }}:${{ vars.BACKEND_PORT }}/api/v1/health"
+        echo "Waiting for backend at $URL to be healthy..."
+        for i in {1..30}; do
+          RESPONSE=$(curl -sfL "$URL" 2>/dev/null || echo "")
+          if echo "$RESPONSE" | grep -q '"code":200'; then
+            echo "✅ Backend is healthy!"
+            exit 0
+          fi
+          echo "Waiting... ($i/30)"
+          sleep 10
+        done
+        echo "❌ Backend health check failed after 5 minutes"
+        exit 1
+
+    - name: Read frontend version from trigger/frontend
+      id: version
+      run: |
+        if [ ! -f trigger/frontend ]; then
+          echo "::warning::trigger/frontend 不存在，跳过前端构建部署（自动 CD 已关闭）"
+          echo "skip_build=true" >> "$GITHUB_OUTPUT"
+          exit 0
+        fi
+        VERSION=$(tr -d '[:space:]' < trigger/frontend)
+        if ! echo "$VERSION" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+          echo "❌ trigger/frontend 版本号格式非法: '$VERSION'（应为 x.y.z）"
+          exit 1
+        fi
+        echo "skip_build=false" >> "$GITHUB_OUTPUT"
+        echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+    - name: Set image name
+      id: image
+      run: echo "owner=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_OUTPUT"
+
+    - name: Set up Docker Buildx
+      if: steps.version.outputs.skip_build != 'true'
+      uses: docker/setup-buildx-action@v3
+
+    - name: Login to GitHub Container Registry
+      if: steps.version.outputs.skip_build != 'true'
+      uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Extract metadata
+      if: steps.version.outputs.skip_build != 'true'
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ghcr.io/${{ steps.image.outputs.owner }}/bluenet-frontend
+        tags: |
+          type=raw,value=${{ steps.version.outputs.version }}
+          type=sha,prefix=sha-
+          type=raw,value=${{ steps.vars.outputs.float_tag }}
+
+    - name: Build frontend image
+      if: steps.version.outputs.skip_build != 'true'
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: docker/frontend.Dockerfile
+        load: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        build-args: |
+          CACHE_BUST=${{ github.sha }}_${{ github.run_id }}
+          BUILD_BACKEND_HOST=${{ vars.BACKEND_HOST }}
+          BUILD_BACKEND_PORT=${{ vars.BACKEND_PORT }}
+          BUILD_SSL_ENABLED=${{ vars.SSL_ENABLED }}
+          NEXT_PUBLIC_BACKEND_HOST=${{ vars.BACKEND_HOST }}
+          NEXT_PUBLIC_BACKEND_PORT=${{ vars.BACKEND_PORT }}
+          NEXT_PUBLIC_SSL_ENABLED=${{ vars.SSL_ENABLED }}
+          NEXT_PUBLIC_AI_SERVICE_HOST=${{ vars.AI_SERVICE_HOST }}
+          NEXT_PUBLIC_AI_SERVICE_PORT=${{ vars.AI_SERVICE_PORT || '8000' }}
+          NEXT_PUBLIC_AI_SERVICE_SSL_ENABLED=${{ vars.AI_SERVICE_SSL_ENABLED || vars.SSL_ENABLED }}
+          NEXT_PUBLIC_AI_SERVICE_PREFIX=${{ vars.AI_SERVICE_PREFIX || '/ai/v1' }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+    - name: Push frontend image to ghcr.io
+      if: steps.version.outputs.skip_build != 'true'
+      run: |
+        echo '${{ steps.meta.outputs.tags }}' | while read -r tag; do
+          [ -n "$tag" ] && docker push "$tag"
+        done
+
+    - name: Save frontend image as tar
+      if: steps.version.outputs.skip_build != 'true'
+      run: |
+        IMAGE="ghcr.io/${{ steps.image.outputs.owner }}/bluenet-frontend:${{ steps.version.outputs.version }}"
+        echo "Saving $IMAGE"
+        docker save "$IMAGE" | gzip > frontend-image.tar.gz
+
+    - name: Sync compose file to server
+      if: steps.version.outputs.skip_build != 'true'
+      uses: appleboy/scp-action@v0.1.7
+      with:
+        host: ${{ steps.vars.outputs.deploy_host }}
+        username: ${{ steps.vars.outputs.deploy_user }}
+        key: ${{ steps.vars.outputs.deploy_key }}
+        port: ${{ steps.vars.outputs.deploy_port }}
+        source: "docker/docker-compose.yml"
+        target: ${{ steps.vars.outputs.deploy_path }}
+        strip_components: 1
+
+    - name: Transfer image to server
+      if: steps.version.outputs.skip_build != 'true'
+      uses: appleboy/scp-action@v0.1.7
+      with:
+        host: ${{ steps.vars.outputs.deploy_host }}
+        username: ${{ steps.vars.outputs.deploy_user }}
+        key: ${{ steps.vars.outputs.deploy_key }}
+        port: ${{ steps.vars.outputs.deploy_port }}
+        source: "frontend-image.tar.gz"
+        target: /tmp/bluenet-deploy
+
+    - name: Deploy frontend via SSH
+      if: steps.version.outputs.skip_build != 'true'
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ steps.vars.outputs.deploy_host }}
+        username: ${{ steps.vars.outputs.deploy_user }}
+        key: ${{ steps.vars.outputs.deploy_key }}
+        port: ${{ steps.vars.outputs.deploy_port }}
+        envs: FRONTEND_IMAGE, DEPLOY_PATH
+        script: |
+          cd $DEPLOY_PATH
+          echo "=== Deploying frontend to ${{ steps.vars.outputs.env_name }} ==="
+          echo "Loading frontend image..."
+          gunzip -c /tmp/bluenet-deploy/frontend-image.tar.gz | docker load
+          rm -f /tmp/bluenet-deploy/frontend-image.tar.gz
+          export FRONTEND_IMAGE="${FRONTEND_IMAGE}"
+          docker compose --profile app up -d --no-deps frontend --remove-orphans
+          echo "Cleaning up old images..."
+          docker image prune -f
+          echo "✅ Frontend deployment completed!"
+      env:
+        FRONTEND_IMAGE: bluenet-frontend:${{ steps.version.outputs.version }}
+        DEPLOY_PATH: ${{ steps.vars.outputs.deploy_path }}

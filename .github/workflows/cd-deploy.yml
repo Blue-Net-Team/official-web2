@@ -1,0 +1,195 @@
+# CD 编排器：CI 成功后（或手动）调度各服务 CD。
+# 自动 CD 条件 = changed-services.json 中该服务 versionBumped=true 且 trigger/<svc> 存在。
+# 仅 codeChanged 的推送不部署（构建不部署规则）。
+# 手动 CD 按 target_service 部署浮动 latest(prod)/develop(dev) 镜像。
+
+name: CD Deploy
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [master, main, develop]
+  workflow_dispatch:
+    inputs:
+      target_service:
+        type: choice
+        options: [all, api, frontend, judge, ai, infra]
+        default: all
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: cd-${{ github.event.workflow_run.head_branch || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ==================== 解析部署上下文 ====================
+
+  resolve-context:
+    runs-on: ubuntu-latest
+    outputs:
+      environment: ${{ steps.resolve.outputs.environment }}
+      api_enabled: ${{ steps.resolve.outputs.api_enabled }}
+      api_tag: ${{ steps.resolve.outputs.api_tag }}
+      frontend_enabled: ${{ steps.resolve.outputs.frontend_enabled }}
+      frontend_tag: ${{ steps.resolve.outputs.frontend_tag }}
+      judge_enabled: ${{ steps.resolve.outputs.judge_enabled }}
+      judge_tag: ${{ steps.resolve.outputs.judge_tag }}
+      ai_enabled: ${{ steps.resolve.outputs.ai_enabled }}
+      ai_tag: ${{ steps.resolve.outputs.ai_tag }}
+      infra_enabled: ${{ steps.resolve.outputs.infra_enabled }}
+
+    steps:
+    - name: Determine event mode
+      id: mode
+      run: |
+        if [ "${{ github.event_name }}" = "workflow_run" ]; then
+          echo "is_auto=true" >> "$GITHUB_OUTPUT"
+          echo "ref=${{ github.event.workflow_run.head_sha }}" >> "$GITHUB_OUTPUT"
+          echo "run_id=${{ github.event.workflow_run.id }}" >> "$GITHUB_OUTPUT"
+        else
+          echo "is_auto=false" >> "$GITHUB_OUTPUT"
+          echo "ref=${{ github.ref }}" >> "$GITHUB_OUTPUT"
+        fi
+
+    - uses: actions/checkout@v4
+      with:
+        ref: ${{ steps.mode.outputs.ref }}
+
+    - name: Download changed-services.json (auto path only)
+      if: steps.mode.outputs.is_auto == 'true'
+      uses: actions/download-artifact@v4
+      with:
+        name: changed-services
+        run-id: ${{ steps.mode.outputs.run_id }}
+        path: .
+
+    - name: Resolve deployment context
+      id: resolve
+      run: |
+        set -e
+        IS_AUTO="${{ steps.mode.outputs.is_auto }}"
+        TARGET="${{ inputs.target_service }}"
+        [ -z "$TARGET" ] && TARGET=all
+
+        # 环境与浮动 tag：master/main → prod(latest)，其余 → dev(develop)
+        BRANCH="${GITHUB_REF#refs/heads/}"
+        if [ "$IS_AUTO" = "true" ]; then
+          BRANCH="${{ github.event.workflow_run.head_branch }}"
+        fi
+        if [ "$BRANCH" = "master" ] || [ "$BRANCH" = "main" ]; then
+          ENV=prod; FLOAT_TAG=latest
+        else
+          ENV=dev; FLOAT_TAG=develop
+        fi
+        echo "environment=$ENV" >> "$GITHUB_OUTPUT"
+
+        for SVC in api frontend judge ai infra; do
+          # trigger 文件存在性 + 版本号
+          if [ -f "trigger/$SVC" ]; then
+            EXISTS=true
+            VERSION=$(tr -d '[:space:]' < "trigger/$SVC")
+          else
+            EXISTS=false
+            VERSION=""
+          fi
+
+          # 自动路径：versionBumped && trigger 存在；手动路径：target 选择 && trigger 存在
+          if [ "$IS_AUTO" = "true" ]; then
+            BUMPED=$(jq -r ".\"$SVC\".versionBumped" changed-services.json 2>/dev/null || echo false)
+            if [ "$BUMPED" = "true" ] && [ "$EXISTS" = "true" ]; then
+              ENABLED=true
+            else
+              ENABLED=false
+            fi
+          else
+            if { [ "$TARGET" = "all" ] || [ "$TARGET" = "$SVC" ]; } && [ "$EXISTS" = "true" ]; then
+              ENABLED=true
+            else
+              ENABLED=false
+            fi
+          fi
+
+          # 部署 tag：自动=该服务版本号；手动=浮动 latest/develop
+          if [ "$IS_AUTO" = "true" ]; then
+            TAG="$VERSION"
+          else
+            TAG="$FLOAT_TAG"
+          fi
+
+          echo "${SVC}_enabled=$ENABLED" >> "$GITHUB_OUTPUT"
+          echo "${SVC}_tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "== $SVC: enabled=$ENABLED tag=$TAG env=$ENV"
+        done
+
+  # ==================== 基础设施 CD ====================
+
+  cd-infra:
+    needs: [resolve-context]
+    if: needs.resolve-context.outputs.infra_enabled == 'true'
+    uses: ./.github/workflows/cd-infra.yml
+    with:
+      environment: ${{ needs.resolve-context.outputs.environment }}
+
+  # ==================== 后端服务 CD ====================
+
+  cd-api:
+    needs: [resolve-context, cd-infra]
+    if: needs.resolve-context.outputs.api_enabled == 'true'
+    uses: ./.github/workflows/cd-api.yml
+    with:
+      environment: ${{ needs.resolve-context.outputs.environment }}
+      image_tag: ${{ needs.resolve-context.outputs.api_tag }}
+
+  cd-judge:
+    needs: [resolve-context, cd-infra]
+    if: needs.resolve-context.outputs.judge_enabled == 'true'
+    uses: ./.github/workflows/cd-judge.yml
+    with:
+      environment: ${{ needs.resolve-context.outputs.environment }}
+      image_tag: ${{ needs.resolve-context.outputs.judge_tag }}
+
+  cd-ai:
+    needs: [resolve-context, cd-infra]
+    if: needs.resolve-context.outputs.ai_enabled == 'true'
+    uses: ./.github/workflows/cd-ai.yml
+    with:
+      environment: ${{ needs.resolve-context.outputs.environment }}
+      image_tag: ${{ needs.resolve-context.outputs.ai_tag }}
+
+  # ==================== 后端健康门控（前端部署前） ====================
+  # 若 api 在本次 CD 中则等其完成；若不在（只改前端）则直接验证既有后端健康。
+
+  backend-gate:
+    needs: [resolve-context, cd-api]
+    if: needs.resolve-context.outputs.frontend_enabled == 'true' && !cancelled()
+    runs-on: ubuntu-latest
+    steps:
+    - name: Wait for backend health
+      run: |
+        PROTOCOL="${{ vars.SSL_ENABLED == 'true' && 'https' || 'http' }}"
+        URL="${PROTOCOL}://${{ vars.BACKEND_HOST }}:${{ vars.BACKEND_PORT }}/api/v1/health"
+        echo "Waiting for backend at $URL to be healthy..."
+        for i in {1..30}; do
+          RESPONSE=$(curl -sfL "$URL" 2>/dev/null || echo "")
+          if echo "$RESPONSE" | grep -q '"code":200'; then
+            echo "✅ Backend is healthy!"
+            exit 0
+          fi
+          echo "Waiting... ($i/30)"
+          sleep 10
+        done
+        echo "❌ Backend health check failed after 5 minutes"
+        exit 1
+
+  # ==================== 前端 CD ====================
+
+  cd-frontend:
+    needs: [resolve-context, backend-gate]
+    if: needs.resolve-context.outputs.frontend_enabled == 'true'
+    uses: ./.github/workflows/cd-frontend.yml
+    with:
+      environment: ${{ needs.resolve-context.outputs.environment }}

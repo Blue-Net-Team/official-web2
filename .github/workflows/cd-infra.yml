@@ -1,0 +1,119 @@
+# CD 基础设施可复用工作流：database+redis 部署到 DATABASE 服务器，rabbitmq 部署到 RABBITMQ 服务器。
+# 基础设施使用 compose 内定义的第三方镜像，无需拉取应用镜像；trigger/infra 仅作存在性开关。
+
+name: CD Infra
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        required: true
+        type: string
+  workflow_dispatch:
+    inputs:
+      environment:
+        type: choice
+        options: [prod, dev]
+        default: dev
+
+permissions:
+  contents: read
+
+jobs:
+  deploy-database-redis:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Resolve deployment variables
+      id: vars
+      run: |
+        ENV="${{ inputs.environment }}"
+        if [ "$ENV" = "prod" ]; then
+          echo "deploy_host=${{ secrets.DATABASE_DEPLOY_HOST_PROD }}" >> "$GITHUB_OUTPUT"
+          echo "deploy_path=${{ secrets.DATABASE_DEPLOY_PATH_PROD }}" >> "$GITHUB_OUTPUT"
+          echo "env_name=production" >> "$GITHUB_OUTPUT"
+        else
+          echo "deploy_host=${{ secrets.DATABASE_DEPLOY_HOST_DEV }}" >> "$GITHUB_OUTPUT"
+          echo "deploy_path=${{ secrets.DATABASE_DEPLOY_PATH_DEV }}" >> "$GITHUB_OUTPUT"
+          echo "env_name=development" >> "$GITHUB_OUTPUT"
+        fi
+        echo "deploy_user=${{ secrets.DATABASE_DEPLOY_USER }}" >> "$GITHUB_OUTPUT"
+        echo "deploy_key=${{ secrets.DATABASE_DEPLOY_KEY }}" >> "$GITHUB_OUTPUT"
+        echo "deploy_port=${{ secrets.DATABASE_DEPLOY_PORT || '22' }}" >> "$GITHUB_OUTPUT"
+
+    - name: Sync compose file to database server
+      uses: appleboy/scp-action@v0.1.7
+      with:
+        host: ${{ steps.vars.outputs.deploy_host }}
+        username: ${{ steps.vars.outputs.deploy_user }}
+        key: ${{ steps.vars.outputs.deploy_key }}
+        port: ${{ steps.vars.outputs.deploy_port }}
+        source: "docker/docker-compose.yml"
+        target: ${{ steps.vars.outputs.deploy_path }}
+        strip_components: 1
+
+    - name: Deploy database and redis via SSH
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ steps.vars.outputs.deploy_host }}
+        username: ${{ steps.vars.outputs.deploy_user }}
+        key: ${{ steps.vars.outputs.deploy_key }}
+        port: ${{ steps.vars.outputs.deploy_port }}
+        envs: DEPLOY_PATH
+        script: |
+          cd $DEPLOY_PATH
+          echo "=== Deploying database and redis to ${{ steps.vars.outputs.env_name }} ==="
+          docker compose up -d database redis --remove-orphans
+          echo "Database and redis deployment completed!"
+      env:
+        DEPLOY_PATH: ${{ steps.vars.outputs.deploy_path }}
+
+  deploy-rabbitmq:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Resolve deployment variables
+      id: vars
+      run: |
+        ENV="${{ inputs.environment }}"
+        if [ "$ENV" = "prod" ]; then
+          echo "deploy_host=${{ secrets.RABBITMQ_DEPLOY_HOST_PROD }}" >> "$GITHUB_OUTPUT"
+          echo "deploy_path=${{ secrets.RABBITMQ_DEPLOY_PATH_PROD }}" >> "$GITHUB_OUTPUT"
+          echo "env_name=production" >> "$GITHUB_OUTPUT"
+        else
+          echo "deploy_host=${{ secrets.RABBITMQ_DEPLOY_HOST_DEV }}" >> "$GITHUB_OUTPUT"
+          echo "deploy_path=${{ secrets.RABBITMQ_DEPLOY_PATH_DEV }}" >> "$GITHUB_OUTPUT"
+          echo "env_name=development" >> "$GITHUB_OUTPUT"
+        fi
+        echo "deploy_user=${{ secrets.RABBITMQ_DEPLOY_USER }}" >> "$GITHUB_OUTPUT"
+        echo "deploy_key=${{ secrets.RABBITMQ_DEPLOY_KEY }}" >> "$GITHUB_OUTPUT"
+        echo "deploy_port=${{ secrets.RABBITMQ_DEPLOY_PORT || '22' }}" >> "$GITHUB_OUTPUT"
+
+    - name: Sync compose file to rabbitmq server
+      uses: appleboy/scp-action@v0.1.7
+      with:
+        host: ${{ steps.vars.outputs.deploy_host }}
+        username: ${{ steps.vars.outputs.deploy_user }}
+        key: ${{ steps.vars.outputs.deploy_key }}
+        port: ${{ steps.vars.outputs.deploy_port }}
+        source: "docker/docker-compose.yml"
+        target: ${{ steps.vars.outputs.deploy_path }}
+        strip_components: 1
+
+    - name: Deploy rabbitmq via SSH
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ steps.vars.outputs.deploy_host }}
+        username: ${{ steps.vars.outputs.deploy_user }}
+        key: ${{ steps.vars.outputs.deploy_key }}
+        port: ${{ steps.vars.outputs.deploy_port }}
+        envs: DEPLOY_PATH
+        script: |
+          cd $DEPLOY_PATH
+          echo "=== Deploying rabbitmq to ${{ steps.vars.outputs.env_name }} ==="
+          docker compose up -d rabbitmq --remove-orphans
+          echo "RabbitMQ deployment completed!"
+      env:
+        DEPLOY_PATH: ${{ steps.vars.outputs.deploy_path }}

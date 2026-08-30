@@ -1,0 +1,130 @@
+# CD Judge 可复用工作流：拉取镜像 → SCP tar → docker load → compose up → 轮询健康
+# 判题服务部署到独立 JUDGE 服务器，使用 JUDGE_DEPLOY_* secrets。
+
+name: CD Judge
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        required: true
+        type: string
+      image_tag:
+        required: true
+        type: string
+  workflow_dispatch:
+    inputs:
+      environment:
+        type: choice
+        options: [prod, dev]
+        default: dev
+      image_tag:
+        type: string
+        description: '镜像 tag（留空 = latest(prod) / develop(dev)）'
+        default: ''
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Resolve deployment variables
+      id: vars
+      run: |
+        ENV="${{ inputs.environment }}"
+        TAG="${{ inputs.image_tag }}"
+        if [ "$ENV" = "prod" ]; then
+          echo "deploy_host=${{ secrets.JUDGE_DEPLOY_HOST_PROD }}" >> "$GITHUB_OUTPUT"
+          echo "deploy_path=${{ secrets.JUDGE_DEPLOY_PATH_PROD }}" >> "$GITHUB_OUTPUT"
+          [ -z "$TAG" ] && TAG=latest
+        else
+          echo "deploy_host=${{ secrets.JUDGE_DEPLOY_HOST_DEV }}" >> "$GITHUB_OUTPUT"
+          echo "deploy_path=${{ secrets.JUDGE_DEPLOY_PATH_DEV }}" >> "$GITHUB_OUTPUT"
+          [ -z "$TAG" ] && TAG=develop
+        fi
+        echo "deploy_user=${{ secrets.JUDGE_DEPLOY_USER }}" >> "$GITHUB_OUTPUT"
+        echo "deploy_key=${{ secrets.JUDGE_DEPLOY_KEY }}" >> "$GITHUB_OUTPUT"
+        echo "deploy_port=${{ secrets.JUDGE_DEPLOY_PORT || '22' }}" >> "$GITHUB_OUTPUT"
+        echo "image_tag=$TAG" >> "$GITHUB_OUTPUT"
+        echo "env_name=$ENV" >> "$GITHUB_OUTPUT"
+
+    - name: Set image name
+      id: image
+      run: echo "name=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_OUTPUT"
+
+    - name: Login to GitHub Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Pull judge-service image and save as tar
+      run: |
+        IMAGE="ghcr.io/${{ steps.image.outputs.name }}/bluenet-judge-service:${{ steps.vars.outputs.image_tag }}"
+        echo "Pulling $IMAGE"
+        docker pull "$IMAGE"
+        docker save "$IMAGE" | gzip > judge-service-image.tar.gz
+
+    - name: Sync compose file to judge server
+      uses: appleboy/scp-action@v0.1.7
+      with:
+        host: ${{ steps.vars.outputs.deploy_host }}
+        username: ${{ steps.vars.outputs.deploy_user }}
+        key: ${{ steps.vars.outputs.deploy_key }}
+        port: ${{ steps.vars.outputs.deploy_port }}
+        source: "docker/docker-compose.yml"
+        target: ${{ steps.vars.outputs.deploy_path }}
+        strip_components: 1
+
+    - name: Transfer image to judge server
+      uses: appleboy/scp-action@v0.1.7
+      with:
+        host: ${{ steps.vars.outputs.deploy_host }}
+        username: ${{ steps.vars.outputs.deploy_user }}
+        key: ${{ steps.vars.outputs.deploy_key }}
+        port: ${{ steps.vars.outputs.deploy_port }}
+        source: "judge-service-image.tar.gz"
+        target: /tmp/bluenet-deploy
+
+    - name: Deploy judge-service via SSH
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ steps.vars.outputs.deploy_host }}
+        username: ${{ steps.vars.outputs.deploy_user }}
+        key: ${{ steps.vars.outputs.deploy_key }}
+        port: ${{ steps.vars.outputs.deploy_port }}
+        envs: JUDGE_IMAGE, DEPLOY_PATH
+        script: |
+          cd $DEPLOY_PATH
+          echo "=== Deploying judge-service to ${{ steps.vars.outputs.env_name }} ==="
+          echo "Loading judge-service image..."
+          gunzip -c /tmp/bluenet-deploy/judge-service-image.tar.gz | docker load
+          rm -f /tmp/bluenet-deploy/judge-service-image.tar.gz
+          export JUDGE_IMAGE="${JUDGE_IMAGE}"
+          docker compose --profile judge up -d --remove-orphans
+          echo "Judge-service deployment completed!"
+      env:
+        JUDGE_IMAGE: bluenet-judge-service:${{ steps.vars.outputs.image_tag }}
+        DEPLOY_PATH: ${{ steps.vars.outputs.deploy_path }}
+
+    - name: Wait for judge-service health check
+      run: |
+        URL="http://${{ steps.vars.outputs.deploy_host }}:8090/api/v1/judge/health"
+        echo "Waiting for judge-service at $URL to be healthy..."
+        for i in {1..30}; do
+          RESPONSE=$(curl -sfL "$URL" 2>/dev/null || echo "")
+          if echo "$RESPONSE" | grep -q '"status":"UP"'; then
+            echo "✅ Judge-service is healthy!"
+            exit 0
+          fi
+          echo "Waiting... ($i/30)"
+          sleep 10
+        done
+        echo "❌ Judge-service health check failed after 5 minutes"
+        exit 1
