@@ -1,0 +1,16 @@
+# 临时诊断工作流：隔离可复用工作流调用问题，诊断完成后删除
+name: Test Caller
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  test-api:
+    uses: ./.github/workflows/cd-api.yml
+    with:
+      environment: dev
+      image_tag: develop
