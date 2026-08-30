@@ -64,11 +64,8 @@ jobs:
 
     - name: Download changed-services.json (auto path only)
       if: steps.mode.outputs.is_auto == 'true'
-      uses: actions/download-artifact@v4
-      with:
-        name: changed-services
-        run-id: ${{ steps.mode.outputs.run_id }}
-        path: .
+      run: |
+        gh run download --repo "${{ github.repository }}" "${{ steps.mode.outputs.run_id }}" -n changed-services -D .
 
     - name: Resolve deployment context
       id: resolve
