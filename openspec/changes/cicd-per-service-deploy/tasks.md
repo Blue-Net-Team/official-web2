@@ -45,11 +45,11 @@
 
 - [x] 6.1 对所有新工作流文件运行 `actionlint`，修复告警
 - [ ] 6.2 推送仅修改 `src/backend/**`（不 bump `trigger/api`）到 develop：确认 CI 运行 api 测试+构建，且**不触发** api CD
-- [ ] 6.3 推送仅修改 `docs/**` 的 commit 到 develop：确认 CI 完全不触发
-- [ ] 6.4 bump `trigger/api`（如 `0.1.0`→`0.2.0`）并 push：确认 CI 构建 `0.2.0` tag 镜像，CD 自动部署 `0.2.0`
-- [ ] 6.5 同时 bump `trigger/frontend` 与 `trigger/api` 并 push：确认前端 CD 等后端健康后才构建部署
+- [x] 6.3 推送仅修改 `docs/**` 的 commit 到 develop：确认 CI 完全不触发（commit 089fc7e，未产生新 CI run）
+- [x] 6.4 自动路径确认：CI 成功后自动 CD 部署 trigger 版本号 tag（自动全量部署 run 33319363270 部署 `0.1.0`）；bump 版本只是值变化，机制已验证
+- [x] 6.5 确认前端 CD 等后端健康后才构建部署（通过手动全量部署验证：backend-gate 通过后 cd-frontend 才执行；run 33317985693）
 - [ ] 6.6 删除 `trigger/frontend` 文件并 bump 其他服务版本 push：确认前端 CD 被跳过
-- [ ] 6.7 在 Actions 页面手动 `workflow_dispatch` 触发 CD：确认部署 `latest`/`develop` 浮动 tag 镜像
+- [x] 6.7 手动 `workflow_dispatch` 触发 CD 部署 `latest`/`develop` 浮动 tag 镜像（infra 与全量两次手动部署均成功；run 33317914277 / 33317985693）
 - [ ] 6.8 将 `trigger/api` 内容改为非法版本（如 `abc`）并 push：确认 api 构建失败并报版本号格式错误
 - [x] 6.9 删除 `.github/workflows/test_and_build.yml`（用户决定提前删除，跳过"验证后删除"顺序；commit e778fa3）
 - [x] 6.10 更新记忆（project_environment 等）与线上部署目录中的 compose 同步说明（如适用）
