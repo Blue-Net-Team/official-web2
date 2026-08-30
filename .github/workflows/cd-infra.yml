@@ -39,7 +39,6 @@ jobs:
           echo "env_name=development" >> "$GITHUB_OUTPUT"
         fi
         echo "deploy_user=${{ secrets.DATABASE_DEPLOY_USER }}" >> "$GITHUB_OUTPUT"
-        echo "deploy_key=${{ secrets.DATABASE_DEPLOY_KEY }}" >> "$GITHUB_OUTPUT"
         echo "deploy_port=${{ secrets.DATABASE_DEPLOY_PORT || '22' }}" >> "$GITHUB_OUTPUT"
 
     - name: Sync compose file to database server
@@ -47,7 +46,7 @@ jobs:
       with:
         host: ${{ steps.vars.outputs.deploy_host }}
         username: ${{ steps.vars.outputs.deploy_user }}
-        key: ${{ steps.vars.outputs.deploy_key }}
+        key: ${{ secrets.DATABASE_DEPLOY_KEY }}
         port: ${{ steps.vars.outputs.deploy_port }}
         source: "docker/docker-compose.yml"
         target: ${{ steps.vars.outputs.deploy_path }}
@@ -58,7 +57,7 @@ jobs:
       with:
         host: ${{ steps.vars.outputs.deploy_host }}
         username: ${{ steps.vars.outputs.deploy_user }}
-        key: ${{ steps.vars.outputs.deploy_key }}
+        key: ${{ secrets.DATABASE_DEPLOY_KEY }}
         port: ${{ steps.vars.outputs.deploy_port }}
         envs: DEPLOY_PATH
         script: |
@@ -88,7 +87,6 @@ jobs:
           echo "env_name=development" >> "$GITHUB_OUTPUT"
         fi
         echo "deploy_user=${{ secrets.RABBITMQ_DEPLOY_USER }}" >> "$GITHUB_OUTPUT"
-        echo "deploy_key=${{ secrets.RABBITMQ_DEPLOY_KEY }}" >> "$GITHUB_OUTPUT"
         echo "deploy_port=${{ secrets.RABBITMQ_DEPLOY_PORT || '22' }}" >> "$GITHUB_OUTPUT"
 
     - name: Sync compose file to rabbitmq server
@@ -96,7 +94,7 @@ jobs:
       with:
         host: ${{ steps.vars.outputs.deploy_host }}
         username: ${{ steps.vars.outputs.deploy_user }}
-        key: ${{ steps.vars.outputs.deploy_key }}
+        key: ${{ secrets.RABBITMQ_DEPLOY_KEY }}
         port: ${{ steps.vars.outputs.deploy_port }}
         source: "docker/docker-compose.yml"
         target: ${{ steps.vars.outputs.deploy_path }}
@@ -107,7 +105,7 @@ jobs:
       with:
         host: ${{ steps.vars.outputs.deploy_host }}
         username: ${{ steps.vars.outputs.deploy_user }}
-        key: ${{ steps.vars.outputs.deploy_key }}
+        key: ${{ secrets.RABBITMQ_DEPLOY_KEY }}
         port: ${{ steps.vars.outputs.deploy_port }}
         envs: DEPLOY_PATH
         script: |

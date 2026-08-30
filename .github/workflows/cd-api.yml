@@ -48,7 +48,6 @@ jobs:
           [ -z "$TAG" ] && TAG=develop
         fi
         echo "deploy_user=${{ secrets.DEPLOY_USER }}" >> "$GITHUB_OUTPUT"
-        echo "deploy_key=${{ secrets.DEPLOY_KEY }}" >> "$GITHUB_OUTPUT"
         echo "deploy_port=${{ secrets.DEPLOY_PORT || '22' }}" >> "$GITHUB_OUTPUT"
         echo "image_tag=$TAG" >> "$GITHUB_OUTPUT"
         echo "env_name=$ENV" >> "$GITHUB_OUTPUT"
@@ -76,7 +75,7 @@ jobs:
       with:
         host: ${{ steps.vars.outputs.deploy_host }}
         username: ${{ steps.vars.outputs.deploy_user }}
-        key: ${{ steps.vars.outputs.deploy_key }}
+        key: ${{ secrets.DEPLOY_KEY }}
         port: ${{ steps.vars.outputs.deploy_port }}
         source: "docker/docker-compose.yml"
         target: ${{ steps.vars.outputs.deploy_path }}
@@ -87,7 +86,7 @@ jobs:
       with:
         host: ${{ steps.vars.outputs.deploy_host }}
         username: ${{ steps.vars.outputs.deploy_user }}
-        key: ${{ steps.vars.outputs.deploy_key }}
+        key: ${{ secrets.DEPLOY_KEY }}
         port: ${{ steps.vars.outputs.deploy_port }}
         source: "api-service-image.tar.gz"
         target: /tmp/bluenet-deploy
@@ -97,7 +96,7 @@ jobs:
       with:
         host: ${{ steps.vars.outputs.deploy_host }}
         username: ${{ steps.vars.outputs.deploy_user }}
-        key: ${{ steps.vars.outputs.deploy_key }}
+        key: ${{ secrets.DEPLOY_KEY }}
         port: ${{ steps.vars.outputs.deploy_port }}
         envs: API_SERVICE_IMAGE, DEPLOY_PATH
         script: |
