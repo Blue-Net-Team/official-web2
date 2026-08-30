@@ -64,6 +64,8 @@ jobs:
 
     - name: Download changed-services.json (auto path only)
       if: steps.mode.outputs.is_auto == 'true'
+      env:
+        GH_TOKEN: ${{ github.token }}
       run: |
         gh run download --repo "${{ github.repository }}" "${{ steps.mode.outputs.run_id }}" -n changed-services -D .
 
