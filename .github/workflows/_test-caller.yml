@@ -15,7 +15,6 @@ on:
 
 permissions:
   contents: read
-  packages: write
 
 concurrency:
   group: cd-${{ github.event.workflow_run.head_branch || github.ref }}
@@ -23,6 +22,9 @@ concurrency:
 
 jobs:
   resolve-context:
+    permissions:
+      contents: read
+      actions: read
     runs-on: ubuntu-latest
     outputs:
       api_enabled: ${{ steps.resolve.outputs.api_enabled }}
