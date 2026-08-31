@@ -38,15 +38,15 @@ jobs:
           echo "deploy_path=${{ secrets.DATABASE_DEPLOY_PATH_DEV }}" >> "$GITHUB_OUTPUT"
           echo "env_name=development" >> "$GITHUB_OUTPUT"
         fi
-        echo "deploy_user=${{ secrets.DATABASE_DEPLOY_USER }}" >> "$GITHUB_OUTPUT"
-        echo "deploy_port=${{ secrets.DATABASE_DEPLOY_PORT || '22' }}" >> "$GITHUB_OUTPUT"
+        echo "deploy_user=${{ secrets.DATABASE_DEPLOY_USER || secrets.DEPLOY_USER }}" >> "$GITHUB_OUTPUT"
+        echo "deploy_port=${{ secrets.DATABASE_DEPLOY_PORT || secrets.DEPLOY_PORT || '22' }}" >> "$GITHUB_OUTPUT"
 
     - name: Sync compose file to database server
       uses: appleboy/scp-action@v0.1.7
       with:
         host: ${{ steps.vars.outputs.deploy_host }}
         username: ${{ steps.vars.outputs.deploy_user }}
-        key: ${{ secrets.DATABASE_DEPLOY_KEY }}
+        key: ${{ secrets.DATABASE_DEPLOY_KEY || secrets.DEPLOY_KEY }}
         port: ${{ steps.vars.outputs.deploy_port }}
         source: "docker/docker-compose.yml"
         target: ${{ steps.vars.outputs.deploy_path }}
@@ -57,7 +57,7 @@ jobs:
       with:
         host: ${{ steps.vars.outputs.deploy_host }}
         username: ${{ steps.vars.outputs.deploy_user }}
-        key: ${{ secrets.DATABASE_DEPLOY_KEY }}
+        key: ${{ secrets.DATABASE_DEPLOY_KEY || secrets.DEPLOY_KEY }}
         port: ${{ steps.vars.outputs.deploy_port }}
         envs: DEPLOY_PATH
         script: |
@@ -86,15 +86,15 @@ jobs:
           echo "deploy_path=${{ secrets.RABBITMQ_DEPLOY_PATH_DEV }}" >> "$GITHUB_OUTPUT"
           echo "env_name=development" >> "$GITHUB_OUTPUT"
         fi
-        echo "deploy_user=${{ secrets.RABBITMQ_DEPLOY_USER }}" >> "$GITHUB_OUTPUT"
-        echo "deploy_port=${{ secrets.RABBITMQ_DEPLOY_PORT || '22' }}" >> "$GITHUB_OUTPUT"
+        echo "deploy_user=${{ secrets.RABBITMQ_DEPLOY_USER || secrets.DEPLOY_USER }}" >> "$GITHUB_OUTPUT"
+        echo "deploy_port=${{ secrets.RABBITMQ_DEPLOY_PORT || secrets.DEPLOY_PORT || '22' }}" >> "$GITHUB_OUTPUT"
 
     - name: Sync compose file to rabbitmq server
       uses: appleboy/scp-action@v0.1.7
       with:
         host: ${{ steps.vars.outputs.deploy_host }}
         username: ${{ steps.vars.outputs.deploy_user }}
-        key: ${{ secrets.RABBITMQ_DEPLOY_KEY }}
+        key: ${{ secrets.RABBITMQ_DEPLOY_KEY || secrets.DEPLOY_KEY }}
         port: ${{ steps.vars.outputs.deploy_port }}
         source: "docker/docker-compose.yml"
         target: ${{ steps.vars.outputs.deploy_path }}
@@ -105,7 +105,7 @@ jobs:
       with:
         host: ${{ steps.vars.outputs.deploy_host }}
         username: ${{ steps.vars.outputs.deploy_user }}
-        key: ${{ secrets.RABBITMQ_DEPLOY_KEY }}
+        key: ${{ secrets.RABBITMQ_DEPLOY_KEY || secrets.DEPLOY_KEY }}
         port: ${{ steps.vars.outputs.deploy_port }}
         envs: DEPLOY_PATH
         script: |

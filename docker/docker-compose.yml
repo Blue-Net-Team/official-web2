@@ -108,6 +108,7 @@ services:
     profiles:
       - full
       - app
+      - api
     restart: ${RESTART_POLICY:-no}
     networks:
       - network
@@ -138,12 +139,12 @@ services:
     # 内存兜底：稳态由上面的堆上限控制，mem_limit 只防瞬时尖峰误伤
     mem_limit: 640m
     mem_reservation: 384m
-    depends_on:
-      api-service:
-        condition: service_healthy
+    # 启动顺序由外部编排（CD backend-gate / 本地手动）保证；
+    # 移除 depends_on 以支持 frontend 独立 profile 部署到无 api-service 的主机
     profiles:
       - full
       - app
+      - frontend
     restart: ${RESTART_POLICY:-unless-stopped}
     networks:
       - network
@@ -320,6 +321,7 @@ services:
     profiles:
       - full
       - app
+      - ai
     restart: ${RESTART_POLICY:-no}
     networks:
       - network

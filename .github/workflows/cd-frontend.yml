@@ -31,16 +31,16 @@ jobs:
       run: |
         ENV="${{ inputs.environment }}"
         if [ "$ENV" = "prod" ]; then
-          echo "deploy_host=${{ secrets.DEPLOY_HOST_PROD }}" >> "$GITHUB_OUTPUT"
-          echo "deploy_path=${{ secrets.DEPLOY_PATH_PROD }}" >> "$GITHUB_OUTPUT"
+          echo "deploy_host=${{ secrets.FRONTEND_DEPLOY_HOST_PROD || secrets.DEPLOY_HOST_PROD }}" >> "$GITHUB_OUTPUT"
+          echo "deploy_path=${{ secrets.FRONTEND_DEPLOY_PATH_PROD || secrets.DEPLOY_PATH_PROD }}" >> "$GITHUB_OUTPUT"
           echo "float_tag=latest" >> "$GITHUB_OUTPUT"
         else
-          echo "deploy_host=${{ secrets.DEPLOY_HOST_DEV }}" >> "$GITHUB_OUTPUT"
-          echo "deploy_path=${{ secrets.DEPLOY_PATH_DEV }}" >> "$GITHUB_OUTPUT"
+          echo "deploy_host=${{ secrets.FRONTEND_DEPLOY_HOST_DEV || secrets.DEPLOY_HOST_DEV }}" >> "$GITHUB_OUTPUT"
+          echo "deploy_path=${{ secrets.FRONTEND_DEPLOY_PATH_DEV || secrets.DEPLOY_PATH_DEV }}" >> "$GITHUB_OUTPUT"
           echo "float_tag=develop" >> "$GITHUB_OUTPUT"
         fi
-        echo "deploy_user=${{ secrets.DEPLOY_USER }}" >> "$GITHUB_OUTPUT"
-        echo "deploy_port=${{ secrets.DEPLOY_PORT || '22' }}" >> "$GITHUB_OUTPUT"
+        echo "deploy_user=${{ secrets.FRONTEND_DEPLOY_USER || secrets.DEPLOY_USER }}" >> "$GITHUB_OUTPUT"
+        echo "deploy_port=${{ secrets.FRONTEND_DEPLOY_PORT || secrets.DEPLOY_PORT || '22' }}" >> "$GITHUB_OUTPUT"
         echo "env_name=$ENV" >> "$GITHUB_OUTPUT"
 
     - name: Wait for backend health before building frontend
@@ -180,7 +180,7 @@ jobs:
           gunzip -c /tmp/bluenet-deploy/frontend-image.tar.gz | docker load
           rm -f /tmp/bluenet-deploy/frontend-image.tar.gz
           export FRONTEND_IMAGE="${FRONTEND_IMAGE}"
-          docker compose --profile app up -d --no-deps frontend --remove-orphans
+          docker compose --profile frontend up -d --no-deps frontend --remove-orphans
           echo "Cleaning up old images..."
           docker image prune -f
           echo "✅ Frontend deployment completed!"

@@ -39,16 +39,16 @@ jobs:
         ENV="${{ inputs.environment }}"
         TAG="${{ inputs.image_tag }}"
         if [ "$ENV" = "prod" ]; then
-          echo "deploy_host=${{ secrets.JUDGE_DEPLOY_HOST_PROD }}" >> "$GITHUB_OUTPUT"
-          echo "deploy_path=${{ secrets.JUDGE_DEPLOY_PATH_PROD }}" >> "$GITHUB_OUTPUT"
+          echo "deploy_host=${{ secrets.JUDGE_DEPLOY_HOST_PROD || secrets.DEPLOY_HOST_PROD }}" >> "$GITHUB_OUTPUT"
+          echo "deploy_path=${{ secrets.JUDGE_DEPLOY_PATH_PROD || secrets.DEPLOY_PATH_PROD }}" >> "$GITHUB_OUTPUT"
           [ -z "$TAG" ] && TAG=latest
         else
-          echo "deploy_host=${{ secrets.JUDGE_DEPLOY_HOST_DEV }}" >> "$GITHUB_OUTPUT"
-          echo "deploy_path=${{ secrets.JUDGE_DEPLOY_PATH_DEV }}" >> "$GITHUB_OUTPUT"
+          echo "deploy_host=${{ secrets.JUDGE_DEPLOY_HOST_DEV || secrets.DEPLOY_HOST_DEV }}" >> "$GITHUB_OUTPUT"
+          echo "deploy_path=${{ secrets.JUDGE_DEPLOY_PATH_DEV || secrets.DEPLOY_PATH_DEV }}" >> "$GITHUB_OUTPUT"
           [ -z "$TAG" ] && TAG=develop
         fi
-        echo "deploy_user=${{ secrets.JUDGE_DEPLOY_USER }}" >> "$GITHUB_OUTPUT"
-        echo "deploy_port=${{ secrets.JUDGE_DEPLOY_PORT || '22' }}" >> "$GITHUB_OUTPUT"
+        echo "deploy_user=${{ secrets.JUDGE_DEPLOY_USER || secrets.DEPLOY_USER }}" >> "$GITHUB_OUTPUT"
+        echo "deploy_port=${{ secrets.JUDGE_DEPLOY_PORT || secrets.DEPLOY_PORT || '22' }}" >> "$GITHUB_OUTPUT"
         echo "image_tag=$TAG" >> "$GITHUB_OUTPUT"
         echo "env_name=$ENV" >> "$GITHUB_OUTPUT"
 

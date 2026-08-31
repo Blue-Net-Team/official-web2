@@ -38,16 +38,16 @@ jobs:
         ENV="${{ inputs.environment }}"
         TAG="${{ inputs.image_tag }}"
         if [ "$ENV" = "prod" ]; then
-          echo "deploy_host=${{ secrets.AI_DEPLOY_HOST_PROD }}" >> "$GITHUB_OUTPUT"
-          echo "deploy_path=${{ secrets.AI_DEPLOY_PATH_PROD }}" >> "$GITHUB_OUTPUT"
+          echo "deploy_host=${{ secrets.AI_DEPLOY_HOST_PROD || secrets.DEPLOY_HOST_PROD }}" >> "$GITHUB_OUTPUT"
+          echo "deploy_path=${{ secrets.AI_DEPLOY_PATH_PROD || secrets.DEPLOY_PATH_PROD }}" >> "$GITHUB_OUTPUT"
           [ -z "$TAG" ] && TAG=latest
         else
-          echo "deploy_host=${{ secrets.AI_DEPLOY_HOST_DEV }}" >> "$GITHUB_OUTPUT"
-          echo "deploy_path=${{ secrets.AI_DEPLOY_PATH_DEV }}" >> "$GITHUB_OUTPUT"
+          echo "deploy_host=${{ secrets.AI_DEPLOY_HOST_DEV || secrets.DEPLOY_HOST_DEV }}" >> "$GITHUB_OUTPUT"
+          echo "deploy_path=${{ secrets.AI_DEPLOY_PATH_DEV || secrets.DEPLOY_PATH_DEV }}" >> "$GITHUB_OUTPUT"
           [ -z "$TAG" ] && TAG=develop
         fi
-        echo "deploy_user=${{ secrets.AI_DEPLOY_USER }}" >> "$GITHUB_OUTPUT"
-        echo "deploy_port=${{ secrets.AI_DEPLOY_PORT || '22' }}" >> "$GITHUB_OUTPUT"
+        echo "deploy_user=${{ secrets.AI_DEPLOY_USER || secrets.DEPLOY_USER }}" >> "$GITHUB_OUTPUT"
+        echo "deploy_port=${{ secrets.AI_DEPLOY_PORT || secrets.DEPLOY_PORT || '22' }}" >> "$GITHUB_OUTPUT"
         echo "image_tag=$TAG" >> "$GITHUB_OUTPUT"
         echo "env_name=$ENV" >> "$GITHUB_OUTPUT"
 
@@ -105,7 +105,7 @@ jobs:
           gunzip -c /tmp/bluenet-deploy/ai-service-image.tar.gz | docker load
           rm -f /tmp/bluenet-deploy/ai-service-image.tar.gz
           export AI_SERVICE_IMAGE="${AI_SERVICE_IMAGE}"
-          docker compose --profile app up -d ai-service --remove-orphans
+          docker compose --profile ai up -d --no-deps ai-service --remove-orphans
           echo "Ai-service deployment completed!"
       env:
         AI_SERVICE_IMAGE: bluenet-ai-service:${{ steps.vars.outputs.image_tag }}
