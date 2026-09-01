@@ -100,6 +100,7 @@ jobs:
         port: ${{ steps.vars.outputs.deploy_port }}
         envs: API_SERVICE_IMAGE, DEPLOY_PATH
         script: |
+          set -e
           cd $DEPLOY_PATH
           echo "=== Deploying api-service to ${{ steps.vars.outputs.env_name }} ==="
           echo "Loading api-service image..."
@@ -109,7 +110,7 @@ jobs:
           docker compose --profile api up -d api-service --remove-orphans
           echo "Api-service deployment completed!"
       env:
-        API_SERVICE_IMAGE: bluenet-api-service:${{ steps.vars.outputs.image_tag }}
+        API_SERVICE_IMAGE: ghcr.io/${{ steps.image.outputs.name }}/bluenet-api-service:${{ steps.vars.outputs.image_tag }}
         DEPLOY_PATH: ${{ steps.vars.outputs.deploy_path }}
 
     - name: Wait for api-service health check

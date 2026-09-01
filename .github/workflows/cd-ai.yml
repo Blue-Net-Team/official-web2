@@ -99,6 +99,7 @@ jobs:
         port: ${{ steps.vars.outputs.deploy_port }}
         envs: AI_SERVICE_IMAGE, DEPLOY_PATH
         script: |
+          set -e
           cd $DEPLOY_PATH
           echo "=== Deploying ai-service to ${{ steps.vars.outputs.env_name }} ==="
           echo "Loading ai-service image..."
@@ -108,7 +109,7 @@ jobs:
           docker compose --profile ai up -d --no-deps ai-service --remove-orphans
           echo "Ai-service deployment completed!"
       env:
-        AI_SERVICE_IMAGE: bluenet-ai-service:${{ steps.vars.outputs.image_tag }}
+        AI_SERVICE_IMAGE: ghcr.io/${{ steps.image.outputs.name }}/bluenet-ai-service:${{ steps.vars.outputs.image_tag }}
         DEPLOY_PATH: ${{ steps.vars.outputs.deploy_path }}
 
     - name: Wait for ai-service health check
