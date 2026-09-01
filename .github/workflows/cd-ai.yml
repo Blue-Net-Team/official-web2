@@ -74,7 +74,7 @@ jobs:
       with:
         host: ${{ steps.vars.outputs.deploy_host }}
         username: ${{ steps.vars.outputs.deploy_user }}
-        key: ${{ secrets.AI_DEPLOY_KEY }}
+        key: ${{ secrets.AI_DEPLOY_KEY || secrets.DEPLOY_KEY }}
         port: ${{ steps.vars.outputs.deploy_port }}
         source: "docker/docker-compose.yml"
         target: ${{ steps.vars.outputs.deploy_path }}
@@ -85,7 +85,7 @@ jobs:
       with:
         host: ${{ steps.vars.outputs.deploy_host }}
         username: ${{ steps.vars.outputs.deploy_user }}
-        key: ${{ secrets.AI_DEPLOY_KEY }}
+        key: ${{ secrets.AI_DEPLOY_KEY || secrets.DEPLOY_KEY }}
         port: ${{ steps.vars.outputs.deploy_port }}
         source: "ai-service-image.tar.gz"
         target: /tmp/bluenet-deploy
@@ -95,7 +95,7 @@ jobs:
       with:
         host: ${{ steps.vars.outputs.deploy_host }}
         username: ${{ steps.vars.outputs.deploy_user }}
-        key: ${{ secrets.AI_DEPLOY_KEY }}
+        key: ${{ secrets.AI_DEPLOY_KEY || secrets.DEPLOY_KEY }}
         port: ${{ steps.vars.outputs.deploy_port }}
         envs: AI_SERVICE_IMAGE, DEPLOY_PATH
         script: |
