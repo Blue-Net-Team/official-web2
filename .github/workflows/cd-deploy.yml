@@ -141,7 +141,7 @@ jobs:
 
   cd-api:
     needs: [resolve-context, cd-infra]
-    if: needs.resolve-context.outputs.api_enabled == 'true'
+    if: ${{ !failure() && !cancelled() && needs.resolve-context.outputs.api_enabled == 'true' }}
     uses: ./.github/workflows/cd-api.yml
     with:
       environment: ${{ needs.resolve-context.outputs.environment }}
@@ -150,7 +150,7 @@ jobs:
 
   cd-judge:
     needs: [resolve-context, cd-infra]
-    if: needs.resolve-context.outputs.judge_enabled == 'true'
+    if: ${{ !failure() && !cancelled() && needs.resolve-context.outputs.judge_enabled == 'true' }}
     uses: ./.github/workflows/cd-judge.yml
     with:
       environment: ${{ needs.resolve-context.outputs.environment }}
@@ -159,7 +159,7 @@ jobs:
 
   cd-ai:
     needs: [resolve-context, cd-infra]
-    if: needs.resolve-context.outputs.ai_enabled == 'true'
+    if: ${{ !failure() && !cancelled() && needs.resolve-context.outputs.ai_enabled == 'true' }}
     uses: ./.github/workflows/cd-ai.yml
     with:
       environment: ${{ needs.resolve-context.outputs.environment }}
@@ -171,7 +171,7 @@ jobs:
 
   backend-gate:
     needs: [resolve-context, cd-api]
-    if: needs.resolve-context.outputs.frontend_enabled == 'true' && !cancelled()
+    if: ${{ !failure() && !cancelled() && needs.resolve-context.outputs.frontend_enabled == 'true' }}
     runs-on: ubuntu-latest
     steps:
     - name: Wait for backend health
@@ -195,7 +195,7 @@ jobs:
 
   cd-frontend:
     needs: [resolve-context, backend-gate]
-    if: needs.resolve-context.outputs.frontend_enabled == 'true'
+    if: ${{ !failure() && !cancelled() && needs.resolve-context.outputs.frontend_enabled == 'true' }}
     uses: ./.github/workflows/cd-frontend.yml
     with:
       environment: ${{ needs.resolve-context.outputs.environment }}
