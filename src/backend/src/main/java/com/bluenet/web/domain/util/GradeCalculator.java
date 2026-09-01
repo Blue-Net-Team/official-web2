@@ -30,21 +30,6 @@ public class GradeCalculator {
     }
 
     /**
-     * 根据学号计算年级序号（内部使用，供 getGradeLabel 调用）
-     *
-     * @param studentId
-     *            学号
-     * @return 年级序号（1=大一, 2=大二, 3=大三, 4=大四, >4=已毕业），无法计算时返回null
-     */
-    private static Integer calculateGrade(String studentId) {
-        Integer enrollmentYear = extractEnrollmentYear(studentId);
-        if (enrollmentYear == null) {
-            return null;
-        }
-        return calculateGrade(enrollmentYear, LocalDate.now());
-    }
-
-    /**
      * 根据入学年份和当前日期计算年级
      *
      * @param enrollmentYear
@@ -70,18 +55,39 @@ public class GradeCalculator {
      * @return 年级标签（如"大一"、"大二"、"已毕业"），无法计算时返回null
      */
     public static String getGradeLabel(String studentId) {
-        return getGradeLabel(studentId, null);
+        return getGradeLabel(studentId, null, LocalDate.now());
     }
 
+    /**
+     * 根据学号计算年级标签（支持指定考核年份）
+     *
+     * @param studentId
+     *            学号
+     * @param assessmentGradeYear
+     *            考核年份，为null时从学号提取
+     * @return 年级标签（如"大一"、"大二"、"已毕业"），无法计算时返回null
+     */
     public static String getGradeLabel(String studentId, Integer assessmentGradeYear) {
+        return getGradeLabel(studentId, assessmentGradeYear, LocalDate.now());
+    }
+
+    /**
+     * 根据学号计算年级标签（支持指定考核年份和当前日期，便于测试）
+     *
+     * @param studentId
+     *            学号
+     * @param assessmentGradeYear
+     *            考核年份，为null时从学号提取
+     * @param currentDate
+     *            当前日期
+     * @return 年级标签（如"大一"、"大二"、"已毕业"），无法计算时返回null
+     */
+    public static String getGradeLabel(String studentId, Integer assessmentGradeYear, LocalDate currentDate) {
         Integer enrollmentYear = resolveAssessmentYear(studentId, assessmentGradeYear);
         if (enrollmentYear == null) {
             return null;
         }
-        Integer gradeNum = calculateGrade(enrollmentYear, LocalDate.now());
-        if (gradeNum == null) {
-            return null;
-        }
+        int gradeNum = calculateGrade(enrollmentYear, currentDate);
         return gradeNum > 4 ? GRADE_GRADUATED : GRADE_LABELS.getOrDefault(gradeNum, gradeNum + "年级");
     }
 

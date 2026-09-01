@@ -29,7 +29,7 @@ class GradeCalculatorTest {
         @DisplayName("正常学号：应返回正确年级标签")
         void getGradeLabel_validStudentId_shouldReturnLabel() {
             // 2023级学生，2026年4月（9月前），参考年=2025，年级=3，应返回"大三"
-            String label = GradeCalculator.getGradeLabel("2023123456");
+            String label = GradeCalculator.getGradeLabel("2023123456", null, LocalDate.of(2026, 4, 1));
             assertNotNull(label);
             assertEquals("大三", label);
         }
@@ -79,7 +79,8 @@ class GradeCalculatorTest {
         @Test
         @DisplayName("grade label should use override year")
         void getGradeLabel_withOverride_shouldUseOverrideYear() {
-            assertEquals("大二", GradeCalculator.getGradeLabel("2023123456", 2024));
+            // 2024级学生，2026年4月（9月前），参考年=2025，年级=2，应返回"大二"
+            assertEquals("大二", GradeCalculator.getGradeLabel("2023123456", 2024, LocalDate.of(2026, 4, 1)));
         }
     }
 
