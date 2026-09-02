@@ -8,10 +8,10 @@ export const getMenuItems = (roleLevel: number): MenuItem[] => {
       label: '相关竞赛',
       key: 'competitions',
     },
-    {
-      label: '团队成果',
-      key: 'achievements',
-    },
+    // {
+    //   label: '团队成果',
+    //   key: 'achievements',
+    // },
     {
       label: '团队成员',
       key: 'members',

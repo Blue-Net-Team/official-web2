@@ -9,11 +9,16 @@ import AchievementFilter from '@/components/Achievements/AchievementFilter'
 import { AchievementService } from '@/apis/services/achievement.service'
 import { AchievementDTO, AchievementStatsDTO } from '@/apis/schema/type'
 import { usePagination } from '@/hooks'
+import { ERROR_CONFIGS } from '@/components/ErrorPage/configs'
+import ErrorPage from '@/components/ErrorPage'
 
 const PAGE_SIZE = 12
 const YEARS = [2024, 2023, 2022, 2021, 2020]
 
 export default function AchievementsPage() {
+  // 暂时关闭该页面
+  return <ErrorPage config={ERROR_CONFIGS[404]} />
+
   const [stats, setStats] = useState<AchievementStatsDTO>({
     totalAchievements: 0,
     nationalCount: 0,
