@@ -43,6 +43,35 @@ Agent SHALL 以知识库文档作为"团队推荐软件"的依据，以软件资
 - **WHEN** 某软件出现在资源库查询结果中，但未被知识库文档提及
 - **THEN** 回答 SHALL NOT 输出该软件
 
+### Requirement: 点名软件未命中时的写法引导
+
+当用户点名的软件未在资源库中命中时，系统 SHALL 考虑用户可能使用了简称、别名或不同写法，并 SHALL 引导用户前往资源库页面自行查找，而不是仅回复"未收录"。
+
+#### Scenario: 点名时提供多种写法候选
+- **WHEN** 用户点名了一个无法确定资源库写法的软件
+- **THEN** Agent SHALL 在同一次 `software_resource_lookup` 调用的 `names` 中传入多个候选写法（如中文名、英文名、简称、全称）
+- **AND** Agent SHALL NOT 依赖工具内置的别名数据进行推断
+
+#### Scenario: 点名软件未命中
+- **WHEN** 用户点名了具体软件，但所有候选写法均被 `software_resource_lookup` 上报为未命中
+- **THEN** 回答 SHALL 说明该软件在资源库中未找到
+- **AND** 回答 SHALL 提示可能是尚未收录或名称写法不同
+- **AND** 回答 SHALL 提供资源库页面链接引导用户自行查找
+- **AND** 回答 SHALL NOT 编造下载地址
+
+#### Scenario: 已知方向时给出对应标签页
+- **WHEN** 未命中的点名问题中可推断出方向（如"嵌入式方向的 SolidWorks 在哪下载"）
+- **THEN** 回答提供的链接 SHALL 为 `/resources?tab=<方向key>`
+- **AND** `<方向key>` SHALL 取自 `general` / `computer_vision` / `structural_design` / `embedded`
+
+#### Scenario: 未知方向时给出资源库首页
+- **WHEN** 未命中的点名问题无法推断方向
+- **THEN** 回答提供的链接 SHALL 为 `/resources`
+
+#### Scenario: 点名时一并传入方向
+- **WHEN** 用户点名软件且问题中包含方向信息
+- **THEN** Agent SHALL 在 `software_resource_lookup` 调用中一并传入 `direction`
+
 ### Requirement: 知识库未召回软件清单时的降级
 
 当 Agent 未能从知识库检索到任何"各方向所需软件"相关内容时，系统 SHALL 降级为提供资源库页面跳转链接，而不是回答"未找到"。

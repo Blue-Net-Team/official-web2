@@ -42,7 +42,7 @@ AI Service 的 `RagAgent`（LangGraph 状态图）通过 `ToolRegistry` 调用 `
 - 不改后端接口、不改数据库 schema、不引入 `pg_trgm` / `pgroonga` / `pg_search` 等扩展。
 - 不把软件资源向量化进 RAG 知识库。
 - 不做资源清单缓存 / 快照。
-- 不新增面向运营的可维护别名表（别名硬编码在 AI Service）。
+- 不新增面向运营的可维护别名表，也不在代码中内置任何软件别名数据。
 - 不改动前端 `/resources` 页面行为。
 
 ## Decisions
@@ -110,11 +110,11 @@ AI Service 的 `RagAgent`（LangGraph 状态图）通过 `ToolRegistry` 调用 `
 
 ### 6. 名称容错匹配放在 AI Service 本地
 
-**选择**：`lookup` 内部按顺序尝试 精确（归一化后）→ 别名表 → 双向子串 → 相似度阈值，匹配对象是**已经拉取到本地的候选集**。
+**选择**：`lookup` 内部按顺序尝试 归一化精确 → 双向子串 → 相似度阈值，匹配对象是**已经拉取到本地的候选集**。
 
 **理由**：
 - 方案 3 的第 1 步已经把该方向的清单拉进进程，再发一次 SQL 模糊查询等于把自己手里的答案绕圈问回去。
-- 别名、同义词、拼写容错在 Python 里表达力远超 SQL `LIKE`。
+- 大小写、空格、子串、拼写容错在 Python 里表达力远超 SQL `LIKE`。
 - 完全不触碰数据库扩展与镜像。
 
 **替代方案**（记录为 Future Work，不在本次实现）：
@@ -126,11 +126,19 @@ AI Service 的 `RagAgent`（LangGraph 状态图）通过 `ToolRegistry` 调用 `
 | `ParadeDB / pg_search` | 真 BM25，最接近 ES | 数据量不匹配，运维成本高 |
 | `zhparser` / `pg_jieba` | 中文分词 | 本场景不需要分词；PG16+ 编译有坑 |
 
-### 7. 别名表硬编码在 AI Service
+### 7. 别名不落数据，由 Agent 提供多写法候选
 
-**选择**：在工具模块内维护 `_ALIASES: dict[str, str]`（如 `vscode` / `vs code` → `Visual Studio Code`，`ad` → `Altium Designer`）。
+**选择**：工具内不维护任何别名表。`lookup` 的 `names` 接受名称列表，Agent 在不确定资源库写法时，根据自身世界知识在同一次调用中传入多个候选（如 `["vscode", "VS Code", "Visual Studio Code"]`）。
 
-**理由**：遵守"先不动数据库"。改动成本低，且当前别名集合可枚举。
+**理由**：
+- 硬编码 `_ALIASES` 会腐烂：软件名与简称持续变化，代码里的表无法被使用方维护，漏项时表现为静默不命中。
+- 别名本质是语义知识，模型比一张静态表更擅长，且不增加维护成本。
+- `lookup` 已支持批量名称，候选写法不需要额外的 LLM 回合。
+- 所有候选均未命中时已有确定降级路径（说明未找到 + 给出资源库页面链接），漏项不会变成静默失败。
+
+**替代方案**：
+- *代码内置 `_ALIASES` 表*：实现简单，但需要发版维护，且与“先不动数据库”之外的又一处硬编码数据。
+- *后端 `tb_software_resource` 加 `aliases` 列*：可运营维护，但本次明确不改数据库；保留为 Future Work。
 
 ### 8. 依赖后端"方向查询自动并入 GENERAL"的既有行为
 
@@ -146,22 +154,25 @@ AI Service 的 `RagAgent`（LangGraph 状态图）通过 `ToolRegistry` 调用 `
 
 ### 10. 结果合并与降级规则
 
+点名软件未命中时，Agent 已用多种写法候选 + 工具的机械匹配（归一化、子串、相似度）排除过常见写法差异；仍然未命中则说明软件很可能确实不在资源库，或写法差异超出模型可猜测的范围。此时仅回复"未收录"既无帮助也无法自查，因此在 prompt 中要求输出资源库页面链接，把兜底动作交给用户。方向可知时给出对应 tab，否则给出资源库首页。
+
 | 情况 | 输出 |
 |---|---|
 | 文档提到 + 资源库有 | 名称 + 说明 + `[名称](URL)` |
 | 文档提到 + 资源库无 | "团队推荐 X，但资源库暂未收录" |
 | 资源库有 + 文档未提 | 不输出 |
+| 点名软件未命中 | "未找到，可能未收录或名称写法不同" + 资源库页面链接（`/resources?tab=<方向key>` 或 `/resources`） |
 | chunk 检索不到软件清单文档 | 返回资源库跳转链接 `/resources?tab=<方向>` |
 | 后端不可用 | 沿用现有降级话术（"软件资源服务暂不可用，请稍后重试"） |
 
 ## Risks / Trade-offs
 
 - **文档 19 未被召回** → 预披露的 tag 流程主要面向报名/考核，软件类问题不保证命中该文档。缓解：prompt 中显式引导检索"各方向所需软件"分片并保留 `chunk_search` 兜底；即使最终失败也降级为 `/resources` 跳转链接，而非报"未找到"。
-- **LLM 名称对齐出错**（文档 `AutoACD` → 索引 `AutoCAD`）→ 缓解：本地匹配多级回退 + 别名表；未命中项显式上报，Agent 可据此说明"暂未收录"而不是静默丢失。
-- **别名表覆盖不全** → 缓解：新增未命中项时日志记录查询名，便于后续补充别名；不引入自动学习。
+- **LLM 名称对齐出错**（文档 `AutoACD` → 索引 `AutoCAD`）→ 缓解：本地机械匹配多级回退 + Agent 多写法候选；未命中项显式上报，Agent 可据此补充候选或说明"未找到"并给出资源库链接，而不是静默丢失。
+- **写法候选给不全** → 缓解：未命中名称已在返回文本中显式上报，Agent 可补一轮候选；最终仍有确定降级路径（说明未找到 + 资源库页面链接），不会静默失败。
 - **lookup 内部 fan-out 放大后端 QPS** → 缓解：单次 `lookup` 最多接收有限个名称（建议 10 个），超出截断并提示；内部串行请求。
 - **一次全量拉取在数据量剧增时退化为大响应** → 缓解：`list` 内部翻页设总量上限（如 500 条）并在超限时明确告知 Agent 结果不完整，由 Agent 改用 `lookup` 精确查询。
-- **移除 `software_resource_search` 影响既有测试** → 缓解：本变更内同步重写 `tests/tools/test_software_resource_search.py`。
+- **移除 `software_resource_search` 使既有测试失效** → 缓解：本次同步删除 `tests/tools/test_software_resource_search.py`（其测试主体已不存在）；本次不为 AI Service 新增测试。
 
 ## Migration Plan
 
@@ -172,5 +183,5 @@ AI Service 的 `RagAgent`（LangGraph 状态图）通过 `ToolRegistry` 调用 `
 ## Open Questions
 
 - `lookup` 单次可接受的最大名称数量取 10 还是 20？（倾向 10，兼顾 round trip 与覆盖度）
-- 相似度匹配的阈值与算法（`difflib.SequenceMatcher` vs `rapidfuzz`，是否需要引入新依赖）留待实现时用测试标定。
+- 相似度匹配的阈值与算法（`difflib.SequenceMatcher` vs `rapidfuzz`，是否需要引入新依赖）留待上线后根据实际未命中情况标定。
 - 资源库页面跳转链接的 query 参数是否稳定为 `/resources?tab=<key>`（当前前端 `TABS` key 为 `general` / `computer_vision` / `structural_design` / `embedded`）——如前端调整需同步。

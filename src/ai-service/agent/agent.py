@@ -299,6 +299,8 @@ class RagAgent:
             "tag_rounds": 0,
             "chunk_rounds": 0,
             "fallback_rounds": 0,
+            "software_list_rounds": 0,
+            "software_lookup_rounds": 0,
             "final_content": "",
             "final_reasoning": "",
         }

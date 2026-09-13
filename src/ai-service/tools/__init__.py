@@ -8,7 +8,13 @@ from .base import TagSearchResult, ToolDefinition
 from .chunk_search import chunk_search
 from .chunk_search_by_tags import chunk_search_by_tags
 from .registry import ToolRegistry
-from .software_resource_search import software_resource_search as _software_resource_search_handler
+from .software_resource_search import software_resource_list, software_resource_lookup
+from .software_resource_search import (
+    software_resource_list as _software_resource_list_handler,
+)
+from .software_resource_search import (
+    software_resource_lookup as _software_resource_lookup_handler,
+)
 from .tag_search import tag_generate, tag_search
 from .tag_search_detailed import tag_search_detailed
 
@@ -103,22 +109,54 @@ ToolRegistry.register(ToolDefinition(
     handler=chunk_search_by_tags,
 ))
 
-# --- 注册 software_resource_search ---
+# --- 注册 software_resource_list ---
 ToolRegistry.register(ToolDefinition(
-    name="software_resource_search",
-    description="查询蓝网软件资源库，获取方向相关的软件下载地址。当用户询问软件下载、安装工具、某个方向需要什么软件时调用",
+    name="software_resource_list",
+    description=(
+        "按方向列出蓝网软件资源索引（仅名称、分类、方向，不含下载地址）。"
+        "当用户询问某个方向需要什么软件、有哪些软件可用时调用。"
+        "省略 direction 可一次获取全部方向的资源；如需对比多个方向，"
+        "不要分多次调用，直接省略 direction。"
+    ),
     parameters={
-        "query": {
+        "direction": {
             "type": "string",
-            "description": "搜索关键词，如软件名称、分类或描述中的关键词",
+            "description": (
+                "可选方向：计算机视觉/视觉方向/COMPUTER_VISION、"
+                "结构设计/结构方向/STRUCTURAL_DESIGN、"
+                "嵌入式开发/电控方向/EMBEDDED、通用/GENERAL；省略则返回全部方向"
+            ),
+        },
+    },
+    required_params=[],
+    handler=_software_resource_list_handler,
+))
+
+# --- 注册 software_resource_lookup ---
+ToolRegistry.register(ToolDefinition(
+    name="software_resource_lookup",
+    description=(
+        "按软件名称列表查询蓝网软件资源库，返回资源详情与下载地址。"
+        "当用户点名了具体软件，或已从知识库获取到推荐软件名时调用。"
+        "支持一次传入多个名称，请勿为每个软件分别调用。"
+    ),
+    parameters={
+        "names": {
+            "type": "array",
+            "items": {"type": "string"},
+            "description": "软件名称列表，如 ['Keil uVision5', '立创EDA']，最多 10 个",
         },
         "direction": {
             "type": "string",
-            "description": "可选方向：计算机视觉/视觉方向/COMPUTER_VISION、结构设计/结构方向/STRUCTURAL_DESIGN、嵌入式开发/电控方向/EMBEDDED、通用/GENERAL",
+            "description": (
+                "可选方向，用于缩小候选集：计算机视觉/视觉方向/COMPUTER_VISION、"
+                "结构设计/结构方向/STRUCTURAL_DESIGN、"
+                "嵌入式开发/电控方向/EMBEDDED、通用/GENERAL"
+            ),
         },
     },
-    required_params=["query"],
-    handler=_software_resource_search_handler,
+    required_params=["names"],
+    handler=_software_resource_lookup_handler,
 ))
 
 __all__ = [
@@ -127,6 +165,8 @@ __all__ = [
     "ToolRegistry",
     "chunk_search",
     "chunk_search_by_tags",
+    "software_resource_list",
+    "software_resource_lookup",
     "tag_search",
     "tag_search_detailed",
     "tag_generate",

@@ -95,15 +95,21 @@ AI Service SHALL 向 `ToolRegistry` 注册两个职责分离的工具，供 `Rag
 - **THEN** 工具 SHALL 返回参数错误的提示文本，而不是抛出未处理异常
 
 ### Requirement: 工具对软件名做容错匹配
-`software_resource_lookup` SHALL 在本地候选集上按 归一化精确匹配 → 别名匹配 → 双向子串匹配 → 相似度匹配 的顺序尝试命中，并 SHALL 上报未命中的名称。
+`software_resource_lookup` SHALL 在本地候选集上按 归一化精确匹配 → 双向子串匹配 → 相似度匹配 的顺序尝试命中，并 SHALL 上报未命中的名称。工具 SHALL NOT 内置软件别名数据；同一软件的不同写法 SHALL 由 Agent 在同一次调用的 `names` 中作为多个候选传入。
 
 #### Scenario: 大小写与空白差异
 - **WHEN** 传入名称 `"keil uvision5"`，资源库中为 `"Keil uVision5"`
 - **THEN** 工具 SHALL 命中该资源
 
-#### Scenario: 别名命中
-- **WHEN** 传入名称 `"vscode"`，别名表将其映射为 `"Visual Studio Code"`
-- **THEN** 工具 SHALL 命中名称包含 "Visual Studio Code" 的资源
+#### Scenario: 多写法候选命中
+- **WHEN** 一次调用传入 `names=["vscode", "VS Code", "Visual Studio Code"]`，资源库中为 `"Visual Studio Code"`
+- **THEN** 工具 SHALL 命中该资源
+- **AND** 未命中的候选 SHALL 出现在未命中清单中
+
+#### Scenario: 工具不推断别名
+- **WHEN** 只传入 `names=["vscode"]`，而资源库中仅有 `"Visual Studio Code"`
+- **THEN** 工具 SHALL NOT 依赖内置别名数据命中该资源
+- **AND** 该名称 SHALL 被上报为未命中
 
 #### Scenario: 未命中名称被显式上报
 - **WHEN** 传入名称在资源库中不存在

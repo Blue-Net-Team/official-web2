@@ -25,6 +25,8 @@ _log = logger.bind(module="RagGraph")
 _MAX_TAG_ROUNDS = 4
 _MAX_CHUNK_ROUNDS = 3
 _MAX_FALLBACK_ROUNDS = 1
+_MAX_SOFTWARE_LIST_ROUNDS = 1
+_MAX_SOFTWARE_LOOKUP_ROUNDS = 2
 
 
 class AgentState(TypedDict):
@@ -34,6 +36,8 @@ class AgentState(TypedDict):
     tag_rounds: int
     chunk_rounds: int
     fallback_rounds: int
+    software_list_rounds: int
+    software_lookup_rounds: int
     final_content: str
     final_reasoning: str
 
@@ -83,7 +87,11 @@ def _build_pre_disclosure(user_input: str) -> str:
     lines.append(
         "  4. 如果 chunk_search_by_tags 诊断显示'标签均不在库中'，调用 chunk_search(query) 进行兜底语义搜索（最多1轮）"
     )
-    lines.append("  5. 基于结果生成答案")
+    lines.append(
+        "  5. 如果用户在问某个方向需要什么软件，务必检索'各方向所需软件'相关分片，"
+        "并配合 software_resource_list / software_resource_lookup 工具作答"
+    )
+    lines.append("  6. 基于结果生成答案")
     return "\n".join(lines)
 
 
@@ -221,6 +229,8 @@ def tool_executor_node(
         tag_rounds = state["tag_rounds"]
         chunk_rounds = state["chunk_rounds"]
         fallback_rounds = state["fallback_rounds"]
+        software_list_rounds = state.get("software_list_rounds", 0)
+        software_lookup_rounds = state.get("software_lookup_rounds", 0)
 
         result: str | None = None
 
@@ -254,6 +264,30 @@ def tool_executor_node(
             else:
                 result = ToolRegistry.execute(tool_name, **tool_args)
             updates["fallback_rounds"] = fallback_rounds
+
+        elif tool_name == "software_resource_list":
+            software_list_rounds += 1
+            if software_list_rounds > _MAX_SOFTWARE_LIST_ROUNDS:
+                result = (
+                    f"软件资源清单查询已达上限 {_MAX_SOFTWARE_LIST_ROUNDS} 轮，"
+                    "请基于已有结果生成答案"
+                )
+                _log.warning(result)
+            else:
+                result = ToolRegistry.execute(tool_name, **tool_args)
+            updates["software_list_rounds"] = software_list_rounds
+
+        elif tool_name == "software_resource_lookup":
+            software_lookup_rounds += 1
+            if software_lookup_rounds > _MAX_SOFTWARE_LOOKUP_ROUNDS:
+                result = (
+                    f"软件资源查询已达上限 {_MAX_SOFTWARE_LOOKUP_ROUNDS} 轮，"
+                    "请基于已有结果生成答案"
+                )
+                _log.warning(result)
+            else:
+                result = ToolRegistry.execute(tool_name, **tool_args)
+            updates["software_lookup_rounds"] = software_lookup_rounds
 
         else:
             result = ToolRegistry.execute(tool_name, **tool_args)
