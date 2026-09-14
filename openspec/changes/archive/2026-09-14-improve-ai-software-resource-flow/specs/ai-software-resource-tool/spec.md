@@ -44,21 +44,17 @@ AI Service SHALL 向 `ToolRegistry` 注册两个职责分离的工具，供 `Rag
 - **THEN** 单项 SHALL 包含资源名称、分类与方向
 - **AND** 单项 SHALL NOT 包含其描述与下载地址
 
-### Requirement: 工具输出不截断地覆盖整个方向
-`software_resource_list` SHALL 在工具内部自动翻页，直到取回该方向（含 `GENERAL`）的全部启用资源或达到内部总量上限，并 SHALL 返回 `totalElements` 供 Agent 判断结果是否完整。
+### Requirement: 工具对后端故障做降级处理
+当后端 API 不可用时，工具 SHALL 返回友好提示，而不是抛出未处理异常。
 
-#### Scenario: 资源数量超过单页上限
-- **WHEN** 某方向启用资源数量超过后端单页上限（100）
-- **THEN** 工具 SHALL 自动请求后续页并合并结果
-- **AND** 返回的索引条目数 SHALL 等于资源总数
+#### Scenario: 后端超时
+- **WHEN** 后端 API 在配置的超时时间内无响应
+- **THEN** 工具返回 "软件资源服务暂不可用，请稍后重试" 或类似提示
 
-#### Scenario: 达到内部总量上限
-- **WHEN** 资源总数超过工具内部总量上限
-- **THEN** 返回文本 SHALL 显式说明结果被截断以及未展示的条目数量
-
-#### Scenario: 方向查询包含通用资源
-- **WHEN** 调用 `software_resource_list(direction="EMBEDDED")`
-- **THEN** 结果 SHALL 包含方向为 `EMBEDDED` 与 `GENERAL` 的资源
+#### Scenario: 列表工具翻页中途失败
+- **WHEN** `software_resource_list` 在请求第 2 页时后端报错
+- **THEN** 工具 SHALL NOT 抛出未处理异常
+- **AND** 返回文本 SHALL 表明结果不完整
 
 ### Requirement: 系统提示词引导 Agent 使用工具
 `RagAgent` 的 system prompt SHALL 包含使用 `software_resource_list` 与 `software_resource_lookup` 的明确指引，并 SHALL 明确禁止在宽泛问题中编造查询关键字。
@@ -77,6 +73,22 @@ AI Service SHALL 向 `ToolRegistry` 注册两个职责分离的工具，供 `Rag
 - **THEN** Agent SHALL 使用 Markdown 超链接格式 `[资源名称](URL)` 呈现，禁止只输出裸链接
 
 ## ADDED Requirements
+
+### Requirement: 工具输出不截断地覆盖整个方向
+`software_resource_list` SHALL 在工具内部自动翻页，直到取回该方向（含 `GENERAL`）的全部启用资源或达到内部总量上限，并 SHALL 返回 `totalElements` 供 Agent 判断结果是否完整。
+
+#### Scenario: 资源数量超过单页上限
+- **WHEN** 某方向启用资源数量超过后端单页上限（100）
+- **THEN** 工具 SHALL 自动请求后续页并合并结果
+- **AND** 返回的索引条目数 SHALL 等于资源总数
+
+#### Scenario: 达到内部总量上限
+- **WHEN** 资源总数超过工具内部总量上限
+- **THEN** 返回文本 SHALL 显式说明结果被截断以及未展示的条目数量
+
+#### Scenario: 方向查询包含通用资源
+- **WHEN** 调用 `software_resource_list(direction="EMBEDDED")`
+- **THEN** 结果 SHALL 包含方向为 `EMBEDDED` 与 `GENERAL` 的资源
 
 ### Requirement: 按软件名列表批量查询
 `software_resource_lookup` SHALL 接受软件名称列表，并在工具内部对每个名称完成查询，避免让 Agent 为每个软件各发起一次工具调用。
@@ -119,15 +131,3 @@ AI Service SHALL 向 `ToolRegistry` 注册两个职责分离的工具，供 `Rag
 #### Scenario: 全部未命中
 - **WHEN** 传入的所有名称均未命中
 - **THEN** 返回文本 SHALL 列出全部未命中名称，并说明资源库中不存在这些软件
-
-### Requirement: 工具对后端故障做降级处理
-当后端 API 不可用时，工具 SHALL 返回友好提示，而不是抛出未处理异常。
-
-#### Scenario: 后端超时
-- **WHEN** 后端 API 在配置的超时时间内无响应
-- **THEN** 工具返回 "软件资源服务暂不可用，请稍后重试" 或类似提示
-
-#### Scenario: 列表工具翻页中途失败
-- **WHEN** `software_resource_list` 在请求第 2 页时后端报错
-- **THEN** 工具 SHALL NOT 抛出未处理异常
-- **AND** 返回文本 SHALL 表明结果不完整

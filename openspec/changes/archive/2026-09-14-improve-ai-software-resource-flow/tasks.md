@@ -36,7 +36,7 @@
 
 - [x] 5.1 运行 `src/ai-service` 既有测试（intent / stream / intent guard）确认无回归
 - [x] 5.2 运行 `ruff check` 确认工具层与 agent 层无静态检查问题
-- [ ] 5.3 手动构造宽泛问题（"嵌入式方向需要什么软件"）走一次流式对话，确认工具调用序列为 `software_resource_list` → chunk 检索 → `software_resource_lookup`，且回答包含下载超链接
-- [ ] 5.4 手动构造点名问题（"SolidWorks 在哪里下载"）走一次对话，确认直接调用 `software_resource_lookup` 且返回下载地址
-- [ ] 5.5 构造点名但未命中的软件，确认回答说明"未找到"并给出资源库页面链接，且不编造下载地址
+- [x] 5.3 手动构造宽泛问题（"嵌入式方向需要什么软件"）走一次流式对话，确认工具调用序列为 `software_resource_list` → chunk 检索 → `software_resource_lookup`，且回答包含下载超链接
+- [x] 5.4 手动构造点名问题（"SolidWorks 在哪里下载"）走一次对话，确认直接调用 `software_resource_lookup` 且返回下载地址
+- [x] 5.5 构造点名但未命中的软件，确认回答说明"未找到"并给出资源库页面链接，且不编造下载地址
 - [x] 5.6 运行 `openspec validate improve-ai-software-resource-flow --strict` 确认变更文档合法

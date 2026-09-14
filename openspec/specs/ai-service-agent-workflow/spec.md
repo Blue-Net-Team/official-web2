@@ -64,7 +64,7 @@ The `pre_disclose` node SHALL call `tag_generate` and `tag_search_detailed`, the
 - **AND** the first user message informs the model that no related tags were found
 
 ### Requirement: Tool round limits enforced by state graph
-The state graph SHALL enforce the same per-tool round limits as the existing `RagAgent`: tag search up to 4 rounds, chunk search by tags up to 3 rounds, and fallback chunk search up to 1 round.
+The state graph SHALL enforce the same per-tool round limits as the existing `RagAgent`: tag search up to 4 rounds, chunk search by tags up to 3 rounds, fallback chunk search up to 1 round, software resource listing up to 1 round, and software resource lookup up to 2 rounds.
 
 #### Scenario: Tag search limit reached
 - **WHEN** the LLM requests `tag_search_detailed` and `tag_rounds` is already 4
@@ -80,6 +80,22 @@ The state graph SHALL enforce the same per-tool round limits as the existing `Ra
 - **WHEN** the LLM requests `chunk_search` and `fallback_rounds` is already 1
 - **THEN** the `tool_executor` returns a limit message instead of executing the tool
 - **AND** the graph routes back to `agent`
+
+#### Scenario: Software resource list limit reached
+- **WHEN** the LLM requests `software_resource_list` and `software_list_rounds` is already 1
+- **THEN** the `tool_executor` returns a limit message instead of executing the tool
+- **AND** the message instructs the model to proceed with the results already obtained
+- **AND** the graph routes back to `agent`
+
+#### Scenario: Software resource lookup limit reached
+- **WHEN** the LLM requests `software_resource_lookup` and `software_lookup_rounds` is already 2
+- **THEN** the `tool_executor` returns a limit message instead of executing the tool
+- **AND** the message instructs the model to proceed with the results already obtained
+- **AND** the graph routes back to `agent`
+
+#### Scenario: Round counters are independent
+- **WHEN** `software_resource_list` has been called once and the LLM requests `software_resource_lookup`
+- **THEN** the lookup request SHALL be executed for as long as `software_lookup_rounds` is below 2
 
 ### Requirement: SSE event protocol remains backward-compatible
 The `/ai/v1/chat/stream` endpoint SHALL continue to emit the same event types and field names as before the refactor.
