@@ -423,6 +423,7 @@ export default function QuestionDrawer({
   const isViewMode = mode === 'view'
   const isCreateMode = mode === 'create'
   const questionTypeValue = Form.useWatch('questionType', form)
+  const attachmentIdValue = Form.useWatch('attachmentId', form)
   const optionsValue = Form.useWatch('options', form)
   const standardSolutionsValue = Form.useWatch('standardSolutions', form)
   const generatorLanguage = Form.useWatch('generatorLanguage', form)
@@ -1369,23 +1370,29 @@ export default function QuestionDrawer({
             <InputNumber min={0} precision={1} placeholder="分值" className="w-full" />
           </Form.Item>
 
-          <Form.Item name="attachmentId" label="附件">
-            <Upload
-              beforeUpload={handleUpload}
-              showUploadList={false}
-              accept=".pdf,.doc,.docx,.zip,.rar,.png,.jpg,.jpeg"
-            >
-              <Button icon={<PaperClipOutlined />} disabled={isViewMode}>
-                {form.getFieldValue('attachmentId') ? '更换附件' : '上传附件'}
-              </Button>
-            </Upload>
-            {form.getFieldValue('attachmentId') && (
-              <span className="ml-2 text-white/50 text-sm">
-                已上传 (ID: {form.getFieldValue('attachmentId')})
-              </span>
-            )}
+          <Form.Item label="附件">
+            <Space size={8}>
+              <Upload
+                beforeUpload={handleUpload}
+                showUploadList={false}
+                accept=".pdf,.doc,.docx,.zip,.rar,.png,.jpg,.jpeg"
+              >
+                <Button icon={<PaperClipOutlined />} disabled={isViewMode}>
+                  {attachmentIdValue ? '更换附件' : '上传附件'}
+                </Button>
+              </Upload>
+              {attachmentIdValue ? (
+                <span className="text-white/50 text-sm">已上传 (ID: {attachmentIdValue})</span>
+              ) : null}
+            </Space>
           </Form.Item>
         </div>
+
+        {/* 附件 ID 单独用隐藏字段承载：Upload 不能被带 name 的 Form.Item 包裹，
+            否则其 onChange 会把 { file, fileList } 对象写进字段，提交时后端无法反序列化为 Long */}
+        <Form.Item name="attachmentId" hidden>
+          <Input />
+        </Form.Item>
 
         {renderContentFields()}
       </Form>
