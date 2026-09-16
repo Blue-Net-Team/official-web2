@@ -5,12 +5,15 @@ export type AiStreamChunkType =
   | 'content'
   | 'done'
   | 'error'
+  | 'conversation_id'
 
 export interface AiStreamChunk {
   type: AiStreamChunkType
   content?: string
   tool_name?: string
   tool_args?: Record<string, unknown>
+  /** 服务端权威下发的会话标识，仅出现在流的首帧。 */
+  conversation_id?: string
 }
 
 export interface ToolCallItem {

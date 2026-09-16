@@ -70,11 +70,6 @@ export function useAiChat(): UseAiChatReturn {
 
       setMessages((prev) => [...prev, userMessage, assistantMessage])
 
-      const currentConversationId = conversationId ?? generateId()
-      if (!conversationId) {
-        setConversationId(currentConversationId)
-      }
-
       const abortController = new AbortController()
       abortControllerRef.current = abortController
       setIsStreaming(true)
@@ -82,9 +77,17 @@ export function useAiChat(): UseAiChatReturn {
       try {
         for await (const chunk of streamChat({
           message: text.trim(),
-          conversationId: currentConversationId,
+          // 不自行生成会话标识：服务端权威生成并通过首帧下发
+          conversationId,
           signal: abortController.signal,
         })) {
+          if (chunk.type === 'conversation_id') {
+            if (chunk.conversation_id && chunk.conversation_id !== conversationId) {
+              setConversationId(chunk.conversation_id)
+            }
+            continue
+          }
+
           setMessages((prev) => {
             const last = prev[prev.length - 1]
             if (!last || last.role !== 'assistant') return prev
@@ -150,6 +153,7 @@ export function useAiChat(): UseAiChatReturn {
                 updated.isStreaming = false
                 updated.blocks = markAllReasoningDone(updated.blocks)
                 break
+              // 未知事件类型一律忽略，保证协议可向后扩展
               default:
                 break
             }
