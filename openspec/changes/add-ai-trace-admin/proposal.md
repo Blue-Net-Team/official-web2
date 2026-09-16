@@ -25,7 +25,7 @@ AI 服务（`src/ai-service`）目前把用户提问、检索过程、模型思�
 ### 数据层
 
 - 新增 `tb_ai_conversation` / `tb_ai_turn` 两张表，由后端 Flyway 管理 schema（与 `tb_rag_*` 同一模式，AI 服务只负责写入）
-- 数据保留策略：全量保留 + 180 天清理任务
+- 数据保留策略：全量保留，不提供清理或归档
 
 ### 读取层（Java + Next.js，纯只读）
 
@@ -64,7 +64,7 @@ AI 服务（`src/ai-service`）目前把用户提问、检索过程、模型思�
 | `src/ai-service/agent/agent.py` | 意图判定结果、轮次计数改为结构化事件外发 |
 | `src/ai-service/agent/graph.py` | `pre_disclose_node` 外发标签命中事件 |
 | `src/ai-service/trace/` (新增) | 事件缓冲、结构化事件定义、落库写入器 |
-| `src/ai-service/setting.py` | 数据保留天数等配置项 |
+| `src/ai-service/setting.py` | 采集开关等配置项 |
 | `src/backend` (新增) | Controller / AppService / Repository / Mapper + Flyway 迁移 |
 | `src/frontend/src/app/admin/ai-traces/` (新增) | 三个页面 |
 | `src/frontend/src/hooks/useAiChat.ts` | 消费 conversation_id 事件，不再自行生成 |

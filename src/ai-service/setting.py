@@ -66,7 +66,6 @@ class Settings(BaseSettings):
     # 对话轨迹采集（管理后台回看）
     TRACE_ENABLED: bool = True
     TRACE_DB_URI: str = ""  # 空 = 复用 PGVECTOR_URI（同一个 Postgres）
-    TRACE_RETENTION_DAYS: int = 180
 
     # RabbitMQ 配置（知识库文档解析任务）
     RABBITMQ_HOST: str = "localhost"

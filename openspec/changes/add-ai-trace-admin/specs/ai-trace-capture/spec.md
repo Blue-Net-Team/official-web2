@@ -126,15 +126,22 @@ SHALL 保存状态图执行结束时组装完成的完整消息列表，以便�
 - **THEN** SHALL 记录该会话的创建时间
 - **AND** 后续每次记录 SHALL 更新该会话的最后活跃时间
 
-### Requirement: Trace data has a bounded retention window
+### Requirement: Trace data is retained indefinitely
 
-轨迹数据 SHALL 按固定保留期自动清理，避免学生原始提问被无限期留档。
+轨迹数据 SHALL 全量保留，系统 MUST NOT 提供自动删除、过期清理或归档能力。
 
-#### Scenario: Expired traces are removed
-- **WHEN** 轨迹记录的存在时间超过配置的保留期
-- **THEN** SHALL 被清理任务删除
-- **AND** 保留期 SHALL 可通过环境变量配置，默认 180 天
+保留完整历史是为了支持跨招新季（年度周期）的问题趋势对比。实测存储开销可控：
+单轮检索型提问约 27 KB，万级提问约 270 MB。
 
-#### Scenario: Orphaned conversations are cleaned up
-- **WHEN** 一个会话下的所有轨迹记录都已被清理
-- **THEN** 该会话记录 SHALL 一并被删除
+#### Scenario: No automatic deletion happens
+- **WHEN** 轨迹记录已存在任意长时间
+- **THEN** 系统 MUST NOT 自动删除该记录
+- **AND** 服务启动与运行期间 MUST NOT 调度任何轨迹清理任务
+
+#### Scenario: No retention configuration exists
+- **WHEN** 检查轨迹采集的配置项
+- **THEN** MUST NOT 存在保留期、保留天数或清理相关的配置项
+
+#### Scenario: Storage growth stays within a single database
+- **WHEN** 轨迹累积到万级提问规模
+- **THEN** 存储占用 SHALL 仍在单个 Postgres 实例的可承受范围内

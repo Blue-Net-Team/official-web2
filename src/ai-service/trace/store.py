@@ -131,29 +131,9 @@ class TraceStore:
     # 保留策略
     # ------------------------------------------------------------------
 
-    def purge_expired(self, retention_days: int | None = None) -> tuple[int, int]:
-        """删除超过保留期的轨迹，以及已无提问的孤儿会话。
-
-        Returns:
-            ``(删除的轨迹数, 删除的会话数)``
-        """
-        days = retention_days if retention_days is not None else settings.TRACE_RETENTION_DAYS
-        with self._pool.connection() as conn:
-            with conn.cursor() as cur:
-                cur.execute(
-                    "DELETE FROM tb_ai_turn WHERE created_at < NOW() - make_interval(days => %s)",
-                    (days,),
-                )
-                turns = cur.rowcount
-                cur.execute(
-                    "DELETE FROM tb_ai_conversation c WHERE NOT EXISTS ("
-                    "  SELECT 1 FROM tb_ai_turn t WHERE t.conversation_id = c.id)"
-                )
-                conversations = cur.rowcount
-            conn.commit()
-        if turns or conversations:
-            _log.info(f"轨迹清理完成: 删除 {turns} 条轨迹, {conversations} 个孤儿会话")
-        return turns, conversations
+    # 轨迹数据全量保留：不提供删除或过期清理能力。
+    # 数据量可控（万级提问约 270 MB），保留完整历史以支持跨招新季的问题趋势对比。
+    # 决策与理由见 openspec/changes/add-ai-trace-admin/design.md 的 D11。
 
 
 # ---------------------------------------------------------------------------
