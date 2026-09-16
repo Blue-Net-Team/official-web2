@@ -38,6 +38,7 @@ class AgentState(TypedDict):
     fallback_rounds: int
     software_list_rounds: int
     software_lookup_rounds: int
+    tool_round: int
     final_content: str
     final_reasoning: str
 
@@ -47,8 +48,13 @@ class AgentState(TypedDict):
 # ---------------------------------------------------------------------------
 
 
-def _build_pre_disclosure(user_input: str) -> str:
-    """生成预披露文本：自动标签生成 + 标签详细检索。"""
+def _build_pre_disclosure(user_input: str) -> tuple[str, list[str], list[dict]]:
+    """生成预披露文本：自动标签生成 + 标签详细检索。
+
+    Returns:
+        ``(富化后的用户消息, 自动生成的标签列表, 命中的标签信息列表)``。
+        标签生成或检索失败时，对应的返回值为空列表。
+    """
     _log.info("预披露阶段: 自动生成初始标签并检索")
     try:
         pre_tags = tag_generate(user_input)
@@ -92,11 +98,23 @@ def _build_pre_disclosure(user_input: str) -> str:
         "并配合 software_resource_list / software_resource_lookup 工具作答"
     )
     lines.append("  6. 基于结果生成答案")
-    return "\n".join(lines)
+    hits = [
+        {
+            "tag_name": r.tag_name,
+            "score": r.relevance_score,
+            "chunks_count": r.chunks_count,
+        }
+        for r in pre_tag_results
+    ]
+    return "\n".join(lines), list(pre_tags), hits
 
 
-def pre_disclose_node(state: AgentState) -> dict:
-    """预披露节点：将最后一条用户消息替换为包含初始检索结果的 enriched 消息。"""
+def pre_disclose_node(state: AgentState, writer: StreamWriter = None) -> dict:
+    """预披露节点：将最后一条用户消息替换为包含初始检索结果的 enriched 消息。
+
+    若提供 ``writer``，则外发 ``pre_disclose`` 事件，携带自动生成的标签与
+    命中的标签信息，使这一步检索在轨迹中可见。
+    """
     messages = list(state["messages"])
     last_user_idx = -1
     for i in range(len(messages) - 1, -1, -1):
@@ -109,7 +127,9 @@ def pre_disclose_node(state: AgentState) -> dict:
         return {"messages": messages}
 
     raw_input = messages[last_user_idx].get("content", "")
-    enriched = _build_pre_disclosure(raw_input)
+    enriched, pre_tags, hits = _build_pre_disclosure(raw_input)
+    if writer is not None:
+        writer({"type": "pre_disclose", "tags": pre_tags, "hits": hits})
     messages[last_user_idx] = {"role": "user", "content": enriched}
     return {"messages": messages}
 
@@ -162,6 +182,7 @@ def agent_node(
                     "type": "tool_call",
                     "tool_name": event.tool_name,
                     "tool_args": event.tool_args or {},
+                    "round": state.get("tool_round", 0) + 1,
                 })
         elif event.type == "done":
             break
@@ -220,6 +241,7 @@ def tool_executor_node(
 
     updates: dict[str, int] = {}
     new_messages: list[dict] = []
+    tool_round = state.get("tool_round", 0)
 
     for tc in tool_calls:
         tool_name = tc["name"]
@@ -232,12 +254,15 @@ def tool_executor_node(
         software_list_rounds = state.get("software_list_rounds", 0)
         software_lookup_rounds = state.get("software_lookup_rounds", 0)
 
+        tool_round += 1
         result: str | None = None
+        blocked = False
 
         if tool_name == "tag_search_detailed":
             tag_rounds += 1
             if tag_rounds > _MAX_TAG_ROUNDS:
                 result = f"标签搜索已达上限 {_MAX_TAG_ROUNDS} 轮，请直接基于已有标签进入选择阶段"
+                blocked = True
                 _log.warning(result)
             else:
                 if tag_rounds == _MAX_TAG_ROUNDS:
@@ -249,6 +274,7 @@ def tool_executor_node(
             chunk_rounds += 1
             if chunk_rounds > _MAX_CHUNK_ROUNDS:
                 result = f"分片检索已达上限 {_MAX_CHUNK_ROUNDS} 轮，请基于已有检索结果生成答案"
+                blocked = True
                 _log.warning(result)
             else:
                 if chunk_rounds == _MAX_CHUNK_ROUNDS:
@@ -260,6 +286,7 @@ def tool_executor_node(
             fallback_rounds += 1
             if fallback_rounds > _MAX_FALLBACK_ROUNDS:
                 result = f"兜底语义搜索已达上限 {_MAX_FALLBACK_ROUNDS} 轮，请基于已有检索结果生成答案"
+                blocked = True
                 _log.warning(result)
             else:
                 result = ToolRegistry.execute(tool_name, **tool_args)
@@ -272,6 +299,7 @@ def tool_executor_node(
                     f"软件资源清单查询已达上限 {_MAX_SOFTWARE_LIST_ROUNDS} 轮，"
                     "请基于已有结果生成答案"
                 )
+                blocked = True
                 _log.warning(result)
             else:
                 result = ToolRegistry.execute(tool_name, **tool_args)
@@ -284,6 +312,7 @@ def tool_executor_node(
                     f"软件资源查询已达上限 {_MAX_SOFTWARE_LOOKUP_ROUNDS} 轮，"
                     "请基于已有结果生成答案"
                 )
+                blocked = True
                 _log.warning(result)
             else:
                 result = ToolRegistry.execute(tool_name, **tool_args)
@@ -298,6 +327,8 @@ def tool_executor_node(
                     "type": "tool_result",
                     "tool_name": tool_name,
                     "content": result,
+                    "round": tool_round,
+                    "blocked": blocked,
                 })
             new_messages.append({
                 "role": "tool",
@@ -306,6 +337,7 @@ def tool_executor_node(
             })
 
     messages.extend(new_messages)
+    updates["tool_round"] = tool_round
     _log.info(f"工具执行完成, {len(new_messages)} 个结果已写回状态")
     return {"messages": messages, **updates}
 

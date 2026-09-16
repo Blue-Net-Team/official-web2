@@ -130,6 +130,7 @@ def test_chat_stream_reasoning_tool_call_result_content_done():
         type="tool_call",
         tool_name="tag_search_detailed",
         tool_args={"query": "蓝网团队", "top_k": 10},
+        round=1,
     )
     tool_result_chunks = [c for c in chunks if c.type == "tool_result"]
     assert tool_result_chunks[0].content == "mock result for tag_search_detailed"

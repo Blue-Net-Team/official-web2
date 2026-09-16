@@ -134,6 +134,14 @@ class RagAgent:
         if intent_result is None:
             intent_result = clarify_result("分类无结果")
 
+        # 结构化外发意图判定结果，使轨迹可按意图/动作筛选（原中文说明文案保留在下方 reasoning 中）
+        yield StreamChunk(
+            type="intent",
+            intent=intent_result.intent,
+            confidence=intent_result.confidence,
+            action=intent_result.action,
+        )
+
         if intent_result.action == ACTION_REFUSE:
             yield StreamChunk(
                 type="reasoning",
@@ -188,6 +196,9 @@ class RagAgent:
         final_content = final_state.values["final_content"] or ""
         final_messages.append({"role": "assistant", "content": final_content})
         self.conversation.messages = final_messages
+
+        # 外发完整 prompt 快照（仅采集层使用，不下发前端）
+        yield StreamChunk(type="prompt", prompt=final_messages)
 
         _log.info(f"Agent 流式响应完成, 长度={len(final_content)}")
         yield StreamChunk(type="done")
@@ -301,6 +312,7 @@ class RagAgent:
             "fallback_rounds": 0,
             "software_list_rounds": 0,
             "software_lookup_rounds": 0,
+            "tool_round": 0,
             "final_content": "",
             "final_reasoning": "",
         }
@@ -323,6 +335,10 @@ class RagAgent:
                     content=event.get("content", ""),
                     tool_name=event.get("tool_name"),
                     tool_args=event.get("tool_args") if "tool_args" in event else {},
+                    round=event.get("round"),
+                    blocked=bool(event.get("blocked", False)),
+                    tags=event.get("tags"),
+                    hits=event.get("hits"),
                 )
             else:
                 _log.warning(f"未知自定义事件: {event}")

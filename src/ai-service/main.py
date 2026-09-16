@@ -14,6 +14,7 @@ from logging_config import setup_logging
 from messaging.parse_consumer import start_parse_consumer
 from pipeline.document_parser import update_doc_status
 from retrieval import PgVectorStore
+from trace.store import get_trace_store
 
 # 初始化统一日志（拦截标准库 logging 到 loguru）
 setup_logging()
@@ -52,7 +53,14 @@ async def lifespan(app: FastAPI):
         consumer_task = await start_parse_consumer()
     except Exception as exc:
         _log.warning(f"RabbitMQ 消费者启动失败（可能 RabbitMQ 未运行）: {exc}")
+
+    purge_task = asyncio.create_task(_trace_purge_loop())
     yield
+    purge_task.cancel()
+    try:
+        await purge_task
+    except asyncio.CancelledError:
+        pass
     if consumer_task is not None:
         consumer_task.cancel()
         try:
@@ -60,6 +68,31 @@ async def lifespan(app: FastAPI):
         except asyncio.CancelledError:
             pass
     _log.info("应用关闭，清理资源...")
+
+
+# ---------------------------------------------------------------------------
+# 轨迹保留策略
+# ---------------------------------------------------------------------------
+
+#: 清理任务运行间隔（轨迹保留期以天计，每小时检查一次足够）
+_TRACE_PURGE_INTERVAL_SECONDS = 60 * 60
+
+
+async def _trace_purge_loop() -> None:
+    """周期性清理超过保留期的轨迹与孤儿会话。
+
+    采集关闭或存储不可用时静默跳过，不影响服务运行。
+    """
+    while True:
+        try:
+            await asyncio.sleep(_TRACE_PURGE_INTERVAL_SECONDS)
+            store = get_trace_store()
+            if store is not None:
+                await asyncio.to_thread(store.purge_expired)
+        except asyncio.CancelledError:
+            raise
+        except Exception as exc:
+            _log.warning(f"轨迹清理失败（不影响服务）: {exc}")
 
 
 # ---------------------------------------------------------------------------
