@@ -28,6 +28,9 @@ import {
   CloudDownloadOutlined,
   GithubOutlined,
   NodeIndexOutlined,
+  MessageOutlined,
+  UnorderedListOutlined,
+  BarChartOutlined,
 } from '@ant-design/icons'
 import type { MenuProps } from 'antd'
 
@@ -237,6 +240,28 @@ export const menuConfig: MenuItemConfig[] = [
         label: '标签管理',
         path: '/admin/knowledge/tags',
         icon: <TagOutlined />,
+        minLevel: 1,
+      },
+    ],
+  },
+  {
+    key: 'aiTrace',
+    label: 'AI 对话记录',
+    icon: <MessageOutlined />,
+    minLevel: 1,
+    children: [
+      {
+        key: 'aiTraceConversations',
+        label: '会话列表',
+        path: '/admin/ai-traces/conversations',
+        icon: <UnorderedListOutlined />,
+        minLevel: 1,
+      },
+      {
+        key: 'aiTraceStatistics',
+        label: '分析面板',
+        path: '/admin/ai-traces/statistics',
+        icon: <BarChartOutlined />,
         minLevel: 1,
       },
     ],
