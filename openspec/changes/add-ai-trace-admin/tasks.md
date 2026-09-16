@@ -41,17 +41,17 @@
 
 ## 5. 后端只读接口（Java，TDD）
 
-- [ ] 5.1 编写 Repository 集成测试：按会话分页查询、内嵌提问、`messageCount` 等于用户提问数
-- [ ] 5.2 编写集成测试：时间范围 / 意图 / 动作 / 关键词四类筛选，关键词只作用于 `user_input`
-- [ ] 5.3 编写集成测试：会话详情返回完整原始事件序列与 prompt 快照；不存在的会话返回 null 而非 500
-- [ ] 5.4 编写集成测试：统计接口——趋势按会话、分布按提问、兜底检索率、工具使用分布、拒答原因分布；无数据时返回零值
-- [ ] 5.5 实现领域层实体与 Repository 接口（返回 `Optional<Aggregate>` / `Page<Aggregate>`）
-- [ ] 5.6 实现基础设施层 DO、Mapper、RepositoryImpl 与转换逻辑
-- [ ] 5.7 实现应用层 AppService，返回 DTO 与 `PageDTO`
-- [ ] 5.8 实现 `AdminAiTraceController`，四个 GET 接口，全部标注 `@RequiresPermission`（`ai-trace:list` / `ai-trace:detail` / `ai-trace:statistics` / `ai-trace:gap`）
-- [ ] 5.9 启动应用确认 `PermissionScanner` 未报权限标识重复
-- [ ] 5.10 编写权限测试：未登录与缺少权限的访问均被拒绝且不返回数据
-- [ ] 5.11 确认控制器未暴露任何写方法（无 POST / PUT / DELETE）
+- [x] 5.1 编写 Repository 集成测试：按会话分页查询、内嵌提问、`messageCount` 等于用户提问数
+- [x] 5.2 编写集成测试：时间范围 / 意图 / 动作 / 关键词四类筛选，关键词只作用于 `user_input`
+- [x] 5.3 编写集成测试：会话详情返回完整原始事件序列与 prompt 快照；不存在的会话返回 null 而非 500
+- [x] 5.4 编写集成测试：统计接口——趋势按会话、分布按提问、兜底检索率、工具使用分布、拒答原因分布；无数据时返回零值
+- [x] 5.5 实现领域层实体与 Repository 接口（返回 `Optional<Aggregate>` / `Page<Aggregate>`）
+- [x] 5.6 实现基础设施层 DO、Mapper、RepositoryImpl 与转换逻辑
+- [x] 5.7 实现应用层 AppService，返回 DTO 与 `PageDTO`
+- [x] 5.8 实现 `AdminAiTraceController`，四个 GET 接口，全部标注 `@RequiresPermission`（`ai-trace:list` / `ai-trace:detail` / `ai-trace:statistics` / `ai-trace:gap`）
+- [x] 5.9 启动应用确认 `PermissionScanner` 未报权限标识重复
+- [x] 5.10 编写权限测试：未登录与缺少权限的访问均被拒绝且不返回数据
+- [x] 5.11 确认控制器未暴露任何写方法（无 POST / PUT / DELETE）
 
 ## 6. 前端三个页面
 

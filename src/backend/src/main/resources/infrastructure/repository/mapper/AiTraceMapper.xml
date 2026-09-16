@@ -1,0 +1,228 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bluenet.web.infrastructure.repository.mapper.AiTraceMapper">
+
+    <!--
+      轨迹读取层共用 SQL 片段。
+
+      intent / action 只存在于 tb_ai_turn.events 的 JSONB 内，因此必须在 SQL 层提取。
+      events 为 JSON 数组，意图事件形如：
+        {"type":"intent","intent":"...","confidence":0.93,"action":"RETRIEVE"}
+    -->
+
+    <sql id="intentExpr">
+        jsonb_path_query_first(t.events, '$[*] ? (@.type == "intent")')->>'intent'
+    </sql>
+
+    <sql id="actionExpr">
+        jsonb_path_query_first(t.events, '$[*] ? (@.type == "intent")')->>'action'
+    </sql>
+
+    <sql id="toolRoundsExpr">
+        (SELECT COALESCE(MAX((e->>'round')::int), 0)
+           FROM jsonb_array_elements(t.events) e
+          WHERE e->>'type' = 'tool_call')
+    </sql>
+
+    <sql id="fallbackExistsExpr">
+        EXISTS (SELECT 1 FROM jsonb_array_elements(t.events) e
+                 WHERE e->>'type' = 'tool_call' AND e->>'tool_name' = 'chunk_search')
+    </sql>
+
+    <sql id="turnSummaryColumns">
+        t.conversation_id AS conversation_id,
+        t.seq AS seq,
+        t.user_input AS user_input,
+        <include refid="intentExpr"/> AS intent,
+        <include refid="actionExpr"/> AS action,
+        <include refid="toolRoundsExpr"/> AS tool_rounds,
+        t.duration_ms AS duration_ms,
+        t.degraded AS degraded,
+        t.created_at AS created_at
+    </sql>
+
+    <select id="selectConversations" resultType="com.bluenet.web.infrastructure.repository.dataobject.query.AiConversationRowQueryDO">
+        SELECT c.id AS id,
+               c.created_at AS created_at,
+               c.last_active_at AS last_active_at,
+               (SELECT count(*) FROM tb_ai_turn t WHERE t.conversation_id = c.id) AS message_count
+          FROM tb_ai_conversation c
+         WHERE 1 = 1
+        <if test="startTime != null">
+           AND c.last_active_at &gt;= #{startTime}
+        </if>
+        <if test="endTime != null">
+           AND c.last_active_at &lt;= #{endTime}
+        </if>
+        <if test="intent != null and intent != ''">
+           AND EXISTS (SELECT 1 FROM tb_ai_turn t
+                        WHERE t.conversation_id = c.id AND <include refid="intentExpr"/> = #{intent})
+        </if>
+        <if test="action != null and action != ''">
+           AND EXISTS (SELECT 1 FROM tb_ai_turn t
+                        WHERE t.conversation_id = c.id AND <include refid="actionExpr"/> = #{action})
+        </if>
+        <if test="keyword != null and keyword != ''">
+           AND EXISTS (SELECT 1 FROM tb_ai_turn t
+                        WHERE t.conversation_id = c.id
+                          AND t.user_input ILIKE '%' || #{keyword} || '%')
+        </if>
+         ORDER BY c.last_active_at DESC
+    </select>
+
+    <select id="selectConversation" resultType="com.bluenet.web.infrastructure.repository.dataobject.query.AiConversationRowQueryDO">
+        SELECT c.id AS id,
+               c.created_at AS created_at,
+               c.last_active_at AS last_active_at,
+               (SELECT count(*) FROM tb_ai_turn t WHERE t.conversation_id = c.id) AS message_count
+          FROM tb_ai_conversation c
+         WHERE c.id = #{id}
+    </select>
+
+    <select id="selectTurnSummaries" resultType="com.bluenet.web.infrastructure.repository.dataobject.query.AiTurnSummaryQueryDO">
+        SELECT <include refid="turnSummaryColumns"/>
+          FROM tb_ai_turn t
+         WHERE t.conversation_id IN
+        <foreach item="cid" collection="conversationIds" open="(" separator="," close=")">
+            #{cid}
+        </foreach>
+        <if test="intent != null and intent != ''">
+           AND <include refid="intentExpr"/> = #{intent}
+        </if>
+        <if test="action != null and action != ''">
+           AND <include refid="actionExpr"/> = #{action}
+        </if>
+         ORDER BY t.conversation_id, t.seq
+    </select>
+
+    <select id="selectTurnDetails" resultType="com.bluenet.web.infrastructure.repository.dataobject.query.AiTurnDetailQueryDO">
+        SELECT t.seq AS seq,
+               t.user_input AS user_input,
+               t.answer AS answer,
+               <include refid="intentExpr"/> AS intent,
+               <include refid="actionExpr"/> AS action,
+               <include refid="toolRoundsExpr"/> AS tool_rounds,
+               t.duration_ms AS duration_ms,
+               t.degraded AS degraded,
+               t.created_at AS created_at,
+               t.events AS events,
+               t.prompt AS prompt
+          FROM tb_ai_turn t
+         WHERE t.conversation_id = #{conversationId}
+         ORDER BY t.seq
+    </select>
+
+    <select id="selectIntentDistribution" resultType="com.bluenet.web.infrastructure.repository.dataobject.query.AiCountQueryDO">
+        SELECT <include refid="intentExpr"/> AS label, count(*) AS count
+          FROM tb_ai_turn t
+         WHERE t.created_at &gt;= #{from}
+         GROUP BY 1
+         ORDER BY 2 DESC
+    </select>
+
+    <select id="selectActionDistribution" resultType="com.bluenet.web.infrastructure.repository.dataobject.query.AiCountQueryDO">
+        SELECT <include refid="actionExpr"/> AS label, count(*) AS count
+          FROM tb_ai_turn t
+         WHERE t.created_at &gt;= #{from}
+         GROUP BY 1
+         ORDER BY 2 DESC
+    </select>
+
+    <select id="selectToolUsage" resultType="com.bluenet.web.infrastructure.repository.dataobject.query.AiCountQueryDO">
+        SELECT e->>'tool_name' AS label, count(*) AS count
+          FROM tb_ai_turn t, jsonb_array_elements(t.events) e
+         WHERE t.created_at &gt;= #{from}
+           AND e->>'type' = 'tool_call'
+         GROUP BY 1
+         ORDER BY 2 DESC
+    </select>
+
+    <select id="selectRefusalReasons" resultType="com.bluenet.web.infrastructure.repository.dataobject.query.AiCountQueryDO">
+        SELECT <include refid="intentExpr"/> AS label, count(*) AS count
+          FROM tb_ai_turn t
+         WHERE t.created_at &gt;= #{from}
+           AND <include refid="actionExpr"/> = 'REFUSE'
+         GROUP BY 1
+         ORDER BY 2 DESC
+    </select>
+
+    <select id="selectConversationTrend" resultType="com.bluenet.web.infrastructure.repository.dataobject.query.AiTrendPointQueryDO">
+        <choose>
+            <when test='period == "H24"'>
+                SELECT bucket::timestamp AS time, COALESCE(c.cnt, 0) AS count
+                  FROM generate_series(
+                        date_trunc('hour', NOW() - INTERVAL '23 hours'),
+                        date_trunc('hour', NOW()),
+                        INTERVAL '1 hour') AS bucket
+                  LEFT JOIN (
+                        SELECT date_trunc('hour', created_at) AS bucket_key, COUNT(*) AS cnt
+                          FROM tb_ai_conversation
+                         WHERE created_at &gt;= NOW() - INTERVAL '24 hours'
+                         GROUP BY date_trunc('hour', created_at)
+                  ) c ON c.bucket_key = bucket
+                 ORDER BY bucket
+            </when>
+            <when test='period == "D30"'>
+                SELECT bucket::timestamp AS time, COALESCE(c.cnt, 0) AS count
+                  FROM generate_series(
+                        date_trunc('day', NOW() - INTERVAL '29 days'),
+                        date_trunc('day', NOW()),
+                        INTERVAL '1 day') AS bucket
+                  LEFT JOIN (
+                        SELECT date_trunc('day', created_at) AS bucket_key, COUNT(*) AS cnt
+                          FROM tb_ai_conversation
+                         WHERE created_at &gt;= NOW() - INTERVAL '30 days'
+                         GROUP BY date_trunc('day', created_at)
+                  ) c ON c.bucket_key = bucket
+                 ORDER BY bucket
+            </when>
+            <otherwise>
+                SELECT bucket::timestamp AS time, COALESCE(c.cnt, 0) AS count
+                  FROM generate_series(
+                        date_trunc('day', NOW() - INTERVAL '6 days'),
+                        date_trunc('day', NOW()),
+                        INTERVAL '1 day') AS bucket
+                  LEFT JOIN (
+                        SELECT date_trunc('day', created_at) AS bucket_key, COUNT(*) AS cnt
+                          FROM tb_ai_conversation
+                         WHERE created_at &gt;= NOW() - INTERVAL '7 days'
+                         GROUP BY date_trunc('day', created_at)
+                  ) c ON c.bucket_key = bucket
+                 ORDER BY bucket
+            </otherwise>
+        </choose>
+    </select>
+
+    <select id="selectOverview" resultType="com.bluenet.web.infrastructure.repository.dataobject.query.AiOverviewQueryDO">
+        SELECT
+            (SELECT count(*) FROM tb_ai_conversation c WHERE c.last_active_at &gt;= #{from}) AS conversation_count,
+            (SELECT count(*) FROM tb_ai_turn t WHERE t.created_at &gt;= #{from}) AS question_count,
+            (SELECT count(*) FROM tb_ai_turn t
+              WHERE t.created_at &gt;= #{from} AND <include refid="actionExpr"/> = 'REFUSE') AS refused_count,
+            (SELECT count(*) FROM tb_ai_turn t
+              WHERE t.created_at &gt;= #{from} AND <include refid="fallbackExistsExpr"/>) AS fallback_count
+    </select>
+
+    <select id="selectGapTurns" resultType="com.bluenet.web.infrastructure.repository.dataobject.query.AiTurnSummaryQueryDO">
+        SELECT <include refid="turnSummaryColumns"/>
+          FROM tb_ai_turn t
+         WHERE 1 = 1
+        <choose>
+            <when test='gapType == "CLARIFY"'>
+           AND <include refid="actionExpr"/> = 'DIRECT'
+           AND <include refid="intentExpr"/> = 'CLARIFY'
+            </when>
+            <when test='gapType == "REFUSE"'>
+           AND <include refid="actionExpr"/> = 'REFUSE'
+            </when>
+            <when test='gapType == "FALLBACK"'>
+           AND <include refid="fallbackExistsExpr"/>
+            </when>
+            <otherwise>
+           AND 1 = 0
+            </otherwise>
+        </choose>
+         ORDER BY t.created_at DESC
+    </select>
+
+</mapper>

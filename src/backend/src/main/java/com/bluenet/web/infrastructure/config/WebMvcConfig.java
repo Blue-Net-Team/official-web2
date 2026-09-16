@@ -1,5 +1,6 @@
 package com.bluenet.web.infrastructure.config;
 
+import com.bluenet.web.infrastructure.config.converter.AiTraceStatisticsPeriodConverter;
 import com.bluenet.web.infrastructure.config.converter.AuditStatisticsPeriodConverter;
 import com.bluenet.web.infrastructure.config.converter.EnumConverterFactory;
 import com.bluenet.web.infrastructure.interceptor.RequestLoggingInterceptor;
@@ -24,6 +25,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
     public void addFormatters(FormatterRegistry registry) {
         registry.addConverterFactory(new EnumConverterFactory());
         registry.addConverter(new AuditStatisticsPeriodConverter());
+        registry.addConverter(new AiTraceStatisticsPeriodConverter());
     }
 
     @Bean
