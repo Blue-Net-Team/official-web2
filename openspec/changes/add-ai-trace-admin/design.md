@@ -206,6 +206,67 @@ content=f"\n[意图识别] 判定为 {intent_result.intent}，进入知识库检
 
 **理由**：用户明确选择纯只读。知识库缺口的判断是人工浏览会话列表后得出的结论，不是一个系统状态，因此不构成独立页面（早期原型中的缺口页已删除）。
 
+## 数据访问 SQL（已在真实数据上验证）
+
+读取层需要从 `events` JSONB 中提取意图与工具信息。下列查询已于 2026-09-16 在 `db_blue_net` 的真实采集数据上逐条跑通，Java 层直接沿用。
+
+### 意图与动作提取
+
+```sql
+jsonb_path_query_first(events, '$[*] ? (@.type == "intent")')->>'intent'  AS intent
+jsonb_path_query_first(events, '$[*] ? (@.type == "intent")')->>'action'  AS action
+```
+
+### 提问内的工具轮次（`tool_call.round` 的最大值）
+
+```sql
+(SELECT COALESCE(MAX((e->>'round')::int), 0)
+   FROM jsonb_array_elements(events) e
+  WHERE e->>'type' = 'tool_call') AS tool_rounds
+```
+
+### 是否触发兜底语义检索
+
+```sql
+(SELECT count(*)
+   FROM jsonb_array_elements(events) e
+  WHERE e->>'type' = 'tool_call' AND e->>'tool_name' = 'chunk_search') AS fallback_calls
+```
+
+### 检索工具使用分布
+
+```sql
+SELECT e->>'tool_name' AS tool, count(*) AS calls
+  FROM tb_ai_turn t, jsonb_array_elements(t.events) e
+ WHERE e->>'type' = 'tool_call'
+ GROUP BY 1 ORDER BY 2 DESC
+```
+
+### 意图 / 动作分布（按提问）
+
+```sql
+SELECT jsonb_path_query_first(events, '$[*] ? (@.type == "intent")')->>'intent' AS intent,
+       count(*) AS cnt
+  FROM tb_ai_turn GROUP BY 1 ORDER BY 2 DESC
+```
+
+### 会话量趋势（按会话，用 `generate_series` 补零）
+
+沿用 `AuditMapper.selectTrends` 的既有写法：以 `generate_series` 生成时间桶，
+对 `tb_ai_conversation.created_at` 做 `date_trunc` 聚合后左连接，保证无数据的桶也返回 0。
+
+### 筛选谓词
+
+列表的四类筛选均以 `EXISTS` 子查询实现，避免 `JOIN` 造成的行放大：
+
+```sql
+AND (:intent IS NULL OR EXISTS (
+      SELECT 1 FROM tb_ai_turn t2 WHERE t2.conversation_id = c.id
+        AND jsonb_path_query_first(t2.events, '$[*] ? (@.type == "intent")')->>'intent' = :intent))
+```
+
+关键词筛选作用于 `tb_ai_turn.user_input`（不能用富化后的消息），用 `ILIKE`。
+
 ## Risks / Trade-offs
 
 - **[prompt 快照体积]** 已实测（2026-09-16，一次真实检索对话）：
