@@ -13,8 +13,11 @@ import org.testcontainers.utility.DockerImageName;
 public class TestcontainersConfiguration {
 
     private static final DockerImageName POSTGRES_IMAGE = DockerImageName.parse("pgvector/pgvector:pg17");
+    // minio 已从 Docker Hub 下架（转向闭源），改从 quay.io 拉取。
+    // asCompatibleSubstituteFor 用于通过 MinIOContainer 对镜像名的校验。
     private static final DockerImageName MINIO_IMAGE = DockerImageName
-            .parse("minio/minio:RELEASE.2025-09-07T16-13-09Z");
+            .parse("quay.io/minio/minio:RELEASE.2025-09-07T16-13-09Z")
+            .asCompatibleSubstituteFor("minio/minio");
     private static final DockerImageName REDIS_IMAGE = DockerImageName.parse("redis:7");
 
     @Bean
