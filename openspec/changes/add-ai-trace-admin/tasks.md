@@ -72,13 +72,13 @@
 
 ## 8. 打包与端到端验证
 
-- [ ] 8.1 `cd src/backend && ./mvnw clean compile package` 编译打包后端产物
-- [ ] 8.2 构建并运行 `bluenet-api-service:latest` 镜像
-- [ ] 8.3 确认 compose 基础设施已启动（PostgreSQL / Redis / RabbitMQ / MinIO）
-- [ ] 8.4 检查 3000 端口占用情况，决定复用现有前端服务还是启动 dev
-- [ ] 8.5 Playwright 验证：发一次检索型对话 → 会话列表出现该会话 → 详情页能看到完整轨迹与 prompt
-- [ ] 8.6 Playwright 验证：发一次被拒答的问题 → 记录仍存在且事件序列中无检索类工具调用
-- [ ] 8.7 Playwright 验证：分析面板的意图与动作分布与真实数据一致
+- [x] 8.1 `cd src/backend && ./mvnw clean compile package` 编译打包后端产物
+- [x] 8.2 构建并运行 `bluenet-api-service:latest` 镜像
+- [x] 8.3 确认 compose 基础设施已启动（PostgreSQL / Redis / RabbitMQ / MinIO）
+- [x] 8.4 检查 3000 端口占用情况，决定复用现有前端服务还是启动 dev
+- [x] 8.5 Playwright 验证：发一次检索型对话 → 会话列表出现该会话 → 详情页能看到完整轨迹与 prompt
+- [x] 8.6 Playwright 验证：发一次被拒答的问题 → 记录仍存在且事件序列中无检索类工具调用
+- [x] 8.7 Playwright 验证：分析面板的意图与动作分布与真实数据一致
 
 ## 9. 收尾
 

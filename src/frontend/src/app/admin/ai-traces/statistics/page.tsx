@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Button, Card, Empty, Select, Spin } from 'antd'
+import { Column } from '@ant-design/charts'
 import { ReloadOutlined } from '@ant-design/icons'
 import { aiTraceService } from '@/apis/services/ai-trace.service'
 import type {
@@ -336,32 +337,22 @@ export default function AiTraceStatisticsPage() {
             {trend.length === 0 ? (
               <Empty description="该区间内没有会话" image={Empty.PRESENTED_IMAGE_SIMPLE} />
             ) : (
-              <div
-                className="flex items-end justify-center gap-3"
-                style={{ height: TREND_HEIGHT + 24 }}
-              >
-                {trend.map((point) => {
-                  const isPeak = point.count === trendMax && point.count > 0
-                  return (
-                    <div
-                      key={point.time}
-                      className="flex w-9 flex-col items-center justify-end gap-2"
-                    >
-                      <span
-                        className="w-[34px] rounded-t"
-                        style={{
-                          height: Math.max((point.count / trendMax) * TREND_HEIGHT, 2),
-                          background: isPeak ? '#fa8c16' : 'rgba(250,140,22,0.35)',
-                        }}
-                        title={`${point.time} · ${point.count}`}
-                      />
-                      <span className="font-mono text-[11px] text-white/25">
-                        {point.time.slice(5, 10)}
-                      </span>
-                    </div>
-                  )
-                })}
-              </div>
+              <Column
+                data={trend.map((point) => ({
+                  time: point.time.slice(5, 10),
+                  count: point.count,
+                }))}
+                xField="time"
+                yField="count"
+                height={TREND_HEIGHT + 24}
+                style={{
+                  fill: (datum: { count: number }) =>
+                    datum.count === trendMax && datum.count > 0
+                      ? '#fa8c16'
+                      : 'rgba(250,140,22,0.35)',
+                }}
+                tooltip={{ title: (datum: { time: string }) => datum.time }}
+              />
             )}
           </Card>
 
