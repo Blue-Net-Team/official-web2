@@ -182,9 +182,54 @@ export default function AiTraceConversationsPage() {
         </div>
       ),
     },
-    { title: '意图', key: 'intent', width: W.intent, render: () => null },
-    { title: '动作', key: 'action', width: W.action, render: () => null },
-    { title: '轮次', key: 'rounds', width: W.rounds, render: () => null },
+    {
+      title: '意图',
+      key: 'intent',
+      width: W.intent,
+      render: (_, record) => {
+        // 会话行聚合其下提问的意图：默认折叠状态下也要能看出问了哪类问题
+        const labels = [...new Set((record.turns ?? []).map((t) => intentLabel(t.intent)))]
+        if (labels.length === 0) return <span className="text-white/25">—</span>
+        return (
+          <span className="text-xs text-white/60">
+            {labels[0]}
+            {labels.length > 1 ? (
+              <span className="text-white/35"> +{labels.length - 1}</span>
+            ) : null}
+          </span>
+        )
+      },
+    },
+    {
+      title: '动作',
+      key: 'action',
+      width: W.action,
+      render: (_, record) => {
+        const actions = [
+          ...new Set((record.turns ?? []).map((t) => t.action).filter(Boolean)),
+        ] as string[]
+        if (actions.length === 0) return <span className="text-white/25">—</span>
+        return (
+          <div className="flex items-center gap-1">
+            {actions.slice(0, 2).map((action) => (
+              <ActionTag key={action} action={action} />
+            ))}
+          </div>
+        )
+      },
+    },
+    {
+      title: '轮次',
+      key: 'rounds',
+      width: W.rounds,
+      render: (_, record) => {
+        const rounds = (record.turns ?? []).reduce<number>(
+          (sum, turn) => sum + (turn.toolRounds ?? 0),
+          0
+        )
+        return <span className="text-xs text-white/60">{rounds > 0 ? `${rounds} 轮` : '—'}</span>
+      },
+    },
     {
       title: '消息数',
       dataIndex: 'messageCount',
