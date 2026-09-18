@@ -33,7 +33,7 @@ _log = logger.bind(module="RagAgent")
 
 # 分类服务不可用时的固定澄清话术（不进入检索，防绕开）
 _CLARIFICATION_FALLBACK_REPLY = (
-    "抱歉，我暂时没能理解你的问题。我主要解答报名加入、考核流程、团队介绍和软件下载相关问题，"
+    "抱歉，我暂时没能理解你的问题。我主要解答报名、考核流程、团队介绍、软件下载，以及报销、学习路线等团队相关问题，"
     "你可以换个方式描述一下吗？"
 )
 
@@ -247,7 +247,7 @@ class RagAgent:
         except Exception as exc:
             _log.error(f"拒绝话术生成失败: {exc}")
             return (
-                "抱歉，我目前主要解答报名加入、考核流程、团队介绍和软件下载相关问题。"
+                "抱歉，我目前主要解答报名、考核流程、团队介绍、软件下载，以及报销、学习路线等团队相关问题。"
                 "你的问题我可能无法直接回答，建议关注招新群通知或入队后向对应方向的同学请教。"
             )
 
@@ -259,7 +259,7 @@ class RagAgent:
             return self._llm.invoke(self._direct_reply_messages(user_input))
         except Exception as exc:
             _log.error(f"直接回复生成失败: {exc}")
-            return "你好！我是蓝网团队的 AI 助手，可以帮你解答报名、考核流程、团队介绍和软件下载相关问题，请问有什么可以帮你的？"
+            return "你好！我是蓝网团队的 AI 助手，可以帮你解答报名、考核流程、团队介绍、软件下载，以及报销、学习路线等团队相关问题，请问有什么可以帮你的？"
 
     def _stream_guard_reply(self, messages: list[dict]) -> Iterator[StreamChunk]:
         """流式生成拒绝/直接回复，逐段 yield content 事件。
@@ -279,7 +279,7 @@ class RagAgent:
         except Exception as exc2:
             _log.error(f"非流式兜底也失败: {exc2}")
             fallback = (
-                "抱歉，我目前主要解答报名加入、考核流程、团队介绍和软件下载相关问题。"
+                "抱歉，我目前主要解答报名、考核流程、团队介绍、软件下载，以及报销、学习路线等团队相关问题。"
                 "你的问题我可能无法直接回答。"
             )
         yield StreamChunk(type="content", content=fallback)

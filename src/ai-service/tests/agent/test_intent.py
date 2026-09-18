@@ -20,6 +20,7 @@ from agent.intent import (
     INTENT_CLARIFY,
     INTENT_GREETING,
     INTENT_REGISTRATION,
+    INTENT_TEAM_KNOWLEDGE,
     IntentClassifier,
     IntentResult,
     intent_to_action,
@@ -38,6 +39,7 @@ from agent.intent import (
         ("ASSESSMENT_PROCESS", ACTION_RETRIEVE),
         ("LAB_INTRODUCTION", ACTION_RETRIEVE),
         ("SOFTWARE_DOWNLOAD", ACTION_RETRIEVE),
+        (INTENT_TEAM_KNOWLEDGE, ACTION_RETRIEVE),
         (INTENT_BLOCKED_ASSESSMENT_CONTENT, ACTION_REFUSE),
         (INTENT_BLOCKED_CODING, ACTION_REFUSE),
         (INTENT_BLOCKED_TECH_SUPPORT, ACTION_REFUSE),
@@ -443,13 +445,31 @@ def test_intent_constants_disjoint():
     assert BLOCKED_INTENTS.isdisjoint(DIRECT_INTENTS)
 
 
-def test_intent_constants_complete():
+def test_team_knowledge_is_allowed_intent():
+    """TEAM_KNOWLEDGE 属于允许检索集合。"""
+    assert INTENT_TEAM_KNOWLEDGE in ALLOWED_INTENTS
+
+
+def test_classification_prompts_cover_team_knowledge():
+    """分类提示词（含流式版）必须包含 TEAM_KNOWLEDGE 定义与关键 few-shot 示例。"""
+    from agent.intent import CLASSIFICATION_SYSTEM_PROMPT, STREAM_CLASSIFICATION_SYSTEM_PROMPT
+
+    for prompt in (CLASSIFICATION_SYSTEM_PROMPT, STREAM_CLASSIFICATION_SYSTEM_PROMPT):
+        assert "TEAM_KNOWLEDGE" in prompt
+        assert "报销" in prompt
+        assert "学习路线" in prompt
+        # 拦截优先 few-shot：团队相关但命中 BLOCKED 特征仍拒绝
+        assert "自动报名" in prompt
+
+
+
     """确保所有定义的意图常量都在对应集合中。"""
     all_intents = {
         INTENT_REGISTRATION,
         "ASSESSMENT_PROCESS",
         "LAB_INTRODUCTION",
         "SOFTWARE_DOWNLOAD",
+        INTENT_TEAM_KNOWLEDGE,
         INTENT_BLOCKED_ASSESSMENT_CONTENT,
         INTENT_BLOCKED_CODING,
         INTENT_BLOCKED_TECH_SUPPORT,
