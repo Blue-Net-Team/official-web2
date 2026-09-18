@@ -186,6 +186,7 @@ services:
       POSTGRES_DB: db_blue_net
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: ${DB_PASSWORD:-dg24Nihng@49*}
+      TZ: Asia/Shanghai
     volumes:
       - bluenet_database_data:/var/lib/postgresql/data
     healthcheck:
