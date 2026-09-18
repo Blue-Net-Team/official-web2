@@ -28,4 +28,4 @@
 ## 5. 收尾
 
 - [x] 5.1 `git commit`，提交信息遵循 `type: description` 规范并 `ref #60`
-- [ ] 5.2 更新 `openspec/changes/ai-intent-team-knowledge` 之外无需动文档（ai-service 提示词即文档），等待用户确认后归档
+- [x] 5.2 更新 `openspec/changes/ai-intent-team-knowledge` 之外无需动文档（ai-service 提示词即文档），等待用户确认后归档
