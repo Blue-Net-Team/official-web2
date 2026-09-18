@@ -18,7 +18,7 @@ on:
         default: all
 
 permissions:
-  contents: read
+  contents: write
   packages: write
 
 concurrency:
@@ -33,6 +33,7 @@ jobs:
     permissions:
       contents: read
       actions: read
+      packages: read
     outputs:
       environment: ${{ steps.resolve.outputs.environment }}
       api_enabled: ${{ steps.resolve.outputs.api_enabled }}
@@ -44,6 +45,8 @@ jobs:
       ai_enabled: ${{ steps.resolve.outputs.ai_enabled }}
       ai_tag: ${{ steps.resolve.outputs.ai_tag }}
       infra_enabled: ${{ steps.resolve.outputs.infra_enabled }}
+      infra_tag: ${{ steps.resolve.outputs.infra_tag }}
+      deploy_ref: ${{ steps.mode.outputs.ref }}
 
     steps:
     - name: Determine event mode
@@ -61,13 +64,11 @@ jobs:
     - uses: actions/checkout@v4
       with:
         ref: ${{ steps.mode.outputs.ref }}
+        fetch-depth: 0
 
-    - name: Download changed-services.json (auto path only)
+    - name: Login to ghcr.io (镜像存在性校验)
       if: steps.mode.outputs.is_auto == 'true'
-      env:
-        GH_TOKEN: ${{ github.token }}
-      run: |
-        gh run download --repo "${{ github.repository }}" "${{ steps.mode.outputs.run_id }}" -n changed-services -D .
+      run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
 
     - name: Resolve deployment context
       id: resolve
@@ -89,6 +90,18 @@ jobs:
         fi
         echo "environment=$ENV" >> "$GITHUB_OUTPUT"
 
+        # CI 失败不触发自动部署（既有 spec「CD 必须有对应 CI」要求，此前实现缺失）
+        if [ "$IS_AUTO" = "true" ] && [ "${{ github.event.workflow_run.conclusion }}" != "success" ]; then
+          echo "CI conclusion=${{ github.event.workflow_run.conclusion }}（非 success），跳过本次自动 CD"
+          for SVC in api frontend judge ai infra; do
+            echo "${SVC}_enabled=false" >> "$GITHUB_OUTPUT"
+            echo "${SVC}_tag=" >> "$GITHUB_OUTPUT"
+          done
+          exit 0
+        fi
+
+        OWNER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+
         for SVC in api frontend judge ai infra; do
           # trigger 文件存在性 + 版本号
           if [ -f "trigger/$SVC" ]; then
@@ -99,15 +112,34 @@ jobs:
             VERSION=""
           fi
 
-          # 自动路径：versionBumped && trigger 存在；手动路径：target 选择 && trigger 存在
           if [ "$IS_AUTO" = "true" ]; then
-            BUMPED=$(jq -r ".\"$SVC\".versionBumped" changed-services.json 2>/dev/null || echo false)
-            if [ "$BUMPED" = "true" ] && [ "$EXISTS" = "true" ]; then
+            # 状态差检测：当前 trigger 版本 ≠ 最近成功部署版本（deploy/<svc>/v<version> 标记）
+            DEPLOYED_TAG=$(git tag -l "deploy/$SVC/v*" | sort -V | tail -1 || true)
+            DEPLOYED_VERSION=""
+            if [ -n "$DEPLOYED_TAG" ]; then
+              DEPLOYED_VERSION="${DEPLOYED_TAG#deploy/$SVC/v}"
+            fi
+
+            if [ "$EXISTS" = "true" ] && [ "$VERSION" != "$DEPLOYED_VERSION" ]; then
               ENABLED=true
             else
               ENABLED=false
             fi
+
+            # 镜像存在性守卫：CI 构建镜像的服务（api/judge/ai），漂移但镜像缺失则跳过+告警（不 fail）
+            if [ "$ENABLED" = "true" ]; then
+              case "$SVC" in
+                api|judge|ai)
+                  IMAGE="ghcr.io/$OWNER/bluenet-$SVC-service:$VERSION"
+                  if ! docker manifest inspect "$IMAGE" >/dev/null 2>&1; then
+                    ENABLED=false
+                    echo "::warning::$SVC 版本漂移（trigger=$VERSION，已部署=${DEPLOYED_VERSION:-none}）但镜像 $IMAGE 未在 ghcr.io 存在，跳过部署；待能重建该镜像的提交自愈"
+                  fi
+                  ;;
+              esac
+            fi
           else
+            # 手动路径：target 选择 && trigger 存在
             if { [ "$TARGET" = "all" ] || [ "$TARGET" = "$SVC" ]; } && [ "$EXISTS" = "true" ]; then
               ENABLED=true
             else
@@ -124,7 +156,7 @@ jobs:
 
           echo "${SVC}_enabled=$ENABLED" >> "$GITHUB_OUTPUT"
           echo "${SVC}_tag=$TAG" >> "$GITHUB_OUTPUT"
-          echo "== $SVC: enabled=$ENABLED tag=$TAG env=$ENV"
+          echo "== $SVC: enabled=$ENABLED tag=$TAG env=$ENV deployed=${DEPLOYED_VERSION:-n/a}"
         done
 
   # ==================== 基础设施 CD ====================
@@ -200,3 +232,112 @@ jobs:
     with:
       environment: ${{ needs.resolve-context.outputs.environment }}
     secrets: inherit
+
+  # ==================== 部署成功后打 deploy/<svc>/v<version> 标记 ====================
+  # 仅在版本化部署（tag 为 x.y.z）时写入；浮动 tag 手动部署不覆盖部署版本记录。
+  # 部署失败（needs 失败）时对应 job 被跳过，不会打标记。
+
+  tag-api:
+    needs: [resolve-context, cd-api]
+    if: ${{ !failure() && !cancelled() && needs.resolve-context.outputs.api_enabled == 'true' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        ref: ${{ needs.resolve-context.outputs.deploy_ref }}
+    - name: Tag deployed version
+      run: |
+        TAG="${{ needs.resolve-context.outputs.api_tag }}"
+        if echo "$TAG" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+          git tag -f "deploy/api/v$TAG"
+          git push -f origin "deploy/api/v$TAG"
+          echo "✅ 已记录 api 部署版本 deploy/api/v$TAG"
+        else
+          echo "浮动 tag ($TAG)，跳过打标记"
+        fi
+
+  tag-judge:
+    needs: [resolve-context, cd-judge]
+    if: ${{ !failure() && !cancelled() && needs.resolve-context.outputs.judge_enabled == 'true' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        ref: ${{ needs.resolve-context.outputs.deploy_ref }}
+    - name: Tag deployed version
+      run: |
+        TAG="${{ needs.resolve-context.outputs.judge_tag }}"
+        if echo "$TAG" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+          git tag -f "deploy/judge/v$TAG"
+          git push -f origin "deploy/judge/v$TAG"
+          echo "✅ 已记录 judge 部署版本 deploy/judge/v$TAG"
+        else
+          echo "浮动 tag ($TAG)，跳过打标记"
+        fi
+
+  tag-ai:
+    needs: [resolve-context, cd-ai]
+    if: ${{ !failure() && !cancelled() && needs.resolve-context.outputs.ai_enabled == 'true' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        ref: ${{ needs.resolve-context.outputs.deploy_ref }}
+    - name: Tag deployed version
+      run: |
+        TAG="${{ needs.resolve-context.outputs.ai_tag }}"
+        if echo "$TAG" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+          git tag -f "deploy/ai/v$TAG"
+          git push -f origin "deploy/ai/v$TAG"
+          echo "✅ 已记录 ai 部署版本 deploy/ai/v$TAG"
+        else
+          echo "浮动 tag ($TAG)，跳过打标记"
+        fi
+
+  tag-frontend:
+    needs: [resolve-context, cd-frontend]
+    if: ${{ !failure() && !cancelled() && needs.resolve-context.outputs.frontend_enabled == 'true' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        ref: ${{ needs.resolve-context.outputs.deploy_ref }}
+    - name: Tag deployed version
+      run: |
+        TAG="${{ needs.resolve-context.outputs.frontend_tag }}"
+        if echo "$TAG" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+          git tag -f "deploy/frontend/v$TAG"
+          git push -f origin "deploy/frontend/v$TAG"
+          echo "✅ 已记录 frontend 部署版本 deploy/frontend/v$TAG"
+        else
+          echo "浮动 tag ($TAG)，跳过打标记"
+        fi
+
+  tag-infra:
+    needs: [resolve-context, cd-infra]
+    if: ${{ !failure() && !cancelled() && needs.resolve-context.outputs.infra_enabled == 'true' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        ref: ${{ needs.resolve-context.outputs.deploy_ref }}
+    - name: Tag deployed version
+      run: |
+        TAG="${{ needs.resolve-context.outputs.infra_tag }}"
+        if echo "$TAG" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+          git tag -f "deploy/infra/v$TAG"
+          git push -f origin "deploy/infra/v$TAG"
+          echo "✅ 已记录 infra 部署版本 deploy/infra/v$TAG"
+        else
+          echo "浮动 tag ($TAG)，跳过打标记"
+        fi

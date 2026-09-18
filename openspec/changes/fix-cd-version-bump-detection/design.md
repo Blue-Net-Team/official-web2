@@ -62,7 +62,19 @@ deploy/ai/v0.1.3
 - 部署成功才打标记 → `V_deployed` 始终代表「实际在跑的版本」
 - 部署失败不打标记 → 下次仍会检测到状态差并重新部署
 
-### D3. 打标记的步骤放在部署成功确认之后
+**去掉「本次推送变更路径内」这个条件**（原 spec 条件 1）。状态差检测本身就蕴含了「该不该部署」，与本次提交动了哪个服务无关。这是修复生效的前提——本次事故里，修复 minio 的提交只动了 `src/backend`，若保留「变更路径内」条件，只能救回 api，ai/frontend 依旧漏掉，达不到「夹了无关提交也不漏」的目标。
+
+### D3. 镜像存在性守卫（仅 CI 构建镜像的服务）
+
+**决定**：对镜像由 CI 构建的服务（`api`、`judge`、`ai`），在启用部署前用 `docker manifest inspect ghcr.io/<owner>/bluenet-<svc>-service:<当前版本>` 校验镜像存在。不存在则**跳过该服务 + 输出 `::warning::`**，不让整个 CD 失败。
+
+**理由**：CI 的构建 job `needs: [test]`——测试挂则镜像不构建。提升版本的提交若 CI 失败，镜像可能根本没产出；去掉「变更路径内」条件后，任何提交都可能触发一个镜像缺失的服务部署，导致 `docker pull` 失败并级联阻塞（api 失败会挡住 backend-gate → frontend）。守卫把「静默跳过」和「失败级联」都降级成「可见告警 + 自愈」。
+
+**不适用**：`frontend`（镜像在 cd-frontend.yml 里现构建，无缺失问题）、`infra`（无独立镜像）。
+
+**自愈性**：镜像缺失只是暂时跳过；一旦某个提交重建了该服务镜像，下一次 CD 检测到镜像存在就会部署。
+
+### D4. 打标记的步骤放在部署成功确认之后
 
 **决定**：每个服务的 CD job 在部署完成并通过健康检查后，`git tag -f deploy/<svc>/v<version> <sha> && git push -f origin <tag>`。
 
@@ -70,7 +82,7 @@ deploy/ai/v0.1.3
 
 **风险点**：并发部署同一服务时两个 job 同时写同一个 tag。CD 已有 `concurrency: group: cd-<branch>` + `cancel-in-progress: true`，同一分支同一时刻只有一个 CD 在跑，所以这个窗口实际不存在。
 
-### D4. 首个 bump 的边界：无基准即视为需要部署
+### D5. 首个 bump 的边界：无基准即视为需要部署
 
 **决定**：若某服务没有对应的 `deploy/` 标记，检测 SHALL 视为需要部署。
 
@@ -84,11 +96,11 @@ deploy/ai/v0.1.3
 
 ## Migration Plan
 
-1. 修改 `cd-deploy.yml`：`resolve-context` 的 bump 检测逻辑改为「当前 trigger 版本 vs 最近部署 tag」
-2. 各服务 CD job 末尾增加「部署成功后打 `deploy/<svc>/v<version>` 标记」步骤
-3. 调整 CD job 的 `permissions` 增加 `contents: write`
+1. 修改 `cd-deploy.yml`：`resolve-context` 的 bump 检测逻辑改为「当前 trigger 版本 vs 最近部署 tag」，去掉「本次推送变更路径内」条件；对 api/judge/ai 增加镜像存在性守卫
+2. 各服务 CD job 末尾增加「部署成功后打 `deploy/<svc>/v<version>` 标记」步骤（仅版本化部署）
+3. 调整 `cd-deploy.yml` 及各 `cd-<svc>.yml` 的 `permissions`：`contents: write`（写 tag）；`resolve-context` 增加 `packages: read`（镜像存在性校验）
 4. 用一次真实 bump 验证：提一个版本号提升，CI 绿后确认自动部署 + 标记写入
-5. 用一个「提升版本但 CI 失败 → 修复提交 CI 通过」的场景回归验证状态差检测
+5. 用一个「提升版本但 CI 失败 → 无关修复提交 CI 通过」的场景回归验证状态差检测能救回所有受影响服务
 
 回滚：恢复 `cd-deploy.yml` 的检测逻辑即可；已打的 `deploy/` 标记不删除，只是不再被读取。
 

@@ -7,24 +7,37 @@
 每次成功部署后，CD SHALL 为该服务创建或更新一个 git 标记 `deploy/<svc>/v<version>`，记录「该服务最近一次成功部署的版本号」。
 
 自动 CD SHALL 仅在满足以下全部条件时执行该服务部署：
-1. 该服务在本次推送的变更路径内；**且**
-2. `trigger/<svc>` 文件存在；**且**
-3. `trigger/<svc>` 的当前版本号 ≠ 该服务最近一次成功部署的版本号（以 `deploy/<svc>/v<version>` 标记为准）。
+1. `trigger/<svc>` 文件存在；**且**
+2. `trigger/<svc>` 的当前版本号 ≠ 该服务最近一次成功部署的版本号（以 `deploy/<svc>/v<version>` 标记为准）。
 
-若某服务从未成功部署过（不存在对应 `deploy/` 标记），则条件 3 SHALL 视为满足（即首次 bump 必须触发部署）。
+检测基准 SHALL 是「当前版本 vs 最近部署版本」的状态差，而非「本次推送的 diff」。因此一次无关提交（未改动该服务）的推送，只要该服务版本号仍未部署，SHALL 触发该服务部署——确保提升版本的提交即使 CI 失败，部署信号也不会丢失。
 
-仅变更服务代码而未变更 `trigger/<svc>` 版本号的推送，CI SHALL 照常构建镜像但 SHALL NOT 自动部署该服务。
+若某服务从未成功部署过（不存在对应 `deploy/` 标记），则条件 2 SHALL 视为满足（即首次 bump 必须触发部署）。
+
+对于镜像由 CI 构建的服务（`api`、`judge`、`ai`），在启用部署前 SHALL 校验 ghcr.io 上存在 `ghcr.io/<owner>/bluenet-<svc>-service:<当前版本>` 镜像。若镜像不存在，CD SHALL 跳过该服务部署并输出可见警告，但 MUST NOT 使整个 CD 运行失败——等待能重建该镜像的后续提交自愈。`frontend`（镜像在 CD 中构建）与 `infra`（无独立镜像）不适用该校验。
+
+仅变更服务代码而未变更 `trigger/<svc>` 版本号（且当前版本已部署）的推送，CI SHALL 照常构建镜像但 SHALL NOT 自动部署该服务。
 
 `trigger/<svc>` 内容不符合 `x.y.z` 格式时，该服务 CI 构建 SHALL 失败。
 
 #### Scenario: 版本号 bump 触发自动部署
-- **WHEN** 推送修改了 `trigger/api` 内容（从 `1.4.0` 改为 `1.5.0`），且 `trigger/api` 存在，且 api 最近一次成功部署的版本为 `1.4.0`
+- **WHEN** 推送修改了 `trigger/api` 内容（从 `1.4.0` 改为 `1.5.0`），`trigger/api` 存在，api 最近部署版本为 `1.4.0`，且 `api:1.5.0` 镜像已在 ghcr.io 存在
 - **THEN** CI 构建 api 镜像并打 `1.5.0` tag，编排器自动触发 api 的 CD 部署该版本
 
 #### Scenario: 失败的 CI 不丢失部署信号
-- **WHEN** 提升版本的提交因无关原因 CI 失败，随后一个修复提交的 CI 通过，且该服务最近一次成功部署的版本仍为旧版本
+- **WHEN** 提升版本的提交因无关原因 CI 失败，随后一个修复提交的 CI 通过，且该服务最近部署版本仍为旧版本
 - **THEN** 修复提交的 CD 检测到「当前 trigger 版本 ≠ 最近部署版本」，自动部署该服务
 - **AND** 无需人工手动 dispatch
+
+#### Scenario: 无关提交也可恢复未部署的版本
+- **WHEN** `trigger/ai` 已提升到 `0.1.3` 但因某次 CI 失败未部署，随后一个只改了 `src/backend` 的提交 CI 通过，且 `ai:0.1.3` 镜像已存在
+- **THEN** CD 检测到 ai 版本漂移（`0.1.3` ≠ 已部署 `0.1.2`），自动部署 ai
+- **AND** 即使本次提交未改动 ai 服务
+
+#### Scenario: 镜像缺失时跳过并告警而非失败
+- **WHEN** `trigger/api` 当前版本与最近部署版本不同，但 ghcr.io 上不存在对应版本镜像
+- **THEN** CD 跳过 api 部署，输出 `::warning::` 说明版本漂移但镜像未构建
+- **AND** CD 运行不因此失败，不阻塞其他服务
 
 #### Scenario: 已部署到当前版本则不重复部署
 - **WHEN** 当前 `trigger/api` 版本等于 api 最近一次成功部署的版本
@@ -34,14 +47,14 @@
 - **WHEN** 某服务存在 `trigger/<svc>` 但从未成功部署过（无 `deploy/<svc>/v<version>` 标记）
 - **THEN** CD SHALL 将其视为需要部署
 
-#### Scenario: 仅改代码不部署
-- **WHEN** 本次推送只修改了 `src/backend/**`，`trigger/api` 内容未变，且当前版本已部署
-- **THEN** CI 照常测试并构建 api 镜像，但编排器不自动部署 api
-
 #### Scenario: 部署成功后才打标记
 - **WHEN** 某服务部署成功
 - **THEN** CD SHALL 创建或更新 `deploy/<svc>/v<version>` 标记指向当前提交
 - **AND** 部署失败的服务 MUST NOT 被打上标记
+
+#### Scenario: 浮动 tag 手动部署不覆盖部署版本记录
+- **WHEN** 手动 CD 以浮动 tag（`latest`/`develop`）部署某服务
+- **THEN** CD MUST NOT 更新 `deploy/<svc>/v<version>` 标记（仅版本化部署才记录）
 
 #### Scenario: 删除触发文件关闭 CD
 - **WHEN** 运维删除 `trigger/frontend` 文件
