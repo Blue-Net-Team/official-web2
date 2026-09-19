@@ -37,20 +37,20 @@
 ## 6. 构建与打包
 
 - [x] 6.1 执行 `cd src/backend && ./mvnw clean compile package`，确认构建成功
-- [ ] 6.2 运行 `docker build -t bluenet-api-service:latest -f docker/api-service.Dockerfile .` 构建后端镜像
+- [x] 6.2 运行 `docker build -t bluenet-api-service:latest -f docker/api-service.Dockerfile .` 构建后端镜像
 
 ## 7. 部署与端到端验证
 
-- [ ] 7.1 按 `docker compose -p bluenet --profile infra up -d` 确认基础设施已启动
-- [ ] 7.2 启动后端容器（`backend-api-dev`，端口 8080，`--env-file docker/.env`，网络 `bluenet_network`）
-- [ ] 7.3 确认 GitHub App 配置已启用：启动日志出现"GitHub Issue 同步功能已启用"，且 `github.apps.issue-sync.*` 环境变量齐全
-- [ ] 7.4 检查 3000 端口占用情况；已被占用时直接复用现有前端服务，禁止重复启动
-- [ ] 7.5 使用 Playwright 打开站点，通过 FloatButton 提交一条真实 Bug 报告，记录报告 ID
-- [ ] 7.6 确认 GitHub 仓库出现对应 Issue，且其 `body` 含 `<!-- bluenet-bug-report -->` 标记
-- [ ] 7.7 刷新后台 `/admin/bug-report`，确认该报告行展示 `#<编号>` 且链接可跳转到对应 Issue（对应 issue #62 的核心验收点）
-- [ ] 7.8 打开该报告详情，确认编号与链接同样正确展示
-- [ ] 7.9 查询数据库确认写回成功：`SELECT id, github_issue_number, github_issue_url FROM tb_bug_report WHERE id = <报告ID>`
-- [ ] 7.10 检查后端日志，确认不再出现 `UnrecognizedPropertyException`，且无"已创建但未写回"错误日志
+- [x] 7.1 按 `docker compose -p bluenet --profile infra up -d` 确认基础设施已启动
+- [x] 7.2 启动后端容器（`backend-api-dev`，端口 8080，`--env-file docker/.env`，网络 `bluenet_network`）
+- [x] 7.3 确认 GitHub App 配置已启用：启动日志出现"GitHub Issue 同步功能已启用"，且 `github.apps.issue-sync.*` 环境变量齐全
+- [x] 7.4 检查 3000 端口占用情况；已被占用时直接复用现有前端服务，禁止重复启动
+- [x] 7.5 使用 Playwright 打开站点，通过 FloatButton 提交一条真实 Bug 报告，记录报告 ID
+- [x] 7.6 确认 GitHub 仓库出现对应 Issue，且其 `body` 含 `<!-- bluenet-bug-report -->` 标记
+- [x] 7.7 刷新后台 `/admin/bug-report`，确认该报告行展示 `#<编号>` 且链接可跳转到对应 Issue（对应 issue #62 的核心验收点）
+- [x] 7.8 打开该报告详情，确认编号与链接同样正确展示
+- [x] 7.9 查询数据库确认写回成功：`SELECT id, github_issue_number, github_issue_url FROM tb_bug_report WHERE id = <报告ID>`
+- [x] 7.10 检查后端日志，确认不再出现 `UnrecognizedPropertyException`，且无"已创建但未写回"错误日志
 
 ## 8. 收尾
 
