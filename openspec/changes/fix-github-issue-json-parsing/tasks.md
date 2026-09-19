@@ -36,7 +36,7 @@
 
 ## 6. 构建与打包
 
-- [ ] 6.1 执行 `cd src/backend && ./mvnw clean compile package`，确认构建成功
+- [x] 6.1 执行 `cd src/backend && ./mvnw clean compile package`，确认构建成功
 - [ ] 6.2 运行 `docker build -t bluenet-api-service:latest -f docker/api-service.Dockerfile .` 构建后端镜像
 
 ## 7. 部署与端到端验证
@@ -54,6 +54,27 @@
 
 ## 8. 收尾
 
-- [ ] 8.1 确认本次变更未修改既有 `openspec/specs/bug-report/spec.md` 与 `admin-bug-report-management/spec.md` 以外的能力定义
+- [x] 8.1 确认本次变更未修改既有 `openspec/specs/bug-report/spec.md` 与 `admin-bug-report-management/spec.md` 以外的能力定义
 - [ ] 8.2 在 PR 描述中关联 issue #62（使用 `ref #62`，禁止使用 `fixes` / `close` 关键字）
 - [ ] 8.3 记录历史孤儿 Issue（#60 → bugReport 11、#61 → bugReport 12）的处理建议，作为后续独立变更的输入
+
+---
+
+## 实施说明（2026-09-19）
+
+已提交：`648fb16b`（修复与回归测试）、`685c34c7`（测试规范与任务进度）。
+
+- **6.1 已完成**：`./mvnw compile package -DskipTests` 打包成功，产物 `target/api-service-0.1.0-SNAPSHOT.jar`（78M），并已核验新代码进入产物。`clean` 因 VS Code Java 语言服务器（JDT）锁定 `target/classes` 未能执行，改为增量打包，不影响产物正确性。
+- **8.1 已核验**：`git diff` 确认未改动 `openspec/specs/` 下任何已归档能力定义，变更仅以 delta spec 形式存在于本次变更目录。
+- **6.2 / 7.x 顺延**：Docker 镜像构建、容器部署与真实 GitHub 端到端验证交由维护者在 CI 或服务器执行。
+- **8.3 已记录**：历史孤儿 Issue（#60 → bugReport 11、#61 → bugReport 12）的处理建议已记入 `design.md` 的 Open Questions 与「Non-Goals」，作为后续独立变更的输入。
+
+**验证证据**：
+
+| 范围 | 结果 |
+| --- | --- |
+| `GitHubIssueClientTest`（红灯阶段） | 7 个用例以 `UnrecognizedPropertyException` 失败，复现生产堆栈 |
+| `GitHubIssueClientTest`（修复后） | 13/13 通过 |
+| `GitHubIssueClientTest` + `GitHubIssuePollingJobTest` | 25/25 通过 |
+| `BugReportAppServiceImplIntegrationTest` + `BugReportRepositoryImplIntegrationTest` | 12/12 通过 |
+| 后端全量 `./mvnw test` | 830/830 通过，BUILD SUCCESS（8:59） |
