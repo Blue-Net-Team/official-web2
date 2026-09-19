@@ -2,13 +2,16 @@ package com.bluenet.web.infrastructure.github;
 
 import com.bluenet.web.infrastructure.config.GitHubAppProperties;
 import com.bluenet.web.infrastructure.config.GitHubAppsProperties;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.*;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.Instant;
@@ -18,7 +21,6 @@ import java.util.List;
 
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class GitHubIssueClient {
 
     private static final String GITHUB_CREATE_ISSUE_URL_TEMPLATE = "%s/repos/%s/%s/issues";
@@ -29,8 +31,29 @@ public class GitHubIssueClient {
 
     private final GitHubAppProperties properties;
     private final GitHubAppTokenService tokenService;
-    private final ObjectMapper objectMapper = new ObjectMapper();
+
+    /**
+     * 用于解析 GitHub API 响应的 ObjectMapper。
+     * <p>
+     * 基于容器注入的实例拷贝，并显式关闭 {@code FAIL_ON_UNKNOWN_PROPERTIES}。
+     * </p>
+     * <p>
+     * 原因：GitHub 作为第三方 API 会持续新增字段（真实 Issue 响应约 40 个字段，而本地响应类型仅声明少数几个）， 严格模式会直接抛出
+     * {@code UnrecognizedPropertyException}，导致 Issue 已在 GitHub 创建却无法写回本地记录。 不直接使用类内
+     * {@code new ObjectMapper()} 是为了与项目其余部分保持一致（如 Webhook 链路）， 避免配置再次分裂。
+     * </p>
+     */
+    private final ObjectMapper objectMapper;
+
     private final RestTemplate restTemplate = new RestTemplate();
+
+    public GitHubIssueClient(GitHubAppProperties properties, GitHubAppTokenService tokenService,
+            ObjectMapper objectMapper) {
+        this.properties = properties;
+        this.tokenService = tokenService;
+        this.objectMapper = objectMapper.copy()
+                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    }
 
     /**
      * 在配置的 GitHub 仓库中创建 Issue。
@@ -62,27 +85,56 @@ public class GitHubIssueClient {
         HttpHeaders headers = createHeaders(accessToken);
         headers.setContentType(MediaType.APPLICATION_JSON);
 
+        String jsonBody;
         try {
-            String jsonBody = objectMapper.writeValueAsString(requestBody);
-            HttpEntity<String> request = new HttpEntity<>(jsonBody, headers);
-
-            ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, request, String.class);
-
-            if (response.getStatusCode() != HttpStatus.CREATED || response.getBody() == null) {
-                throw new RuntimeException(
-                        "GitHub API error: failed to create issue, status=" + response.getStatusCode());
-            }
-
-            GitHubIssueCreateResponse result = objectMapper
-                    .readValue(response.getBody(), GitHubIssueCreateResponse.class);
-            return new GitHubIssueCreateResult(result.number(), result.htmlUrl(), result.title());
-        } catch (RuntimeException e) {
-            log.error("Failed to create GitHub issue: title={}", title, e);
-            throw e;
-        } catch (Exception e) {
-            log.error("Failed to create GitHub issue: title={}", title, e);
-            throw new RuntimeException("Failed to create GitHub issue", e);
+            jsonBody = objectMapper.writeValueAsString(requestBody);
+        } catch (JsonProcessingException e) {
+            log.error("Failed to serialize GitHub API request: method=createIssue, title={}", title, e);
+            throw new RuntimeException("Failed to serialize GitHub API request: createIssue", e);
         }
+
+        ResponseEntity<String> response;
+        try {
+            HttpEntity<String> request = new HttpEntity<>(jsonBody, headers);
+            response = restTemplate.exchange(url, HttpMethod.POST, request, String.class);
+        } catch (RestClientException e) {
+            log.error("Failed to call GitHub API: method=createIssue, url={}, title={}", url, title, e);
+            throw new RuntimeException("Failed to call GitHub API: createIssue", e);
+        }
+
+        if (response.getStatusCode() != HttpStatus.CREATED || response.getBody() == null) {
+            log.error(
+                    "GitHub API returned unexpected status: method=createIssue, status={}, title={}",
+                    response.getStatusCode(),
+                    title);
+            throw new RuntimeException(
+                    "GitHub API error: failed to create issue, status=" + response.getStatusCode());
+        }
+
+        GitHubIssueCreateResponse result;
+        try {
+            result = objectMapper.readValue(response.getBody(), GitHubIssueCreateResponse.class);
+        } catch (JsonProcessingException e) {
+            log.error(
+                    "Failed to parse GitHub API response: method=createIssue, title={}, cause={}",
+                    title,
+                    e.getOriginalMessage(),
+                    e);
+            throw new RuntimeException("Failed to parse GitHub API response: createIssue", e);
+        }
+
+        if (result.number() == null || result.number() <= 0
+                || result.htmlUrl() == null || result.htmlUrl().isBlank()) {
+            log.error(
+                    "GitHub API returned incomplete issue payload: method=createIssue, number={}, htmlUrl={}",
+                    result.number(),
+                    result.htmlUrl());
+            throw new RuntimeException(
+                    "GitHub API returned incomplete issue payload: number=" + result.number()
+                            + ", htmlUrl=" + result.htmlUrl());
+        }
+
+        return new GitHubIssueCreateResult(result.number(), result.htmlUrl(), result.title());
     }
 
     /**
@@ -113,9 +165,18 @@ public class GitHubIssueClient {
                     sinceParam);
 
             HttpEntity<Void> request = new HttpEntity<>(headers);
-            ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, request, String.class);
+            ResponseEntity<String> response;
+            try {
+                response = restTemplate.exchange(url, HttpMethod.GET, request, String.class);
+            } catch (RestClientException e) {
+                log.error("Failed to call GitHub API: method=listIssues, url={}", url, e);
+                throw new RuntimeException("Failed to call GitHub API: listIssues", e);
+            }
 
             if (response.getStatusCode() != HttpStatus.OK || response.getBody() == null) {
+                log.error(
+                        "GitHub API returned unexpected status: method=listIssues, status={}",
+                        response.getStatusCode());
                 throw new RuntimeException(
                         "GitHub API error: failed to list issues, status=" + response.getStatusCode());
             }
@@ -156,8 +217,12 @@ public class GitHubIssueClient {
                                 item.htmlUrl()));
             }
             return results;
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to parse GitHub issue list response", e);
+        } catch (JsonProcessingException e) {
+            log.error(
+                    "Failed to parse GitHub API response: method=listIssues, cause={}",
+                    e.getOriginalMessage(),
+                    e);
+            throw new RuntimeException("Failed to parse GitHub API response: listIssues", e);
         }
     }
 
@@ -211,7 +276,12 @@ public class GitHubIssueClient {
 
     /**
      * GitHub Issue 列表项原始响应结构（用于反序列化）。
+     * <p>
+     * {@code ignoreUnknown = true} 为防御性补充：即使上层 ObjectMapper 配置回归为严格模式， 也不会因 GitHub
+     * 新增字段而导致解析失败。
+     * </p>
      */
+    @JsonIgnoreProperties(ignoreUnknown = true)
     private record GitHubIssueRaw(
             @JsonProperty("number") Number number,
             @JsonProperty("title") String title,
@@ -223,7 +293,11 @@ public class GitHubIssueClient {
 
     /**
      * GitHub Issue 创建响应结构（用于反序列化）。
+     * <p>
+     * {@code ignoreUnknown = true} 为防御性补充，理由同 {@link GitHubIssueRaw}。
+     * </p>
      */
+    @JsonIgnoreProperties(ignoreUnknown = true)
     private record GitHubIssueCreateResponse(
             @JsonProperty("number") Integer number,
             @JsonProperty("html_url") String htmlUrl,

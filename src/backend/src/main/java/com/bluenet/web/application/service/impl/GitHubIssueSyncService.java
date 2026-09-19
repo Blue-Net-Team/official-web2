@@ -38,8 +38,20 @@ public class GitHubIssueSyncService {
         String title = buildTitle(bugReport);
         String body = buildBody(bugReport);
 
+        GitHubIssueCreateResult result;
         try {
-            GitHubIssueCreateResult result = gitHubIssueClient.createIssue(title, body);
+            result = gitHubIssueClient.createIssue(title, body);
+        } catch (Exception e) {
+            // 该阶段失败时无法确定 GitHub 侧是否已落库（例如响应体解析失败），日志需保留这种歧义
+            log.error(
+                    "Bug 报告同步到 GitHub Issue 失败：调用或解析异常，Issue 可能已在 GitHub 创建但未写回本地记录: bugReportId={}, title={}",
+                    bugReport.getId(),
+                    title,
+                    e);
+            return;
+        }
+
+        try {
             BugReport savedBugReport = bugReportRepository.findById(bugReport.getId())
                     .orElseThrow(() -> new IllegalStateException("Bug 报告不存在，ID: " + bugReport.getId()));
             savedBugReport.updateGithubIssueInfo(result.htmlUrl(), result.number());
@@ -50,10 +62,13 @@ public class GitHubIssueSyncService {
                     result.number(),
                     result.htmlUrl());
         } catch (Exception e) {
+            // GitHub 侧已创建成功，但本地未写回：属于数据不一致状态，需人工回填
             log.error(
-                    "Bug 报告同步到 GitHub Issue 失败: bugReportId={}, title={}",
+                    "Bug 报告已在 GitHub 创建但未写回本地记录（数据不一致，需人工回填）: bugReportId={}, title={}, issueNumber={}, issueUrl={}",
                     bugReport.getId(),
                     title,
+                    result.number(),
+                    result.htmlUrl(),
                     e);
         }
     }
