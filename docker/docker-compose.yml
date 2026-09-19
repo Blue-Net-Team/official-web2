@@ -19,6 +19,9 @@ x-shared-env: &shared-env
   ALIYUN_OSS_PUBLIC_ENDPOINT: ${ALIYUN_OSS_PUBLIC_ENDPOINT:-}
   ALIYUN_OSS_AK: ${ALIYUN_OSS_AK:-}
   ALIYUN_OSS_SK: ${ALIYUN_OSS_SK:-}
+  # 判题产物存储桶：api-service 与 judge-service 共用，必须为同一值，
+  # 否则后端生成的判题产物访问地址会指向错误的 bucket。
+  JUDGE_STORAGE_BUCKET: ${JUDGE_STORAGE_BUCKET:-bluenet-judge}
 
 x-api-service-env: &api-service-env
   <<: *shared-env
@@ -57,6 +60,17 @@ x-api-service-env: &api-service-env
   GITHUB_APP_OWNER: ${GITHUB_APP_OWNER:-}
   GITHUB_APP_REPO: ${GITHUB_APP_REPO:-}
   GITHUB_APP_APP_BASE_URL: ${GITHUB_APP_APP_BASE_URL:-http://localhost:8080}
+  # Webhook Secret：用于校验 GitHub Webhook 的 HMAC-SHA256 签名。
+  # 必须与 GitHub App 设置中的 Webhook Secret 一致；留空时 isWebhookEnabled()=false，
+  # 所有 Webhook 请求（issues.assigned / closed / reopened）均返回 401，状态自动同步失效。
+  GITHUB_APP_WEBHOOK_SECRET: ${GITHUB_APP_WEBHOOK_SECRET:-}
+  # 定时轮询对账（Webhook 的兜底机制）
+  GITHUB_APP_POLLING_ENABLED: ${GITHUB_APP_POLLING_ENABLED:-true}
+  GITHUB_APP_POLLING_SINCE_DAYS: ${GITHUB_APP_POLLING_SINCE_DAYS:-7}
+  GITHUB_ISSUE_SYNC_CRON: "${GITHUB_ISSUE_SYNC_CRON:-0 0 3 * * *}"
+  # 其他定时任务
+  ELIMINATED_USER_DISABLE_CRON: "${ELIMINATED_USER_DISABLE_CRON:-0 0 3 * * *}"
+  ORPHAN_FILE_CLEANUP_CRON: "${ORPHAN_FILE_CLEANUP_CRON:-0 0 2 * * *}"
 
   # GitHub App 配置（组织成员邀请）
   # 不配置或留空时，邀请功能自动禁用
@@ -159,11 +173,29 @@ services:
       - "8090:8090"
     environment:
       <<: *shared-env
-      JUDGE_STORAGE_BUCKET: ${JUDGE_STORAGE_BUCKET:-bluenet-judge}
+      # JUDGE_STORAGE_BUCKET 定义在 x-shared-env（需与 api-service 保持一致）
       JUDGE_SANDBOX_ENGINE: isolate
       JUDGE_WORK_ROOT: /var/lib/bluenet-judge/work
       LANG: C.UTF-8
       TZ: Asia/Shanghai
+      # 服务端口
+      JUDGE_SERVER_PORT: ${JUDGE_SERVER_PORT:-8090}
+      # RabbitMQ 拓扑（exchange / 队列 / routing key）
+      JUDGE_RABBITMQ_EXCHANGE: ${JUDGE_RABBITMQ_EXCHANGE:-algorithm.judge}
+      JUDGE_FORMAL_QUEUE: ${JUDGE_FORMAL_QUEUE:-algorithm.judge.formal}
+      JUDGE_TEST_DATA_QUEUE: ${JUDGE_TEST_DATA_QUEUE:-algorithm.judge.test-data}
+      JUDGE_RUN_QUEUE: ${JUDGE_RUN_QUEUE:-algorithm.judge.run}
+      JUDGE_FORMAL_ROUTING_KEY: ${JUDGE_FORMAL_ROUTING_KEY:-judge.formal}
+      JUDGE_TEST_DATA_ROUTING_KEY: ${JUDGE_TEST_DATA_ROUTING_KEY:-judge.test-data}
+      JUDGE_RUN_ROUTING_KEY: ${JUDGE_RUN_ROUTING_KEY:-judge.run}
+      # 沙箱资源限制
+      JUDGE_CPU_TIME_SECONDS: ${JUDGE_CPU_TIME_SECONDS:-2}
+      JUDGE_WALL_TIME_SECONDS: ${JUDGE_WALL_TIME_SECONDS:-5}
+      JUDGE_MEMORY_LIMIT_MB: ${JUDGE_MEMORY_LIMIT_MB:-256}
+      JUDGE_PROCESS_LIMIT: ${JUDGE_PROCESS_LIMIT:-32}
+      JUDGE_OUTPUT_LIMIT_KB: ${JUDGE_OUTPUT_LIMIT_KB:-1024}
+      JUDGE_GENERATED_FILE_LIMIT_MB: ${JUDGE_GENERATED_FILE_LIMIT_MB:-64}
+      JUDGE_NETWORK_DISABLED: ${JUDGE_NETWORK_DISABLED:-true}
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8090/api/v1/judge/health"]
       interval: 10s
@@ -301,10 +333,16 @@ services:
       TBD_RAG_CHUNK_MAX_TOKENS: ${TBD_RAG_CHUNK_MAX_TOKENS:-4000}
       # Embedding / LLM / Reranker
       TBD_RAG_EMBEDDING_PROVIDER: ${TBD_RAG_EMBEDDING_PROVIDER:-siliconflow}
+      TBD_RAG_EMBEDDING_MODEL: ${TBD_RAG_EMBEDDING_MODEL:-}
       TBD_RAG_LLM_PROVIDER: ${TBD_RAG_LLM_PROVIDER:-siliconflow}
+      TBD_RAG_LLM_MODEL: ${TBD_RAG_LLM_MODEL:-}
       TBD_RAG_LLM_TEMPERATURE: ${TBD_RAG_LLM_TEMPERATURE:-0.7}
       TBD_RAG_LLM_TIMEOUT: ${TBD_RAG_LLM_TIMEOUT:-60}
       TBD_RAG_RERANKER_PROVIDER: ${TBD_RAG_RERANKER_PROVIDER:-siliconflow}
+      TBD_RAG_RERANKER_MODEL: ${TBD_RAG_RERANKER_MODEL:-}
+      # 对话轨迹采集（管理后台回看）
+      TBD_RAG_TRACE_ENABLED: ${TBD_RAG_TRACE_ENABLED:-true}
+      TBD_RAG_TRACE_DB_URI: ${TBD_RAG_TRACE_DB_URI:-}
       # 意图识别 / 安全围栏
       TBD_RAG_INTENT_GUARD_ENABLED: ${TBD_RAG_INTENT_GUARD_ENABLED:-true}
       TBD_RAG_INTENT_LLM_PROVIDER: ${TBD_RAG_INTENT_LLM_PROVIDER:-}
