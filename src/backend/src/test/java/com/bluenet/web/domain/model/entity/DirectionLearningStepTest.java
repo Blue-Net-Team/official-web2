@@ -24,7 +24,7 @@ class DirectionLearningStepTest {
 
         assertThat(step.getId()).isNull();
         assertThat(step.getDirection()).isEqualTo(Direction.COMPUTER_VISION);
-        assertThat(step.getStepNumber()).isEqualTo(1);
+        assertThat(step.getSortOrder()).isEqualTo(1);
         assertThat(step.getTitle()).isEqualTo("OpenCV 基础");
         assertThat(step.getRelatedUrl()).isEqualTo("https://example.com/video");
     }
@@ -38,15 +38,15 @@ class DirectionLearningStepTest {
     }
 
     @Test
-    @DisplayName("create: 步骤序号为空或小于1应抛异常")
-    void create_withInvalidStepNumber_shouldThrow() {
+    @DisplayName("create: 顺序值为空或小于1应抛异常")
+    void create_withInvalidSortOrder_shouldThrow() {
         assertThatThrownBy(() -> DirectionLearningStep.create(Direction.EMBEDDED, null, "标题", null))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("步骤序号");
+                .hasMessageContaining("步骤顺序值");
 
         assertThatThrownBy(() -> DirectionLearningStep.create(Direction.EMBEDDED, 0, "标题", null))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("步骤序号");
+                .hasMessageContaining("步骤顺序值");
     }
 
     @Test
@@ -58,23 +58,23 @@ class DirectionLearningStepTest {
     }
 
     @Test
-    @DisplayName("updateStepNumber: 应更新步骤序号")
-    void updateStepNumber_shouldUpdateStepNumber() {
+    @DisplayName("updateSortOrder: 应更新顺序值")
+    void updateSortOrder_shouldUpdateSortOrder() {
         DirectionLearningStep step = DirectionLearningStep.create(Direction.EMBEDDED, 1, "标题", null);
 
-        step.updateStepNumber(2);
+        step.updateSortOrder(2);
 
-        assertThat(step.getStepNumber()).isEqualTo(2);
+        assertThat(step.getSortOrder()).isEqualTo(2);
     }
 
     @Test
-    @DisplayName("updateStepNumber: 非法序号应抛异常")
-    void updateStepNumber_withInvalidNumber_shouldThrow() {
+    @DisplayName("updateSortOrder: 非法顺序值应抛异常")
+    void updateSortOrder_withInvalidValue_shouldThrow() {
         DirectionLearningStep step = DirectionLearningStep.create(Direction.EMBEDDED, 1, "标题", null);
 
-        assertThatThrownBy(() -> step.updateStepNumber(0))
+        assertThatThrownBy(() -> step.updateSortOrder(0))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("步骤序号");
+                .hasMessageContaining("步骤顺序值");
     }
 
     @Test
@@ -108,6 +108,18 @@ class DirectionLearningStepTest {
     }
 
     @Test
+    @DisplayName("更新标题与相关链接: 不应改变顺序值")
+    void updateContent_shouldNotChangeSortOrder() {
+        DirectionLearningStep step = DirectionLearningStep
+                .create(Direction.EMBEDDED, 7, "旧标题", "https://old.example.com");
+
+        step.updateTitle("新标题");
+        step.updateRelatedUrl("https://new.example.com");
+
+        assertThat(step.getSortOrder()).isEqualTo(7);
+    }
+
+    @Test
     @DisplayName("reconstruct: 应保留所有字段")
     void reconstruct_shouldPreserveAllFields() {
         DirectionLearningStep step = DirectionLearningStep.reconstruct(
@@ -119,7 +131,7 @@ class DirectionLearningStepTest {
 
         assertThat(step.getId()).isEqualTo(10L);
         assertThat(step.getDirection()).isEqualTo(Direction.STRUCTURAL_DESIGN);
-        assertThat(step.getStepNumber()).isEqualTo(3);
+        assertThat(step.getSortOrder()).isEqualTo(3);
         assertThat(step.getTitle()).isEqualTo("标题");
         assertThat(step.getRelatedUrl()).isEqualTo("https://example.com");
     }

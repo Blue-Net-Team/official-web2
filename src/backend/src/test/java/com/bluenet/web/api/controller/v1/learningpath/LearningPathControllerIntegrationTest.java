@@ -8,7 +8,6 @@ import com.bluenet.web.application.result.learningpath.LearningPathResult;
 import com.bluenet.web.application.service.LearningPathAppService;
 import com.bluenet.web.domain.model.enumerate.Direction;
 import com.bluenet.web.testconfig.TestSecurityConfig;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,11 +39,6 @@ class LearningPathControllerIntegrationTest extends BaseIntegrationTest {
     @MockitoBean
     private LearningPathResponseConverter learningPathResponseConverter;
 
-    @AfterEach
-    void tearDown() {
-        // 公开接口，不涉及 UserCTX。
-    }
-
     @Test
     @DisplayName("getLearningPath: 有效方向标识应返回学习路径")
     void getLearningPath_validSlug_shouldReturnPath() throws Exception {
@@ -53,7 +47,7 @@ class LearningPathControllerIntegrationTest extends BaseIntegrationTest {
         DirectionLearningPathDTO dto = DirectionLearningPathDTO.builder()
                 .direction("cv")
                 .directionName("计算机视觉")
-                .steps(List.of(LearningStepDTO.builder().id(1L).stepNumber(1).title("OpenCV 基础").build()))
+                .steps(List.of(LearningStepDTO.builder().id(1L).title("OpenCV 基础").build()))
                 .build();
         when(learningPathAppService.getLearningPath("cv")).thenReturn(List.of(result));
         when(learningPathResponseConverter.toDirectionLearningPathDTO("cv", List.of(result))).thenReturn(dto);
@@ -63,6 +57,24 @@ class LearningPathControllerIntegrationTest extends BaseIntegrationTest {
                 .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.data.direction").value("cv"))
                 .andExpect(jsonPath("$.data.steps[0].title").value("OpenCV 基础"));
+    }
+
+    @Test
+    @DisplayName("getLearningPath: 步骤不应包含任何序号字段")
+    void getLearningPath_shouldNotExposeStepNumber() throws Exception {
+        LearningPathResult result = new LearningPathResult(1L, Direction.COMPUTER_VISION, 1, "OpenCV 基础", null);
+        DirectionLearningPathDTO dto = DirectionLearningPathDTO.builder()
+                .direction("cv")
+                .directionName("计算机视觉")
+                .steps(List.of(LearningStepDTO.builder().id(1L).title("OpenCV 基础").build()))
+                .build();
+        when(learningPathAppService.getLearningPath("cv")).thenReturn(List.of(result));
+        when(learningPathResponseConverter.toDirectionLearningPathDTO("cv", List.of(result))).thenReturn(dto);
+
+        mockMvc.perform(get("/api/v1/directions/cv/learning-path"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.steps[0].stepNumber").doesNotExist())
+                .andExpect(jsonPath("$.data.steps[0].sortOrder").doesNotExist());
     }
 
     @Test

@@ -30,7 +30,9 @@ export default function LearningPath({ data }: LearningPathProps) {
                 tabIndex={step.relatedLink ? 0 : undefined}
               >
                 <span className="text-[32px] font-bold text-[var(--theme-primary)] leading-none max-lg:text-[28px] max-[991px]:text-2xl max-[991px]:shrink-0">
-                  {String(step.stepNumber).padStart(2, '0')}
+                  {/* 展示编号由数组位置派生（后端不返回序号）。
+                      依赖该接口不分页：整份列表一次返回时 index+1 才等于全局序号。 */}
+                  {String(index + 1).padStart(2, '0')}
                 </span>
                 <h3 className="text-base font-medium text-white m-0 max-[991px]:text-sm max-[991px]:flex-1">
                   {step.title}

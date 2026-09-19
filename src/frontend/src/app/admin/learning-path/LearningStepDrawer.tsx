@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { App, Button, Drawer, Form, Input, InputNumber } from 'antd'
+import { App, Button, Drawer, Form, Input } from 'antd'
 import { AxiosError } from 'axios'
 import type { LearningStepDTO } from '@/apis/schema/direction.dto'
 import { adminDirectionService } from '@/apis/services/direction.service'
@@ -18,7 +18,6 @@ interface LearningStepDrawerProps {
 }
 
 interface FormValues {
-  stepNumber: number
   title: string
   relatedLink?: string
 }
@@ -40,7 +39,6 @@ export default function LearningStepDrawer({
     if (open) {
       if (record) {
         form.setFieldsValue({
-          stepNumber: record.stepNumber,
           title: record.title,
           relatedLink: record.relatedLink ?? undefined,
         })
@@ -55,7 +53,6 @@ export default function LearningStepDrawer({
       const values = await form.validateFields()
       setSaving(true)
       const payload = {
-        stepNumber: values.stepNumber,
         title: values.title,
         relatedLink: values.relatedLink || null,
       }
@@ -70,7 +67,7 @@ export default function LearningStepDrawer({
       }
     } catch (error) {
       if (error instanceof AxiosError) {
-        // 透出后端业务错误消息（如步骤序号冲突）
+        // 透出后端业务错误消息
         const data = error.response?.data as ResponseMessage<unknown> | undefined
         messageApi.error(data?.msg || '保存失败')
       } else if (error instanceof Error && error.message) {
@@ -101,13 +98,6 @@ export default function LearningStepDrawer({
       }
     >
       <Form form={form} layout="vertical">
-        <Form.Item
-          label="步骤序号"
-          name="stepNumber"
-          rules={[{ required: true, message: '请输入步骤序号' }]}
-        >
-          <InputNumber min={1} max={100} precision={0} className="w-full" placeholder="1-100" />
-        </Form.Item>
         <Form.Item
           label="标题"
           name="title"

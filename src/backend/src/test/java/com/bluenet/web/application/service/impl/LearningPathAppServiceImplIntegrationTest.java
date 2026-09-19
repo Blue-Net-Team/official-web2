@@ -15,6 +15,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -24,7 +25,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  * LearningPathAppServiceImpl 集成测试。
  *
  * <p>
- * 验证学习路径应用服务的查询、创建、更新、删除逻辑，以及同方向步骤序号唯一性约束。
+ * 验证学习路径应用服务的查询、创建（追加到末尾）、更新（不改变位置）、删除（不重排） 以及批量排序逻辑。
  * </p>
  */
 @DisplayName("LearningPathAppServiceImpl 集成测试")
@@ -62,11 +63,17 @@ class LearningPathAppServiceImplIntegrationTest extends BaseIntegrationTest {
                 .extracting(LearningPathResult::direction)
                 .containsOnly(VALID_DIRECTION);
         assertThat(result)
-                .extracting(LearningPathResult::stepNumber)
-                .contains(10, 20);
-        assertThat(result)
                 .extracting(LearningPathResult::title)
                 .contains("计算机视觉进阶", "图像处理实战");
+    }
+
+    @Test
+    @WithSecurityPrincipal(userId = 1L, roleType = "MEMBER")
+    @DisplayName("getLearningPath: 应按顺序值升序返回")
+    void getLearningPath_shouldReturnAscendingOrder() {
+        List<LearningPathResult> result = learningPathAppService.getLearningPath(VALID_SLUG);
+
+        assertThat(result).extracting(LearningPathResult::sortOrder).isSorted();
     }
 
     @Test
@@ -80,24 +87,25 @@ class LearningPathAppServiceImplIntegrationTest extends BaseIntegrationTest {
 
     @Test
     @WithSecurityPrincipal(userId = 1L, roleType = "SUPER_ADMIN")
-    @DisplayName("createStep: 应创建学习步骤并持久化")
-    void createStep_shouldCreateAndPersist() {
+    @DisplayName("createStep: 应创建学习步骤并追加到该方向末尾")
+    void createStep_shouldAppendToEnd() {
+        Integer maxBefore = learningPathRepository.findMaxSortOrder(VALID_DIRECTION);
         LearningPathCommands.CreateLearningStepCommand command = new LearningPathCommands.CreateLearningStepCommand(
-                VALID_SLUG, 10, "计算机视觉进阶", "http://example.com/cv-10");
+                VALID_SLUG, "计算机视觉进阶", "http://example.com/cv-10");
 
         LearningPathResult result = learningPathAppService.createStep(command);
 
         assertThat(result).isNotNull();
         assertThat(result.id()).isNotNull();
         assertThat(result.direction()).isEqualTo(VALID_DIRECTION);
-        assertThat(result.stepNumber()).isEqualTo(10);
+        assertThat(result.sortOrder()).isEqualTo(maxBefore + 1);
         assertThat(result.title()).isEqualTo("计算机视觉进阶");
         assertThat(result.relatedUrl()).isEqualTo("http://example.com/cv-10");
         assertThat(learningPathRepository.findById(result.id()))
                 .isPresent()
                 .hasValueSatisfying(step -> {
                     assertThat(step.getDirection()).isEqualTo(VALID_DIRECTION);
-                    assertThat(step.getStepNumber()).isEqualTo(10);
+                    assertThat(step.getSortOrder()).isEqualTo(maxBefore + 1);
                     assertThat(step.getTitle()).isEqualTo("计算机视觉进阶");
                     assertThat(step.getRelatedUrl()).isEqualTo("http://example.com/cv-10");
                 });
@@ -105,38 +113,50 @@ class LearningPathAppServiceImplIntegrationTest extends BaseIntegrationTest {
 
     @Test
     @WithSecurityPrincipal(userId = 1L, roleType = "SUPER_ADMIN")
-    @DisplayName("createStep: 同一方向重复步骤序号应抛 IllegalArgumentException")
-    void createStep_withDuplicateStepNumber_shouldThrowIllegalArgument() {
-        DirectionLearningStep existing = DirectionLearningStep
-                .create(VALID_DIRECTION, 10, "已有步骤", "http://example.com/cv-existing");
-        learningPathRepository.save(existing);
+    @DisplayName("createStep: 空方向的首个步骤顺序值应为 1")
+    void createStep_onEmptyDirection_shouldUseSortOrderOne() {
+        learningPathRepository.findByDirection(Direction.STRUCTURAL_DESIGN)
+                .forEach(step -> learningPathRepository.deleteById(step.getId()));
         LearningPathCommands.CreateLearningStepCommand command = new LearningPathCommands.CreateLearningStepCommand(
-                VALID_SLUG, 10, "重复步骤", "http://example.com/cv-duplicate");
+                "struct", "首个步骤", null);
 
-        assertThatThrownBy(() -> learningPathAppService.createStep(command))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("该方向的步骤序号已存在");
+        LearningPathResult result = learningPathAppService.createStep(command);
+
+        assertThat(result.sortOrder()).isEqualTo(1);
     }
 
     @Test
     @WithSecurityPrincipal(userId = 1L, roleType = "SUPER_ADMIN")
-    @DisplayName("updateStep: 应更新步骤序号、标题和相关链接")
-    void updateStep_shouldUpdateStepNumberTitleAndRelatedUrl() {
+    @DisplayName("createStep: 相同标题不应再受序号冲突限制")
+    void createStep_withSameTitle_shouldNotBeRejected() {
+        LearningPathCommands.CreateLearningStepCommand command = new LearningPathCommands.CreateLearningStepCommand(
+                VALID_SLUG, "重复标题", null);
+
+        LearningPathResult first = learningPathAppService.createStep(command);
+        LearningPathResult second = learningPathAppService.createStep(command);
+
+        assertThat(first.sortOrder()).isLessThan(second.sortOrder());
+    }
+
+    @Test
+    @WithSecurityPrincipal(userId = 1L, roleType = "SUPER_ADMIN")
+    @DisplayName("updateStep: 应更新标题和相关链接且不改变顺序值")
+    void updateStep_shouldUpdateContentWithoutChangingOrder() {
         DirectionLearningStep step = DirectionLearningStep
                 .create(VALID_DIRECTION, 10, "旧标题", "http://example.com/old");
         learningPathRepository.save(step);
         LearningPathCommands.UpdateLearningStepCommand command = new LearningPathCommands.UpdateLearningStepCommand(
-                step.getId(), 20, "新标题", "http://example.com/new");
+                step.getId(), "新标题", "http://example.com/new");
 
         LearningPathResult result = learningPathAppService.updateStep(command);
 
-        assertThat(result.stepNumber()).isEqualTo(20);
+        assertThat(result.sortOrder()).isEqualTo(10);
         assertThat(result.title()).isEqualTo("新标题");
         assertThat(result.relatedUrl()).isEqualTo("http://example.com/new");
         assertThat(learningPathRepository.findById(step.getId()))
                 .isPresent()
                 .hasValueSatisfying(updated -> {
-                    assertThat(updated.getStepNumber()).isEqualTo(20);
+                    assertThat(updated.getSortOrder()).isEqualTo(10);
                     assertThat(updated.getTitle()).isEqualTo("新标题");
                     assertThat(updated.getRelatedUrl()).isEqualTo("http://example.com/new");
                 });
@@ -147,29 +167,11 @@ class LearningPathAppServiceImplIntegrationTest extends BaseIntegrationTest {
     @DisplayName("updateStep: 不存在的 id 应抛 IllegalArgumentException")
     void updateStep_withNonExistentId_shouldThrowIllegalArgument() {
         LearningPathCommands.UpdateLearningStepCommand command = new LearningPathCommands.UpdateLearningStepCommand(
-                99999L, 1, "任意标题", "http://example.com/any");
+                99999L, "任意标题", "http://example.com/any");
 
         assertThatThrownBy(() -> learningPathAppService.updateStep(command))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("学习步骤不存在");
-    }
-
-    @Test
-    @WithSecurityPrincipal(userId = 1L, roleType = "SUPER_ADMIN")
-    @DisplayName("updateStep: 与同一方向其他步骤重复序号应抛 IllegalArgumentException")
-    void updateStep_withDuplicateStepNumber_shouldThrowIllegalArgument() {
-        DirectionLearningStep step1 = DirectionLearningStep
-                .create(VALID_DIRECTION, 10, "步骤一", "http://example.com/cv-10");
-        DirectionLearningStep step2 = DirectionLearningStep
-                .create(VALID_DIRECTION, 20, "步骤二", "http://example.com/cv-20");
-        learningPathRepository.save(step1);
-        learningPathRepository.save(step2);
-        LearningPathCommands.UpdateLearningStepCommand command = new LearningPathCommands.UpdateLearningStepCommand(
-                step2.getId(), 10, "步骤二改名", "http://example.com/cv-20-new");
-
-        assertThatThrownBy(() -> learningPathAppService.updateStep(command))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("该方向的步骤序号已存在");
     }
 
     @Test
@@ -192,5 +194,87 @@ class LearningPathAppServiceImplIntegrationTest extends BaseIntegrationTest {
         assertThatThrownBy(() -> learningPathAppService.deleteStep(99999L))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("学习步骤不存在");
+    }
+
+    @Test
+    @WithSecurityPrincipal(userId = 1L, roleType = "SUPER_ADMIN")
+    @DisplayName("deleteStep: 删除中间步骤不应重排剩余步骤顺序值")
+    void deleteStep_shouldNotRenumberRemainingSteps() {
+        List<DirectionLearningStep> before = learningPathRepository.findByDirection(VALID_DIRECTION);
+        assertThat(before).hasSizeGreaterThanOrEqualTo(3);
+
+        DirectionLearningStep middle = before.get(1);
+        Integer middleOrder = middle.getSortOrder();
+        List<Integer> expected = before.stream()
+                .map(DirectionLearningStep::getSortOrder)
+                .filter(order -> !order.equals(middleOrder))
+                .toList();
+
+        learningPathAppService.deleteStep(middle.getId());
+
+        assertThat(learningPathRepository.findByDirection(VALID_DIRECTION))
+                .extracting(DirectionLearningStep::getSortOrder)
+                .containsExactlyElementsOf(expected);
+    }
+
+    @Test
+    @WithSecurityPrincipal(userId = 1L, roleType = "SUPER_ADMIN")
+    @DisplayName("batchUpdateSortOrder: 应全量覆盖该方向顺序")
+    void batchUpdateSortOrder_shouldOverwriteOrder() {
+        List<DirectionLearningStep> steps = learningPathRepository.findByDirection(VALID_DIRECTION);
+        assertThat(steps).hasSizeGreaterThanOrEqualTo(3);
+
+        // 把最后一个步骤移到最前，其余依次后移
+        List<LearningPathCommands.SortItemCommand> items = new ArrayList<>();
+        items.add(new LearningPathCommands.SortItemCommand(steps.get(steps.size() - 1).getId(), 1));
+        for (int i = 0; i < steps.size() - 1; i++) {
+            items.add(new LearningPathCommands.SortItemCommand(steps.get(i).getId(), i + 2));
+        }
+
+        learningPathAppService.batchUpdateSortOrder(
+                new LearningPathCommands.BatchUpdateSortOrderCommand(
+                        VALID_SLUG, items));
+
+        List<DirectionLearningStep> reloaded = learningPathRepository.findByDirection(VALID_DIRECTION);
+        assertThat(reloaded.get(0).getId()).isEqualTo(steps.get(steps.size() - 1).getId());
+        assertThat(reloaded).extracting(DirectionLearningStep::getSortOrder).isSorted();
+    }
+
+    @Test
+    @WithSecurityPrincipal(userId = 1L, roleType = "SUPER_ADMIN")
+    @DisplayName("batchUpdateSortOrder: 跨方向步骤 id 应被拒绝且不写入")
+    void batchUpdateSortOrder_withForeignDirectionId_shouldReject() {
+        List<DirectionLearningStep> cvSteps = learningPathRepository.findByDirection(VALID_DIRECTION);
+        List<DirectionLearningStep> embedSteps = learningPathRepository.findByDirection(Direction.EMBEDDED);
+        assertThat(embedSteps).isNotEmpty();
+        List<Integer> orderBefore = cvSteps.stream().map(DirectionLearningStep::getSortOrder).toList();
+
+        List<LearningPathCommands.SortItemCommand> items = new ArrayList<>();
+        items.add(new LearningPathCommands.SortItemCommand(cvSteps.get(0).getId(), 1));
+        items.add(new LearningPathCommands.SortItemCommand(embedSteps.get(0).getId(), 2));
+
+        assertThatThrownBy(
+                () -> learningPathAppService.batchUpdateSortOrder(
+                        new LearningPathCommands.BatchUpdateSortOrderCommand(VALID_SLUG, items)))
+                                .isInstanceOf(IllegalArgumentException.class);
+
+        assertThat(learningPathRepository.findByDirection(VALID_DIRECTION))
+                .extracting(DirectionLearningStep::getSortOrder)
+                .containsExactlyElementsOf(orderBefore);
+    }
+
+    @Test
+    @WithSecurityPrincipal(userId = 1L, roleType = "SUPER_ADMIN")
+    @DisplayName("batchUpdateSortOrder: 不存在的步骤 id 应被拒绝")
+    void batchUpdateSortOrder_withUnknownId_shouldReject() {
+        List<DirectionLearningStep> cvSteps = learningPathRepository.findByDirection(VALID_DIRECTION);
+        List<LearningPathCommands.SortItemCommand> items = List.of(
+                new LearningPathCommands.SortItemCommand(cvSteps.get(0).getId(), 1),
+                new LearningPathCommands.SortItemCommand(99999L, 2));
+
+        assertThatThrownBy(
+                () -> learningPathAppService.batchUpdateSortOrder(
+                        new LearningPathCommands.BatchUpdateSortOrderCommand(VALID_SLUG, items)))
+                                .isInstanceOf(IllegalArgumentException.class);
     }
 }

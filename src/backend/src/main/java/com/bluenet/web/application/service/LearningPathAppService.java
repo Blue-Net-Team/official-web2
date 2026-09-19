@@ -46,4 +46,12 @@ public interface LearningPathAppService {
      *            步骤ID
      */
     void deleteStep(Long id);
+
+    /**
+     * 批量更新某方向学习步骤的展示顺序
+     *
+     * @param command
+     *            批量排序命令
+     */
+    void batchUpdateSortOrder(LearningPathCommands.BatchUpdateSortOrderCommand command);
 }

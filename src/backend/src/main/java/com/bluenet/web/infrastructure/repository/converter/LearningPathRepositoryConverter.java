@@ -25,7 +25,7 @@ public class LearningPathRepositoryConverter {
         return DirectionLearningStepDO.builder()
                 .id(entity.getId())
                 .direction(entity.getDirection())
-                .stepNumber(entity.getStepNumber())
+                .sortOrder(entity.getSortOrder())
                 .title(entity.getTitle())
                 .relatedUrl(entity.getRelatedUrl())
                 .build();
@@ -41,7 +41,7 @@ public class LearningPathRepositoryConverter {
         return DirectionLearningStep.reconstruct(
                 dataObject.getId(),
                 dataObject.getDirection(),
-                dataObject.getStepNumber(),
+                dataObject.getSortOrder(),
                 dataObject.getTitle(),
                 dataObject.getRelatedUrl());
     }

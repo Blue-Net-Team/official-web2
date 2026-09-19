@@ -7,8 +7,6 @@ import { ResponseMessage } from './type'
 export interface LearningStepDTO {
   /** 步骤ID */
   id: number
-  /** 步骤序号 */
-  stepNumber: number
   /** 步骤标题 */
   title: string
   /** 相关链接URL，可能为 null */
@@ -18,14 +16,27 @@ export interface LearningStepDTO {
 /**
  * 创建/更新学习步骤请求
  * 对应后端 CreateLearningStepRequestDTO / UpdateLearningStepRequestDTO
+ * 不包含步骤序号：顺序由后端自动追加到底部，展示编号由前端按位置派生
  */
 export interface LearningStepRequestDTO {
-  /** 步骤序号 */
-  stepNumber: number
   /** 步骤标题 */
   title: string
   /** 相关链接URL，可选 */
   relatedLink?: string | null
+}
+
+/**
+ * 批量排序请求
+ * 对应后端 BatchSortRequestDTO
+ */
+export interface BatchSortRequestDTO {
+  /** 排序项列表，全量覆盖该方向的步骤顺序 */
+  items: Array<{
+    /** 步骤ID */
+    id: number
+    /** 排序值（数值越小越靠前） */
+    sortOrder: number
+  }>
 }
 
 /**

@@ -12,11 +12,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * 学习路径应用服务实现。
  * <p>
- * 实现学习路径聚合在应用层的业务逻辑编排。
+ * 实现学习路径聚合在应用层的业务逻辑编排。顺序值由系统负责：创建时追加到方向末尾， 拖拽排序时整体覆盖。
  * </p>
  */
 @Service
@@ -42,6 +44,9 @@ public class LearningPathAppServiceImpl implements LearningPathAppService {
 
     /**
      * 创建学习步骤。
+     * <p>
+     * 顺序值由系统分配为当前方向排序值上界 + 1，即追加到末尾。
+     * </p>
      *
      * @param command
      *            创建学习步骤命令
@@ -52,18 +57,20 @@ public class LearningPathAppServiceImpl implements LearningPathAppService {
     public LearningPathResult createStep(LearningPathCommands.CreateLearningStepCommand command) {
         Direction direction = DirectionSlugConverter.fromSlug(command.slug());
 
-        if (learningPathRepository.existsByDirectionAndStepNumber(direction, command.stepNumber(), null)) {
-            throw new IllegalArgumentException("该方向的步骤序号已存在");
-        }
+        Integer maxSortOrder = learningPathRepository.findMaxSortOrder(direction);
+        int nextSortOrder = maxSortOrder == null ? 1 : maxSortOrder + 1;
 
         DirectionLearningStep step = DirectionLearningStep
-                .create(direction, command.stepNumber(), command.title(), command.relatedUrl());
+                .create(direction, nextSortOrder, command.title(), command.relatedUrl());
         learningPathRepository.save(step);
         return toResult(step);
     }
 
     /**
      * 更新学习步骤。
+     * <p>
+     * 只更新内容，不改变展示顺序。
+     * </p>
      *
      * @param command
      *            更新学习步骤命令
@@ -75,12 +82,6 @@ public class LearningPathAppServiceImpl implements LearningPathAppService {
         DirectionLearningStep step = learningPathRepository.findById(command.id())
                 .orElseThrow(() -> new IllegalArgumentException("学习步骤不存在"));
 
-        if (learningPathRepository
-                .existsByDirectionAndStepNumber(step.getDirection(), command.stepNumber(), command.id())) {
-            throw new IllegalArgumentException("该方向的步骤序号已存在");
-        }
-
-        step.updateStepNumber(command.stepNumber());
         step.updateTitle(command.title());
         step.updateRelatedUrl(command.relatedUrl());
         learningPathRepository.save(step);
@@ -89,6 +90,9 @@ public class LearningPathAppServiceImpl implements LearningPathAppService {
 
     /**
      * 删除学习步骤。
+     * <p>
+     * 不重排剩余步骤的顺序值——展示编号由前端按位置派生，删除后天然连续。
+     * </p>
      *
      * @param id
      *            学习步骤ID
@@ -102,11 +106,46 @@ public class LearningPathAppServiceImpl implements LearningPathAppService {
         learningPathRepository.deleteById(id);
     }
 
+    /**
+     * 批量更新学习步骤顺序。
+     * <p>
+     * 全量覆盖该方向的排序值，并校验所有步骤均属于该方向；任一不合法则整体回滚。
+     * </p>
+     *
+     * @param command
+     *            批量排序命令
+     */
+    @Override
+    @Transactional
+    public void batchUpdateSortOrder(LearningPathCommands.BatchUpdateSortOrderCommand command) {
+        Direction direction = DirectionSlugConverter.fromSlug(command.slug());
+
+        Set<Long> ownedStepIds = learningPathRepository.findByDirection(direction)
+                .stream()
+                .map(DirectionLearningStep::getId)
+                .collect(Collectors.toSet());
+
+        List<LearningPathRepository.SortItem> sortItems = command.items()
+                .stream()
+                .map(item -> {
+                    if (item.id() == null || !ownedStepIds.contains(item.id())) {
+                        throw new IllegalArgumentException("学习步骤不存在或不属于该方向: " + item.id());
+                    }
+                    if (item.sortOrder() == null) {
+                        throw new IllegalArgumentException("排序值不能为空");
+                    }
+                    return new LearningPathRepository.SortItem(item.id(), item.sortOrder());
+                })
+                .toList();
+
+        learningPathRepository.batchUpdateSortOrder(direction, sortItems);
+    }
+
     private LearningPathResult toResult(DirectionLearningStep step) {
         return new LearningPathResult(
                 step.getId(),
                 step.getDirection(),
-                step.getStepNumber(),
+                step.getSortOrder(),
                 step.getTitle(),
                 step.getRelatedUrl());
     }

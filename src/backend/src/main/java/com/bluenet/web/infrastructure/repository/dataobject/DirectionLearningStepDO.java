@@ -29,9 +29,9 @@ public class DirectionLearningStepDO {
      */
     private Direction direction;
     /**
-     * 学习路径步骤序号。
+     * 学习步骤展示排序值，数值越小越靠前。
      */
-    private Integer stepNumber;
+    private Integer sortOrder;
 
     /**
      * 标题或名称，用于列表和详情展示。

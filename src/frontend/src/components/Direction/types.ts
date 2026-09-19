@@ -15,10 +15,10 @@ export interface TechItem {
   description: string
 }
 
-/** 学习路径步骤（与后端 LearningStepDTO 对齐） */
+/** 学习路径步骤（与后端 LearningStepDTO 对齐）
+ *  不含序号字段：展示编号由前端按数组位置派生 */
 export interface LearningStep {
   id: number
-  stepNumber: number
   title: string
   relatedLink?: string | null
 }

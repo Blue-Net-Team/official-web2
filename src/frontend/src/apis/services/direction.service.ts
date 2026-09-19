@@ -1,5 +1,6 @@
 import { apiClient, publicClient } from '../client'
 import {
+  BatchSortRequestDTO,
   DirectionLearningPathResponse,
   LearningStepDTO,
   LearningStepRequestDTO,
@@ -75,6 +76,21 @@ export const adminDirectionService = {
   async deleteStep(id: number): Promise<ResponseMessage<void>> {
     const response = await apiClient.delete<ResponseMessage<void>>(
       `/admin/directions/learning-steps/${id}`
+    )
+    return response.data
+  },
+
+  /**
+   * 批量调整学习步骤排序
+   * PUT /admin/directions/{slug}/learning-steps/sort
+   */
+  async batchUpdateSortOrder(
+    slug: string,
+    data: BatchSortRequestDTO
+  ): Promise<ResponseMessage<void>> {
+    const response = await apiClient.put<ResponseMessage<void>>(
+      `/admin/directions/${slug}/learning-steps/sort`,
+      data
     )
     return response.data
   },

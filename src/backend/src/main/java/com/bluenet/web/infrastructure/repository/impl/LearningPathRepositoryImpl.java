@@ -57,7 +57,15 @@ public class LearningPathRepositoryImpl implements LearningPathRepository {
     }
 
     @Override
-    public boolean existsByDirectionAndStepNumber(Direction direction, Integer stepNumber, Long excludeId) {
-        return learningPathMapper.existsByDirectionAndStepNumber(direction, stepNumber, excludeId);
+    public Integer findMaxSortOrder(Direction direction) {
+        return learningPathMapper.selectMaxSortOrder(direction);
+    }
+
+    @Override
+    public void batchUpdateSortOrder(Direction direction, List<SortItem> sortItems) {
+        if (sortItems == null || sortItems.isEmpty()) {
+            return;
+        }
+        learningPathMapper.batchUpdateSortOrder(direction, sortItems);
     }
 }

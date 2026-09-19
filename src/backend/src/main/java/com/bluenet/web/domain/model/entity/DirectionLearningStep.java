@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 /**
  * 方向学习步骤实体
  * <p>
- * 存储各方向的学习路径步骤信息
+ * 存储各方向的学习路径步骤信息。排序值由系统分配（创建时追加到方向末尾、拖拽时整体重写）， 实体不承担"序号唯一"职责——展示编号由前端按位置派生。
  * </p>
  */
 @Data
@@ -26,9 +26,9 @@ public class DirectionLearningStep {
     private Direction direction;
 
     /**
-     * 步骤序号
+     * 展示排序值，数值越小越靠前；允许空洞
      */
-    private Integer stepNumber;
+    private Integer sortOrder;
 
     /**
      * 步骤标题
@@ -40,47 +40,50 @@ public class DirectionLearningStep {
      */
     private String relatedUrl;
 
-    private DirectionLearningStep(Long id, Direction direction, Integer stepNumber, String title, String relatedUrl) {
+    private DirectionLearningStep(Long id, Direction direction, Integer sortOrder, String title, String relatedUrl) {
         this.id = id;
         this.direction = direction;
-        this.stepNumber = stepNumber;
+        this.sortOrder = sortOrder;
         this.title = title;
         this.relatedUrl = relatedUrl;
     }
 
     /**
      * 构造新学习步骤 —— 带领域校验
+     * <p>
+     * 排序值由调用方（应用层）系统分配，不接受用户直接输入。
+     * </p>
      */
-    public static DirectionLearningStep create(Direction direction, Integer stepNumber, String title,
+    public static DirectionLearningStep create(Direction direction, Integer sortOrder, String title,
             String relatedUrl) {
         if (direction == null) {
             throw new IllegalArgumentException("方向不能为空");
         }
-        if (stepNumber == null || stepNumber < 1) {
-            throw new IllegalArgumentException("步骤序号必须大于0");
+        if (sortOrder == null || sortOrder < 1) {
+            throw new IllegalArgumentException("步骤顺序值必须大于0");
         }
         if (title == null || title.isBlank()) {
             throw new IllegalArgumentException("标题不能为空");
         }
-        return new DirectionLearningStep(null, direction, stepNumber, title.trim(), relatedUrl);
+        return new DirectionLearningStep(null, direction, sortOrder, title.trim(), relatedUrl);
     }
 
     /**
      * 从数据库重建 —— 跳过创建校验
      */
-    public static DirectionLearningStep reconstruct(Long id, Direction direction, Integer stepNumber, String title,
+    public static DirectionLearningStep reconstruct(Long id, Direction direction, Integer sortOrder, String title,
             String relatedUrl) {
-        return new DirectionLearningStep(id, direction, stepNumber, title, relatedUrl);
+        return new DirectionLearningStep(id, direction, sortOrder, title, relatedUrl);
     }
 
     /**
-     * 更新步骤序号
+     * 更新展示排序值
      */
-    public void updateStepNumber(Integer stepNumber) {
-        if (stepNumber == null || stepNumber < 1) {
-            throw new IllegalArgumentException("步骤序号必须大于0");
+    public void updateSortOrder(Integer sortOrder) {
+        if (sortOrder == null || sortOrder < 1) {
+            throw new IllegalArgumentException("步骤顺序值必须大于0");
         }
-        this.stepNumber = stepNumber;
+        this.sortOrder = sortOrder;
     }
 
     /**

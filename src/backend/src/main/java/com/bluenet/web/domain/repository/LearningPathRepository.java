@@ -57,15 +57,27 @@ public interface LearningPathRepository {
     boolean existsById(Long id);
 
     /**
-     * 判断是否存在满足条件的学习路径记录。
+     * 查询某方向当前的排序值上界。
      *
      * @param direction
      *            技术方向过滤条件。
-     * @param stepNumber
-     *            学习路径步骤序号。
-     * @param excludeId
-     *            需要排除的当前记录主键。
-     * @return 满足条件时返回 true，否则返回 false。
+     * @return 当前最大排序值；该方向尚无步骤时为 null。
      */
-    boolean existsByDirectionAndStepNumber(Direction direction, Integer stepNumber, Long excludeId);
+    Integer findMaxSortOrder(Direction direction);
+
+    /**
+     * 批量覆盖某方向学习步骤的排序值。
+     *
+     * @param direction
+     *            技术方向过滤条件。
+     * @param sortItems
+     *            需要更新排序的条目集合。
+     */
+    void batchUpdateSortOrder(Direction direction, List<SortItem> sortItems);
+
+    /**
+     * 排序项记录
+     */
+    record SortItem(Long id, Integer sortOrder) {
+    }
 }

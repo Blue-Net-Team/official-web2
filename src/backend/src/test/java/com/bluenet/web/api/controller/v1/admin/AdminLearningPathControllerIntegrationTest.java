@@ -1,6 +1,7 @@
 package com.bluenet.web.api.controller.v1.admin;
 
 import com.bluenet.web.BaseIntegrationTest;
+import com.bluenet.web.api.dto.learningpath.BatchSortRequestDTO;
 import com.bluenet.web.api.dto.learningpath.CreateLearningStepRequestDTO;
 import com.bluenet.web.api.dto.learningpath.LearningStepDTO;
 import com.bluenet.web.api.dto.learningpath.UpdateLearningStepRequestDTO;
@@ -24,6 +25,8 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -72,7 +75,6 @@ class AdminLearningPathControllerIntegrationTest extends BaseIntegrationTest {
     private LearningStepDTO stubDTO() {
         return LearningStepDTO.builder()
                 .id(1L)
-                .stepNumber(1)
                 .title("Python基础")
                 .build();
     }
@@ -88,7 +90,6 @@ class AdminLearningPathControllerIntegrationTest extends BaseIntegrationTest {
         when(learningPathResponseConverter.toDTO(any(LearningPathResult.class))).thenReturn(dto);
 
         CreateLearningStepRequestDTO request = CreateLearningStepRequestDTO.builder()
-                .stepNumber(1)
                 .title("Python基础")
                 .relatedLink("https://example.com/video.mp4")
                 .build();
@@ -100,6 +101,7 @@ class AdminLearningPathControllerIntegrationTest extends BaseIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.id").value(1))
                 .andExpect(jsonPath("$.data.title").value("Python基础"))
+                .andExpect(jsonPath("$.data.stepNumber").doesNotExist())
                 .andReturn();
         assertThat(mvcResult.getResponse().getStatus()).isEqualTo(200);
     }
@@ -110,7 +112,6 @@ class AdminLearningPathControllerIntegrationTest extends BaseIntegrationTest {
             "direction-learning-path:create" })
     void createStep_withBlankTitle_shouldReturn400() throws Exception {
         CreateLearningStepRequestDTO request = CreateLearningStepRequestDTO.builder()
-                .stepNumber(1)
                 .title("")
                 .build();
 
@@ -124,11 +125,29 @@ class AdminLearningPathControllerIntegrationTest extends BaseIntegrationTest {
     }
 
     @Test
+    @DisplayName("createStep: 仅需标题即可创建（不再需要序号）")
+    @WithSecurityPrincipal(userId = SUPER_ADMIN_USER_ID, roleType = "SUPER_ADMIN", roleId = 1L, permissions = {
+            "direction-learning-path:create" })
+    void createStep_withTitleOnly_shouldSucceed() throws Exception {
+        when(learningPathAppService.createStep(any())).thenReturn(stubResult());
+        when(learningPathResponseConverter.toDTO(any(LearningPathResult.class))).thenReturn(stubDTO());
+
+        CreateLearningStepRequestDTO request = CreateLearningStepRequestDTO.builder()
+                .title("仅标题")
+                .build();
+
+        mockMvc.perform(
+                post("/api/v1/admin/directions/{slug}/learning-steps", "cv")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk());
+    }
+
+    @Test
     @DisplayName("createStep: 普通成员访问应返回 403")
     @WithSecurityPrincipal(roleType = "MEMBER", roleId = 3L, permissions = {})
     void createStep_asMember_shouldReturn403() throws Exception {
         CreateLearningStepRequestDTO request = CreateLearningStepRequestDTO.builder()
-                .stepNumber(1)
                 .title("Python基础")
                 .build();
 
@@ -150,7 +169,6 @@ class AdminLearningPathControllerIntegrationTest extends BaseIntegrationTest {
         when(learningPathResponseConverter.toDTO(any(LearningPathResult.class))).thenReturn(dto);
 
         UpdateLearningStepRequestDTO request = UpdateLearningStepRequestDTO.builder()
-                .stepNumber(1)
                 .title("Python基础")
                 .relatedLink("https://example.com/video.mp4")
                 .build();
@@ -173,7 +191,6 @@ class AdminLearningPathControllerIntegrationTest extends BaseIntegrationTest {
         when(learningPathAppService.updateStep(any())).thenThrow(new DataNotFound("学习步骤不存在"));
 
         UpdateLearningStepRequestDTO request = UpdateLearningStepRequestDTO.builder()
-                .stepNumber(1)
                 .title("Python基础")
                 .build();
 
@@ -197,5 +214,58 @@ class AdminLearningPathControllerIntegrationTest extends BaseIntegrationTest {
                 .andExpect(status().isOk())
                 .andReturn();
         assertThat(mvcResult.getResponse().getStatus()).isEqualTo(200);
+    }
+
+    @Test
+    @DisplayName("batchUpdateSortOrder: 超级管理员应成功批量调整排序")
+    @WithSecurityPrincipal(userId = SUPER_ADMIN_USER_ID, roleType = "SUPER_ADMIN", roleId = 1L, permissions = {
+            "direction-learning-path:sort" })
+    void batchUpdateSortOrder_asSuperAdmin_shouldReturnOk() throws Exception {
+        doNothing().when(learningPathAppService).batchUpdateSortOrder(any());
+
+        BatchSortRequestDTO request = BatchSortRequestDTO.builder()
+                .items(
+                        List.of(
+                                BatchSortRequestDTO.SortItemDTO.builder().id(1L).sortOrder(1).build(),
+                                BatchSortRequestDTO.SortItemDTO.builder().id(2L).sortOrder(2).build()))
+                .build();
+
+        MvcResult mvcResult = mockMvc.perform(
+                put("/api/v1/admin/directions/{slug}/learning-steps/sort", "cv")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andReturn();
+        assertThat(mvcResult.getResponse().getStatus()).isEqualTo(200);
+    }
+
+    @Test
+    @DisplayName("batchUpdateSortOrder: 空排序列表应返回 400")
+    @WithSecurityPrincipal(userId = SUPER_ADMIN_USER_ID, roleType = "SUPER_ADMIN", roleId = 1L, permissions = {
+            "direction-learning-path:sort" })
+    void batchUpdateSortOrder_withEmptyItems_shouldReturn400() throws Exception {
+        BatchSortRequestDTO request = BatchSortRequestDTO.builder().items(List.of()).build();
+
+        mockMvc.perform(
+                put("/api/v1/admin/directions/{slug}/learning-steps/sort", "cv")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("batchUpdateSortOrder: 缺少排序权限应返回 403")
+    @WithSecurityPrincipal(roleType = "MEMBER", roleId = 3L, permissions = {
+            "direction-learning-path:update" })
+    void batchUpdateSortOrder_withoutSortPermission_shouldReturn403() throws Exception {
+        BatchSortRequestDTO request = BatchSortRequestDTO.builder()
+                .items(List.of(BatchSortRequestDTO.SortItemDTO.builder().id(1L).sortOrder(1).build()))
+                .build();
+
+        mockMvc.perform(
+                put("/api/v1/admin/directions/{slug}/learning-steps/sort", "cv")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isForbidden());
     }
 }

@@ -24,7 +24,6 @@ public class LearningPathResponseConverter {
     public LearningStepDTO toDTO(LearningPathResult result) {
         return LearningStepDTO.builder()
                 .id(result.id())
-                .stepNumber(result.stepNumber())
                 .title(result.title())
                 .relatedLink(result.relatedUrl())
                 .build();
