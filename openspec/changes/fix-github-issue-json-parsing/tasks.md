@@ -55,12 +55,14 @@
 ## 8. 收尾
 
 - [x] 8.1 确认本次变更未修改既有 `openspec/specs/bug-report/spec.md` 与 `admin-bug-report-management/spec.md` 以外的能力定义
-- [ ] 8.2 在 PR 描述中关联 issue #62（使用 `ref #62`，禁止使用 `fixes` / `close` 关键字）
-- [ ] 8.3 记录历史孤儿 Issue（#60 → bugReport 11、#61 → bugReport 12）的处理建议，作为后续独立变更的输入
+- [x] 8.2 在 PR 描述中关联 issue #62（使用 `ref #62`，禁止使用 `fixes` / `close` 关键字）
+- [x] 8.3 记录历史孤儿 Issue（#60 → bugReport 11、#61 → bugReport 12）的处理建议，作为后续独立变更的输入
 
 ---
 
 ## 实施说明（2026-09-19）
+
+已提交 PR：https://github.com/Blue-Net-Team/official-web2/pull/63（base: `develop`，关联方式 `ref #62`，未使用自动关闭关键字，合并由维护者手动执行）。
 
 已提交：`648fb16b`（修复与回归测试）、`685c34c7`（测试规范与任务进度）。
 
