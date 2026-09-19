@@ -1,38 +1,38 @@
 ## 1. 回归测试先行（红灯）
 
-- [ ] 1.1 在 `GitHubIssueClientTest` 中新增用例：以含大量未声明字段的真实 `createIssue` 响应载荷调用 `createIssue`，断言不抛异常且返回 `number` / `html_url`（当前必失败，用于确认缺陷复现）
-- [ ] 1.2 在 `GitHubIssueClientTest` 中新增用例：以含大量未声明字段的真实 `listIssues` 响应载荷调用 `listIssues`，断言解析成功且数量正确（当前必失败）
-- [ ] 1.3 运行 `./mvnw -Dtest=GitHubIssueClientTest test`，确认上述用例以 `UnrecognizedPropertyException` 失败，记录红灯输出作为证据
+- [x] 1.1 在 `GitHubIssueClientTest` 中新增用例：以含大量未声明字段的真实 `createIssue` 响应载荷调用 `createIssue`，断言不抛异常且返回 `number` / `html_url`（当前必失败，用于确认缺陷复现）
+- [x] 1.2 在 `GitHubIssueClientTest` 中新增用例：以含大量未声明字段的真实 `listIssues` 响应载荷调用 `listIssues`，断言解析成功且数量正确（当前必失败）
+- [x] 1.3 运行 `./mvnw -Dtest=GitHubIssueClientTest test`，确认上述用例以 `UnrecognizedPropertyException` 失败，记录红灯输出作为证据
 
 ## 2. 真实响应载荷固化
 
-- [ ] 2.1 以 `GET /repos/Blue-Net-Team/official-web2/issues/60` 的真实响应体为基准，构造裁剪后的固定 JSON 常量（保留 `id`、`url`、`repository_url`、`labels_url`、`user`、`labels`、`state`、`created_at`、`assignee`、`comments` 等代表性未声明字段）
-- [ ] 2.2 将 `TC-008`（`createIssue` 成功用例）的三字段载荷替换为 2.1 的载荷，断言 `number` 与 `html_url` 解析结果正确
-- [ ] 2.3 将 `listIssues` 系列成功用例（`TC-001` / `TC-004` / `TC-005` / `TC-006`）的载荷替换为含未声明字段的真实载荷，保持原有断言不变
-- [ ] 2.4 保留并复核 `TC-005` 的 PR 过滤断言：载荷中带 `pull_request` 字段的条目仍被过滤
-- [ ] 2.5 保留并复核 `TC-006` 的大数值断言：`number = 2147483647` 仍被 `toInteger()` 正确处理
+- [x] 2.1 以 `GET /repos/Blue-Net-Team/official-web2/issues/60` 的真实响应体为基准，构造裁剪后的固定 JSON 常量（保留 `id`、`url`、`repository_url`、`labels_url`、`user`、`labels`、`state`、`created_at`、`assignee`、`comments` 等代表性未声明字段）
+- [x] 2.2 将 `TC-008`（`createIssue` 成功用例）的三字段载荷替换为 2.1 的载荷，断言 `number` 与 `html_url` 解析结果正确
+- [x] 2.3 将 `listIssues` 系列成功用例（`TC-001` / `TC-004` / `TC-005` / `TC-006`）的载荷替换为含未声明字段的真实载荷，保持原有断言不变
+- [x] 2.4 保留并复核 `TC-005` 的 PR 过滤断言：载荷中带 `pull_request` 字段的条目仍被过滤
+- [x] 2.5 保留并复核 `TC-006` 的大数值断言：`number = 2147483647` 仍被 `toInteger()` 正确处理
 
 ## 3. 解析配置修复（绿灯）
 
-- [ ] 3.1 调整 `GitHubIssueClient`：通过构造注入 Spring 容器的 `ObjectMapper`，替换类内自建的 `new ObjectMapper()`
-- [ ] 3.2 在 `GitHubIssueClient` 内基于注入实例建立显式关闭 `FAIL_ON_UNKNOWN_PROPERTIES` 的副本，并在字段上注明原因
-- [ ] 3.3 为 `GitHubIssueCreateResponse` 与 `GitHubIssueRaw` 添加 `@JsonIgnoreProperties(ignoreUnknown = true)` 作为防御性补充
-- [ ] 3.4 保持 `GitHubIssueRaw.number` 为 `Number` 并使用既有 `toInteger()` 转换，不扩大改动范围
-- [ ] 3.5 断言 `createIssue` 解析结果中 `number` 与 `html_url` 非空，为空时按解析失败处理
-- [ ] 3.6 运行 `./mvnw -Dtest=GitHubIssueClientTest test`，确认第 1 组用例全部转绿
+- [x] 3.1 调整 `GitHubIssueClient`：通过构造注入 Spring 容器的 `ObjectMapper`，替换类内自建的 `new ObjectMapper()`
+- [x] 3.2 在 `GitHubIssueClient` 内基于注入实例建立显式关闭 `FAIL_ON_UNKNOWN_PROPERTIES` 的副本，并在字段上注明原因
+- [x] 3.3 为 `GitHubIssueCreateResponse` 与 `GitHubIssueRaw` 添加 `@JsonIgnoreProperties(ignoreUnknown = true)` 作为防御性补充
+- [x] 3.4 保持 `GitHubIssueRaw.number` 为 `Number` 并使用既有 `toInteger()` 转换，不扩大改动范围
+- [x] 3.5 断言 `createIssue` 解析结果中 `number` 与 `html_url` 非空，为空时按解析失败处理
+- [x] 3.6 运行 `./mvnw -Dtest=GitHubIssueClientTest test`，确认第 1 组用例全部转绿
 
 ## 4. 错误日志可观测性
 
-- [ ] 4.1 拆分 `GitHubIssueClient.createIssue` 的异常处理：网络/状态码异常记录为 API 调用失败（含状态码），Jackson 解析异常记录为响应解析失败（含方法名与字段信息）
-- [ ] 4.2 拆分 `GitHubIssueClient.listIssues` / `parseIssueList` 的异常处理，保持同一区分标准
-- [ ] 4.3 调整 `GitHubIssueSyncService.sync` 的失败日志，在 Issue 已创建但未写回时明确表达"已创建但未写回"，日志中包含 Bug 报告 ID、Issue 标题与失败原因
-- [ ] 4.4 复核日志不泄露 access token 等敏感信息
+- [x] 4.1 拆分 `GitHubIssueClient.createIssue` 的异常处理：网络/状态码异常记录为 API 调用失败（含状态码），Jackson 解析异常记录为响应解析失败（含方法名与字段信息）
+- [x] 4.2 拆分 `GitHubIssueClient.listIssues` / `parseIssueList` 的异常处理，保持同一区分标准
+- [x] 4.3 调整 `GitHubIssueSyncService.sync` 的失败日志，在 Issue 已创建但未写回时明确表达"已创建但未写回"，日志中包含 Bug 报告 ID、Issue 标题与失败原因
+- [x] 4.4 复核日志不泄露 access token 等敏感信息
 
 ## 5. 单元与集成测试
 
-- [ ] 5.1 运行 `./mvnw -Dtest=GitHubIssueClientTest,GitHubIssuePollingJobTest,GitHubIssueSyncService*Test test`，确认无回归
-- [ ] 5.2 运行 `./mvnw -Dtest=BugReportAppServiceImplIntegrationTest,BugReportRepositoryImplIntegrationTest test`，确认 Bug 报告写回链路集成测试通过
-- [ ] 5.3 如新增/调整了测试用例覆盖范围，同步更新 `docs/03-开发指南/03-08-测试规范手册.md` 中对应说明（若无必要则跳过并在归档时说明）
+- [x] 5.1 运行 `./mvnw -Dtest=GitHubIssueClientTest,GitHubIssuePollingJobTest,GitHubIssueSyncService*Test test`，确认无回归
+- [x] 5.2 运行 `./mvnw -Dtest=BugReportAppServiceImplIntegrationTest,BugReportRepositoryImplIntegrationTest test`，确认 Bug 报告写回链路集成测试通过
+- [x] 5.3 如新增/调整了测试用例覆盖范围，同步更新 `docs/03-开发指南/03-08-测试规范手册.md` 中对应说明（若无必要则跳过并在归档时说明）
 
 ## 6. 构建与打包
 
