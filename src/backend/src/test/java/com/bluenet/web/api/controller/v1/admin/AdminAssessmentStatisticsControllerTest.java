@@ -1,6 +1,6 @@
 package com.bluenet.web.api.controller.v1.admin;
 
-import com.bluenet.web.BaseIntegrationTest;
+import com.bluenet.web.APIIntegrationTest;
 import com.bluenet.web.api.converter.assessment_statistics.AssessmentStatisticsResponseConverter;
 import com.bluenet.web.api.dto.assessment_statistics.QuestionStatisticsDTO;
 import com.bluenet.web.application.result.assessment.AssessmentStatisticsResult;
@@ -32,7 +32,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @Import(TestSecurityConfig.class)
 @DisplayName("AdminAssessmentStatisticsController 集成测试")
-class AdminAssessmentStatisticsControllerTest extends BaseIntegrationTest {
+class AdminAssessmentStatisticsControllerTest extends APIIntegrationTest {
 
     private static final long ADMIN_USER_ID = 9999L;
 

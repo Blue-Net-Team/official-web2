@@ -1,6 +1,6 @@
 package com.bluenet.web.application.service.impl;
 
-import com.bluenet.web.BaseIntegrationTest;
+import com.bluenet.web.DBIntegrationTest;
 import com.bluenet.web.application.command.algorithm_judge.AlgorithmJudgeCommands;
 import com.bluenet.web.application.result.algorithm_judge.AlgorithmJudgeResult;
 import com.bluenet.web.application.service.AlgorithmJudgeAppService;
@@ -65,7 +65,7 @@ import static org.mockito.Mockito.*;
  * </p>
  */
 @DisplayName("AlgorithmJudgeAppServiceImpl 集成测试")
-class AlgorithmJudgeAppServiceImplIntegrationTest extends BaseIntegrationTest {
+class AlgorithmJudgeAppServiceImplIntegrationTest extends DBIntegrationTest {
 
     @Autowired
     private AlgorithmJudgeAppService algorithmJudgeAppService;

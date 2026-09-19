@@ -1,6 +1,6 @@
 package com.bluenet.web.api.controller.v1.admin;
 
-import com.bluenet.web.BaseIntegrationTest;
+import com.bluenet.web.APIIntegrationTest;
 import com.bluenet.web.application.message.MessageTemplateInfo;
 import com.bluenet.web.application.service.MessageTemplateAppService;
 import com.bluenet.web.domain.exception.DataNotFound;
@@ -37,7 +37,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @Import(TestSecurityConfig.class)
 @DisplayName("AdminMessageTemplateController 集成测试")
-class AdminMessageTemplateControllerIntegrationTest extends BaseIntegrationTest {
+class AdminMessageTemplateControllerIntegrationTest extends APIIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;

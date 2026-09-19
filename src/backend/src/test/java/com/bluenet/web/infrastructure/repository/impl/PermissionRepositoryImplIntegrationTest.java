@@ -1,6 +1,6 @@
 package com.bluenet.web.infrastructure.repository.impl;
 
-import com.bluenet.web.BaseIntegrationTest;
+import com.bluenet.web.DBIntegrationTest;
 import com.bluenet.web.domain.model.entity.Permission;
 import com.bluenet.web.domain.repository.PermissionRepository;
 import com.bluenet.web.infrastructure.repository.dataobject.PermissionDO;
@@ -30,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * </p>
  */
 @DisplayName("PermissionRepositoryImpl 集成测试")
-class PermissionRepositoryImplIntegrationTest extends BaseIntegrationTest {
+class PermissionRepositoryImplIntegrationTest extends DBIntegrationTest {
 
     @Autowired
     private PermissionRepository permissionRepository;

@@ -1,6 +1,6 @@
 package com.bluenet.web.infrastructure.repository.impl;
 
-import com.bluenet.web.BaseIntegrationTest;
+import com.bluenet.web.DBIntegrationTest;
 import com.bluenet.web.application.result.audit.AuditEndpointLatency;
 import com.bluenet.web.application.result.audit.AuditEndpointRanking;
 import com.bluenet.web.application.result.audit.AuditTrendPoint;
@@ -22,7 +22,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * AuditRepositoryImpl 集成测试。
  */
 @DisplayName("AuditRepositoryImpl 集成测试")
-class AuditRepositoryImplIntegrationTest extends BaseIntegrationTest {
+class AuditRepositoryImplIntegrationTest extends DBIntegrationTest {
 
     @Autowired
     private AuditRepository auditRepository;

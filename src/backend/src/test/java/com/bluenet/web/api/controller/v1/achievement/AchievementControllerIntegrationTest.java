@@ -1,6 +1,6 @@
 package com.bluenet.web.api.controller.v1.achievement;
 
-import com.bluenet.web.BaseIntegrationTest;
+import com.bluenet.web.APIIntegrationTest;
 import com.bluenet.web.api.dto.PageDTO;
 import com.bluenet.web.api.dto.achievement.AchievementDTO;
 import com.bluenet.web.api.dto.achievement.AchievementStatsDTO;
@@ -35,7 +35,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @Import(TestSecurityConfig.class)
 @DisplayName("AchievementController 集成测试")
-class AchievementControllerIntegrationTest extends BaseIntegrationTest {
+class AchievementControllerIntegrationTest extends APIIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;

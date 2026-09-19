@@ -1,6 +1,6 @@
 package com.bluenet.web.application.service.impl;
 
-import com.bluenet.web.BaseIntegrationTest;
+import com.bluenet.web.DBIntegrationTest;
 import com.bluenet.web.application.command.file.FileCommands;
 import com.bluenet.web.application.result.file.FileDownloadResult;
 import com.bluenet.web.application.result.file.FileResult;
@@ -43,7 +43,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  * </p>
  */
 @DisplayName("FileAppServiceImpl 集成测试")
-class FileAppServiceImplIntegrationTest extends BaseIntegrationTest {
+class FileAppServiceImplIntegrationTest extends DBIntegrationTest {
 
     private static final byte[] TEXT_BYTES = "Hello, BlueNet!".getBytes(StandardCharsets.UTF_8);
 

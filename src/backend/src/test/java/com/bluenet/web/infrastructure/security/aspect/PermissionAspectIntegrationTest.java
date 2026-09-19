@@ -1,6 +1,6 @@
 package com.bluenet.web.infrastructure.security.aspect;
 
-import com.bluenet.web.BaseIntegrationTest;
+import com.bluenet.web.DBIntegrationTest;
 import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
 import com.bluenet.web.infrastructure.security.annotation.RequiresPermission;
 import com.bluenet.web.infrastructure.security.principal.WithSecurityPrincipal;
@@ -26,7 +26,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @DisplayName("PermissionAspect 集成测试")
 @AutoConfigureMockMvc
 @Import(PermissionAspectIntegrationTest.PermissionTestController.class)
-class PermissionAspectIntegrationTest extends BaseIntegrationTest {
+class PermissionAspectIntegrationTest extends DBIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;

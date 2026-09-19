@@ -1,6 +1,6 @@
 package com.bluenet.web.application.service.impl;
 
-import com.bluenet.web.BaseIntegrationTest;
+import com.bluenet.web.DBIntegrationTest;
 import com.bluenet.web.application.command.userexperience.UserExperienceCommands;
 import com.bluenet.web.application.result.user.UserExperienceResult;
 import com.bluenet.web.application.service.UserExperienceAppService;
@@ -34,7 +34,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * </p>
  */
 @DisplayName("UserExperienceAppServiceImpl 集成测试")
-class UserExperienceAppServiceImplIntegrationTest extends BaseIntegrationTest {
+class UserExperienceAppServiceImplIntegrationTest extends DBIntegrationTest {
 
     @Autowired
     private UserExperienceAppService userExperienceAppService;

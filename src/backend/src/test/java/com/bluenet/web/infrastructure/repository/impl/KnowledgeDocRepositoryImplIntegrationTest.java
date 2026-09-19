@@ -1,6 +1,6 @@
 package com.bluenet.web.infrastructure.repository.impl;
 
-import com.bluenet.web.BaseIntegrationTest;
+import com.bluenet.web.DBIntegrationTest;
 import com.bluenet.web.domain.model.entity.File;
 import com.bluenet.web.domain.model.entity.KnowledgeDoc;
 import com.bluenet.web.domain.model.enumerate.DocParseStatus;
@@ -25,7 +25,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * KnowledgeDocRepositoryImpl 集成测试。
  */
 @DisplayName("KnowledgeDocRepositoryImpl 集成测试")
-class KnowledgeDocRepositoryImplIntegrationTest extends BaseIntegrationTest {
+class KnowledgeDocRepositoryImplIntegrationTest extends DBIntegrationTest {
 
     @Autowired
     private KnowledgeDocRepository knowledgeDocRepository;

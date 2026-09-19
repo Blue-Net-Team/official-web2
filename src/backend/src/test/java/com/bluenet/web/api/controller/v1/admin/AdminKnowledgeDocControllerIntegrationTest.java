@@ -1,6 +1,6 @@
 package com.bluenet.web.api.controller.v1.admin;
 
-import com.bluenet.web.BaseIntegrationTest;
+import com.bluenet.web.APIIntegrationTest;
 import com.bluenet.web.api.converter.knowledge.KnowledgeDocRequestConverter;
 import com.bluenet.web.api.converter.knowledge.KnowledgeDocResponseConverter;
 import com.bluenet.web.api.dto.PageDTO;
@@ -54,7 +54,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @Import(TestSecurityConfig.class)
 @DisplayName("AdminKnowledgeDocController 集成测试")
-class AdminKnowledgeDocControllerIntegrationTest extends BaseIntegrationTest {
+class AdminKnowledgeDocControllerIntegrationTest extends APIIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;

@@ -1,6 +1,6 @@
 package com.bluenet.web.application.service.impl;
 
-import com.bluenet.web.BaseIntegrationTest;
+import com.bluenet.web.DBIntegrationTest;
 import com.bluenet.web.application.message.MessageTemplateInfo;
 import com.bluenet.web.application.message.MessageTemplateRegistry;
 import com.bluenet.web.application.service.MessageTemplateAppService;
@@ -29,7 +29,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  * </p>
  */
 @DisplayName("MessageTemplateAppServiceImpl 集成测试")
-class MessageTemplateAppServiceImplIntegrationTest extends BaseIntegrationTest {
+class MessageTemplateAppServiceImplIntegrationTest extends DBIntegrationTest {
 
     private static final String EMAIL_VERIFICATION_CODE = "EMAIL_VERIFICATION_CODE";
 

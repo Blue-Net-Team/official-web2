@@ -11,11 +11,30 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 
 import com.bluenet.web.testcontainers.TestcontainersConfiguration;
 
+/**
+ * 数据库集成测试基类。
+ * <p>
+ * 适用于需要真实数据库的测试：Application Service 的用例编排与事务边界、RepositoryImpl 的 自定义 SQL
+ * 与分页聚合、以及断言数据确实持久化到数据库的测试。提供真实 PostgreSQL 实例与 完整的 Flyway 迁移，并在每个用例前后重建 schema
+ * 保证数据隔离。
+ * </p>
+ *
+ * <h2>为什么不能关闭 Flyway</h2>
+ * <p>
+ * 本层测试的断言依赖真实 schema 与迁移插入的种子数据（例如 {@code tb_role} 中的角色记录， 测试需要通过
+ * {@code roleMapper.selectByName("MEMBER")} 获取角色 ID）。关闭迁移会导致 这些断言失败。
+ * </p>
+ * <p>
+ * 仅验证 HTTP 契约、不需要数据库的测试请继承 {@link APIIntegrationTest}，该基类跳过了 Flyway 迁移，可显著缩短耗时。
+ * </p>
+ *
+ * @see APIIntegrationTest
+ */
 @SpringBootTest
 @ActiveProfiles("test")
 @Testcontainers
 @Import(TestcontainersConfiguration.class)
-public abstract class BaseIntegrationTest {
+public abstract class DBIntegrationTest {
     @Autowired
     private Flyway flyway;
 

@@ -1,6 +1,6 @@
 package com.bluenet.web.application.service.impl;
 
-import com.bluenet.web.BaseIntegrationTest;
+import com.bluenet.web.DBIntegrationTest;
 import com.bluenet.web.application.command.rolepermission.RolePermissionCommands;
 import com.bluenet.web.application.result.rolepermission.RolePermissionManageResult;
 import com.bluenet.web.application.service.RolePermissionManageAppService;
@@ -32,7 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * </p>
  */
 @DisplayName("RolePermissionManageAppServiceImpl 集成测试")
-class RolePermissionManageAppServiceImplIntegrationTest extends BaseIntegrationTest {
+class RolePermissionManageAppServiceImplIntegrationTest extends DBIntegrationTest {
 
     @Autowired
     private RolePermissionManageAppService rolePermissionManageAppService;

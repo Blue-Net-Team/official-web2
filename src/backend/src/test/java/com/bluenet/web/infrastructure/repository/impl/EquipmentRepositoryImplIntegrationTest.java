@@ -1,6 +1,6 @@
 package com.bluenet.web.infrastructure.repository.impl;
 
-import com.bluenet.web.BaseIntegrationTest;
+import com.bluenet.web.DBIntegrationTest;
 import com.bluenet.web.domain.model.entity.Equipment;
 import com.bluenet.web.domain.repository.EquipmentRepository;
 import com.bluenet.web.infrastructure.repository.dataobject.EquipmentDO;
@@ -18,7 +18,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * EquipmentRepositoryImpl 集成测试。
  */
 @DisplayName("EquipmentRepositoryImpl 集成测试")
-class EquipmentRepositoryImplIntegrationTest extends BaseIntegrationTest {
+class EquipmentRepositoryImplIntegrationTest extends DBIntegrationTest {
 
     @Autowired
     private EquipmentRepository equipmentRepository;

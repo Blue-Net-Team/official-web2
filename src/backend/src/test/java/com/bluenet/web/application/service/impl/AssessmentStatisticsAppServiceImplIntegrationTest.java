@@ -1,6 +1,6 @@
 package com.bluenet.web.application.service.impl;
 
-import com.bluenet.web.BaseIntegrationTest;
+import com.bluenet.web.DBIntegrationTest;
 import com.bluenet.web.application.result.assessment.AssessmentStatisticsResult;
 import com.bluenet.web.application.service.AssessmentQuestionAppService;
 import com.bluenet.web.domain.exception.BadRequest;
@@ -51,7 +51,7 @@ import static org.mockito.Mockito.when;
  * </p>
  */
 @DisplayName("AssessmentStatisticsAppServiceImpl 集成测试")
-class AssessmentStatisticsAppServiceImplIntegrationTest extends BaseIntegrationTest {
+class AssessmentStatisticsAppServiceImplIntegrationTest extends DBIntegrationTest {
 
     @Autowired
     private AssessmentStatisticsAppServiceImpl assessmentStatisticsAppService;

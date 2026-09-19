@@ -1,6 +1,6 @@
 package com.bluenet.web.api.controller.v1.admin;
 
-import com.bluenet.web.BaseIntegrationTest;
+import com.bluenet.web.APIIntegrationTest;
 import com.bluenet.web.api.dto.learningpath.BatchSortRequestDTO;
 import com.bluenet.web.api.dto.learningpath.CreateLearningStepRequestDTO;
 import com.bluenet.web.api.dto.learningpath.LearningStepDTO;
@@ -42,7 +42,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @Import(TestSecurityConfig.class)
 @DisplayName("AdminLearningPathController 集成测试")
-class AdminLearningPathControllerIntegrationTest extends BaseIntegrationTest {
+class AdminLearningPathControllerIntegrationTest extends APIIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;

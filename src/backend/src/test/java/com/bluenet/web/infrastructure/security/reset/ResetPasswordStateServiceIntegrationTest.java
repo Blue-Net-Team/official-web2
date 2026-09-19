@@ -17,7 +17,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 
-import com.bluenet.web.BaseIntegrationTest;
+import com.bluenet.web.DBIntegrationTest;
 
 /**
  * ResetPasswordStateService 集成测试。
@@ -26,7 +26,7 @@ import com.bluenet.web.BaseIntegrationTest;
  * </p>
  */
 @DisplayName("ResetPasswordStateService 集成测试")
-class ResetPasswordStateServiceIntegrationTest extends BaseIntegrationTest {
+class ResetPasswordStateServiceIntegrationTest extends DBIntegrationTest {
 
     private static final String KEY_PREFIX = "reset_pwd:";
     private static final String FIELD_STUDENT_ID = "studentId";

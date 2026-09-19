@@ -6,7 +6,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.time.LocalDate;
 
-import com.bluenet.web.BaseIntegrationTest;
+import com.bluenet.web.DBIntegrationTest;
 import com.bluenet.web.api.dto.ResponseMessage;
 import com.bluenet.web.infrastructure.repository.dataobject.AuditDO;
 import com.bluenet.web.infrastructure.repository.mapper.AuditMapper;
@@ -36,7 +36,7 @@ import org.springframework.test.web.servlet.MockMvc;
 @DisplayName("AuditAspect 集成测试")
 @AutoConfigureMockMvc
 @Import(AuditAspectIntegrationTest.AuditTestController.class)
-class AuditAspectIntegrationTest extends BaseIntegrationTest {
+class AuditAspectIntegrationTest extends DBIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;

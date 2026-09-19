@@ -1,6 +1,6 @@
 package com.bluenet.web.infrastructure.repository.impl;
 
-import com.bluenet.web.BaseIntegrationTest;
+import com.bluenet.web.DBIntegrationTest;
 import com.bluenet.web.domain.model.entity.Venue;
 import com.bluenet.web.domain.repository.VenueRepository;
 import com.bluenet.web.infrastructure.repository.dataobject.VenueDO;
@@ -18,7 +18,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * VenueRepositoryImpl 集成测试。
  */
 @DisplayName("VenueRepositoryImpl 集成测试")
-class VenueRepositoryImplIntegrationTest extends BaseIntegrationTest {
+class VenueRepositoryImplIntegrationTest extends DBIntegrationTest {
 
     @Autowired
     private VenueRepository venueRepository;

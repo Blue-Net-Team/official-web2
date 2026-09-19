@@ -1,6 +1,6 @@
 package com.bluenet.web.application.service.impl;
 
-import com.bluenet.web.BaseIntegrationTest;
+import com.bluenet.web.DBIntegrationTest;
 import com.bluenet.web.application.result.team.TeamPreviewResult;
 import com.bluenet.web.application.result.team.TeamResult;
 import com.bluenet.web.application.service.AssessmentTeamAppService;
@@ -40,7 +40,7 @@ import static org.mockito.Mockito.when;
  * </p>
  */
 @DisplayName("AssessmentTeamAppServiceImpl 集成测试")
-class AssessmentTeamAppServiceImplIntegrationTest extends BaseIntegrationTest {
+class AssessmentTeamAppServiceImplIntegrationTest extends DBIntegrationTest {
 
     @Autowired
     private AssessmentTeamAppService assessmentTeamAppService;

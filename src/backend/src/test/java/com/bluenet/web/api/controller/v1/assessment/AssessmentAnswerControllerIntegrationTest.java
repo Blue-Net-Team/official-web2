@@ -1,6 +1,6 @@
 package com.bluenet.web.api.controller.v1.assessment;
 
-import com.bluenet.web.BaseIntegrationTest;
+import com.bluenet.web.APIIntegrationTest;
 import com.bluenet.web.api.dto.assessment_answer.AssessmentAnswerDTO;
 import com.bluenet.web.api.dto.assessment_answer.CreateAnswerRequestDTO;
 import com.bluenet.web.api.converter.assessment_answer.AssessmentAnswerRequestConverter;
@@ -34,7 +34,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @Import(TestSecurityConfig.class)
 @DisplayName("AssessmentAnswerController 集成测试")
-class AssessmentAnswerControllerIntegrationTest extends BaseIntegrationTest {
+class AssessmentAnswerControllerIntegrationTest extends APIIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;

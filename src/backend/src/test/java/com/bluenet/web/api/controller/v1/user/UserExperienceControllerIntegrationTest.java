@@ -1,6 +1,6 @@
 package com.bluenet.web.api.controller.v1.user;
 
-import com.bluenet.web.BaseIntegrationTest;
+import com.bluenet.web.APIIntegrationTest;
 import com.bluenet.web.api.dto.experience.CreateExperienceRequestDTO;
 import com.bluenet.web.api.dto.experience.ExperienceDTO;
 import com.bluenet.web.api.dto.experience.UpdateExperienceRequestDTO;
@@ -40,7 +40,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @Import(TestSecurityConfig.class)
 @DisplayName("UserExperienceController 集成测试")
-class UserExperienceControllerIntegrationTest extends BaseIntegrationTest {
+class UserExperienceControllerIntegrationTest extends APIIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;

@@ -1,6 +1,6 @@
 package com.bluenet.web.application.service.impl;
 
-import com.bluenet.web.BaseIntegrationTest;
+import com.bluenet.web.DBIntegrationTest;
 import com.bluenet.web.application.command.competition.CompetitionCommands;
 import com.bluenet.web.application.result.competition.CompetitionResult;
 import com.bluenet.web.application.service.CompetitionAppService;
@@ -34,7 +34,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  * </p>
  */
 @DisplayName("CompetitionAppServiceImpl 集成测试")
-class CompetitionAppServiceImplIntegrationTest extends BaseIntegrationTest {
+class CompetitionAppServiceImplIntegrationTest extends DBIntegrationTest {
 
     @Autowired
     private CompetitionAppService competitionAppService;

@@ -1,6 +1,6 @@
 package com.bluenet.web.application.service.impl;
 
-import com.bluenet.web.BaseIntegrationTest;
+import com.bluenet.web.DBIntegrationTest;
 import com.bluenet.web.application.query.aitrace.AiTraceGapQuery;
 import com.bluenet.web.application.query.aitrace.AiTraceListQuery;
 import com.bluenet.web.application.query.aitrace.AiTraceStatisticsQuery;
@@ -32,7 +32,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * </p>
  */
 @DisplayName("AiTraceQueryService 集成测试")
-class AiTraceQueryServiceIntegrationTest extends BaseIntegrationTest {
+class AiTraceQueryServiceIntegrationTest extends DBIntegrationTest {
 
     @Autowired
     private AiTraceQueryService aiTraceQueryService;

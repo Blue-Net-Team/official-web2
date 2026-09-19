@@ -1,6 +1,6 @@
 package com.bluenet.web.infrastructure.repository.impl;
 
-import com.bluenet.web.BaseIntegrationTest;
+import com.bluenet.web.DBIntegrationTest;
 import com.bluenet.web.domain.model.entity.User;
 import com.bluenet.web.domain.model.entity.UserExperience;
 import com.bluenet.web.domain.model.enumerate.ExperienceType;
@@ -26,7 +26,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * UserExperienceRepositoryImpl 集成测试。
  */
 @DisplayName("UserExperienceRepositoryImpl 集成测试")
-class UserExperienceRepositoryImplIntegrationTest extends BaseIntegrationTest {
+class UserExperienceRepositoryImplIntegrationTest extends DBIntegrationTest {
 
     @Autowired
     private UserExperienceRepository userExperienceRepository;

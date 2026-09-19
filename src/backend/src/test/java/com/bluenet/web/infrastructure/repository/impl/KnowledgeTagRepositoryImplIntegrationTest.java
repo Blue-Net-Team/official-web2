@@ -1,6 +1,6 @@
 package com.bluenet.web.infrastructure.repository.impl;
 
-import com.bluenet.web.BaseIntegrationTest;
+import com.bluenet.web.DBIntegrationTest;
 import com.bluenet.web.domain.model.entity.KnowledgeTag;
 import com.bluenet.web.domain.repository.KnowledgeTagRepository;
 import com.bluenet.web.infrastructure.repository.dataobject.KnowledgeTagDO;
@@ -20,7 +20,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * KnowledgeTagRepositoryImpl 集成测试。
  */
 @DisplayName("KnowledgeTagRepositoryImpl 集成测试")
-class KnowledgeTagRepositoryImplIntegrationTest extends BaseIntegrationTest {
+class KnowledgeTagRepositoryImplIntegrationTest extends DBIntegrationTest {
 
     @Autowired
     private KnowledgeTagRepository knowledgeTagRepository;

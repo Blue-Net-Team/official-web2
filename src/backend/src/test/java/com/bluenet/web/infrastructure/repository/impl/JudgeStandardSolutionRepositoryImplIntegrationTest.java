@@ -1,6 +1,6 @@
 package com.bluenet.web.infrastructure.repository.impl;
 
-import com.bluenet.web.BaseIntegrationTest;
+import com.bluenet.web.DBIntegrationTest;
 import com.bluenet.web.domain.model.entity.JudgeProblemConfig;
 import com.bluenet.web.domain.model.entity.JudgeStandardSolution;
 import com.bluenet.web.domain.repository.JudgeProblemConfigRepository;
@@ -21,7 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * JudgeStandardSolutionRepositoryImpl 集成测试。
  */
 @DisplayName("JudgeStandardSolutionRepositoryImpl 集成测试")
-class JudgeStandardSolutionRepositoryImplIntegrationTest extends BaseIntegrationTest {
+class JudgeStandardSolutionRepositoryImplIntegrationTest extends DBIntegrationTest {
 
     @Autowired
     private JudgeStandardSolutionRepository judgeStandardSolutionRepository;

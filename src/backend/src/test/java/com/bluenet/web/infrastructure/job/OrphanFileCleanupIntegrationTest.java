@@ -1,6 +1,6 @@
 package com.bluenet.web.infrastructure.job;
 
-import com.bluenet.web.BaseIntegrationTest;
+import com.bluenet.web.DBIntegrationTest;
 import com.bluenet.web.domain.model.entity.File;
 import com.bluenet.web.domain.model.enumerate.FileStatus;
 import com.bluenet.web.domain.model.enumerate.FileType;
@@ -18,7 +18,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class OrphanFileCleanupIntegrationTest extends BaseIntegrationTest {
+class OrphanFileCleanupIntegrationTest extends DBIntegrationTest {
 
     @Autowired
     private FileRepository fileRepository;

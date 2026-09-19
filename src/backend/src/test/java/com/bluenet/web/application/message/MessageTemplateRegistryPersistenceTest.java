@@ -1,6 +1,6 @@
 package com.bluenet.web.application.message;
 
-import com.bluenet.web.BaseIntegrationTest;
+import com.bluenet.web.DBIntegrationTest;
 import com.bluenet.web.infrastructure.repository.dataobject.MessageTemplateDO;
 import com.bluenet.web.infrastructure.repository.mapper.MessageTemplateMapper;
 import org.junit.jupiter.api.DisplayName;
@@ -17,7 +17,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * {@link MessageTemplateRegistry} 实例并传入真实 Mapper 来模拟。
  * </p>
  */
-class MessageTemplateRegistryPersistenceTest extends BaseIntegrationTest {
+class MessageTemplateRegistryPersistenceTest extends DBIntegrationTest {
 
     @Autowired
     private MessageTemplateMapper mapper;

@@ -1,6 +1,6 @@
 package com.bluenet.web.application.service.impl;
 
-import com.bluenet.web.BaseIntegrationTest;
+import com.bluenet.web.DBIntegrationTest;
 import com.bluenet.web.application.query.permission.GetPermissionsQuery;
 import com.bluenet.web.application.result.permission.PermissionResult;
 import com.bluenet.web.application.service.PermissionAppService;
@@ -35,7 +35,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  * </p>
  */
 @DisplayName("PermissionAppServiceImpl 集成测试")
-class PermissionAppServiceImplIntegrationTest extends BaseIntegrationTest {
+class PermissionAppServiceImplIntegrationTest extends DBIntegrationTest {
 
     @Autowired
     private PermissionAppService permissionAppService;

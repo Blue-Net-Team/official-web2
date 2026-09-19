@@ -1,6 +1,6 @@
 package com.bluenet.web.infrastructure.repository.impl;
 
-import com.bluenet.web.BaseIntegrationTest;
+import com.bluenet.web.DBIntegrationTest;
 import com.bluenet.web.domain.model.entity.College;
 import com.bluenet.web.domain.model.entity.Enroll;
 import com.bluenet.web.domain.model.enumerate.Direction;
@@ -32,7 +32,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * EnrollRepositoryImpl 集成测试。
  */
 @DisplayName("EnrollRepositoryImpl 集成测试")
-class EnrollRepositoryImplIntegrationTest extends BaseIntegrationTest {
+class EnrollRepositoryImplIntegrationTest extends DBIntegrationTest {
 
     @Autowired
     private EnrollRepository enrollRepository;

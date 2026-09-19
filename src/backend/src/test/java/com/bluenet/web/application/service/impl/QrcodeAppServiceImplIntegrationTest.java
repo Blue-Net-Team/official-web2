@@ -1,6 +1,6 @@
 package com.bluenet.web.application.service.impl;
 
-import com.bluenet.web.BaseIntegrationTest;
+import com.bluenet.web.DBIntegrationTest;
 import com.bluenet.web.application.command.qrcode.QrcodeCommands;
 import com.bluenet.web.application.result.qrcode.QrcodeResult;
 import com.bluenet.web.application.service.QrcodeAppService;
@@ -34,7 +34,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  * </p>
  */
 @DisplayName("QrcodeAppServiceImpl 集成测试")
-class QrcodeAppServiceImplIntegrationTest extends BaseIntegrationTest {
+class QrcodeAppServiceImplIntegrationTest extends DBIntegrationTest {
 
     @Autowired
     private QrcodeAppService qrcodeAppService;

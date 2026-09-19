@@ -1,6 +1,6 @@
 package com.bluenet.web.api.controller.v1.bugreport;
 
-import com.bluenet.web.BaseIntegrationTest;
+import com.bluenet.web.APIIntegrationTest;
 import com.bluenet.web.api.dto.bugreport.BugReportCreatedDTO;
 import com.bluenet.web.api.dto.bugreport.CreateBugReportRequestDTO;
 import com.bluenet.web.api.converter.bugreport.BugReportRequestConverter;
@@ -34,7 +34,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @Import(TestSecurityConfig.class)
 @DisplayName("BugReportController 集成测试")
-class BugReportControllerIntegrationTest extends BaseIntegrationTest {
+class BugReportControllerIntegrationTest extends APIIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;

@@ -1,6 +1,6 @@
 package com.bluenet.web.infrastructure.repository.impl;
 
-import com.bluenet.web.BaseIntegrationTest;
+import com.bluenet.web.DBIntegrationTest;
 import com.bluenet.web.domain.model.entity.User;
 import com.bluenet.web.domain.model.enumerate.Direction;
 import com.bluenet.web.domain.model.enumerate.Gender;
@@ -29,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * </p>
  */
 @DisplayName("UserRepositoryImpl 集成测试")
-class UserRepositoryImplIntegrationTest extends BaseIntegrationTest {
+class UserRepositoryImplIntegrationTest extends DBIntegrationTest {
 
     @Autowired
     private UserRepository userRepository;

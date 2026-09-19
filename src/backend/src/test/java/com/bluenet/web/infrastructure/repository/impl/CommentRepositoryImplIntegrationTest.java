@@ -1,6 +1,6 @@
 package com.bluenet.web.infrastructure.repository.impl;
 
-import com.bluenet.web.BaseIntegrationTest;
+import com.bluenet.web.DBIntegrationTest;
 import com.bluenet.web.domain.model.entity.Comment;
 import com.bluenet.web.domain.model.entity.User;
 import com.bluenet.web.domain.model.enumerate.Gender;
@@ -26,7 +26,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * CommentRepositoryImpl 集成测试。
  */
 @DisplayName("CommentRepositoryImpl 集成测试")
-class CommentRepositoryImplIntegrationTest extends BaseIntegrationTest {
+class CommentRepositoryImplIntegrationTest extends DBIntegrationTest {
 
     @Autowired
     private CommentRepository commentRepository;

@@ -1,6 +1,6 @@
 package com.bluenet.web.infrastructure.repository.impl;
 
-import com.bluenet.web.BaseIntegrationTest;
+import com.bluenet.web.DBIntegrationTest;
 import com.bluenet.web.domain.model.entity.AssessmentAnswer;
 import com.bluenet.web.domain.model.entity.AssessmentJudgement;
 import com.bluenet.web.domain.model.entity.AssessmentQuestion;
@@ -39,7 +39,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * AssessmentJudgementRepositoryImpl 集成测试。
  */
 @DisplayName("AssessmentJudgementRepositoryImpl 集成测试")
-class AssessmentJudgementRepositoryImplIntegrationTest extends BaseIntegrationTest {
+class AssessmentJudgementRepositoryImplIntegrationTest extends DBIntegrationTest {
 
     @Autowired
     private AssessmentJudgementRepository assessmentJudgementRepository;

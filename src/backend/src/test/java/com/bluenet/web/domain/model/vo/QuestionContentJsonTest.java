@@ -7,18 +7,20 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.bluenet.web.domain.model.vo.question_content.*;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 
-import com.bluenet.web.BaseIntegrationTest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
- * QuestionContent JSON 序列化/反序列化集成测试
+ * QuestionContent JSON 序列化/反序列化单元测试。
+ * <p>
+ * 多态识别由 {@code QuestionContent} 上的 {@code @JsonTypeInfo} /
+ * {@code @JsonSubTypes} 注解驱动， 不依赖 Spring 配置的 ObjectMapper，因此本类以纯 JUnit 方式运行，不启动
+ * Spring 上下文、 不需要数据库与容器。
+ * </p>
  */
-class QuestionContentJsonTest extends BaseIntegrationTest {
+class QuestionContentJsonTest {
 
-    @Autowired
-    private ObjectMapper objectMapper;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Test
     void testSingleChoiceContentSerialization() throws Exception {

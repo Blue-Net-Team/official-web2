@@ -1,6 +1,6 @@
 package com.bluenet.web.infrastructure.repository.impl;
 
-import com.bluenet.web.BaseIntegrationTest;
+import com.bluenet.web.DBIntegrationTest;
 import com.bluenet.web.domain.model.entity.DirectionLearningStep;
 import com.bluenet.web.domain.model.enumerate.Direction;
 import com.bluenet.web.domain.repository.LearningPathRepository;
@@ -20,7 +20,7 @@ import static org.assertj.core.api.Assertions.assertThatCode;
  * LearningPathRepositoryImpl 集成测试。
  */
 @DisplayName("LearningPathRepositoryImpl 集成测试")
-class LearningPathRepositoryImplIntegrationTest extends BaseIntegrationTest {
+class LearningPathRepositoryImplIntegrationTest extends DBIntegrationTest {
 
     @Autowired
     private LearningPathRepository learningPathRepository;

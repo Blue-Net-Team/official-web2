@@ -1,6 +1,6 @@
 package com.bluenet.web.infrastructure.repository.impl;
 
-import com.bluenet.web.BaseIntegrationTest;
+import com.bluenet.web.DBIntegrationTest;
 import com.bluenet.web.domain.model.entity.Competition;
 import com.bluenet.web.domain.model.enumerate.AwardLevel;
 import com.bluenet.web.domain.repository.CompetitionRepository;
@@ -23,7 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * CompetitionRepositoryImpl 集成测试。
  */
 @DisplayName("CompetitionRepositoryImpl 集成测试")
-class CompetitionRepositoryImplIntegrationTest extends BaseIntegrationTest {
+class CompetitionRepositoryImplIntegrationTest extends DBIntegrationTest {
 
     @Autowired
     private CompetitionRepository competitionRepository;

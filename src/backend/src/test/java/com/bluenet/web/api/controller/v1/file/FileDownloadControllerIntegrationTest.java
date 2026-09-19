@@ -1,6 +1,6 @@
 package com.bluenet.web.api.controller.v1.file;
 
-import com.bluenet.web.BaseIntegrationTest;
+import com.bluenet.web.DBIntegrationTest;
 import com.bluenet.web.api.dto.file.BatchDownloadEntryDTO;
 import com.bluenet.web.api.dto.file.BatchDownloadRequestDTO;
 import com.bluenet.web.application.command.file.FileCommands;
@@ -34,7 +34,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @Import(TestSecurityConfig.class)
 @DisplayName("FileDownloadController 集成测试")
-class FileDownloadControllerIntegrationTest extends BaseIntegrationTest {
+class FileDownloadControllerIntegrationTest extends DBIntegrationTest {
 
     private static final byte[] TEXT_BYTES = "Hello, BlueNet!".getBytes(StandardCharsets.UTF_8);
 

@@ -1,6 +1,6 @@
 package com.bluenet.web.api.controller.v1.user;
 
-import com.bluenet.web.BaseIntegrationTest;
+import com.bluenet.web.APIIntegrationTest;
 import com.bluenet.web.api.dto.user.UserInfo;
 import com.bluenet.web.api.converter.userinfo.UserInfoResponseConverter;
 import com.bluenet.web.application.result.user.UserInfoResult;
@@ -30,7 +30,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @Import(TestSecurityConfig.class)
 @DisplayName("UserInfoController 集成测试")
-class UserInfoControllerIntegrationTest extends BaseIntegrationTest {
+class UserInfoControllerIntegrationTest extends APIIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;

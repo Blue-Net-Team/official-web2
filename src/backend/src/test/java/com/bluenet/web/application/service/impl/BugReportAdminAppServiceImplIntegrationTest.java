@@ -1,6 +1,6 @@
 package com.bluenet.web.application.service.impl;
 
-import com.bluenet.web.BaseIntegrationTest;
+import com.bluenet.web.DBIntegrationTest;
 import com.bluenet.web.application.query.bugreport.GetBugReportListQuery;
 import com.bluenet.web.application.result.bugreport.BugReportResult;
 import com.bluenet.web.application.service.BugReportAdminAppService;
@@ -28,7 +28,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  */
 @DisplayName("BugReportAdminAppServiceImpl 集成测试")
 @WithSecurityPrincipal(userId = 1L, roleType = "SUPER_ADMIN")
-class BugReportAdminAppServiceImplIntegrationTest extends BaseIntegrationTest {
+class BugReportAdminAppServiceImplIntegrationTest extends DBIntegrationTest {
 
     @Autowired
     private BugReportAdminAppService bugReportAdminAppService;

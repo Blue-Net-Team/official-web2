@@ -1,6 +1,6 @@
 package com.bluenet.web.infrastructure.init;
 
-import com.bluenet.web.BaseIntegrationTest;
+import com.bluenet.web.DBIntegrationTest;
 import com.bluenet.web.domain.model.entity.User;
 import com.bluenet.web.domain.repository.UserRepository;
 import com.bluenet.web.infrastructure.config.properties.SystemUserProperties;
@@ -18,7 +18,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DisplayName("SystemUserInitializer 集成测试")
-public class SystemUserInitializerIntegrationTest extends BaseIntegrationTest {
+public class SystemUserInitializerIntegrationTest extends DBIntegrationTest {
 
     @Autowired
     private UserRepository userRepository;

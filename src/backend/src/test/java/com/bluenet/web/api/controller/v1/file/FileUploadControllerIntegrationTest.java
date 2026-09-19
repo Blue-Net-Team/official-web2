@@ -1,6 +1,6 @@
 package com.bluenet.web.api.controller.v1.file;
 
-import com.bluenet.web.BaseIntegrationTest;
+import com.bluenet.web.DBIntegrationTest;
 import com.bluenet.web.application.command.file.FileCommands;
 import com.bluenet.web.application.service.FileAppService;
 import com.bluenet.web.domain.model.enumerate.FileType;
@@ -40,7 +40,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @Import(TestSecurityConfig.class)
 @DisplayName("FileUploadController 集成测试")
-class FileUploadControllerIntegrationTest extends BaseIntegrationTest {
+class FileUploadControllerIntegrationTest extends DBIntegrationTest {
 
     private static final byte[] TEXT_BYTES = "Hello, BlueNet!".getBytes(StandardCharsets.UTF_8);
 

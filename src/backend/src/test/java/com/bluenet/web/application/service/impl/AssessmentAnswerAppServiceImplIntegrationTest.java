@@ -1,6 +1,6 @@
 package com.bluenet.web.application.service.impl;
 
-import com.bluenet.web.BaseIntegrationTest;
+import com.bluenet.web.DBIntegrationTest;
 import com.bluenet.web.application.command.assessment_answer.AssessmentAnswerCommands;
 import com.bluenet.web.application.result.assessment.AssessmentAnswerResult;
 import com.bluenet.web.application.service.AssessmentAnswerAppService;
@@ -50,7 +50,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * </p>
  */
 @DisplayName("AssessmentAnswerAppServiceImpl 集成测试")
-class AssessmentAnswerAppServiceImplIntegrationTest extends BaseIntegrationTest {
+class AssessmentAnswerAppServiceImplIntegrationTest extends DBIntegrationTest {
 
     @Autowired
     private AssessmentAnswerAppService assessmentAnswerAppService;

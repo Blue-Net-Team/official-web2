@@ -1,6 +1,6 @@
 package com.bluenet.web.infrastructure.repository.impl;
 
-import com.bluenet.web.BaseIntegrationTest;
+import com.bluenet.web.DBIntegrationTest;
 import com.bluenet.web.domain.model.entity.File;
 import com.bluenet.web.domain.model.enumerate.FileStatus;
 import com.bluenet.web.domain.model.enumerate.FileType;
@@ -27,7 +27,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * FileRepositoryImpl 集成测试。
  */
 @DisplayName("FileRepositoryImpl 集成测试")
-class FileRepositoryImplIntegrationTest extends BaseIntegrationTest {
+class FileRepositoryImplIntegrationTest extends DBIntegrationTest {
 
     @Autowired
     private FileRepository fileRepository;

@@ -1,6 +1,6 @@
 package com.bluenet.web.application.service.impl;
 
-import com.bluenet.web.BaseIntegrationTest;
+import com.bluenet.web.DBIntegrationTest;
 import com.bluenet.web.application.command.adminuser.AdminUserCommands;
 import com.bluenet.web.application.query.adminuser.GetUserListQuery;
 import com.bluenet.web.application.result.adminuser.AdminUserResult;
@@ -41,7 +41,7 @@ import static org.mockito.Mockito.when;
  * </p>
  */
 @DisplayName("AdminUserAppServiceImpl 集成测试")
-class AdminUserAppServiceImplIntegrationTest extends BaseIntegrationTest {
+class AdminUserAppServiceImplIntegrationTest extends DBIntegrationTest {
 
     @Autowired
     private AdminUserAppService adminUserAppService;

@@ -1,6 +1,6 @@
 package com.bluenet.web.infrastructure.repository.impl;
 
-import com.bluenet.web.BaseIntegrationTest;
+import com.bluenet.web.DBIntegrationTest;
 import com.bluenet.web.domain.model.entity.Achievement;
 import com.bluenet.web.domain.model.entity.File;
 import com.bluenet.web.domain.model.entity.User;
@@ -41,7 +41,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * AchievementRepositoryImpl 集成测试。
  */
 @DisplayName("AchievementRepositoryImpl 集成测试")
-class AchievementRepositoryImplIntegrationTest extends BaseIntegrationTest {
+class AchievementRepositoryImplIntegrationTest extends DBIntegrationTest {
 
     @Autowired
     private AchievementRepository achievementRepository;

@@ -1,6 +1,6 @@
 package com.bluenet.web.api.controller.v1.user;
 
-import com.bluenet.web.BaseIntegrationTest;
+import com.bluenet.web.APIIntegrationTest;
 import com.bluenet.web.api.dto.user.ChangeEmailRequestDTO;
 import com.bluenet.web.api.dto.user.ChangePasswordRequestDTO;
 import com.bluenet.web.api.dto.user.SendEmailVerificationCodeRequestDTO;
@@ -43,7 +43,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @Import(TestSecurityConfig.class)
 @DisplayName("UserProfileController 集成测试")
-class UserProfileControllerIntegrationTest extends BaseIntegrationTest {
+class UserProfileControllerIntegrationTest extends APIIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;

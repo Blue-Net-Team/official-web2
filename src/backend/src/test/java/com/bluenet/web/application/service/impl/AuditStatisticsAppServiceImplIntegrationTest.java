@@ -1,6 +1,6 @@
 package com.bluenet.web.application.service.impl;
 
-import com.bluenet.web.BaseIntegrationTest;
+import com.bluenet.web.DBIntegrationTest;
 import com.bluenet.web.application.query.auditstatistics.GetEndpointLatencyRankingQuery;
 import com.bluenet.web.application.query.auditstatistics.GetEndpointRankingQuery;
 import com.bluenet.web.application.query.auditstatistics.GetTrendsQuery;
@@ -32,7 +32,7 @@ import static org.assertj.core.api.Assertions.tuple;
  * </p>
  */
 @DisplayName("AuditStatisticsAppServiceImpl 集成测试")
-class AuditStatisticsAppServiceImplIntegrationTest extends BaseIntegrationTest {
+class AuditStatisticsAppServiceImplIntegrationTest extends DBIntegrationTest {
 
     @Autowired
     private AuditStatisticsAppService auditStatisticsAppService;

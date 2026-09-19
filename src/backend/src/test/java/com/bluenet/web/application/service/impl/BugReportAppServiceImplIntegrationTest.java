@@ -1,6 +1,6 @@
 package com.bluenet.web.application.service.impl;
 
-import com.bluenet.web.BaseIntegrationTest;
+import com.bluenet.web.DBIntegrationTest;
 import com.bluenet.web.application.command.bugreport.BugReportCommands;
 import com.bluenet.web.application.result.bugreport.BugReportResult;
 import com.bluenet.web.application.service.BugReportAppService;
@@ -30,7 +30,7 @@ import static org.mockito.Mockito.verify;
  */
 @DisplayName("BugReportAppServiceImpl 集成测试")
 @WithSecurityPrincipal(userId = 1L, roleType = "MEMBER")
-class BugReportAppServiceImplIntegrationTest extends BaseIntegrationTest {
+class BugReportAppServiceImplIntegrationTest extends DBIntegrationTest {
 
     @Autowired
     private BugReportAppService bugReportAppService;

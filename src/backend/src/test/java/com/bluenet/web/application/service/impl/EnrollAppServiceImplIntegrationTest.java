@@ -1,6 +1,6 @@
 package com.bluenet.web.application.service.impl;
 
-import com.bluenet.web.BaseIntegrationTest;
+import com.bluenet.web.DBIntegrationTest;
 import com.bluenet.web.application.command.enroll.EnrollCommands;
 import com.bluenet.web.application.message.MessageDispatcher;
 import com.bluenet.web.application.message.MessageRequest;
@@ -50,7 +50,7 @@ import static org.mockito.Mockito.verify;
  * </p>
  */
 @DisplayName("EnrollAppServiceImpl 集成测试")
-class EnrollAppServiceImplIntegrationTest extends BaseIntegrationTest {
+class EnrollAppServiceImplIntegrationTest extends DBIntegrationTest {
 
     @Autowired
     private EnrollAppService enrollAppService;

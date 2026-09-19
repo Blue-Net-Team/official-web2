@@ -1,6 +1,6 @@
 package com.bluenet.web.api.controller.v1.admin;
 
-import com.bluenet.web.BaseIntegrationTest;
+import com.bluenet.web.APIIntegrationTest;
 import com.bluenet.web.api.dto.equipment.CreateEquipmentRequestDTO;
 import com.bluenet.web.api.dto.equipment.EquipmentDTO;
 import com.bluenet.web.api.dto.equipment.UpdateEquipmentRequestDTO;
@@ -38,7 +38,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @Import(TestSecurityConfig.class)
 @DisplayName("AdminEquipmentController 集成测试")
-class AdminEquipmentControllerIntegrationTest extends BaseIntegrationTest {
+class AdminEquipmentControllerIntegrationTest extends APIIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;

@@ -1,6 +1,6 @@
 package com.bluenet.web.application.service.impl;
 
-import com.bluenet.web.BaseIntegrationTest;
+import com.bluenet.web.DBIntegrationTest;
 import com.bluenet.web.application.command.audit.AuditCommands;
 import com.bluenet.web.application.service.AuditAppService;
 import com.bluenet.web.infrastructure.repository.dataobject.AuditDO;
@@ -25,7 +25,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * </p>
  */
 @DisplayName("AuditAppServiceImpl 集成测试")
-class AuditAppServiceImplIntegrationTest extends BaseIntegrationTest {
+class AuditAppServiceImplIntegrationTest extends DBIntegrationTest {
 
     @Autowired
     private AuditAppService auditAppService;

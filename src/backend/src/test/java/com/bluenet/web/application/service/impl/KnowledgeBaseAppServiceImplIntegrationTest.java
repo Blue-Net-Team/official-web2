@@ -1,6 +1,6 @@
 package com.bluenet.web.application.service.impl;
 
-import com.bluenet.web.BaseIntegrationTest;
+import com.bluenet.web.DBIntegrationTest;
 import com.bluenet.web.application.command.knowledge.KnowledgeCommands;
 import com.bluenet.web.application.result.knowledge.KnowledgeDocResult;
 import com.bluenet.web.application.service.KnowledgeBaseAppService;
@@ -49,7 +49,7 @@ import static org.mockito.Mockito.verify;
         "knowledge:doc:cancel",
         "knowledge:doc:delete",
         "knowledge:tag:update" })
-class KnowledgeBaseAppServiceImplIntegrationTest extends BaseIntegrationTest {
+class KnowledgeBaseAppServiceImplIntegrationTest extends DBIntegrationTest {
 
     private static final byte[] MD_BYTES = "# Hello Knowledge Base".getBytes(StandardCharsets.UTF_8);
 

@@ -1,6 +1,6 @@
 package com.bluenet.web.application.service.impl;
 
-import com.bluenet.web.BaseIntegrationTest;
+import com.bluenet.web.DBIntegrationTest;
 import com.bluenet.web.application.command.wpsform.WpsFormCommands;
 import com.bluenet.web.application.message.MessageDispatcher;
 import com.bluenet.web.application.message.MessageRequest;
@@ -38,7 +38,7 @@ import static org.mockito.Mockito.verify;
  * </p>
  */
 @DisplayName("WpsFormAppServiceImpl 集成测试")
-class WpsFormAppServiceImplIntegrationTest extends BaseIntegrationTest {
+class WpsFormAppServiceImplIntegrationTest extends DBIntegrationTest {
 
     @Autowired
     private WpsFormAppService wpsFormAppService;

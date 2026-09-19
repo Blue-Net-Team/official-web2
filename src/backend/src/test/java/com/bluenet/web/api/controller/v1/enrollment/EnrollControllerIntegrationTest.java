@@ -1,6 +1,6 @@
 package com.bluenet.web.api.controller.v1.enrollment;
 
-import com.bluenet.web.BaseIntegrationTest;
+import com.bluenet.web.APIIntegrationTest;
 import com.bluenet.web.api.dto.enrollment.CreateEnrollmentRequestDTO;
 import com.bluenet.web.api.dto.enrollment.EnrollmentResultDTO;
 import com.bluenet.web.api.converter.enroll.EnrollRequestConverter;
@@ -34,7 +34,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @Import(TestSecurityConfig.class)
 @DisplayName("EnrollController 集成测试")
-class EnrollControllerIntegrationTest extends BaseIntegrationTest {
+class EnrollControllerIntegrationTest extends APIIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;

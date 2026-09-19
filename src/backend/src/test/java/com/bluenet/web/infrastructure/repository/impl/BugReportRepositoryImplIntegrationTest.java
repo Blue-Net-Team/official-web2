@@ -1,6 +1,6 @@
 package com.bluenet.web.infrastructure.repository.impl;
 
-import com.bluenet.web.BaseIntegrationTest;
+import com.bluenet.web.DBIntegrationTest;
 import com.bluenet.web.domain.model.entity.BugReport;
 import com.bluenet.web.domain.model.entity.File;
 import com.bluenet.web.domain.model.enumerate.BugReportStatus;
@@ -27,7 +27,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * BugReportRepositoryImpl 集成测试。
  */
 @DisplayName("BugReportRepositoryImpl 集成测试")
-class BugReportRepositoryImplIntegrationTest extends BaseIntegrationTest {
+class BugReportRepositoryImplIntegrationTest extends DBIntegrationTest {
 
     @Autowired
     private BugReportRepository bugReportRepository;

@@ -1,6 +1,6 @@
 package com.bluenet.web.infrastructure.repository.impl;
 
-import com.bluenet.web.BaseIntegrationTest;
+import com.bluenet.web.DBIntegrationTest;
 import com.bluenet.web.domain.model.entity.JudgeLanguageLimit;
 import com.bluenet.web.domain.model.entity.JudgeProblemConfig;
 import com.bluenet.web.domain.repository.JudgeLanguageLimitRepository;
@@ -18,7 +18,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * JudgeLanguageLimitRepositoryImpl 集成测试。
  */
 @DisplayName("JudgeLanguageLimitRepositoryImpl 集成测试")
-class JudgeLanguageLimitRepositoryImplIntegrationTest extends BaseIntegrationTest {
+class JudgeLanguageLimitRepositoryImplIntegrationTest extends DBIntegrationTest {
 
     @Autowired
     private JudgeLanguageLimitRepository judgeLanguageLimitRepository;

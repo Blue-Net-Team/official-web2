@@ -1,6 +1,6 @@
 package com.bluenet.web.application.service.impl;
 
-import com.bluenet.web.BaseIntegrationTest;
+import com.bluenet.web.DBIntegrationTest;
 import com.bluenet.web.application.command.assessment_judgement.AssessmentJudgementCommands;
 import com.bluenet.web.application.result.assessment.AssessmentCandidateScoreboard;
 import com.bluenet.web.application.result.assessment.AssessmentDecisionResult;
@@ -67,7 +67,7 @@ import static org.mockito.Mockito.*;
  * </p>
  */
 @DisplayName("AssessmentJudgementAppServiceImpl 集成测试")
-class AssessmentJudgementAppServiceImplIntegrationTest extends BaseIntegrationTest {
+class AssessmentJudgementAppServiceImplIntegrationTest extends DBIntegrationTest {
 
     @Autowired
     private AssessmentJudgementAppService assessmentJudgementAppService;

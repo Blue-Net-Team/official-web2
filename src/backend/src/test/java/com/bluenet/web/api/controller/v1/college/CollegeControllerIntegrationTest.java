@@ -1,6 +1,6 @@
 package com.bluenet.web.api.controller.v1.college;
 
-import com.bluenet.web.BaseIntegrationTest;
+import com.bluenet.web.APIIntegrationTest;
 import com.bluenet.web.api.dto.college.CollegeDTO;
 import com.bluenet.web.api.converter.college.CollegeResponseConverter;
 import com.bluenet.web.application.result.college.CollegeResult;
@@ -28,7 +28,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @Import(TestSecurityConfig.class)
 @DisplayName("CollegeController 集成测试")
-class CollegeControllerIntegrationTest extends BaseIntegrationTest {
+class CollegeControllerIntegrationTest extends APIIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;

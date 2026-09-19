@@ -1,6 +1,6 @@
 package com.bluenet.web.api.controller.v1.admin;
 
-import com.bluenet.web.BaseIntegrationTest;
+import com.bluenet.web.APIIntegrationTest;
 import com.bluenet.web.api.dto.qrcode.ConsultationQrcodeDTO;
 import com.bluenet.web.api.dto.qrcode.UpdateConsultationQrcodeRequestDTO;
 import com.bluenet.web.api.converter.qrcode.QrcodeResponseConverter;
@@ -41,7 +41,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @Import(TestSecurityConfig.class)
 @DisplayName("AdminQrcodeController 集成测试")
-class AdminQrcodeControllerIntegrationTest extends BaseIntegrationTest {
+class AdminQrcodeControllerIntegrationTest extends APIIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;

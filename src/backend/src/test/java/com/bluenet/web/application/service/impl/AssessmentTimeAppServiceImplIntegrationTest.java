@@ -1,6 +1,6 @@
 package com.bluenet.web.application.service.impl;
 
-import com.bluenet.web.BaseIntegrationTest;
+import com.bluenet.web.DBIntegrationTest;
 import com.bluenet.web.application.command.assessment_time.AssessmentTimeCommands;
 import com.bluenet.web.application.result.assessment.AssessmentProgressResult;
 import com.bluenet.web.application.result.assessment.AssessmentTimeResult;
@@ -42,7 +42,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * </p>
  */
 @DisplayName("AssessmentTimeAppServiceImpl 集成测试")
-class AssessmentTimeAppServiceImplIntegrationTest extends BaseIntegrationTest {
+class AssessmentTimeAppServiceImplIntegrationTest extends DBIntegrationTest {
 
     @Autowired
     private AssessmentTimeAppService assessmentTimeAppService;

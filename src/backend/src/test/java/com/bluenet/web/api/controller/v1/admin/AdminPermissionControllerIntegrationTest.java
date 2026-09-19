@@ -1,6 +1,6 @@
 package com.bluenet.web.api.controller.v1.admin;
 
-import com.bluenet.web.BaseIntegrationTest;
+import com.bluenet.web.APIIntegrationTest;
 import com.bluenet.web.api.dto.permission.PermissionDTO;
 import com.bluenet.web.api.dto.permission.PermissionRoleBatchRequestDTO;
 import com.bluenet.web.api.dto.permission.PermissionTreeDTO;
@@ -39,7 +39,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @Import(TestSecurityConfig.class)
 @DisplayName("AdminPermissionController 集成测试")
-class AdminPermissionControllerIntegrationTest extends BaseIntegrationTest {
+class AdminPermissionControllerIntegrationTest extends APIIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;

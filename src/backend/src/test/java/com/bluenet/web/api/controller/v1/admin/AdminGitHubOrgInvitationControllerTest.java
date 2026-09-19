@@ -1,6 +1,6 @@
 package com.bluenet.web.api.controller.v1.admin;
 
-import com.bluenet.web.BaseIntegrationTest;
+import com.bluenet.web.APIIntegrationTest;
 import com.bluenet.web.api.dto.githuborg.GitHubOrgBatchInviteRequestDTO;
 import com.bluenet.web.application.result.githuborg.GitHubOrgInvitationAdminResult;
 import com.bluenet.web.application.service.GitHubOrgInvitationAdminAppService;
@@ -32,7 +32,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @Import(TestSecurityConfig.class)
 @DisplayName("AdminGitHubOrgInvitationController 集成测试")
-class AdminGitHubOrgInvitationControllerTest extends BaseIntegrationTest {
+class AdminGitHubOrgInvitationControllerTest extends APIIntegrationTest {
 
     private static final long ADMIN_USER_ID = 9999L;
 

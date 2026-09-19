@@ -1,6 +1,6 @@
 package com.bluenet.web.api.controller.v1.wps;
 
-import com.bluenet.web.BaseIntegrationTest;
+import com.bluenet.web.APIIntegrationTest;
 import com.bluenet.web.api.converter.wpsform.WpsFormRequestConverter;
 import com.bluenet.web.api.dto.wps.WpsBindCallbackRequestDTO;
 import com.bluenet.web.api.dto.wps.WpsCreateAnswerCallbackRequestDTO;
@@ -34,7 +34,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @Import(TestSecurityConfig.class)
 @DisplayName("WpsCallbackController 集成测试")
-class WpsCallbackControllerIntegrationTest extends BaseIntegrationTest {
+class WpsCallbackControllerIntegrationTest extends APIIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;

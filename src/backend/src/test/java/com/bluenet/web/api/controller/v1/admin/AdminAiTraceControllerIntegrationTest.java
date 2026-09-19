@@ -1,6 +1,6 @@
 package com.bluenet.web.api.controller.v1.admin;
 
-import com.bluenet.web.BaseIntegrationTest;
+import com.bluenet.web.DBIntegrationTest;
 import com.bluenet.web.infrastructure.security.principal.WithSecurityPrincipal;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -34,7 +34,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 @AutoConfigureMockMvc
 @DisplayName("AdminAiTraceController 集成测试")
-class AdminAiTraceControllerIntegrationTest extends BaseIntegrationTest {
+class AdminAiTraceControllerIntegrationTest extends DBIntegrationTest {
 
     private static final long ADMIN_USER_ID = 1L;
 

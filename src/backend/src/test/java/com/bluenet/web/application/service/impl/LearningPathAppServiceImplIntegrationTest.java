@@ -1,6 +1,6 @@
 package com.bluenet.web.application.service.impl;
 
-import com.bluenet.web.BaseIntegrationTest;
+import com.bluenet.web.DBIntegrationTest;
 import com.bluenet.web.application.command.learningpath.LearningPathCommands;
 import com.bluenet.web.application.result.learningpath.LearningPathResult;
 import com.bluenet.web.application.service.LearningPathAppService;
@@ -29,7 +29,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  * </p>
  */
 @DisplayName("LearningPathAppServiceImpl 集成测试")
-class LearningPathAppServiceImplIntegrationTest extends BaseIntegrationTest {
+class LearningPathAppServiceImplIntegrationTest extends DBIntegrationTest {
 
     @Autowired
     private LearningPathAppService learningPathAppService;

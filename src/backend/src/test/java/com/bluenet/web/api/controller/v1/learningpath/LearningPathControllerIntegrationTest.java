@@ -1,6 +1,6 @@
 package com.bluenet.web.api.controller.v1.learningpath;
 
-import com.bluenet.web.BaseIntegrationTest;
+import com.bluenet.web.APIIntegrationTest;
 import com.bluenet.web.api.dto.learningpath.DirectionLearningPathDTO;
 import com.bluenet.web.api.dto.learningpath.LearningStepDTO;
 import com.bluenet.web.api.converter.learningpath.LearningPathResponseConverter;
@@ -28,7 +28,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @Import(TestSecurityConfig.class)
 @DisplayName("LearningPathController 集成测试")
-class LearningPathControllerIntegrationTest extends BaseIntegrationTest {
+class LearningPathControllerIntegrationTest extends APIIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;

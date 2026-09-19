@@ -1,6 +1,6 @@
 package com.bluenet.web.infrastructure.repository.impl;
 
-import com.bluenet.web.BaseIntegrationTest;
+import com.bluenet.web.DBIntegrationTest;
 import com.bluenet.web.domain.model.entity.VerifyCode;
 import com.bluenet.web.domain.repository.VerificationCodeRepository;
 import com.bluenet.web.infrastructure.repository.dataobject.VerifyCodeDO;
@@ -21,7 +21,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * </p>
  */
 @DisplayName("VerificationCodeRepositoryImpl 集成测试")
-class VerificationCodeRepositoryImplIntegrationTest extends BaseIntegrationTest {
+class VerificationCodeRepositoryImplIntegrationTest extends DBIntegrationTest {
 
     @Autowired
     private VerificationCodeRepository verificationCodeRepository;

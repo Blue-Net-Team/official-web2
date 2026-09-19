@@ -1,6 +1,6 @@
 package com.bluenet.web.infrastructure.repository.impl;
 
-import com.bluenet.web.BaseIntegrationTest;
+import com.bluenet.web.DBIntegrationTest;
 import com.bluenet.web.domain.model.entity.Role;
 import com.bluenet.web.domain.model.enumerate.RoleType;
 import com.bluenet.web.domain.repository.RoleRepository;
@@ -18,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * RoleRepositoryImpl 集成测试。
  */
 @DisplayName("RoleRepositoryImpl 集成测试")
-class RoleRepositoryImplIntegrationTest extends BaseIntegrationTest {
+class RoleRepositoryImplIntegrationTest extends DBIntegrationTest {
 
     @Autowired
     private RoleRepository roleRepository;

@@ -1,6 +1,6 @@
 package com.bluenet.web.api.controller.v1.auth;
 
-import com.bluenet.web.BaseIntegrationTest;
+import com.bluenet.web.APIIntegrationTest;
 import com.bluenet.web.api.dto.auth.AuthMeResponseDTO;
 import com.bluenet.web.api.dto.auth.EmailLoginRequestDTO;
 import com.bluenet.web.api.dto.auth.SendVerificationCodeRequestDTO;
@@ -51,7 +51,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @Import(TestSecurityConfig.class)
 @DisplayName("AuthController 集成测试")
-class AuthControllerIntegrationTest extends BaseIntegrationTest {
+class AuthControllerIntegrationTest extends APIIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;

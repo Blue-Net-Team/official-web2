@@ -1,6 +1,6 @@
 package com.bluenet.web.application.service.impl;
 
-import com.bluenet.web.BaseIntegrationTest;
+import com.bluenet.web.DBIntegrationTest;
 import com.bluenet.web.application.query.member.GetMemberListQuery;
 import com.bluenet.web.application.result.member.MemberResult;
 import com.bluenet.web.application.result.user.UserExperienceResult;
@@ -38,7 +38,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  * </p>
  */
 @DisplayName("MemberAppServiceImpl 集成测试")
-class MemberAppServiceImplIntegrationTest extends BaseIntegrationTest {
+class MemberAppServiceImplIntegrationTest extends DBIntegrationTest {
 
     @Autowired
     private MemberAppService memberAppService;

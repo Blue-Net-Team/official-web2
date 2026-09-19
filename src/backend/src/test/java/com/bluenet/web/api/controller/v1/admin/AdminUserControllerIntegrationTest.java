@@ -1,6 +1,6 @@
 package com.bluenet.web.api.controller.v1.admin;
 
-import com.bluenet.web.BaseIntegrationTest;
+import com.bluenet.web.APIIntegrationTest;
 import com.bluenet.web.api.dto.PageDTO;
 import com.bluenet.web.api.dto.adminuser.AdminUserBatchOperateRequestDTO;
 import com.bluenet.web.api.dto.adminuser.AdminUserBatchUpdateRoleRequestDTO;
@@ -46,7 +46,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @Import(TestSecurityConfig.class)
 @DisplayName("AdminUserController 集成测试")
-class AdminUserControllerIntegrationTest extends BaseIntegrationTest {
+class AdminUserControllerIntegrationTest extends APIIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;

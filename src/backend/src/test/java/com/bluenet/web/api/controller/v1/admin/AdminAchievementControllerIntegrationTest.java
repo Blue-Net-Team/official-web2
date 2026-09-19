@@ -1,6 +1,6 @@
 package com.bluenet.web.api.controller.v1.admin;
 
-import com.bluenet.web.BaseIntegrationTest;
+import com.bluenet.web.APIIntegrationTest;
 import com.bluenet.web.api.dto.achievement.AchievementDTO;
 import com.bluenet.web.api.dto.achievement.AchievementMemberDTO;
 import com.bluenet.web.api.dto.achievement.CreateAchievementRequestDTO;
@@ -48,7 +48,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @Import(TestSecurityConfig.class)
 @DisplayName("AdminAchievementController 集成测试")
-class AdminAchievementControllerIntegrationTest extends BaseIntegrationTest {
+class AdminAchievementControllerIntegrationTest extends APIIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;

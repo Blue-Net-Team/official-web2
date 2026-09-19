@@ -1,6 +1,6 @@
 package com.bluenet.web.api.controller.v1.auth;
 
-import com.bluenet.web.BaseIntegrationTest;
+import com.bluenet.web.APIIntegrationTest;
 import com.bluenet.web.api.dto.auth.ResetPasswordRequestDTO;
 import com.bluenet.web.api.dto.auth.SendResetCodeRequestDTO;
 import com.bluenet.web.api.dto.auth.VerifyEmailRequestDTO;
@@ -42,7 +42,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @Import(TestSecurityConfig.class)
 @DisplayName("ResetPasswordController 集成测试")
-class ResetPasswordControllerIntegrationTest extends BaseIntegrationTest {
+class ResetPasswordControllerIntegrationTest extends APIIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;

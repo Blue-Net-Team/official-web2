@@ -1,6 +1,6 @@
 package com.bluenet.web.application.service.impl;
 
-import com.bluenet.web.BaseIntegrationTest;
+import com.bluenet.web.DBIntegrationTest;
 import com.bluenet.web.application.command.resetpassword.ResetPasswordCommands;
 import com.bluenet.web.application.message.MessageDispatcher;
 import com.bluenet.web.application.message.MessageRequest;
@@ -36,7 +36,7 @@ import static org.mockito.Mockito.*;
  * </p>
  */
 @DisplayName("ResetPasswordAppServiceImpl 集成测试")
-class ResetPasswordAppServiceImplIntegrationTest extends BaseIntegrationTest {
+class ResetPasswordAppServiceImplIntegrationTest extends DBIntegrationTest {
 
     @Autowired
     private ResetPasswordAppService resetPasswordAppService;

@@ -1,6 +1,6 @@
 package com.bluenet.web.application.service.impl;
 
-import com.bluenet.web.BaseIntegrationTest;
+import com.bluenet.web.DBIntegrationTest;
 import com.bluenet.web.application.command.auth.AuthCommands;
 import com.bluenet.web.application.message.MessageDispatcher;
 import com.bluenet.web.application.message.MessageRequest;
@@ -47,7 +47,7 @@ import static org.mockito.Mockito.*;
  * </p>
  */
 @DisplayName("AuthAppServiceImpl 集成测试")
-class AuthAppServiceImplIntegrationTest extends BaseIntegrationTest {
+class AuthAppServiceImplIntegrationTest extends DBIntegrationTest {
 
     @Autowired
     private AuthAppService authAppService;

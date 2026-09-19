@@ -1,6 +1,6 @@
 package com.bluenet.web.application.service.impl;
 
-import com.bluenet.web.BaseIntegrationTest;
+import com.bluenet.web.DBIntegrationTest;
 import com.bluenet.web.application.result.comment.CommentResult;
 import com.bluenet.web.application.service.CommentAppService;
 import com.bluenet.web.domain.exception.BadRequest;
@@ -28,7 +28,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * </p>
  */
 @DisplayName("CommentAppServiceImpl 集成测试")
-class CommentAppServiceImplIntegrationTest extends BaseIntegrationTest {
+class CommentAppServiceImplIntegrationTest extends DBIntegrationTest {
 
     @Autowired
     private CommentAppService commentAppService;

@@ -1,6 +1,6 @@
 package com.bluenet.web.api.controller.v1.github;
 
-import com.bluenet.web.BaseIntegrationTest;
+import com.bluenet.web.APIIntegrationTest;
 import com.bluenet.web.application.service.impl.GitHubWebhookService;
 import com.bluenet.web.infrastructure.github.GitHubWebhookVerifier;
 import com.bluenet.web.testconfig.TestSecurityConfig;
@@ -26,7 +26,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @Import(TestSecurityConfig.class)
 @DisplayName("GitHubWebhookController 集成测试")
-class GitHubWebhookControllerIntegrationTest extends BaseIntegrationTest {
+class GitHubWebhookControllerIntegrationTest extends APIIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;

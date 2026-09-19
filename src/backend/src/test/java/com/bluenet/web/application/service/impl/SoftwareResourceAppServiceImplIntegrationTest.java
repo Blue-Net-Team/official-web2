@@ -1,6 +1,6 @@
 package com.bluenet.web.application.service.impl;
 
-import com.bluenet.web.BaseIntegrationTest;
+import com.bluenet.web.DBIntegrationTest;
 import com.bluenet.web.application.command.softwareresource.SoftwareResourceCommands;
 import com.bluenet.web.application.result.softwareresource.SoftwareResourceResult;
 import com.bluenet.web.application.service.SoftwareResourceAppService;
@@ -32,7 +32,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  * </p>
  */
 @DisplayName("SoftwareResourceAppServiceImpl 集成测试")
-class SoftwareResourceAppServiceImplIntegrationTest extends BaseIntegrationTest {
+class SoftwareResourceAppServiceImplIntegrationTest extends DBIntegrationTest {
 
     @Autowired
     private SoftwareResourceAppService softwareResourceAppService;

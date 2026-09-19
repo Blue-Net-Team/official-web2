@@ -1,6 +1,6 @@
 package com.bluenet.web.infrastructure.repository.impl;
 
-import com.bluenet.web.BaseIntegrationTest;
+import com.bluenet.web.DBIntegrationTest;
 import com.bluenet.web.domain.model.entity.SoftwareResource;
 import com.bluenet.web.domain.model.enumerate.SoftwareResourceDirection;
 import com.bluenet.web.domain.model.enumerate.SoftwareResourceStatus;
@@ -23,7 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * SoftwareResourceRepositoryImpl 集成测试。
  */
 @DisplayName("SoftwareResourceRepositoryImpl 集成测试")
-class SoftwareResourceRepositoryImplIntegrationTest extends BaseIntegrationTest {
+class SoftwareResourceRepositoryImplIntegrationTest extends DBIntegrationTest {
 
     @Autowired
     private SoftwareResourceRepository softwareResourceRepository;

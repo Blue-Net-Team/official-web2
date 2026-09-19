@@ -1,6 +1,6 @@
 package com.bluenet.web.api.controller.v1.algorithm;
 
-import com.bluenet.web.BaseIntegrationTest;
+import com.bluenet.web.APIIntegrationTest;
 import com.bluenet.web.api.dto.algorithm_judge.AlgorithmRunRequestDTO;
 import com.bluenet.web.api.dto.algorithm_judge.AlgorithmSubmitResponseDTO;
 import com.bluenet.web.api.dto.algorithm_judge.JudgeJobPollingResponseDTO;
@@ -39,7 +39,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @Import(TestSecurityConfig.class)
 @DisplayName("AlgorithmJudgeController 集成测试")
-class AlgorithmJudgeControllerIntegrationTest extends BaseIntegrationTest {
+class AlgorithmJudgeControllerIntegrationTest extends APIIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;

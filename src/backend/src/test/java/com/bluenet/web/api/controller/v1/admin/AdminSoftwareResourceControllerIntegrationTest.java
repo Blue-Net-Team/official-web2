@@ -1,6 +1,6 @@
 package com.bluenet.web.api.controller.v1.admin;
 
-import com.bluenet.web.BaseIntegrationTest;
+import com.bluenet.web.APIIntegrationTest;
 import com.bluenet.web.api.dto.PageDTO;
 import com.bluenet.web.api.dto.softwareresource.BatchSortRequestDTO;
 import com.bluenet.web.api.dto.softwareresource.CreateSoftwareResourceRequestDTO;
@@ -47,7 +47,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @Import(TestSecurityConfig.class)
 @DisplayName("AdminSoftwareResourceController 集成测试")
-class AdminSoftwareResourceControllerIntegrationTest extends BaseIntegrationTest {
+class AdminSoftwareResourceControllerIntegrationTest extends APIIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;

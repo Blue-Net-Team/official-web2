@@ -1,6 +1,6 @@
 package com.bluenet.web.application.service.impl;
 
-import com.bluenet.web.BaseIntegrationTest;
+import com.bluenet.web.DBIntegrationTest;
 import com.bluenet.web.application.command.equipment.EquipmentCommands;
 import com.bluenet.web.application.result.equipment.EquipmentResult;
 import com.bluenet.web.application.service.EquipmentAppService;
@@ -31,7 +31,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  * </p>
  */
 @DisplayName("EquipmentAppServiceImpl 集成测试")
-class EquipmentAppServiceImplIntegrationTest extends BaseIntegrationTest {
+class EquipmentAppServiceImplIntegrationTest extends DBIntegrationTest {
 
     @Autowired
     private EquipmentAppService equipmentAppService;

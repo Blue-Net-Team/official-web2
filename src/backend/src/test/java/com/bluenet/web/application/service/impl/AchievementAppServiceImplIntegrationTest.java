@@ -1,6 +1,6 @@
 package com.bluenet.web.application.service.impl;
 
-import com.bluenet.web.BaseIntegrationTest;
+import com.bluenet.web.DBIntegrationTest;
 import com.bluenet.web.application.command.achievement.AchievementCommands;
 import com.bluenet.web.application.result.achievement.AchievementResult;
 import com.bluenet.web.application.result.achievement.AchievementStatistics;
@@ -41,7 +41,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  * </p>
  */
 @DisplayName("AchievementAppServiceImpl 集成测试")
-class AchievementAppServiceImplIntegrationTest extends BaseIntegrationTest {
+class AchievementAppServiceImplIntegrationTest extends DBIntegrationTest {
 
     @Autowired
     private AchievementAppService achievementAppService;

@@ -1,6 +1,6 @@
 package com.bluenet.web.api.controller.v1.venue;
 
-import com.bluenet.web.BaseIntegrationTest;
+import com.bluenet.web.APIIntegrationTest;
 import com.bluenet.web.api.dto.venue.VenueDTO;
 import com.bluenet.web.api.converter.venue.VenueResponseConverter;
 import com.bluenet.web.application.result.venue.VenueResult;
@@ -29,7 +29,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @Import(TestSecurityConfig.class)
 @DisplayName("VenueController 集成测试")
-class VenueControllerIntegrationTest extends BaseIntegrationTest {
+class VenueControllerIntegrationTest extends APIIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;

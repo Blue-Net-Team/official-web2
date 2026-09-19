@@ -1,6 +1,6 @@
 package com.bluenet.web.application.service.impl;
 
-import com.bluenet.web.BaseIntegrationTest;
+import com.bluenet.web.DBIntegrationTest;
 import com.bluenet.web.application.command.enrollform.EnrollFormCommands;
 import com.bluenet.web.application.result.enrollform.EnrollFormResult;
 import com.bluenet.web.application.service.EnrollFormAppService;
@@ -28,7 +28,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  * </p>
  */
 @DisplayName("EnrollFormAppServiceImpl 集成测试")
-class EnrollFormAppServiceImplIntegrationTest extends BaseIntegrationTest {
+class EnrollFormAppServiceImplIntegrationTest extends DBIntegrationTest {
 
     @Autowired
     private EnrollFormAppService enrollFormAppService;

@@ -1,6 +1,6 @@
 package com.bluenet.web.application.service.impl;
 
-import com.bluenet.web.BaseIntegrationTest;
+import com.bluenet.web.DBIntegrationTest;
 import com.bluenet.web.application.command.userinfo.UserInfoCommands;
 import com.bluenet.web.application.result.common.TabCounts;
 import com.bluenet.web.application.result.user.UserInfoResult;
@@ -50,7 +50,7 @@ import static org.mockito.Mockito.verify;
  * </p>
  */
 @DisplayName("UserInfoAppServiceImpl 集成测试")
-class UserInfoAppServiceImplIntegrationTest extends BaseIntegrationTest {
+class UserInfoAppServiceImplIntegrationTest extends DBIntegrationTest {
 
     @Autowired
     private UserInfoAppService userInfoAppService;

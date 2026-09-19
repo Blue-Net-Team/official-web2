@@ -1,6 +1,6 @@
 package com.bluenet.web.api.controller.v1.competition;
 
-import com.bluenet.web.BaseIntegrationTest;
+import com.bluenet.web.APIIntegrationTest;
 import com.bluenet.web.api.dto.PageDTO;
 import com.bluenet.web.api.dto.competition.CompetitionResponseDTO;
 import com.bluenet.web.api.converter.competition.CompetitionResponseConverter;
@@ -30,7 +30,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @Import(TestSecurityConfig.class)
 @DisplayName("CompetitionController 集成测试")
-class CompetitionControllerIntegrationTest extends BaseIntegrationTest {
+class CompetitionControllerIntegrationTest extends APIIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;
