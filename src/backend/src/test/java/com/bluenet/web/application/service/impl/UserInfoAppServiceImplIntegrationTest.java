@@ -29,11 +29,16 @@ import com.bluenet.web.testsupport.fixture.UserFixture;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.MockedStatic;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.time.LocalDate;
+
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.CALLS_REAL_METHODS;
+import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.verify;
 
 /**
@@ -104,8 +109,15 @@ class UserInfoAppServiceImplIntegrationTest extends BaseIntegrationTest {
     @DisplayName("getMyInfo: 应返回当前用户信息")
     void getMyInfo_shouldReturnUserInfo() {
         User user = createUser("2024003001", memberRoleId);
+        // 年级以 9 月为新学年起点，用 when 固定 LocalDate.now() 为 2026 年 7 月，
+        // 避免断言随真实学年切换而漂移（2025 参考年 - 2024 入学 + 1 = 大二）
+        LocalDate july2026 = LocalDate.of(2026, 7, 1);
 
-        UserInfoResult result = userInfoAppService.getMyInfo(user.getId());
+        UserInfoResult result;
+        try (MockedStatic<LocalDate> mockedLocalDate = mockStatic(LocalDate.class, CALLS_REAL_METHODS)) {
+            mockedLocalDate.when(LocalDate::now).thenReturn(july2026);
+            result = userInfoAppService.getMyInfo(user.getId());
+        }
 
         assertEquals(user.getId(), result.id());
         assertEquals("用户2024003001", result.username());
