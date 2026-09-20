@@ -9,10 +9,10 @@ import com.bluenet.web.domain.model.entity.Permission;
 import com.bluenet.web.domain.model.enumerate.RoleType;
 import com.bluenet.web.domain.repository.PermissionRepository;
 import com.bluenet.web.domain.repository.RolePermissionRepository;
-import com.bluenet.web.infrastructure.repository.dataobject.RoleDO;
 import com.bluenet.web.infrastructure.repository.mapper.RoleMapper;
 import com.bluenet.web.testconfig.TestSecurityConfig;
 import com.bluenet.web.testsupport.fixture.PermissionFixture;
+import com.bluenet.web.testsupport.fixture.RoleFixture;
 import com.bluenet.web.testsupport.fixture.RolePermissionFixture;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -28,7 +28,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * RolePermissionManageAppServiceImpl 集成测试。
  * <p>
- * 验证角色权限管理应用服务的查询、分配、移除及异常行为。
+ * 验证角色权限管理应用服务的查询、分配、移除及异常行为。角色一律使用迁移种子角色， 通过名称解析 ID（角色 ID 由 SERIAL
+ * 生成，不可硬编码为固定值）。
  * </p>
  */
 @DisplayName("RolePermissionManageAppServiceImpl 集成测试")
@@ -47,27 +48,21 @@ class RolePermissionManageAppServiceImplIntegrationTest extends DBIntegrationTes
     @Autowired
     private RolePermissionRepository rolePermissionRepository;
 
-    private RoleDO createRole(String name) {
-        RoleDO role = RoleDO.builder().name(name).build();
-        roleMapper.insert(role);
-        return role;
-    }
-
     @Test
     @DisplayName("getRolePermissions: 应返回角色已绑定的权限值并排序")
     void getRolePermissions_shouldReturnSortedPermissionValues() {
-        RoleDO role = createRole("ROLE_TEST_MEMBER");
+        Long roleId = RoleFixture.roleId(roleMapper, RoleType.MEMBER);
         Permission permissionB = PermissionFixture.save(permissionRepository, "测试权限B", "test:permission:b");
         Permission permissionA = PermissionFixture.save(permissionRepository, "测试权限A", "test:permission:a");
         Permission permissionC = PermissionFixture.save(permissionRepository, "测试权限C", "test:permission:c");
         RolePermissionFixture.grant(
                 rolePermissionRepository,
-                role.getId(),
+                roleId,
                 permissionA.getId(),
                 permissionB.getId(),
                 permissionC.getId());
 
-        List<String> result = rolePermissionManageAppService.getRolePermissions(role.getName());
+        List<String> result = rolePermissionManageAppService.getRolePermissions(RoleType.MEMBER.getName());
 
         assertEquals(List.of("test:permission:a", "test:permission:b", "test:permission:c"), result);
     }
@@ -75,9 +70,7 @@ class RolePermissionManageAppServiceImplIntegrationTest extends DBIntegrationTes
     @Test
     @DisplayName("getRolePermissions: 角色无权限时应返回空列表")
     void getRolePermissions_withoutPermissions_shouldReturnEmpty() {
-        RoleDO role = createRole("ROLE_TEST_EMPTY");
-
-        List<String> result = rolePermissionManageAppService.getRolePermissions(role.getName());
+        List<String> result = rolePermissionManageAppService.getRolePermissions(RoleType.CANDIDATE.getName());
 
         assertTrue(result.isEmpty());
     }
@@ -85,13 +78,13 @@ class RolePermissionManageAppServiceImplIntegrationTest extends DBIntegrationTes
     @Test
     @DisplayName("assignPermissionsToRole: 应分配权限并返回当前权限列表")
     void assignPermissionsToRole_shouldAssignAndReturnCurrentPermissions() {
-        RoleDO role = createRole("ROLE_TEST_ASSIGN");
         Permission permissionA = PermissionFixture.save(permissionRepository, "测试权限A", "test:permission:a");
         Permission permissionB = PermissionFixture.save(permissionRepository, "测试权限B", "test:permission:b");
 
         RolePermissionManageResult result = rolePermissionManageAppService.assignPermissionsToRole(
                 new RolePermissionCommands.AssignPermissionsToRoleCommand(
-                        role.getName(), List.of(permissionA.getId(), permissionB.getId())));
+                        RoleType.MEMBER.getName(),
+                        List.of(permissionA.getId(), permissionB.getId())));
 
         assertEquals(2, result.successCount());
         assertEquals(List.of("test:permission:a", "test:permission:b"), result.currentPermissions());
@@ -106,7 +99,8 @@ class RolePermissionManageAppServiceImplIntegrationTest extends DBIntegrationTes
                 IllegalArgumentException.class,
                 () -> rolePermissionManageAppService.assignPermissionsToRole(
                         new RolePermissionCommands.AssignPermissionsToRoleCommand(
-                                RoleType.SUPER_ADMIN.getName(), List.of(permission.getId()))));
+                                RoleType.SUPER_ADMIN.getName(),
+                                List.of(permission.getId()))));
     }
 
     @Test
@@ -118,32 +112,33 @@ class RolePermissionManageAppServiceImplIntegrationTest extends DBIntegrationTes
                 DataNotFound.class,
                 () -> rolePermissionManageAppService.assignPermissionsToRole(
                         new RolePermissionCommands.AssignPermissionsToRoleCommand(
-                                "ROLE_NOT_EXISTS", List.of(permission.getId()))));
+                                "ROLE_NOT_EXISTS",
+                                List.of(permission.getId()))));
     }
 
     @Test
     @DisplayName("assignPermissionsToRole: 权限不存在应抛 DataNotFound")
     void assignPermissionsToRole_withPermissionNotFound_shouldThrow() {
-        RoleDO role = createRole("ROLE_TEST_ASSIGN_PERM_NOT_FOUND");
-
         assertThrows(
                 DataNotFound.class,
                 () -> rolePermissionManageAppService.assignPermissionsToRole(
                         new RolePermissionCommands.AssignPermissionsToRoleCommand(
-                                role.getName(), List.of(-1L))));
+                                RoleType.MEMBER.getName(),
+                                List.of(-1L))));
     }
 
     @Test
     @DisplayName("removePermissionsFromRole: 应移除权限并返回当前权限列表")
     void removePermissionsFromRole_shouldRemoveAndReturnCurrentPermissions() {
-        RoleDO role = createRole("ROLE_TEST_REMOVE");
+        Long roleId = RoleFixture.roleId(roleMapper, RoleType.MEMBER);
         Permission permissionA = PermissionFixture.save(permissionRepository, "测试权限A", "test:permission:a");
         Permission permissionB = PermissionFixture.save(permissionRepository, "测试权限B", "test:permission:b");
-        RolePermissionFixture.grant(rolePermissionRepository, role.getId(), permissionA.getId(), permissionB.getId());
+        RolePermissionFixture.grant(rolePermissionRepository, roleId, permissionA.getId(), permissionB.getId());
 
         RolePermissionManageResult result = rolePermissionManageAppService.removePermissionsFromRole(
                 new RolePermissionCommands.RemovePermissionsFromRoleCommand(
-                        role.getName(), List.of(permissionA.getId())));
+                        RoleType.MEMBER.getName(),
+                        List.of(permissionA.getId())));
 
         assertEquals(1, result.successCount());
         assertEquals(List.of("test:permission:b"), result.currentPermissions());
@@ -158,52 +153,51 @@ class RolePermissionManageAppServiceImplIntegrationTest extends DBIntegrationTes
                 DataNotFound.class,
                 () -> rolePermissionManageAppService.removePermissionsFromRole(
                         new RolePermissionCommands.RemovePermissionsFromRoleCommand(
-                                "ROLE_NOT_EXISTS", List.of(permission.getId()))));
+                                "ROLE_NOT_EXISTS",
+                                List.of(permission.getId()))));
     }
 
     @Test
     @DisplayName("removePermissionsFromRole: 权限不存在应抛 DataNotFound")
     void removePermissionsFromRole_withPermissionNotFound_shouldThrow() {
-        RoleDO role = createRole("ROLE_TEST_REMOVE_PERM_NOT_FOUND");
-
         assertThrows(
                 DataNotFound.class,
                 () -> rolePermissionManageAppService.removePermissionsFromRole(
                         new RolePermissionCommands.RemovePermissionsFromRoleCommand(
-                                role.getName(), List.of(-1L))));
+                                RoleType.MEMBER.getName(),
+                                List.of(-1L))));
     }
 
     @Test
     @DisplayName("getPermissionRoles: 应返回权限已绑定的角色名称")
     void getPermissionRoles_shouldReturnRoleNames() {
-        RoleDO roleA = createRole("ROLE_TEST_PERM_A");
-        RoleDO roleB = createRole("ROLE_TEST_PERM_B");
+        Long roleIdA = RoleFixture.roleId(roleMapper, RoleType.MEMBER);
+        Long roleIdB = RoleFixture.roleId(roleMapper, RoleType.CANDIDATE);
         Permission permission = PermissionFixture.save(permissionRepository, "测试权限", "test:permission");
-        RolePermissionFixture.grant(rolePermissionRepository, roleA.getId(), permission.getId());
-        RolePermissionFixture.grant(rolePermissionRepository, roleB.getId(), permission.getId());
+        RolePermissionFixture.grant(rolePermissionRepository, roleIdA, permission.getId());
+        RolePermissionFixture.grant(rolePermissionRepository, roleIdB, permission.getId());
 
         List<String> result = rolePermissionManageAppService.getPermissionRoles(permission.getId());
 
         assertEquals(2, result.size());
-        assertTrue(result.contains(roleA.getName()));
-        assertTrue(result.contains(roleB.getName()));
+        assertTrue(result.contains(RoleType.MEMBER.getName()));
+        assertTrue(result.contains(RoleType.CANDIDATE.getName()));
     }
 
     @Test
     @DisplayName("assignRolesToPermission: 应分配角色到权限并返回当前角色列表")
     void assignRolesToPermission_shouldAssignAndReturnCurrentRoles() {
-        RoleDO roleA = createRole("ROLE_TEST_ASSIGN_TO_PERM_A");
-        RoleDO roleB = createRole("ROLE_TEST_ASSIGN_TO_PERM_B");
         Permission permission = PermissionFixture.save(permissionRepository, "测试权限", "test:permission");
 
         RolePermissionManageResult result = rolePermissionManageAppService.assignRolesToPermission(
                 new RolePermissionCommands.AssignRolesToPermissionCommand(
-                        permission.getId(), List.of(roleA.getName(), roleB.getName())));
+                        permission.getId(),
+                        List.of(RoleType.MEMBER.getName(), RoleType.CANDIDATE.getName())));
 
         assertEquals(2, result.successCount());
         assertEquals(2, result.currentRoles().size());
-        assertTrue(result.currentRoles().contains(roleA.getName()));
-        assertTrue(result.currentRoles().contains(roleB.getName()));
+        assertTrue(result.currentRoles().contains(RoleType.MEMBER.getName()));
+        assertTrue(result.currentRoles().contains(RoleType.CANDIDATE.getName()));
     }
 
     @Test
@@ -215,24 +209,26 @@ class RolePermissionManageAppServiceImplIntegrationTest extends DBIntegrationTes
                 DataNotFound.class,
                 () -> rolePermissionManageAppService.assignRolesToPermission(
                         new RolePermissionCommands.AssignRolesToPermissionCommand(
-                                permission.getId(), List.of("ROLE_NOT_EXISTS"))));
+                                permission.getId(),
+                                List.of("ROLE_NOT_EXISTS"))));
     }
 
     @Test
     @DisplayName("removeRolesFromPermission: 应从权限移除角色并返回当前角色列表")
     void removeRolesFromPermission_shouldRemoveAndReturnCurrentRoles() {
-        RoleDO roleA = createRole("ROLE_TEST_REMOVE_FROM_PERM_A");
-        RoleDO roleB = createRole("ROLE_TEST_REMOVE_FROM_PERM_B");
+        Long roleIdA = RoleFixture.roleId(roleMapper, RoleType.MEMBER);
+        Long roleIdB = RoleFixture.roleId(roleMapper, RoleType.CANDIDATE);
         Permission permission = PermissionFixture.save(permissionRepository, "测试权限", "test:permission");
-        RolePermissionFixture.grant(rolePermissionRepository, roleA.getId(), permission.getId());
-        RolePermissionFixture.grant(rolePermissionRepository, roleB.getId(), permission.getId());
+        RolePermissionFixture.grant(rolePermissionRepository, roleIdA, permission.getId());
+        RolePermissionFixture.grant(rolePermissionRepository, roleIdB, permission.getId());
 
         RolePermissionManageResult result = rolePermissionManageAppService.removeRolesFromPermission(
                 new RolePermissionCommands.RemoveRolesFromPermissionCommand(
-                        permission.getId(), List.of(roleA.getName())));
+                        permission.getId(),
+                        List.of(RoleType.MEMBER.getName())));
 
         assertEquals(1, result.successCount());
-        assertEquals(List.of(roleB.getName()), result.currentRoles());
+        assertEquals(List.of(RoleType.CANDIDATE.getName()), result.currentRoles());
     }
 
     @Test
@@ -244,6 +240,7 @@ class RolePermissionManageAppServiceImplIntegrationTest extends DBIntegrationTes
                 DataNotFound.class,
                 () -> rolePermissionManageAppService.removeRolesFromPermission(
                         new RolePermissionCommands.RemoveRolesFromPermissionCommand(
-                                permission.getId(), List.of("ROLE_NOT_EXISTS"))));
+                                permission.getId(),
+                                List.of("ROLE_NOT_EXISTS"))));
     }
 }

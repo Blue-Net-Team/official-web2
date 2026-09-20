@@ -15,6 +15,7 @@ import com.bluenet.web.domain.model.enumerate.RoleType;
 import com.bluenet.web.domain.repository.CollegeRepository;
 import com.bluenet.web.domain.repository.UserRepository;
 import com.bluenet.web.domain.service.ReferralCodeGenerator;
+import com.bluenet.web.infrastructure.repository.mapper.RoleMapper;
 import com.bluenet.web.infrastructure.security.principal.SecurityPrincipal;
 import com.bluenet.web.infrastructure.security.util.UserCTX;
 import com.bluenet.web.testsupport.fixture.CollegeFixture;
@@ -55,6 +56,9 @@ class AdminUserAppServiceImplIntegrationTest extends DBIntegrationTest {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private RoleMapper roleMapper;
+
     @MockitoBean
     private ReferralCodeGenerator referralCodeGenerator;
 
@@ -64,8 +68,8 @@ class AdminUserAppServiceImplIntegrationTest extends DBIntegrationTest {
 
     @BeforeEach
     void prepare() {
-        memberRoleId = RoleFixture.defaultRoleId(RoleType.MEMBER);
-        candidateRoleId = RoleFixture.defaultRoleId(RoleType.CANDIDATE);
+        memberRoleId = RoleFixture.roleId(roleMapper, RoleType.MEMBER);
+        candidateRoleId = RoleFixture.roleId(roleMapper, RoleType.CANDIDATE);
         collegeId = CollegeFixture.saveDefaultCollege(collegeRepository).getId();
     }
 
@@ -109,7 +113,7 @@ class AdminUserAppServiceImplIntegrationTest extends DBIntegrationTest {
     @Test
     @DisplayName("createUser: 不允许创建超级管理员")
     void createUser_withSuperAdminRole_shouldThrow() {
-        Long superAdminRoleId = RoleFixture.defaultRoleId(RoleType.SUPER_ADMIN);
+        Long superAdminRoleId = RoleFixture.roleId(roleMapper, RoleType.SUPER_ADMIN);
         AdminUserCommands.CreateUserCommand command = new AdminUserCommands.CreateUserCommand(
                 "2024002002",
                 "2024002002@example.com",

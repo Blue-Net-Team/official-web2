@@ -124,7 +124,7 @@ public final class UserFixture {
         }
 
         public Builder withRoleType(RoleType roleType) {
-            this.roleId = RoleFixture.defaultRoleId(roleType);
+            this.roleId = RoleFixture.roleIdFor(roleType);
             return this;
         }
 

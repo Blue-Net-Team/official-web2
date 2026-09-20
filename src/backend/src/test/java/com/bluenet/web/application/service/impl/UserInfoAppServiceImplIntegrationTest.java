@@ -21,10 +21,12 @@ import com.bluenet.web.domain.repository.FileRepository;
 import com.bluenet.web.domain.repository.UserRepository;
 import com.bluenet.web.domain.service.VerificationCodeDomainService;
 import com.bluenet.web.application.message.MessageDispatcher;
+import com.bluenet.web.infrastructure.repository.mapper.RoleMapper;
 import com.bluenet.web.infrastructure.security.auth.AuthTokenService;
 import com.bluenet.web.infrastructure.security.change.ChangePasswordStateService;
 import com.bluenet.web.testsupport.fixture.CollegeFixture;
 import com.bluenet.web.testsupport.fixture.FileFixture;
+import com.bluenet.web.testsupport.fixture.RoleFixture;
 import com.bluenet.web.testsupport.fixture.UserFixture;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -70,6 +72,9 @@ class UserInfoAppServiceImplIntegrationTest extends DBIntegrationTest {
     @Autowired
     private ChangePasswordStateService changePasswordStateService;
 
+    @Autowired
+    private RoleMapper roleMapper;
+
     @MockitoBean
     private AuthTokenService authTokenService;
 
@@ -85,8 +90,8 @@ class UserInfoAppServiceImplIntegrationTest extends DBIntegrationTest {
 
     @BeforeEach
     void prepare() {
-        memberRoleId = com.bluenet.web.testsupport.fixture.RoleFixture.defaultRoleId(RoleType.MEMBER);
-        candidateRoleId = com.bluenet.web.testsupport.fixture.RoleFixture.defaultRoleId(RoleType.CANDIDATE);
+        memberRoleId = RoleFixture.roleId(roleMapper, RoleType.MEMBER);
+        candidateRoleId = RoleFixture.roleId(roleMapper, RoleType.CANDIDATE);
         College college = CollegeFixture.saveDefaultCollege(collegeRepository);
         collegeId = college.getId();
     }

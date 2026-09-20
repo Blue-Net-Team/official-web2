@@ -9,6 +9,7 @@ import com.bluenet.web.domain.model.enumerate.RoleType;
 import com.bluenet.web.domain.repository.MemberRepository;
 import com.bluenet.web.domain.repository.UserRepository;
 import com.bluenet.web.infrastructure.repository.mapper.RoleMapper;
+import com.bluenet.web.testsupport.fixture.RoleFixture;
 import com.bluenet.web.testsupport.fixture.UserFixture;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -46,7 +47,7 @@ class MemberRepositoryImplIntegrationTest extends DBIntegrationTest {
     private User createUser(String studentId, RoleType roleType, Direction direction) {
         User user = UserFixture.builder()
                 .withStudentId(studentId)
-                .withRoleType(roleType)
+                .withRoleId(RoleFixture.roleId(roleMapper, roleType))
                 .withDirection(direction)
                 .withGender(Gender.MALE)
                 .build();

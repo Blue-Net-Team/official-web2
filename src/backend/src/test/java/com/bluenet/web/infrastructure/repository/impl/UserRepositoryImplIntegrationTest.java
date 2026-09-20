@@ -4,13 +4,14 @@ import com.bluenet.web.DBIntegrationTest;
 import com.bluenet.web.domain.model.entity.User;
 import com.bluenet.web.domain.model.enumerate.Direction;
 import com.bluenet.web.domain.model.enumerate.Gender;
+import com.bluenet.web.domain.model.enumerate.RoleType;
 import com.bluenet.web.domain.repository.UserRepository;
 import com.bluenet.web.infrastructure.repository.dataobject.FileDO;
-import com.bluenet.web.infrastructure.repository.dataobject.RoleDO;
 import com.bluenet.web.infrastructure.repository.dataobject.UserDO;
 import com.bluenet.web.infrastructure.repository.mapper.FileMapper;
 import com.bluenet.web.infrastructure.repository.mapper.RoleMapper;
 import com.bluenet.web.infrastructure.repository.mapper.UserMapper;
+import com.bluenet.web.testsupport.fixture.RoleFixture;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -208,22 +209,21 @@ class UserRepositoryImplIntegrationTest extends DBIntegrationTest {
     @Test
     @DisplayName("findPage: 应按角色和方向筛选")
     void findPage_shouldFilterAndPaginate() {
-        RoleDO role = RoleDO.builder().name("TEST_ROLE").build();
-        roleMapper.insert(role);
+        Long roleId = RoleFixture.roleId(roleMapper, RoleType.CANDIDATE);
 
         User user1 = createUser("2024001010");
-        user1.setRoleId(role.getId());
+        user1.setRoleId(roleId);
         user1.setDirection(Direction.COMPUTER_VISION);
         userRepository.save(user1);
 
         User user2 = createUser("2024001011");
-        user2.setRoleId(role.getId());
+        user2.setRoleId(roleId);
         user2.setDirection(Direction.STRUCTURAL_DESIGN);
         userRepository.save(user2);
 
         Page<User> page = userRepository.findPage(
                 PageRequest.of(0, 10),
-                role.getId(),
+                roleId,
                 Direction.COMPUTER_VISION,
                 null,
                 null);

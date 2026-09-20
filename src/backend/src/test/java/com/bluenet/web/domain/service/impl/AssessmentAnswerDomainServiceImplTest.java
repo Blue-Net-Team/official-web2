@@ -63,6 +63,12 @@ class AssessmentAnswerDomainServiceImplTest {
 
     private static final LocalDateTime FIXED_NOW = LocalDateTime.of(2026, 7, 11, 12, 0, 0);
 
+    /**
+     * 纯单元测试不访问数据库，角色 ID 仅需满足 {@code User.create} 的入参；具体取值不参与任何断言， 也不代表数据库中的真实角色
+     * ID（该值由 SEQUENCE 生成，不可假定）。
+     */
+    private static final Long UNUSED_ROLE_ID = 1L;
+
     @Mock
     private AssessmentTimeRepository assessmentTimeRepository;
     @Mock
@@ -672,13 +678,13 @@ class AssessmentAnswerDomainServiceImplTest {
     }
 
     private User memberWithId(Long id, String studentId) {
-        User user = UserFixture.member(studentId).build();
+        User user = UserFixture.builder().withStudentId(studentId).withRoleId(UNUSED_ROLE_ID).build();
         user.setId(id);
         return user;
     }
 
     private User candidateWithId(Long id, String studentId) {
-        User user = UserFixture.candidate(studentId).build();
+        User user = UserFixture.builder().withStudentId(studentId).withRoleId(UNUSED_ROLE_ID).build();
         user.setId(id);
         return user;
     }
