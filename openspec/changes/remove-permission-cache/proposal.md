@@ -9,7 +9,7 @@
 ## What Changes
 
 - 删除 `PermissionCache` 及其单元测试 `PermissionCacheTest`
-- 新增仓储能力：按角色查询权限值集合（关联权限表取 `value`）
+- 新增仓储能力：`PermissionRepository.findValuesByRoleId`，**复用已有的** `PermissionMapper.selectByRoleId`（该查询已存在但无任何调用点）
 - `JwtAuthenticationFilter` 改为在认证时从仓储加载该角色的权限值集合，写入 `SecurityPrincipal`
 - 删除 `RolePermissionManageAppServiceImpl` 中两处 `permissionCache.refresh()`
 - 删除死代码：`PermissionChecker`（生产与测试均无任何引用）、`UserRepositoryImpl` 中声明但从未使用的 `PermissionCache` 依赖
@@ -43,7 +43,8 @@
 
 - 生产代码：删除 `PermissionCache`、`PermissionChecker` 两个类；修改 `JwtAuthenticationFilter`、`RolePermissionManageAppServiceImpl`；清理 `UserRepositoryImpl` 的死依赖；新增一个仓储查询方法与其 Mapper 查询
 - 测试代码：删除 `PermissionCacheTest`；更新 `APIIntegrationTest`、`RolePermissionManageAppServiceImplIntegrationTest`、`JwtAuthenticationFilterTest`
-- 性能：认证阶段每请求增加一次数据库查询（加载该角色的权限值集合）。当前系统规模下可接受，且消除了启动期状态依赖
+- 性能：认证阶段每请求增加一次数据库查询（加载该角色的权限值集合）。**实测确认**：SQL 日志显示 3 个端到端用例中两个带令牌的请求恰好各执行 1 次 `selectByRoleId`，即每请求固定一次，不随接口内权限检查次数放大（`PermissionAspect` 不触碰持久层）。当前系统规模下可接受，且消除了启动期状态依赖
+- 全量测试：改动后 1917 个用例 0 失败（基线 1914 个）；耗时 2903s，较基线 2839s 增加约 64s。增量来自新增的端到端回归用例类（新上下文 + Testcontainers），而非生产代码改动，属为守护本缺陷付出的有意代价
 - 风险：失去内存缓存后，权限校验的延迟取决于数据库；若后续出现性能压力，需重新引入缓存，但必须解决加载顺序问题
 - 关联：本变更是 `optimize-db-test-cleanup` 的前置清理项之一（后者会随之少一个需要替身的启动期组件）
 
@@ -57,5 +58,5 @@
 | `getAllPermissions` / `getAllPermissionValues` / `getByValue` / `exists` | **无生产调用**，仅被 `PermissionCacheTest` 使用 |
 | `PermissionAspect` 是否依赖缓存 | 否，走 `principal.hasPermission(...)` |
 | `PermissionAppServiceImpl` 是否依赖缓存 | 否 |
-| 是否已有「按角色查权限值」的仓储能力 | 否。`RolePermissionRepository.findPermissionIdsByRoleId` 只返回权限 ID |
+| 是否已有「按角色查权限值」的能力 | Mapper 层已有 `PermissionMapper.selectByRoleId`（join 两张表直接取 `value`），但**主代码与测试均无调用点**，属死代码；仓储层无对应方法 |
 | 为何没有测试发现 | 接口层测试 mock 了 `PermissionCache` 且用 `@WithSecurityPrincipal` 直接注入权限；DB 层测试每用例清空 `tb_permission` |

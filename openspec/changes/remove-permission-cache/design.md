@@ -61,13 +61,32 @@
 | 请求级懒加载缓存（RequestScope / 首次访问时加载） | 解决了启动顺序，但引入生命周期管理与失效语义的复杂度；当前规模下收益不足 |
 | `PermissionAspect` 每次检查都查库 | 查询次数随接口内权限检查次数放大；且 `PermissionAspect` 已依赖 `SecurityPrincipal`，改它属于无必要扩大改动面 |
 
-### 决策 2：权限值查询下沉到 `RolePermissionRepository`，允许 Mapper 投影返回字符串
+### 决策 2：复用已有的 `PermissionMapper.selectByRoleId`，不在 `RolePermissionMapper` 重写查询
 
-**选择**：在 `RolePermissionRepository` 增加 `findPermissionValuesByRoleId(Long roleId)`，返回权限值集合；其 Mapper 层用一条 join `tb_role_permission` 与 `tb_permission` 的查询直接投影出 `value`。
+**选择**：在 `PermissionRepository` 新增 `findValuesByRoleId(Long roleId)` 返回权限值集合，实现直接委派给**已存在的** `PermissionMapper.selectByRoleId`。
 
-**理由**：语义上「角色拥有的权限」属于角色-权限关系，放在 `RolePermissionRepository` 比放在 `PermissionRepository` 更自然。用 join 一次取回避免「先查 ID 再查值」的两次往返。
+**理由**：实施勘查发现 `PermissionMapper.selectByRoleId` 就是所需要的那条查询：
 
-**与分层约定的一致性**：项目约定 Mapper 默认返回 DO/PO，但允许「为性能在 SQL 层做投影」的例外，前提是**在方法注释中说明**。此处即属于该例外，实现时必须在 Mapper 方法上写明投影原因。
+```xml
+<select id="selectByRoleId" resultType="java.lang.String">
+    SELECT p.value FROM tb_permission p
+    INNER JOIN tb_role_permission rp ON p.id = rp.permission_id
+    WHERE rp.role_id = #{roleId}
+</select>
+```
+
+它已声明在 Mapper 接口上、已有 XML，但**主代码与测试中都没有任何调用点**（历史遗留，应为早期缓存预载方案的残留）。直接复用既避免了写一条功能重复的 SQL，又让这段死代码重新有了用途。
+
+索引方面：`tb_role_permission` 上的 `UNIQUE(role_id, permission_id)` 已提供以 `role_id` 为前导列的索引，该查询可命中索引。
+
+**与原设计的差异**：原设计拟在 `RolePermissionRepository` 上新增方法、并在 `RolePermissionMapper` 写一条新的 join 查询。改为复用后，既无新增 SQL、也不再需要分层约定的「Mapper 返回投影」例外说明（该例外已由既有代码的 `resultType="java.lang.String"` 体现）。
+
+**被否决的替代方案**：
+
+| 方案 | 否决原因 |
+|---|---|
+| 在 `RolePermissionMapper` 新增一条功能相同的 join 查询 | 制造两条重复 SQL，后续修改易漏 |
+| 先查 `findPermissionIdsByRoleId` 再查权限值 | 两次数据库往返，而一条 join 即可 |
 
 ### 决策 3：删除 `PermissionChecker` 与 `UserRepositoryImpl` 的死依赖
 
