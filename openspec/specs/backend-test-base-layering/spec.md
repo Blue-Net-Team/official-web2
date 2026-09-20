@@ -5,10 +5,7 @@
 约定后端集成测试基类的分层规则：按「被测代码是否访问真实数据库」选择基类，而非按测试类名是否包含 `IntegrationTest`。接口层基类跳过 Flyway 迁移以消除无意义的 schema 重建开销，数据库层基类保留完整迁移以保证持久化断言与迁移种子数据可用。
 
 本能力由变更 `split-test-base-classes` 引入，起因是接口层测试长期为数据库开销付费（每个用例执行 2 次 `flyway.clean()` 加 1 次 28 个迁移脚本），叠加 131 个集成测试类被 surefire 排除，导致集成测试始终无法接入 CI。
-
 ## Requirements
-
-
 ### Requirement: 测试基类按数据库依赖分层选择
 
 后端测试类 SHALL 依据「被测代码是否访问真实数据库」选择基类，而不是依据测试类名是否包含 `IntegrationTest`：
@@ -43,11 +40,12 @@
 
 由于迁移被跳过，数据库 schema 为空，`APIIntegrationTest` MUST 同时替换掉启动期访问数据库的组件，否则 Spring 上下文无法启动。启动期访问数据库的组件为：
 
-- `PermissionCache`（`@PostConstruct init()` 查询权限表与角色权限关联表）
 - `MessageTemplateRegistry`（`@PostConstruct` 查询消息模板表）
 - `SystemUserInitializer`（`CommandLineRunner` 访问用户表）
 
 `APIIntegrationTest` MUST 保留 Testcontainers 提供的 `DataSource`，以保证全部 `RepositoryImpl` Bean 能被正常构造（`@MockitoBean` 只替换单个 Bean，不阻止其他 `RepositoryImpl` 被实例化）。
+
+该清单 SHALL 随生产代码变化而维护：任何新增的、在 Spring 上下文启动阶段访问数据库的 `@Component` 都必须补入清单；任何被删除或改造为不再于启动期访问数据库的组件都必须从清单中移除。
 
 #### Scenario: 接口层测试不触发数据库迁移
 - **WHEN** 运行任意继承 `APIIntegrationTest` 的测试类
@@ -61,12 +59,17 @@
 
 #### Scenario: 跳过迁移后启动期组件不会导致上下文失败
 - **WHEN** Spring 上下文在 `spring.flyway.enabled=false` 且 schema 为空的条件下启动
-- **THEN** `PermissionCache`、`MessageTemplateRegistry`、`SystemUserInitializer` SHALL 已被测试替身替换
+- **THEN** `MessageTemplateRegistry`、`SystemUserInitializer` SHALL 已被测试替身替换
 - **THEN** Spring 上下文 SHALL 启动成功
 
 #### Scenario: 缺少启动期组件替身时上下文启动失败
 - **WHEN** 一个继承 `APIIntegrationTest` 的测试类移除了启动期查库组件的替身
 - **THEN** Spring 上下文 SHALL 启动失败并报告无法获取数据库连接或表不存在
+
+#### Scenario: 启动期组件清单已移除不再查库的组件
+- **WHEN** 检查 `APIIntegrationTest` 中声明的测试替身
+- **THEN** 清单中 SHALL NOT 包含 `PermissionCache`
+- **THEN** 该断言 SHALL 在权限数据改为认证时直查持久层之后持续成立
 
 ### Requirement: DB 层测试基类保留完整迁移与隔离
 
@@ -101,3 +104,4 @@
 - **WHEN** 一个继承 `APIIntegrationTest` 的测试用例执行完毕
 - **THEN** 测试基类 SHALL 调用 `UserCTX.clear()` 清理安全上下文
 - **THEN** 后续用例 SHALL NOT 读取到前一个用例残留的用户身份或权限
+
