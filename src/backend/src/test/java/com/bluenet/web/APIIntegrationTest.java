@@ -11,7 +11,6 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 
 import com.bluenet.web.application.message.MessageTemplateRegistry;
 import com.bluenet.web.infrastructure.init.SystemUserInitializer;
-import com.bluenet.web.infrastructure.security.cache.PermissionCache;
 import com.bluenet.web.infrastructure.security.util.UserCTX;
 import com.bluenet.web.testconfig.TestSecurityConfig;
 import com.bluenet.web.testcontainers.TestcontainersConfiguration;
@@ -45,7 +44,6 @@ import com.bluenet.web.testcontainers.TestcontainersConfiguration;
  * 导致启动失败，因此必须在下方声明对应的测试替身。当前已识别的启动期查库组件为：
  * </p>
  * <ul>
- * <li>{@link PermissionCache}：{@code @PostConstruct init()} 查询权限表与角色权限关联表</li>
  * <li>{@link MessageTemplateRegistry}：{@code @PostConstruct} 查询消息模板表</li>
  * <li>{@link SystemUserInitializer}：{@code CommandLineRunner} 访问用户表</li>
  * </ul>
@@ -60,12 +58,6 @@ import com.bluenet.web.testcontainers.TestcontainersConfiguration;
 @Import({ TestcontainersConfiguration.class, TestSecurityConfig.class })
 @TestPropertySource(properties = "spring.flyway.enabled=false")
 public abstract class APIIntegrationTest {
-
-    /**
-     * 启动期 {@code @PostConstruct} 会查询权限表；跳过迁移后 schema 不存在，故以替身替换。
-     */
-    @MockitoBean
-    private PermissionCache permissionCache;
 
     /**
      * 启动期 {@code @PostConstruct} 会查询消息模板表；跳过迁移后 schema 不存在，故以替身替换。

@@ -2,13 +2,20 @@ package com.bluenet.web.infrastructure.repository.impl;
 
 import com.bluenet.web.DBIntegrationTest;
 import com.bluenet.web.domain.model.entity.Permission;
+import com.bluenet.web.domain.model.enumerate.RoleType;
 import com.bluenet.web.domain.repository.PermissionRepository;
+import com.bluenet.web.domain.repository.RolePermissionRepository;
 import com.bluenet.web.infrastructure.repository.dataobject.PermissionDO;
 import com.bluenet.web.infrastructure.repository.mapper.PermissionMapper;
+import com.bluenet.web.infrastructure.repository.mapper.RoleMapper;
 import com.bluenet.web.testsupport.fixture.PermissionFixture;
+import com.bluenet.web.testsupport.fixture.RoleFixture;
+import com.bluenet.web.testsupport.fixture.RolePermissionFixture;
+import com.bluenet.web.testconfig.TestSecurityConfig;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -16,6 +23,7 @@ import org.springframework.data.domain.Pageable;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -30,6 +38,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * </p>
  */
 @DisplayName("PermissionRepositoryImpl 集成测试")
+@Import(TestSecurityConfig.class)
 class PermissionRepositoryImplIntegrationTest extends DBIntegrationTest {
 
     @Autowired
@@ -37,6 +46,12 @@ class PermissionRepositoryImplIntegrationTest extends DBIntegrationTest {
 
     @Autowired
     private PermissionMapper permissionMapper;
+
+    @Autowired
+    private RoleMapper roleMapper;
+
+    @Autowired
+    private RolePermissionRepository rolePermissionRepository;
 
     @Test
     @DisplayName("save: 新权限应插入并回写ID")
@@ -214,5 +229,49 @@ class PermissionRepositoryImplIntegrationTest extends DBIntegrationTest {
 
         assertTrue(permissionRepository.existsById(permission.getId()));
         assertFalse(permissionRepository.existsById(-1L));
+    }
+
+    @Test
+    @DisplayName("findValuesByRoleId: 应返回该角色已绑定的权限值集合")
+    void findValuesByRoleId_shouldReturnBoundPermissionValues() {
+        Long roleId = RoleFixture.roleId(roleMapper, RoleType.MEMBER);
+        Permission first = PermissionFixture.save(permissionRepository, "值查询一", "repo-values:one");
+        Permission second = PermissionFixture.save(permissionRepository, "值查询二", "repo-values:two");
+        RolePermissionFixture.grant(rolePermissionRepository, roleId, first.getId(), second.getId());
+
+        Set<String> values = permissionRepository.findValuesByRoleId(roleId);
+
+        assertEquals(Set.of("repo-values:one", "repo-values:two"), values);
+    }
+
+    @Test
+    @DisplayName("findValuesByRoleId: 无绑定时应返回空集合")
+    void findValuesByRoleId_withoutBinding_shouldReturnEmptySet() {
+        Long roleId = RoleFixture.roleId(roleMapper, RoleType.CANDIDATE);
+
+        Set<String> values = permissionRepository.findValuesByRoleId(roleId);
+
+        assertNotNull(values);
+        assertTrue(values.isEmpty());
+    }
+
+    @Test
+    @DisplayName("findValuesByRoleId: 结果应限定在指定角色内")
+    void findValuesByRoleId_shouldBeScopedToRole() {
+        Long memberRoleId = RoleFixture.roleId(roleMapper, RoleType.MEMBER);
+        Long candidateRoleId = RoleFixture.roleId(roleMapper, RoleType.CANDIDATE);
+        Permission memberPermission = PermissionFixture.save(permissionRepository, "成员专属", "repo-scope:member");
+        Permission candidatePermission = PermissionFixture.save(permissionRepository, "考生专属", "repo-scope:candidate");
+        RolePermissionFixture.grant(rolePermissionRepository, memberRoleId, memberPermission.getId());
+        RolePermissionFixture.grant(rolePermissionRepository, candidateRoleId, candidatePermission.getId());
+
+        assertEquals(Set.of("repo-scope:member"), permissionRepository.findValuesByRoleId(memberRoleId));
+        assertEquals(Set.of("repo-scope:candidate"), permissionRepository.findValuesByRoleId(candidateRoleId));
+    }
+
+    @Test
+    @DisplayName("findValuesByRoleId: 角色主键为空应返回空集合")
+    void findValuesByRoleId_nullRoleId_shouldReturnEmptySet() {
+        assertTrue(permissionRepository.findValuesByRoleId(null).isEmpty());
     }
 }

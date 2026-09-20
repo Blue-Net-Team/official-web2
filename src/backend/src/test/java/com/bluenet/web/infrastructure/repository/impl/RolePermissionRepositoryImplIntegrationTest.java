@@ -8,12 +8,14 @@ import com.bluenet.web.domain.repository.PermissionRepository;
 import com.bluenet.web.domain.repository.RolePermissionRepository;
 import com.bluenet.web.infrastructure.repository.dataobject.RoleDO;
 import com.bluenet.web.infrastructure.repository.mapper.RoleMapper;
+import com.bluenet.web.testconfig.TestSecurityConfig;
 import com.bluenet.web.testsupport.fixture.PermissionFixture;
 import com.bluenet.web.testsupport.fixture.RoleFixture;
 import com.bluenet.web.testsupport.fixture.RolePermissionFixture;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Import;
 
 import java.util.List;
 import java.util.Map;
@@ -30,6 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * </p>
  */
 @DisplayName("RolePermissionRepositoryImpl 集成测试")
+@Import(TestSecurityConfig.class)
 class RolePermissionRepositoryImplIntegrationTest extends DBIntegrationTest {
 
     @Autowired

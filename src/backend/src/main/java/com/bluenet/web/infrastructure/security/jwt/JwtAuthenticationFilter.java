@@ -2,11 +2,11 @@ package com.bluenet.web.infrastructure.security.jwt;
 
 import com.bluenet.web.domain.exception.Unauthorized;
 import com.bluenet.web.domain.model.entity.User;
+import com.bluenet.web.domain.repository.PermissionRepository;
 import com.bluenet.web.domain.repository.UserRepository;
 import com.bluenet.web.infrastructure.config.CookieProperties;
 import com.bluenet.web.infrastructure.config.FailAuthEntryPoint;
 import com.bluenet.web.infrastructure.security.auth.AuthTokenService;
-import com.bluenet.web.infrastructure.security.cache.PermissionCache;
 import com.bluenet.web.infrastructure.security.principal.RoleTypeResolver;
 import com.bluenet.web.infrastructure.security.principal.SecurityPrincipal;
 import com.bluenet.web.infrastructure.security.util.UserCTX;
@@ -26,6 +26,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * JWT认证过滤器 优先从 Cookie 中提取 JWT Token，fallback 到 Authorization Header（过渡期）
@@ -40,7 +41,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final UserRepository userRepository;
     private final FailAuthEntryPoint failAuthEntryPoint;
     private final CookieProperties cookieProperties;
-    private final PermissionCache permissionCache;
+    private final PermissionRepository permissionRepository;
     private final RoleTypeResolver roleTypeResolver;
 
     @Override
@@ -72,7 +73,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         SecurityPrincipal principal = new SecurityPrincipal(
                                 user,
                                 roleTypeResolver.resolve(user.getRoleId()),
-                                permissionCache.getPermissionsByRole(user.getRoleId()));
+                                loadPermissionValues(user.getRoleId()));
 
                         // 4. 设置Spring Security上下文
                         UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
@@ -103,6 +104,30 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             // 6. 清理SecurityContext，防止内存泄漏
             UserCTX.clear();
             SecurityContextHolder.clearContext();
+        }
+    }
+
+    /**
+     * 加载角色已绑定的权限值集合。
+     * <p>
+     * 权限数据不做内存预加载，每次认证直接查询持久层，以避免启动期预加载缓存带来的加载顺序依赖，
+     * 并保证权限变更在下一个请求即生效。调用频次为每请求一次，与接口内的权限检查次数无关。
+     * </p>
+     * <p>
+     * 查询异常时按最小权限原则返回空集合，不向外抛出：故障必须转化为「拒绝」， 而不是「放行」，也不应把数据库故障伪装成认证失败。异常会以 error
+     * 级别记录以便发现。
+     * </p>
+     *
+     * @param roleId
+     *            角色主键
+     * @return 权限值集合，永不返回 null
+     */
+    private Set<String> loadPermissionValues(Long roleId) {
+        try {
+            return permissionRepository.findValuesByRoleId(roleId);
+        } catch (RuntimeException e) {
+            log.error("加载角色权限失败，按最小权限处理。roleId={}", roleId, e);
+            return Collections.emptySet();
         }
     }
 

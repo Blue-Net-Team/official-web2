@@ -16,6 +16,7 @@ import org.springframework.stereotype.Repository;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * 权限仓储实现
@@ -87,5 +88,18 @@ public class PermissionRepositoryImpl implements PermissionRepository {
     @Override
     public boolean existsById(Long id) {
         return permissionMapper.selectById(id) != null;
+    }
+
+    @Override
+    public Set<String> findValuesByRoleId(Long roleId) {
+        if (roleId == null) {
+            return Collections.emptySet();
+        }
+        // 复用既有 join 查询（tb_permission 与 tb_role_permission），避免两次往返。
+        List<String> values = permissionMapper.selectByRoleId(roleId);
+        if (values == null || values.isEmpty()) {
+            return Collections.emptySet();
+        }
+        return Set.copyOf(values);
     }
 }

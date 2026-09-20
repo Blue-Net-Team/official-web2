@@ -15,7 +15,6 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.bluenet.web.infrastructure.repository.dataobject.*;
 import com.bluenet.web.infrastructure.repository.mapper.*;
-import com.bluenet.web.infrastructure.security.cache.PermissionCache;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -36,7 +35,6 @@ public class UserRepositoryImpl extends ServiceImpl<UserMapper, UserDO> implemen
     private final CollegeMapper collegeMapper;
     private final FileMapper fileMapper;
     private final QrcodeMapper qrcodeMapper;
-    private final PermissionCache permissionCache;
     private final RoleMapper roleMapper;
     private final UserExperienceMapper userExperienceMapper;
     private final UserAchievementMapper userAchievementMapper;

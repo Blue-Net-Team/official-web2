@@ -77,16 +77,17 @@ public Result createUser() {}
 
 **推荐采用方案 A**，通过代码审查确保所有敏感接口都添加注解。
 
-### FR-AOP-005: 权限缓存
+### FR-AOP-005: 权限数据直查
 
-为提高性能，拦截器必须缓存权限数据：
+认证阶段必须从持久层直接读取权限数据，不得依赖应用启动阶段预加载的内存缓存：
 
-- 启动时从数据库加载所有权限到内存（Map<value, Permission>）
-- 启动时加载所有角色-权限关系到内存（Map<roleId, Set<value>>）
-- 缓存刷新策略：
-  - 应用重启时自动刷新
-  - 提供手动刷新接口（供管理员使用）
-  - 可选：定时刷新（如每 5 分钟）
+- 认证时按角色查询其绑定的权限值集合，写入 `SecurityPrincipal` 并放入请求上下文
+- 权限判定阶段直接读取 `SecurityPrincipal` 携带的权限集，不得再次查询持久层
+- 每请求的权限查询次数固定为一次，与接口内的权限检查次数无关
+
+原「启动时预加载到内存 + 刷新策略」的规定已废止。原因：预加载的内容取决于 Bean 初始化顺序，而权限数据的写入方（权限扫描器）在加载之后才执行，导致缓存可能为空；且原实现的读取无持久层回退，空的缓存会使全部权限校验失效。
+
+若将来需要重新引入缓存，必须同时满足：具备失效机制（而非仅在启动时加载一次）、具备明确的加载顺序保证、且读取路径保留持久层回退。
 
 ### FR-AOP-006: 用户信息获取
 
@@ -134,7 +135,7 @@ public class SecurityContext {
 ### NFR-AOP-002: 线程安全
 
 - ThreadLocal 使用必须正确清理（`try-finally` 或 `@After`）
-- 并发情况下缓存读取安全
+- 权限集随 `SecurityPrincipal` 按请求独立构造，为不可变集合，不存在跨请求共享的可变状态
 
 ### NFR-AOP-003: 日志记录
 
@@ -149,7 +150,7 @@ public class SecurityContext {
 
 | 场景 | 行为 |
 |------|------|
-| 缓存未命中 | 从数据库加载，若仍不存在返回 403 |
+| 权限查询异常或无绑定 | 视为无任何权限，拒绝访问；异常额外记录 error 级别日志（SUPER_ADMIN 的角色级别绕过除外） |
 | 用户角色为空 | 视为无任何权限，拒绝访问 |
 | 权限值为空 | 记录错误，拒绝访问 |
 | ThreadLocal 未清理 | 可能导致内存泄漏，必须确保清理 |
@@ -163,8 +164,8 @@ public class SecurityContext {
 @Component
 public class PermissionAspect {
 
-    @Autowired
-    private PermissionCache permissionCache;
+    // 权限集由认证阶段（JwtAuthenticationFilter）从持久层读取后写入 SecurityPrincipal，
+    // 本切面不再自行查询或缓存权限数据。
 
     @Around("@annotation(permission)")
     public Object checkPermission(ProceedingJoinPoint pjp, Permission permission) throws Throwable {
@@ -191,7 +192,7 @@ public class PermissionAspect {
                 if (user == null) {
                     throw new UnauthorizedException("Token required");
                 }
-                if (!hasPermission(user.getRoleId(), permission.value())) {
+                if (!hasPermission(permission.value())) {
                     log.warn("Access denied: userId={}, permission={}",
                         user.getId(), permission.value());
                     throw new ForbiddenException("Access denied");
@@ -203,8 +204,8 @@ public class PermissionAspect {
     }
 
     private boolean hasPermission(Long roleId, String permissionValue) {
-        Set<String> permissions = permissionCache.getPermissionsByRole(roleId);
-        return permissions.contains(permissionValue);
+        // 直接读 SecurityPrincipal 携带的权限集，不查询持久层、不读缓存
+        return UserCTX.getPrincipal().hasPermission(permissionValue);
     }
 }
 ```

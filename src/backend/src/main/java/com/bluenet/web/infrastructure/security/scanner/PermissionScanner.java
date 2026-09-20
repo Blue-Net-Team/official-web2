@@ -12,7 +12,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.method.HandlerMethod;
@@ -24,9 +23,13 @@ import java.util.stream.Collectors;
 
 /**
  * 权限扫描器 启动时扫描所有Controller方法的@RequiresPermission注解，同步到数据库 支持批量处理和物理删除幽灵数据
+ * <p>
+ * 无需通过 {@code @Order} 控制初始化时机：控制器映射通过构造函数注入的
+ * {@code RequestMappingHandlerMapping} 形成依赖关系，Spring 会保证它先于本组件完成初始化，
+ * 从而扫描时能看到完整的路由表。
+ * </p>
  */
 @Component
-@Order(100) // 在其他组件初始化之后执行
 public class PermissionScanner implements InitializingBean {
 
     private static final Logger logger = LoggerFactory.getLogger(PermissionScanner.class);

@@ -3,6 +3,8 @@ package com.bluenet.web.infrastructure.security.jwt;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.junit.jupiter.api.AfterEach;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -26,11 +28,11 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import com.bluenet.web.domain.model.entity.User;
 import com.bluenet.web.domain.model.enumerate.RoleType;
+import com.bluenet.web.domain.repository.PermissionRepository;
 import com.bluenet.web.domain.repository.UserRepository;
 import com.bluenet.web.infrastructure.config.CookieProperties;
 import com.bluenet.web.infrastructure.config.FailAuthEntryPoint;
 import com.bluenet.web.infrastructure.security.auth.AuthTokenService;
-import com.bluenet.web.infrastructure.security.cache.PermissionCache;
 import com.bluenet.web.infrastructure.security.principal.RoleTypeResolver;
 import com.bluenet.web.infrastructure.security.principal.SecurityPrincipal;
 import com.bluenet.web.infrastructure.security.util.UserCTX;
@@ -63,7 +65,7 @@ class JwtAuthenticationFilterTest {
     private CookieProperties cookieProperties;
 
     @Mock
-    private PermissionCache permissionCache;
+    private PermissionRepository permissionRepository;
 
     @Mock
     private RoleTypeResolver roleTypeResolver;
@@ -90,7 +92,7 @@ class JwtAuthenticationFilterTest {
         SecurityContextHolder.clearContext();
         UserCTX.clear();
         lenient().when(roleTypeResolver.resolve(anyLong())).thenReturn(RoleType.CANDIDATE);
-        lenient().when(permissionCache.getPermissionsByRole(anyLong())).thenReturn(Collections.emptySet());
+        lenient().when(permissionRepository.findValuesByRoleId(anyLong())).thenReturn(Collections.emptySet());
     }
 
     @AfterEach
@@ -241,6 +243,116 @@ class JwtAuthenticationFilterTest {
         // 验证
         verify(filterChain, never()).doFilter(request, response);
         assertNull(SecurityContextHolder.getContext().getAuthentication());
+    }
+
+    @Test
+    @DisplayName("认证成功时，角色已绑定的权限值应写入 SecurityPrincipal")
+    void doFilterInternal_shouldPopulatePermissionsFromRepository() throws ServletException, IOException {
+        // 准备
+        Long roleId = 3L;
+        JwtPayload payload = JwtPayload.builder()
+                .userId(TEST_USER_ID)
+                .jti(TEST_JTI)
+                .issuedAt(System.currentTimeMillis() / 1000)
+                .expiration(System.currentTimeMillis() / 1000 + 3600)
+                .build();
+
+        when(request.getHeader(HttpHeaders.AUTHORIZATION)).thenReturn(BEARER_TOKEN);
+        when(jwtUtil.parseToken(TEST_TOKEN)).thenReturn(payload);
+        when(authTokenService.validateToken(TEST_JTI)).thenReturn(Optional.of(TEST_USER_ID));
+
+        User user = User.reconstruct(TEST_USER_ID, "password");
+        user.setRoleId(roleId);
+        when(userRepository.findById(TEST_USER_ID)).thenReturn(Optional.of(user));
+        when(permissionRepository.findValuesByRoleId(roleId)).thenReturn(Set.of("user:list", "user:create"));
+
+        AtomicReference<SecurityPrincipal> captured = new AtomicReference<>();
+        doAnswer(invocation -> {
+            captured.set((SecurityPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal());
+            return null;
+        }).when(filterChain).doFilter(request, response);
+
+        // 执行
+        jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
+
+        // 验证
+        assertNotNull(captured.get());
+        assertEquals(Set.of("user:list", "user:create"), captured.get().permissions());
+        assertEquals(roleId, captured.get().user().getRoleId());
+    }
+
+    @Test
+    @DisplayName("角色无权限绑定时，SecurityPrincipal 权限集应为空且仍完成认证")
+    void doFilterInternal_withoutPermissionBinding_shouldSetEmptyPermissions() throws ServletException, IOException {
+        // 准备
+        Long roleId = 4L;
+        JwtPayload payload = JwtPayload.builder()
+                .userId(TEST_USER_ID)
+                .jti(TEST_JTI)
+                .issuedAt(System.currentTimeMillis() / 1000)
+                .expiration(System.currentTimeMillis() / 1000 + 3600)
+                .build();
+
+        when(request.getHeader(HttpHeaders.AUTHORIZATION)).thenReturn(BEARER_TOKEN);
+        when(jwtUtil.parseToken(TEST_TOKEN)).thenReturn(payload);
+        when(authTokenService.validateToken(TEST_JTI)).thenReturn(Optional.of(TEST_USER_ID));
+
+        User user = User.reconstruct(TEST_USER_ID, "password");
+        user.setRoleId(roleId);
+        when(userRepository.findById(TEST_USER_ID)).thenReturn(Optional.of(user));
+        when(permissionRepository.findValuesByRoleId(roleId)).thenReturn(Collections.emptySet());
+
+        AtomicReference<SecurityPrincipal> captured = new AtomicReference<>();
+        doAnswer(invocation -> {
+            captured.set((SecurityPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal());
+            return null;
+        }).when(filterChain).doFilter(request, response);
+
+        // 执行
+        jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
+
+        // 验证：认证通过但无任何权限
+        assertNotNull(captured.get());
+        assertNotNull(captured.get().permissions());
+        assertEquals(Collections.emptySet(), captured.get().permissions());
+    }
+
+    @Test
+    @DisplayName("权限查询异常时按最小权限处理，不把异常抛给上层")
+    void doFilterInternal_whenPermissionQueryFails_shouldFallBackToEmptyPermissions()
+            throws ServletException, IOException {
+        // 准备
+        Long roleId = 3L;
+        JwtPayload payload = JwtPayload.builder()
+                .userId(TEST_USER_ID)
+                .jti(TEST_JTI)
+                .issuedAt(System.currentTimeMillis() / 1000)
+                .expiration(System.currentTimeMillis() / 1000 + 3600)
+                .build();
+
+        when(request.getHeader(HttpHeaders.AUTHORIZATION)).thenReturn(BEARER_TOKEN);
+        when(jwtUtil.parseToken(TEST_TOKEN)).thenReturn(payload);
+        when(authTokenService.validateToken(TEST_JTI)).thenReturn(Optional.of(TEST_USER_ID));
+
+        User user = User.reconstruct(TEST_USER_ID, "password");
+        user.setRoleId(roleId);
+        when(userRepository.findById(TEST_USER_ID)).thenReturn(Optional.of(user));
+        when(permissionRepository.findValuesByRoleId(roleId))
+                .thenThrow(new org.springframework.dao.DataAccessResourceFailureException("db down"));
+
+        AtomicReference<SecurityPrincipal> captured = new AtomicReference<>();
+        doAnswer(invocation -> {
+            captured.set((SecurityPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal());
+            return null;
+        }).when(filterChain).doFilter(request, response);
+
+        // 执行：不应抛出
+        jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
+
+        // 验证：故障转化为“拒绝”，而不是“放行”
+        verify(filterChain).doFilter(request, response);
+        assertNotNull(captured.get());
+        assertEquals(Collections.emptySet(), captured.get().permissions());
     }
 
     /**

@@ -14,11 +14,13 @@ import com.bluenet.web.infrastructure.security.principal.WithSecurityPrincipal;
 import com.bluenet.web.infrastructure.security.util.UserCTX;
 import com.bluenet.web.testsupport.fixture.PermissionFixture;
 import com.bluenet.web.testsupport.fixture.RoleFixture;
+import com.bluenet.web.testconfig.TestSecurityConfig;
 import com.bluenet.web.testsupport.fixture.RolePermissionFixture;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
 
 import java.util.List;
@@ -35,6 +37,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  * </p>
  */
 @DisplayName("PermissionAppServiceImpl 集成测试")
+@Import(TestSecurityConfig.class)
 class PermissionAppServiceImplIntegrationTest extends DBIntegrationTest {
 
     @Autowired

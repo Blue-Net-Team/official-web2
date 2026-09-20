@@ -6,6 +6,7 @@ import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * 权限仓储接口
@@ -76,4 +77,17 @@ public interface PermissionRepository {
      * @return 满足条件时返回 true，否则返回 false。
      */
     boolean existsById(Long id);
+
+    /**
+     * 查询指定角色已绑定的权限值集合。
+     * <p>
+     * 供认证阶段构造安全上下文主体使用，调用频次为每请求一次，与接口内的权限检查次数无关。 实现必须命中 {@code tb_role_permission}
+     * 上由 {@code UNIQUE(role_id, permission_id)} 提供的前导列索引。
+     * </p>
+     *
+     * @param roleId
+     *            角色主键。
+     * @return 该角色已绑定的权限值集合；无绑定或入参为空时返回空集合。
+     */
+    Set<String> findValuesByRoleId(Long roleId);
 }
