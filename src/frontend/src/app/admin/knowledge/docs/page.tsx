@@ -18,7 +18,7 @@ import { useRouter } from 'next/navigation'
 const STATUS_MAP: Record<DocParseStatus, { label: string; color: string }> = {
   PENDING: { label: '待解析', color: 'default' },
   PARSING: { label: '解析中', color: 'processing' },
-  COMPLETED: { label: '已完成', color: 'success' },
+  COMPLETED: { label: '已就绪', color: 'success' },
   FAILED: { label: '失败', color: 'error' },
   CANCELING: { label: '取消中', color: 'warning' },
   CANCELED: { label: '已取消', color: 'default' },

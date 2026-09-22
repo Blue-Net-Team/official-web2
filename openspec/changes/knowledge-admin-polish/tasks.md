@@ -24,7 +24,7 @@
 
 ## 4. 前端
 
-- [ ] 4.1 `admin/knowledge/docs/page.tsx`：`STATUS_MAP.COMPLETED.label` 改为「已就绪」
+- [x] 4.1 `admin/knowledge/docs/page.tsx`：`STATUS_MAP.COMPLETED.label` 改为「已就绪」
 - [ ] 4.2 `knowledge.service.ts` 新增 `deleteChunk(id)`；`KnowledgeTagDTO` 加 `vectorStatus: 'synced' | 'embedding'`
 - [ ] 4.3 chunks 页：删除按钮（`isAdmin`）+ Popconfirm + 请求期间按钮 loading spinner，成功后刷新列表与文档状态
 - [ ] 4.4 tags 页：行内 `embedding` 状态显示 spinning「向量化中」Tag；存在 embedding 时 3s 静默轮询列表直至全部 synced
