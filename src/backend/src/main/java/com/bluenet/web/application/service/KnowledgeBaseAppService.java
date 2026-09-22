@@ -60,6 +60,15 @@ public interface KnowledgeBaseAppService {
     void updateChunk(KnowledgeCommands.UpdateChunkCommand command);
 
     /**
+     * 删除单个分片：删除分片行、标签关联，并将文档分段计数减一。 文档处于 PENDING/PARSING/CANCELING 状态时抛出
+     * DataConflict。
+     *
+     * @param command
+     *            删除分片命令
+     */
+    void deleteChunk(KnowledgeCommands.DeleteChunkCommand command);
+
+    /**
      * 重新上传文档附件，触发完整重新解析。
      *
      * @param command

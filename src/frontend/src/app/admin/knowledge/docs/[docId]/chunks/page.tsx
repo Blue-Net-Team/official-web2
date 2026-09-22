@@ -2,8 +2,20 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { App, Button, Card, Modal, Pagination, Select, Space, Spin, Tag, Input } from 'antd'
-import { ArrowLeftOutlined, EditOutlined, LoadingOutlined } from '@ant-design/icons'
+import {
+  App,
+  Button,
+  Card,
+  Modal,
+  Pagination,
+  Popconfirm,
+  Select,
+  Space,
+  Spin,
+  Tag,
+  Input,
+} from 'antd'
+import { ArrowLeftOutlined, DeleteOutlined, EditOutlined, LoadingOutlined } from '@ant-design/icons'
 import type { KnowledgeChunkDTO, KnowledgeTagDTO } from '@/apis/services/knowledge.service'
 import { knowledgeService } from '@/apis/services/knowledge.service'
 import MarkdownRenderer from '@/components/Assessment/MarkdownRenderer'
@@ -110,6 +122,26 @@ export default function KnowledgeChunksPage() {
     }
   }, [hasEmbedding, isParsing, fetchChunks, fetchDocStatus])
 
+  const [deletingChunkId, setDeletingChunkId] = useState<number | null>(null)
+
+  const handleDeleteChunk = async (chunk: KnowledgeChunkDTO) => {
+    setDeletingChunkId(chunk.id)
+    try {
+      const res = await knowledgeService.deleteChunk(chunk.id)
+      if (res.code === 200) {
+        messageApi.success('分段已删除')
+        fetchChunks()
+        fetchDocStatus()
+      } else {
+        messageApi.error(res.msg || '删除失败')
+      }
+    } catch {
+      messageApi.error('删除失败')
+    } finally {
+      setDeletingChunkId(null)
+    }
+  }
+
   const handleEditClick = (chunk: KnowledgeChunkDTO) => {
     setEditingChunk(chunk)
     setEditContent(chunk.content)
@@ -193,6 +225,26 @@ export default function KnowledgeChunksPage() {
                       >
                         编辑
                       </Button>
+                    )}
+                    {isAdmin && (
+                      <Popconfirm
+                        title={`删除分段 ID:${chunk.id}？`}
+                        description="将同时解除其标签关联，此操作不可撤销。"
+                        okText="删除"
+                        okButtonProps={{ danger: true }}
+                        cancelText="取消"
+                        onConfirm={() => handleDeleteChunk(chunk)}
+                      >
+                        <Button
+                          type="link"
+                          size="small"
+                          danger
+                          icon={<DeleteOutlined />}
+                          loading={deletingChunkId === chunk.id}
+                        >
+                          删除
+                        </Button>
+                      </Popconfirm>
                     )}
                   </Space>
                 }

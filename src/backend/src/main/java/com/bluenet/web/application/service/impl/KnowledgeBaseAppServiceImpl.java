@@ -164,6 +164,28 @@ public class KnowledgeBaseAppServiceImpl implements KnowledgeBaseAppService {
 
     @Override
     @Transactional
+    public void deleteChunk(KnowledgeCommands.DeleteChunkCommand command) {
+        KnowledgeChunk chunk = knowledgeChunkRepository.findById(command.chunkId())
+                .orElseThrow(() -> new DataNotFound("分片不存在，ID: " + command.chunkId()));
+
+        KnowledgeDoc doc = knowledgeDocRepository.findById(chunk.getDocId())
+                .orElseThrow(() -> new DataNotFound("文档不存在，ID: " + chunk.getDocId()));
+        if (doc.getStatus() == DocParseStatus.PENDING
+                || doc.getStatus() == DocParseStatus.PARSING
+                || doc.getStatus() == DocParseStatus.CANCELING) {
+            throw new DataConflict("文档正在解析中，不允许删除分片: " + doc.getStatus().getValue());
+        }
+
+        // 分片行删除时 chunk_vector 随行移除；计数原子递减避免并发丢失更新
+        knowledgeChunkTagRepository.deleteByChunkId(chunk.getId());
+        knowledgeChunkRepository.deleteById(chunk.getId());
+        knowledgeDocRepository.decrementChunkCount(doc.getId());
+
+        log.info("知识库分片删除成功，chunkId={}, docId={}", chunk.getId(), doc.getId());
+    }
+
+    @Override
+    @Transactional
     public void replaceDocFile(KnowledgeCommands.ReplaceDocFileCommand command) {
         MultipartFile file = command.file();
         String originalFilename = file.getOriginalFilename();

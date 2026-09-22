@@ -44,4 +44,12 @@ public interface KnowledgeDocRepository {
      */
     void deleteById(Long id);
 
+    /**
+     * 分段计数原子递减 1（用于删除单个分段后同步冗余列）。
+     *
+     * @param id
+     *            文档ID
+     */
+    void decrementChunkCount(Long id);
+
 }

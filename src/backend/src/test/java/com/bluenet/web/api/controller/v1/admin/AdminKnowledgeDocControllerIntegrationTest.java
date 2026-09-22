@@ -14,6 +14,7 @@ import com.bluenet.web.application.result.knowledge.KnowledgeDocResult;
 import com.bluenet.web.application.result.knowledge.KnowledgeTagResult;
 import com.bluenet.web.application.service.KnowledgeBaseAppService;
 import com.bluenet.web.application.service.KnowledgeDocQueryService;
+import com.bluenet.web.domain.exception.DataConflict;
 import com.bluenet.web.domain.exception.DataNotFound;
 import com.bluenet.web.domain.model.enumerate.DocParseStatus;
 import com.bluenet.web.infrastructure.security.principal.WithSecurityPrincipal;
@@ -418,6 +419,55 @@ class AdminKnowledgeDocControllerIntegrationTest extends APIIntegrationTest {
                                 objectMapper.writeValueAsString(
                                         new com.bluenet.web.api.dto.knowledge.UpdateChunkRequestDTO("内容",
                                                 List.of(1L)))))
+                .andExpect(status().isForbidden())
+                .andReturn();
+        assertThat(result.getResponse().getStatus()).isEqualTo(403);
+    }
+
+    @Test
+    @DisplayName("deleteChunk: 超级管理员应成功删除分片")
+    @WithSecurityPrincipal(userId = SUPER_ADMIN_USER_ID, roleType = "SUPER_ADMIN", roleId = 1L, permissions = {
+            "knowledge:chunk:delete" })
+    void deleteChunk_asSuperAdmin_shouldReturnOk() throws Exception {
+        doNothing().when(knowledgeBaseAppService).deleteChunk(any());
+
+        MvcResult result = mockMvc.perform(delete("/api/v1/admin/knowledge/chunks/{id}", 1L))
+                .andExpect(status().isOk())
+                .andReturn();
+        assertThat(result.getResponse().getStatus()).isEqualTo(200);
+    }
+
+    @Test
+    @DisplayName("deleteChunk: 分片不存在时应返回 404")
+    @WithSecurityPrincipal(userId = SUPER_ADMIN_USER_ID, roleType = "SUPER_ADMIN", roleId = 1L, permissions = {
+            "knowledge:chunk:delete" })
+    void deleteChunk_whenNotFound_shouldReturn404() throws Exception {
+        doThrow(new DataNotFound("分片不存在")).when(knowledgeBaseAppService).deleteChunk(any());
+
+        MvcResult result = mockMvc.perform(delete("/api/v1/admin/knowledge/chunks/{id}", 1L))
+                .andExpect(status().isNotFound())
+                .andReturn();
+        assertThat(result.getResponse().getStatus()).isEqualTo(404);
+    }
+
+    @Test
+    @DisplayName("deleteChunk: 文档解析中应返回 409")
+    @WithSecurityPrincipal(userId = SUPER_ADMIN_USER_ID, roleType = "SUPER_ADMIN", roleId = 1L, permissions = {
+            "knowledge:chunk:delete" })
+    void deleteChunk_whenParsing_shouldReturn409() throws Exception {
+        doThrow(new DataConflict("文档正在解析中")).when(knowledgeBaseAppService).deleteChunk(any());
+
+        MvcResult result = mockMvc.perform(delete("/api/v1/admin/knowledge/chunks/{id}", 1L))
+                .andExpect(status().isConflict())
+                .andReturn();
+        assertThat(result.getResponse().getStatus()).isEqualTo(409);
+    }
+
+    @Test
+    @DisplayName("deleteChunk: 普通成员访问应返回 403")
+    @WithSecurityPrincipal(roleType = "MEMBER", roleId = 3L, permissions = {})
+    void deleteChunk_asMemberWithoutPermission_shouldReturn403() throws Exception {
+        MvcResult result = mockMvc.perform(delete("/api/v1/admin/knowledge/chunks/{id}", 1L))
                 .andExpect(status().isForbidden())
                 .andReturn();
         assertThat(result.getResponse().getStatus()).isEqualTo(403);

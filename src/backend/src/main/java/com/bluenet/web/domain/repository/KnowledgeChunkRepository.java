@@ -46,4 +46,12 @@ public interface KnowledgeChunkRepository {
      *            文档ID
      */
     void deleteByDocId(Long docId);
+
+    /**
+     * 按主键删除单个分段。
+     *
+     * @param id
+     *            分段ID
+     */
+    void deleteById(Long id);
 }

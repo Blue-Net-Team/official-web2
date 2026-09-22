@@ -64,6 +64,11 @@ public class KnowledgeChunkRepositoryImpl implements KnowledgeChunkRepository {
         knowledgeChunkMapper.deleteByDocId(docId);
     }
 
+    @Override
+    public void deleteById(Long id) {
+        knowledgeChunkMapper.deleteById(id);
+    }
+
     /**
      * 批量填充分片实体的标签ID列表。
      */

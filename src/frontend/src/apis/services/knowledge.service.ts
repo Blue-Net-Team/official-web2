@@ -210,6 +210,15 @@ export const knowledgeService = {
   },
 
   /**
+   * 删除分片（同时解除标签关联，文档分段数减一）
+   * DELETE /api/v1/admin/knowledge/chunks/{id}
+   */
+  async deleteChunk(id: number): Promise<ResponseMessage<void>> {
+    const response = await apiClient.delete<ResponseMessage<void>>(`/admin/knowledge/chunks/${id}`)
+    return response.data
+  },
+
+  /**
    * 重新上传文档附件（触发完整重新解析，文档ID不变）
    * POST /api/v1/admin/knowledge/docs/{id}/file
    */

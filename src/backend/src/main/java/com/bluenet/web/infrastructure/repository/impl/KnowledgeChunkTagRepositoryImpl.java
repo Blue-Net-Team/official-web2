@@ -34,6 +34,11 @@ public class KnowledgeChunkTagRepositoryImpl implements KnowledgeChunkTagReposit
     }
 
     @Override
+    public void deleteByChunkId(Long chunkId) {
+        knowledgeChunkTagMapper.deleteByChunkId(chunkId);
+    }
+
+    @Override
     public void deleteByDocId(Long docId) {
         knowledgeChunkTagMapper.deleteByDocId(docId);
     }

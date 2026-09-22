@@ -203,6 +203,20 @@ public class AdminKnowledgeDocController {
         return ResponseMessage.success();
     }
 
+    @Operation(summary = "删除知识库分段", description = "删除单个分段及其标签关联，文档分段计数减一；文档解析中禁止删除")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "删除成功"),
+            @ApiResponse(responseCode = "404", description = "分片不存在", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseMessage.class))),
+            @ApiResponse(responseCode = "409", description = "文档正在解析中", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseMessage.class)))
+    })
+    @RequiresPermission(name = "删除知识库分段", value = "knowledge:chunk:delete", access = AccessLevel.PROTECTED)
+    @DeleteMapping("/chunks/{id}")
+    public ResponseMessage<Void> deleteChunk(
+            @Parameter(description = "分片ID", required = true) @PathVariable Long id) {
+        knowledgeBaseAppService.deleteChunk(new KnowledgeCommands.DeleteChunkCommand(id));
+        return ResponseMessage.success();
+    }
+
     @Operation(summary = "重新上传文档附件", description = "为已有文档更换 .md 附件并触发完整重新解析，文档ID不变")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "更换成功，重新解析已触发"),

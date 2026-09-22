@@ -56,6 +56,7 @@ import static org.mockito.Mockito.verify;
         "knowledge:tag:create",
         "knowledge:tag:delete",
         "knowledge:chunk:update",
+        "knowledge:chunk:delete",
         "knowledge:doc:replace-file" })
 class KnowledgeBaseAppServiceImplIntegrationTest extends DBIntegrationTest {
 
@@ -288,6 +289,57 @@ class KnowledgeBaseAppServiceImplIntegrationTest extends DBIntegrationTest {
                         new KnowledgeCommands.UpdateChunkCommand(999_999L, "新内容", List.of())))
                                 .isInstanceOf(DataNotFound.class)
                                 .hasMessageContaining("分片不存在");
+    }
+
+    @Test
+    @DisplayName("deleteChunk: 应删除分片、解除关联并将文档分段数减一")
+    void deleteChunk_withValidChunk_shouldDeleteAndDecrementCount() {
+        Long docId = uploadMarkdownAndReturnDocId("chunk-delete.md");
+        Long keepChunkId = insertChunk(docId, "保留内容");
+        Long deleteChunkId = insertChunk(docId, "待删内容");
+        KnowledgeDoc completedDoc = knowledgeDocRepository.findById(docId).orElseThrow();
+        completedDoc.updateStatus(DocParseStatus.COMPLETED, 2, null);
+        knowledgeDocRepository.save(completedDoc);
+        Long tagId = createTagWithVector("删除分段标签", "");
+        jdbcTemplate.update(
+                "INSERT INTO tb_rag_chunk_tags (chunk_id, tag_id) VALUES (?, ?)",
+                deleteChunkId,
+                tagId);
+        clearInvocations(knowledgeParsePublisher);
+
+        knowledgeBaseAppService.deleteChunk(new KnowledgeCommands.DeleteChunkCommand(deleteChunkId));
+
+        assertThat(knowledgeChunkRepository.findById(deleteChunkId)).isEmpty();
+        assertThat(knowledgeChunkTagRepository.countByTagId(tagId)).isZero();
+        assertThat(knowledgeChunkRepository.findById(keepChunkId)).isPresent();
+        assertThat(knowledgeDocRepository.findById(docId))
+                .isPresent()
+                .hasValueSatisfying(doc -> assertThat(doc.getChunkCount()).isEqualTo(1));
+        verify(knowledgeParsePublisher, org.mockito.Mockito.never()).publishReembed(anyLong());
+    }
+
+    @Test
+    @DisplayName("deleteChunk: 文档解析中应抛 DataConflict")
+    void deleteChunk_withParsingDocument_shouldThrowConflict() {
+        Long docId = uploadMarkdownAndReturnDocId("chunk-delete-conflict.md");
+        Long chunkId = insertChunk(docId, "内容");
+        KnowledgeDoc doc = knowledgeDocRepository.findById(docId).orElseThrow();
+        doc.updateStatus(DocParseStatus.PARSING, null, null);
+        knowledgeDocRepository.save(doc);
+
+        assertThatThrownBy(
+                () -> knowledgeBaseAppService.deleteChunk(new KnowledgeCommands.DeleteChunkCommand(chunkId)))
+                        .isInstanceOf(DataConflict.class);
+        assertThat(knowledgeChunkRepository.findById(chunkId)).isPresent();
+    }
+
+    @Test
+    @DisplayName("deleteChunk: 分片不存在应抛 DataNotFound")
+    void deleteChunk_withNonExistingChunk_shouldThrowDataNotFound() {
+        assertThatThrownBy(
+                () -> knowledgeBaseAppService.deleteChunk(new KnowledgeCommands.DeleteChunkCommand(999_999L)))
+                        .isInstanceOf(DataNotFound.class)
+                        .hasMessageContaining("分片不存在");
     }
 
     @Test

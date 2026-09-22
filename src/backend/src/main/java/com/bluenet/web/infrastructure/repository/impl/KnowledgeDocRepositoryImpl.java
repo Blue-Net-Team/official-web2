@@ -61,4 +61,9 @@ public class KnowledgeDocRepositoryImpl implements KnowledgeDocRepository {
         log.debug("知识库文档删除成功: id={}", id);
     }
 
+    @Override
+    public void decrementChunkCount(Long id) {
+        knowledgeDocMapper.decrementChunkCount(id);
+    }
+
 }

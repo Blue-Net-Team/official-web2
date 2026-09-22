@@ -11,11 +11,11 @@
 
 ## 2. 删除分段（后端，TDD）
 
-- [ ] 2.1 先写 `deleteChunk` 应用服务测试：成功删除（断言删 chunk + 删关联 + `chunk_count - 1`）、解析中 409、chunk 不存在 404
-- [ ] 2.2 `KnowledgeChunkRepository`/`Mapper` 加 `deleteById`；`KnowledgeDocRepository`/`Mapper` 加 `decrementChunkCount(docId)`（SQL `chunk_count = chunk_count - 1`）
-- [ ] 2.3 `KnowledgeBaseAppService` 接口加 `deleteChunk(Long chunkId)` 并实现（校验文档状态 → 删关联 → 删分片 → 递减计数，单事务）
-- [ ] 2.4 `AdminKnowledgeDocController` 加 `DELETE /chunks/{id}`，`@RequiresPermission(value="knowledge:chunk:delete", name="删除知识库分段", access=PROTECTED)`，全局确认权限标识唯一
-- [ ] 2.5 集成测试：Controller 全链路（204/200 成功、409、404、无权限 403）
+- [x] 2.1 先写 `deleteChunk` 应用服务测试：成功删除（断言删 chunk + 删关联 + `chunk_count - 1`）、解析中 409、chunk 不存在 404
+- [x] 2.2 `KnowledgeChunkRepository`/`Mapper` 加 `deleteById`；`KnowledgeDocRepository`/`Mapper` 加 `decrementChunkCount(docId)`（SQL `chunk_count = chunk_count - 1`）
+- [x] 2.3 `KnowledgeBaseAppService` 接口加 `deleteChunk(Long chunkId)` 并实现（校验文档状态 → 删关联 → 删分片 → 递减计数，单事务）
+- [x] 2.4 `AdminKnowledgeDocController` 加 `DELETE /chunks/{id}`，`@RequiresPermission(value="knowledge:chunk:delete", name="删除知识库分段", access=PROTECTED)`，全局确认权限标识唯一
+- [x] 2.5 集成测试：Controller 全链路（204/200 成功、409、404、无权限 403）
 
 ## 3. ai-service 协调（仓库外）
 
@@ -26,7 +26,7 @@
 
 - [x] 4.1 `admin/knowledge/docs/page.tsx`：`STATUS_MAP.COMPLETED.label` 改为「已就绪」
 - [ ] 4.2 `knowledge.service.ts` 新增 `deleteChunk(id)`；`KnowledgeTagDTO` 加 `vectorStatus: 'synced' | 'embedding'`
-- [ ] 4.3 chunks 页：删除按钮（`isAdmin`）+ Popconfirm + 请求期间按钮 loading spinner，成功后刷新列表与文档状态
+- [x] 4.3 chunks 页：删除按钮（`isAdmin`）+ Popconfirm + 请求期间按钮 loading spinner，成功后刷新列表与文档状态
 - [ ] 4.4 tags 页：行内 `embedding` 状态显示 spinning「向量化中」Tag；存在 embedding 时 3s 静默轮询列表直至全部 synced
 - [ ] 4.5 创建标签成功后保持现有 spinner 提示并触发轮询（若创建响应未含状态则以列表轮询为准）
 

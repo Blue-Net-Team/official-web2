@@ -57,6 +57,13 @@ public class KnowledgeCommands {
     }
 
     /**
+     * 删除分段命令。
+     */
+    public record DeleteChunkCommand(
+            Long chunkId) {
+    }
+
+    /**
      * 重新上传文档附件命令。
      */
     public record ReplaceDocFileCommand(

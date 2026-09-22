@@ -26,6 +26,14 @@ public interface KnowledgeChunkTagRepository {
     void deleteByTagId(Long tagId);
 
     /**
+     * 按分段ID删除该分段的全部标签关联。
+     *
+     * @param chunkId
+     *            分段ID
+     */
+    void deleteByChunkId(Long chunkId);
+
+    /**
      * 按文档ID删除该文档下所有分片的关联。
      *
      * @param docId
