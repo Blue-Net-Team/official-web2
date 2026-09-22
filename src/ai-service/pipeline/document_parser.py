@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import math
 import time
-from typing import Any, Callable, TypeVar
+from typing import Callable, TypeVar
 
 import httpx
 from loguru import logger
