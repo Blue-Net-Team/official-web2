@@ -1,4 +1,4 @@
-# CD AI 可复用工作流：拉取镜像 → SCP tar → docker load → compose up → 轮询健康
+# CD AI 可复用工作流：拉取镜像 → 推送阿里云 ACR → 服务器 docker pull → compose up → 轮询健康
 
 name: CD AI
 
@@ -62,12 +62,25 @@ jobs:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Pull ai-service image and save as tar
+    - name: Pull ai-service image from ghcr
       run: |
         IMAGE="ghcr.io/${{ steps.image.outputs.name }}/bluenet-ai-service:${{ steps.vars.outputs.image_tag }}"
         echo "Pulling $IMAGE"
         docker pull "$IMAGE"
-        docker save "$IMAGE" | gzip > ai-service-image.tar.gz
+
+    - name: Login to Aliyun ACR
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ secrets.ACR_REPO }}
+        username: ${{ secrets.ACR_USERNAME }}
+        password: ${{ secrets.ACR_PWD }}
+    - name: Tag and push image to Aliyun ACR
+      run: |
+        GHCR_IMAGE="ghcr.io/${{ steps.image.outputs.name }}/bluenet-ai-service:${{ steps.vars.outputs.image_tag }}"
+        ACR_IMAGE="${{ secrets.ACR_REPO }}/${{ secrets.ACR_NAMESPACE }}/bluenet:ai"
+        echo "Pushing $ACR_IMAGE"
+        docker tag "$GHCR_IMAGE" "$ACR_IMAGE"
+        docker push "$ACR_IMAGE"
 
     - name: Sync compose file to ai server
       uses: appleboy/scp-action@v0.1.7
@@ -80,16 +93,6 @@ jobs:
         target: ${{ steps.vars.outputs.deploy_path }}
         strip_components: 1
 
-    - name: Transfer image to ai server
-      uses: appleboy/scp-action@v0.1.7
-      with:
-        host: ${{ steps.vars.outputs.deploy_host }}
-        username: ${{ steps.vars.outputs.deploy_user }}
-        key: ${{ secrets.AI_DEPLOY_KEY || secrets.DEPLOY_KEY }}
-        port: ${{ steps.vars.outputs.deploy_port }}
-        source: "ai-service-image.tar.gz"
-        target: /tmp/bluenet-deploy
-
     - name: Deploy ai-service via SSH
       uses: appleboy/ssh-action@v1.0.3
       with:
@@ -97,20 +100,24 @@ jobs:
         username: ${{ steps.vars.outputs.deploy_user }}
         key: ${{ secrets.AI_DEPLOY_KEY || secrets.DEPLOY_KEY }}
         port: ${{ steps.vars.outputs.deploy_port }}
-        envs: AI_SERVICE_IMAGE, DEPLOY_PATH
+        envs: AI_SERVICE_IMAGE, DEPLOY_PATH, IMAGE_ENV, ACR_REPO, ACR_USERNAME, ACR_PWD
         script: |
           set -e
           cd $DEPLOY_PATH
           echo "=== Deploying ai-service to ${{ steps.vars.outputs.env_name }} ==="
-          echo "Loading ai-service image..."
-          gunzip -c /tmp/bluenet-deploy/ai-service-image.tar.gz | docker load
-          rm -f /tmp/bluenet-deploy/ai-service-image.tar.gz
-          export AI_SERVICE_IMAGE="${AI_SERVICE_IMAGE}"
+          echo "Logging into Aliyun ACR..."
+          echo "$ACR_PWD" | docker login --username="$ACR_USERNAME" "$ACR_REPO" --password-stdin
+          echo "Pulling image $IMAGE_ENV..."
+          docker pull "$IMAGE_ENV"
+          export AI_SERVICE_IMAGE="$IMAGE_ENV"
           docker compose --profile ai up -d --no-deps ai-service --remove-orphans
-          echo "Ai-service deployment completed!"
+          echo "ai-service deployment completed!"
       env:
-        AI_SERVICE_IMAGE: ghcr.io/${{ steps.image.outputs.name }}/bluenet-ai-service:${{ steps.vars.outputs.image_tag }}
+        IMAGE_ENV: ${{ secrets.ACR_REPO }}/${{ secrets.ACR_NAMESPACE }}/bluenet:ai
         DEPLOY_PATH: ${{ steps.vars.outputs.deploy_path }}
+        ACR_REPO: ${{ secrets.ACR_REPO }}
+        ACR_USERNAME: ${{ secrets.ACR_USERNAME }}
+        ACR_PWD: ${{ secrets.ACR_PWD }}
 
     - name: Wait for ai-service health check
       run: |
