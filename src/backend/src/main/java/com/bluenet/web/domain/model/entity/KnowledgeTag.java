@@ -1,5 +1,6 @@
 package com.bluenet.web.domain.model.entity;
 
+import com.bluenet.web.domain.model.enumerate.ChunkVectorStatus;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -17,6 +18,7 @@ public class KnowledgeTag {
     private String tagName;
     private String tagDescription;
     private Integer chunksCount;
+    private ChunkVectorStatus vectorStatus;
 
     /**
      * 创建新标签。
@@ -31,14 +33,17 @@ public class KnowledgeTag {
         if (tagName == null || tagName.isBlank()) {
             throw new IllegalArgumentException("标签名不能为空");
         }
-        return new KnowledgeTag(null, tagName, tagDescription != null ? tagDescription : "", 0);
+        return new KnowledgeTag(null, tagName, tagDescription != null ? tagDescription : "", 0,
+                ChunkVectorStatus.EMBEDDING);
     }
 
     /**
      * 从数据库重建。
      */
-    public static KnowledgeTag reconstruct(Long id, String tagName, String tagDescription, Integer chunksCount) {
-        return new KnowledgeTag(id, tagName, tagDescription, chunksCount);
+    public static KnowledgeTag reconstruct(Long id, String tagName, String tagDescription, Integer chunksCount,
+            ChunkVectorStatus vectorStatus) {
+        return new KnowledgeTag(id, tagName, tagDescription, chunksCount,
+                vectorStatus != null ? vectorStatus : ChunkVectorStatus.SYNCED);
     }
 
     /**
@@ -52,7 +57,7 @@ public class KnowledgeTag {
     }
 
     /**
-     * 重命名标签。名称为空时抛出异常。
+     * 重命名标签。名称为空时抛出异常。重命名后标签向量需重新生成。
      *
      * @param tagName
      *            新标签名
@@ -62,5 +67,13 @@ public class KnowledgeTag {
             throw new IllegalArgumentException("标签名不能为空");
         }
         this.tagName = tagName;
+        this.vectorStatus = ChunkVectorStatus.EMBEDDING;
+    }
+
+    /**
+     * 标记标签向量已同步（由 ai-service 嵌入完成后回调）。
+     */
+    public void markSynced() {
+        this.vectorStatus = ChunkVectorStatus.SYNCED;
     }
 }

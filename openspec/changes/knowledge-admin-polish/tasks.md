@@ -2,12 +2,12 @@
 
 ## 1. 标签向量化状态机（后端）
 
-- [ ] 1.1 DDL：`tb_rag_tags` 新增 `vector_status varchar(16) NOT NULL DEFAULT 'synced'`（写入数据库迁移脚本/SQL 记录）
-- [ ] 1.2 `KnowledgeTagDO` 加 `vectorStatus` 字段（复用 `ChunkVectorStatus` 枚举，MyBatis-Plus 类型转换）
-- [ ] 1.3 `KnowledgeTag` 领域实体加 `vectorStatus`：`create()` 初始化为 `EMBEDDING`，`reconstruct()` 支持该字段，新增 `markSynced()`；converter 同步转换
-- [ ] 1.4 `KnowledgeTagListItemResponseDTO` 加 `vectorStatus` 字段，converter 透传
-- [ ] 1.5 `KnowledgeBaseAppServiceImpl.updateTag()`：重命名同事务置 `EMBEDDING`（创建路径 1.3 已覆盖）；补单元测试验证创建/重命名后置 `embedding`
-- [ ] 1.6 标签创建/重命名集成测试：断言响应含 `vectorStatus=embedding`，DB 行状态正确
+- [x] 1.1 DDL：`tb_rag_tags` 新增 `vector_status varchar(16) NOT NULL DEFAULT 'synced'`（写入数据库迁移脚本/SQL 记录）
+- [x] 1.2 `KnowledgeTagDO` 加 `vectorStatus` 字段（复用 `ChunkVectorStatus` 枚举，MyBatis-Plus 类型转换）
+- [x] 1.3 `KnowledgeTag` 领域实体加 `vectorStatus`：`create()` 初始化为 `EMBEDDING`，`reconstruct()` 支持该字段，新增 `markSynced()`；converter 同步转换
+- [x] 1.4 `KnowledgeTagListItemResponseDTO` 加 `vectorStatus` 字段，converter 透传
+- [x] 1.5 `KnowledgeBaseAppServiceImpl.updateTag()`：重命名同事务置 `EMBEDDING`（创建路径 1.3 已覆盖）；补单元测试验证创建/重命名后置 `embedding`
+- [x] 1.6 标签创建/重命名集成测试：断言响应含 `vectorStatus=embedding`，DB 行状态正确
 
 ## 2. 删除分段（后端，TDD）
 
@@ -25,10 +25,10 @@
 ## 4. 前端
 
 - [x] 4.1 `admin/knowledge/docs/page.tsx`：`STATUS_MAP.COMPLETED.label` 改为「已就绪」
-- [ ] 4.2 `knowledge.service.ts` 新增 `deleteChunk(id)`；`KnowledgeTagDTO` 加 `vectorStatus: 'synced' | 'embedding'`
+- [x] 4.2 `knowledge.service.ts` 新增 `deleteChunk(id)`；`KnowledgeTagDTO` 加 `vectorStatus: 'synced' | 'embedding'`
 - [x] 4.3 chunks 页：删除按钮（`isAdmin`）+ Popconfirm + 请求期间按钮 loading spinner，成功后刷新列表与文档状态
-- [ ] 4.4 tags 页：行内 `embedding` 状态显示 spinning「向量化中」Tag；存在 embedding 时 3s 静默轮询列表直至全部 synced
-- [ ] 4.5 创建标签成功后保持现有 spinner 提示并触发轮询（若创建响应未含状态则以列表轮询为准）
+- [x] 4.4 tags 页：行内 `embedding` 状态显示 spinning「向量化中」Tag；存在 embedding 时 3s 静默轮询列表直至全部 synced
+- [x] 4.5 创建标签成功后保持现有 spinner 提示并触发轮询（若创建响应未含状态则以列表轮询为准）
 
 ## 5. 验证与收尾
 

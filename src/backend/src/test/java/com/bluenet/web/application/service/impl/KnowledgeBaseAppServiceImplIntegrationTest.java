@@ -207,7 +207,10 @@ class KnowledgeBaseAppServiceImplIntegrationTest extends DBIntegrationTest {
 
         assertThat(knowledgeTagRepository.findById(tagId))
                 .isPresent()
-                .hasValueSatisfying(updated -> assertThat(updated.getTagDescription()).isEqualTo("更新后的描述"));
+                .hasValueSatisfying(updated -> {
+                    assertThat(updated.getTagDescription()).isEqualTo("更新后的描述");
+                    assertThat(updated.getVectorStatus()).isEqualTo(ChunkVectorStatus.SYNCED);
+                });
     }
 
     private Long createTagWithVector(String tagName, String description) {
@@ -413,6 +416,7 @@ class KnowledgeBaseAppServiceImplIntegrationTest extends DBIntegrationTest {
                 .hasValueSatisfying(tag -> {
                     assertThat(tag.getTagName()).isEqualTo("新标签");
                     assertThat(tag.getTagDescription()).isEqualTo("描述");
+                    assertThat(tag.getVectorStatus()).isEqualTo(ChunkVectorStatus.EMBEDDING);
                 });
         verify(knowledgeParsePublisher).publishTagUpsert(tagId, false);
     }
@@ -439,7 +443,10 @@ class KnowledgeBaseAppServiceImplIntegrationTest extends DBIntegrationTest {
 
         assertThat(knowledgeTagRepository.findById(tagId))
                 .isPresent()
-                .hasValueSatisfying(tag -> assertThat(tag.getTagName()).isEqualTo("新名"));
+                .hasValueSatisfying(tag -> {
+                    assertThat(tag.getTagName()).isEqualTo("新名");
+                    assertThat(tag.getVectorStatus()).isEqualTo(ChunkVectorStatus.EMBEDDING);
+                });
         verify(knowledgeParsePublisher).publishTagUpsert(tagId, false);
     }
 

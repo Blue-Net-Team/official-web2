@@ -31,4 +31,10 @@ public class KnowledgeTagDO {
     private String tagDescription;
 
     private Integer chunksCount;
+
+    /**
+     * 标签向量同步状态：synced(已同步)、embedding(向量化中)。 存字符串值，实体层使用
+     * {@link com.bluenet.web.domain.model.enumerate.ChunkVectorStatus}。
+     */
+    private String vectorStatus;
 }

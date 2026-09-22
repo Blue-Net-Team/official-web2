@@ -15,6 +15,7 @@ public class KnowledgeTagResult {
             Long id,
             String tagName,
             String tagDescription,
-            Integer chunksCount) {
+            Integer chunksCount,
+            String vectorStatus) {
     }
 }

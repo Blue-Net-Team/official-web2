@@ -114,6 +114,7 @@ public class KnowledgeDocQueryServiceImpl implements KnowledgeDocQueryService {
                 entity.getId(),
                 entity.getTagName(),
                 entity.getTagDescription(),
-                entity.getChunksCount());
+                entity.getChunksCount(),
+                entity.getVectorStatus() != null ? entity.getVectorStatus().getValue() : null);
     }
 }

@@ -45,6 +45,6 @@ public class KnowledgeDocResponseConverter {
 
     public KnowledgeTagListItemResponseDTO toTagDTO(KnowledgeTagResult.ListItem item) {
         return new KnowledgeTagListItemResponseDTO(
-                item.id(), item.tagName(), item.tagDescription(), item.chunksCount());
+                item.id(), item.tagName(), item.tagDescription(), item.chunksCount(), item.vectorStatus());
     }
 }

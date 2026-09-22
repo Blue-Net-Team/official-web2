@@ -34,6 +34,7 @@ export interface KnowledgeTagDTO {
   tagName: string
   tagDescription: string
   chunksCount: number
+  vectorStatus: 'synced' | 'embedding'
 }
 
 export const knowledgeService = {

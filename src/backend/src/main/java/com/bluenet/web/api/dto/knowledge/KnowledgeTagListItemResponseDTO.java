@@ -10,5 +10,6 @@ public record KnowledgeTagListItemResponseDTO(
         @Schema(description = "标签ID") Long id,
         @Schema(description = "标签名称") String tagName,
         @Schema(description = "标签描述") String tagDescription,
-        @Schema(description = "关联分段数量") Integer chunksCount) {
+        @Schema(description = "关联分段数量") Integer chunksCount,
+        @Schema(description = "标签向量同步状态：synced(已同步)、embedding(向量化中)") String vectorStatus) {
 }

@@ -1,6 +1,7 @@
 package com.bluenet.web.infrastructure.repository.converter;
 
 import com.bluenet.web.domain.model.entity.KnowledgeTag;
+import com.bluenet.web.domain.model.enumerate.ChunkVectorStatus;
 import com.bluenet.web.infrastructure.repository.dataobject.KnowledgeTagDO;
 import org.springframework.stereotype.Component;
 
@@ -24,6 +25,7 @@ public class KnowledgeTagRepositoryConverter {
                 .tagName(entity.getTagName())
                 .tagDescription(entity.getTagDescription())
                 .chunksCount(entity.getChunksCount())
+                .vectorStatus(entity.getVectorStatus() != null ? entity.getVectorStatus().getValue() : null)
                 .build();
     }
 
@@ -38,7 +40,8 @@ public class KnowledgeTagRepositoryConverter {
                 dataObject.getId(),
                 dataObject.getTagName(),
                 dataObject.getTagDescription(),
-                dataObject.getChunksCount());
+                dataObject.getChunksCount(),
+                parseVectorStatus(dataObject.getVectorStatus()));
     }
 
     /**
@@ -51,5 +54,17 @@ public class KnowledgeTagRepositoryConverter {
         return dataObjects.stream()
                 .map(this::toEntity)
                 .toList();
+    }
+
+    private ChunkVectorStatus parseVectorStatus(String value) {
+        if (value == null) {
+            return ChunkVectorStatus.SYNCED;
+        }
+        for (ChunkVectorStatus status : ChunkVectorStatus.values()) {
+            if (status.getValue().equalsIgnoreCase(value)) {
+                return status;
+            }
+        }
+        return ChunkVectorStatus.SYNCED;
     }
 }

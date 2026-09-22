@@ -1,8 +1,8 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
-import { App, Button, Input, Modal, Pagination, Popconfirm, Spin, Table } from 'antd'
-import { DeleteOutlined, EditOutlined, PlusOutlined } from '@ant-design/icons'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { App, Button, Input, Modal, Pagination, Popconfirm, Spin, Table, Tag } from 'antd'
+import { DeleteOutlined, EditOutlined, LoadingOutlined, PlusOutlined } from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
 import type { KnowledgeTagDTO } from '@/apis/services/knowledge.service'
 import { knowledgeService } from '@/apis/services/knowledge.service'
@@ -28,22 +28,46 @@ export default function KnowledgeTagsPage() {
   const [createName, setCreateName] = useState('')
   const [createDescription, setCreateDescription] = useState('')
 
-  const fetchTags = useCallback(async () => {
-    setLoading(true)
-    try {
-      const res = await knowledgeService.listTags(page - 1, pageSize)
-      if (res.code === 200 && res.data) {
-        setTags(res.data.content)
-        setTotal(res.data.totalElements)
+  const fetchTags = useCallback(
+    async (silent = false) => {
+      if (!silent) setLoading(true)
+      try {
+        const res = await knowledgeService.listTags(page - 1, pageSize)
+        if (res.code === 200 && res.data) {
+          setTags(res.data.content)
+          setTotal(res.data.totalElements)
+        }
+      } finally {
+        if (!silent) setLoading(false)
       }
-    } finally {
-      setLoading(false)
-    }
-  }, [page, pageSize])
+    },
+    [page, pageSize]
+  )
 
   useEffect(() => {
     fetchTags()
   }, [fetchTags])
+
+  // 有标签正在向量化时 3 秒静默轮询，全部同步后停止
+  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const hasEmbedding = tags.some((t) => t.vectorStatus === 'embedding')
+
+  useEffect(() => {
+    if (hasEmbedding && !pollingRef.current) {
+      pollingRef.current = setInterval(() => {
+        fetchTags(true)
+      }, 3000)
+    } else if (!hasEmbedding && pollingRef.current) {
+      clearInterval(pollingRef.current)
+      pollingRef.current = null
+    }
+    return () => {
+      if (pollingRef.current) {
+        clearInterval(pollingRef.current)
+        pollingRef.current = null
+      }
+    }
+  }, [hasEmbedding, fetchTags])
 
   const handleEditClick = (tag: KnowledgeTagDTO) => {
     setEditingTag(tag)
@@ -143,6 +167,21 @@ export default function KnowledgeTagsPage() {
       dataIndex: 'chunksCount',
       key: 'chunksCount',
       width: 120,
+    },
+    {
+      title: '向量状态',
+      key: 'vectorStatus',
+      width: 120,
+      render: (_: unknown, record: KnowledgeTagDTO) =>
+        record.vectorStatus === 'embedding' ? (
+          <Tag icon={<LoadingOutlined spin />} color="processing" className="m-0">
+            向量化中
+          </Tag>
+        ) : (
+          <Tag color="success" className="m-0">
+            已同步
+          </Tag>
+        ),
     },
     ...(isAdmin
       ? [

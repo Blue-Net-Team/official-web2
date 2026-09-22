@@ -83,11 +83,18 @@ class KnowledgeTagTest {
     @Test
     @DisplayName("reconstruct: 应保留所有字段")
     void reconstruct_shouldPreserveAllFields() {
-        KnowledgeTag tag = KnowledgeTag.reconstruct(100L, "Python", "Python 相关", 5);
+        KnowledgeTag tag = KnowledgeTag.reconstruct(
+                100L,
+                "Python",
+                "Python 相关",
+                5,
+                com.bluenet.web.domain.model.enumerate.ChunkVectorStatus.SYNCED);
 
         assertThat(tag.getId()).isEqualTo(100L);
         assertThat(tag.getTagName()).isEqualTo("Python");
         assertThat(tag.getTagDescription()).isEqualTo("Python 相关");
         assertThat(tag.getChunksCount()).isEqualTo(5);
+        assertThat(tag.getVectorStatus())
+                .isEqualTo(com.bluenet.web.domain.model.enumerate.ChunkVectorStatus.SYNCED);
     }
 }
