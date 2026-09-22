@@ -19,6 +19,14 @@ public class KnowledgeQueueConfig {
     public static final String KNOWLEDGE_PARSE_QUEUE = "knowledge.parse";
     /** 知识库文档解析路由键。 */
     public static final String KNOWLEDGE_PARSE_ROUTING_KEY = "parse";
+    /** 知识库分片重新嵌入队列。 */
+    public static final String KNOWLEDGE_REEMBED_QUEUE = "knowledge.reembed";
+    /** 知识库分片重新嵌入路由键。 */
+    public static final String KNOWLEDGE_REEMBED_ROUTING_KEY = "re-embed";
+    /** 知识库标签向量 upsert 队列。 */
+    public static final String KNOWLEDGE_TAG_UPSERT_QUEUE = "knowledge.tag_upsert";
+    /** 知识库标签向量 upsert 路由键。 */
+    public static final String KNOWLEDGE_TAG_UPSERT_ROUTING_KEY = "tag-upsert";
 
     @Bean
     public DirectExchange knowledgeExchange() {
@@ -35,5 +43,29 @@ public class KnowledgeQueueConfig {
         return BindingBuilder.bind(knowledgeParseQueue)
                 .to(knowledgeExchange)
                 .with(KNOWLEDGE_PARSE_ROUTING_KEY);
+    }
+
+    @Bean
+    public Queue knowledgeReembedQueue() {
+        return new Queue(KNOWLEDGE_REEMBED_QUEUE, true);
+    }
+
+    @Bean
+    public Binding knowledgeReembedBinding(Queue knowledgeReembedQueue, DirectExchange knowledgeExchange) {
+        return BindingBuilder.bind(knowledgeReembedQueue)
+                .to(knowledgeExchange)
+                .with(KNOWLEDGE_REEMBED_ROUTING_KEY);
+    }
+
+    @Bean
+    public Queue knowledgeTagUpsertQueue() {
+        return new Queue(KNOWLEDGE_TAG_UPSERT_QUEUE, true);
+    }
+
+    @Bean
+    public Binding knowledgeTagUpsertBinding(Queue knowledgeTagUpsertQueue, DirectExchange knowledgeExchange) {
+        return BindingBuilder.bind(knowledgeTagUpsertQueue)
+                .to(knowledgeExchange)
+                .with(KNOWLEDGE_TAG_UPSERT_ROUTING_KEY);
     }
 }

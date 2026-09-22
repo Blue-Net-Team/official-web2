@@ -101,6 +101,36 @@ export default function KnowledgeDocsPage() {
     return false
   }
 
+  const [replacingDoc, setReplacingDoc] = useState<KnowledgeDocDTO | null>(null)
+  const [replacing, setReplacing] = useState(false)
+
+  const handleReplaceFile = async (doc: KnowledgeDocDTO, file: File) => {
+    if (!file.name.toLowerCase().endsWith('.md')) {
+      messageApi.error('仅支持上传 .md 文件')
+      return
+    }
+    if (doc.status === 'PENDING' || doc.status === 'PARSING' || doc.status === 'CANCELING') {
+      messageApi.error('文档正在解析中，请稍后再试')
+      return
+    }
+    setReplacingDoc(doc)
+    setReplacing(true)
+    try {
+      const res = await knowledgeService.replaceDocFile(doc.id, file)
+      if (res.code === 200) {
+        messageApi.success('附件已更换，重新解析已触发')
+        fetchDocs()
+      } else {
+        messageApi.error(res.msg || '更换附件失败')
+      }
+    } catch {
+      messageApi.error('更换附件失败')
+    } finally {
+      setReplacing(false)
+      setReplacingDoc(null)
+    }
+  }
+
   const handleReparse = async (doc: KnowledgeDocDTO) => {
     try {
       const res = await knowledgeService.reparseDocument(doc.id)
@@ -198,7 +228,7 @@ export default function KnowledgeDocsPage() {
       {
         title: '操作',
         key: 'actions',
-        width: 280,
+        width: 360,
         fixed: 'right',
         render: (_, record) => (
           <div className="flex gap-1">
@@ -210,6 +240,27 @@ export default function KnowledgeDocsPage() {
             >
               分段
             </Button>
+            {isAdmin &&
+              (record.status === 'COMPLETED' ||
+                record.status === 'FAILED' ||
+                record.status === 'CANCELED') && (
+                <Upload
+                  beforeUpload={(file) => {
+                    handleReplaceFile(record, file)
+                    return false
+                  }}
+                  showUploadList={false}
+                  accept=".md"
+                >
+                  <Button
+                    type="link"
+                    size="small"
+                    loading={replacing && replacingDoc?.id === record.id}
+                  >
+                    换附件
+                  </Button>
+                </Upload>
+              )}
             {isAdmin &&
               (record.status === 'COMPLETED' ||
                 record.status === 'FAILED' ||

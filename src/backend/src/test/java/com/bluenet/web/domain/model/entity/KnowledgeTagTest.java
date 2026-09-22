@@ -60,6 +60,27 @@ class KnowledgeTagTest {
     }
 
     @Test
+    @DisplayName("rename: 应更新标签名")
+    void rename_shouldUpdateTagName() {
+        KnowledgeTag tag = KnowledgeTag.create("Java", "描述");
+
+        tag.rename("Java语言");
+
+        assertThat(tag.getTagName()).isEqualTo("Java语言");
+        assertThat(tag.getTagDescription()).isEqualTo("描述");
+    }
+
+    @Test
+    @DisplayName("rename: 空名称应抛异常")
+    void rename_withBlankName_shouldThrow() {
+        KnowledgeTag tag = KnowledgeTag.create("Java", "描述");
+
+        assertThatThrownBy(() -> tag.rename(" "))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("标签名不能为空");
+    }
+
+    @Test
     @DisplayName("reconstruct: 应保留所有字段")
     void reconstruct_shouldPreserveAllFields() {
         KnowledgeTag tag = KnowledgeTag.reconstruct(100L, "Python", "Python 相关", 5);

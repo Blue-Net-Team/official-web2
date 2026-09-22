@@ -12,6 +12,8 @@ from loguru import logger
 from api import router as api_router
 from logging_config import setup_logging
 from messaging.parse_consumer import start_parse_consumer
+from messaging.reembed_consumer import start_reembed_consumer
+from messaging.tag_upsert_consumer import start_tag_upsert_consumer
 from pipeline.document_parser import update_doc_status
 from retrieval import PgVectorStore
 
@@ -47,14 +49,19 @@ async def lifespan(app: FastAPI):
     except Exception as exc:
         _log.warning(f"清理僵尸任务失败（不影响服务启动）: {exc}")
 
-    consumer_task = None
+    consumer_tasks: list[asyncio.Task] = []
     try:
-        consumer_task = await start_parse_consumer()
+        consumer_tasks.append(await start_parse_consumer())
     except Exception as exc:
         _log.warning(f"RabbitMQ 消费者启动失败（可能 RabbitMQ 未运行）: {exc}")
+    for starter in (start_reembed_consumer, start_tag_upsert_consumer):
+        try:
+            consumer_tasks.append(await starter())
+        except Exception as exc:
+            _log.warning(f"RabbitMQ 消费者启动失败（可能 RabbitMQ 未运行）: {exc}")
 
     yield
-    if consumer_task is not None:
+    for consumer_task in consumer_tasks:
         consumer_task.cancel()
         try:
             await consumer_task

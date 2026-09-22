@@ -36,7 +36,7 @@ public class KnowledgeDocResponseConverter {
 
     public KnowledgeChunkListItemResponseDTO toChunkDTO(KnowledgeChunkResult.ListItem item) {
         return new KnowledgeChunkListItemResponseDTO(
-                item.id(), item.docId(), item.content(), item.tags(), item.source());
+                item.id(), item.docId(), item.content(), item.tagIds(), item.source(), item.vectorStatus());
     }
 
     public PageDTO<KnowledgeTagListItemResponseDTO> toTagListPageDTO(Page<KnowledgeTagResult.ListItem> page) {

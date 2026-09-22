@@ -24,8 +24,9 @@ export interface KnowledgeChunkDTO {
   id: number
   docId: number
   content: string
-  tags: string[]
+  tagIds: number[]
   source: string
+  vectorStatus: 'synced' | 'embedding'
 }
 
 export interface KnowledgeTagDTO {
@@ -147,6 +148,21 @@ export const knowledgeService = {
   },
 
   /**
+   * 更新标签（重命名/描述）
+   * PUT /api/v1/admin/knowledge/tags/{id}
+   */
+  async updateTag(
+    id: number,
+    payload: { tagName?: string; description?: string }
+  ): Promise<ResponseMessage<void>> {
+    const response = await apiClient.put<ResponseMessage<void>>(
+      `/admin/knowledge/tags/${id}`,
+      payload
+    )
+    return response.data
+  },
+
+  /**
    * 更新标签描述
    * PUT /api/v1/admin/knowledge/tags/{id}
    */
@@ -154,6 +170,61 @@ export const knowledgeService = {
     const response = await apiClient.put<ResponseMessage<void>>(`/admin/knowledge/tags/${id}`, {
       description,
     })
+    return response.data
+  },
+
+  /**
+   * 新建标签
+   * POST /api/v1/admin/knowledge/tags
+   */
+  async createTag(payload: {
+    tagName: string
+    description?: string
+  }): Promise<ResponseMessage<number>> {
+    const response = await apiClient.post<ResponseMessage<number>>('/admin/knowledge/tags', payload)
+    return response.data
+  },
+
+  /**
+   * 删除标签（自动解除全部分片关联），返回解除关联的分片数
+   * DELETE /api/v1/admin/knowledge/tags/{id}
+   */
+  async deleteTag(id: number): Promise<ResponseMessage<number>> {
+    const response = await apiClient.delete<ResponseMessage<number>>(`/admin/knowledge/tags/${id}`)
+    return response.data
+  },
+
+  /**
+   * 编辑分片（内容与标签，保存后异步重新向量化）
+   * PUT /api/v1/admin/knowledge/chunks/{id}
+   */
+  async updateChunk(
+    id: number,
+    payload: { content: string; tagIds: number[] }
+  ): Promise<ResponseMessage<void>> {
+    const response = await apiClient.put<ResponseMessage<void>>(
+      `/admin/knowledge/chunks/${id}`,
+      payload
+    )
+    return response.data
+  },
+
+  /**
+   * 重新上传文档附件（触发完整重新解析，文档ID不变）
+   * POST /api/v1/admin/knowledge/docs/{id}/file
+   */
+  async replaceDocFile(id: number, file: File): Promise<ResponseMessage<void>> {
+    const formData = new FormData()
+    formData.append('file', file)
+    const response = await apiClient.post<ResponseMessage<void>>(
+      `/admin/knowledge/docs/${id}/file`,
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      }
+    )
     return response.data
   },
 }

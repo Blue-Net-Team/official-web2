@@ -387,8 +387,8 @@ class PgVectorStore(VectorStore):
             return {"insert_count": 0, "ids": []}
 
         sql = f"""
-            INSERT INTO {table} (doc_id, chunk_vector, content, tags, source)
-            VALUES (%(doc_id)s, %(chunk_vector)s, %(content)s, %(tags)s, %(source)s)
+            INSERT INTO {table} (doc_id, chunk_vector, content, source)
+            VALUES (%(doc_id)s, %(chunk_vector)s, %(content)s, %(source)s)
             RETURNING id
         """
         ids: list[int] = []
@@ -411,19 +411,106 @@ class PgVectorStore(VectorStore):
             return {"upsert_count": 0, "ids": []}
 
         sql = f"""
-            INSERT INTO {table} (id, doc_id, chunk_vector, content, tags, source)
-            VALUES (%(id)s, %(doc_id)s, %(chunk_vector)s, %(content)s, %(tags)s, %(source)s)
+            INSERT INTO {table} (id, doc_id, chunk_vector, content, source)
+            VALUES (%(id)s, %(doc_id)s, %(chunk_vector)s, %(content)s, %(source)s)
             ON CONFLICT (id) DO UPDATE SET
                 doc_id = EXCLUDED.doc_id,
                 chunk_vector = EXCLUDED.chunk_vector,
                 content = EXCLUDED.content,
-                tags = EXCLUDED.tags,
                 source = EXCLUDED.source
         """
         for row in rows:
             self._execute(sql, row)
 
         return {"upsert_count": len(rows), "ids": [r["id"] for r in rows]}
+
+    def insert_chunk_tag_links(self, links: list[tuple[int, int]]) -> None:
+        """批量插入分片-标签关联（中间表）。
+
+        Args:
+            links: (chunk_id, tag_id) 元组列表
+        """
+        if not links:
+            return
+        values = ", ".join(["(%s, %s)"] * len(links))
+        params: list[Any] = []
+        for chunk_id, tag_id in links:
+            params.extend([chunk_id, tag_id])
+        sql = f"""
+            INSERT INTO tb_rag_chunk_tags (chunk_id, tag_id)
+            VALUES {values}
+            ON CONFLICT DO NOTHING
+        """
+        self._execute(sql, tuple(params))
+
+    def delete_chunk_tag_links_by_doc(self, doc_id: int) -> None:
+        """删除指定文档下所有分片的标签关联（中间表）。"""
+        self._execute(
+            "DELETE FROM tb_rag_chunk_tags "
+            "WHERE chunk_id IN (SELECT id FROM tb_rag_chunks WHERE doc_id = %s)",
+            (doc_id,),
+        )
+
+    def get_tag_ids_by_names(self, names: list[str]) -> dict[str, int]:
+        """按标签名批量查询标签ID。
+
+        Returns:
+            标签名 → 标签ID 的映射；无对应记录的名字不出现在结果中
+        """
+        if not names:
+            return {}
+        table = _get_table(settings.TAGS_COLLECTION_NAME)
+        placeholders = ", ".join(["%s"] * len(names))
+        rows = self._execute(
+            f"SELECT id, tag_name FROM {table} WHERE tag_name IN ({placeholders})",
+            tuple(names),
+            fetch=True,
+        )
+        return {row["tag_name"]: row["id"] for row in rows or []}
+
+    def get_chunk_by_id(self, chunk_id: int) -> dict | None:
+        """按ID查询单个分段。"""
+        table = _get_table(settings.CHUNKS_COLLECTION_NAME)
+        rows = self._execute(
+            f"SELECT id, doc_id, content FROM {table} WHERE id = %s",
+            (chunk_id,),
+            fetch=True,
+        )
+        return rows[0] if rows else None
+
+    def get_tag_by_id(self, tag_id: int) -> dict | None:
+        """按ID查询单个标签。"""
+        table = _get_table(settings.TAGS_COLLECTION_NAME)
+        rows = self._execute(
+            f"SELECT id, tag_name FROM {table} WHERE id = %s",
+            (tag_id,),
+            fetch=True,
+        )
+        return rows[0] if rows else None
+
+    def update_chunk_vector(self, chunk_id: int, vector: list[float]) -> None:
+        """更新分片向量并标记为已同步。"""
+        table = _get_table(settings.CHUNKS_COLLECTION_NAME)
+        self._execute(
+            f"UPDATE {table} SET chunk_vector = %s WHERE id = %s",
+            (vector, chunk_id),
+        )
+
+    def mark_chunk_synced(self, chunk_id: int) -> None:
+        """标记分片向量已同步。"""
+        table = _get_table(settings.CHUNKS_COLLECTION_NAME)
+        self._execute(
+            f"UPDATE {table} SET vector_status = 'synced' WHERE id = %s",
+            (chunk_id,),
+        )
+
+    def update_tag_vector(self, tag_id: int, vector: list[float]) -> None:
+        """更新标签向量。"""
+        table = _get_table(settings.TAGS_COLLECTION_NAME)
+        self._execute(
+            f"UPDATE {table} SET tag_vector = %s WHERE id = %s",
+            (vector, tag_id),
+        )
 
     def insert_docs(self, data: list[DocRecord]) -> dict:
         """批量插入文档数据。"""
@@ -519,7 +606,7 @@ class PgVectorStore(VectorStore):
         tag_filter: list[str] | None = None,
         output_fields: list[str] | None = None,
     ) -> list[ChunkRecord]:
-        """在 chunks 表中执行向量搜索，支持标签过滤。"""
+        """在 chunks 表中执行向量搜索，支持标签过滤（经中间表）。"""
         table = _get_table(settings.CHUNKS_COLLECTION_NAME)
         if not self._check_table_exists(table):
             raise CollectionNotFoundError(f"表不存在: {table}")
@@ -527,9 +614,10 @@ class PgVectorStore(VectorStore):
         metric = settings.VECTOR_METRIC_TYPE
         op = _METRIC_OPS.get(metric, "<=>")
 
-        default_fields = ["id", "doc_id", "chunk_vector", "content", "tags", "source"]
-        fields = output_fields or default_fields
-        select_cols = ", ".join(fields)
+        select_cols = (
+            "c.id, c.doc_id, c.chunk_vector, c.content, c.source, "
+            "COALESCE(agg.tags, ARRAY[]::varchar[]) AS tags"
+        )
 
         conditions: list[str] = []
         params: list[Any] = [vector]
@@ -543,9 +631,15 @@ class PgVectorStore(VectorStore):
 
         sql = f"""
             SELECT {select_cols}
-            FROM {table}
+            FROM {table} c
+            LEFT JOIN LATERAL (
+                SELECT array_agg(t.tag_name) AS tags
+                FROM tb_rag_chunk_tags ct
+                JOIN {_get_table(settings.TAGS_COLLECTION_NAME)} t ON t.id = ct.tag_id
+                WHERE ct.chunk_id = c.id
+            ) agg ON TRUE
             {where_clause}
-            ORDER BY chunk_vector {op} %s::vector
+            ORDER BY c.chunk_vector {op} %s::vector
             LIMIT {top_k}
         """
         rows = self._execute(sql, params, fetch=True)
@@ -554,7 +648,7 @@ class PgVectorStore(VectorStore):
     def get_chunks_by_tags(self, tags: list[str], limit: int = 50) -> list[ChunkRecord]:
         """根据标签列表精确查询 chunks（纯标签匹配，非向量搜索）。
 
-        使用 PostgreSQL 数组重叠操作符 &&，直接匹配 chunks 表的 tags 数组字段。
+        标签经 tb_rag_chunk_tags 中间表与 tb_rag_tags 按名称匹配。
         """
         table = _get_table(settings.CHUNKS_COLLECTION_NAME)
         if not self._check_table_exists(table):
@@ -563,13 +657,21 @@ class PgVectorStore(VectorStore):
         if not tags:
             return []
 
-        default_fields = ["id", "doc_id", "chunk_vector", "content", "tags", "source"]
-        select_cols = ", ".join(default_fields)
+        select_cols = (
+            "c.id, c.doc_id, c.chunk_vector, c.content, c.source, "
+            "COALESCE(agg.tags, ARRAY[]::varchar[]) AS tags"
+        )
 
         tag_sql = self._build_tag_filter_sql(tags)
         sql = f"""
             SELECT {select_cols}
-            FROM {table}
+            FROM {table} c
+            LEFT JOIN LATERAL (
+                SELECT array_agg(t.tag_name) AS tags
+                FROM tb_rag_chunk_tags ct
+                JOIN {_get_table(settings.TAGS_COLLECTION_NAME)} t ON t.id = ct.tag_id
+                WHERE ct.chunk_id = c.id
+            ) agg ON TRUE
             WHERE {tag_sql}
             LIMIT {limit}
         """
@@ -719,15 +821,21 @@ class PgVectorStore(VectorStore):
 
     @staticmethod
     def _build_tag_filter_sql(tags: list[str]) -> str:
-        """构建标签数组过滤 SQL。
+        """构建标签过滤 SQL（经 tb_rag_chunk_tags 中间表按标签名匹配）。
 
-        使用 PostgreSQL 数组操作符 &&（交集）实现。
+        返回的子查询引用外层 chunks 表的 id 列，调用方需保证查询中有且仅有
+        一张含 id 列的表（或使用 c.id 别名的场景由子查询相关性自动解析）。
         """
         if not tags:
             return ""
         escaped = [t.replace("'", "''") for t in tags]
         array_literal = ", ".join(f"'{t}'" for t in escaped)
-        return f"tags && ARRAY[{array_literal}]::varchar[]"
+        return (
+            "id IN ("
+            "SELECT ct.chunk_id FROM tb_rag_chunk_tags ct "
+            f"JOIN tb_rag_tags t ON t.id = ct.tag_id WHERE t.tag_name = ANY(ARRAY[{array_literal}]::varchar[])"
+            ")"
+        )
 
     @staticmethod
     def _convert_filter(milvus_expr: str) -> str:

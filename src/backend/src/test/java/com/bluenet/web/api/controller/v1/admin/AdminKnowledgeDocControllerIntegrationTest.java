@@ -132,8 +132,9 @@ class AdminKnowledgeDocControllerIntegrationTest extends APIIntegrationTest {
                 1L,
                 1L,
                 "分段内容",
-                List.of("tag"),
-                "source");
+                List.of(1L),
+                "source",
+                "synced");
         return new PageDTO<>(
                 List.of(item),
                 1L,
@@ -264,8 +265,9 @@ class AdminKnowledgeDocControllerIntegrationTest extends APIIntegrationTest {
                 1L,
                 1L,
                 "分段内容",
-                List.of("tag"),
-                "source");
+                List.of(1L),
+                "source",
+                "synced");
         when(knowledgeDocQueryService.listChunks(any(Long.class), any())).thenReturn(new PageImpl<>(List.of(item)));
         when(responseConverter.toChunkListPageDTO(any())).thenReturn(chunkListPageDTO());
 
@@ -369,18 +371,179 @@ class AdminKnowledgeDocControllerIntegrationTest extends APIIntegrationTest {
     }
 
     @Test
-    @DisplayName("updateTagDescription: 空描述应返回 400")
+    @DisplayName("updateTag: 空白描述视为清除描述，应返回 200")
     @WithSecurityPrincipal(userId = SUPER_ADMIN_USER_ID, roleType = "SUPER_ADMIN", roleId = 1L, permissions = {
             "knowledge:tag:update" })
-    void updateTagDescription_withBlankDescription_shouldReturn400() throws Exception {
+    void updateTag_withBlankDescription_shouldReturnOk() throws Exception {
         UpdateTagDescriptionRequestDTO request = new UpdateTagDescriptionRequestDTO("  ");
 
         MvcResult result = mockMvc.perform(
                 put("/api/v1/admin/knowledge/tags/{id}", 1L)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andReturn();
+        assertThat(result.getResponse().getStatus()).isEqualTo(200);
+    }
+
+    @Test
+    @DisplayName("updateChunk: 超级管理员应成功编辑分片")
+    @WithSecurityPrincipal(userId = SUPER_ADMIN_USER_ID, roleType = "SUPER_ADMIN", roleId = 1L, permissions = {
+            "knowledge:chunk:update" })
+    void updateChunk_asSuperAdmin_shouldReturnOk() throws Exception {
+        doNothing().when(knowledgeBaseAppService)
+                .updateChunk(
+                        any(com.bluenet.web.application.command.knowledge.KnowledgeCommands.UpdateChunkCommand.class));
+
+        MvcResult result = mockMvc.perform(
+                put("/api/v1/admin/knowledge/chunks/{id}", 1L)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(
+                                objectMapper.writeValueAsString(
+                                        new com.bluenet.web.api.dto.knowledge.UpdateChunkRequestDTO("新内容",
+                                                List.of(1L, 2L)))))
+                .andExpect(status().isOk())
+                .andReturn();
+        assertThat(result.getResponse().getStatus()).isEqualTo(200);
+    }
+
+    @Test
+    @DisplayName("updateChunk: 普通成员访问应返回 403")
+    @WithSecurityPrincipal(roleType = "MEMBER", roleId = 3L, permissions = {})
+    void updateChunk_asMemberWithoutPermission_shouldReturn403() throws Exception {
+        MvcResult result = mockMvc.perform(
+                put("/api/v1/admin/knowledge/chunks/{id}", 1L)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(
+                                objectMapper.writeValueAsString(
+                                        new com.bluenet.web.api.dto.knowledge.UpdateChunkRequestDTO("内容",
+                                                List.of(1L)))))
+                .andExpect(status().isForbidden())
+                .andReturn();
+        assertThat(result.getResponse().getStatus()).isEqualTo(403);
+    }
+
+    @Test
+    @DisplayName("updateChunk: 空内容应返回 400")
+    @WithSecurityPrincipal(userId = SUPER_ADMIN_USER_ID, roleType = "SUPER_ADMIN", roleId = 1L, permissions = {
+            "knowledge:chunk:update" })
+    void updateChunk_withBlankContent_shouldReturn400() throws Exception {
+        MvcResult result = mockMvc.perform(
+                put("/api/v1/admin/knowledge/chunks/{id}", 1L)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(
+                                objectMapper.writeValueAsString(
+                                        new com.bluenet.web.api.dto.knowledge.UpdateChunkRequestDTO(" ", List.of(1L)))))
                 .andExpect(status().isBadRequest())
                 .andReturn();
         assertThat(result.getResponse().getStatus()).isEqualTo(400);
+    }
+
+    @Test
+    @DisplayName("replaceDocFile: 超级管理员应成功更换附件")
+    @WithSecurityPrincipal(userId = SUPER_ADMIN_USER_ID, roleType = "SUPER_ADMIN", roleId = 1L, permissions = {
+            "knowledge:doc:replace-file" })
+    void replaceDocFile_asSuperAdmin_shouldReturnOk() throws Exception {
+        doNothing().when(knowledgeBaseAppService)
+                .replaceDocFile(
+                        any(
+                                com.bluenet.web.application.command.knowledge.KnowledgeCommands.ReplaceDocFileCommand.class));
+
+        MockMultipartFile file = new MockMultipartFile("file", "updated.md", MediaType.TEXT_MARKDOWN_VALUE,
+                "# updated".getBytes());
+
+        MvcResult result = mockMvc.perform(
+                multipart("/api/v1/admin/knowledge/docs/{id}/file", 1L).file(file))
+                .andExpect(status().isOk())
+                .andReturn();
+        assertThat(result.getResponse().getStatus()).isEqualTo(200);
+    }
+
+    @Test
+    @DisplayName("replaceDocFile: 普通成员访问应返回 403")
+    @WithSecurityPrincipal(roleType = "MEMBER", roleId = 3L, permissions = {})
+    void replaceDocFile_asMemberWithoutPermission_shouldReturn403() throws Exception {
+        MockMultipartFile file = new MockMultipartFile("file", "updated.md", MediaType.TEXT_MARKDOWN_VALUE,
+                "# updated".getBytes());
+
+        MvcResult result = mockMvc.perform(
+                multipart("/api/v1/admin/knowledge/docs/{id}/file", 1L).file(file))
+                .andExpect(status().isForbidden())
+                .andReturn();
+        assertThat(result.getResponse().getStatus()).isEqualTo(403);
+    }
+
+    @Test
+    @DisplayName("createTag: 超级管理员应成功创建标签")
+    @WithSecurityPrincipal(userId = SUPER_ADMIN_USER_ID, roleType = "SUPER_ADMIN", roleId = 1L, permissions = {
+            "knowledge:tag:create" })
+    void createTag_asSuperAdmin_shouldReturnOk() throws Exception {
+        when(
+                knowledgeBaseAppService.createTag(
+                        any(com.bluenet.web.application.command.knowledge.KnowledgeCommands.CreateTagCommand.class)))
+                                .thenReturn(1L);
+
+        MvcResult result = mockMvc.perform(
+                post("/api/v1/admin/knowledge/tags")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(
+                                objectMapper.writeValueAsString(
+                                        new com.bluenet.web.api.dto.knowledge.CreateTagRequestDTO("新标签", "描述"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data").value(1))
+                .andReturn();
+        assertThat(result.getResponse().getStatus()).isEqualTo(200);
+    }
+
+    @Test
+    @DisplayName("createTag: 空标签名应返回 400")
+    @WithSecurityPrincipal(userId = SUPER_ADMIN_USER_ID, roleType = "SUPER_ADMIN", roleId = 1L, permissions = {
+            "knowledge:tag:create" })
+    void createTag_withBlankName_shouldReturn400() throws Exception {
+        MvcResult result = mockMvc.perform(
+                post("/api/v1/admin/knowledge/tags")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(
+                                objectMapper.writeValueAsString(
+                                        new com.bluenet.web.api.dto.knowledge.CreateTagRequestDTO(" ", null))))
+                .andExpect(status().isBadRequest())
+                .andReturn();
+        assertThat(result.getResponse().getStatus()).isEqualTo(400);
+    }
+
+    @Test
+    @DisplayName("updateTag: 超级管理员应成功重命名标签")
+    @WithSecurityPrincipal(userId = SUPER_ADMIN_USER_ID, roleType = "SUPER_ADMIN", roleId = 1L, permissions = {
+            "knowledge:tag:update" })
+    void updateTag_asSuperAdmin_shouldReturnOk() throws Exception {
+        doNothing().when(knowledgeBaseAppService)
+                .updateTag(any(com.bluenet.web.application.command.knowledge.KnowledgeCommands.UpdateTagCommand.class));
+
+        MvcResult result = mockMvc.perform(
+                put("/api/v1/admin/knowledge/tags/{id}", 1L)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(
+                                objectMapper.writeValueAsString(
+                                        new com.bluenet.web.api.dto.knowledge.UpdateTagRequestDTO("新名字", "新描述"))))
+                .andExpect(status().isOk())
+                .andReturn();
+        assertThat(result.getResponse().getStatus()).isEqualTo(200);
+    }
+
+    @Test
+    @DisplayName("deleteTag: 超级管理员应成功删除标签并返回解除关联数")
+    @WithSecurityPrincipal(userId = SUPER_ADMIN_USER_ID, roleType = "SUPER_ADMIN", roleId = 1L, permissions = {
+            "knowledge:tag:delete" })
+    void deleteTag_asSuperAdmin_shouldReturnOk() throws Exception {
+        when(
+                knowledgeBaseAppService.deleteTag(
+                        any(com.bluenet.web.application.command.knowledge.KnowledgeCommands.DeleteTagCommand.class)))
+                                .thenReturn(3);
+
+        MvcResult result = mockMvc.perform(delete("/api/v1/admin/knowledge/tags/{id}", 1L))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data").value(3))
+                .andReturn();
+        assertThat(result.getResponse().getStatus()).isEqualTo(200);
     }
 }

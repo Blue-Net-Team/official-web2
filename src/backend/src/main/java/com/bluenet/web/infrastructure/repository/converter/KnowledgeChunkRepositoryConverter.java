@@ -1,6 +1,7 @@
 package com.bluenet.web.infrastructure.repository.converter;
 
 import com.bluenet.web.domain.model.entity.KnowledgeChunk;
+import com.bluenet.web.domain.model.enumerate.ChunkVectorStatus;
 import com.bluenet.web.infrastructure.repository.dataobject.KnowledgeChunkDO;
 import org.springframework.stereotype.Component;
 
@@ -23,7 +24,7 @@ public class KnowledgeChunkRepositoryConverter {
                 .id(entity.getId())
                 .docId(entity.getDocId())
                 .content(entity.getContent())
-                .tags(entity.getTags())
+                .vectorStatus(entity.getVectorStatus() != null ? entity.getVectorStatus().getValue() : null)
                 .source(entity.getSource())
                 .build();
     }
@@ -39,12 +40,13 @@ public class KnowledgeChunkRepositoryConverter {
                 dataObject.getId(),
                 dataObject.getDocId(),
                 dataObject.getContent(),
-                dataObject.getTags(),
-                dataObject.getSource());
+                List.of(),
+                dataObject.getSource(),
+                parseVectorStatus(dataObject.getVectorStatus()));
     }
 
     /**
-     * DO 列表 → Entity 列表
+     * DO 列表 → Entity 列表（tagIds 由仓储层批量填充）
      */
     public List<KnowledgeChunk> toEntityList(List<KnowledgeChunkDO> dataObjects) {
         if (dataObjects == null) {
@@ -53,5 +55,17 @@ public class KnowledgeChunkRepositoryConverter {
         return dataObjects.stream()
                 .map(this::toEntity)
                 .toList();
+    }
+
+    private ChunkVectorStatus parseVectorStatus(String value) {
+        if (value == null) {
+            return ChunkVectorStatus.SYNCED;
+        }
+        for (ChunkVectorStatus status : ChunkVectorStatus.values()) {
+            if (status.getValue().equalsIgnoreCase(value)) {
+                return status;
+            }
+        }
+        return ChunkVectorStatus.SYNCED;
     }
 }

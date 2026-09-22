@@ -1,8 +1,8 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { App, Button, Input, Modal, Pagination, Spin, Table } from 'antd'
-import { EditOutlined } from '@ant-design/icons'
+import { App, Button, Input, Modal, Pagination, Popconfirm, Spin, Table } from 'antd'
+import { DeleteOutlined, EditOutlined, PlusOutlined } from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
 import type { KnowledgeTagDTO } from '@/apis/services/knowledge.service'
 import { knowledgeService } from '@/apis/services/knowledge.service'
@@ -20,8 +20,13 @@ export default function KnowledgeTagsPage() {
 
   const [editingTag, setEditingTag] = useState<KnowledgeTagDTO | null>(null)
   const [editModalOpen, setEditModalOpen] = useState(false)
+  const [editName, setEditName] = useState('')
   const [editDescription, setEditDescription] = useState('')
   const [saving, setSaving] = useState(false)
+
+  const [createModalOpen, setCreateModalOpen] = useState(false)
+  const [createName, setCreateName] = useState('')
+  const [createDescription, setCreateDescription] = useState('')
 
   const fetchTags = useCallback(async () => {
     setLoading(true)
@@ -42,15 +47,23 @@ export default function KnowledgeTagsPage() {
 
   const handleEditClick = (tag: KnowledgeTagDTO) => {
     setEditingTag(tag)
+    setEditName(tag.tagName)
     setEditDescription(tag.tagDescription || '')
     setEditModalOpen(true)
   }
 
-  const handleSaveDescription = async () => {
+  const handleSaveEdit = async () => {
     if (!editingTag) return
+    if (!editName.trim()) {
+      messageApi.error('标签名不能为空')
+      return
+    }
     setSaving(true)
     try {
-      const res = await knowledgeService.updateTagDescription(editingTag.id, editDescription)
+      const res = await knowledgeService.updateTag(editingTag.id, {
+        tagName: editName.trim(),
+        description: editDescription,
+      })
       if (res.code === 200) {
         messageApi.success('更新成功')
         setEditModalOpen(false)
@@ -62,6 +75,47 @@ export default function KnowledgeTagsPage() {
       messageApi.error('更新失败')
     } finally {
       setSaving(false)
+    }
+  }
+
+  const handleCreate = async () => {
+    if (!createName.trim()) {
+      messageApi.error('标签名不能为空')
+      return
+    }
+    setSaving(true)
+    try {
+      const res = await knowledgeService.createTag({
+        tagName: createName.trim(),
+        description: createDescription || undefined,
+      })
+      if (res.code === 200) {
+        messageApi.success('创建成功，标签向量生成中')
+        setCreateModalOpen(false)
+        setCreateName('')
+        setCreateDescription('')
+        fetchTags()
+      } else {
+        messageApi.error(res.msg || '创建失败')
+      }
+    } catch {
+      messageApi.error('创建失败')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleDelete = async (tag: KnowledgeTagDTO) => {
+    try {
+      const res = await knowledgeService.deleteTag(tag.id)
+      if (res.code === 200) {
+        messageApi.success(`已删除，自动解除 ${res.data ?? 0} 个分片关联`)
+        fetchTags()
+      } else {
+        messageApi.error(res.msg || '删除失败')
+      }
+    } catch {
+      messageApi.error('删除失败')
     }
   }
 
@@ -95,16 +149,30 @@ export default function KnowledgeTagsPage() {
           {
             title: '操作' as const,
             key: 'actions',
-            width: 120,
+            width: 200,
             render: (_: unknown, record: KnowledgeTagDTO) => (
-              <Button
-                type="link"
-                size="small"
-                icon={<EditOutlined />}
-                onClick={() => handleEditClick(record)}
-              >
-                编辑描述
-              </Button>
+              <div className="flex gap-1">
+                <Button
+                  type="link"
+                  size="small"
+                  icon={<EditOutlined />}
+                  onClick={() => handleEditClick(record)}
+                >
+                  编辑
+                </Button>
+                <Popconfirm
+                  title={`删除标签「${record.tagName}」？`}
+                  description={`将自动解除与 ${record.chunksCount} 个分片的关联，此操作不可撤销。`}
+                  okText="删除"
+                  okButtonProps={{ danger: true }}
+                  cancelText="取消"
+                  onConfirm={() => handleDelete(record)}
+                >
+                  <Button type="link" size="small" danger icon={<DeleteOutlined />}>
+                    删除
+                  </Button>
+                </Popconfirm>
+              </div>
             ),
           },
         ]
@@ -115,6 +183,11 @@ export default function KnowledgeTagsPage() {
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-medium text-white/90 m-0">知识库标签管理</h2>
+        {isAdmin && (
+          <Button type="primary" icon={<PlusOutlined />} onClick={() => setCreateModalOpen(true)}>
+            新建标签
+          </Button>
+        )}
       </div>
 
       <Spin spinning={loading}>
@@ -142,20 +215,67 @@ export default function KnowledgeTagsPage() {
       </div>
 
       <Modal
-        title={`编辑标签描述 - ${editingTag?.tagName}`}
+        title={`编辑标签 - ${editingTag?.tagName}`}
         open={editModalOpen}
-        onOk={handleSaveDescription}
+        onOk={handleSaveEdit}
         onCancel={() => setEditModalOpen(false)}
         confirmLoading={saving}
         okText="保存"
         cancelText="取消"
       >
-        <Input.TextArea
-          rows={4}
-          value={editDescription}
-          onChange={(e) => setEditDescription(e.target.value)}
-          placeholder="请输入标签描述"
-        />
+        <div className="flex flex-col gap-3">
+          <div>
+            <div className="text-white/70 mb-1">标签名称（重命名会重新生成标签向量）</div>
+            <Input
+              value={editName}
+              onChange={(e) => setEditName(e.target.value)}
+              placeholder="请输入标签名称"
+              maxLength={128}
+            />
+          </div>
+          <div>
+            <div className="text-white/70 mb-1">描述</div>
+            <Input.TextArea
+              rows={4}
+              value={editDescription}
+              onChange={(e) => setEditDescription(e.target.value)}
+              placeholder="请输入标签描述"
+              maxLength={512}
+            />
+          </div>
+        </div>
+      </Modal>
+
+      <Modal
+        title="新建标签"
+        open={createModalOpen}
+        onOk={handleCreate}
+        onCancel={() => setCreateModalOpen(false)}
+        confirmLoading={saving}
+        okText="创建"
+        cancelText="取消"
+      >
+        <div className="flex flex-col gap-3">
+          <div>
+            <div className="text-white/70 mb-1">标签名称</div>
+            <Input
+              value={createName}
+              onChange={(e) => setCreateName(e.target.value)}
+              placeholder="请输入标签名称"
+              maxLength={128}
+            />
+          </div>
+          <div>
+            <div className="text-white/70 mb-1">描述（可选）</div>
+            <Input.TextArea
+              rows={4}
+              value={createDescription}
+              onChange={(e) => setCreateDescription(e.target.value)}
+              placeholder="请输入标签描述"
+              maxLength={512}
+            />
+          </div>
+        </div>
       </Modal>
     </div>
   )

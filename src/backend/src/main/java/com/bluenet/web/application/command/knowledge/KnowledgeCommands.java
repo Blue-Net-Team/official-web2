@@ -46,4 +46,45 @@ public class KnowledgeCommands {
             Long tagId,
             String description) {
     }
+
+    /**
+     * 编辑分片命令。
+     */
+    public record UpdateChunkCommand(
+            Long chunkId,
+            String content,
+            java.util.List<Long> tagIds) {
+    }
+
+    /**
+     * 重新上传文档附件命令。
+     */
+    public record ReplaceDocFileCommand(
+            Long docId,
+            MultipartFile file) {
+    }
+
+    /**
+     * 新建标签命令。
+     */
+    public record CreateTagCommand(
+            String tagName,
+            String description) {
+    }
+
+    /**
+     * 更新标签命令（重命名/描述，字段为 null 表示不修改）。
+     */
+    public record UpdateTagCommand(
+            Long tagId,
+            String tagName,
+            String description) {
+    }
+
+    /**
+     * 删除标签命令。
+     */
+    public record DeleteTagCommand(
+            Long tagId) {
+    }
 }

@@ -143,17 +143,79 @@ public class AdminKnowledgeDocController {
         return ResponseMessage.success(responseConverter.toTagListPageDTO(page));
     }
 
-    @Operation(summary = "更新标签描述", description = "修改指定标签的描述文本")
+    @Operation(summary = "更新标签", description = "修改指定标签的名称和/或描述；重命名会触发标签向量重新计算")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "更新成功"),
+            @ApiResponse(responseCode = "400", description = "标签名重复", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseMessage.class))),
             @ApiResponse(responseCode = "404", description = "标签不存在", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseMessage.class)))
     })
-    @RequiresPermission(name = "更新知识库标签描述", value = "knowledge:tag:update", access = AccessLevel.PROTECTED)
+    @RequiresPermission(name = "更新知识库标签", value = "knowledge:tag:update", access = AccessLevel.PROTECTED)
     @PutMapping("/tags/{id}")
-    public ResponseMessage<Void> updateTagDescription(
+    public ResponseMessage<Void> updateTag(
             @Parameter(description = "标签ID", required = true) @PathVariable Long id,
-            @Valid @RequestBody UpdateTagDescriptionRequestDTO request) {
-        knowledgeBaseAppService.updateTagDescription(id, request.description());
+            @Valid @RequestBody UpdateTagRequestDTO request) {
+        knowledgeBaseAppService
+                .updateTag(new KnowledgeCommands.UpdateTagCommand(id, request.tagName(), request.description()));
+        return ResponseMessage.success();
+    }
+
+    @Operation(summary = "新建知识库标签", description = "创建标签并异步生成标签向量")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "创建成功"),
+            @ApiResponse(responseCode = "400", description = "标签名为空或已存在", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseMessage.class)))
+    })
+    @RequiresPermission(name = "新建知识库标签", value = "knowledge:tag:create", access = AccessLevel.PROTECTED)
+    @PostMapping("/tags")
+    public ResponseMessage<Long> createTag(
+            @Valid @RequestBody CreateTagRequestDTO request) {
+        Long tagId = knowledgeBaseAppService.createTag(
+                new KnowledgeCommands.CreateTagCommand(request.tagName(), request.description()));
+        return ResponseMessage.success(tagId);
+    }
+
+    @Operation(summary = "删除知识库标签", description = "删除标签并自动解除其与全部分片的关联")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "删除成功，返回被解除关联的分片数量"),
+            @ApiResponse(responseCode = "404", description = "标签不存在", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseMessage.class)))
+    })
+    @RequiresPermission(name = "删除知识库标签", value = "knowledge:tag:delete", access = AccessLevel.PROTECTED)
+    @DeleteMapping("/tags/{id}")
+    public ResponseMessage<Integer> deleteTag(
+            @Parameter(description = "标签ID", required = true) @PathVariable Long id) {
+        int dissociated = knowledgeBaseAppService.deleteTag(new KnowledgeCommands.DeleteTagCommand(id));
+        return ResponseMessage.success(dissociated);
+    }
+
+    @Operation(summary = "编辑知识库分片", description = "修改分片内容与标签，保存后异步重新向量化")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "编辑成功"),
+            @ApiResponse(responseCode = "400", description = "参数校验失败或标签不存在", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseMessage.class))),
+            @ApiResponse(responseCode = "404", description = "分片不存在", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseMessage.class))),
+            @ApiResponse(responseCode = "409", description = "文档正在解析中", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseMessage.class)))
+    })
+    @RequiresPermission(name = "编辑知识库分片", value = "knowledge:chunk:update", access = AccessLevel.PROTECTED)
+    @PutMapping("/chunks/{id}")
+    public ResponseMessage<Void> updateChunk(
+            @Parameter(description = "分片ID", required = true) @PathVariable Long id,
+            @Valid @RequestBody UpdateChunkRequestDTO request) {
+        knowledgeBaseAppService.updateChunk(
+                new KnowledgeCommands.UpdateChunkCommand(id, request.content(), request.tagIds()));
+        return ResponseMessage.success();
+    }
+
+    @Operation(summary = "重新上传文档附件", description = "为已有文档更换 .md 附件并触发完整重新解析，文档ID不变")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "更换成功，重新解析已触发"),
+            @ApiResponse(responseCode = "400", description = "仅支持 .md 文件", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseMessage.class))),
+            @ApiResponse(responseCode = "404", description = "文档不存在", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseMessage.class))),
+            @ApiResponse(responseCode = "409", description = "文档正在解析中", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseMessage.class)))
+    })
+    @RequiresPermission(name = "重新上传文档附件", value = "knowledge:doc:replace-file", access = AccessLevel.PROTECTED)
+    @PostMapping("/docs/{id}/file")
+    public ResponseMessage<Void> replaceDocFile(
+            @Parameter(description = "文档ID", required = true) @PathVariable Long id,
+            @RequestParam("file") org.springframework.web.multipart.MultipartFile file) {
+        knowledgeBaseAppService.replaceDocFile(new KnowledgeCommands.ReplaceDocFileCommand(id, file));
         return ResponseMessage.success();
     }
 }

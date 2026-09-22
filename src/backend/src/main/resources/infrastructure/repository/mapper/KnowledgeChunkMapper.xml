@@ -6,7 +6,7 @@
         <id column="id" property="id"/>
         <result column="doc_id" property="docId"/>
         <result column="content" property="content"/>
-        <result column="tags" property="tags" typeHandler="com.bluenet.web.infrastructure.repository.handler.PgTextArrayTypeHandler"/>
+        <result column="vector_status" property="vectorStatus"/>
         <result column="source" property="source"/>
     </resultMap>
 
@@ -15,14 +15,14 @@
     </delete>
 
     <select id="selectByDocId" resultMap="BaseResultMap">
-        SELECT id, doc_id, content, tags, source
+        SELECT id, doc_id, content, vector_status, source
         FROM tb_rag_chunks
         WHERE doc_id = #{docId}
         ORDER BY id
     </select>
 
     <select id="selectPageByDocId" resultMap="BaseResultMap">
-        SELECT id, doc_id, content, tags, source
+        SELECT id, doc_id, content, vector_status, source
         FROM tb_rag_chunks
         WHERE doc_id = #{docId}
         ORDER BY id

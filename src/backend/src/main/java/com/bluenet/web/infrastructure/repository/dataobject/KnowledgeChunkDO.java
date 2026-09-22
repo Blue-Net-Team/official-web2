@@ -4,14 +4,11 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.bluenet.web.infrastructure.repository.handler.PgTextArrayTypeHandler;
 import com.bluenet.web.infrastructure.repository.handler.PgVectorTypeHandler;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.util.List;
 
 /**
  * 知识库分段 Mapper 数据对象。
@@ -33,8 +30,7 @@ public class KnowledgeChunkDO {
 
     private String content;
 
-    @TableField(typeHandler = PgTextArrayTypeHandler.class)
-    private List<String> tags;
+    private String vectorStatus;
 
     private String source;
 }

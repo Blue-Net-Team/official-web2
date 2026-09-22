@@ -104,8 +104,9 @@ public class KnowledgeDocQueryServiceImpl implements KnowledgeDocQueryService {
                 entity.getId(),
                 entity.getDocId(),
                 entity.getContent(),
-                entity.getTags(),
-                entity.getSource());
+                entity.getTagIds(),
+                entity.getSource(),
+                entity.getVectorStatus() != null ? entity.getVectorStatus().getValue() : null);
     }
 
     private KnowledgeTagResult.ListItem toTagItem(KnowledgeTag entity) {

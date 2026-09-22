@@ -16,7 +16,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 
-import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -54,7 +53,7 @@ class KnowledgeChunkRepositoryImplIntegrationTest extends DBIntegrationTest {
         chunk.setDocId(docId);
         chunk.setChunkVector(new float[VECTOR_DIMENSION]);
         chunk.setContent(content);
-        chunk.setTags(List.of("标签"));
+        chunk.setVectorStatus("synced");
         chunk.setSource("source");
         knowledgeChunkMapper.insert(chunk);
         return chunk;

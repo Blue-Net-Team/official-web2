@@ -6,7 +6,8 @@
 from __future__ import annotations
 
 import math
-from typing import Any
+import time
+from typing import Any, Callable, TypeVar
 
 import httpx
 from loguru import logger
@@ -26,6 +27,44 @@ _chunker = None
 
 SIMILARITY_THRESHOLD = 0.75
 RERANKER_THRESHOLD = 0.90
+
+# 消费端查询重试：生产端在数据库事务内投递消息，消费可能先于事务提交到达。
+# 目标行查询不到时按此间隔重试，超过次数后视为脏数据丢弃。
+ROW_LOOKUP_RETRY_DELAY_SECONDS = 2.0
+ROW_LOOKUP_RETRY_MAX_ATTEMPTS = 5
+
+T = TypeVar("T")
+
+
+def fetch_with_retry(
+    fetch: Callable[[], T | None],
+    description: str,
+    max_attempts: int = ROW_LOOKUP_RETRY_MAX_ATTEMPTS,
+    delay_seconds: float = ROW_LOOKUP_RETRY_DELAY_SECONDS,
+) -> T | None:
+    """查询目标行，缺失时有限重试（应对生产端事务未提交的可见性延迟）。
+
+    Args:
+        fetch: 返回单行（或 None）的查询函数
+        description: 日志描述（如 "chunk 15"）
+        max_attempts: 最大尝试次数
+        delay_seconds: 每次重试间隔秒数
+
+    Returns:
+        查询到的行；全部重试后仍缺失返回 None
+    """
+    for attempt in range(1, max_attempts + 1):
+        row = fetch()
+        if row is not None:
+            return row
+        if attempt < max_attempts:
+            _log.warning(
+                f"{description} 尚未可见（生产端事务可能未提交），"
+                f"{delay_seconds:.0f}s 后重试 ({attempt}/{max_attempts})"
+            )
+            time.sleep(delay_seconds)
+    _log.error(f"{description} 在 {max_attempts} 次重试后仍不存在，丢弃任务")
+    return None
 
 TAG_GENERATION_PROMPT = """\
 请为以下文本生成2-3个标签，用于信息检索分类。
@@ -201,6 +240,20 @@ def check_doc_status(doc_id: int) -> str:
     return ""
 
 
+def wait_for_doc_status(doc_id: int, max_attempts: int = ROW_LOOKUP_RETRY_MAX_ATTEMPTS) -> str | None:
+    """等待文档行可见并返回状态。
+
+    生产端在数据库事务内投递消息，消费可能先于提交到达；文档行查询不到时
+    有限重试，仍缺失返回 None（调用方应丢弃任务）。
+    """
+    row = fetch_with_retry(
+        lambda: check_doc_status(doc_id) or None,
+        f"doc {doc_id}",
+        max_attempts=max_attempts,
+    )
+    return row
+
+
 def check_should_abort(doc_id: int) -> bool:
     """检查是否应该中止解析（canceling / canceled 状态）。
 
@@ -235,45 +288,31 @@ def download_file(download_url: str) -> str:
 
 
 def recalculate_tag_counts() -> None:
-    """重新统计并更新所有标签的引用次数。"""
+    """重新统计并更新所有标签的引用次数（基于 tb_rag_chunk_tags 中间表）。"""
     _log.info("开始重新统计标签引用次数...")
     with PgVectorStore() as store:
-        tag_counts: dict[str, int] = {}
-        rows = store._execute(
+        store._execute(
             """
-            SELECT tags FROM tb_rag_chunks
-            WHERE tags IS NOT NULL AND array_length(tags, 1) > 0
-            """,
-            fetch=True,
+            UPDATE tb_rag_tags t
+            SET chunks_count = COALESCE(cnt.c, 0)
+            FROM (
+                SELECT tag_id, COUNT(*) AS c
+                FROM tb_rag_chunk_tags
+                GROUP BY tag_id
+            ) cnt
+            WHERE t.id = cnt.tag_id
+            """
         )
-        for row in rows or []:
-            for tag in row.get("tags") or []:
-                tag = tag.strip()
-                if tag:
-                    tag_counts[tag] = tag_counts.get(tag, 0) + 1
-
-        if tag_counts:
-            store._execute("UPDATE tb_rag_tags SET chunks_count = 0")
-            items = list(tag_counts.items())
-            values = ", ".join(["(%s, %s)"] * len(items))
-            params: list[Any] = []
-            for tag, cnt in items:
-                params.extend([tag, cnt])
-
-            sql_update = f"""
-                WITH counts AS (
-                    SELECT v.tag_name, v.cnt::int
-                    FROM (VALUES {values}) AS v(tag_name, cnt)
-                )
-                UPDATE tb_rag_tags t
-                SET chunks_count = c.cnt
-                FROM counts c
-                WHERE t.tag_name = c.tag_name
+        store._execute(
             """
-            store._execute(sql_update, tuple(params))
-            _log.info(f"已更新 {len(tag_counts)} 个标签的引用次数")
-        else:
-            _log.warning("未统计到任何标签引用")
+            UPDATE tb_rag_tags t
+            SET chunks_count = 0
+            WHERE NOT EXISTS (
+                SELECT 1 FROM tb_rag_chunk_tags ct WHERE ct.tag_id = t.id
+            )
+            """
+        )
+        _log.info("已更新全部标签的引用次数")
 
 
 def ingest_chunks(doc_id: int, chunks: list[str], source: str = "knowledge") -> None:
@@ -349,7 +388,17 @@ def ingest_chunks(doc_id: int, chunks: list[str], source: str = "knowledge") -> 
             store.insert_tags(tag_records)
             _log.info(f"存储 {len(tag_records)} 个新标签")
 
-    # 插入所有 chunks
+    # 重新读取标签表，构建 标签名 → 标签ID 映射（含刚插入的新标签）
+    final_tag_names: set[str] = set()
+    for tags in chunk_tag_map.values():
+        final_tag_names.update(tags)
+    with PgVectorStore() as store:
+        name_to_id = store.get_tag_ids_by_names(list(final_tag_names))
+    missing_names = final_tag_names - set(name_to_id)
+    if missing_names:
+        _log.warning(f"以下标签未在库中找到，将跳过其关联: {missing_names}")
+
+    # 嵌入并插入所有 chunks（不含标签数组，标签经中间表关联）
     chunk_records: list[ChunkRecord] = []
     for chunk, tags in chunk_tag_map.items():
         chunk_embedding = embedding.embed_texts([chunk])
@@ -362,11 +411,20 @@ def ingest_chunks(doc_id: int, chunks: list[str], source: str = "knowledge") -> 
         ))
 
     # 批量插入
+    chunk_links: list[tuple[int, int]] = []
     batch_size = 50
     for i in range(0, len(chunk_records), batch_size):
         batch = chunk_records[i:i + batch_size]
+        batch_tags = list(chunk_tag_map.values())[i:i + batch_size]
         with PgVectorStore() as store:
-            store.insert_chunks(batch)
+            result = store.insert_chunks(batch)
+            for chunk_id, tags in zip(result.get("ids", []), batch_tags):
+                for tag_name in tags:
+                    tag_id = name_to_id.get(tag_name)
+                    if tag_id is not None:
+                        chunk_links.append((chunk_id, tag_id))
+            store.insert_chunk_tag_links(chunk_links)
+            chunk_links = []
         _log.info(f"已插入 chunks {i + 1}-{min(i + batch_size, len(chunk_records))}/{len(chunk_records)}")
 
     # 重新统计标签引用次数
@@ -374,9 +432,10 @@ def ingest_chunks(doc_id: int, chunks: list[str], source: str = "knowledge") -> 
 
 
 def _cleanup_chunks(doc_id: int) -> None:
-    """清除指定文档的所有分段。"""
+    """清除指定文档的所有分段及其标签关联。"""
     try:
         with PgVectorStore() as store:
+            store.delete_chunk_tag_links_by_doc(doc_id)
             store._execute("DELETE FROM tb_rag_chunks WHERE doc_id = %s", (doc_id,))
         _log.info(f"已清除分段: doc_id={doc_id}")
     except Exception as exc:
@@ -393,6 +452,11 @@ def parse_single_document(doc_id: int, file_id: int, download_url: str, reparse:
         reparse: 是否为重新解析（会清除旧分段）
     """
     _, _, _, chunker = get_models()
+
+    # 等待文档行可见（生产端事务内投递消息，消费可能先于提交到达）
+    if wait_for_doc_status(doc_id) is None:
+        _log.error(f"文档行不存在，放弃解析: doc_id={doc_id}")
+        return
 
     # 检查取消状态（入口处即处理，防止僵尸任务继续）
     if check_should_abort(doc_id):
@@ -450,3 +514,67 @@ def parse_single_document(doc_id: int, file_id: int, download_url: str, reparse:
         # 尽最大努力更新失败状态，不阻塞异常传播
         update_doc_status(doc_id, "failed", 0, str(exc))
         raise
+
+
+def reembed_chunk(chunk_id: int) -> bool:
+    """重新嵌入单个分片并向量化完成置为已同步。
+
+    Args:
+        chunk_id: 分片ID
+
+    Returns:
+        处理成功返回 True；分片不存在（重试后仍缺失）返回 False，消息应丢弃
+    """
+    _, embedding, _, _ = get_models()
+
+    def _fetch() -> dict | None:
+        with PgVectorStore() as store:
+            return store.get_chunk_by_id(chunk_id)
+
+    row = fetch_with_retry(_fetch, f"chunk {chunk_id}")
+    if row is None:
+        return False
+
+    content = row.get("content", "")
+    vector = embedding.embed_texts([content])[0]
+    with PgVectorStore() as store:
+        store.update_chunk_vector(chunk_id, vector)
+        store.mark_chunk_synced(chunk_id)
+
+    recalculate_tag_counts()
+    _log.info(f"分片重新嵌入完成: chunk_id={chunk_id}")
+    return True
+
+
+def upsert_tag_vector(tag_id: int, recount: bool = False) -> bool:
+    """重新计算标签向量（新建/重命名后由 tag-upsert 消息触发）。
+
+    Args:
+        tag_id: 标签ID
+        recount: 是否在处理后重新统计标签引用计数（标签删除场景）
+
+    Returns:
+        标签存在且处理成功返回 True；标签不存在（重试后仍缺失）返回 False
+    """
+    _, embedding, _, _ = get_models()
+
+    def _fetch() -> dict | None:
+        with PgVectorStore() as store:
+            return store.get_tag_by_id(tag_id)
+
+    row = fetch_with_retry(_fetch, f"tag {tag_id}")
+    if row is None:
+        # 标签可能刚被删除；recount 场景仍需重算其余标签的引用计数
+        if recount:
+            recalculate_tag_counts()
+        return False
+
+    tag_name = row.get("tag_name", "")
+    vector = embedding.embed_texts([tag_name])[0]
+    with PgVectorStore() as store:
+        store.update_tag_vector(tag_id, vector)
+
+    if recount:
+        recalculate_tag_counts()
+    _log.info(f"标签向量已更新: tag_id={tag_id}")
+    return True

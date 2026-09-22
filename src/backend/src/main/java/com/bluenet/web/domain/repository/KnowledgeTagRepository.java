@@ -36,4 +36,32 @@ public interface KnowledgeTagRepository {
      *            标签实体。若 id 为空则插入，否则按 id 更新。
      */
     void save(KnowledgeTag tag);
+
+    /**
+     * 按名称查询标签。
+     *
+     * @param tagName
+     *            标签名
+     * @return 查询到的标签；不存在时为空
+     */
+    Optional<KnowledgeTag> findByName(String tagName);
+
+    /**
+     * 判断标签名是否已存在（排除指定ID，用于重名校验）。
+     *
+     * @param tagName
+     *            标签名
+     * @param excludeId
+     *            需要排除的标签ID（新建时传 null）
+     * @return 已存在返回 true
+     */
+    boolean existsByName(String tagName, Long excludeId);
+
+    /**
+     * 按主键删除标签。
+     *
+     * @param id
+     *            标签ID
+     */
+    void deleteById(Long id);
 }

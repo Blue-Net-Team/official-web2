@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bluenet.web.infrastructure.repository.mapper.KnowledgeChunkTagMapper">
+
+    <delete id="deleteByChunkId">
+        DELETE FROM tb_rag_chunk_tags WHERE chunk_id = #{chunkId}
+    </delete>
+
+    <delete id="deleteByTagId">
+        DELETE FROM tb_rag_chunk_tags WHERE tag_id = #{tagId}
+    </delete>
+
+    <delete id="deleteByDocId">
+        DELETE FROM tb_rag_chunk_tags
+        WHERE chunk_id IN (SELECT id FROM tb_rag_chunks WHERE doc_id = #{docId})
+    </delete>
+
+    <select id="selectByChunkIds" resultType="com.bluenet.web.infrastructure.repository.dataobject.KnowledgeChunkTagDO">
+        SELECT chunk_id AS chunkId, tag_id AS tagId
+        FROM tb_rag_chunk_tags
+        WHERE chunk_id IN
+        <foreach collection="chunkIds" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+
+    <select id="countByTagId" resultType="long">
+        SELECT COUNT(*) FROM tb_rag_chunk_tags WHERE tag_id = #{tagId}
+    </select>
+
+</mapper>

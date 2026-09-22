@@ -50,4 +50,17 @@ public class KnowledgeTag {
     public void updateDescription(String description) {
         this.tagDescription = description != null ? description : "";
     }
+
+    /**
+     * 重命名标签。名称为空时抛出异常。
+     *
+     * @param tagName
+     *            新标签名
+     */
+    public void rename(String tagName) {
+        if (tagName == null || tagName.isBlank()) {
+            throw new IllegalArgumentException("标签名不能为空");
+        }
+        this.tagName = tagName;
+    }
 }

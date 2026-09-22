@@ -1,7 +1,5 @@
 package com.bluenet.web.application.result.knowledge;
 
-import java.util.List;
-
 /**
  * 知识库分段应用层结果对象。
  */
@@ -17,7 +15,8 @@ public class KnowledgeChunkResult {
             Long id,
             Long docId,
             String content,
-            List<String> tags,
-            String source) {
+            java.util.List<Long> tagIds,
+            String source,
+            String vectorStatus) {
     }
 }

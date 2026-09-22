@@ -59,5 +59,27 @@ public class KnowledgeTagRepositoryImpl implements KnowledgeTagRepository {
         log.debug("知识库标签保存成功: id={}", tag.getId());
     }
 
+    @Override
+    public Optional<KnowledgeTag> findByName(String tagName) {
+        QueryWrapper<KnowledgeTagDO> wrapper = new QueryWrapper<>();
+        wrapper.eq("tag_name", tagName);
+        return Optional.ofNullable(converter.toEntity(knowledgeTagMapper.selectOne(wrapper)));
+    }
+
+    @Override
+    public boolean existsByName(String tagName, Long excludeId) {
+        QueryWrapper<KnowledgeTagDO> wrapper = new QueryWrapper<>();
+        wrapper.eq("tag_name", tagName);
+        if (excludeId != null) {
+            wrapper.ne("id", excludeId);
+        }
+        return knowledgeTagMapper.selectCount(wrapper) > 0;
+    }
+
+    @Override
+    public void deleteById(Long id) {
+        knowledgeTagMapper.deleteById(id);
+    }
+
     private static final int VECTOR_DIMENSION = 1024;
 }
