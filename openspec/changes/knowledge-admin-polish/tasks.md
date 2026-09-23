@@ -19,8 +19,8 @@
 
 ## 3. ai-service 协调（仓库外）
 
-- [ ] 3.1 ai-service 消费 `tag-upsert` 完成嵌入后，UPDATE 语句加写 `vector_status='synced'`（向 ai-service 维护者提交需求/PR，本仓库记录部署依赖）
-- [ ] 3.2 部署顺序确认：ai-service 先于或同步于后端上线
+- [x] 3.1 ai-service 消费 `tag-upsert` 完成嵌入后，UPDATE 语句加写 `vector_status='synced'`（向 ai-service 维护者提交需求/PR，本仓库记录部署依赖）
+- [x] 3.2 部署顺序确认：ai-service 先于或同步于后端上线
 
 ## 4. 前端
 
@@ -32,6 +32,6 @@
 
 ## 5. 验证与收尾
 
-- [ ] 5.1 `./mvnw clean compile package` 编译打包，重建 `bluenet-api-service:latest` 镜像并运行
-- [ ] 5.2 Playwright E2E：文档列表「已就绪」文案；分段删除（Popconfirm + spinner + 列表消失 + 分段数 -1）；改标签名 → 出现「向量化中」spinner → 轮询至消失
-- [ ] 5.3 按提交规范分 commit（`fix:`/`feat:`，必要时 `ref #<issue>`），不合并 PR
+- [x] 5.1 `./mvnw clean compile package` 编译打包，重建 `bluenet-api-service:latest` 镜像并运行
+- [x] 5.2 Playwright E2E：文档列表「已就绪」文案；分段删除（Popconfirm + spinner + 列表消失 + 分段数 -1）；改标签名 → 出现「向量化中」spinner → 轮询至消失
+- [x] 5.3 按提交规范分 commit（`fix:`/`feat:`，必要时 `ref #<issue>`），不合并 PR

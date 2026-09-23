@@ -153,7 +153,8 @@ class AdminKnowledgeDocControllerIntegrationTest extends APIIntegrationTest {
                 1L,
                 "标签",
                 "标签描述",
-                5);
+                5,
+                "synced");
         return new PageDTO<>(
                 List.of(item),
                 1L,
@@ -339,7 +340,7 @@ class AdminKnowledgeDocControllerIntegrationTest extends APIIntegrationTest {
     @WithSecurityPrincipal(userId = SUPER_ADMIN_USER_ID, roleType = "SUPER_ADMIN", roleId = 1L, permissions = {
             "knowledge:tag:list" })
     void listTags_asSuperAdmin_shouldReturnPagedTags() throws Exception {
-        KnowledgeTagResult.ListItem item = new KnowledgeTagResult.ListItem(1L, "标签", "标签描述", 5);
+        KnowledgeTagResult.ListItem item = new KnowledgeTagResult.ListItem(1L, "标签", "标签描述", 5, "synced");
         when(knowledgeDocQueryService.listTags(any())).thenReturn(new PageImpl<>(List.of(item)));
         when(responseConverter.toTagListPageDTO(any())).thenReturn(tagListPageDTO());
 

@@ -505,10 +505,10 @@ class PgVectorStore(VectorStore):
         )
 
     def update_tag_vector(self, tag_id: int, vector: list[float]) -> None:
-        """更新标签向量。"""
+        """更新标签向量并标记为已同步。"""
         table = _get_table(settings.TAGS_COLLECTION_NAME)
         self._execute(
-            f"UPDATE {table} SET tag_vector = %s WHERE id = %s",
+            f"UPDATE {table} SET tag_vector = %s, vector_status = 'synced' WHERE id = %s",
             (vector, tag_id),
         )
 
