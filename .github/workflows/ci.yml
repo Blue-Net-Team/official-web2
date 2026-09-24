@@ -114,7 +114,7 @@ jobs:
     - name: Configure iven-infra GitHub Packages access
       run: |
         mkdir -p ~/.m2
-        cat > ~/.m2/settings.xml <<'EOF'
+        cat > ~/.m2/settings.xml <<EOF
         <settings>
           <servers>
             <server>
@@ -192,7 +192,7 @@ jobs:
     - name: Configure iven-infra GitHub Packages access
       run: |
         mkdir -p ~/.m2
-        cat > ~/.m2/settings.xml <<'EOF'
+        cat > ~/.m2/settings.xml <<EOF
         <settings>
           <servers>
             <server>
