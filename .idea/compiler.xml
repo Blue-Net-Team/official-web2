@@ -3,31 +3,36 @@
   <component name="CompilerConfiguration">
     <annotationProcessing>
       <profile default="true" name="Default" enabled="true" />
-      <profile name="Annotation profile for judge-service" enabled="true">
-        <sourceOutputDir name="target/generated-sources/annotations" />
-        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
-        <outputRelativeToContentRoot value="true" />
-        <processorPath useClasspath="false">
-          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.42/lombok-1.18.42.jar" />
-        </processorPath>
-        <module name="judge-service" />
-      </profile>
       <profile name="Annotation profile for bluenet_parent" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <processorPath useClasspath="false">
           <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.42/lombok-1.18.42.jar" />
-          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.42/lombok-1.18.42.jar" />
         </processorPath>
         <module name="api-service" />
+        <module name="judge-service" />
       </profile>
     </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="iven-infra" target="21" />
+      <module name="iven-starter-core" target="21" />
+      <module name="iven-starter-rbac" target="21" />
+      <module name="iven-starter-security" target="21" />
+      <module name="iven-starter-storage" target="21" />
+      <module name="iven-starter-web" target="21" />
+    </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
       <module name="api-service" options="-parameters -encoding UTF-8" />
       <module name="bluenet-parent" options="-parameters -encoding UTF-8" />
+      <module name="iven-infra" options="-parameters -encoding UTF-8" />
+      <module name="iven-starter-core" options="-parameters -encoding UTF-8" />
+      <module name="iven-starter-rbac" options="-parameters -encoding UTF-8" />
+      <module name="iven-starter-security" options="-parameters -encoding UTF-8" />
+      <module name="iven-starter-storage" options="-parameters -encoding UTF-8" />
+      <module name="iven-starter-web" options="-parameters -encoding UTF-8" />
       <module name="judge-service" options="-parameters -encoding UTF-8" />
     </option>
   </component>
