@@ -26,27 +26,29 @@ spring:
           writetimeout: 10000
 
 # Object storage configuration
-storage:
-  enabled: true
-  provider: ${STORAGE_PROVIDER:minio}
-  bucket: ${STORAGE_BUCKET:bluenet}
-  minio:
-    endpoint: ${MINIO_ENDPOINT:localhost}
-    port: ${MINIO_PORT:9000}
-    accessKey: ${MINIO_AK:admin}
-    secretKey: ${MINIO_SK:admin1234}
-    useSSL: ${MINIO_USE_SSL:false}
-  aliyun-oss:
-    endpoint: ${ALIYUN_OSS_ENDPOINT:}
-    accessKeyId: ${ALIYUN_OSS_AK:}
-    accessKeySecret: ${ALIYUN_OSS_SK:}
+iven:
+  storage:
+      enabled: true
+      provider: ${STORAGE_PROVIDER:minio}
+      bucket: ${STORAGE_BUCKET:bluenet}
+      minio:
+        endpoint: ${MINIO_ENDPOINT:localhost}
+        port: ${MINIO_PORT:9000}
+        accessKey: ${MINIO_AK:admin}
+        secretKey: ${MINIO_SK:admin1234}
+        useSSL: ${MINIO_USE_SSL:false}
+      aliyun-oss:
+        endpoint: ${ALIYUN_OSS_ENDPOINT:}
+        accessKeyId: ${ALIYUN_OSS_AK:}
+        accessKeySecret: ${ALIYUN_OSS_SK:}
 
 # Cookie 配置（开发环境）
-cookie:
-  domain: ${COOKIE_DOMAIN:}
-  secure: ${COOKIE_SECURE:false}
-  same-site: ${COOKIE_SAME_SITE:Lax}
-  max-age: ${COOKIE_MAX_AGE:43200}
+  security:
+    cookie:
+        domain: ${COOKIE_DOMAIN:}
+        secure: ${COOKIE_SECURE:false}
+        same-site: ${COOKIE_SAME_SITE:Lax}
+        max-age: ${COOKIE_MAX_AGE:43200}
 
 # CORS 配置（开发环境）
 cors:

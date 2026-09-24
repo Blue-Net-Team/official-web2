@@ -1,6 +1,6 @@
 package com.bluenet.web.api.converter.assessment_question;
 
-import com.bluenet.web.api.dto.PageDTO;
+import io.github.ivencn.infra.web.response.PageDTO;
 import com.bluenet.web.api.dto.assessment_question.AssessmentQuestionDTO;
 import com.bluenet.web.api.dto.assessment_question.UserQuestionListResponse;
 import com.bluenet.web.application.result.assessment.AssessmentQuestionResult;

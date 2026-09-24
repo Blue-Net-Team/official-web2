@@ -19,12 +19,12 @@ import com.bluenet.web.domain.repository.AssessmentAnswerRepository;
 import com.bluenet.web.domain.repository.AssessmentQuestionRepository;
 import com.bluenet.web.domain.repository.AssessmentTimeRepository;
 import com.bluenet.web.domain.repository.FileRepository;
-import com.bluenet.web.infrastructure.config.properties.StorageProperties;
+import io.github.ivencn.infra.storage.StorageProperties;
 import com.bluenet.web.infrastructure.security.jwt.PresignedUploadTokenService;
 import com.bluenet.web.infrastructure.security.principal.RoleTypeResolver;
-import com.bluenet.web.infrastructure.storage.FileMagicChecker;
-import com.bluenet.web.infrastructure.storage.ObjectStorage;
-import com.bluenet.web.infrastructure.storage.StorageObjectMetadata;
+import io.github.ivencn.infra.storage.magic.FileMagicChecker;
+import com.bluenet.web.infrastructure.storage.FileObjectStorage;
+import io.github.ivencn.infra.storage.api.StorageObjectMetadata;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -70,7 +70,7 @@ class FileDomainServiceImplTest {
     @Mock
     private ApplicationEventPublisher applicationEventPublisher;
     @Mock
-    private ObjectStorage objectStorage;
+    private FileObjectStorage objectStorage;
     @Mock
     private PresignedUploadTokenService presignedUploadTokenService;
     @Mock

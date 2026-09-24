@@ -1,6 +1,6 @@
 package com.bluenet.web.application.service.impl;
 
-import com.bluenet.web.api.dto.PageDTO;
+import io.github.ivencn.infra.web.response.PageDTO;
 import com.bluenet.web.application.query.permission.GetPermissionsQuery;
 import com.bluenet.web.application.result.permission.PermissionResult;
 import com.bluenet.web.domain.exception.DataNotFound;

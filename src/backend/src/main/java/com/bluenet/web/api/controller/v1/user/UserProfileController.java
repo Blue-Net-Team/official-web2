@@ -1,6 +1,6 @@
 package com.bluenet.web.api.controller.v1.user;
 
-import com.bluenet.web.api.dto.ResponseMessage;
+import io.github.ivencn.infra.web.response.ResponseMessage;
 import com.bluenet.web.api.dto.user.ChangeEmailRequestDTO;
 import com.bluenet.web.api.dto.user.ChangePasswordRequestDTO;
 import com.bluenet.web.api.dto.user.SendEmailVerificationCodeRequestDTO;
@@ -12,10 +12,11 @@ import com.bluenet.web.api.dto.user.VerifyPasswordRequestDTO;
 import com.bluenet.web.api.converter.userinfo.UserInfoRequestConverter;
 import com.bluenet.web.api.converter.userinfo.UserInfoResponseConverter;
 import com.bluenet.web.application.service.UserInfoAppService;
-import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
-import com.bluenet.web.infrastructure.security.annotation.RateLimit;
-import com.bluenet.web.infrastructure.security.annotation.RequiresPermission;
-import com.bluenet.web.infrastructure.security.util.UserCTX;
+import io.github.ivencn.infra.security.principal.AccessLevel;
+import io.github.ivencn.infra.security.ratelimit.RateLimit;
+import io.github.ivencn.infra.security.annotation.RequiresPermission;
+import io.github.ivencn.infra.security.principal.UserCTX;
+import com.bluenet.web.infrastructure.adapter.LoginContext;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -106,7 +107,7 @@ class UserProfileController {
     @RequiresPermission(name = "验证当前密码", value = "user:password:verify", access = AccessLevel.AUTHENTICATED)
     @PostMapping("/password/verify")
     public ResponseMessage<String> verifyCurrentPassword(@Valid @RequestBody VerifyPasswordRequestDTO request) {
-        Long userId = UserCTX.getCurrentUser().getId();
+        Long userId = LoginContext.getCurrentUser().getId();
         String token = userInfoAppService.verifyCurrentPassword(requestConverter.toCommand(userId, request));
         return ResponseMessage.success(token);
     }
@@ -116,7 +117,7 @@ class UserProfileController {
     @RequiresPermission(name = "修改密码", value = "user:password:update", access = AccessLevel.AUTHENTICATED)
     @PutMapping("/password")
     public ResponseMessage<Void> changePassword(@Valid @RequestBody ChangePasswordRequestDTO request) {
-        Long userId = UserCTX.getCurrentUser().getId();
+        Long userId = LoginContext.getCurrentUser().getId();
         userInfoAppService.changePassword(requestConverter.toCommand(userId, request));
         return ResponseMessage.success();
     }

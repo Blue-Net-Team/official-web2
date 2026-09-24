@@ -11,7 +11,7 @@ import com.bluenet.web.domain.model.result.ConfirmUploadResult;
 import com.bluenet.web.domain.model.result.PresignedUploadResult;
 import com.bluenet.web.domain.repository.FileRepository;
 import com.bluenet.web.domain.service.FileDomainService;
-import com.bluenet.web.infrastructure.security.util.UserCTX;
+import com.bluenet.web.infrastructure.adapter.LoginContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
@@ -68,7 +68,7 @@ public class FileAppServiceImpl implements FileAppService {
     public FileDownloadResult downloadFile(FileCommands.DownloadFileCommand command) {
         File file = fileDomainService.getFileById(command.fileId());
 
-        fileDomainService.checkDownloadPermission(file, UserCTX.getCurrentUser());
+        fileDomainService.checkDownloadPermission(file, LoginContext.getCurrentUser());
 
         Resource resource = fileRepository.loadFile(file.getName(), file.getType());
         if (resource == null || !resource.exists()) {
@@ -98,7 +98,7 @@ public class FileAppServiceImpl implements FileAppService {
             try (ZipOutputStream zos = new ZipOutputStream(outputStream)) {
                 for (FileCommands.BatchDownloadEntry entry : command.entries()) {
                     File file = fileDomainService.getFileById(entry.fileId());
-                    fileDomainService.checkDownloadPermission(file, UserCTX.getCurrentUser());
+                    fileDomainService.checkDownloadPermission(file, LoginContext.getCurrentUser());
 
                     Resource resource = fileRepository.loadFile(file.getName(), file.getType());
                     if (resource == null || !resource.exists()) {
@@ -154,7 +154,7 @@ public class FileAppServiceImpl implements FileAppService {
     @Override
     public String getPresignedDownloadUrl(FileCommands.DownloadFileCommand command) {
         File file = fileDomainService.getFileById(command.fileId());
-        fileDomainService.checkDownloadPermission(file, UserCTX.getCurrentUser());
+        fileDomainService.checkDownloadPermission(file, LoginContext.getCurrentUser());
         return fileDomainService.getPresignedDownloadUrl(file.getType(), file.getName());
     }
 

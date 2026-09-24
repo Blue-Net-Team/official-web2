@@ -13,7 +13,7 @@ import com.bluenet.web.domain.model.entity.User;
 import com.bluenet.web.domain.model.vo.experience_content.InternshipContent;
 import com.bluenet.web.domain.model.vo.experience_content.ProjectContent;
 import com.bluenet.web.domain.repository.UserExperienceRepository;
-import com.bluenet.web.infrastructure.security.util.UserCTX;
+import com.bluenet.web.infrastructure.adapter.LoginContext;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -145,7 +145,7 @@ public class UserExperienceAppServiceImpl implements UserExperienceAppService {
     }
 
     private Long getCurrentUserId() {
-        User user = UserCTX.getCurrentUser();
+        User user = LoginContext.getCurrentUser();
         if (user == null) {
             throw new Unauthorized("未认证");
         }

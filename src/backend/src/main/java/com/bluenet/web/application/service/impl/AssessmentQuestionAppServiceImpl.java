@@ -28,7 +28,7 @@ import com.bluenet.web.domain.service.AssessmentDecisionDomainService;
 import com.bluenet.web.domain.util.GradeCalculator;
 import com.bluenet.web.infrastructure.security.principal.RoleTypeResolver;
 import com.bluenet.web.infrastructure.storage.JudgeAssetStorage;
-import com.bluenet.web.infrastructure.security.util.UserCTX;
+import com.bluenet.web.infrastructure.adapter.LoginContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -273,7 +273,7 @@ public class AssessmentQuestionAppServiceImpl implements AssessmentQuestionAppSe
         AssessmentTime time = assessmentTimeRepository.findById(assessmentTimeId)
                 .orElseThrow(() -> new IllegalArgumentException("考核时间不存在"));
 
-        User currentUser = UserCTX.getCurrentUser();
+        User currentUser = LoginContext.getCurrentUser();
         if (currentUser != null) {
             RoleType roleType = roleTypeResolver.resolve(currentUser.getRoleId());
             if (roleType == RoleType.CANDIDATE) {
@@ -344,7 +344,7 @@ public class AssessmentQuestionAppServiceImpl implements AssessmentQuestionAppSe
         AssessmentQuestion entity = assessmentQuestionRepository.findById(id)
                 .orElseThrow(() -> new DataNotFound("考题不存在，ID: " + id));
 
-        User currentUser = UserCTX.getCurrentUser();
+        User currentUser = LoginContext.getCurrentUser();
 
         if (currentUser != null) {
             RoleType roleType = roleTypeResolver.resolve(currentUser.getRoleId());

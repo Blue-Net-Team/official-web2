@@ -1,10 +1,10 @@
 package com.bluenet.web.application.service.auth.session;
 
 import com.bluenet.web.domain.model.entity.User;
-import com.bluenet.web.infrastructure.security.auth.AuthTokenService;
-import com.bluenet.web.infrastructure.security.cookie.CookieService;
-import com.bluenet.web.infrastructure.security.csrf.CsrfTokenService;
-import com.bluenet.web.infrastructure.security.jwt.JwtUtil;
+import io.github.ivencn.infra.security.auth.AuthTokenService;
+import io.github.ivencn.infra.security.cookie.CookieService;
+import io.github.ivencn.infra.security.csrf.CsrfTokenService;
+import io.github.ivencn.infra.security.jwt.JwtService;
 
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -14,7 +14,7 @@ import lombok.RequiredArgsConstructor;
  */
 @RequiredArgsConstructor
 public class AuthSessionIssuer {
-    private final JwtUtil jwtUtil;
+    private final JwtService jwtService;
     private final AuthTokenService authTokenService;
     private final CookieService cookieService;
     private final CsrfTokenService csrfTokenService;
@@ -29,8 +29,8 @@ public class AuthSessionIssuer {
      * @return 新生成的 CSRF Token。
      */
     public String issueCookies(User user, HttpServletResponse response) {
-        String jwtToken = jwtUtil.generateToken(user.getId());
-        authTokenService.storeToken(jwtUtil.getJti(jwtToken), user.getId());
+        String jwtToken = jwtService.issue(user.getId());
+        authTokenService.storeToken(jwtService.getJti(jwtToken), user.getId());
         String csrfToken = csrfTokenService.generateCsrfToken();
         cookieService.setAuthCookies(response, jwtToken, csrfToken);
         return csrfToken;

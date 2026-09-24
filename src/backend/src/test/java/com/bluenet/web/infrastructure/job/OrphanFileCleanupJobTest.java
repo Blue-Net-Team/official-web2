@@ -4,7 +4,7 @@ import com.bluenet.web.domain.model.entity.File;
 import com.bluenet.web.domain.model.enumerate.FileStatus;
 import com.bluenet.web.domain.model.enumerate.FileType;
 import com.bluenet.web.domain.repository.FileRepository;
-import com.bluenet.web.infrastructure.storage.ObjectStorage;
+import com.bluenet.web.infrastructure.storage.FileObjectStorage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -23,7 +23,7 @@ class OrphanFileCleanupJobTest {
     private FileRepository fileRepository;
 
     @Mock
-    private ObjectStorage objectStorage;
+    private FileObjectStorage objectStorage;
 
     private OrphanFileCleanupJob job;
 

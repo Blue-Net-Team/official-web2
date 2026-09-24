@@ -1,6 +1,6 @@
 package com.bluenet.web.api.dto.assessment_question;
 
-import com.bluenet.web.api.dto.PageDTO;
+import io.github.ivencn.infra.web.response.PageDTO;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

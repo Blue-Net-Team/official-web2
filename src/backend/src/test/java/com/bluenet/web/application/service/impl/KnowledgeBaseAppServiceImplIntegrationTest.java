@@ -17,7 +17,7 @@ import com.bluenet.web.domain.repository.KnowledgeDocRepository;
 import com.bluenet.web.domain.repository.KnowledgeTagRepository;
 import com.bluenet.web.infrastructure.messaging.KnowledgeParsePublisher;
 import com.bluenet.web.infrastructure.security.principal.WithSecurityPrincipal;
-import com.bluenet.web.infrastructure.security.util.UserCTX;
+import io.github.ivencn.infra.security.principal.UserCTX;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

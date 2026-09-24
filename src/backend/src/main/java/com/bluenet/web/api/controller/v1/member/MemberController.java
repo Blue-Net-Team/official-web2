@@ -1,7 +1,7 @@
 package com.bluenet.web.api.controller.v1.member;
 
-import com.bluenet.web.api.dto.PageDTO;
-import com.bluenet.web.api.dto.ResponseMessage;
+import io.github.ivencn.infra.web.response.PageDTO;
+import io.github.ivencn.infra.web.response.ResponseMessage;
 import com.bluenet.web.api.dto.achievement.AchievementDTO;
 import com.bluenet.web.api.dto.experience.ExperienceDTO;
 import com.bluenet.web.api.dto.member.DirectionLeaderDTO;
@@ -16,8 +16,8 @@ import com.bluenet.web.application.result.member.MemberResult;
 import com.bluenet.web.application.query.member.GetMemberListQuery;
 import com.bluenet.web.application.service.MemberAppService;
 import com.bluenet.web.domain.model.enumerate.Direction;
-import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
-import com.bluenet.web.infrastructure.security.annotation.RequiresPermission;
+import io.github.ivencn.infra.security.principal.AccessLevel;
+import io.github.ivencn.infra.security.annotation.RequiresPermission;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;

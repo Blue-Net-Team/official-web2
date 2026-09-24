@@ -7,7 +7,7 @@
         <result column="file_id" property="fileId"/>
         <result column="title" property="title"/>
         <result column="status" property="status"
-                typeHandler="com.bluenet.web.infrastructure.repository.handler.ValueEnumTypeHandler"/>
+                typeHandler="io.github.ivencn.infra.web.enumx.ValueEnumTypeHandler"/>
         <result column="chunk_count" property="chunkCount"/>
         <result column="error_message" property="errorMessage"/>
         <result column="created_at" property="createdAt"/>

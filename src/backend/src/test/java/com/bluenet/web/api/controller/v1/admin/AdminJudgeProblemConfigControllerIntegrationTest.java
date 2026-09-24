@@ -10,7 +10,7 @@ import com.bluenet.web.application.command.judge.JudgeProblemConfigCommands;
 import com.bluenet.web.application.result.judge.JudgeProblemConfigResult;
 import com.bluenet.web.application.service.JudgeProblemConfigAdminService;
 import com.bluenet.web.infrastructure.security.principal.WithSecurityPrincipal;
-import com.bluenet.web.infrastructure.security.util.UserCTX;
+import io.github.ivencn.infra.security.principal.UserCTX;
 import com.bluenet.web.testconfig.TestSecurityConfig;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;

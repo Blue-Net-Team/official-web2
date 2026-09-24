@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.bluenet.web.infrastructure.security.annotation.RequiresPermission;
+import io.github.ivencn.infra.security.annotation.RequiresPermission;
 
 class PermissionAnnotationConventionTest {
 
@@ -68,7 +68,7 @@ class PermissionAnnotationConventionTest {
                 for (String path : resolvePaths(controllerClass, method)) {
                     if (path.startsWith("/api/v1/admin")
                             && permission
-                                    .access() != com.bluenet.web.infrastructure.security.annotation.AccessLevel.PROTECTED) {
+                                    .access() != io.github.ivencn.infra.security.principal.AccessLevel.PROTECTED) {
                         missing.add(
                                 controllerClass.getName() + "#" + method.getName()
                                         + " -> admin endpoint must be PROTECTED: " + path);

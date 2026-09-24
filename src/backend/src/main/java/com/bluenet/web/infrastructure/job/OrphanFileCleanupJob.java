@@ -3,7 +3,7 @@ package com.bluenet.web.infrastructure.job;
 import com.bluenet.web.domain.model.entity.File;
 import com.bluenet.web.domain.model.enumerate.FileType;
 import com.bluenet.web.domain.repository.FileRepository;
-import com.bluenet.web.infrastructure.storage.ObjectStorage;
+import com.bluenet.web.infrastructure.storage.FileObjectStorage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -17,7 +17,7 @@ import java.util.List;
 public class OrphanFileCleanupJob {
 
     private final FileRepository fileRepository;
-    private final ObjectStorage objectStorage;
+    private final FileObjectStorage objectStorage;
 
     @Scheduled(cron = "${job.orphan-file-cleanup.cron:0 0 2 * * *}")
     public void cleanup() {

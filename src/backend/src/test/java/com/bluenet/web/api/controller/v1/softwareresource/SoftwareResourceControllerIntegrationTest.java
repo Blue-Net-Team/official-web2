@@ -1,7 +1,7 @@
 package com.bluenet.web.api.controller.v1.softwareresource;
 
 import com.bluenet.web.APIIntegrationTest;
-import com.bluenet.web.api.dto.PageDTO;
+import io.github.ivencn.infra.web.response.PageDTO;
 import com.bluenet.web.api.dto.softwareresource.SoftwareResourceDTO;
 import com.bluenet.web.api.converter.softwareresource.SoftwareResourceRequestConverter;
 import com.bluenet.web.api.converter.softwareresource.SoftwareResourceResponseConverter;

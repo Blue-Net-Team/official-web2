@@ -2,7 +2,7 @@ package com.bluenet.web.api.controller.v1.assessment;
 
 import com.bluenet.web.APIIntegrationTest;
 import com.bluenet.web.api.converter.assessment_question.AssessmentQuestionResponseConverter;
-import com.bluenet.web.api.dto.PageDTO;
+import io.github.ivencn.infra.web.response.PageDTO;
 import com.bluenet.web.api.dto.assessment_question.AssessmentQuestionDTO;
 import com.bluenet.web.api.dto.assessment_question.UserQuestionListResponse;
 import com.bluenet.web.application.result.assessment.AssessmentQuestionResult;
@@ -11,7 +11,7 @@ import com.bluenet.web.application.service.AssessmentQuestionAppService;
 import com.bluenet.web.domain.exception.DataNotFound;
 import com.bluenet.web.domain.model.enumerate.QuestionType;
 import com.bluenet.web.infrastructure.security.principal.WithSecurityPrincipal;
-import com.bluenet.web.infrastructure.security.util.UserCTX;
+import io.github.ivencn.infra.security.principal.UserCTX;
 import com.bluenet.web.testconfig.TestSecurityConfig;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;

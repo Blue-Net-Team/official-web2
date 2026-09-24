@@ -6,7 +6,7 @@ import com.bluenet.web.application.message.MessageTemplateRegistry;
 import com.bluenet.web.application.service.MessageTemplateAppService;
 import com.bluenet.web.domain.exception.DataNotFound;
 import com.bluenet.web.infrastructure.security.principal.WithSecurityPrincipal;
-import com.bluenet.web.infrastructure.security.util.UserCTX;
+import io.github.ivencn.infra.security.principal.UserCTX;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

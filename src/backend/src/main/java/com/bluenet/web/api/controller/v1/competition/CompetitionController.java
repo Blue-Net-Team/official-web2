@@ -1,14 +1,14 @@
 package com.bluenet.web.api.controller.v1.competition;
 
-import com.bluenet.web.api.dto.PageDTO;
-import com.bluenet.web.api.dto.ResponseMessage;
+import io.github.ivencn.infra.web.response.PageDTO;
+import io.github.ivencn.infra.web.response.ResponseMessage;
 import com.bluenet.web.api.dto.competition.CompetitionResponseDTO;
 import com.bluenet.web.api.dto.competition.ResponseMessageCompetitionList;
 import com.bluenet.web.api.converter.competition.CompetitionResponseConverter;
 import com.bluenet.web.application.service.CompetitionAppService;
 import com.bluenet.web.domain.model.readmodel.CompetitionReadModel;
-import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
-import com.bluenet.web.infrastructure.security.annotation.RequiresPermission;
+import io.github.ivencn.infra.security.principal.AccessLevel;
+import io.github.ivencn.infra.security.annotation.RequiresPermission;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;

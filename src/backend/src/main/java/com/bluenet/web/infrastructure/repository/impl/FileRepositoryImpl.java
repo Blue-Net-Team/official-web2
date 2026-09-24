@@ -7,7 +7,7 @@ import com.bluenet.web.domain.repository.FileRepository;
 import com.bluenet.web.infrastructure.repository.converter.FileRepositoryConverter;
 import com.bluenet.web.infrastructure.repository.dataobject.FileDO;
 import com.bluenet.web.infrastructure.repository.mapper.FileMapper;
-import com.bluenet.web.infrastructure.storage.ObjectStorage;
+import com.bluenet.web.infrastructure.storage.FileObjectStorage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -30,10 +30,10 @@ import java.util.Optional;
 @Slf4j
 @Repository
 @RequiredArgsConstructor
-@ConditionalOnBean(ObjectStorage.class)
+@ConditionalOnBean(FileObjectStorage.class)
 public class FileRepositoryImpl implements FileRepository {
 
-    private final ObjectStorage objectStorage;
+    private final FileObjectStorage objectStorage;
     private final FileMapper fileMapper;
     private final FileRepositoryConverter converter;
 

@@ -17,7 +17,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 @Slf4j
 @Repository
-@ConditionalOnProperty(name = "storage.enabled", havingValue = "false", matchIfMissing = false)
+@ConditionalOnProperty(name = "iven.storage.enabled", havingValue = "false", matchIfMissing = false)
 public class MockFileRepository implements FileRepository {
 
     private final AtomicLong idGenerator = new AtomicLong(1);

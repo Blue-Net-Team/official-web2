@@ -4,8 +4,8 @@ import com.bluenet.web.api.converter.file.FileRequestConverter;
 import com.bluenet.web.api.dto.file.BatchDownloadRequestDTO;
 import com.bluenet.web.application.command.file.FileCommands;
 import com.bluenet.web.application.service.FileAppService;
-import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
-import com.bluenet.web.infrastructure.security.annotation.RequiresPermission;
+import io.github.ivencn.infra.security.principal.AccessLevel;
+import io.github.ivencn.infra.security.annotation.RequiresPermission;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -48,9 +48,9 @@ public class FileDownloadController {
     @Operation(summary = "下载文件", description = "根据文件 ID 返回 302 重定向到预签名下载 URL")
     @ApiResponses({
             @ApiResponse(responseCode = "302", description = "重定向到预签名 URL"),
-            @ApiResponse(responseCode = "403", description = "权限不足", content = @Content(mediaType = "application/json", schema = @Schema(implementation = com.bluenet.web.api.dto.ResponseMessage.class), examples = {
+            @ApiResponse(responseCode = "403", description = "权限不足", content = @Content(mediaType = "application/json", schema = @Schema(implementation = io.github.ivencn.infra.web.response.ResponseMessage.class), examples = {
                     @ExampleObject(value = "{\"code\":403,\"msg\":\"权限不足\",\"data\":null}") })),
-            @ApiResponse(responseCode = "404", description = "文件不存在", content = @Content(mediaType = "application/json", schema = @Schema(implementation = com.bluenet.web.api.dto.ResponseMessage.class), examples = {
+            @ApiResponse(responseCode = "404", description = "文件不存在", content = @Content(mediaType = "application/json", schema = @Schema(implementation = io.github.ivencn.infra.web.response.ResponseMessage.class), examples = {
                     @ExampleObject(value = "{\"code\":404,\"msg\":\"文件不存在\",\"data\":null}") })) })
     @RequiresPermission(value = "file:download", name = "下载文件", access = AccessLevel.PUBLIC)
     @GetMapping("/{fileId}")
@@ -68,9 +68,9 @@ public class FileDownloadController {
     @Operation(summary = "批量下载文件", description = "按文件 ID 列表批量下载并打包为 ZIP 流式输出")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "批量下载成功", content = @Content(schema = @Schema(type = "string", format = "binary"))),
-            @ApiResponse(responseCode = "403", description = "权限不足", content = @Content(mediaType = "application/json", schema = @Schema(implementation = com.bluenet.web.api.dto.ResponseMessage.class), examples = {
+            @ApiResponse(responseCode = "403", description = "权限不足", content = @Content(mediaType = "application/json", schema = @Schema(implementation = io.github.ivencn.infra.web.response.ResponseMessage.class), examples = {
                     @ExampleObject(value = "{\"code\":403,\"msg\":\"权限不足\",\"data\":null}") })),
-            @ApiResponse(responseCode = "404", description = "文件不存在", content = @Content(mediaType = "application/json", schema = @Schema(implementation = com.bluenet.web.api.dto.ResponseMessage.class), examples = {
+            @ApiResponse(responseCode = "404", description = "文件不存在", content = @Content(mediaType = "application/json", schema = @Schema(implementation = io.github.ivencn.infra.web.response.ResponseMessage.class), examples = {
                     @ExampleObject(value = "{\"code\":404,\"msg\":\"文件不存在\",\"data\":null}") })) })
     @RequiresPermission(value = "file:download:batch", name = "批量下载文件", access = AccessLevel.PUBLIC)
     @PostMapping("/batch")

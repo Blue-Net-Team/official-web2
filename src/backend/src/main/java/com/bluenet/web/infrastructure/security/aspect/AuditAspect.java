@@ -1,13 +1,13 @@
 package com.bluenet.web.infrastructure.security.aspect;
 
-import com.bluenet.web.api.dto.ResponseMessage;
+import io.github.ivencn.infra.web.response.ResponseMessage;
 import com.bluenet.web.application.service.AuditAppService;
 import com.bluenet.web.application.command.audit.AuditCommands;
 import com.bluenet.web.domain.exception.GlobalException;
 import com.bluenet.web.infrastructure.security.audit.AuditParameterSerializer;
-import com.bluenet.web.infrastructure.security.annotation.RequiresPermission;
-import com.bluenet.web.infrastructure.security.util.IpUtils;
-import com.bluenet.web.infrastructure.security.util.UserCTX;
+import io.github.ivencn.infra.security.annotation.RequiresPermission;
+import io.github.ivencn.infra.web.util.IpUtils;
+import io.github.ivencn.infra.security.principal.UserCTX;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.aspectj.lang.ProceedingJoinPoint;

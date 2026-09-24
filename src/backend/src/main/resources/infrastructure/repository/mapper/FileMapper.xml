@@ -4,9 +4,9 @@
     <resultMap id="BaseResultMap" type="com.bluenet.web.infrastructure.repository.dataobject.FileDO">
         <id column="id" property="id"/>
         <result column="name" property="name"/>
-        <result column="type" property="type" typeHandler="com.bluenet.web.infrastructure.repository.handler.ValueEnumTypeHandler"/>
+        <result column="type" property="type" typeHandler="io.github.ivencn.infra.web.enumx.ValueEnumTypeHandler"/>
         <result column="url" property="url"/>
-        <result column="status" property="status" typeHandler="com.bluenet.web.infrastructure.repository.handler.ValueEnumTypeHandler"/>
+        <result column="status" property="status" typeHandler="io.github.ivencn.infra.web.enumx.ValueEnumTypeHandler"/>
         <result column="created_at" property="createdAt"/>
     </resultMap>
 

@@ -10,7 +10,7 @@ import com.bluenet.web.domain.model.entity.AssessmentTime;
 import com.bluenet.web.domain.model.entity.User;
 import com.bluenet.web.domain.repository.AssessmentTimeRepository;
 import com.bluenet.web.infrastructure.security.principal.RoleTypeResolver;
-import com.bluenet.web.infrastructure.security.util.UserCTX;
+import com.bluenet.web.infrastructure.adapter.LoginContext;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -30,7 +30,7 @@ public class AssessmentJudgementAccessGuard {
      * @return 当前登录用户实体。
      */
     public User requireCurrentUser() {
-        User currentUser = UserCTX.getCurrentUser();
+        User currentUser = LoginContext.getCurrentUser();
         if (currentUser == null) {
             throw new SecurityException("未登录");
         }

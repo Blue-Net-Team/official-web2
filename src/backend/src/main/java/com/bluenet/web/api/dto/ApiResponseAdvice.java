@@ -1,4 +1,5 @@
 package com.bluenet.web.api.dto;
+import io.github.ivencn.infra.web.response.ResponseMessage;
 
 import java.util.Objects;
 

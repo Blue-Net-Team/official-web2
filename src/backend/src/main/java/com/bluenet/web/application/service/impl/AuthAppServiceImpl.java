@@ -23,13 +23,13 @@ import com.bluenet.web.domain.service.AuthDomainService;
 import com.bluenet.web.domain.service.GitHubOAuthService;
 import com.bluenet.web.domain.service.VerificationCodeDomainService;
 import com.bluenet.web.infrastructure.config.GitHubOAuthProperties;
-import com.bluenet.web.infrastructure.security.auth.AuthTokenService;
-import com.bluenet.web.infrastructure.security.cookie.CookieService;
-import com.bluenet.web.infrastructure.security.csrf.CsrfTokenService;
-import com.bluenet.web.infrastructure.security.jwt.JwtPayload;
-import com.bluenet.web.infrastructure.security.jwt.JwtUtil;
-import com.bluenet.web.infrastructure.security.oauth.OAuthStateStore;
-import com.bluenet.web.infrastructure.security.util.UserCTX;
+import io.github.ivencn.infra.security.auth.AuthTokenService;
+import io.github.ivencn.infra.security.cookie.CookieService;
+import io.github.ivencn.infra.security.csrf.CsrfTokenService;
+import io.github.ivencn.infra.security.jwt.DefaultJwtPayload;
+import io.github.ivencn.infra.security.jwt.JwtService;
+import io.github.ivencn.infra.security.oauth.OAuthStateStore;
+import io.github.ivencn.infra.security.principal.UserCTX;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import jakarta.servlet.http.HttpServletResponse;
@@ -65,7 +65,7 @@ public class AuthAppServiceImpl implements AuthAppService {
      *
      * @param authDomainService
      *            认证领域服务
-     * @param jwtUtil
+     * @param jwtService
      *            JWT工具
      * @param authTokenService
      *            认证令牌服务
@@ -92,7 +92,7 @@ public class AuthAppServiceImpl implements AuthAppService {
      */
     public AuthAppServiceImpl(
             AuthDomainService authDomainService,
-            JwtUtil jwtUtil,
+            JwtService jwtService,
             AuthTokenService authTokenService,
             CookieService cookieService,
             CsrfTokenService csrfTokenService,
@@ -113,7 +113,7 @@ public class AuthAppServiceImpl implements AuthAppService {
         this.messageDispatcher = messageDispatcher;
         this.emailVerificationCodeTemplate = emailVerificationCodeTemplate;
         this.authSessionIssuer = new AuthSessionIssuer(
-                jwtUtil,
+                jwtService,
                 authTokenService,
                 cookieService,
                 csrfTokenService);
@@ -198,7 +198,9 @@ public class AuthAppServiceImpl implements AuthAppService {
     public void logout(HttpServletResponse response) {
         Long currentUserId = UserCTX.getCurrentUserId();
         if (currentUserId != null) {
-            JwtPayload payload = (JwtPayload) SecurityContextHolder.getContext().getAuthentication().getCredentials();
+            DefaultJwtPayload payload = (DefaultJwtPayload) SecurityContextHolder.getContext()
+                    .getAuthentication()
+                    .getCredentials();
             if (payload != null && payload.getJti() != null) {
                 // Token 撤销仍由底层 token 服务负责，门面只处理登出流程编排。
                 authTokenService.revokeToken(payload.getJti());

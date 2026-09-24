@@ -1,4 +1,5 @@
 package com.bluenet.web.infrastructure.security.jwt;
+import io.github.ivencn.infra.security.jwt.JwtService;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -24,10 +25,10 @@ import com.bluenet.web.domain.repository.PermissionRepository;
 import com.bluenet.web.domain.repository.RolePermissionRepository;
 import com.bluenet.web.domain.repository.UserRepository;
 import com.bluenet.web.infrastructure.repository.mapper.RoleMapper;
-import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
-import com.bluenet.web.infrastructure.security.annotation.RequiresPermission;
-import com.bluenet.web.infrastructure.security.auth.AuthTokenService;
-import com.bluenet.web.infrastructure.config.CookieProperties;
+import io.github.ivencn.infra.security.principal.AccessLevel;
+import io.github.ivencn.infra.security.annotation.RequiresPermission;
+import io.github.ivencn.infra.security.auth.AuthTokenService;
+import io.github.ivencn.infra.security.cookie.CookieProperties;
 import com.bluenet.web.testconfig.TestSecurityConfig;
 import com.bluenet.web.testsupport.fixture.PermissionFixture;
 import com.bluenet.web.testsupport.fixture.RoleFixture;
@@ -61,7 +62,7 @@ class JwtAuthenticationFilterIntegrationTest extends DBIntegrationTest {
     private MockMvc mockMvc;
 
     @Autowired
-    private JwtUtil jwtUtil;
+    private JwtService jwtService;
 
     @Autowired
     private AuthTokenService authTokenService;
@@ -129,8 +130,8 @@ class JwtAuthenticationFilterIntegrationTest extends DBIntegrationTest {
      * @return JWT 字符串
      */
     private String issueToken(Long userId) {
-        String token = jwtUtil.generateToken(userId);
-        authTokenService.storeToken(jwtUtil.getJti(token), userId);
+        String token = jwtService.issue(userId);
+        authTokenService.storeToken(jwtService.getJti(token), userId);
         return token;
     }
 

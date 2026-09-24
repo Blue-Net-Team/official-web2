@@ -13,7 +13,7 @@ import com.bluenet.web.domain.repository.CollegeRepository;
 import com.bluenet.web.domain.repository.EnrollRepository;
 import com.bluenet.web.domain.repository.UserRepository;
 import com.bluenet.web.infrastructure.security.principal.WithSecurityPrincipal;
-import com.bluenet.web.infrastructure.security.util.UserCTX;
+import io.github.ivencn.infra.security.principal.UserCTX;
 import com.bluenet.web.testsupport.fixture.CollegeFixture;
 import com.bluenet.web.testsupport.fixture.UserFixture;
 import org.junit.jupiter.api.AfterEach;

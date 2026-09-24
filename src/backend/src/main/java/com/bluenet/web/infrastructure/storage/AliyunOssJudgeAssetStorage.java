@@ -9,7 +9,6 @@ import com.aliyun.oss.model.OSSObjectSummary;
 import com.bluenet.web.infrastructure.config.properties.JudgeAssetStorageProperties;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.stereotype.Component;
 
@@ -25,8 +24,7 @@ import java.io.InputStream;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-@ConditionalOnExpression("'${storage.provider:minio}' == 'aliyun-oss'")
-@ConditionalOnBean(OSS.class)
+@ConditionalOnExpression("'${iven.storage.provider:minio}' == 'aliyun-oss'")
 public class AliyunOssJudgeAssetStorage implements JudgeAssetStorage {
 
     private final OSS ossClient;

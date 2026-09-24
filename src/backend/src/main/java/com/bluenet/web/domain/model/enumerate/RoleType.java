@@ -23,7 +23,7 @@ package com.bluenet.web.domain.model.enumerate;
  *
  * @see com.bluenet.web.domain.model.policy.RoleHierarchy
  */
-public enum RoleType {
+public enum RoleType implements io.github.ivencn.infra.rbac.role.Role {
     /**
      * 超级管理员。
      * <p>
@@ -66,6 +66,11 @@ public enum RoleType {
 
     public String getName() {
         return name;
+    }
+
+    @Override
+    public int level() {
+        return level;
     }
 
     public int getLevel() {

@@ -1,7 +1,7 @@
 package com.bluenet.web.api.controller.v1.admin;
 
-import com.bluenet.web.api.dto.PageDTO;
-import com.bluenet.web.api.dto.ResponseMessage;
+import io.github.ivencn.infra.web.response.PageDTO;
+import io.github.ivencn.infra.web.response.ResponseMessage;
 import com.bluenet.web.api.dto.enrollment.*;
 import com.bluenet.web.api.converter.enroll.EnrollRequestConverter;
 import com.bluenet.web.api.converter.enroll.EnrollResponseConverter;
@@ -9,8 +9,8 @@ import com.bluenet.web.application.result.enroll.EnrollResult;
 import com.bluenet.web.application.command.enroll.EnrollCommands;
 import com.bluenet.web.application.query.enroll.GetEnrollmentListQuery;
 import com.bluenet.web.application.service.EnrollAppService;
-import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
-import com.bluenet.web.infrastructure.security.annotation.RequiresPermission;
+import io.github.ivencn.infra.security.principal.AccessLevel;
+import io.github.ivencn.infra.security.annotation.RequiresPermission;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;

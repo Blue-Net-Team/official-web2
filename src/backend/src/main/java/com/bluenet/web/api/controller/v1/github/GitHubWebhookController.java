@@ -2,8 +2,8 @@ package com.bluenet.web.api.controller.v1.github;
 
 import com.bluenet.web.application.service.impl.GitHubWebhookService;
 import com.bluenet.web.infrastructure.github.GitHubWebhookVerifier;
-import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
-import com.bluenet.web.infrastructure.security.annotation.RequiresPermission;
+import io.github.ivencn.infra.security.principal.AccessLevel;
+import io.github.ivencn.infra.security.annotation.RequiresPermission;
 import io.swagger.v3.oas.annotations.Hidden;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;

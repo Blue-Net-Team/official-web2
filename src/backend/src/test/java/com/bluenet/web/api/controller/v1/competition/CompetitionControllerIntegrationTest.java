@@ -1,7 +1,7 @@
 package com.bluenet.web.api.controller.v1.competition;
 
 import com.bluenet.web.APIIntegrationTest;
-import com.bluenet.web.api.dto.PageDTO;
+import io.github.ivencn.infra.web.response.PageDTO;
 import com.bluenet.web.api.dto.competition.CompetitionResponseDTO;
 import com.bluenet.web.api.converter.competition.CompetitionResponseConverter;
 import com.bluenet.web.application.service.CompetitionAppService;

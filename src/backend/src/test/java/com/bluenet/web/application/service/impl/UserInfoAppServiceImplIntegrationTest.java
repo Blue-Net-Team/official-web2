@@ -22,7 +22,7 @@ import com.bluenet.web.domain.repository.UserRepository;
 import com.bluenet.web.domain.service.VerificationCodeDomainService;
 import com.bluenet.web.application.message.MessageDispatcher;
 import com.bluenet.web.infrastructure.repository.mapper.RoleMapper;
-import com.bluenet.web.infrastructure.security.auth.AuthTokenService;
+import io.github.ivencn.infra.security.auth.AuthTokenService;
 import com.bluenet.web.infrastructure.security.change.ChangePasswordStateService;
 import com.bluenet.web.testsupport.fixture.CollegeFixture;
 import com.bluenet.web.testsupport.fixture.FileFixture;

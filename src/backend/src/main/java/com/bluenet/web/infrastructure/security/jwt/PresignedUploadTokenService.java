@@ -1,6 +1,6 @@
 package com.bluenet.web.infrastructure.security.jwt;
 
-import com.bluenet.web.infrastructure.config.JwtProperties;
+import io.github.ivencn.infra.security.jwt.JwtProperties;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;

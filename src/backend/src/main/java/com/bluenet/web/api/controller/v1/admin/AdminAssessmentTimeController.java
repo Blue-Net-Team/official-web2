@@ -1,7 +1,7 @@
 package com.bluenet.web.api.controller.v1.admin;
 
-import com.bluenet.web.api.dto.PageDTO;
-import com.bluenet.web.api.dto.ResponseMessage;
+import io.github.ivencn.infra.web.response.PageDTO;
+import io.github.ivencn.infra.web.response.ResponseMessage;
 import com.bluenet.web.api.dto.assessment_time.AssessmentTimeDTO;
 import com.bluenet.web.api.dto.assessment_time.CreateAssessmentTimeRequestDTO;
 import com.bluenet.web.api.dto.assessment_time.ResponseMessageAssessmentTime;
@@ -13,9 +13,9 @@ import com.bluenet.web.application.result.assessment.AssessmentTimeResult;
 import com.bluenet.web.application.command.assessment_time.AssessmentTimeCommands;
 import com.bluenet.web.application.service.AssessmentTimeAppService;
 import org.springframework.data.domain.Page;
-import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
-import com.bluenet.web.infrastructure.security.annotation.RequiresPermission;
-import com.bluenet.web.infrastructure.security.util.UserCTX;
+import io.github.ivencn.infra.security.principal.AccessLevel;
+import io.github.ivencn.infra.security.annotation.RequiresPermission;
+import io.github.ivencn.infra.security.principal.UserCTX;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;

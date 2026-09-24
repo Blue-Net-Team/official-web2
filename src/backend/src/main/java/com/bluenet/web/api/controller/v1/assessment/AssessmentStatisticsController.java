@@ -1,12 +1,12 @@
 package com.bluenet.web.api.controller.v1.assessment;
 
-import com.bluenet.web.api.dto.ResponseMessage;
+import io.github.ivencn.infra.web.response.ResponseMessage;
 import com.bluenet.web.api.dto.assessment_statistics.QuestionStatisticsDTO;
 import com.bluenet.web.application.result.assessment.AssessmentStatisticsResult;
 import com.bluenet.web.api.converter.assessment_statistics.AssessmentStatisticsResponseConverter;
 import com.bluenet.web.application.service.AssessmentStatisticsAppService;
-import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
-import com.bluenet.web.infrastructure.security.annotation.RequiresPermission;
+import io.github.ivencn.infra.security.principal.AccessLevel;
+import io.github.ivencn.infra.security.annotation.RequiresPermission;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;

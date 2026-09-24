@@ -14,7 +14,7 @@ import java.util.Optional;
 @Slf4j
 @Repository
 @Primary
-@ConditionalOnProperty(name = "storage.enabled", havingValue = "false")
+@ConditionalOnProperty(name = "iven.storage.enabled", havingValue = "false")
 public class MockQrcodeRepository implements QrcodeRepository {
 
     @Override

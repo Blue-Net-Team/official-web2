@@ -18,8 +18,8 @@ import com.bluenet.web.domain.service.AuthDomainService;
 import com.bluenet.web.domain.service.GitHubOAuthService;
 import com.bluenet.web.domain.service.VerificationCodeDomainService;
 import com.bluenet.web.infrastructure.repository.mapper.RoleMapper;
-import com.bluenet.web.infrastructure.security.principal.SecurityPrincipal;
-import com.bluenet.web.infrastructure.security.util.UserCTX;
+import io.github.ivencn.infra.security.principal.SecurityPrincipal;
+import io.github.ivencn.infra.security.principal.UserCTX;
 import com.bluenet.web.testsupport.fixture.RoleFixture;
 import com.bluenet.web.testsupport.fixture.UserFixture;
 
@@ -184,7 +184,7 @@ class AuthAppServiceImplIntegrationTest extends DBIntegrationTest {
     @DisplayName("getAuthMe: 认证时应返回 authenticated=true 与 CSRF 令牌")
     void getAuthMe_authenticated_shouldReturnAuthenticatedWithCsrfToken() {
         User user = createMemberUser("2024005005");
-        UserCTX.setPrincipal(new SecurityPrincipal(user, RoleType.MEMBER, Collections.emptySet()));
+        UserCTX.setPrincipal(new SecurityPrincipal(user.getId(), RoleType.MEMBER, Collections.emptySet()));
         HttpServletResponse response = mock(HttpServletResponse.class);
 
         AuthResult.AuthMe result = authAppService.getAuthMe(response);

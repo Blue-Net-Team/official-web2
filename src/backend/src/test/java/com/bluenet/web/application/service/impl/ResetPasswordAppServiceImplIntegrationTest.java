@@ -11,7 +11,7 @@ import com.bluenet.web.domain.model.entity.User;
 import com.bluenet.web.domain.model.entity.VerifyCode;
 import com.bluenet.web.domain.repository.UserRepository;
 import com.bluenet.web.domain.service.VerificationCodeDomainService;
-import com.bluenet.web.infrastructure.security.auth.AuthTokenService;
+import io.github.ivencn.infra.security.auth.AuthTokenService;
 import com.bluenet.web.infrastructure.security.reset.ResetPasswordStateService;
 import com.bluenet.web.testsupport.fixture.UserFixture;
 import org.junit.jupiter.api.DisplayName;

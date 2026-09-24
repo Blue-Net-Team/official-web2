@@ -4,8 +4,8 @@ import com.bluenet.web.domain.model.entity.User;
 import com.bluenet.web.domain.model.enumerate.Direction;
 import com.bluenet.web.domain.model.enumerate.RoleType;
 import com.bluenet.web.domain.repository.UserRepository;
-import com.bluenet.web.infrastructure.security.principal.SecurityPrincipal;
-import com.bluenet.web.infrastructure.security.util.UserCTX;
+import io.github.ivencn.infra.security.principal.SecurityPrincipal;
+import io.github.ivencn.infra.security.principal.UserCTX;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Collections;
@@ -20,11 +20,11 @@ public final class SecurityContextFixture {
     }
 
     public static SecurityPrincipal principal(User user, RoleType roleType) {
-        return new SecurityPrincipal(user, roleType, Collections.emptySet());
+        return new SecurityPrincipal(user.getId(), roleType, Collections.emptySet());
     }
 
     public static SecurityPrincipal principal(User user, RoleType roleType, Set<String> permissions) {
-        return new SecurityPrincipal(user, roleType, permissions);
+        return new SecurityPrincipal(user.getId(), roleType, permissions);
     }
 
     public static void asMember(User user) {

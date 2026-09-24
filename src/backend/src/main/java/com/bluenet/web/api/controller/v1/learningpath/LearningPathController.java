@@ -1,12 +1,12 @@
 package com.bluenet.web.api.controller.v1.learningpath;
 
-import com.bluenet.web.api.dto.ResponseMessage;
+import io.github.ivencn.infra.web.response.ResponseMessage;
 import com.bluenet.web.api.dto.learningpath.DirectionLearningPathDTO;
 import com.bluenet.web.application.result.learningpath.LearningPathResult;
 import com.bluenet.web.api.converter.learningpath.LearningPathResponseConverter;
 import com.bluenet.web.application.service.LearningPathAppService;
-import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
-import com.bluenet.web.infrastructure.security.annotation.RequiresPermission;
+import io.github.ivencn.infra.security.principal.AccessLevel;
+import io.github.ivencn.infra.security.annotation.RequiresPermission;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;

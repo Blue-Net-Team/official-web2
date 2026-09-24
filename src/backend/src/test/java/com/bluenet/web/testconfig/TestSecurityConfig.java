@@ -1,24 +1,26 @@
 package com.bluenet.web.testconfig;
 
-import com.bluenet.web.infrastructure.security.scanner.PermissionScanner;
+import io.github.ivencn.infra.rbac.model.PermissionDefinition;
+import io.github.ivencn.infra.rbac.spi.PermissionRegistry;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
 
+import java.util.List;
+
 /**
- * 测试安全配置，禁用权限扫描器
+ * 测试安全配置，禁用权限扫描同步（空实现，避免在测试中扫描权限）。
  */
 @TestConfiguration
 public class TestSecurityConfig {
 
     @Bean
     @Primary
-    public PermissionScanner permissionScanner() {
-        // 返回一个不执行任何操作的 PermissionScanner
-        return new PermissionScanner(null, null, null, null) {
+    public PermissionRegistry testPermissionRegistry() {
+        return new PermissionRegistry() {
             @Override
-            public void afterPropertiesSet() {
-                // 什么都不做，避免在测试中扫描权限
+            public void sync(List<PermissionDefinition> definitions) {
+                // 测试中不执行权限持久化
             }
         };
     }

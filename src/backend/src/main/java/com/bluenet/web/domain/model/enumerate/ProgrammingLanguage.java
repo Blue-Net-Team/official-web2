@@ -1,5 +1,7 @@
 package com.bluenet.web.domain.model.enumerate;
 
+import io.github.ivencn.infra.web.enumx.ValueEnum;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 import lombok.Getter;

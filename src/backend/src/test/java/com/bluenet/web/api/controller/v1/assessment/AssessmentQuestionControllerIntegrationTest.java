@@ -8,7 +8,7 @@ import com.bluenet.web.application.result.assessment.AssessmentQuestionResult;
 import com.bluenet.web.application.result.user.UserQuestionListResult;
 import com.bluenet.web.application.service.AssessmentQuestionAppService;
 import com.bluenet.web.infrastructure.security.principal.WithSecurityPrincipal;
-import com.bluenet.web.infrastructure.security.util.UserCTX;
+import io.github.ivencn.infra.security.principal.UserCTX;
 import com.bluenet.web.testconfig.TestSecurityConfig;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;

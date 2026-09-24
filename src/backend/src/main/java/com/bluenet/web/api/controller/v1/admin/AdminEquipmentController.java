@@ -1,6 +1,6 @@
 package com.bluenet.web.api.controller.v1.admin;
 
-import com.bluenet.web.api.dto.ResponseMessage;
+import io.github.ivencn.infra.web.response.ResponseMessage;
 import com.bluenet.web.api.dto.equipment.CreateEquipmentRequestDTO;
 import com.bluenet.web.api.dto.equipment.EquipmentDTO;
 import com.bluenet.web.api.dto.equipment.UpdateEquipmentRequestDTO;
@@ -9,8 +9,8 @@ import com.bluenet.web.application.result.equipment.EquipmentResult;
 import com.bluenet.web.application.command.equipment.EquipmentCommands;
 import com.bluenet.web.api.converter.equipment.EquipmentResponseConverter;
 import com.bluenet.web.application.service.EquipmentAppService;
-import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
-import com.bluenet.web.infrastructure.security.annotation.RequiresPermission;
+import io.github.ivencn.infra.security.principal.AccessLevel;
+import io.github.ivencn.infra.security.annotation.RequiresPermission;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;

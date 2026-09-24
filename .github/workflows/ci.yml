@@ -111,6 +111,24 @@ jobs:
         distribution: 'temurin'
         cache: maven
 
+    - name: Configure iven-infra GitHub Packages access
+      run: |
+        mkdir -p ~/.m2
+        cat > ~/.m2/settings.xml <<'EOF'
+        <settings>
+          <servers>
+            <server>
+              <id>iven-github</id>
+              <username>${IVEN_PACKAGES_USER}</username>
+              <password>${IVEN_PACKAGES_TOKEN}</password>
+            </server>
+          </servers>
+        </settings>
+        EOF
+      env:
+        IVEN_PACKAGES_USER: ${{ secrets.IVEN_PACKAGES_USER }}
+        IVEN_PACKAGES_TOKEN: ${{ secrets.IVEN_PACKAGES_TOKEN }}
+
     - name: Make mvnw executable
       run: chmod +x ./mvnw
 
@@ -170,6 +188,24 @@ jobs:
         java-version: '21'
         distribution: 'temurin'
         cache: maven
+
+    - name: Configure iven-infra GitHub Packages access
+      run: |
+        mkdir -p ~/.m2
+        cat > ~/.m2/settings.xml <<'EOF'
+        <settings>
+          <servers>
+            <server>
+              <id>iven-github</id>
+              <username>${IVEN_PACKAGES_USER}</username>
+              <password>${IVEN_PACKAGES_TOKEN}</password>
+            </server>
+          </servers>
+        </settings>
+        EOF
+      env:
+        IVEN_PACKAGES_USER: ${{ secrets.IVEN_PACKAGES_USER }}
+        IVEN_PACKAGES_TOKEN: ${{ secrets.IVEN_PACKAGES_TOKEN }}
 
     - name: Make mvnw executable
       run: chmod +x src/backend/mvnw

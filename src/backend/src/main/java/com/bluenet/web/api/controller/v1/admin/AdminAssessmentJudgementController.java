@@ -1,6 +1,6 @@
 package com.bluenet.web.api.controller.v1.admin;
 
-import com.bluenet.web.api.dto.ResponseMessage;
+import io.github.ivencn.infra.web.response.ResponseMessage;
 import com.bluenet.web.api.dto.assessment_judgement.AssessmentDecisionDTO;
 import com.bluenet.web.api.dto.assessment_judgement.AssessmentDecisionRequestDTO;
 import com.bluenet.web.api.dto.assessment_judgement.AssessmentDecisionWorkspaceDTO;
@@ -16,8 +16,8 @@ import com.bluenet.web.application.result.assessment.AssessmentJudgementResult;
 import com.bluenet.web.application.command.assessment_judgement.AssessmentJudgementCommands;
 import com.bluenet.web.application.service.AssessmentJudgementAppService;
 import com.bluenet.web.domain.model.enumerate.QuestionType;
-import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
-import com.bluenet.web.infrastructure.security.annotation.RequiresPermission;
+import io.github.ivencn.infra.security.principal.AccessLevel;
+import io.github.ivencn.infra.security.annotation.RequiresPermission;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;

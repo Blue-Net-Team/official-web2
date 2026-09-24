@@ -1,6 +1,6 @@
 package com.bluenet.web.api.controller.v1.admin;
 
-import com.bluenet.web.api.dto.ResponseMessage;
+import io.github.ivencn.infra.web.response.ResponseMessage;
 import com.bluenet.web.api.dto.judge.ConfirmJudgeLanguageLimitRequestDTO;
 import com.bluenet.web.api.dto.judge.JudgeProblemConfigDTO;
 import com.bluenet.web.api.dto.judge.UpsertJudgeProblemConfigRequestDTO;
@@ -8,8 +8,8 @@ import com.bluenet.web.api.converter.judge.JudgeProblemConfigRequestConverter;
 import com.bluenet.web.api.converter.judge.JudgeProblemConfigResponseConverter;
 import com.bluenet.web.application.result.judge.JudgeProblemConfigResult;
 import com.bluenet.web.application.service.JudgeProblemConfigAdminService;
-import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
-import com.bluenet.web.infrastructure.security.annotation.RequiresPermission;
+import io.github.ivencn.infra.security.principal.AccessLevel;
+import io.github.ivencn.infra.security.annotation.RequiresPermission;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;

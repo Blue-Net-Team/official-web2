@@ -1,13 +1,13 @@
 package com.bluenet.web.domain.exception;
 
-import lombok.Getter;
 import org.springframework.http.HttpStatus;
 
-@Getter
+/**
+ * DataNotFound 业务异常，映射 HTTP NOT_FOUND。
+ */
 public class DataNotFound extends GlobalException {
-    private final HttpStatus code = HttpStatus.NOT_FOUND;
 
     public DataNotFound(String message) {
-        super(message);
+        super(HttpStatus.NOT_FOUND, message);
     }
 }

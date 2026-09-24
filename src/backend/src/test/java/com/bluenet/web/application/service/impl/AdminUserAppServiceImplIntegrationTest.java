@@ -5,7 +5,7 @@ import com.bluenet.web.application.command.adminuser.AdminUserCommands;
 import com.bluenet.web.application.query.adminuser.GetUserListQuery;
 import com.bluenet.web.application.result.adminuser.AdminUserResult;
 import com.bluenet.web.application.service.AdminUserAppService;
-import com.bluenet.web.api.dto.PageDTO;
+import io.github.ivencn.infra.web.response.PageDTO;
 import com.bluenet.web.domain.exception.BadRequest;
 import com.bluenet.web.domain.exception.DataNotFound;
 import com.bluenet.web.domain.model.entity.User;
@@ -16,8 +16,8 @@ import com.bluenet.web.domain.repository.CollegeRepository;
 import com.bluenet.web.domain.repository.UserRepository;
 import com.bluenet.web.domain.service.ReferralCodeGenerator;
 import com.bluenet.web.infrastructure.repository.mapper.RoleMapper;
-import com.bluenet.web.infrastructure.security.principal.SecurityPrincipal;
-import com.bluenet.web.infrastructure.security.util.UserCTX;
+import io.github.ivencn.infra.security.principal.SecurityPrincipal;
+import io.github.ivencn.infra.security.principal.UserCTX;
 import com.bluenet.web.testsupport.fixture.CollegeFixture;
 import com.bluenet.web.testsupport.fixture.RoleFixture;
 import com.bluenet.web.testsupport.fixture.UserFixture;
@@ -251,7 +251,7 @@ class AdminUserAppServiceImplIntegrationTest extends DBIntegrationTest {
     @DisplayName("deleteUser: 不能删除当前登录用户自己")
     void deleteUser_self_shouldThrow() {
         User user = createMemberUser("2024002012");
-        UserCTX.setPrincipal(new SecurityPrincipal(user, RoleType.MEMBER, java.util.Collections.emptySet()));
+        UserCTX.setPrincipal(new SecurityPrincipal(user.getId(), RoleType.MEMBER, java.util.Collections.emptySet()));
 
         assertThrows(BadRequest.class, () -> adminUserAppService.deleteUser(user.getId()));
     }

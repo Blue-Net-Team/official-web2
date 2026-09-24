@@ -1,8 +1,8 @@
 package com.bluenet.web.infrastructure.security.aspect;
 
 import com.bluenet.web.DBIntegrationTest;
-import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
-import com.bluenet.web.infrastructure.security.annotation.RequiresPermission;
+import io.github.ivencn.infra.security.principal.AccessLevel;
+import io.github.ivencn.infra.security.annotation.RequiresPermission;
 import com.bluenet.web.infrastructure.security.principal.WithSecurityPrincipal;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

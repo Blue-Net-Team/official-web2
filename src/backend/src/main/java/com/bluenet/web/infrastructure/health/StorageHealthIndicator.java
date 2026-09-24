@@ -1,6 +1,6 @@
 package com.bluenet.web.infrastructure.health;
 
-import com.bluenet.web.infrastructure.storage.ObjectStorage;
+import com.bluenet.web.infrastructure.storage.FileObjectStorage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.actuate.health.Health;
@@ -17,10 +17,10 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-@ConditionalOnBean(ObjectStorage.class)
+@ConditionalOnBean(FileObjectStorage.class)
 public class StorageHealthIndicator implements HealthIndicator {
 
-    private final ObjectStorage objectStorage;
+    private final FileObjectStorage objectStorage;
 
     @Override
     public Health health() {

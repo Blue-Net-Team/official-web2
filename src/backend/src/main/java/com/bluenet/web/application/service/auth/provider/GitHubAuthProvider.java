@@ -11,12 +11,12 @@ import com.bluenet.web.domain.exception.BadRequest;
 import com.bluenet.web.domain.exception.Unauthorized;
 import com.bluenet.web.domain.model.entity.User;
 import com.bluenet.web.domain.model.vo.GitHubUserInfo;
-import com.bluenet.web.domain.model.vo.OAuthState;
+import io.github.ivencn.infra.security.oauth.OAuthState;
 import com.bluenet.web.domain.repository.UserRepository;
 import com.bluenet.web.domain.service.GitHubOAuthService;
 import com.bluenet.web.infrastructure.config.GitHubOAuthProperties;
-import com.bluenet.web.infrastructure.security.oauth.OAuthStateStore;
-import com.bluenet.web.infrastructure.security.util.UserCTX;
+import io.github.ivencn.infra.security.oauth.OAuthStateStore;
+import com.bluenet.web.infrastructure.adapter.LoginContext;
 
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -114,12 +114,12 @@ public class GitHubAuthProvider extends AbstractAuthProvider<GitHubCallbackCrede
             githubUser = gitHubOAuthService.getUserInfo(accessToken);
         } catch (Exception e) {
             log.error("GitHub OAuth failed", e);
-            redirectToFrontend(response, "bind".equals(oauthState.getType()) ? "/profile" : "/login", "github=error");
+            redirectToFrontend(response, "bind".equals(oauthState.type()) ? "/profile" : "/login", "github=error");
             return null;
         }
 
         String githubId = String.valueOf(githubUser.getId());
-        if ("bind".equals(oauthState.getType())) {
+        if ("bind".equals(oauthState.type())) {
             handleBindFlow(oauthState, githubId, githubUser, response);
         } else {
             handleLoginFlow(githubId, githubUser, response);
@@ -173,13 +173,13 @@ public class GitHubAuthProvider extends AbstractAuthProvider<GitHubCallbackCrede
     private void handleBindFlow(OAuthState oauthState, String githubId, GitHubUserInfo githubUser,
             HttpServletResponse response) {
         Optional<User> existingUser = userRepository.findByGithubId(githubId);
-        if (existingUser.isPresent() && !existingUser.get().getId().equals(oauthState.getUserId())) {
+        if (existingUser.isPresent() && !existingUser.get().getId().equals(oauthState.userId())) {
             log.warn("GitHub bind failed: githubId {} already bound to user {}", githubId, existingUser.get().getId());
             redirectToFrontend(response, "/profile", "github=already_bound");
             return;
         }
 
-        User user = userRepository.findById(oauthState.getUserId())
+        User user = userRepository.findById(oauthState.userId())
                 .orElseThrow(() -> new Unauthorized("用户不存在"));
         user.bindGithub(githubId, githubUser.getLogin());
         userRepository.save(user);
@@ -188,7 +188,7 @@ public class GitHubAuthProvider extends AbstractAuthProvider<GitHubCallbackCrede
     }
 
     private User requireCurrentUser() {
-        User currentUser = UserCTX.getCurrentUser();
+        User currentUser = LoginContext.getCurrentUser();
         if (currentUser == null) {
             throw new Unauthorized("未登录");
         }

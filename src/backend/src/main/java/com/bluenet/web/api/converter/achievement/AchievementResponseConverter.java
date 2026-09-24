@@ -1,6 +1,6 @@
 package com.bluenet.web.api.converter.achievement;
 
-import com.bluenet.web.api.dto.PageDTO;
+import io.github.ivencn.infra.web.response.PageDTO;
 import com.bluenet.web.api.dto.achievement.AchievementDTO;
 import com.bluenet.web.api.dto.achievement.AchievementMemberDTO;
 import com.bluenet.web.api.dto.achievement.AchievementStatsDTO;

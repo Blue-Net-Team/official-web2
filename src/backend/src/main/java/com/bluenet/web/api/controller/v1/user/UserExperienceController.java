@@ -1,14 +1,14 @@
 package com.bluenet.web.api.controller.v1.user;
 
-import com.bluenet.web.api.dto.ResponseMessage;
+import io.github.ivencn.infra.web.response.ResponseMessage;
 import com.bluenet.web.api.dto.experience.CreateExperienceRequestDTO;
 import com.bluenet.web.api.dto.experience.ExperienceDTO;
 import com.bluenet.web.api.dto.experience.UpdateExperienceRequestDTO;
 import com.bluenet.web.api.converter.userexperience.UserExperienceRequestConverter;
 import com.bluenet.web.api.converter.userexperience.UserExperienceResponseConverter;
 import com.bluenet.web.application.service.UserExperienceAppService;
-import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
-import com.bluenet.web.infrastructure.security.annotation.RequiresPermission;
+import io.github.ivencn.infra.security.principal.AccessLevel;
+import io.github.ivencn.infra.security.annotation.RequiresPermission;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;

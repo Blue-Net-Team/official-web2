@@ -1,8 +1,10 @@
 package com.bluenet.web.infrastructure.security.principal;
+import io.github.ivencn.infra.security.principal.SecurityPrincipal;
 
 import com.bluenet.web.domain.model.entity.User;
 import com.bluenet.web.domain.model.enumerate.RoleType;
-import com.bluenet.web.infrastructure.security.util.UserCTX;
+import com.bluenet.web.infrastructure.adapter.LoginContext;
+import io.github.ivencn.infra.security.principal.UserCTX;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -33,7 +35,7 @@ public class WithSecurityPrincipalContextFactory implements WithSecurityContextF
                 ? Collections.emptySet()
                 : Set.of(withUser.permissions());
 
-        SecurityPrincipal principal = new SecurityPrincipal(user, roleType, permissions);
+        SecurityPrincipal principal = new SecurityPrincipal(user.getId(), roleType, permissions);
 
         UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                 principal, null, Collections.emptyList());
@@ -43,6 +45,7 @@ public class WithSecurityPrincipalContextFactory implements WithSecurityContextF
 
         // 同时设置自定义上下文，与 JwtAuthenticationFilter 行为一致
         UserCTX.setPrincipal(principal);
+        LoginContext.set(user, roleType);
 
         return context;
     }

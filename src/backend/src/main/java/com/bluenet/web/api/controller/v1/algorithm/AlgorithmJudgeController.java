@@ -1,6 +1,6 @@
 package com.bluenet.web.api.controller.v1.algorithm;
 
-import com.bluenet.web.api.dto.ResponseMessage;
+import io.github.ivencn.infra.web.response.ResponseMessage;
 import com.bluenet.web.api.dto.algorithm_judge.AlgorithmRunRequestDTO;
 import com.bluenet.web.api.dto.algorithm_judge.AlgorithmSubmitResponseDTO;
 import com.bluenet.web.api.dto.algorithm_judge.JudgeJobPollingResponseDTO;
@@ -9,8 +9,8 @@ import com.bluenet.web.api.converter.algorithm_judge.AlgorithmJudgeRequestConver
 import com.bluenet.web.application.result.algorithm_judge.AlgorithmJudgeResult;
 import com.bluenet.web.api.converter.algorithm_judge.AlgorithmJudgeResponseConverter;
 import com.bluenet.web.application.service.AlgorithmJudgeAppService;
-import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
-import com.bluenet.web.infrastructure.security.annotation.RequiresPermission;
+import io.github.ivencn.infra.security.principal.AccessLevel;
+import io.github.ivencn.infra.security.annotation.RequiresPermission;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;

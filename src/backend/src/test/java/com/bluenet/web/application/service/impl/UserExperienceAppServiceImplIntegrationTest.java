@@ -12,8 +12,8 @@ import com.bluenet.web.domain.model.entity.User;
 import com.bluenet.web.domain.model.enumerate.ExperienceType;
 import com.bluenet.web.domain.repository.UserExperienceRepository;
 import com.bluenet.web.domain.repository.UserRepository;
-import com.bluenet.web.infrastructure.security.principal.SecurityPrincipal;
-import com.bluenet.web.infrastructure.security.util.UserCTX;
+import io.github.ivencn.infra.security.principal.SecurityPrincipal;
+import io.github.ivencn.infra.security.principal.UserCTX;
 import com.bluenet.web.testsupport.fixture.UserFixture;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -54,7 +54,7 @@ class UserExperienceAppServiceImplIntegrationTest extends DBIntegrationTest {
     void prepare() {
         currentUser = UserFixture.member("2026001001").save(userRepository, passwordEncoder);
         UserCTX.setPrincipal(
-                new SecurityPrincipal(currentUser, com.bluenet.web.domain.model.enumerate.RoleType.MEMBER,
+                new SecurityPrincipal(currentUser.getId(), com.bluenet.web.domain.model.enumerate.RoleType.MEMBER,
                         java.util.Collections.emptySet()));
     }
 
@@ -196,7 +196,7 @@ class UserExperienceAppServiceImplIntegrationTest extends DBIntegrationTest {
         UserExperienceResult created = createProject("项目");
         User otherUser = createOtherUser("2026001002");
         UserCTX.setPrincipal(
-                new SecurityPrincipal(otherUser, com.bluenet.web.domain.model.enumerate.RoleType.MEMBER,
+                new SecurityPrincipal(otherUser.getId(), com.bluenet.web.domain.model.enumerate.RoleType.MEMBER,
                         java.util.Collections.emptySet()));
 
         UserExperienceCommands.UpdateExperienceCommand command = new UserExperienceCommands.UpdateExperienceCommand(
@@ -231,7 +231,7 @@ class UserExperienceAppServiceImplIntegrationTest extends DBIntegrationTest {
         UserExperienceResult created = createProject("项目");
         User otherUser = createOtherUser("2026001003");
         UserCTX.setPrincipal(
-                new SecurityPrincipal(otherUser, com.bluenet.web.domain.model.enumerate.RoleType.MEMBER,
+                new SecurityPrincipal(otherUser.getId(), com.bluenet.web.domain.model.enumerate.RoleType.MEMBER,
                         java.util.Collections.emptySet()));
 
         assertThrows(Forbidden.class, () -> userExperienceAppService.deleteExperience(created.id()));

@@ -1,7 +1,7 @@
 package com.bluenet.web.api.controller.v1.admin;
 
 import com.bluenet.web.APIIntegrationTest;
-import com.bluenet.web.api.dto.PageDTO;
+import io.github.ivencn.infra.web.response.PageDTO;
 import com.bluenet.web.api.dto.adminuser.AdminUserBatchOperateRequestDTO;
 import com.bluenet.web.api.dto.adminuser.AdminUserBatchUpdateRoleRequestDTO;
 import com.bluenet.web.api.dto.adminuser.AdminUserCreateRequestDTO;
@@ -16,7 +16,7 @@ import com.bluenet.web.application.service.AdminUserAppService;
 import com.bluenet.web.domain.model.enumerate.Direction;
 import com.bluenet.web.domain.model.enumerate.Gender;
 import com.bluenet.web.infrastructure.security.principal.WithSecurityPrincipal;
-import com.bluenet.web.infrastructure.security.util.UserCTX;
+import io.github.ivencn.infra.security.principal.UserCTX;
 import com.bluenet.web.testconfig.TestSecurityConfig;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.AfterEach;

@@ -9,7 +9,7 @@ import com.bluenet.web.domain.model.entity.DirectionLearningStep;
 import com.bluenet.web.domain.model.enumerate.Direction;
 import com.bluenet.web.domain.repository.LearningPathRepository;
 import com.bluenet.web.infrastructure.security.principal.WithSecurityPrincipal;
-import com.bluenet.web.infrastructure.security.util.UserCTX;
+import io.github.ivencn.infra.security.principal.UserCTX;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

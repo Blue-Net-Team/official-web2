@@ -25,7 +25,7 @@ import com.bluenet.web.application.message.MessageDispatcher;
 import com.bluenet.web.application.message.MessageRequest;
 import com.bluenet.web.application.message.template.EmailVerificationCodeTemplate;
 import com.bluenet.web.application.message.template.VerificationCodeScene;
-import com.bluenet.web.infrastructure.security.auth.AuthTokenService;
+import io.github.ivencn.infra.security.auth.AuthTokenService;
 import com.bluenet.web.infrastructure.security.change.ChangePasswordStateService;
 import com.bluenet.web.infrastructure.security.principal.RoleTypeResolver;
 import lombok.RequiredArgsConstructor;

@@ -11,7 +11,7 @@ import com.bluenet.web.application.service.AssessmentAnswerAppService;
 import com.bluenet.web.domain.exception.DataConflict;
 import com.bluenet.web.domain.model.enumerate.ProgrammingLanguage;
 import com.bluenet.web.infrastructure.security.principal.WithSecurityPrincipal;
-import com.bluenet.web.infrastructure.security.util.UserCTX;
+import io.github.ivencn.infra.security.principal.UserCTX;
 import com.bluenet.web.testconfig.TestSecurityConfig;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.AfterEach;

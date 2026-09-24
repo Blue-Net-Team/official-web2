@@ -1,6 +1,6 @@
 package com.bluenet.web.api.controller.v1.auth;
 
-import com.bluenet.web.api.dto.ResponseMessage;
+import io.github.ivencn.infra.web.response.ResponseMessage;
 import com.bluenet.web.api.converter.auth.AuthRequestConverter;
 import com.bluenet.web.api.dto.auth.AuthMeResponseDTO;
 import com.bluenet.web.api.dto.auth.EmailLoginRequestDTO;
@@ -12,10 +12,10 @@ import com.bluenet.web.api.converter.auth.AuthResponseConverter;
 import com.bluenet.web.application.result.user.UserInfoResult;
 import com.bluenet.web.application.service.AuthAppService;
 import com.bluenet.web.application.service.UserInfoAppService;
-import com.bluenet.web.infrastructure.security.util.UserCTX;
-import com.bluenet.web.infrastructure.security.annotation.AccessLevel;
-import com.bluenet.web.infrastructure.security.annotation.RateLimit;
-import com.bluenet.web.infrastructure.security.annotation.RequiresPermission;
+import io.github.ivencn.infra.security.principal.UserCTX;
+import io.github.ivencn.infra.security.principal.AccessLevel;
+import io.github.ivencn.infra.security.ratelimit.RateLimit;
+import io.github.ivencn.infra.security.annotation.RequiresPermission;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;

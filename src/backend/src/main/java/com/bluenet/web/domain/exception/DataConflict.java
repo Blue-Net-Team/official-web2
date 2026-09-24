@@ -1,20 +1,17 @@
 package com.bluenet.web.domain.exception;
 
-import lombok.Getter;
 import org.springframework.http.HttpStatus;
 
-@Getter
+/**
+ * 数据冲突异常，映射 HTTP 409，可携带冲突详情数据。
+ */
 public class DataConflict extends GlobalException {
-    private final HttpStatus code = HttpStatus.CONFLICT;
-    private final Object data;
 
     public DataConflict(String message) {
-        super(message);
-        this.data = null;
+        this(message, null);
     }
 
     public DataConflict(String message, Object data) {
-        super(message);
-        this.data = data;
+        super(HttpStatus.CONFLICT, message, data);
     }
 }

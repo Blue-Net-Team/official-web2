@@ -1,13 +1,13 @@
 package com.bluenet.web.domain.exception;
 
-import lombok.Getter;
 import org.springframework.http.HttpStatus;
 
-@Getter
+/**
+ * Unauthorized 业务异常，映射 HTTP UNAUTHORIZED。
+ */
 public class Unauthorized extends GlobalException {
-    private final HttpStatus code = HttpStatus.UNAUTHORIZED;
 
     public Unauthorized(String message) {
-        super(message);
+        super(HttpStatus.UNAUTHORIZED, message);
     }
 }

@@ -1,12 +1,13 @@
 package com.bluenet.web.domain.exception;
 
-import lombok.Getter;
 import org.springframework.http.HttpStatus;
 
-@Getter
+/**
+ * BadRequest 业务异常，映射 HTTP BAD_REQUEST。
+ */
 public class BadRequest extends GlobalException {
-    private final HttpStatus code = HttpStatus.BAD_REQUEST;
+
     public BadRequest(String message) {
-        super(message);
+        super(HttpStatus.BAD_REQUEST, message);
     }
 }

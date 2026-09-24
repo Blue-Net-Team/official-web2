@@ -21,6 +21,17 @@
         <module>src/judge-service</module>
     </modules>
 
+    <repositories>
+        <!-- iven-infra 框架（GitHub Packages，需 ~/.m2/settings.xml 配置 IVEN-CN 凭据） -->
+        <repository>
+            <id>iven-github</id>
+            <name>IVEN-CN GitHub Packages</name>
+            <url>https://maven.pkg.github.com/IVEN-CN/iven-infra</url>
+            <releases><enabled>true</enabled></releases>
+            <snapshots><enabled>false</enabled></snapshots>
+        </repository>
+    </repositories>
+
     <properties>
         <java.version>21</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

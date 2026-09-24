@@ -14,7 +14,7 @@ import com.bluenet.web.domain.model.result.ConfirmUploadResult;
 import com.bluenet.web.domain.model.result.PresignedUploadResult;
 import com.bluenet.web.domain.repository.AssessmentAnswerRepository;
 import com.bluenet.web.infrastructure.security.principal.WithSecurityPrincipal;
-import com.bluenet.web.infrastructure.security.util.UserCTX;
+import io.github.ivencn.infra.security.principal.UserCTX;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

@@ -11,7 +11,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 
 import com.bluenet.web.application.message.MessageTemplateRegistry;
 import com.bluenet.web.infrastructure.init.SystemUserInitializer;
-import com.bluenet.web.infrastructure.security.util.UserCTX;
+import io.github.ivencn.infra.security.principal.UserCTX;
 import com.bluenet.web.testconfig.TestSecurityConfig;
 import com.bluenet.web.testcontainers.TestcontainersConfiguration;
 

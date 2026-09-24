@@ -1,6 +1,6 @@
 package com.bluenet.web.api.dto.assessment_time;
 
-import com.bluenet.web.api.dto.ResponseMessage;
+import io.github.ivencn.infra.web.response.ResponseMessage;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 /**

@@ -22,8 +22,8 @@ import com.bluenet.web.domain.repository.FileRepository;
 import com.bluenet.web.domain.repository.UserRepository;
 import com.bluenet.web.domain.service.AssessmentDecisionDomainService;
 import com.bluenet.web.infrastructure.security.principal.RoleTypeResolver;
-import com.bluenet.web.infrastructure.security.principal.SecurityPrincipal;
-import com.bluenet.web.infrastructure.security.util.UserCTX;
+import io.github.ivencn.infra.security.principal.SecurityPrincipal;
+import io.github.ivencn.infra.security.principal.UserCTX;
 import com.bluenet.web.testsupport.fixture.AssessmentFixture;
 import com.bluenet.web.testsupport.fixture.FileFixture;
 import com.bluenet.web.testsupport.fixture.TimeFixture;
@@ -101,7 +101,7 @@ class AssessmentQuestionAppServiceImplIntegrationTest extends DBIntegrationTest 
 
     private void loginAs(User user) {
         SecurityPrincipal principal = new SecurityPrincipal(
-                user,
+                user.getId(),
                 roleTypeResolver.resolve(user.getRoleId()),
                 Collections.emptySet());
         UserCTX.setPrincipal(principal);

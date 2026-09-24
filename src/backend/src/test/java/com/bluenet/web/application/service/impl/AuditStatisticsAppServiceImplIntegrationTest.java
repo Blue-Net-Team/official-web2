@@ -12,7 +12,7 @@ import com.bluenet.web.domain.model.entity.Audit;
 import com.bluenet.web.domain.model.enumerate.AuditStatisticsPeriod;
 import com.bluenet.web.domain.repository.AuditRepository;
 import com.bluenet.web.infrastructure.security.principal.WithSecurityPrincipal;
-import com.bluenet.web.infrastructure.security.util.UserCTX;
+import io.github.ivencn.infra.security.principal.UserCTX;
 import com.bluenet.web.testsupport.fixture.AssessmentFixture;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;

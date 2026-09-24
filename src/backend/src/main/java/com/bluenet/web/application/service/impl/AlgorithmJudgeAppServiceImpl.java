@@ -29,7 +29,7 @@ import com.bluenet.web.domain.repository.AssessmentQuestionRepository;
 import com.bluenet.web.domain.repository.AssessmentTimeRepository;
 import com.bluenet.web.domain.repository.JudgeLanguageLimitRepository;
 import com.bluenet.web.infrastructure.judge.AlgorithmJudgeJobPublisher;
-import com.bluenet.web.infrastructure.security.util.UserCTX;
+import com.bluenet.web.infrastructure.adapter.LoginContext;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -178,7 +178,7 @@ public class AlgorithmJudgeAppServiceImpl implements AlgorithmJudgeAppService {
     }
 
     private User getCurrentUser() {
-        User currentUser = UserCTX.getCurrentUser();
+        User currentUser = LoginContext.getCurrentUser();
         if (currentUser == null) {
             throw new SecurityException("未登录");
         }

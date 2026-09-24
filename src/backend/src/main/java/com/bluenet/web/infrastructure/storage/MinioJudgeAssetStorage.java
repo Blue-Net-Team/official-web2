@@ -1,7 +1,7 @@
 package com.bluenet.web.infrastructure.storage;
 
 import com.bluenet.web.infrastructure.config.properties.JudgeAssetStorageProperties;
-import com.bluenet.web.infrastructure.config.properties.StorageProperties;
+import io.github.ivencn.infra.storage.StorageProperties;
 import io.minio.BucketExistsArgs;
 import io.minio.GetObjectArgs;
 import io.minio.GetObjectResponse;
@@ -26,7 +26,7 @@ import java.io.ByteArrayInputStream;
  */
 @Component
 @RequiredArgsConstructor
-@ConditionalOnExpression("'${storage.provider:minio}' == 'minio'")
+@ConditionalOnExpression("'${iven.storage.provider:minio}' == 'minio'")
 public class MinioJudgeAssetStorage implements JudgeAssetStorage {
     private final JudgeAssetStorageProperties judgeProperties;
     private final StorageProperties storageProperties;

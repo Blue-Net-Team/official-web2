@@ -1,6 +1,6 @@
 package com.bluenet.web.api.converter.aitrace;
 
-import com.bluenet.web.api.dto.PageDTO;
+import io.github.ivencn.infra.web.response.PageDTO;
 import com.bluenet.web.api.dto.aitrace.AiConversationDetailDTO;
 import com.bluenet.web.api.dto.aitrace.AiConversationSummaryDTO;
 import com.bluenet.web.api.dto.aitrace.AiCountItemDTO;

@@ -8,7 +8,7 @@ import com.bluenet.web.api.dto.auth.VerifyResetCodeRequestDTO;
 import com.bluenet.web.api.dto.auth.VerifyStudentRequestDTO;
 import com.bluenet.web.application.result.resetpassword.ResetPasswordResult;
 import com.bluenet.web.application.service.ResetPasswordAppService;
-import com.bluenet.web.infrastructure.security.util.UserCTX;
+import io.github.ivencn.infra.security.principal.UserCTX;
 import com.bluenet.web.testconfig.TestSecurityConfig;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.AfterEach;

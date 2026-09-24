@@ -1,6 +1,6 @@
 package com.bluenet.web.api.converter.softwareresource;
 
-import com.bluenet.web.api.dto.PageDTO;
+import io.github.ivencn.infra.web.response.PageDTO;
 import com.bluenet.web.api.dto.softwareresource.SoftwareResourceDTO;
 import com.bluenet.web.application.result.softwareresource.SoftwareResourceResult;
 import org.springframework.data.domain.Page;

@@ -4,6 +4,9 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import com.bluenet.web.infrastructure.adapter.LoginContextCleanupFilter;
+import io.github.ivencn.infra.security.csrf.CsrfTokenFilter;
+import io.github.ivencn.infra.security.jwt.JwtAuthenticationFilter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -19,9 +22,6 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import com.bluenet.web.infrastructure.security.csrf.CsrfTokenFilter;
-import com.bluenet.web.infrastructure.security.jwt.JwtAuthenticationFilter;
-
 import lombok.RequiredArgsConstructor;
 
 /**
@@ -34,6 +34,7 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final CsrfTokenFilter csrfTokenFilter;
+    private final LoginContextCleanupFilter loginContextCleanupFilter;
 
     @Value("${cors.allowed-origins:*}")
     private String allowedOrigins;
@@ -43,15 +44,10 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
 
         // 1. 允许的前端域名
-        // 从环境变量读取，支持逗号分隔的多个域名
-        // 生产环境应配置具体域名，如: https://example.com,https://www.example.com
-        // 开发环境可使用 * 允许所有域名
         List<String> origins = Arrays.asList(allowedOrigins.split(","));
         if (origins.size() == 1 && "*".equals(origins.get(0).trim())) {
-            // 使用 Pattern 允许所有域名（开发环境）
             configuration.setAllowedOriginPatterns(Collections.singletonList("*"));
         } else {
-            // 使用具体域名列表（生产环境）
             configuration.setAllowedOriginPatterns(origins);
         }
 
@@ -85,7 +81,8 @@ public class SecurityConfig {
      *             配置异常
      */
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http, FailAuthEntryPoint failAuthEntryPoint) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http,
+            io.github.ivencn.infra.security.http.FailAuthEntryPoint failAuthEntryPoint) throws Exception {
         http.cors(cors -> cors.configurationSource(corsConfigurationSource()))
 
                 // 禁用 Spring 内置 CSRF（使用自定义 CsrfTokenFilter）
@@ -100,13 +97,10 @@ public class SecurityConfig {
                 // 配置授权规则
                 .authorizeHttpRequests(
                         auth -> auth
-                                // 允许公开访问的端点
                                 .requestMatchers("/api/v1/**")
                                 .permitAll()
-                                // 允许 OpenAPI 文档与 Swagger UI 无需认证
                                 .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html")
                                 .permitAll()
-                                // 其余需要认证的接口（如 /v1/user/info/me）
                                 .anyRequest()
                                 .authenticated())
 
@@ -114,7 +108,10 @@ public class SecurityConfig {
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
 
                 // 添加 CSRF Token 验证过滤器（在 JWT 认证之后）
-                .addFilterAfter(csrfTokenFilter, JwtAuthenticationFilter.class);
+                .addFilterAfter(csrfTokenFilter, JwtAuthenticationFilter.class)
+
+                // 清理应用侧登录上下文
+                .addFilterAfter(loginContextCleanupFilter, CsrfTokenFilter.class);
 
         return http.build();
     }
