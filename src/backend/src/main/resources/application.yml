@@ -67,6 +67,12 @@ iven:
   rbac:
     # RBAC 权限校验开关（关闭时 PROTECTED 接口降级为仅登录校验）
     enabled: true
+  web:
+    logging:
+      # 不记录请求日志的路径（Ant 风格）
+      exclude-paths:
+        - /api/v1/health
+        - /actuator/**
   storage:
       enabled: true
       provider: ${STORAGE_PROVIDER:minio}
