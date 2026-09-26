@@ -1,10 +1,13 @@
 # deploy/ —— 部署资产
 
+> **★ 从零搭建集群并部署本项目，请先读 [CLUSTER-SETUP.md](./CLUSTER-SETUP.md)** —— 含完整步骤、验收清单、容量规划与 **20 个踩坑记录**。
+
 本目录承载 k3s 集群部署相关的全部资产。**真实服务器 IP、ACR 地址、namespace、密码一律不入库**，仅在部署时通过参数/Secrets 注入。
 
 ```
 deploy/
 ├── README.md              # 本文件：总览、发布与回滚流程
+├── CLUSTER-SETUP.md      # ★ 从零搭建集群 + 部署项目完整手册（含踩坑记录）
 ├── k3s/                   # 集群安装（安装脚本、离线包说明、ACR 凭据配置）
 │   ├── README.md
 │   ├── install-server.sh / install-agent.sh      # 在线安装
@@ -111,7 +114,7 @@ helm rollback bluenet-api <N> -n bluenet
 **A. 公网域名（已配置，推荐日常使用，配合只读账号）**
 
 ```
-https://cluster.gdou-bluenet.cn
+https://<DASHBOARD_DOMAIN>
 ```
 
 链路：宝塔 nginx（该站点）→ `https://127.0.0.1:30443`（本机 NodePort）→ dashboard Pod。

@@ -57,8 +57,8 @@
 
 ## 7. CI/CD 链路（cicd-helm-deploy spec）
 
-- [ ] 7.1 准备镜像仓库（阿里云 ACR：基础镜像与业务镜像同 host、不同 namespace），配置集群 `registries.yaml` 与 GitHub Secrets；**真实 ACR 地址与 namespace 不入库**（chart values 仅占位符，部署时 `--set image.repository` 注入；CI 用 `ACR_REPO`/`ACR_NAMESPACE`/`ACR_REPOSITORY`，基础镜像用 `ACR_BASE_NAMESPACE`/`ACR_BASE_REPOSITORY`）
-- [ ] 7.2 创建 CI 专用 ServiceAccount + RBAC（限 bluenet namespace deploy 权限），签发短周期 token kubeconfig，存入 GitHub 仓库 Secret（名：`KUBECONFIG`）；使用 GitHub 托管 runner（6443 公网可达 + 认证，无需 runner IP 白名单）；token 存 GitHub Secrets，泄露即吊销重建。具体步骤：
+- [x] 7.1 镜像仓库已就绪：阿里云 ACR（基础镜像 `iven-common-dev/common-dev` 与业务镜像 `bluenet2026/bluenet` 同 host 不同 namespace）；5 台节点 `registries.yaml` 配好并以 `crictl pull` 验证；GitHub Secrets 增加 `ACR_REPOSITORY`/`ACR_BASE_NAMESPACE`/`ACR_BASE_REPOSITORY`；真实地址不入库（chart values 用占位符，部署时 `--set image.repository` 注入）
+- [x] 7.2 CI 凭据已就绪（**采用永久 token，无需轮换**）：ServiceAccount `bluenet-ci` + RoleBinding(clusterrole=edit，仅 bluenet ns)；通过 `Secret(type=kubernetes.io/service-account-token)` 生成**无 exp 的永久 JWT**，拼成 kubeconfig 存入 GitHub Secret `KUBECONFIG`（本地备份 `~/.kube/ci.kubeconfig`）；权限实测 create deployments/statefulsets=yes、get nodes=no。注意：该传统机制在 k8s 1.37 仍有效，若未来版本停用则退化用 `kubectl create token --duration=8760h`（1 年）
   ```bash
   # 在 master 上执行
   kubectl create namespace bluenet
@@ -73,13 +73,15 @@
   - 本地留存一份于 `deploy/secrets/ci.kubeconfig` 作为备份/排查用，**必须加入 `.gitignore`**（追加 `*.kubeconfig` 规则），并验证 `git status` 不出现该文件、git 历史无泄露
   - 轮换流程：token 到期前重跑 `kubectl create token ... --duration=720h` → 更新 GitHub Secret → 零停机
 - [x] 7.3 编写 GitHub Actions workflow（**本地已完成，未提交**）：新增可复用 `cd-helm-deploy.yml`（setup-helm + kubeconfig + helm upgrade --install + rollout status + history 输出，支持 Deployment/StatefulSet 与 base/services 两种镜像来源）；**4 个 `cd-<svc>.yml` 与 `cd-infra.yml` 已全面改为纯 helm，删除全部 SSH/compose/部署主机解析逻辑**；ACR 推送改为双 tag（`<svc>-<版本>` 不可变 + `<svc>` 浮动别名）；frontend 构建参数改为 `K8S_*/PUBLIC_*` 变量优先、旧变量兜底
-- [ ] 7.4 端到端验证：推送一次提交，确认集群自动更新且全程无 SSH
-- [ ] 7.6 清理 compose/SSH 时代的 GitHub Secrets（约 49 个：`*_DEPLOY_HOST_*`、`*_DEPLOY_PATH_*`、`*_DEPLOY_KEY`、`*_DEPLOY_USER`、`*_DEPLOY_PORT`、`DEPLOY_*`、`DATABASE_HOST_*`、`DATABASE_DEPLOY_*`、`RABBITMQ_HOST_*`、`RABBITMQ_DEPLOY_*`）与旧兜底 Vars（`BACKEND_HOST`、`BACKEND_PORT`、`SSL_ENABLED`、`AI_SERVICE_HOST`、`AI_SERVICE_PORT`、`AI_SERVICE_SSL_ENABLED`）；**切流稳定后执行**（旧 Secrets 是手工回滚排障时的参考）
-- [ ] 7.7 确认 cd-deploy.yml 编排器在新流程下仍正确（它调用 cd-infra/cd-api/cd-ai/cd-judge/cd-frontend 并打 `deploy/<svc>/v<version>` git tag；已验证无 SSH/compose 引用）
+- [x] 7.4 端到端验证完成（全程无 SSH）：经 `push → CI → CD Deploy → helm upgrade` 成功发布 infra（PG/Redis/RabbitMQ）与 api(1.0.2→1.0.4)/judge(0.1.1)/ai(0.3.1)/frontend(0.3.1)；公网验证 api/ai/首页均 200，登录正常
+- [x] 7.6 已清理 27 个 compose/SSH 时代 Secrets（`DEPLOY_*`、`{API,AI,JUDGE,FRONTEND}_DEPLOY_*`、`DATABASE_*`、`RABBITMQ_*`）；保留 10 个实际被 workflow 引用的：`ACR_REPO`/`ACR_NAMESPACE`/`ACR_REPOSITORY`/`ACR_USERNAME`/`ACR_PWD`/`ACR_BASE_NAMESPACE`/`ACR_BASE_REPOSITORY`/`KUBECONFIG`/`IVEN_PACKAGES_USER`/`IVEN_PACKAGES_TOKEN`；已校验 workflow 引用的 secret 全部存在（`QODANA_TOKEN` 为组织级 secret，不在仓库级列表中）。遗留：6 个旧兜底 Vars（`BACKEND_HOST`/`BACKEND_PORT`/`SSL_ENABLED`/`AI_SERVICE_HOST`/`AI_SERVICE_PORT`/`AI_SERVICE_SSL_ENABLED`）待确认是否删除
+- [x] 7.7 编排器 `cd-deploy.yml` 实际验证通过：多次 CD Deploy success，`resolve-context`（版本漂移判定）、`cd-*`（各服务部署）、`tag-<svc>`（打 `deploy/<svc>/v<version>` git tag）均正常；全仓库已无 SSH/compose 引用
+- [ ] 7.8 补充 **chart-only 发布路径**：当前 CI「构建不部署」规则要求先提升 `trigger/<svc>` 版本，导致仅改 chart（探针/资源/环境变量）也要重跑镜像构建；建议支持 `workflow_dispatch` 指定“仅部署已有镜像 tag”的模式
+- [x] 7.9 token 轮换问题已解决：改用永久 SA token，无需定期轮换；另需注意**本地管理 kubeconfig 的客户端证书 1 年后到期**（2027-09-25），到期重新从 master 拉取 `k3s.yaml`
 
 ## 8. 可观测与收尾（cluster-observability spec）
 
 - [ ] 8.1 为 PG Pod 配置内存告警（limit 80% 阈值），接入通知通道
 - [ ] 8.2 compose 环境保留一周作为回滚源（infra profile 只读），验证稳定后归档 compose 生产部署文档
-- [ ] 8.3 编写运维文档：`deploy/README.md`（集群拓扑、常用命令、回滚、备份恢复指引）
-- [ ] 8.4 更新根 README / docs 部署章节，指向 k3s 部署为新生产路径
+- [x] 8.3 运维文档已完成：`deploy/README.md`（总览/发布/回滚/Secrets/常用命令）+ **`deploy/CLUSTER-SETUP.md`（从零搭建完整手册：资源前置、安全组、12 步实施、验收清单、容量规划、20 个踩坑记录、待改进项）**
+- [x] 8.4 根 README 文档导航已加入 `deploy/CLUSTER-SETUP.md` 入口；原 compose 部署文档保留作历史参考（compose app profile 已下线为回滚源）
