@@ -106,7 +106,20 @@ helm rollback bluenet-api <N> -n bluenet
 
 ## Kubernetes Dashboard
 
-纯管理面板，**不暴露公网**，通过本地隧道访问：
+访问方式二选一：
+
+**A. 公网域名（已配置，推荐日常使用，配合只读账号）**
+
+```
+https://cluster.gdou-bluenet.cn
+```
+
+链路：宝塔 nginx（该站点）→ `https://127.0.0.1:30443`（本机 NodePort）→ dashboard Pod。
+指向本机 NodePort 的好处：**不需要为该端口开云安全组**（nginx 主机本身就是 k3s 节点）。
+nginx 侧关键配置（Dashboard 特有）：`proxy_ssl_verify off`（上游自签证书）、
+`Upgrade/Connection` 两个头（WebSocket：日志/终端）、`proxy_read_timeout 3600s`（日志长连接）。
+
+**B. 本地隧道（不经公网，用于 cluster-admin 应急操作）**
 
 ```bash
 # 安装（如已装可跳过）
@@ -129,6 +142,27 @@ kubectl -n kubernetes-dashboard create token dashboard-admin --duration=720h
 | 指标 | 由 `metrics-server` 提供（`kubectl top` 可用） |
 
 > token 30 天过期，到期重跑上面第 3 条命令即可。
+
+### 账号与 token
+
+| 账号 | 权限 | 用途 | 取 token |
+|------|------|------|---------|
+| `dashboard-viewer` | 只读（ClusterRole `view`） | **公网域名日常使用** | `kubectl -n kubernetes-dashboard create token dashboard-viewer --duration=720h` |
+| `dashboard-admin` | cluster-admin | 仅本地隧道应急 | `kubectl -n kubernetes-dashboard create token dashboard-admin --duration=720h` |
+
+### 公网入口的安全加固（建议）
+
+Dashboard 是 cluster-admin 级面板，公网可达时建议至少做以下两项：
+
+1. **宝塔站点开启"密码访问"（Basic Auth）** 或手工加：
+   ```nginx
+   auth_basic "BlueNet Dashboard";
+   auth_basic_user_file /www/server/panel/vhost/nginx/.htpasswd_dashboard;
+   ```
+   生成密码文件：`htpasswd -bc /www/server/panel/vhost/nginx/.htpasswd_dashboard <用户名> '<密码>'`
+2. **日常只用 `dashboard-viewer`（只读）token**，避免 cluster-admin token 暴露在公网入口。
+
+> 注意：宝塔面板保存站点配置时可能重写该文件，重写后需确认 `proxy_ssl_verify off` 与两处超时设置仍在。
 
 ## 运维常用命令
 
