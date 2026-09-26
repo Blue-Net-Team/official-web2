@@ -7,9 +7,12 @@
 - [x] 1.3 编写 `deploy/k3s/install-agent.sh`：agent 加入脚本（`K3S_URL`/`K3S_TOKEN`/`--node-external-ip` 参数化）
 - [x] 1.4 在 5 台服务器执行安装脚本，验证 `kubectl get nodes` 返回 5 个 Ready 节点（本地经公网 6443 访问；实测坑：master 为内网 IP+EIP 需用 EIP 作 `--node-external-ip`/`--tls-san`，且老系统 cgroup v1 需 `--kubelet-arg=fail-cgroupv1=false`）
 - [x] 1.5 执行节点打标：`bluenet/role=db`（39.96.11.213）、`=mq`（8.146.230.107）、`=compute`（其余 3 台含 master），验证 label 查询
-- [ ] 1.6 验证跨节点 Pod 连通性（wireguard 隧道生效，无 MTU 问题）：在各节点 `wg show flannel-wg` 查看 peer 握手与流量；并检查 kube-system Pod 跨节点分布均 Running
+- [x] 1.6 验证跨节点 Pod 连通性（wireguard 隧道生效，无 MTU 问题）：实测跨节点 Pod IP ping 0% 丢包、CoreDNS 解析 `kubernetes.default.svc.cluster.local` → 10.43.0.1、经 ClusterIP 访问 apiserver 返回 401（证明链路全通）
+- [x] 1.7 修复多云跨节点 CNI 连通性：master 启用 `--flannel-external-ip`（已写入 `deploy/k3s/*.sh` 与 design D2）后跨节点通信恢复；**该参数仅 server 支持，agent 配置会导致 k3s-agent 启动失败**
 
 ## 2. 集群基础组件
+
+- [ ] 2.0 配置 containerd 镜像加速（`/etc/rancher/k3s/registries.yaml`，docker.io/registry.k8s.io 国内直连不稳），供后续拉取非离线包镜像使用
 
 - [ ] 2.1 确认 local-path provisioner（k3s 内置）可用，创建测试 PVC 验证供给
 - [ ] 2.2 部署 metrics-server（helm 或官方 manifest），验证 `kubectl top nodes` 有数据

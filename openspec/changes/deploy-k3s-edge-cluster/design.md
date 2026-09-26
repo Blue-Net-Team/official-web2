@@ -43,6 +43,18 @@ k3s 单二进制、内置 etcd/containerd/flannel，内存占用最小（server 
 
 ### D2: 公网互访安全基线
 
+本集群属于 k3s 官方的「**分布式赝合云/多云集群**」模式（节点间无共同私有网络）：k3s 集群流量走 WireGuard VPN 网状网络（CNI 流量）与 WebSocket 隧道（管理流量）。
+
+必需的 k3s 参数（缺一不可）：
+
+```
+server: --node-external-ip=<SERVER公网IP> --flannel-backend=wireguard-native --flannel-external-ip
+agent:  --node-external-ip=<AGENT公网IP>
+        (K3S_URL 指向 SERVER 公网 IP)
+```
+
+注：`--flannel-external-ip` 让 flannel 以公网 IP 作为节点地址建立跨节点隧道，缺失时 Pod 跨节点通信（CNI 层）会失效而节点仍显示 Ready。**该参数仅 server 支持：写入 agent 的 config.yaml 会导致 k3s-agent 启动失败**（实测报 exit-code）；agent 仅需 `--node-external-ip`。此模式**不支持嵌入式 etcd**（需多 server 场景应另设方案）。
+
 集群跨公网、跨云账号，安全组默认全拒，按需白名单：
 
 - master 6443（k3s API）：公网可达，安全依赖 **TLS + token/客户端证书认证**（决策：团队接受“强认证即可公网暴露”的模型，与 SSH 密钥认证公网暴露的现有惯例一致）
@@ -151,6 +163,7 @@ git push / release → GitHub Actions:
 | judge privileged + 受信用户代码：逃逸即节点沦陷（数据节点同池） | 威胁模型已评估接受；未来如需收紧可用 seccomp/Kata（非本次范围） |
 | wireguard flannel 在部分云安全组下 MTU 问题 | 安装后跨节点 Pod 连通性验证纳入验收；必要时调 flannel MTU |
 | 存量服务器为 cgroup v1（CentOS 7 系老系统），k8s 1.35+ 默认拒绝启动 kubelet | 安装脚本统一加 `--kubelet-arg=fail-cgroupv1=false`（v1.37 仍保留该回退开关，代码删除不早于 1.38）；长期应评估迁移 cgroup v2 |
+| 节点为“VPC 内网 IP + 公网 IP”模式且 VPC 间不互通，k8s Endpoints 默认登记内网 IP（跨节点访问 Service 可能不可达） | 已按官方多云模式启用 `--flannel-external-ip`；实施后需实测跨节点 Pod↔Pod 与 ClusterIP 连通性，必要时补加 `--node-ip=<公网IP>` 使 InternalIP=公网 IP |
 | NodePort 直接暴露，绕过 ingress 的限流/WAF 能力 | 安全组限定仅 nginx 节点可达；nginx 层保留现有访问控制 |
 | CI 凭据（kubeconfig）泄露 = 集群失守 | 公网暴露决策下此风险上升：缓解 = CI token 绑定最小 RBAC 权限 + 短有效期 + 仅 GitHub Secrets 存储；泄露后立即吊销重建 ServiceAccount |
 | apiserver 认证绕过类 0day（历史 CVE 先例） | 6443 公网可达且无网络层白名单，唯一防线是响应速度：订阅 k3s 安全公告，CVE 修复 48h 内滚动升级 server 节点 |

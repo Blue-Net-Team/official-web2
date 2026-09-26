@@ -14,6 +14,7 @@ fi
 curl -sfL https://get.k3s.io | sh -s - server \
   --kubelet-arg=fail-cgroupv1=false \
   --flannel-backend wireguard-native \
+  --flannel-external-ip \
   --node-external-ip "${MASTER_PUBLIC_IP}" \
   --tls-san "${MASTER_PUBLIC_IP}" \
   --write-kubeconfig-mode 644
