@@ -119,14 +119,23 @@ volumeMounts:
     mountPath: /var/lib/bluenet-judge/work
 
 probes:
+  startup:
+    httpGet: { path: /api/v1/judge/health, port: 8090 }
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 60          # JVM 冷启动最长 10 分钟
   liveness:
     httpGet: { path: /api/v1/judge/health, port: 8090 }
-    initialDelaySeconds: 60
-    periodSeconds: 10
+    initialDelaySeconds: 120
+    periodSeconds: 15
+    timeoutSeconds: 5
+    failureThreshold: 5
   readiness:
     httpGet: { path: /api/v1/judge/health, port: 8090 }
     initialDelaySeconds: 30
     periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 6
 
 # 大部分时间空闲：request 给低，burst 靠 limit 与节点空闲容量
 resources:

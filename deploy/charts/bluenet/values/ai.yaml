@@ -118,10 +118,12 @@ probes:
     httpGet: { path: /ai/v1/health, port: 8000 }
     initialDelaySeconds: 30
     periodSeconds: 10
+    timeoutSeconds: 5
   readiness:
     httpGet: { path: /ai/v1/health, port: 8000 }
     initialDelaySeconds: 15
     periodSeconds: 10
+    timeoutSeconds: 5
 
 resources:
   requests:

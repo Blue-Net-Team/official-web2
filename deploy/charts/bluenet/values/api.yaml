@@ -185,18 +185,24 @@ volumeMounts:
     readOnly: true
 
 probes:
-  liveness:
-    httpGet: { path: /api/v1/health, port: 8080 }
-    initialDelaySeconds: 60
-    periodSeconds: 10
-  readiness:
-    httpGet: { path: /api/v1/health, port: 8080 }
-    initialDelaySeconds: 40
-    periodSeconds: 10
+  # JVM 在 2C2G 上冷启动可达 70s+，必须给足 startup 预算，否则会被误杀重启
   startup:
     httpGet: { path: /api/v1/health, port: 8080 }
-    failureThreshold: 30
-    periodSeconds: 5
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 60          # 最长容忍 10 分钟
+  liveness:
+    httpGet: { path: /api/v1/health, port: 8080 }
+    initialDelaySeconds: 120
+    periodSeconds: 15
+    timeoutSeconds: 5
+    failureThreshold: 5
+  readiness:
+    httpGet: { path: /api/v1/health, port: 8080 }
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 6
 
 resources:
   requests:
