@@ -1,5 +1,5 @@
-# CD Judge 可复用工作流：拉取镜像 → 推送阿里云 ACR → 服务器 docker pull → compose up → 轮询健康
-# 判题服务部署到独立 JUDGE 服务器，使用 JUDGE_DEPLOY_* secrets。
+# CD Judge：ghcr 拉取 → 推送阿里云 ACR（不可变 tag） → Helm 发布到 k3s
+# 全面 helm 部署，不使用 SSH/compose。
 
 name: CD Judge
 
@@ -28,27 +28,24 @@ permissions:
   packages: write
 
 jobs:
-  deploy:
+  push-image:
+    name: Push judge-service image to ACR
     runs-on: ubuntu-latest
+    outputs:
+      image_tag: ${{ steps.vars.outputs.image_tag }}
     steps:
     - uses: actions/checkout@v4
 
-    - name: Resolve deployment variables
+    - name: Resolve image tag
       id: vars
       run: |
         ENV="${{ inputs.environment }}"
         TAG="${{ inputs.image_tag }}"
         if [ "$ENV" = "prod" ]; then
-          echo "deploy_host=${{ secrets.JUDGE_DEPLOY_HOST_PROD || secrets.DEPLOY_HOST_PROD }}" >> "$GITHUB_OUTPUT"
-          echo "deploy_path=${{ secrets.JUDGE_DEPLOY_PATH_PROD || secrets.DEPLOY_PATH_PROD }}" >> "$GITHUB_OUTPUT"
           [ -z "$TAG" ] && TAG=latest
         else
-          echo "deploy_host=${{ secrets.JUDGE_DEPLOY_HOST_DEV || secrets.DEPLOY_HOST_DEV }}" >> "$GITHUB_OUTPUT"
-          echo "deploy_path=${{ secrets.JUDGE_DEPLOY_PATH_DEV || secrets.DEPLOY_PATH_DEV }}" >> "$GITHUB_OUTPUT"
           [ -z "$TAG" ] && TAG=develop
         fi
-        echo "deploy_user=${{ secrets.JUDGE_DEPLOY_USER || secrets.DEPLOY_USER }}" >> "$GITHUB_OUTPUT"
-        echo "deploy_port=${{ secrets.JUDGE_DEPLOY_PORT || secrets.DEPLOY_PORT || '22' }}" >> "$GITHUB_OUTPUT"
         echo "image_tag=$TAG" >> "$GITHUB_OUTPUT"
         echo "env_name=$ENV" >> "$GITHUB_OUTPUT"
 
@@ -75,63 +72,27 @@ jobs:
         registry: ${{ secrets.ACR_REPO }}
         username: ${{ secrets.ACR_USERNAME }}
         password: ${{ secrets.ACR_PWD }}
+
     - name: Tag and push image to Aliyun ACR
+      env:
+        GHCR_IMAGE: ghcr.io/${{ steps.image.outputs.name }}/bluenet-judge-service:${{ steps.vars.outputs.image_tag }}
+        ACR_IMAGE: ${{ secrets.ACR_REPO }}/${{ secrets.ACR_NAMESPACE }}/${{ secrets.ACR_REPOSITORY }}:judge-${{ steps.vars.outputs.image_tag }}
+        ACR_ALIAS: ${{ secrets.ACR_REPO }}/${{ secrets.ACR_NAMESPACE }}/${{ secrets.ACR_REPOSITORY }}:judge
       run: |
-        GHCR_IMAGE="ghcr.io/${{ steps.image.outputs.name }}/bluenet-judge-service:${{ steps.vars.outputs.image_tag }}"
-        ACR_IMAGE="${{ secrets.ACR_REPO }}/${{ secrets.ACR_NAMESPACE }}/bluenet:judge"
+        set -e
         echo "Pushing $ACR_IMAGE"
         docker tag "$GHCR_IMAGE" "$ACR_IMAGE"
         docker push "$ACR_IMAGE"
+        echo "Pushing $ACR_ALIAS"
+        docker tag "$GHCR_IMAGE" "$ACR_ALIAS"
+        docker push "$ACR_ALIAS"
 
-    - name: Sync compose file to judge server
-      uses: appleboy/scp-action@v0.1.7
-      with:
-        host: ${{ steps.vars.outputs.deploy_host }}
-        username: ${{ steps.vars.outputs.deploy_user }}
-        key: ${{ secrets.JUDGE_DEPLOY_KEY || secrets.DEPLOY_KEY }}
-        port: ${{ steps.vars.outputs.deploy_port }}
-        source: "docker/docker-compose.yml"
-        target: ${{ steps.vars.outputs.deploy_path }}
-        strip_components: 1
-
-    - name: Deploy judge-service via SSH
-      uses: appleboy/ssh-action@v1.0.3
-      with:
-        host: ${{ steps.vars.outputs.deploy_host }}
-        username: ${{ steps.vars.outputs.deploy_user }}
-        key: ${{ secrets.JUDGE_DEPLOY_KEY || secrets.DEPLOY_KEY }}
-        port: ${{ steps.vars.outputs.deploy_port }}
-        envs: JUDGE_IMAGE, DEPLOY_PATH, IMAGE_ENV, ACR_REPO, ACR_USERNAME, ACR_PWD
-        script: |
-          set -e
-          cd $DEPLOY_PATH
-          echo "=== Deploying judge-service to ${{ steps.vars.outputs.env_name }} ==="
-          echo "Logging into Aliyun ACR..."
-          echo "$ACR_PWD" | docker login --username="$ACR_USERNAME" "$ACR_REPO" --password-stdin
-          echo "Pulling image $IMAGE_ENV..."
-          docker pull "$IMAGE_ENV"
-          export JUDGE_IMAGE="$IMAGE_ENV"
-          docker compose --profile judge up -d --remove-orphans
-          echo "judge-service deployment completed!"
-      env:
-        IMAGE_ENV: ${{ secrets.ACR_REPO }}/${{ secrets.ACR_NAMESPACE }}/bluenet:judge
-        DEPLOY_PATH: ${{ steps.vars.outputs.deploy_path }}
-        ACR_REPO: ${{ secrets.ACR_REPO }}
-        ACR_USERNAME: ${{ secrets.ACR_USERNAME }}
-        ACR_PWD: ${{ secrets.ACR_PWD }}
-
-    - name: Wait for judge-service health check
-      run: |
-        URL="http://${{ steps.vars.outputs.deploy_host }}:8090/api/v1/judge/health"
-        echo "Waiting for judge-service at $URL to be healthy..."
-        for i in {1..30}; do
-          RESPONSE=$(curl -sfL "$URL" 2>/dev/null || echo "")
-          if echo "$RESPONSE" | grep -q '"status":"UP"'; then
-            echo "✅ Judge-service is healthy!"
-            exit 0
-          fi
-          echo "Waiting... ($i/30)"
-          sleep 10
-        done
-        echo "❌ Judge-service health check failed after 5 minutes"
-        exit 1
+  deploy:
+    name: Deploy judge-service to k3s (Helm)
+    needs: push-image
+    uses: ./.github/workflows/cd-helm-deploy.yml
+    secrets: inherit
+    with:
+      service: judge
+      image_tag: judge-${{ needs.push-image.outputs.image_tag }}
+      environment: ${{ inputs.environment }}

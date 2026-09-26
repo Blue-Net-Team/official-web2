@@ -1,0 +1,143 @@
+# CD Helm 部署（可复用工作流）
+#
+# 由 cd-<service>.yml / cd-infra.yml 以 job 形式调用：
+#   uses: ./.github/workflows/cd-helm-deploy.yml
+#   secrets: inherit
+#
+# 职责边界：本工作流只做「把已构建好的镜像发布到 k3s 集群」，
+#          镜像构建与推送由调用方完成（基础镜像为一次性中转，见 deploy/scripts）。
+#
+# 前置条件（见 openspec/changes/deploy-k3s-edge-cluster tasks 7.1/7.2）：
+#   Secrets: KUBECONFIG（base64 限权 kubeconfig）、ACR_REPO、ACR_NAMESPACE、ACR_REPOSITORY
+#            （部署基础服务时还需 ACR_BASE_NAMESPACE、ACR_BASE_REPOSITORY）
+#
+# 说明：
+#   - 每服务一个 Helm release（bluenet-<service>），发布/回滚互不影响
+#   - image.tag 必须为不可变 tag（约定 <service>-<版本号>），否则回滚无法生效
+#   - 不使用 SSH：全部经 kubeconfig 访问 master 6443
+
+name: CD Helm Deploy
+
+on:
+  workflow_call:
+    inputs:
+      service:
+        description: '服务名（对应 deploy/charts/bluenet/values/<service>.yaml）'
+        required: true
+        type: string
+      image_tag:
+        description: '不可变镜像 tag，如 api-1.4.2'
+        required: true
+        type: string
+      kind:
+        description: '工作负载类型：Deployment | StatefulSet（用于 rollout status）'
+        required: false
+        type: string
+        default: Deployment
+      image_source:
+        description: '镜像来源 namespace：services（业务）| base（基础镜像）'
+        required: false
+        type: string
+        default: services
+      environment:
+        description: '环境标识（仅用于日志）'
+        required: false
+        type: string
+        default: prod
+      namespace:
+        required: false
+        type: string
+        default: bluenet
+      release:
+        description: 'Helm release 名，留空 = bluenet-<service>'
+        required: false
+        type: string
+        default: ''
+      timeout:
+        required: false
+        type: string
+        default: '5m'
+    secrets:
+      KUBECONFIG:
+        required: true
+      ACR_REPO:
+        required: true
+      ACR_NAMESPACE:
+        required: true
+      ACR_REPOSITORY:
+        required: true
+      ACR_BASE_NAMESPACE:
+        required: false
+      ACR_BASE_REPOSITORY:
+        required: false
+
+jobs:
+  deploy:
+    name: helm upgrade bluenet-${{ inputs.service }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: v3.16.3
+
+      - name: Configure kubeconfig
+        run: |
+          mkdir -p "$HOME/.kube"
+          echo "${{ secrets.KUBECONFIG }}" | base64 -d > "$HOME/.kube/config"
+          chmod 600 "$HOME/.kube/config"
+          echo "=== 集群连通性检查 ==="
+          kubectl version --client
+          kubectl get nodes --no-headers | head -6
+
+      - name: Ensure namespace
+        run: |
+          kubectl create namespace "${{ inputs.namespace }}" --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Helm upgrade --install
+        env:
+          RELEASE: ${{ inputs.release != '' && inputs.release || format('bluenet-{0}', inputs.service) }}
+          IMAGE_SOURCE: ${{ inputs.image_source }}
+          SVC_REPO: ${{ secrets.ACR_REPO }}/${{ secrets.ACR_NAMESPACE }}/${{ secrets.ACR_REPOSITORY }}
+          BASE_REPO: ${{ secrets.ACR_REPO }}/${{ secrets.ACR_BASE_NAMESPACE }}/${{ secrets.ACR_BASE_REPOSITORY }}
+        run: |
+          set -e
+          if [ "$IMAGE_SOURCE" = "base" ]; then
+            IMAGE_REPO="$BASE_REPO"
+          else
+            IMAGE_REPO="$SVC_REPO"
+          fi
+          echo "环境: ${{ inputs.environment }} | 来源: $IMAGE_SOURCE"
+          echo "Release: $RELEASE"
+          echo "镜像: ${IMAGE_REPO}:${{ inputs.image_tag }}"
+          helm upgrade --install "$RELEASE" deploy/charts/bluenet \
+            --namespace "${{ inputs.namespace }}" \
+            -f "deploy/charts/bluenet/values/${{ inputs.service }}.yaml" \
+            --set "image.repository=${IMAGE_REPO}" \
+            --set "image.tag=${{ inputs.image_tag }}" \
+            --wait --timeout "${{ inputs.timeout }}"
+
+      - name: Wait for rollout
+        env:
+          RELEASE: ${{ inputs.release != '' && inputs.release || format('bluenet-{0}', inputs.service) }}
+        run: |
+          set -e
+          KIND_LOWER=$(echo "${{ inputs.kind }}" | tr '[:upper:]' '[:lower:]')
+          kubectl -n "${{ inputs.namespace }}" rollout status "${KIND_LOWER}/${RELEASE}" --timeout=3m
+
+      - name: Summary
+        if: always()
+        env:
+          RELEASE: ${{ inputs.release != '' && inputs.release || format('bluenet-{0}', inputs.service) }}
+        run: |
+          echo "=== Helm history ==="
+          helm history "$RELEASE" -n "${{ inputs.namespace }}" --max 5 || true
+          echo "=== Pods ==="
+          kubectl -n "${{ inputs.namespace }}" get pods -l "app.kubernetes.io/instance=${RELEASE}" -o wide || true
+          echo ""
+          echo "回滚命令：helm rollback ${RELEASE} -n ${{ inputs.namespace }}"

@@ -71,7 +71,7 @@
   - kubeconfig YAML 粘贴到 GitHub Secret `KUBECONFIG`（Settings → Secrets and variables → Actions）
   - 本地留存一份于 `deploy/secrets/ci.kubeconfig` 作为备份/排查用，**必须加入 `.gitignore`**（追加 `*.kubeconfig` 规则），并验证 `git status` 不出现该文件、git 历史无泄露
   - 轮换流程：token 到期前重跑 `kubectl create token ... --duration=720h` → 更新 GitHub Secret → 零停机
-- [ ] 7.3 编写 GitHub Actions workflow：构建 api/judge/ai/frontend 镜像（frontend 带 build args）→ 推送仓库（**tag 必须不可变：`<服务名>-<git短SHA>`；`-latest` 仅供调试不得用于部署**）→ helm upgrade --install（`--set image.tag=<服务名>-<git短SHA>`，可选 `--set image.digest=...`）→ rollout status
+- [ ] 7.3 编写 GitHub Actions workflow（**本地已改，未提交**）：新增可复用 `cd-helm-deploy.yml`（setup-helm + kubeconfig + helm upgrade --install + rollout status）；4 个 `cd-<svc>.yml` 增加 `deploy_mode` 开关（compose|helm，默认 compose，读仓库变量 `DEPLOY_MODE`）与 helm job，compose 步骤加 `!= helm` 门禁；ACR 推送改为双 tag（`<svc>-<版本>` 不可变 + `<svc>` 浮动别名）；frontend 构建参数改为 `K8S_*/PUBLIC_*` 变量优先、旧变量兜底。**tag 不可变**；待补齐 Secrets 后验证
 - [ ] 7.4 端到端验证：推送一次提交，确认集群自动更新且全程无 SSH
 - [ ] 7.5 验证 `helm rollback <release> <revision>` 回滚路径：确认历史 tag 镜像仍在 ACR、Pod 成功回到旧版本（若 CI 用固定 tag，此验证必然失败）
 
