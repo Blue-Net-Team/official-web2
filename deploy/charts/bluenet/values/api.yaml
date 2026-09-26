@@ -205,9 +205,10 @@ probes:
     failureThreshold: 6
 
 resources:
+  # JVM 启动 CPU 密集：限流会显著拖慢冷启动（实测 0.5 核时 92% 时间片被限流）
   requests:
     memory: 512Mi
-    cpu: 250m
+    cpu: 500m
   limits:
     memory: 1Gi
-    cpu: 500m
+    cpu: "1"

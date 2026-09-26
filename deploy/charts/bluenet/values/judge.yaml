@@ -140,8 +140,8 @@ probes:
 # 大部分时间空闲：request 给低，burst 靠 limit 与节点空闲容量
 resources:
   requests:
-    memory: 128Mi
-    cpu: 200m
+    memory: 256Mi
+    cpu: 500m
   limits:
     memory: 1Gi
     cpu: "1"

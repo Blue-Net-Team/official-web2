@@ -56,7 +56,7 @@ on:
       timeout:
         required: false
         type: string
-        default: '5m'
+        default: '10m'
     secrets:
       KUBECONFIG:
         required: true
@@ -134,7 +134,7 @@ jobs:
         run: |
           set -e
           KIND_LOWER=$(echo "${{ inputs.kind }}" | tr '[:upper:]' '[:lower:]')
-          kubectl -n "${{ inputs.namespace }}" rollout status "${KIND_LOWER}/${RELEASE}" --timeout=3m
+          kubectl -n "${{ inputs.namespace }}" rollout status "${KIND_LOWER}/${RELEASE}" --timeout=8m
 
       - name: Summary
         if: always()
