@@ -56,16 +56,27 @@ volumeMounts:
     mountPath: /var/lib/rabbitmq
 
 probes:
+  # 2C2G 上 rabbitmq-diagnostics 单次执行可能 >1s，必须放大 timeout，否则被 liveness 反复重启
+  startup:
+    exec:
+      command: ["rabbitmq-diagnostics", "-q", "ping"]
+    periodSeconds: 10
+    timeoutSeconds: 10
+    failureThreshold: 30          # 最长容忍 5 分钟启动
   liveness:
     exec:
       command: ["rabbitmq-diagnostics", "-q", "ping"]
-    initialDelaySeconds: 40
-    periodSeconds: 15
+    initialDelaySeconds: 60
+    periodSeconds: 30
+    timeoutSeconds: 10
+    failureThreshold: 5
   readiness:
     exec:
       command: ["rabbitmq-diagnostics", "-q", "ping"]
     initialDelaySeconds: 20
     periodSeconds: 15
+    timeoutSeconds: 10
+    failureThreshold: 5
 
 nodeSelector:
   bluenet/role: mq

@@ -54,11 +54,13 @@ probes:
       command: ["sh", "-c", "redis-cli ${REDIS_PASSWORD:+-a \"$REDIS_PASSWORD\"} ping | grep -q PONG"]
     initialDelaySeconds: 15
     periodSeconds: 10
+    timeoutSeconds: 5
   readiness:
     exec:
       command: ["sh", "-c", "redis-cli ${REDIS_PASSWORD:+-a \"$REDIS_PASSWORD\"} ping | grep -q PONG"]
     initialDelaySeconds: 5
     periodSeconds: 10
+    timeoutSeconds: 5
 
 nodeSelector:
   bluenet/role: db

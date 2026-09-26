@@ -73,11 +73,13 @@ probes:
       command: ["sh", "-c", "pg_isready -U postgres -d db_blue_net"]
     initialDelaySeconds: 20
     periodSeconds: 10
+    timeoutSeconds: 5
   readiness:
     exec:
       command: ["sh", "-c", "pg_isready -U postgres -d db_blue_net"]
     initialDelaySeconds: 10
     periodSeconds: 10
+    timeoutSeconds: 5
 
 nodeSelector:
   bluenet/role: db
