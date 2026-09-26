@@ -41,14 +41,11 @@ k3s 集群（5 节点，公网互访 + wireguard 加密 overlay）
 ```
 开发者改代码 → 提升 trigger/<svc> 版本号
    ↓ ci.yml：测试 + 构建 → ghcr.io（tag: <版本号> / sha-xxx / latest）
-   ↓ cd-<svc>.yml：
-       1. ghcr 拉取 → 推送 ACR：<ns>/bluenet:<svc>-<版本号>（不可变）+ <svc>（浮动别名，仅调试）
-       2. 按 deploy_mode 选择部署路径：
-          - compose（旧）：SCP + SSH + docker compose up
-          - helm（新）：调用 cd-helm-deploy.yml → helm upgrade --install bluenet-<svc>
+   ↓ cd-<svc>.yml（纯 helm，无 SSH）：
+       1. push-image job：ghcr 拉取 → 推送 ACR：<ns>/<repo>:<svc>-<版本号>（不可变）+ <svc>（浮动别名，仅调试）
+       2. deploy job：调用 cd-helm-deploy.yml → helm upgrade --install bluenet-<svc> → rollout status
+   ↓ cd-infra.yml：postgres / redis / rabbitmq 三个 StatefulSet 同样经 helm 发布（基础镜像来源 namespace）
 ```
-
-`deploy_mode` 取值来源：workflow 输入 > 仓库变量 `DEPLOY_MODE` > `compose`（默认，保证过渡期行为不变）。
 
 ### 方式二：本地/手工发布
 
@@ -76,17 +73,36 @@ helm rollback bluenet-api <N> -n bluenet
 
 > 前提：CI 必须推送**不可变 tag**（`<svc>-<版本号>`）。若使用固定 tag（如 `:api`），镜像被覆盖后回滚会静默失败。
 
-## CI 依赖的 Secrets / Vars
+## CI 依赖的 Secrets / Vars（全面 helm 后）
 
-| 类型 | 名称 | 用途 |
+### Secrets
+
+| 名称 | 状态 | 用途 |
 |------|------|------|
-| Secret | `ACR_REPO` / `ACR_NAMESPACE` / `ACR_USERNAME` / `ACR_PWD` | 镜像推送 |
-| Secret | `ACR_REPOSITORY` | 业务镜像仓库名（新增） |
-| Secret | `KUBECONFIG` | base64 编码的限权 kubeconfig（SA 限 bluenet namespace，新增） |
-| Var | `DEPLOY_MODE` | `compose`（默认）/ `helm` |
-| Var | `K8S_BACKEND_HOST` / `K8S_BACKEND_PORT` / `K8S_SSL_ENABLED` | frontend 镜像构建期的 SSR 目标（如 `bluenet-api` / `8080` / `false`） |
-| Var | `PUBLIC_HOST` / `PUBLIC_PORT` / `PUBLIC_SSL_ENABLED` | frontend 浏览器侧目标（生产域名 / 443 / true） |
-| Var | `PUBLIC_AI_HOST` / `PUBLIC_AI_PORT` / `PUBLIC_AI_SSL_ENABLED` | 浏览器侧 AI 服务目标（经 nginx `/ai/v1`） |
+| `ACR_REPO` | 保留 | ACR host（业务与基础镜像同一 host） |
+| `ACR_NAMESPACE` | 保留 | 业务镜像 namespace |
+| `ACR_USERNAME` / `ACR_PWD` | 保留 | ACR 登录 |
+| `ACR_REPOSITORY` | **新增** | 业务镜像仓库名 |
+| `ACR_BASE_NAMESPACE` | **新增** | 基础镜像 namespace（仅 cd-infra 使用） |
+| `ACR_BASE_REPOSITORY` | **新增** | 基础镜像仓库名 |
+| `KUBECONFIG` | **新增** | base64 编码的限权 kubeconfig（SA 限 bluenet namespace） |
+| `QODANA_TOKEN` | 保留 | 代码质量扫描 |
+| `IVEN_PACKAGES_USER` / `IVEN_PACKAGES_TOKEN` | 保留 | 私有包依赖 |
+| ~~`*_DEPLOY_HOST_*` / `*_DEPLOY_PATH_*` / `*_DEPLOY_KEY` / `*_DEPLOY_USER` / `*_DEPLOY_PORT` / `DEPLOY_*` / `DATABASE_HOST_*` / `RABBITMQ_HOST_*`~~ | **待清理（49 个）** | compose/SSH 时代遗留，切流稳定后删除 |
+
+### Variables
+
+| 名称 | 状态 | 值示例 | 用途 |
+|------|------|--------|------|
+| `K8S_BACKEND_HOST` | **新增** | `bluenet-api` | frontend 构建期 SSR 目标（集群内 DNS） |
+| `K8S_BACKEND_PORT` | **新增** | `8080` | 同上 |
+| `K8S_SSL_ENABLED` | **新增** | `false` | SSR 内部访问为 http |
+| `PUBLIC_HOST` | **新增** | `<生产域名>` | 浏览器侧目标（经 nginx） |
+| `PUBLIC_PORT` | **新增** | `443` | 同上 |
+| `PUBLIC_SSL_ENABLED` | **新增** | `true` | 同上 |
+| `PUBLIC_AI_HOST` / `PUBLIC_AI_PORT` / `PUBLIC_AI_SSL_ENABLED` | **新增** | `<域名>` / `443` / `true` | 浏览器侧 AI 服务（经 nginx `/ai/v1`） |
+| `AI_SERVICE_PREFIX` | 保留 | `/ai/v1` | AI 路由前缀（构建期注入） |
+| ~~`BACKEND_HOST` / `BACKEND_PORT` / `SSL_ENABLED` / `AI_SERVICE_HOST` / `AI_SERVICE_PORT` / `AI_SERVICE_SSL_ENABLED`~~ | **待清理（6 个）** | — | 旧兜底变量，新变量就位后删除 |
 
 ## 运维常用命令
 

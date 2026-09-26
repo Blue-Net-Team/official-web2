@@ -39,7 +39,7 @@ env:
   - name: REDIS_PASSWORD
     valueFrom:
       secretKeyRef:
-        name: bluenet-redis-auth
+        name: bluenet-redis
         key: redis-password
   - name: TZ
     value: Asia/Shanghai

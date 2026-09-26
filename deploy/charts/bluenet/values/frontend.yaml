@@ -6,7 +6,7 @@
 fullnameOverride: bluenet-frontend
 kind: Deployment
 containerName: frontend
-replicas: 2
+replicas: 1
 
 image:
   repository: "<ACR-ADDRESS>/<SERVICE-NAMESPACE>/<SERVICE-REPO>"
@@ -50,7 +50,7 @@ env:
     value: /api/v1
   # 浏览器侧（构建期已注入，运行时保留同值）
   - name: NEXT_PUBLIC_BACKEND_HOST
-    value: "<生产域名>"
+    value: "www.gdou-bluenet.cn"
   - name: NEXT_PUBLIC_BACKEND_PORT
     value: "443"
   - name: NEXT_PUBLIC_SSL_ENABLED
@@ -58,7 +58,7 @@ env:
   - name: NEXT_PUBLIC_API_PREFIX
     value: /api/v1
   - name: NEXT_PUBLIC_AI_SERVICE_HOST
-    value: "<生产域名>"
+    value: "www.gdou-bluenet.cn"
   - name: NEXT_PUBLIC_AI_SERVICE_PORT
     value: "443"
   - name: NEXT_PUBLIC_AI_SERVICE_SSL_ENABLED

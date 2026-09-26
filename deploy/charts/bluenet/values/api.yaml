@@ -80,9 +80,9 @@ env:
   - name: JUDGE_STORAGE_BUCKET
     value: bluenet-judge
   - name: ALIYUN_OSS_ENDPOINT
-    value: "<OSS 内网/外网 endpoint>"
+    value: "oss-cn-beijing-internal.aliyuncs.com"   # 见 README 说明：跨云节点可能需改为公网 endpoint
   - name: ALIYUN_OSS_PUBLIC_ENDPOINT
-    value: "<OSS 公网 endpoint>"
+    value: "https://oss-cn-beijing.aliyuncs.com"
   - name: ALIYUN_OSS_AK
     valueFrom:
       secretKeyRef: { name: bluenet-api-secret, key: oss-ak }
@@ -95,7 +95,7 @@ env:
     valueFrom:
       secretKeyRef: { name: bluenet-api-secret, key: jwt-secret }
   - name: COOKIE_DOMAIN
-    value: "<生产域名>"
+    value: ".gdou-bluenet.cn"
   - name: COOKIE_SECURE
     value: "true"
   - name: COOKIE_SAME_SITE
@@ -103,7 +103,7 @@ env:
   - name: COOKIE_MAX_AGE
     value: "43200"
   - name: CORS_ALLOWED_ORIGINS
-    value: "https://<生产域名>"
+    value: "https://www.gdou-bluenet.cn"
 
   # ---------- 系统账号 / 邮件 ----------
   - name: SYSTEM_USER_USERNAME
@@ -114,33 +114,33 @@ env:
   - name: SYSTEM_USER_STUDENT_ID
     value: "000000000000"
   - name: MAIL_USERNAME
-    value: "<邮箱账号>"
+    value: "gdou_bluenet@163.com"
   - name: MAIL_PASSWORD
     valueFrom:
       secretKeyRef: { name: bluenet-api-secret, key: mail-password }
 
   # ---------- GitHub OAuth ----------
   - name: GITHUB_CLIENT_ID
-    value: "<GitHub OAuth Client ID>"
+    value: "Ov23liUx8DSqRIo6WT86"
   - name: GITHUB_CLIENT_SECRET
     valueFrom:
       secretKeyRef: { name: bluenet-api-secret, key: github-client-secret }
   - name: GITHUB_OAUTH_CALLBACK_BASE_URL
-    value: "https://<生产域名>"
+    value: "https://www.gdou-bluenet.cn"
   - name: GITHUB_FRONTEND_BASE_URL
-    value: "https://<生产域名>"
+    value: "https://www.gdou-bluenet.cn"
 
   # ---------- GitHub App（Bug 同步）----------
   - name: GITHUB_ISSUE_APP_ID
-    value: "<GitHub App ID>"
+    value: "3615796"
   - name: GITHUB_ISSUE_PRIVATE_KEY_PATH
     value: /app/github-issue-private-key.pem
   - name: GITHUB_APP_OWNER
-    value: "<org>"
+    value: "Blue-Net-Team"
   - name: GITHUB_APP_REPO
-    value: "<repo>"
+    value: "official-web2"
   - name: GITHUB_APP_APP_BASE_URL
-    value: "https://<生产域名>"
+    value: "https://www.gdou-bluenet.cn"
   - name: GITHUB_APP_WEBHOOK_SECRET
     valueFrom:
       secretKeyRef: { name: bluenet-api-secret, key: github-app-webhook-secret }
@@ -153,7 +153,7 @@ env:
 
   # ---------- GitHub App（组织邀请）----------
   - name: GITHUB_ORG_APP_ID
-    value: "<GitHub Org App ID>"
+    value: "4484778"
   - name: GITHUB_ORG_PRIVATE_KEY_PATH
     value: /app/github-org-private-key.pem
 

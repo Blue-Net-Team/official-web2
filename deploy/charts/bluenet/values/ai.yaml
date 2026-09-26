@@ -27,7 +27,7 @@ env:
 
   # ---------- 向量存储：pgvector（与主库同库，不部署 Milvus）----------
   - name: TBD_RAG_VECTOR_STORE_BACKEND
-    value: pgvector
+    value: pgsql            # 代码可选值：milvus | pgsql（pgvector 实现在 pgsql 分支）
   - name: TBD_RAG_PGVECTOR_URI
     valueFrom:
       secretKeyRef: { name: bluenet-ai-secret, key: pgvector-uri }
@@ -63,18 +63,24 @@ env:
   # ---------- Embedding / LLM / Reranker ----------
   - name: TBD_RAG_EMBEDDING_PROVIDER
     value: siliconflow
+  - name: TBD_RAG_EMBEDDING_MODEL
+    value: BAAI/bge-m3
   - name: TBD_RAG_SILICONFLOW_API_KEY
     valueFrom:
       secretKeyRef: { name: bluenet-ai-secret, key: siliconflow-api-key }
   - name: TBD_RAG_LLM_PROVIDER
-    value: siliconflow
+    value: deepseek
+  - name: TBD_RAG_LLM_MODEL
+    value: deepseek-flash
   - name: TBD_RAG_DEEPSEEK_API_KEY
     valueFrom:
       secretKeyRef: { name: bluenet-ai-secret, key: deepseek-api-key }
   - name: TBD_RAG_RERANKER_PROVIDER
     value: siliconflow
+  - name: TBD_RAG_RERANKER_MODEL
+    value: BAAI/bge-reranker-v2-m3
   - name: TBD_RAG_LLM_TEMPERATURE
-    value: "0.7"
+    value: "0.5"
   - name: TBD_RAG_LLM_TIMEOUT
     value: "60"
 
@@ -89,7 +95,9 @@ env:
   - name: TBD_RAG_INTENT_GUARD_ENABLED
     value: "true"
   - name: TBD_RAG_INTENT_LLM_PROVIDER
-    value: siliconflow
+    value: deepseek
+  - name: TBD_RAG_INTENT_LLM_MODEL
+    value: deepseek-flash
   - name: TBD_RAG_INTENT_LLM_TEMPERATURE
     value: "0.0"
   - name: TBD_RAG_INTENT_LLM_TIMEOUT

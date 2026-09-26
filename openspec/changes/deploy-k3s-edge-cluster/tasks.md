@@ -56,7 +56,7 @@
 
 ## 7. CI/CD 链路（cicd-helm-deploy spec）
 
-- [ ] 7.1 准备镜像仓库（阿里云 ACR：基础镜像与业务镜像同 host、不同 namespace），配置集群 imagePullSecret/`registries.yaml` 与 GitHub Secrets 凭据；**真实 ACR 地址与 namespace 不入库**（chart values 仅占位符，部署时用 `--set image.repository` 注入，业务侧由 `ACR_REPO`/`ACR_NAMESPACE` 提供）
+- [ ] 7.1 准备镜像仓库（阿里云 ACR：基础镜像与业务镜像同 host、不同 namespace），配置集群 `registries.yaml` 与 GitHub Secrets；**真实 ACR 地址与 namespace 不入库**（chart values 仅占位符，部署时 `--set image.repository` 注入；CI 用 `ACR_REPO`/`ACR_NAMESPACE`/`ACR_REPOSITORY`，基础镜像用 `ACR_BASE_NAMESPACE`/`ACR_BASE_REPOSITORY`）
 - [ ] 7.2 创建 CI 专用 ServiceAccount + RBAC（限 bluenet namespace deploy 权限），签发短周期 token kubeconfig，存入 GitHub 仓库 Secret（名：`KUBECONFIG`）；使用 GitHub 托管 runner（6443 公网可达 + 认证，无需 runner IP 白名单）；token 存 GitHub Secrets，泄露即吊销重建。具体步骤：
   ```bash
   # 在 master 上执行
@@ -71,9 +71,10 @@
   - kubeconfig YAML 粘贴到 GitHub Secret `KUBECONFIG`（Settings → Secrets and variables → Actions）
   - 本地留存一份于 `deploy/secrets/ci.kubeconfig` 作为备份/排查用，**必须加入 `.gitignore`**（追加 `*.kubeconfig` 规则），并验证 `git status` 不出现该文件、git 历史无泄露
   - 轮换流程：token 到期前重跑 `kubectl create token ... --duration=720h` → 更新 GitHub Secret → 零停机
-- [ ] 7.3 编写 GitHub Actions workflow（**本地已改，未提交**）：新增可复用 `cd-helm-deploy.yml`（setup-helm + kubeconfig + helm upgrade --install + rollout status）；4 个 `cd-<svc>.yml` 增加 `deploy_mode` 开关（compose|helm，默认 compose，读仓库变量 `DEPLOY_MODE`）与 helm job，compose 步骤加 `!= helm` 门禁；ACR 推送改为双 tag（`<svc>-<版本>` 不可变 + `<svc>` 浮动别名）；frontend 构建参数改为 `K8S_*/PUBLIC_*` 变量优先、旧变量兜底。**tag 不可变**；待补齐 Secrets 后验证
+- [x] 7.3 编写 GitHub Actions workflow（**本地已完成，未提交**）：新增可复用 `cd-helm-deploy.yml`（setup-helm + kubeconfig + helm upgrade --install + rollout status + history 输出，支持 Deployment/StatefulSet 与 base/services 两种镜像来源）；**4 个 `cd-<svc>.yml` 与 `cd-infra.yml` 已全面改为纯 helm，删除全部 SSH/compose/部署主机解析逻辑**；ACR 推送改为双 tag（`<svc>-<版本>` 不可变 + `<svc>` 浮动别名）；frontend 构建参数改为 `K8S_*/PUBLIC_*` 变量优先、旧变量兜底
 - [ ] 7.4 端到端验证：推送一次提交，确认集群自动更新且全程无 SSH
-- [ ] 7.5 验证 `helm rollback <release> <revision>` 回滚路径：确认历史 tag 镜像仍在 ACR、Pod 成功回到旧版本（若 CI 用固定 tag，此验证必然失败）
+- [ ] 7.6 清理 compose/SSH 时代的 GitHub Secrets（约 49 个：`*_DEPLOY_HOST_*`、`*_DEPLOY_PATH_*`、`*_DEPLOY_KEY`、`*_DEPLOY_USER`、`*_DEPLOY_PORT`、`DEPLOY_*`、`DATABASE_HOST_*`、`DATABASE_DEPLOY_*`、`RABBITMQ_HOST_*`、`RABBITMQ_DEPLOY_*`）与旧兜底 Vars（`BACKEND_HOST`、`BACKEND_PORT`、`SSL_ENABLED`、`AI_SERVICE_HOST`、`AI_SERVICE_PORT`、`AI_SERVICE_SSL_ENABLED`）；**切流稳定后执行**（旧 Secrets 是手工回滚排障时的参考）
+- [ ] 7.7 确认 cd-deploy.yml 编排器在新流程下仍正确（它调用 cd-infra/cd-api/cd-ai/cd-judge/cd-frontend 并打 `deploy/<svc>/v<version>` git tag；已验证无 SSH/compose 引用）
 
 ## 8. 可观测与收尾（cluster-observability spec）
 

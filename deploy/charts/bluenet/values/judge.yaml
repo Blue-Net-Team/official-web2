@@ -26,6 +26,20 @@ containerSecurityContext:
   privileged: true
 
 env:
+  # ---------- 数据库（judge-service 直接连库，application.yml 读取 DATABASE_*）----------
+  - name: DATABASE_HOST
+    value: bluenet-postgres
+  - name: DATABASE_PORT
+    value: "5432"
+  - name: DATABASE_NAME
+    value: db_blue_net
+  - name: DATABASE_USERNAME
+    value: postgres
+  - name: DATABASE_PASSWORD
+    valueFrom:
+      secretKeyRef: { name: bluenet-postgres, key: postgres-password }
+
+  # ---------- 沙箱 ----------
   - name: JUDGE_SANDBOX_ENGINE
     value: isolate
   - name: JUDGE_WORK_ROOT

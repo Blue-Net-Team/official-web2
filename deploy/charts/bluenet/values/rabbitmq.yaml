@@ -34,17 +34,17 @@ env:
   - name: RABBITMQ_DEFAULT_USER
     valueFrom:
       secretKeyRef:
-        name: bluenet-rabbitmq-auth
+        name: bluenet-rabbitmq
         key: username
   - name: RABBITMQ_DEFAULT_PASS
     valueFrom:
       secretKeyRef:
-        name: bluenet-rabbitmq-auth
+        name: bluenet-rabbitmq
         key: password
   - name: RABBITMQ_ERLANG_COOKIE
     valueFrom:
       secretKeyRef:
-        name: bluenet-rabbitmq-auth
+        name: bluenet-rabbitmq
         key: erlang-cookie
   - name: RABBITMQ_NODENAME
     value: "rabbit@localhost"

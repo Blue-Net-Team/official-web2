@@ -93,11 +93,17 @@ jobs:
           chmod 600 "$HOME/.kube/config"
           echo "=== 集群连通性检查 ==="
           kubectl version --client
-          kubectl get nodes --no-headers | head -6
+          kubectl auth whoami || true
+          kubectl get namespace "${{ inputs.namespace }}" >/dev/null 2>&1             && echo "namespace ${{ inputs.namespace }} 可访问"             || echo "::warning::无法访问 namespace ${{ inputs.namespace }}（检查 RBAC 绑定）"
 
-      - name: Ensure namespace
+      - name: Verify namespace exists
         run: |
-          kubectl create namespace "${{ inputs.namespace }}" --dry-run=client -o yaml | kubectl apply -f -
+          # namespace 为集群级资源，限权 SA 无权创建；由运维一次性创建（见 deploy/README.md）
+          if ! kubectl get namespace "${{ inputs.namespace }}" >/dev/null 2>&1; then
+            echo "::error::namespace ${{ inputs.namespace }} 不存在或无权访问，请先在集群创建并确认 RBAC 绑定"
+            exit 1
+          fi
+          echo "namespace ${{ inputs.namespace }} 就绪"
 
       - name: Helm upgrade --install
         env:

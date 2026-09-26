@@ -48,7 +48,7 @@ env:
   - name: POSTGRES_PASSWORD
     valueFrom:
       secretKeyRef:
-        name: bluenet-db-auth
+        name: bluenet-postgres
         key: postgres-password
   - name: PGDATA
     value: /var/lib/postgresql/data/pgdata
