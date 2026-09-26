@@ -53,9 +53,9 @@ env:
   - name: JUDGE_STORAGE_BUCKET
     value: bluenet-judge
   - name: ALIYUN_OSS_ENDPOINT
-    value: "<OSS endpoint>"
+    value: "oss-cn-beijing.aliyuncs.com"
   - name: ALIYUN_OSS_PUBLIC_ENDPOINT
-    value: "<OSS 公网 endpoint>"
+    value: "https://oss-cn-beijing.aliyuncs.com"
   - name: ALIYUN_OSS_AK
     valueFrom:
       secretKeyRef: { name: bluenet-api-secret, key: oss-ak }

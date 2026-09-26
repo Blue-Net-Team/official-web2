@@ -80,7 +80,7 @@ env:
   - name: JUDGE_STORAGE_BUCKET
     value: bluenet-judge
   - name: ALIYUN_OSS_ENDPOINT
-    value: "oss-cn-beijing-internal.aliyuncs.com"   # 见 README 说明：跨云节点可能需改为公网 endpoint
+    value: "oss-cn-beijing.aliyuncs.com"   # 见 README 说明：跨云节点可能需改为公网 endpoint
   - name: ALIYUN_OSS_PUBLIC_ENDPOINT
     value: "https://oss-cn-beijing.aliyuncs.com"
   - name: ALIYUN_OSS_AK
