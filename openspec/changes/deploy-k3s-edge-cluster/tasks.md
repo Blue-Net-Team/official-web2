@@ -14,10 +14,10 @@
 
 - [x] 2.0 配置 containerd 镜像加速/认证（`/etc/rancher/k3s/registries.yaml`）供后续拉取非离线包镜像使用；**验证必须用 `k3s crictl pull`（走 CRI，会读 registries.yaml）而非 `k3s ctr`（不读该配置）**；写完文件后必须重启 k3s/k3s-agent 才生效（实测 master 因未生效报 `insufficient_scope: authorization failed`，重写并重启后恢复）
 
-- [ ] 2.1 确认 local-path provisioner（k3s 内置）可用，创建测试 PVC 验证供给（阻塞在：未验证）
+- [x] 2.1 local-path 存储验证：三个 StatefulSet 的 PVC 全部 Bound（postgres 8Gi / redis 2Gi / rabbitmq 2Gi）
 - [x] 2.2 部署 metrics-server（k3s 内置）并验证：5 台节点均可 `kubectl top nodes`；实测坑：metrics-server 为普通 Pod，需直连节点 ExternalIP:10250，因此安全组需在 5 台节点间互放 10250/TCP（含“来源=自身”以覆盖 hairpin），且 db 节点本机防火墙（firewalld/iptables REJECT）会导致 `no route to host`
 - [ ] 2.3 部署 Kubernetes Dashboard（官方 chart），验证 port-forward 可访问且不暴露公网
-- [ ] 2.4 db 节点启用 swap（1-2G）并配置 vm.swappiness，写入节点初始化文档
+- [ ] 2.4 db 节点启用 swap（1-2G）并配置 vm.swappiness，写入节点初始化文档（待确认执行情况）
 - [x] 2.5 安全组补开 kubelet 10250/TCP（每台来源 = 其余 4 台节点公网 IP + 本机 IP，共 25 条），修复 metrics-server；并排查 db 节点本机防火墙 REJECT 导致的不通
 
 ## 3. 有状态服务（stateful-services spec）
@@ -25,10 +25,10 @@
 - [x] 3.1 通用 chart `deploy/charts/bluenet` + `values/postgres.yaml`：kind=StatefulSet + volumeClaimTemplates(local-path 8Gi) + nodeSelector(bluenet/role=db) + 保守 PG 参数（shared_buffers=256MB）+ pgvector 镜像 + 密码走 Secret 引用 + /dev/shm 内存卷
 - [x] 3.2 通用 chart + `values/redis.yaml`：StatefulSet + appendonly + maxmemory/allkeys-lru + nodeSelector(db) + 探针带密码
 - [x] 3.3 通用 chart + `values/rabbitmq.yaml`：StatefulSet + nodeSelector(mq) + 用户名/密码/erlang-cookie 走 Secret；队列/Exchange 拓扑仍由应用侧声明
-- [ ] 3.3b 创建命名空间与三个有状态服务 Secret（`bluenet-postgres` / `bluenet-redis` / `bluenet-rabbitmq`）并于集群部署验证 Pod 落在正确节点、PVC Bound
+- [x] 3.3b 命名空间与六个 Secret 创建完成；三个 infra release 经 **CD 流水线（cd-infra）** 部署成功：Pod 分别落在 db/mq 节点、PVC Bound、PG/Redis/RabbitMQ 连通性校验通过。部署中修掉两个坑：① 首次漏建 `bluenet-redis` Secret 导致 CreateContainerConfigError；② 探针 timeoutSeconds 默认 1s 导致 RabbitMQ 在 2C2G 上被 liveness 反复重启（已放宽到 10s 并加 startupProbe）
 - [ ] 3.4 编写 PG 每日备份 CronJob（pg_dump → 云 OSS，03:00 Asia/Shanghai），验证备份文件落桶
 - [ ] 3.5 编写 PG 恢复文档（新 PV + pg_restore），并在测试 namespace 做一次恢复演练
-- [ ] 3.6 数据迁移：`pg_dump` 导出 compose 环境 PG → 导入 k3s PG（含 db_blue_net 与 rag 库），抽样校验数据一致性
+- [x] 3.6 数据迁移完成（源为 GUI 导出的 SQL 备份，非 pg_dump）：先在与正式库同实例的临时库 `restore_test` 预演通过后再导入 `db_blue_net`；**备份文件的 5 类坑已修**：① vector 列维度丢失（`vector` → `vector(1024)`）② 索引带非法 `COLLATE` ③ HNSW/GIN 索引带 `NULLS FIRST/LAST` ④ 未导出序列 `OWNED BY` 与 setval（改用解析 `pg_default` 的 DO 块统一 setval）⑤ dump 内含 91 个 pgvector 扩展函数定义与扩展冲突（按语句级清理丢弃）。终态：45 表 / 42 序列 / 57 用户 / 194 权限 / 176 文件 / 19 文档+96 分段，flyway=V30，HNSW 索引 2 个，向量相似度检索实测可用；修复脚本留存 `data-bak/0927 full/fix-sequences.sql`
 
 ## 4. 无状态服务（stateless-services spec）
 
@@ -36,7 +36,7 @@
 - [x] 4.2 通用 chart + `values/frontend.yaml`：Deployment×2 + Service(NodePort 30000) + 384m/640m + anti-affinity + SSR 变量指向集群内 Service DNS
 - [x] 4.3 通用 chart + `values/ai.yaml`：Deployment×1 + Service(NodePort 30081) + 256m/512m + pgvector 后端（URI 指向同库 db_blue_net）
 - [x] 4.4 通用 chart + `values/judge.yaml`：Deployment×1 + privileged + 128m/1G + 仅 ClusterIP（无 NodePort）+ emptyDir 工作目录
-- [ ] 4.4b 创建无状态服务的 Secret（`bluenet-api-secret` / `bluenet-ai-secret` / `bluenet-github-keys`）
+- [x] 4.4b 创建无状态服务的 Secret（`bluenet-api-secret` / `bluenet-ai-secret` / `bluenet-github-keys`）已完成
 - [ ] 4.5 验证 judge 沙箱在 containerd/k3s 特权容器内正常编译运行判题（isolate 兼容性确认）
 - [ ] 4.6 验证 aliyun-oss 链路：文件上传与 judge 产物均落云 OSS bucket，集群内无 MinIO Pod
 
@@ -50,6 +50,7 @@
 
 ## 6. 入口切流（nginx + NodePort）
 
+- [ ] 6.0 **禁用 k3s 自带 Traefik**（master `/etc/rancher/k3s/config.yaml` 加 `disable: [traefik]` 并重启 k3s）：其 svclb DaemonSet 在各节点 hostPort 抢占 80/443，导致公网 443 落到 Traefik（自签默认证书），宝塔 nginx 流量被劫持
 - [ ] 6.1 将 8.146.230.107 宿主机 nginx upstream 改为节点 NodePort（api:30080、frontend:30000、ai:30081，各配 2-3 个节点 IP 兜底；`/ai/v1` 路径转发 ai NodePort）
 - [ ] 6.2 按序切流：ai-service → judge-service → api-service → frontend，每段验证通过后继续
 - [ ] 6.3 全链路回归：登录、题目提交（含文件上传 100 QPS 量级压测）、判题、AI 问答、GitHub Issue 同步

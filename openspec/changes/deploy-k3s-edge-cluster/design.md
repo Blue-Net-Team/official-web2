@@ -103,7 +103,7 @@ request 合计 ≈ 2.3G/1.6 核，池子可调度余量 ≈ 6.9G（master≈1.1G
 
 ### D5: 入口——保留宿主机 nginx + NodePort
 
-不上 ingress-controller（节省约 300-500m 内存与一套证书管理）。api/frontend/ai 暴露为 NodePort Service（如 api:30080、frontend:30000），nginx（8.146 宿主机）upstream 指向多个节点 IP:NodePort，Pod 漂移对入口透明。judge 不暴露公网（仅集群内 Service）。SSL 证书与域名管理维持现状。
+不上 ingress-controller（节省约 300-500m 内存与一套证书管理）。**因此必须禁用 k3s 自带的 Traefik**：Traefik 的 ServiceLB（klipper）会以 `svclb-traefik` DaemonSet 在**每个节点**占用宿主机 80/443（hostPort + NET_ADMIN），与承载 nginx 的节点直接冲突——表现为公网 443 返回 `TRAEFIK DEFAULT CERT`、宝塔 nginx 虽在监听但流量被劫走。禁用方式：master 的 `/etc/rancher/k3s/config.yaml` 加 `disable: [traefik]` 后重启 k3s。api/frontend/ai 暴露为 NodePort Service（如 api:30080、frontend:30000），nginx（8.146 宿主机）upstream 指向多个节点 IP:NodePort，Pod 漂移对入口透明。judge 不暴露公网（仅集群内 Service）。SSL 证书与域名管理维持现状。
 
 ### D6: Helm chart 结构与配置管理
 
