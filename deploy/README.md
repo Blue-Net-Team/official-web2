@@ -104,6 +104,32 @@ helm rollback bluenet-api <N> -n bluenet
 | `AI_SERVICE_PREFIX` | 保留 | `/ai/v1` | AI 路由前缀（构建期注入） |
 | ~~`BACKEND_HOST` / `BACKEND_PORT` / `SSL_ENABLED` / `AI_SERVICE_HOST` / `AI_SERVICE_PORT` / `AI_SERVICE_SSL_ENABLED`~~ | **待清理（6 个）** | — | 旧兜底变量，新变量就位后删除 |
 
+## Kubernetes Dashboard
+
+纯管理面板，**不暴露公网**，通过本地隧道访问：
+
+```bash
+# 安装（如已装可跳过）
+./deploy/scripts/install-dashboard.sh <ACR-ADDRESS>/<BASE-NAMESPACE>/<BASE-REPO>
+
+# 建立隧道
+kubectl -n kubernetes-dashboard port-forward svc/kubernetes-dashboard 8443:443
+# 浏览器打开 https://localhost:8443（自签证书，忽略告警）
+
+# 获取登录 token（dashboard-admin / cluster-admin，有效期 30 天）
+kubectl -n kubernetes-dashboard create token dashboard-admin --duration=720h
+```
+
+| 项 | 值 |
+|----|-----|
+| 命名空间 | `kubernetes-dashboard` |
+| 部署方式 | 官方 v2.7.0 `recommended.yaml`（自带 Deployment/Service/RBAC，无需自写） |
+| 镜像 | ACR 中转的 `dashboard-v2.7.0` / `metrics-scraper-v1.0.8` |
+| 登录 | ServiceAccount `dashboard-admin` + token（ClusterRoleBinding → cluster-admin） |
+| 指标 | 由 `metrics-server` 提供（`kubectl top` 可用） |
+
+> token 30 天过期，到期重跑上面第 3 条命令即可。
+
 ## 运维常用命令
 
 ```bash

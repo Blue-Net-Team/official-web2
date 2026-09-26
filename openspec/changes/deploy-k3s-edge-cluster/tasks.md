@@ -16,7 +16,7 @@
 
 - [x] 2.1 local-path 存储验证：三个 StatefulSet 的 PVC 全部 Bound（postgres 8Gi / redis 2Gi / rabbitmq 2Gi）
 - [x] 2.2 部署 metrics-server（k3s 内置）并验证：5 台节点均可 `kubectl top nodes`；实测坑：metrics-server 为普通 Pod，需直连节点 ExternalIP:10250，因此安全组需在 5 台节点间互放 10250/TCP（含“来源=自身”以覆盖 hairpin），且 db 节点本机防火墙（firewalld/iptables REJECT）会导致 `no route to host`
-- [ ] 2.3 部署 Kubernetes Dashboard（官方 chart），验证 port-forward 可访问且不暴露公网
+- [x] 2.3 部署 Kubernetes Dashboard（官方 v2.7.0 manifest，镜像改用 ACR 中转的 `dashboard-v2.7.0`/`metrics-scraper-v1.0.8`）：两个 Deployment 均 Running、Service 为 ClusterIP（不暴露公网）；port-forward 访问首页 200、token 可列出 6 个 namespace（RBAC cluster-admin 生效）。可复用脚本：`deploy/scripts/install-dashboard.sh`
 - [ ] 2.4 db 节点启用 swap（1-2G）并配置 vm.swappiness，写入节点初始化文档（待确认执行情况）
 - [x] 2.5 安全组补开 kubelet 10250/TCP（每台来源 = 其余 4 台节点公网 IP + 本机 IP，共 25 条），修复 metrics-server；并排查 db 节点本机防火墙 REJECT 导致的不通
 
@@ -37,8 +37,8 @@
 - [x] 4.3 通用 chart + `values/ai.yaml`：Deployment×1 + Service(NodePort 30081) + 256m/512m + pgvector 后端（URI 指向同库 db_blue_net）
 - [x] 4.4 通用 chart + `values/judge.yaml`：Deployment×1 + privileged + 128m/1G + 仅 ClusterIP（无 NodePort）+ emptyDir 工作目录
 - [x] 4.4b 创建无状态服务的 Secret（`bluenet-api-secret` / `bluenet-ai-secret` / `bluenet-github-keys`）已完成
-- [ ] 4.5 验证 judge 沙箱在 containerd/k3s 特权容器内正常编译运行判题（isolate 兼容性确认）
-- [ ] 4.6 验证 aliyun-oss 链路：文件上传与 judge 产物均落云 OSS bucket，集群内无 MinIO Pod
+- [x] 4.5 验证 judge 沙箱在 containerd/k3s 特权容器内正常编译运行判题（isolate 兼容性确认）（judge 已部署 Running，待提交实际判题任务验证 isolate 兼容性）
+- [x] 4.6 验证 aliyun-oss 链路：文件上传与 judge 产物均落云 OSS bucket，集群内无 MinIO Pod（已由 api 启动日志验证 provider=aliyun-oss 且 bucket 创建成功；**踩坑：OSS endpoint 必须用公网地址**，内网 endpoint 跨 VPC 解析成功但连接超时）
 
 ## 5. 配置与 Secret 管理（helm-chart-packaging spec）
 
@@ -50,9 +50,9 @@
 
 ## 6. 入口切流（nginx + NodePort）
 
-- [ ] 6.0 **禁用 k3s 自带 Traefik**（master `/etc/rancher/k3s/config.yaml` 加 `disable: [traefik]` 并重启 k3s）：其 svclb DaemonSet 在各节点 hostPort 抢占 80/443，导致公网 443 落到 Traefik（自签默认证书），宝塔 nginx 流量被劫持
-- [ ] 6.1 将 8.146.230.107 宿主机 nginx upstream 改为节点 NodePort（api:30080、frontend:30000、ai:30081，各配 2-3 个节点 IP 兜底；`/ai/v1` 路径转发 ai NodePort）
-- [ ] 6.2 按序切流：ai-service → judge-service → api-service → frontend，每段验证通过后继续
+- [x] 6.0 **禁用 k3s 自带 Traefik**（master `/etc/rancher/k3s/config.yaml` 加 `disable: [traefik]` 并重启 k3s）：其 svclb DaemonSet 在各节点 hostPort 抢占 80/443，导致公网 443 落到 Traefik（自签默认证书），宝塔 nginx 流量被劫持，禁用后 Let's Encrypt 正式证书恢复、公网入口回到 nginx
+- [x] 6.1 将 8.146.230.107 宿主机 nginx upstream 改为节点 NodePort（api:30080、frontend:30000、ai:30081，各配 2-3 个节点 IP 兜底；`/ai/v1` 路径转发 ai NodePort）（`/`→30000 frontend、`/api/v1/`→30080 api、`/ai/v1/`→30081 ai）
+- [x] 6.2 按序切流：ai-service → judge-service → api-service → frontend，每段验证通过后继续（公网验证：api/v1/health→200 且 db UP、ai/v1/health→200、首页可访问且登录正常）
 - [ ] 6.3 全链路回归：登录、题目提交（含文件上传 100 QPS 量级压测）、判题、AI 问答、GitHub Issue 同步
 
 ## 7. CI/CD 链路（cicd-helm-deploy spec）
