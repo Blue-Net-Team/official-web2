@@ -165,7 +165,41 @@ $env:KUBECONFIG="C:\path\to\k3s.yaml"
 kubectl get nodes
 ```
 
-## 六、常见问题
+## 六、配置镜像仓库凭据（ACR）
+
+第三方镜像（PostgreSQL/Redis/RabbitMQ/Dashboard 等）通过本地中转推送到阿里云 ACR（见 `deploy/scripts/README.md`），节点需要凭据才能拉取。
+
+**在每一个节点（master + 所有 agent）** 创建 `/etc/rancher/k3s/registries.yaml`（替换 `<ACR地址>`、`<ACR用户名>`、`<ACR密码>`）：
+
+```bash
+mkdir -p /etc/rancher/k3s && cat > /etc/rancher/k3s/registries.yaml <<'EOF'
+configs:
+  "ACR地址":
+    auth:
+      username: 用户名
+      password: 仓库登录密码
+EOF
+cat /etc/rancher/k3s/registries.yaml
+```
+
+重启使配置生效：
+
+```bash
+systemctl restart k3s        # master
+systemctl restart k3s-agent  # agent
+```
+
+验证拉取（任一节点）：
+
+```bash
+/usr/local/bin/k3s ctr images pull <ACR地址>/<命名空间>/<仓库名>:busybox-1.36
+```
+
+注意：
+- 该文件含密码，**不得提交到仓库**；换密码后需重新写入全部节点并重启
+- 不要与 `/etc/rancher/k3s/config.yaml` 混淆（后者放 k3s 启动参数，如 `flannel-external-ip`，且**仅 master 可配**）
+
+## 七、常见问题
 
 | 现象 | 排查 |
 |------|------|
@@ -175,6 +209,6 @@ kubectl get nodes
 | `kubectl get nodes` 只看到自己 | agent 未成功 join，查 agent 节点 `journalctl -u k3s-agent` |
 | 卸载 k3s | master: `/usr/local/bin/k3s-uninstall.sh`；agent: `/usr/local/bin/k3s-agent-uninstall.sh` |
 
-## 七、下一步
+## 八、下一步
 
 按 `openspec/changes/deploy-k3s-edge-cluster/tasks.md` 继续：节点打标（1.5）→ 基础组件（第 2 组）→ Helm charts（第 3、4 组）。
