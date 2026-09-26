@@ -2,12 +2,12 @@
 
 ## 1. 集群搭建与网络安全基线
 
-- [ ] 1.1 安全组开白（各云控制台逐台执行，先清理历史 0.0.0.0/0 遗留规则，再按下表添加；先开白再装集群）：
-- [ ] 1.2 编写 `deploy/k3s/install-server.sh`：k3s server 安装参数（`--flannel-backend wireguard-native`、`--node-external-ip`、`--tls-san <master公网IP>`、`--write-kubeconfig-mode 644`；kubeconfig server 地址写 master 公网 IP，供本地/CI 直接使用）
-- [ ] 1.3 编写 `deploy/k3s/install-agent.sh`：agent 加入脚本（`K3S_URL`/`K3S_TOKEN`/`--node-external-ip` 参数化）
-- [ ] 1.4 在 5 台服务器执行安装脚本，验证 `kubectl get nodes` 返回 5 个 Ready 节点（本地经公网 6443 访问）
-- [ ] 1.5 执行节点打标：`bluenet/role=db`（C）、`=mq`（B）、`=compute`（A/D/E），验证 label 查询
-- [ ] 1.6 验证跨节点 Pod 连通性（wireguard 隧道生效，无 MTU 问题）：在两台不同节点 Pod 间互 ping ClusterIP
+- [x] 1.1 安全组开白（已手工完成；规则含服务器 IP，不入库）：已清理 0.0.0.0/0 遗留规则并按设计 D2 放行（6443/SSH 公网认证、wireguard 节点互指、NodePort 仅 nginx 节点、DB/Redis/MQ 不公网、默认拒绝）
+- [x] 1.2 编写 `deploy/k3s/install-server.sh`：k3s server 安装参数（`--flannel-backend wireguard-native`、`--node-external-ip`、`--tls-san <master公网IP>`、`--write-kubeconfig-mode 644`；kubeconfig server 地址写 master 公网 IP，供本地/CI 直接使用）
+- [x] 1.3 编写 `deploy/k3s/install-agent.sh`：agent 加入脚本（`K3S_URL`/`K3S_TOKEN`/`--node-external-ip` 参数化）
+- [x] 1.4 在 5 台服务器执行安装脚本，验证 `kubectl get nodes` 返回 5 个 Ready 节点（本地经公网 6443 访问；实测坑：master 为内网 IP+EIP 需用 EIP 作 `--node-external-ip`/`--tls-san`，且老系统 cgroup v1 需 `--kubelet-arg=fail-cgroupv1=false`）
+- [x] 1.5 执行节点打标：`bluenet/role=db`（39.96.11.213）、`=mq`（8.146.230.107）、`=compute`（其余 3 台含 master），验证 label 查询
+- [ ] 1.6 验证跨节点 Pod 连通性（wireguard 隧道生效，无 MTU 问题）：在各节点 `wg show flannel-wg` 查看 peer 握手与流量；并检查 kube-system Pod 跨节点分布均 Running
 
 ## 2. 集群基础组件
 

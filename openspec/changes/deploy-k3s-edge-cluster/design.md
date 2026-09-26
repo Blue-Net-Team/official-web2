@@ -150,6 +150,7 @@ git push / release → GitHub Actions:
 | PG limit 1.2G 接近 db 节点红线，pgvector 大查询 OOM | 保守 shared_buffers；swap 兜底；Dashboard 配置内存告警；慢查询观察 |
 | judge privileged + 受信用户代码：逃逸即节点沦陷（数据节点同池） | 威胁模型已评估接受；未来如需收紧可用 seccomp/Kata（非本次范围） |
 | wireguard flannel 在部分云安全组下 MTU 问题 | 安装后跨节点 Pod 连通性验证纳入验收；必要时调 flannel MTU |
+| 存量服务器为 cgroup v1（CentOS 7 系老系统），k8s 1.35+ 默认拒绝启动 kubelet | 安装脚本统一加 `--kubelet-arg=fail-cgroupv1=false`（v1.37 仍保留该回退开关，代码删除不早于 1.38）；长期应评估迁移 cgroup v2 |
 | NodePort 直接暴露，绕过 ingress 的限流/WAF 能力 | 安全组限定仅 nginx 节点可达；nginx 层保留现有访问控制 |
 | CI 凭据（kubeconfig）泄露 = 集群失守 | 公网暴露决策下此风险上升：缓解 = CI token 绑定最小 RBAC 权限 + 短有效期 + 仅 GitHub Secrets 存储；泄露后立即吊销重建 ServiceAccount |
 | apiserver 认证绕过类 0day（历史 CVE 先例） | 6443 公网可达且无网络层白名单，唯一防线是响应速度：订阅 k3s 安全公告，CVE 修复 48h 内滚动升级 server 节点 |
