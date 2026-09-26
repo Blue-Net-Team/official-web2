@@ -1,0 +1,79 @@
+# RabbitMQ（含 management 插件）—— 有状态，钉在 bluenet/role=mq 节点
+# release: helm upgrade --install bluenet-rabbitmq deploy/charts/bluenet -f .../values/rabbitmq.yaml
+# 队列/Exchange 拓扑（algorithm.judge 等）由应用侧声明，chart 不预建
+
+fullnameOverride: bluenet-rabbitmq
+kind: StatefulSet
+containerName: rabbitmq
+replicas: 1
+persistence:
+  enabled: true
+  storageClassName: local-path
+  size: 2Gi
+  mountPath: /var/lib/rabbitmq
+
+image:
+  repository: "<ACR-ADDRESS>/<BASE-NAMESPACE>/<BASE-REPO>"
+  tag: rabbitmq-3-management
+  pullPolicy: IfNotPresent
+
+service:
+  enabled: true
+  type: NodePort        # 供 nginx 转发
+  ports:
+    - name: amqp
+      port: 5672
+      targetPort: 5672
+      nodePort: 30572
+    - name: management
+      port: 15672
+      targetPort: 15672
+      nodePort: 30672
+
+env:
+  - name: RABBITMQ_DEFAULT_USER
+    valueFrom:
+      secretKeyRef:
+        name: bluenet-rabbitmq-auth
+        key: username
+  - name: RABBITMQ_DEFAULT_PASS
+    valueFrom:
+      secretKeyRef:
+        name: bluenet-rabbitmq-auth
+        key: password
+  - name: RABBITMQ_ERLANG_COOKIE
+    valueFrom:
+      secretKeyRef:
+        name: bluenet-rabbitmq-auth
+        key: erlang-cookie
+  - name: RABBITMQ_NODENAME
+    value: "rabbit@localhost"
+  - name: TZ
+    value: Asia/Shanghai
+
+volumeMounts:
+  - name: data
+    mountPath: /var/lib/rabbitmq
+
+probes:
+  liveness:
+    exec:
+      command: ["rabbitmq-diagnostics", "-q", "ping"]
+    initialDelaySeconds: 40
+    periodSeconds: 15
+  readiness:
+    exec:
+      command: ["rabbitmq-diagnostics", "-q", "ping"]
+    initialDelaySeconds: 20
+    periodSeconds: 15
+
+nodeSelector:
+  bluenet/role: mq
+
+resources:
+  requests:
+    memory: 256Mi
+    cpu: 200m
+  limits:
+    memory: 512Mi
+    cpu: 500m

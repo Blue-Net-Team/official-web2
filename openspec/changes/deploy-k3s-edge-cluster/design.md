@@ -64,6 +64,7 @@ agent:  --node-external-ip=<AGENT公网IP>
 - NodePort（30000 段）：仅 nginx 节点（8.146.230.107）公网 IP 可访问（节点 IP 固定，无动态问题）
 - nginx 节点 80/443：对公网开放（业务入口，现状保留）
 - 所有节点禁止 0.0.0.0/0 放通上述管理端口；kubelet(10250) 等组件端口默认拒绝
+- **例外：kubelet 10250/TCP 需在 5 台节点间互放**（来源 = 其余 4 台节点公网 IP，共 20 条）。原因：metrics-server 作为普通 Pod 只能直连节点 ExternalIP:10250 抓取指标（k3s 的 agent 反向 WebSocket 隧道仅适用于 apiserver 的 exec/logs 场景）。kubelet 默认关闭匿名访问、需 webhook 认证，暴露面限于 5 个已知节点 IP。若不需要 `kubectl top` 与 Dashboard 指标，可用 `--disable metrics-server` 并去掉这些规则
 
 安装参数：`--flannel-backend wireguard-native --node-external-ip <公网IP> --tls-san <master公网IP>`；agent 以 `K3S_URL=https://<master>:6443` 加入。备选管理面方案（动态 IP 问题）：曾评估 Tailscale overlay（6443/22 仅 tailnet 可达）以规避运维 IP 动态变化，因部署复杂度被否；最终决策为公网暴露 + 强认证。
 
@@ -151,7 +152,7 @@ git push / release → GitHub Actions:
 
 ### D9: ai-service 向量检索走 pgvector
 
-`TBD_RAG_VECTOR_STORE_BACKEND=pgvector`，`TBD_RAG_PGVECTOR_URI` 指向集群内 PG Service（`db_blue_net` 之外建议独立 `rag` 库，便于备份粒度区分）；不部署 Milvus。ai-service 无状态、无特权，普通弹性 Pod。
+`TBD_RAG_VECTOR_STORE_BACKEND=pgvector`，`TBD_RAG_PGVECTOR_URI` 指向集群内 PG Service 的 `db_blue_net` 库；不部署 Milvus，也**不创建独立 rag 库**（已核实：RAG 向量表由主 API 服务的 Flyway migration `V17__add_rag_vector_tables.sql` 在 `db_blue_net` 中创建，ai-service 与主服务共用同一库）。ai-service 无状态、无特权，普通弹性 Pod。
 
 ## Risks / Trade-offs
 
@@ -163,7 +164,8 @@ git push / release → GitHub Actions:
 | judge privileged + 受信用户代码：逃逸即节点沦陷（数据节点同池） | 威胁模型已评估接受；未来如需收紧可用 seccomp/Kata（非本次范围） |
 | wireguard flannel 在部分云安全组下 MTU 问题 | 安装后跨节点 Pod 连通性验证纳入验收；必要时调 flannel MTU |
 | 存量服务器为 cgroup v1（CentOS 7 系老系统），k8s 1.35+ 默认拒绝启动 kubelet | 安装脚本统一加 `--kubelet-arg=fail-cgroupv1=false`（v1.37 仍保留该回退开关，代码删除不早于 1.38）；长期应评估迁移 cgroup v2 |
-| 节点为“VPC 内网 IP + 公网 IP”模式且 VPC 间不互通，k8s Endpoints 默认登记内网 IP（跨节点访问 Service 可能不可达） | 已按官方多云模式启用 `--flannel-external-ip`；实施后需实测跨节点 Pod↔Pod 与 ClusterIP 连通性，必要时补加 `--node-ip=<公网IP>` 使 InternalIP=公网 IP |
+| 节点为“VPC 内网 IP + 公网 IP”模式且 VPC 间不互通，k8s Endpoints 默认登记内网 IP | 已按官方多云模式启用 `--flannel-external-ip`；实测跨节点 Pod↔Pod、DNS、ClusterIP 均正常 |
+| metrics-server 无法抓取 kubelet 指标（`Failed to scrape node ... :10250 timeout`） | 需在 5 台节点间互放 10250/TCP（见 D2 例外）；若仍报 TLS 校验失败，给 metrics-server 加 `--kubelet-insecure-tls` |
 | NodePort 直接暴露，绕过 ingress 的限流/WAF 能力 | 安全组限定仅 nginx 节点可达；nginx 层保留现有访问控制 |
 | CI 凭据（kubeconfig）泄露 = 集群失守 | 公网暴露决策下此风险上升：缓解 = CI token 绑定最小 RBAC 权限 + 短有效期 + 仅 GitHub Secrets 存储；泄露后立即吊销重建 ServiceAccount |
 | apiserver 认证绕过类 0day（历史 CVE 先例） | 6443 公网可达且无网络层白名单，唯一防线是响应速度：订阅 k3s 安全公告，CVE 修复 48h 内滚动升级 server 节点 |
@@ -181,5 +183,5 @@ git push / release → GitHub Actions:
 
 1. **镜像仓库选型**：阿里云 ACR（推荐，国内拉取快）vs ghcr（免额外服务但国内不稳）——需用户提供/确认仓库凭据
 2. **Secret 管理**：sops/age 加密入库（推荐，可审计）vs CI 纯 Secrets 注入（简单但集群内变更不可审计）——倾向 sops
-3. **ai-service 的 pgvector 库**：复用 `db_blue_net` 单库 vs 独立 `rag` 库——倾向独立库便于备份粒度
+3. ~~ai-service 的 pgvector 库~~ → **已决策**：复用 `db_blue_net` 单库（RAG 向量表由主服务 Flyway 管理，无独立 rag 库）
 4. **master 迁移评估**：server 迁至与多数节点同云（阿里云 182.92.241.91 或 123.56.253.250）以降低 etcd 公网延迟——实施时实测后决定，非阻塞项

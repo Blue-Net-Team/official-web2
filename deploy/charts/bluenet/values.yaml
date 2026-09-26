@@ -1,0 +1,106 @@
+# 通用 chart 默认值
+# 实际部署时用 -f values/<服务>.yaml 覆盖；此处仅声明全部可用字段与默认值。
+# 设计依据：openspec/changes/deploy-k3s-edge-cluster/design.md
+#
+# 用法（每服务一个 release）：
+#   helm upgrade --install bluenet-api deploy/charts/bluenet -f deploy/charts/bluenet/values/api.yaml
+
+# 资源名前缀，默认取 release 名（由 -f 的 values 文件给出 fullnameOverride 更直观）
+fullnameOverride: ""
+
+# 工作负载类型：Deployment | StatefulSet | CronJob
+kind: Deployment
+
+# 容器名（默认与资源名一致）
+containerName: ""
+
+replicas: 1
+
+strategy: {}
+#  StatefulSet:
+#    type: RollingUpdate
+#  Deployment:
+#    rollingUpdate: { maxSurge: 0, maxUnavailable: 1 }
+
+podManagementPolicy: ""
+serviceName: ""          # StatefulSet 的 governing service（默认用资源名）
+
+image:
+  repository: "<ACR-ADDRESS>/<NAMESPACE>/<REPOSITORY>"  # 例：crpi-xxx.cn-beijing.personal.cr.aliyuncs.com/my-ns/my-repo
+  tag: "<TAG>"                    # 约定：不可变 tag，格式 <服务名>-<git短SHA>，如 api-a1b2c3d
+  digest: ""                      # 可选：sha256:...；填了则锁定内容哈希（防 tag 被重新推送）
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+
+command: []
+args: []
+
+# 服务端口（同时用于 Service 与容器 ports）
+service:
+  enabled: false
+  type: ClusterIP         # ClusterIP | NodePort | LoadBalancer
+  annotations: {}
+  ports: []
+  #  - name: http
+  #    port: 8080
+  #    targetPort: 8080
+  #    nodePort: 30080     # 仅 type=NodePort
+  #    protocol: TCP
+
+# 环境变量（明文/引用 Secret 均在此声明）
+env: []
+#  - name: JWT_SECRET
+#    valueFrom:
+#      secretKeyRef: { name: bluenet-api-secret, key: jwt-secret }
+envFrom: []
+
+# 建议：密码/密钥统一由集群外预建 Secret，chart 只引用（不写进 git）
+secret:
+  enabled: false
+  name: ""
+  stringData: {}
+
+securityContext: {}          # Pod 级
+containerSecurityContext: {} # 容器级（judge 用 privileged: true）
+
+resources:
+  requests: {}
+  limits: {}
+nodeSelector: {}
+tolerations: []
+affinity: {}
+topologySpreadConstraints: []
+priorityClassName: ""
+terminationGracePeriodSeconds: 30
+
+probes:
+  liveness: {}
+  readiness: {}
+  startup: {}
+
+volumes: []
+volumeMounts: []
+initContainers: []
+
+# 有状态服务的持久化（仅 kind=StatefulSet 使用 volumeClaimTemplates）
+persistence:
+  enabled: false
+  storageClassName: local-path
+  size: 8Gi
+  mountPath: /data
+  accessMode: ReadWriteOnce
+
+# kind=CronJob 时的调度配置
+cronjob:
+  schedule: "0 3 * * *"
+  timeZone: Asia/Shanghai
+  concurrencyPolicy: Forbid
+  restartPolicy: OnFailure
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  backoffLimit: 2
+
+podAnnotations: {}
+podLabels: {}
+extraLabels: {}

@@ -1,0 +1,207 @@
+# api-service（无状态，弹性调度，NodePort 30080 供 nginx 转发）
+# release: helm upgrade --install bluenet-api deploy/charts/bluenet -f .../values/api.yaml
+#
+# 迁移自 docker-compose 的 x-api-service-env；敏感项统一引用预建 Secret（不在 git 中）
+
+fullnameOverride: bluenet-api
+kind: Deployment
+containerName: api
+replicas: 2
+
+image:
+  repository: "<ACR-ADDRESS>/<SERVICE-NAMESPACE>/<SERVICE-REPO>"
+  tag: api-<VERSION>            # 不可变 tag：<服务名>-<trigger版本号>，由 CI 注入
+  pullPolicy: IfNotPresent
+
+strategy:
+  rollingUpdate:
+    maxSurge: 0
+    maxUnavailable: 1
+
+service:
+  enabled: true
+  type: NodePort
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
+      nodePort: 30080
+
+# 无节点约束：由 scheduler 按 request/limit 自由装箱（仅副本间尽量分散）
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          topologyKey: kubernetes.io/hostname
+          labelSelector:
+            matchLabels:
+              app.kubernetes.io/name: bluenet-api
+              app.kubernetes.io/instance: bluenet-api
+
+env:
+  # ---------- 数据库 / 缓存 / 队列（Service DNS 发现）----------
+  - name: DATABASE_HOST
+    value: bluenet-postgres
+  - name: DATABASE_PORT
+    value: "5432"
+  - name: DATABASE_NAME
+    value: db_blue_net
+  - name: DATABASE_USERNAME
+    value: postgres
+  - name: DATABASE_PASSWORD
+    valueFrom:
+      secretKeyRef: { name: bluenet-postgres, key: postgres-password }
+
+  - name: REDIS_HOST
+    value: bluenet-redis
+  - name: REDIS_PORT
+    value: "6379"
+  - name: REDIS_PASSWORD
+    valueFrom:
+      secretKeyRef: { name: bluenet-redis, key: redis-password }
+
+  - name: RABBITMQ_HOST
+    value: bluenet-rabbitmq
+  - name: RABBITMQ_PORT
+    value: "5672"
+  - name: RABBITMQ_USERNAME
+    valueFrom:
+      secretKeyRef: { name: bluenet-rabbitmq, key: username }
+  - name: RABBITMQ_PASSWORD
+    valueFrom:
+      secretKeyRef: { name: bluenet-rabbitmq, key: password }
+
+  # ---------- 对象存储（云 OSS，无 MinIO）----------
+  - name: STORAGE_PROVIDER
+    value: aliyun-oss
+  - name: STORAGE_BUCKET
+    value: bluenet
+  - name: JUDGE_STORAGE_BUCKET
+    value: bluenet-judge
+  - name: ALIYUN_OSS_ENDPOINT
+    value: "<OSS 内网/外网 endpoint>"
+  - name: ALIYUN_OSS_PUBLIC_ENDPOINT
+    value: "<OSS 公网 endpoint>"
+  - name: ALIYUN_OSS_AK
+    valueFrom:
+      secretKeyRef: { name: bluenet-api-secret, key: oss-ak }
+  - name: ALIYUN_OSS_SK
+    valueFrom:
+      secretKeyRef: { name: bluenet-api-secret, key: oss-sk }
+
+  # ---------- 认证 / Cookie ----------
+  - name: JWT_SECRET
+    valueFrom:
+      secretKeyRef: { name: bluenet-api-secret, key: jwt-secret }
+  - name: COOKIE_DOMAIN
+    value: "<生产域名>"
+  - name: COOKIE_SECURE
+    value: "true"
+  - name: COOKIE_SAME_SITE
+    value: Lax
+  - name: COOKIE_MAX_AGE
+    value: "43200"
+  - name: CORS_ALLOWED_ORIGINS
+    value: "https://<生产域名>"
+
+  # ---------- 系统账号 / 邮件 ----------
+  - name: SYSTEM_USER_USERNAME
+    value: system
+  - name: SYSTEM_USER_PASSWORD
+    valueFrom:
+      secretKeyRef: { name: bluenet-api-secret, key: system-user-password }
+  - name: SYSTEM_USER_STUDENT_ID
+    value: "000000000000"
+  - name: MAIL_USERNAME
+    value: "<邮箱账号>"
+  - name: MAIL_PASSWORD
+    valueFrom:
+      secretKeyRef: { name: bluenet-api-secret, key: mail-password }
+
+  # ---------- GitHub OAuth ----------
+  - name: GITHUB_CLIENT_ID
+    value: "<GitHub OAuth Client ID>"
+  - name: GITHUB_CLIENT_SECRET
+    valueFrom:
+      secretKeyRef: { name: bluenet-api-secret, key: github-client-secret }
+  - name: GITHUB_OAUTH_CALLBACK_BASE_URL
+    value: "https://<生产域名>"
+  - name: GITHUB_FRONTEND_BASE_URL
+    value: "https://<生产域名>"
+
+  # ---------- GitHub App（Bug 同步）----------
+  - name: GITHUB_ISSUE_APP_ID
+    value: "<GitHub App ID>"
+  - name: GITHUB_ISSUE_PRIVATE_KEY_PATH
+    value: /app/github-issue-private-key.pem
+  - name: GITHUB_APP_OWNER
+    value: "<org>"
+  - name: GITHUB_APP_REPO
+    value: "<repo>"
+  - name: GITHUB_APP_APP_BASE_URL
+    value: "https://<生产域名>"
+  - name: GITHUB_APP_WEBHOOK_SECRET
+    valueFrom:
+      secretKeyRef: { name: bluenet-api-secret, key: github-app-webhook-secret }
+  - name: GITHUB_APP_POLLING_ENABLED
+    value: "true"
+  - name: GITHUB_APP_POLLING_SINCE_DAYS
+    value: "7"
+  - name: GITHUB_ISSUE_SYNC_CRON
+    value: "0 0 3 * * *"
+
+  # ---------- GitHub App（组织邀请）----------
+  - name: GITHUB_ORG_APP_ID
+    value: "<GitHub Org App ID>"
+  - name: GITHUB_ORG_PRIVATE_KEY_PATH
+    value: /app/github-org-private-key.pem
+
+  # ---------- 其他 ----------
+  - name: WPS_BIND_CODE
+    valueFrom:
+      secretKeyRef: { name: bluenet-api-secret, key: wps-bind-code }
+  - name: ELIMINATED_USER_DISABLE_CRON
+    value: "0 0 3 * * *"
+  - name: ORPHAN_FILE_CLEANUP_CRON
+    value: "0 0 2 * * *"
+  - name: TZ
+    value: Asia/Shanghai
+
+# GitHub App 私钥：由 Secret 挂载为文件（应用只认路径，不改代码）
+volumes:
+  - name: github-keys
+    secret:
+      secretName: bluenet-github-keys
+      defaultMode: 0400
+volumeMounts:
+  - name: github-keys
+    mountPath: /app/github-issue-private-key.pem
+    subPath: github-issue-private-key.pem
+    readOnly: true
+  - name: github-keys
+    mountPath: /app/github-org-private-key.pem
+    subPath: github-org-private-key.pem
+    readOnly: true
+
+probes:
+  liveness:
+    httpGet: { path: /api/v1/health, port: 8080 }
+    initialDelaySeconds: 60
+    periodSeconds: 10
+  readiness:
+    httpGet: { path: /api/v1/health, port: 8080 }
+    initialDelaySeconds: 40
+    periodSeconds: 10
+  startup:
+    httpGet: { path: /api/v1/health, port: 8080 }
+    failureThreshold: 30
+    periodSeconds: 5
+
+resources:
+  requests:
+    memory: 512Mi
+    cpu: 250m
+  limits:
+    memory: 1Gi
+    cpu: 500m

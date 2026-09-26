@@ -1,0 +1,124 @@
+# ai-service（FastAPI + pgvector，无状态，NodePort 30081 供 nginx /ai/v1 转发）
+# release: helm upgrade --install bluenet-ai deploy/charts/bluenet -f .../values/ai.yaml
+
+fullnameOverride: bluenet-ai
+kind: Deployment
+containerName: ai
+replicas: 1
+
+image:
+  repository: "<ACR-ADDRESS>/<SERVICE-NAMESPACE>/<SERVICE-REPO>"
+  tag: ai-<VERSION>            # 不可变 tag：<服务名>-<trigger版本号>，由 CI 注入
+  pullPolicy: IfNotPresent
+
+service:
+  enabled: true
+  type: NodePort
+  ports:
+    - name: http
+      port: 8000
+      targetPort: 8000
+      nodePort: 30081
+
+env:
+  # ---------- 后端 API（工具调用）----------
+  - name: TBD_RAG_BACKEND_API_URL
+    value: http://bluenet-api:8080
+
+  # ---------- 向量存储：pgvector（与主库同库，不部署 Milvus）----------
+  - name: TBD_RAG_VECTOR_STORE_BACKEND
+    value: pgvector
+  - name: TBD_RAG_PGVECTOR_URI
+    valueFrom:
+      secretKeyRef: { name: bluenet-ai-secret, key: pgvector-uri }
+  - name: TBD_RAG_PGVECTOR_POOL_SIZE
+    value: "10"
+  - name: TBD_RAG_TAGS_COLLECTION_NAME
+    value: tags_collection
+  - name: TBD_RAG_CHUNKS_COLLECTION_NAME
+    value: chunks_collection
+  - name: TBD_RAG_DOCS_COLLECTION_NAME
+    value: docs_collection
+  - name: TBD_RAG_VECTOR_DIMENSION
+    value: "1024"
+  - name: TBD_RAG_VECTOR_INDEX_TYPE
+    value: HNSW
+  - name: TBD_RAG_VECTOR_METRIC_TYPE
+    value: COSINE
+  - name: TBD_RAG_CHUNK_MAX_TOKENS
+    value: "4000"
+
+  # ---------- RabbitMQ ----------
+  - name: TBD_RAG_RABBITMQ_HOST
+    value: bluenet-rabbitmq
+  - name: TBD_RAG_RABBITMQ_PORT
+    value: "5672"
+  - name: TBD_RAG_RABBITMQ_USERNAME
+    valueFrom:
+      secretKeyRef: { name: bluenet-rabbitmq, key: username }
+  - name: TBD_RAG_RABBITMQ_PASSWORD
+    valueFrom:
+      secretKeyRef: { name: bluenet-rabbitmq, key: password }
+
+  # ---------- Embedding / LLM / Reranker ----------
+  - name: TBD_RAG_EMBEDDING_PROVIDER
+    value: siliconflow
+  - name: TBD_RAG_SILICONFLOW_API_KEY
+    valueFrom:
+      secretKeyRef: { name: bluenet-ai-secret, key: siliconflow-api-key }
+  - name: TBD_RAG_LLM_PROVIDER
+    value: siliconflow
+  - name: TBD_RAG_DEEPSEEK_API_KEY
+    valueFrom:
+      secretKeyRef: { name: bluenet-ai-secret, key: deepseek-api-key }
+  - name: TBD_RAG_RERANKER_PROVIDER
+    value: siliconflow
+  - name: TBD_RAG_LLM_TEMPERATURE
+    value: "0.7"
+  - name: TBD_RAG_LLM_TIMEOUT
+    value: "60"
+
+  # ---------- 对话轨迹 ----------
+  - name: TBD_RAG_TRACE_ENABLED
+    value: "true"
+  - name: TBD_RAG_TRACE_DB_URI
+    valueFrom:
+      secretKeyRef: { name: bluenet-ai-secret, key: pgvector-uri }
+
+  # ---------- 意图识别 / 安全围栏 ----------
+  - name: TBD_RAG_INTENT_GUARD_ENABLED
+    value: "true"
+  - name: TBD_RAG_INTENT_LLM_PROVIDER
+    value: siliconflow
+  - name: TBD_RAG_INTENT_LLM_TEMPERATURE
+    value: "0.0"
+  - name: TBD_RAG_INTENT_LLM_TIMEOUT
+    value: "30"
+
+  # ---------- 编码 ----------
+  - name: LANG
+    value: C.UTF-8
+  - name: LC_ALL
+    value: C.UTF-8
+  - name: PYTHONUTF8
+    value: "1"
+  - name: TZ
+    value: Asia/Shanghai
+
+probes:
+  liveness:
+    httpGet: { path: /ai/v1/health, port: 8000 }
+    initialDelaySeconds: 30
+    periodSeconds: 10
+  readiness:
+    httpGet: { path: /ai/v1/health, port: 8000 }
+    initialDelaySeconds: 15
+    periodSeconds: 10
+
+resources:
+  requests:
+    memory: 256Mi
+    cpu: 200m
+  limits:
+    memory: 512Mi
+    cpu: 500m

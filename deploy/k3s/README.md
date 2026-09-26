@@ -3,6 +3,8 @@
 BlueNet 边缘集群（5 节点 k3s）安装文档。适用于跨云账号、仅公网互通的 2C2G 服务器。
 
 > 服务器 IP、登录方式等敏感信息不入库，请以各云控制台与运维记录为准。前置条件：**安全组已按设计 D2 开白**（6443/SSH 公网认证、**51820/UDP**（注意是 UDP 不是 TCP）节点互指、NodePort 30000-32767 仅 nginx 节点、5432/6379/5672/15672 不公网、默认拒绝）。
+>
+> 另需 **10250/TCP 在 5 台节点间互放**（来源为其余 4 台节点公网 IP）：否则 metrics-server 无法抓取 kubelet 指标，`kubectl top` 与 Dashboard 指标不可用。
 
 ## 一、安装前准备（全部节点执行）
 
@@ -192,8 +194,11 @@ systemctl restart k3s-agent  # agent
 验证拉取（任一节点）：
 
 ```bash
-/usr/local/bin/k3s ctr images pull <ACR地址>/<命名空间>/<仓库名>:busybox-1.36
+sudo /usr/local/bin/k3s crictl pull <ACR地址>/<命名空间>/<仓库名>:busybox-1.36
 ```
+
+> **必须用 `crictl` 而不是 `ctr` 验证**：`k3s ctr images pull` 不读 k3s 生成的 registry 认证配置，会给出误导性结果。
+> 常见错误 `insufficient_scope: authorization failed` = 凭据未生效（文件内容错、或写完未重启 k3s/k3s-agent）。
 
 注意：
 - 该文件含密码，**不得提交到仓库**；换密码后需重新写入全部节点并重启

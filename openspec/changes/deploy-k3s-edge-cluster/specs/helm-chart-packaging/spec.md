@@ -24,11 +24,15 @@
 - **THEN** 成功解析到 postgres Service ClusterIP 且连接成功
 
 ### Requirement: 镜像与标签约定
-chart 的 image repository/tag MUST 参数化，tag 默认指向发布版本（CI 注入），MUST NOT 使用 `latest` 作为默认发布标签。
+chart 的 image repository/tag MUST 参数化，tag MUST 为不可变标签（约定 `<服务名>-<git短SHA>`），MUST NOT 使用 `latest` 或固定同名 tag 作为发布标签；CI SHOULD 同时写入 image digest 以锁定内容。
 
 #### Scenario: 发布指定版本
-- **WHEN** CI 以 `--set image.tag=<git-sha>` 执行 upgrade
-- **THEN** Deployment 滚动更新至该镜像版本
+- **WHEN** CI 以 `--set image.tag=<服务名>-<git短SHA>` 执行 upgrade
+- **THEN** Deployment 滚动更新至该镜像版本，且该 tag 在镜像仓库中唯一、不被后续构建覆盖
+
+#### Scenario: 回滚到历史版本
+- **WHEN** 新版本异常并执行 `helm rollback <release> <revision>`
+- **THEN** 渲染出的 image.tag 回退到该 revision 记录的历史 tag，且该镜像在仓库中仍可拉取，Pod 成功回到旧版本
 
 ### Requirement: Secret 版本化管理
 敏感配置 SHOULD 以 sops/age 加密文件存于仓库（deploy/secrets/），解密仅在 CI 中进行；若采用 CI 纯注入方案，集群内 Secret 的变更 MUST 可追溯到 CI 运行记录。

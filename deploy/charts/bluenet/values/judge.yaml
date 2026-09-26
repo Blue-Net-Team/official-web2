@@ -1,0 +1,124 @@
+# judge-service（isolate 沙箱，privileged 容器，仅集群内 ClusterIP，不暴露公网）
+# release: helm upgrade --install bluenet-judge deploy/charts/bluenet -f .../values/judge.yaml
+#
+# 调度：与其他无状态服务同权，不钉节点（威胁模型已评估：仅受信登录用户可提交代码）
+
+fullnameOverride: bluenet-judge
+kind: Deployment
+containerName: judge
+replicas: 1
+
+image:
+  repository: "<ACR-ADDRESS>/<SERVICE-NAMESPACE>/<SERVICE-REPO>"
+  tag: judge-<VERSION>            # 不可变 tag：<服务名>-<trigger版本号>，由 CI 注入
+  pullPolicy: IfNotPresent
+
+service:
+  enabled: true
+  type: ClusterIP      # 内部服务：api-service 通过 DNS 调用，公网不可达
+  ports:
+    - name: http
+      port: 8090
+      targetPort: 8090
+
+# isolate 沙箱需要特权（设计已接受该风险）
+containerSecurityContext:
+  privileged: true
+
+env:
+  - name: JUDGE_SANDBOX_ENGINE
+    value: isolate
+  - name: JUDGE_WORK_ROOT
+    value: /var/lib/bluenet-judge/work
+  - name: JUDGE_SERVER_PORT
+    value: "8090"
+
+  # 存储：云 OSS（与 api-service 共用 bucket 约定）
+  - name: STORAGE_PROVIDER
+    value: aliyun-oss
+  - name: JUDGE_STORAGE_BUCKET
+    value: bluenet-judge
+  - name: ALIYUN_OSS_ENDPOINT
+    value: "<OSS endpoint>"
+  - name: ALIYUN_OSS_PUBLIC_ENDPOINT
+    value: "<OSS 公网 endpoint>"
+  - name: ALIYUN_OSS_AK
+    valueFrom:
+      secretKeyRef: { name: bluenet-api-secret, key: oss-ak }
+  - name: ALIYUN_OSS_SK
+    valueFrom:
+      secretKeyRef: { name: bluenet-api-secret, key: oss-sk }
+
+  # RabbitMQ（判题队列）
+  - name: RABBITMQ_HOST
+    value: bluenet-rabbitmq
+  - name: RABBITMQ_PORT
+    value: "5672"
+  - name: RABBITMQ_USERNAME
+    valueFrom:
+      secretKeyRef: { name: bluenet-rabbitmq, key: username }
+  - name: RABBITMQ_PASSWORD
+    valueFrom:
+      secretKeyRef: { name: bluenet-rabbitmq, key: password }
+  - name: JUDGE_RABBITMQ_EXCHANGE
+    value: algorithm.judge
+  - name: JUDGE_FORMAL_QUEUE
+    value: algorithm.judge.formal
+  - name: JUDGE_TEST_DATA_QUEUE
+    value: algorithm.judge.test-data
+  - name: JUDGE_RUN_QUEUE
+    value: algorithm.judge.run
+  - name: JUDGE_FORMAL_ROUTING_KEY
+    value: judge.formal
+  - name: JUDGE_TEST_DATA_ROUTING_KEY
+    value: judge.test-data
+  - name: JUDGE_RUN_ROUTING_KEY
+    value: judge.run
+
+  # 沙箱资源限制
+  - name: JUDGE_CPU_TIME_SECONDS
+    value: "2"
+  - name: JUDGE_WALL_TIME_SECONDS
+    value: "5"
+  - name: JUDGE_MEMORY_LIMIT_MB
+    value: "256"
+  - name: JUDGE_PROCESS_LIMIT
+    value: "32"
+  - name: JUDGE_OUTPUT_LIMIT_KB
+    value: "1024"
+  - name: JUDGE_GENERATED_FILE_LIMIT_MB
+    value: "64"
+  - name: JUDGE_NETWORK_DISABLED
+    value: "true"
+
+  - name: LANG
+    value: C.UTF-8
+  - name: TZ
+    value: Asia/Shanghai
+
+volumes:
+  - name: judge-work
+    emptyDir: {}
+
+volumeMounts:
+  - name: judge-work
+    mountPath: /var/lib/bluenet-judge/work
+
+probes:
+  liveness:
+    httpGet: { path: /api/v1/judge/health, port: 8090 }
+    initialDelaySeconds: 60
+    periodSeconds: 10
+  readiness:
+    httpGet: { path: /api/v1/judge/health, port: 8090 }
+    initialDelaySeconds: 30
+    periodSeconds: 10
+
+# 大部分时间空闲：request 给低，burst 靠 limit 与节点空闲容量
+resources:
+  requests:
+    memory: 128Mi
+    cpu: 200m
+  limits:
+    memory: 1Gi
+    cpu: "1"

@@ -1,0 +1,6 @@
+apiVersion: v2
+name: bluenet
+description: BlueNet 通用工作负载 chart —— 一个 chart 覆盖全部服务，每服务一份 values、一个 release
+type: application
+version: 0.1.0
+appVersion: "1.0.0"

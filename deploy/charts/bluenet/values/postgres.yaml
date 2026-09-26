@@ -1,0 +1,93 @@
+# PostgreSQL (pgvector) —— 有状态，钉在 bluenet/role=db 节点
+# release: helm upgrade --install bluenet-postgres deploy/charts/bluenet -f .../values/postgres.yaml
+
+fullnameOverride: bluenet-postgres
+kind: StatefulSet
+containerName: postgres
+replicas: 1
+persistence:
+  enabled: true
+  storageClassName: local-path
+  size: 8Gi
+  mountPath: /var/lib/postgresql/data
+
+image:
+  repository: "<ACR-ADDRESS>/<BASE-NAMESPACE>/<BASE-REPO>"
+  tag: pgvector-pg17
+  pullPolicy: IfNotPresent
+
+service:
+  enabled: true
+  type: NodePort        # 供 nginx 转发（公网不直接暴露节点 IP）
+  headless: false
+  ports:
+    - name: postgres
+      port: 5432
+      targetPort: 5432
+      nodePort: 30432
+
+args:
+  - "-c"
+  - "shared_buffers=256MB"
+  - "-c"
+  - "max_connections=100"
+  - "-c"
+  - "work_mem=8MB"
+  - "-c"
+  - "maintenance_work_mem=64MB"
+  - "-c"
+  - "effective_cache_size=768MB"
+  - "-c"
+  - "log_min_duration_statement=1000"
+
+env:
+  - name: POSTGRES_DB
+    value: db_blue_net            # RAG 向量表由主服务 Flyway 在同库创建，无需独立 rag 库
+  - name: POSTGRES_USER
+    value: postgres
+  - name: POSTGRES_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: bluenet-db-auth
+        key: postgres-password
+  - name: PGDATA
+    value: /var/lib/postgresql/data/pgdata
+  - name: TZ
+    value: Asia/Shanghai
+
+volumeMounts:
+  - name: data
+    mountPath: /var/lib/postgresql/data
+  - name: shm
+    mountPath: /dev/shm
+
+volumes:
+  - name: shm
+    emptyDir:
+      medium: Memory
+      sizeLimit: 256Mi
+
+probes:
+  liveness:
+    exec:
+      command: ["sh", "-c", "pg_isready -U postgres -d db_blue_net"]
+    initialDelaySeconds: 20
+    periodSeconds: 10
+  readiness:
+    exec:
+      command: ["sh", "-c", "pg_isready -U postgres -d db_blue_net"]
+    initialDelaySeconds: 10
+    periodSeconds: 10
+
+nodeSelector:
+  bluenet/role: db
+
+resources:
+  requests:
+    memory: 512Mi
+    cpu: 300m
+  limits:
+    memory: 1200Mi
+    cpu: "1"
+
+terminationGracePeriodSeconds: 60
