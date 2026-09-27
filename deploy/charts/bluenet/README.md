@@ -18,8 +18,13 @@ bluenet/
 │   ├── service.yaml         # ClusterIP / NodePort / headless
 │   └── secret.yaml          # 可选，仅本地冒烟用；生产一律用预建 Secret 引用
 └── values/
-    ├── postgres.yaml  ├── redis.yaml  ├── rabbitmq.yaml
-    ├── api.yaml       ├── frontend.yaml  ├── ai.yaml  └── judge.yaml
+    ├── postgres.yaml  
+    ├── redis.yaml  
+    ├── rabbitmq.yaml
+    ├── api.yaml       
+    ├── frontend.yaml  
+    ├── ai.yaml  
+    └── judge.yaml
 ```
 
 ## 镜像地址：部署时注入，不入库
