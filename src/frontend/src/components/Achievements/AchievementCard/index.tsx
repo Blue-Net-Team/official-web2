@@ -4,6 +4,7 @@ import { AWARD_LEVEL_LABELS } from '@/apis/schema/enumerate'
 import { TrophyOutlined, BulbOutlined, FileTextOutlined, UserOutlined } from '@ant-design/icons'
 import Image from 'next/image'
 import Link from 'next/link'
+import { useState } from 'react'
 import { API_BASE_URL } from '@/apis/config'
 
 interface AchievementCardProps {
@@ -11,9 +12,12 @@ interface AchievementCardProps {
 }
 
 const AchievementCard = ({ achievement }: AchievementCardProps) => {
-  const logoImageUrl = achievement.competitionLogoFileId
-    ? `${API_BASE_URL}/file/download/${achievement.competitionLogoFileId}`
-    : null
+  const [logoLoadFailed, setLogoLoadFailed] = useState(false)
+
+  const logoImageUrl =
+    !logoLoadFailed && achievement.competitionLogoFileId
+      ? `${API_BASE_URL}/file/download/${achievement.competitionLogoFileId}`
+      : null
 
   const awardLevelColor: Record<string, string> = {
     national: 'gold',
@@ -69,15 +73,21 @@ const AchievementCard = ({ achievement }: AchievementCardProps) => {
     >
       <Flex align="start" gap={16}>
         <div
-          className="w-14 h-14 rounded-xl max-md:w-12 max-md:h-12 max-md:rounded-lg flex items-center justify-center shrink-0 overflow-hidden"
-          style={{ background: typeGradient[achievement.type] || typeGradient.competition }}
+          className="relative w-14 h-14 rounded-xl max-md:w-12 max-md:h-12 max-md:rounded-lg flex items-center justify-center shrink-0 overflow-hidden"
+          style={
+            logoImageUrl
+              ? undefined
+              : { background: typeGradient[achievement.type] || typeGradient.competition }
+          }
         >
           {logoImageUrl ? (
             <Image
               src={logoImageUrl}
               alt={displayName}
               fill
-              className="w-full h-full object-cover"
+              sizes="56px"
+              className="object-cover"
+              onError={() => setLogoLoadFailed(true)}
             />
           ) : (
             typeIcon
