@@ -314,7 +314,84 @@ helm upgrade --install bluenet-frontend $CHART -n $NS -f $CHART/values/frontend.
 
 （`QODANA_TOKEN` 为组织级 secret；`GITHUB_TOKEN` 内置）
 
-**Variables**：`K8S_BACKEND_HOST=bluenet-api`、`K8S_BACKEND_PORT=8080`、`K8S_SSL_ENABLED=false`、`PUBLIC_HOST=<PROD_DOMAIN>`、`PUBLIC_PORT=443`、`PUBLIC_SSL_ENABLED=true`、`PUBLIC_AI_*`、`AI_SERVICE_PREFIX=/ai/v1`
+```bash
+# 写入方式（gh CLI）——`-R` 显式指定仓库，从任意目录执行都不会搞错目标
+R=Blue-Net-Team/official-web2
+
+gh secret set ACR_REPO            -R $R --body "<ACR_HOST>"
+gh secret set ACR_NAMESPACE       -R $R --body "<SVC_NS>"
+gh secret set ACR_REPOSITORY      -R $R --body "<SVC_REPO>"
+gh secret set ACR_USERNAME        -R $R --body "<ACR 用户名>"
+gh secret set ACR_PWD             -R $R --body "<ACR 固定密码>"
+gh secret set ACR_BASE_NAMESPACE  -R $R --body "<BASE_NS>"
+gh secret set ACR_BASE_REPOSITORY -R $R --body "<BASE_REPO>"
+gh secret set IVEN_PACKAGES_USER  -R $R --body "<GitHub 账号名>"
+gh secret set IVEN_PACKAGES_TOKEN -R $R --body "<含 read:packages 的 PAT>"
+```
+
+> `-R/--repo` 可省略（`gh` 会从当前目录的 git remote 推断），但**强烈建议保留**：
+> 本仓库的 remote 名叫 `github`（不是默认的 `origin`），且在非仓库目录执行时会报 `no git remotes found`。
+> 校验：`gh secret list -R Blue-Net-Team/official-web2`
+
+#### 关于 `IVEN_PACKAGES_USER` / `IVEN_PACKAGES_TOKEN`
+
+用于拉取**私有 Maven 依赖** `io.github.iven-cn:iven-starter-*`（自研框架 `iven-infra`，发布在 GitHub Packages）：
+
+```
+pom.xml: <repository><id>iven-github</id>
+         <url>https://maven.pkg.github.com/IVEN-CN/iven-infra</url>
+                ↓ 需要认证（GitHub Packages 的 Maven registry 对每个请求都要求 token，
+                  即使包/仓库是 public；实测匿名请求返回 401）
+CI 动态生成 ~/.m2/settings.xml: <server><id>iven-github</id>
+         <username>${IVEN_PACKAGES_USER}</username><password>${IVEN_PACKAGES_TOKEN}</password>
+```
+
+| 项 | 说明 |
+|----|------|
+| `IVEN_PACKAGES_USER` | GitHub 账号名（当前为包所有者账号） |
+| `IVEN_PACKAGES_TOKEN` | PAT，**必须含 `read:packages` scope**（实测：缺该 scope 时连所有者账号也返回 401）；包为 private 时还需 `repo` 或对该包的读权限 |
+| 生成方式 | GitHub → Settings → Developer settings → Personal access tokens（classic）→ scopes 勾 `read:packages`(+`repo`)；或 fine-grained token 选 resource owner + `Packages: Read-only` |
+| 注意 | PAT **永远属于某个用户账号**，GitHub 没有"组织级 PAT"；组织级凭据只有 GitHub App / 内置 `GITHUB_TOKEN` |
+| 改进方向 | 把 `iven-infra` 迁到组织下并用内置 `GITHUB_TOKEN`（`permissions: packages: read`）→ 彻底摆脱个人 PAT 过期问题 |
+
+**GitHub Variables**（10 个，**必须在第一次跑 CD 之前设好**，因为它们是 frontend 镜像的构建期参数）：
+
+| Variable | 值 | 用途 |
+|----------|-----|------|
+| `K8S_BACKEND_HOST` | `bluenet-api` | frontend 构建期 **SSR** 目标（集群内 Service DNS，不经公网） |
+| `K8S_BACKEND_PORT` | `8080` | 同上 |
+| `K8S_SSL_ENABLED` | `false` | SSR 在集群内走 http |
+| `PUBLIC_HOST` | `<PROD_DOMAIN>` | **浏览器侧**访问目标（经 nginx，需真实域名） |
+| `PUBLIC_PORT` | `443` | 同上 |
+| `PUBLIC_SSL_ENABLED` | `true` | 同上 |
+| `PUBLIC_AI_HOST` | `<PROD_DOMAIN>` | 浏览器侧 AI 服务（经 nginx `/ai/v1`） |
+| `PUBLIC_AI_PORT` | `443` | 同上 |
+| `PUBLIC_AI_SSL_ENABLED` | `true` | 同上 |
+| `AI_SERVICE_PREFIX` | `/ai/v1` | AI 路由前缀（构建期注入，**必须保留**） |
+
+> ⚠️ 区分两组目标：`K8S_*` 给 **SSR（容器内）** 用；`PUBLIC_*` 给 **浏览器** 用（打进 `NEXT_PUBLIC_*`）。两者混用会导致「页面能打开但接口 404/跨域」。
+> ⚠️ `NEXT_PUBLIC_*` 是**构建期注入**，改动这些 Variable 后必须**重新构建 frontend 镜像**才生效（即提升 `trigger/frontend` 版本）。
+
+```bash
+# 一次性写入（gh CLI；-R 显式指定仓库，从任意目录执行都不会搞错目标）
+R=Blue-Net-Team/official-web2
+
+gh variable set K8S_BACKEND_HOST    -R $R --body "bluenet-api"
+gh variable set K8S_BACKEND_PORT    -R $R --body "8080"
+gh variable set K8S_SSL_ENABLED     -R $R --body "false"
+gh variable set PUBLIC_HOST         -R $R --body "<PROD_DOMAIN>"
+gh variable set PUBLIC_PORT         -R $R --body "443"
+gh variable set PUBLIC_SSL_ENABLED  -R $R --body "true"
+gh variable set PUBLIC_AI_HOST      -R $R --body "<PROD_DOMAIN>"
+gh variable set PUBLIC_AI_PORT      -R $R --body "443"
+gh variable set PUBLIC_AI_SSL_ENABLED -R $R --body "true"
+gh variable set AI_SERVICE_PREFIX   -R $R --body "/ai/v1"
+
+# 校验
+gh variable list -R $R
+```
+
+> 迁移自 compose 时代的旧 Variables（`BACKEND_HOST`/`BACKEND_PORT`/`SSL_ENABLED`/`AI_SERVICE_HOST`/`AI_SERVICE_PORT`/`AI_SERVICE_SSL_ENABLED`）在新变量设好后即可删除，workflow 中它们仅作为 fallback 存在。
 
 **CI 专用集群凭据（永久 token）**：
 
@@ -339,10 +416,82 @@ EOF
 kubectl -n bluenet get secret bluenet-ci-token -o go-template='{{index .data "token"}}' | base64 -d
 ```
 
-把该 token 拼成 kubeconfig（server 用 master **公网 IP**），base64 后存入 GitHub Secret `KUBECONFIG`：
+#### 如何拼出 CI 用的 `ci.kubeconfig`
+
+kubeconfig 只是一个 YAML 文件，把「集群地址 + CA 证书 + 凭据」拼在一起。CI 用的这份与 admin 的 `k3s.yaml` **只差 users 段**：
+
+| 字段 | 值来自 |
+|------|--------|
+| `clusters[].cluster.server` | `https://<master 公网 IP>:6443`（手填） |
+| `clusters[].cluster.certificate-authority-data` | 从 admin kubeconfig（`/etc/rancher/k3s/k3s.yaml`）的 clusters 段**直接抄** |
+| `users[].user.token` | `bluenet-ci-token` Secret 里的 token（**Secret 里是 base64，需先解码**） |
+| `contexts[] / current-context` | 手写，`namespace: bluenet` |
+
+> 不要直接把 `k3s.yaml` 给 CI：那份 users 段是 **cluster-admin 客户端证书**（全集群权限）。我们只借用它的 CA 段。
+
+**bash（在 master 或任意有 kubectl 的机器上）**：
+
+```bash
+MASTER=<master 公网 IP>
+TOKEN=$(kubectl -n bluenet get secret bluenet-ci-token -o go-template='{{index .data "token"}}' | base64 -d)
+CA=$(kubectl config view --raw -o jsonpath='{.clusters[0].cluster.certificate-authority-data}')
+
+cat > ci.kubeconfig <<EOF
+apiVersion: v1
+kind: Config
+clusters:
+- name: bluenet
+  cluster:
+    server: https://${MASTER}:6443
+    certificate-authority-data: ${CA}
+users:
+- name: bluenet-ci
+  user:
+    token: ${TOKEN}
+contexts:
+- name: bluenet-ci
+  context:
+    cluster: bluenet
+    user: bluenet-ci
+    namespace: bluenet
+current-context: bluenet-ci
+EOF
+```
+
+**PowerShell（在本地用 admin kubeconfig 生成）**：
 
 ```powershell
-[Convert]::ToBase64String([IO.File]::ReadAllBytes("ci.kubeconfig")) | gh secret set KUBECONFIG
+$admin = "$env:USERPROFILE\.kube\bluenet-k3s.yaml"
+$ca  = kubectl --kubeconfig $admin config view --raw -o jsonpath='{.clusters[0].cluster.certificate-authority-data}'
+$tokB64 = kubectl -n bluenet get secret bluenet-ci-token -o go-template='{{index .data "token"}}'
+$tok = [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($tokB64))
+
+@"
+apiVersion: v1
+kind: Config
+clusters:
+- name: bluenet
+  cluster:
+    server: https://<master 公网 IP>:6443
+    certificate-authority-data: $ca
+users:
+- name: bluenet-ci
+  user:
+    token: $tok
+contexts:
+- name: bluenet-ci
+  context:
+    cluster: bluenet
+    user: bluenet-ci
+    namespace: bluenet
+current-context: bluenet-ci
+"@ | Set-Content "$env:USERPROFILE\.kube\ci.kubeconfig" -Encoding utf8
+```
+
+生成后 base64 存入 GitHub Secret `KUBECONFIG`：
+
+```powershell
+[Convert]::ToBase64String([IO.File]::ReadAllBytes("$env:USERPROFILE\.kube\ci.kubeconfig")) | gh secret set KUBECONFIG -R Blue-Net-Team/official-web2
 ```
 
 权限自检（最小权限应为：可部署、不可越权）：
