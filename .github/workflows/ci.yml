@@ -45,22 +45,22 @@ jobs:
         filters: |
           api:
             - 'src/backend/**'
-            - 'docker/api-service.Dockerfile'
+            - 'src/backend/Dockerfile'
           api_trigger:
             - 'trigger/api'
           frontend:
             - 'src/frontend/**'
-            - 'docker/frontend.Dockerfile'
+            - 'src/frontend/Dockerfile'
           frontend_trigger:
             - 'trigger/frontend'
           judge:
             - 'src/judge-service/**'
-            - 'docker/judge-service.Dockerfile'
+            - 'src/judge-service/Dockerfile'
           judge_trigger:
             - 'trigger/judge'
           ai:
             - 'src/ai-service/**'
-            - 'docker/ai-service.Dockerfile'
+            - 'src/ai-service/Dockerfile'
           ai_trigger:
             - 'trigger/ai'
           infra:
@@ -317,8 +317,8 @@ jobs:
       if: steps.version.outputs.skip_build != 'true'
       uses: docker/build-push-action@v5
       with:
-        context: .
-        file: docker/api-service.Dockerfile
+        context: src/backend
+        file: src/backend/Dockerfile
         load: true
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
@@ -407,8 +407,8 @@ jobs:
       if: steps.version.outputs.skip_build != 'true'
       uses: docker/build-push-action@v5
       with:
-        context: .
-        file: docker/judge-service.Dockerfile
+        context: src/judge-service
+        file: src/judge-service/Dockerfile
         load: true
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
@@ -483,8 +483,8 @@ jobs:
       if: steps.version.outputs.skip_build != 'true'
       uses: docker/build-push-action@v5
       with:
-        context: .
-        file: docker/ai-service.Dockerfile
+        context: src/ai-service
+        file: src/ai-service/Dockerfile
         load: true
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}

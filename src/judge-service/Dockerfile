@@ -1,6 +1,6 @@
 # BlueNet Judge Service Dockerfile
 # 使用预编译的 judge-service jar 文件，不在 Docker 中编译业务代码。
-# 构建上下文应为项目根目录。
+# 构建上下文应为 src/judge-service 目录。
 
 # judge-service 需要在容器内编译/运行多语言代码，不能使用 JRE-only 镜像。
 # isolate 依赖 Linux namespaces/cgroups，实际判题镜像使用 Debian/Ubuntu 系 JDK 镜像更合适。
@@ -84,7 +84,7 @@ ENV TZ=Asia/Shanghai
 
 WORKDIR /app
 
-COPY src/judge-service/target/*.jar /app/judge-service.jar
+COPY target/*.jar /app/judge-service.jar
 
 RUN mkdir -p /var/lib/bluenet-judge/work
 

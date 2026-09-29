@@ -41,11 +41,11 @@ cd src/backend
 
 ### 2. 构建并运行后端 Docker 镜像
 
-镜像标签：`bluenet-api-service:latest`，Dockerfile：`docker/api-service.Dockerfile`。
+镜像标签：`bluenet-api-service:latest`，Dockerfile：`src/backend/Dockerfile`（构建上下文即 `src/backend`）。
 
 ```bash
-# 构建镜像
-docker build -t bluenet-api-service:latest -f docker/api-service.Dockerfile .
+# 构建镜像（在仓库根目录执行，Dockerfile 与构建上下文均为 src/backend）
+docker build -t bluenet-api-service:latest src/backend
 
 # 运行容器（需先确保 compose 基础设施已启动）
 docker run -d \

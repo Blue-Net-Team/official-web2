@@ -1,5 +1,5 @@
 # BlueNet Frontend Dockerfile
-# 构建上下文应为项目根目录
+# 构建上下文应为 src/frontend 目录
 
 # ==================== 构建阶段 ====================
 FROM node:20-slim AS builder
@@ -28,7 +28,7 @@ RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
 WORKDIR /app
 
 # 复制 package.json 和 lock 文件
-COPY src/frontend/package.json src/frontend/pnpm-lock.yaml ./
+COPY package.json pnpm-lock.yaml ./
 
 # 安装依赖
 RUN pnpm install --frozen-lockfile
@@ -38,7 +38,7 @@ ARG CACHE_BUST
 RUN echo "Cache bust: ${CACHE_BUST}" > /dev/null
 
 # 复制源代码（宿主机 node_modules 即使被 dockerignore 忽略也做一次清理，确保使用容器内安装的依赖）
-COPY src/frontend/ ./
+COPY ./ ./
 RUN rm -rf /app/node_modules && pnpm install --frozen-lockfile
 
 # 设置构建时的环境变量并构建应用

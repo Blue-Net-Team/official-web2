@@ -67,7 +67,7 @@ mvn -pl src/judge-service -am -DskipTests package
 在仓库根目录构建调试镜像：
 
 ```bash
-docker build -f docker/judge-service.Dockerfile -t bluenet-judge-service:debug .
+docker build -t bluenet-judge-service:debug src/judge-service
 ```
 
 运行容器，暴露 Spring Boot 端口和 JDWP 调试端口：

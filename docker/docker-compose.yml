@@ -99,8 +99,8 @@ services:
   api-service:
     image: ${API_SERVICE_IMAGE:-bluenet-api-service:latest}
     build:
-      context: ..
-      dockerfile: api-service.Dockerfile
+      context: ../src/backend
+      dockerfile: Dockerfile
     container_name: bluenet-api-service
     ports:
       - "8080:8080"
@@ -130,8 +130,8 @@ services:
   frontend:
     image: ${FRONTEND_IMAGE:-bluenet-frontend:latest}
     build:
-      context: ..
-      dockerfile: frontend.Dockerfile
+      context: ../src/frontend
+      dockerfile: Dockerfile
       args:
         BUILD_BACKEND_HOST: ${BACKEND_HOST:-api-service}
         BUILD_BACKEND_PORT: ${BACKEND_PORT:-8080}
@@ -166,8 +166,8 @@ services:
   judge-service:
     image: ${JUDGE_IMAGE:-bluenet-judge-service:latest}
     build:
-      context: ..
-      dockerfile: docker/judge-service.Dockerfile
+      context: ../src/judge-service
+      dockerfile: Dockerfile
     container_name: bluenet-judge-service
     ports:
       - "8090:8090"
@@ -294,8 +294,8 @@ services:
   ai-service:
     image: ${AI_SERVICE_IMAGE:-bluenet-ai-service:latest}
     build:
-      context: ..
-      dockerfile: docker/ai-service.Dockerfile
+      context: ../src/ai-service
+      dockerfile: Dockerfile
     container_name: bluenet-ai-service
     ports:
       - "8000:8000"

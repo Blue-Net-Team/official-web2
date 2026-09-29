@@ -114,8 +114,7 @@ MSYS_NO_PATHCONV=1 docker run -d \
 ## 构建后端镜像
 
 ```bash
-cd src/backend
-docker build -t bluenet-api-service:latest -f docker/api-service.Dockerfile .
+docker build -t bluenet-api-service:latest src/backend
 ```
 
 ## 相关文档

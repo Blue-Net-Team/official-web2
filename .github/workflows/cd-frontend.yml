@@ -109,8 +109,8 @@ jobs:
       if: steps.version.outputs.skip_build != 'true'
       uses: docker/build-push-action@v5
       with:
-        context: .
-        file: docker/frontend.Dockerfile
+        context: src/frontend
+        file: src/frontend/Dockerfile
         load: true
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}

@@ -1,6 +1,6 @@
 # BlueNet API Service Dockerfile
 # 使用预编译的 jar 文件，不在 Docker 中编译
-# 构建上下文应为项目根目录
+# 构建上下文应为 src/backend 目录
 
 FROM eclipse-temurin:21-jre-alpine
 LABEL authors="IVEN"
@@ -28,7 +28,7 @@ ENV TZ=Asia/Shanghai
 
 WORKDIR /app
 
-COPY src/backend/target/*.jar /app/backend.jar
+COPY target/*.jar /app/backend.jar
 
 EXPOSE 8080
 

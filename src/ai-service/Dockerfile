@@ -1,5 +1,5 @@
 # BlueNet AI Service Dockerfile
-# 使用 uv 管理 Python 依赖，构建上下文应为项目根目录
+# 使用 uv 管理 Python 依赖，构建上下文应为 src/ai-service 目录
 
 # ---- Builder 阶段 ----
 FROM ghcr.io/astral-sh/uv:python3.12-alpine AS builder
@@ -10,13 +10,13 @@ ENV UV_COMPILE_BYTECODE=1
 ENV UV_LINK_MODE=copy
 
 # 复制依赖锁定文件（利用 Docker 缓存层）
-COPY src/ai-service/pyproject.toml src/ai-service/uv.lock src/ai-service/uv.toml ./
+COPY pyproject.toml uv.lock uv.toml ./
 
 # 安装生产依赖（不含项目本身）
 RUN uv sync --frozen --no-install-project --no-dev
 
 # 复制项目源码
-COPY src/ai-service/ .
+COPY ./ .
 
 # 安装项目本身（editable 模式）
 RUN uv sync --frozen --no-dev
