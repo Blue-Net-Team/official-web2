@@ -10,7 +10,7 @@ public class AchievementStatsQueryDO {
     /**
      * 成果总数量。
      */
-    private Long totalAchievements;
+    private Long competitionCount;
     /**
      * 国家级成果数量。
      */

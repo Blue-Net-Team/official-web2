@@ -511,8 +511,8 @@ export interface AchievementDTO {
  * 对应后端 AchievementStatsDTO.java
  */
 export interface AchievementStatsDTO {
-  /** 总成就数 */
-  totalAchievements: number
+  /** 竞赛类成就总数（后端统计口径仅含 type = competition） */
+  competitionCount: number
   /** 国家级奖项数 */
   nationalCount: number
   /** 省级奖项数 */

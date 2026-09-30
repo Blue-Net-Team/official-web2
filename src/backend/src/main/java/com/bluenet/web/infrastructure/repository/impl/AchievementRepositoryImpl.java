@@ -66,7 +66,7 @@ public class AchievementRepositoryImpl implements AchievementRepository {
     public AchievementStatistics findAchievementStats() {
         AchievementStatsQueryDO stats = achievementMapper.selectAchievementStats();
         return AchievementStatistics.builder()
-                .totalAchievements(stats.getTotalAchievements())
+                .competitionCount(stats.getCompetitionCount())
                 .nationalCount(stats.getNationalCount())
                 .provincialCount(stats.getProvincialCount())
                 .schoolCount(stats.getSchoolCount())

@@ -13,7 +13,7 @@
     </resultMap>
 
     <resultMap id="AchievementStatsQueryResultMap" type="com.bluenet.web.infrastructure.repository.dataobject.query.AchievementStatsQueryDO">
-        <result column="total_achievements" property="totalAchievements"/>
+        <result column="competition_count" property="competitionCount"/>
         <result column="national_count" property="nationalCount"/>
         <result column="provincial_count" property="provincialCount"/>
         <result column="school_count" property="schoolCount"/>
@@ -46,7 +46,7 @@
 
     <select id="selectAchievementStats" resultMap="AchievementStatsQueryResultMap">
         SELECT
-            COUNT(*) AS total_achievements,
+            COUNT(*) AS competition_count,
             COALESCE(SUM(CASE WHEN award_level = 'national' THEN 1 ELSE 0 END), 0) AS national_count,
             COALESCE(SUM(CASE WHEN award_level = 'provincial' THEN 1 ELSE 0 END), 0) AS provincial_count,
             COALESCE(SUM(CASE WHEN award_level = 'school' THEN 1 ELSE 0 END), 0) AS school_count

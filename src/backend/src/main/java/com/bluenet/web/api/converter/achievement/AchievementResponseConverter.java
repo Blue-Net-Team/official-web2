@@ -88,7 +88,7 @@ public class AchievementResponseConverter {
             return null;
         }
         return AchievementStatsDTO.builder()
-                .totalAchievements(vo.getTotalAchievements())
+                .competitionCount(vo.getCompetitionCount())
                 .nationalCount(vo.getNationalCount())
                 .provincialCount(vo.getProvincialCount())
                 .schoolCount(vo.getSchoolCount())

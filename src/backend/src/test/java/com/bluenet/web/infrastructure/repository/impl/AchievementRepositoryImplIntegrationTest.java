@@ -173,7 +173,7 @@ class AchievementRepositoryImplIntegrationTest extends DBIntegrationTest {
 
         AchievementStatistics statistics = achievementRepository.findAchievementStats();
 
-        assertThat(statistics.getTotalAchievements()).isGreaterThanOrEqualTo(3);
+        assertThat(statistics.getCompetitionCount()).isGreaterThanOrEqualTo(3);
         assertThat(statistics.getNationalCount()).isGreaterThanOrEqualTo(1);
         assertThat(statistics.getProvincialCount()).isGreaterThanOrEqualTo(2);
     }
