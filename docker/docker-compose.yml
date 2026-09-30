@@ -366,19 +366,26 @@ services:
       - network
 
   oss:
-    image: minio/minio:RELEASE.2025-09-07T16-13-09Z
+    image: rustfs/rustfs:latest
     container_name: bluenet-oss
     ports:
       - "7000:9000"
       - "7001:7001"
     environment:
-      MINIO_ROOT_USER: admin
-      MINIO_ROOT_PASSWORD: ${MINIO_PASSWORD:-admin123}
-    command: server /data --console-address ":7001"
+      # RustFS 与 MinIO 环境变量不兼容，必须使用 RUSTFS_ 前缀
+      # 账号需与 x-shared-env 中的 MINIO_AK / MINIO_SK 保持一致
+      RUSTFS_ACCESS_KEY: ${MINIO_AK:-admin}
+      RUSTFS_SECRET_KEY: ${MINIO_PASSWORD:-admin123}
+      RUSTFS_ADDRESS: ":9000"
+      RUSTFS_CONSOLE_ADDRESS: ":7001"
+      RUSTFS_CONSOLE_ENABLE: "true"
+      TZ: Asia/Shanghai
+    command: /data
     volumes:
-      - bluenet_minio_data:/data
+      - bluenet_oss_data:/data
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      # 匿名访问根路径返回 200/403 均视为存活
+      test: ["CMD-SHELL", "code=$$(curl -s -o /dev/null -w '%{http_code}' http://localhost:9000/); [ \"$$code\" = \"200\" ] || [ \"$$code\" = \"403\" ]"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -401,5 +408,5 @@ volumes:
     name: bluenet-rabbitmq-${ENV:-dev}-data
   bluenet_redis_data:
     name: bluenet-redis-${ENV:-dev}-data
-  bluenet_minio_data:
-    name: bluenet-minio-${ENV:-dev}-data
+  bluenet_oss_data:
+    name: bluenet-oss-${ENV:-dev}-data
