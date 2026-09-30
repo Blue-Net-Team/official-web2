@@ -1,6 +1,8 @@
 'use client'
 
 import React from 'react'
+import type { CSSProperties } from 'react'
+import SmokedGlassCard from '@/components/SmokedGlassCard'
 import {
   DIRECTION_LABELS,
   GENDER_LABELS,
@@ -50,7 +52,12 @@ export const ProfileInfoDisplay: React.FC<ProfileInfoDisplayProps> = ({ profile 
   ]
 
   return (
-    <div className="bg-white/[0.03] backdrop-blur-[20px] border border-white/[0.05] rounded-2xl p-8 animate-[fadeIn_0.3s_ease] max-[480px]:p-4">
+    <SmokedGlassCard
+      tone="soft"
+      radius={16}
+      className="animate-[fadeIn_0.3s_ease] max-[480px]:[--sgc-padding:16px]"
+      style={{ '--sgc-padding': '32px' } as CSSProperties}
+    >
       <div className="text-lg font-semibold text-white mb-6 flex items-center gap-2.5 [&_svg]:w-5 [&_svg]:h-5 [&_svg]:text-[#6677ff]">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
@@ -107,7 +114,7 @@ export const ProfileInfoDisplay: React.FC<ProfileInfoDisplayProps> = ({ profile 
           </div>
         )}
       </div>
-    </div>
+    </SmokedGlassCard>
   )
 }
 

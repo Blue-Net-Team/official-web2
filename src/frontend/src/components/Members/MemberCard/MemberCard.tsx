@@ -1,12 +1,13 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { CSSProperties, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { MemberBriefDTO } from '@/apis/schema/type'
 import { Role } from '@/apis/schema/enumerate'
 import { DIRECTION_CONFIG, ROLE_CONFIG, GENDER_CONFIG } from './MemberCard.config'
 import { API_BASE_URL } from '@/apis/config'
+import SmokedGlassCard from '@/components/SmokedGlassCard'
 import { UserOutlined } from '@ant-design/icons'
 import AdminIcon from '@/assets/icon/admin.svg'
 
@@ -26,13 +27,19 @@ export const MemberCard: React.FC<MemberCardProps> = ({ member, index }) => {
 
   return (
     <Link href={`/members/${member.id}`} className="no-underline text-inherit block">
-      <div
-        className="relative overflow-hidden rounded-[20px] border border-white/[0.08] bg-white/[0.05] backdrop-blur-xl p-7 cursor-pointer transition-all duration-400 ease-[cubic-bezier(0.4,0,0.2,1)] max-md:p-5 before:content-[''] before:absolute before:top-0 before:left-0 before:right-0 before:h-[3px] before:bg-gradient-to-r before:from-[#6677ff] before:to-[#ff6b35] before:opacity-0 before:transition-opacity before:duration-300 hover:bg-white/[0.08] hover:border-white/[0.15] hover:-translate-y-2 hover:shadow-[0_20px_40px_rgba(0,0,0,0.4),0_0_60px_rgba(102,119,255,0.1)] hover:before:opacity-100 animate-[fadeInUp_0.5s_ease_forwards] opacity-0"
-        style={{ animationDelay: `${index * 0.05}s` }}
+      <SmokedGlassCard
+        hoverable
+        radius={20}
+        className="relative overflow-hidden animate-[fadeInUp_0.5s_ease_forwards] opacity-0 max-md:[--sgc-padding:20px]"
+        style={
+          {
+            animationDelay: `${index * 0.05}s`,
+            '--sgc-padding': '28px',
+          } as CSSProperties
+        }
       >
         <div className="flex items-center gap-4 mb-5">
-          <div className="w-[72px] h-[72px] rounded-full relative shrink-0 max-md:w-[60px] max-md:h-[60px]">
-            <div className="absolute -inset-[3px] rounded-full bg-gradient-to-br from-[#6677ff] via-[#ff6b35] to-[#2f27b0] p-[3px]" />
+          <div className="w-[72px] h-[72px] rounded-full relative shrink-0 overflow-hidden max-md:w-[60px] max-md:h-[60px]">
             <div className="w-full h-full rounded-full bg-gradient-to-br from-[#1a1a2e] to-[#16213e] flex items-center justify-center text-[28px] font-semibold text-white relative z-1 overflow-hidden max-md:text-2xl">
               {avatarImageUrl && !avatarError ? (
                 <Image
@@ -107,7 +114,7 @@ export const MemberCard: React.FC<MemberCardProps> = ({ member, index }) => {
             <span>{member.major}</span>
           </div>
         </div>
-      </div>
+      </SmokedGlassCard>
     </Link>
   )
 }

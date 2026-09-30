@@ -1,6 +1,8 @@
 'use client'
 
 import { useState, useRef, useCallback } from 'react'
+import type { CSSProperties } from 'react'
+import SmokedGlassCard from '@/components/SmokedGlassCard'
 import type { TabCounts } from '@/apis/schema/type'
 import { DIRECTION_LABELS, ROLE_LABELS, getRoleTagColor, Direction } from '@/apis/schema/enumerate'
 import { API_BASE_URL } from '@/apis/config'
@@ -162,7 +164,12 @@ export default function ProfileSidebar({
 
   return (
     <aside className="w-[340px] shrink-0 max-lg:w-full max-lg:shrink">
-      <div className="sticky top-[104px] bg-white/[0.03] backdrop-blur-[20px] border border-white/[0.05] rounded-2xl p-8 transition-all duration-300 max-lg:relative max-lg:top-auto max-[640px]:p-5">
+      <SmokedGlassCard
+        tone="soft"
+        radius={16}
+        className="sticky top-[104px] max-lg:relative max-lg:top-auto max-[640px]:[--sgc-padding:20px]"
+        style={{ '--sgc-padding': '32px' } as CSSProperties}
+      >
         <div className="text-center mb-6">
           <div className="relative inline-block mb-5">
             <div
@@ -327,7 +334,7 @@ export default function ProfileSidebar({
             })}
           </div>
         )}
-      </div>
+      </SmokedGlassCard>
 
       {allowAvatarUpload && (
         <AvatarCropModal

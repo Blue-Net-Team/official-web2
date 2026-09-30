@@ -1,6 +1,8 @@
 'use client'
 
 import { useState } from 'react'
+import type { CSSProperties } from 'react'
+import SmokedGlassCard from '@/components/SmokedGlassCard'
 import type { UserExperience } from '@/apis/schema/type'
 import type { ExperienceType } from '@/apis/schema/enumerate'
 import {
@@ -197,7 +199,12 @@ export default function ExperienceSection({
   }
 
   return (
-    <div className="bg-white/[0.03] backdrop-blur-[20px] border border-white/[0.05] rounded-2xl p-6 max-[640px]:p-4">
+    <SmokedGlassCard
+      tone="soft"
+      radius={16}
+      className="max-[640px]:[--sgc-padding:16px]"
+      style={{ '--sgc-padding': '24px' } as CSSProperties}
+    >
       <div className="flex items-center justify-between mb-5 pb-4 border-b border-white/[0.05] max-[640px]:flex-col max-[640px]:gap-3 max-[640px]:items-start">
         <h3 className="text-lg font-semibold text-white m-0">{title}</h3>
         {!readOnly && (
@@ -219,7 +226,12 @@ export default function ExperienceSection({
           ))}
         </div>
       ) : (
-        <div className="text-center py-[60px] px-5 bg-white/[0.03] backdrop-blur-[20px] border border-white/[0.05] rounded-2xl">
+        <SmokedGlassCard
+          tone="soft"
+          radius={16}
+          className="text-center"
+          style={{ '--sgc-padding': '60px 20px' } as CSSProperties}
+        >
           <div className="w-20 h-20 mx-auto mb-5 rounded-full bg-[rgba(102,119,255,0.1)] flex items-center justify-center [&>svg]:w-10 [&>svg]:h-10 [&>svg]:text-[#6677ff]">
             {getIcon()}
           </div>
@@ -229,7 +241,7 @@ export default function ExperienceSection({
           {!readOnly && (
             <p className="text-sm text-[rgba(140,140,141,1)] m-0">点击上方按钮添加你的经历</p>
           )}
-        </div>
+        </SmokedGlassCard>
       )}
 
       {!readOnly && (
@@ -253,6 +265,6 @@ export default function ExperienceSection({
           </Form>
         </Modal>
       )}
-    </div>
+    </SmokedGlassCard>
   )
 }

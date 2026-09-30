@@ -1,6 +1,8 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
+import type { CSSProperties } from 'react'
+import SmokedGlassCard from '@/components/SmokedGlassCard'
 import { Avatar, Flex, Spin, Tag } from 'antd'
 import { TrophyOutlined, UserOutlined } from '@ant-design/icons'
 import Link from 'next/link'
@@ -66,7 +68,12 @@ export default function MemberAchievements({ memberId }: MemberAchievementsProps
   }
 
   return (
-    <div className="bg-white/[0.03] backdrop-blur-[20px] border border-white/[0.05] rounded-2xl p-6 max-[640px]:p-4">
+    <SmokedGlassCard
+      tone="soft"
+      radius={16}
+      className="max-[640px]:[--sgc-padding:16px]"
+      style={{ '--sgc-padding': '24px' } as CSSProperties}
+    >
       <div className="flex items-center justify-between mb-5 pb-4 border-b border-white/[0.05]">
         <h3 className="text-lg font-semibold text-white m-0">个人成就</h3>
       </div>
@@ -161,6 +168,6 @@ export default function MemberAchievements({ memberId }: MemberAchievementsProps
           })}
         </div>
       )}
-    </div>
+    </SmokedGlassCard>
   )
 }

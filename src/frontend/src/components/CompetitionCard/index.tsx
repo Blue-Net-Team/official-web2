@@ -1,11 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { CSSProperties, useState } from 'react'
 import Image from 'next/image'
 import { Tag } from 'antd'
 import { CompetitionResponseDTO } from '@/apis/schema/type'
 import { API_BASE_URL } from '@/apis/config'
 import { COMPETITION_LEVEL_LABELS, COMPETITION_LEVEL_COLORS } from '@/types/competition'
+import SmokedGlassCard from '@/components/SmokedGlassCard'
 
 interface CompetitionCardProps {
   competition: CompetitionResponseDTO
@@ -26,10 +27,11 @@ export default function CompetitionCard({ competition }: CompetitionCardProps) {
       : null
 
   return (
-    <div
-      className={
-        'w-full glass-card md:min-h-[150px] rounded-3xl md:px-8 flex flex-col md:flex-row md:items-center relative overflow-hidden'
-      }
+    <SmokedGlassCard
+      hoverable
+      radius={24}
+      className="w-full md:min-h-[150px] flex flex-col md:flex-row md:items-center relative overflow-hidden"
+      style={{ '--sgc-padding': '0 32px' } as CSSProperties}
     >
       {coverUrl && (
         <div
@@ -113,6 +115,6 @@ export default function CompetitionCard({ competition }: CompetitionCardProps) {
           </p>
         </div>
       </div>
-    </div>
+    </SmokedGlassCard>
   )
 }

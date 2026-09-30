@@ -1,4 +1,6 @@
-import { Card, Col, Row, Statistic } from 'antd'
+import { Col, Row, Statistic } from 'antd'
+import { CSSProperties } from 'react'
+import SmokedGlassCard from '@/components/SmokedGlassCard'
 import { TrophyOutlined, StarOutlined, CrownOutlined, FlagOutlined } from '@ant-design/icons'
 import { AchievementStatsDTO } from '@/apis/schema/type'
 
@@ -38,10 +40,7 @@ const AchievementStats = ({ stats }: AchievementStatsProps) => {
     <Row gutter={[16, 16]} className="w-full">
       {statItems.map((item) => (
         <Col xs={12} sm={6} key={item.title}>
-          <Card
-            className="glass-card rounded-xl max-md:rounded-lg"
-            styles={{ body: { padding: '16px' } }}
-          >
+          <SmokedGlassCard radius={12} style={{ '--sgc-padding': '16px' } as CSSProperties}>
             <div className="flex items-center gap-3 max-md:flex-col max-md:text-center">
               <div className="flex items-center justify-center">{item.icon}</div>
               <Statistic
@@ -50,7 +49,7 @@ const AchievementStats = ({ stats }: AchievementStatsProps) => {
                 valueStyle={{ color: item.color, fontWeight: 600 }}
               />
             </div>
-          </Card>
+          </SmokedGlassCard>
         </Col>
       ))}
     </Row>

@@ -12,7 +12,9 @@
  * @author BlueNet Team
  */
 import type { AssessmentTimeDTO } from '@/apis/schema/assessment.dto'
+import type { CSSProperties } from 'react'
 import { FileTextOutlined } from '@ant-design/icons'
+import SmokedGlassCard from '@/components/SmokedGlassCard'
 import { AssessmentCard } from '@/components/Assessment'
 
 interface AssessmentListProps {
@@ -22,13 +24,18 @@ interface AssessmentListProps {
 export default function AssessmentList({ assessments }: AssessmentListProps) {
   if (assessments.length === 0) {
     return (
-      <div className="text-center py-[60px] px-5 bg-white/[0.03] backdrop-blur-[20px] border border-white/[0.05] rounded-2xl">
+      <SmokedGlassCard
+        tone="soft"
+        radius={16}
+        className="text-center"
+        style={{ '--sgc-padding': '60px 20px' } as CSSProperties}
+      >
         <div className="w-20 h-20 mx-auto mb-5 rounded-full bg-[rgba(102,119,255,0.1)] flex items-center justify-center [&>svg]:w-10 [&>svg]:h-10 [&>svg]:text-[#6677ff]">
           <FileTextOutlined />
         </div>
         <h3 className="text-lg font-semibold text-white mb-2">暂无考核记录</h3>
         <p className="text-sm text-[rgba(140,140,141,1)]">您还没有参与任何考核</p>
-      </div>
+      </SmokedGlassCard>
     )
   }
 

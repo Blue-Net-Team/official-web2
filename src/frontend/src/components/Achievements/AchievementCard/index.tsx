@@ -1,10 +1,12 @@
-import { Avatar, Card, Flex, Tag } from 'antd'
+import { Avatar, Flex, Tag } from 'antd'
 import { AchievementDTO } from '@/apis/schema/type'
 import { AWARD_LEVEL_LABELS } from '@/apis/schema/enumerate'
 import { TrophyOutlined, BulbOutlined, FileTextOutlined, UserOutlined } from '@ant-design/icons'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useState } from 'react'
+import { CSSProperties } from 'react'
+import SmokedGlassCard from '@/components/SmokedGlassCard'
 import { API_BASE_URL } from '@/apis/config'
 
 interface AchievementCardProps {
@@ -63,13 +65,10 @@ const AchievementCard = ({ achievement }: AchievementCardProps) => {
   const subInfo = achievement.relateTo
 
   return (
-    <Card
-      className="glass-card rounded-xl max-md:rounded-lg hover:-translate-y-0.5"
-      styles={{
-        body: {
-          padding: '20px 24px',
-        },
-      }}
+    <SmokedGlassCard
+      hoverable
+      radius={12}
+      style={{ '--sgc-padding': '20px 24px' } as CSSProperties}
     >
       <Flex align="start" gap={16}>
         <div
@@ -154,7 +153,7 @@ const AchievementCard = ({ achievement }: AchievementCardProps) => {
           )}
         </Flex>
       </Flex>
-    </Card>
+    </SmokedGlassCard>
   )
 }
 

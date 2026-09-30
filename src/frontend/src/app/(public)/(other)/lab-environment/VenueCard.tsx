@@ -1,8 +1,10 @@
 'use client'
 
+import { CSSProperties } from 'react'
 import Image from 'next/image'
 import { VenueDTO } from '@/apis/schema/type'
 import { PUBLIC_API_BASE_URL } from '@/apis/config'
+import SmokedGlassCard from '@/components/SmokedGlassCard'
 
 export function VenueCard({ venue }: { venue: VenueDTO }) {
   const imageUrl = venue.imageFileId
@@ -10,7 +12,12 @@ export function VenueCard({ venue }: { venue: VenueDTO }) {
     : null
 
   return (
-    <div className="bg-white/[0.05] backdrop-blur-xl border border-white/10 rounded-2xl overflow-hidden shadow-[0_4px_24px_rgba(0,0,0,0.25)] transition-all hover:-translate-y-1 hover:shadow-[0_8px_32px_rgba(0,0,0,0.35)] hover:bg-white/[0.08]">
+    <SmokedGlassCard
+      hoverable
+      radius={16}
+      className="overflow-hidden"
+      style={{ '--sgc-padding': '0' } as CSSProperties}
+    >
       <div className="relative w-full h-[280px] max-sm:h-[200px] overflow-hidden">
         {imageUrl ? (
           <Image
@@ -37,6 +44,6 @@ export function VenueCard({ venue }: { venue: VenueDTO }) {
           </p>
         )}
       </div>
-    </div>
+    </SmokedGlassCard>
   )
 }

@@ -1,5 +1,7 @@
 import Link from 'next/link'
+import { CSSProperties } from 'react'
 import DarkVeil from '@/components/Reactbits/DarkVeil'
+import SmokedGlassCard from '@/components/SmokedGlassCard'
 import { softwareResourceService } from '@/apis/services/software-resource.service'
 import { SOFTWARE_RESOURCE_DIRECTION_LABELS } from '@/apis/schema/enumerate'
 import type { SoftwareResourceDTO } from '@/apis/schema/type'
@@ -125,29 +127,31 @@ function ResourceCard({ resource }: { resource: SoftwareResourceDTO }) {
       href={resource.externalUrl}
       target="_blank"
       rel="noopener noreferrer"
-      className="block p-5 rounded-2xl bg-white/[0.05] backdrop-blur-xl border border-white/10 shadow-[0_4px_24px_rgba(0,0,0,0.25)] transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] hover:shadow-[0_8px_32px_rgba(0,0,0,0.35)] hover:bg-white/[0.08] group"
+      className="block group"
     >
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex-1">
-          <div className="flex items-center gap-3 mb-2">
-            <h3 className="text-lg font-semibold text-white group-hover:text-blue-300 transition-colors">
-              {resource.name}
-            </h3>
-            {resource.category && (
+      <SmokedGlassCard hoverable radius={16} style={{ '--sgc-padding': '20px' } as CSSProperties}>
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex-1">
+            <div className="flex items-center gap-3 mb-2">
+              <h3 className="text-lg font-semibold text-white group-hover:text-blue-300 transition-colors">
+                {resource.name}
+              </h3>
+              {resource.category && (
+                <span className="px-2 py-0.5 rounded text-xs bg-white/10 text-white/70">
+                  {resource.category}
+                </span>
+              )}
               <span className="px-2 py-0.5 rounded text-xs bg-white/10 text-white/70">
-                {resource.category}
+                {SOFTWARE_RESOURCE_DIRECTION_LABELS[resource.direction]}
               </span>
+            </div>
+            {resource.description && (
+              <p className="text-white/60 text-sm leading-relaxed">{resource.description}</p>
             )}
-            <span className="px-2 py-0.5 rounded text-xs bg-white/10 text-white/70">
-              {SOFTWARE_RESOURCE_DIRECTION_LABELS[resource.direction]}
-            </span>
           </div>
-          {resource.description && (
-            <p className="text-white/60 text-sm leading-relaxed">{resource.description}</p>
-          )}
+          <span className="text-blue-400 text-sm whitespace-nowrap">前往下载 →</span>
         </div>
-        <span className="text-blue-400 text-sm whitespace-nowrap">前往下载 →</span>
-      </div>
+      </SmokedGlassCard>
     </a>
   )
 }

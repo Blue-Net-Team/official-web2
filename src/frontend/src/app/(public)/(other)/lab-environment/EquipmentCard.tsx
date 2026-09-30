@@ -1,8 +1,10 @@
 'use client'
 
+import { CSSProperties } from 'react'
 import Image from 'next/image'
 import { EquipmentDTO } from '@/apis/schema/type'
 import { PUBLIC_API_BASE_URL } from '@/apis/config'
+import SmokedGlassCard from '@/components/SmokedGlassCard'
 
 export function EquipmentCard({ equipment }: { equipment: EquipmentDTO }) {
   const imageUrl = equipment.imageFileId
@@ -10,7 +12,12 @@ export function EquipmentCard({ equipment }: { equipment: EquipmentDTO }) {
     : null
 
   return (
-    <div className="bg-white/[0.05] backdrop-blur-xl border border-white/10 rounded-2xl overflow-hidden shadow-[0_4px_24px_rgba(0,0,0,0.25)] transition-all hover:-translate-y-1 hover:shadow-[0_8px_32px_rgba(0,0,0,0.35)] hover:bg-white/[0.08]">
+    <SmokedGlassCard
+      hoverable
+      radius={16}
+      className="overflow-hidden"
+      style={{ '--sgc-padding': '0' } as CSSProperties}
+    >
       <div className="relative w-full h-[200px] max-sm:h-[160px] overflow-hidden">
         {imageUrl ? (
           <Image src={imageUrl} alt={equipment.name} fill className="object-cover" />
@@ -31,6 +38,6 @@ export function EquipmentCard({ equipment }: { equipment: EquipmentDTO }) {
           </p>
         )}
       </div>
-    </div>
+    </SmokedGlassCard>
   )
 }

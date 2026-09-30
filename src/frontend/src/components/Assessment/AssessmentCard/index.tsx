@@ -1,6 +1,6 @@
 'use client'
 
-import type { ReactNode } from 'react'
+import type { CSSProperties, ReactNode } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   ClockCircleOutlined,
@@ -13,6 +13,7 @@ import {
 } from '@ant-design/icons'
 import type { AssessmentTimeDTO, AssessmentStatus } from '@/apis/schema/assessment.dto'
 import { DIRECTION_LABELS } from '@/apis/schema/enumerate'
+import SmokedGlassCard from '@/components/SmokedGlassCard'
 
 interface AssessmentCardProps {
   assessment: AssessmentTimeDTO
@@ -21,86 +22,79 @@ interface AssessmentCardProps {
 /** 卡片视觉状态：按优先级 eliminated > inProgress > ended > notStarted 派生 */
 type VisualState = 'eliminated' | 'inProgress' | 'ended' | 'notStarted'
 
-/** 单一视觉状态对应的完整视觉规格 */
-interface VisualStyle {
-  /** 卡片边框 + 悬浮效果 */
-  border: string
-  /** 左上角图标底色 */
-  iconBg: string
+/**
+ * 单一视觉状态对应的视觉规格。
+ * token 化设计：状态只贡献 accent 颜色变量（外加语义色：被淘汰=红），
+ * 卡片边框/光晕/内高光由 SmokedGlassCard 经 --accent 派生，
+ * 图标/进度条/按钮在渲染处经 color-mix 派生，不再逐状态手写全部颜色。
+ */
+interface VisualStateStyle {
+  /** 主题色 token（未设置则为中性态） */
+  accent?: string
+  /** 是否可点击进入答题页 */
+  clickable: boolean
+  /** 整体置灰（被淘汰） */
+  dimmed?: boolean
   /** 左上角图标元素 */
   icon: ReactNode
-  /** 状态徽章底色 */
+  /** 状态徽章：语义色类名（被淘汰=红、未开始=灰）；accent 态留空，渲染处派生 */
   badgeClass: string
   /** 状态徽章文案 */
   badgeText: string
-  /** 操作按钮样式 */
-  buttonClass: string
+  /** 操作按钮配色：accent（渐变发光）或 gray（中性禁用） */
+  buttonTone: 'accent' | 'gray'
   /** 操作按钮文案 */
   buttonText: string
-  /** 答题进度条填充色 */
-  progressBar: string
-  /** 顶部高光线渐变（null 表示不渲染） */
-  topLine: string | null
-  /** 是否可点击进入答题页 */
-  clickable: boolean
+  /** 进度条配色：accent 或 gray */
+  progressTone: 'accent' | 'gray'
+  /** 是否渲染顶部高光线 */
+  topLine: boolean
 }
 
 /** 四态视觉映射表：新增状态时 Record 会强制补齐全部字段，杜绝遗漏导致的不一致 */
-const STYLES: Record<VisualState, VisualStyle> = {
+const STYLES: Record<VisualState, VisualStateStyle> = {
   eliminated: {
-    border: 'border-white/[0.04] opacity-70',
-    iconBg: 'bg-[rgba(140,140,141,0.08)] text-[#8c8c8d]/50',
+    clickable: false,
+    dimmed: true,
     icon: <InboxOutlined />,
     badgeClass: 'bg-[rgba(255,77,79,0.1)] text-[#ff4d4f] border border-[rgba(255,77,79,0.15)]',
     badgeText: '已被淘汰',
-    buttonClass: 'bg-[rgba(140,140,141,0.1)] text-[#8c8c8d]/70 cursor-not-allowed',
+    buttonTone: 'gray',
     buttonText: '已被淘汰',
-    progressBar: 'bg-[rgba(140,140,141,0.3)]',
-    topLine: null,
-    clickable: false,
+    progressTone: 'gray',
+    topLine: false,
   },
   inProgress: {
-    border:
-      'border-[rgba(102,119,255,0.2)] shadow-[0_0_20px_rgba(102,119,255,0.06),inset_0_1px_0_rgba(102,119,255,0.1)] hover:-translate-y-0.5 hover:bg-white/[0.06] hover:shadow-[0_8px_32px_rgba(102,119,255,0.12),inset_0_1px_0_rgba(102,119,255,0.15)] hover:border-[rgba(102,119,255,0.3)]',
-    iconBg: 'bg-[rgba(102,119,255,0.15)] text-[#6677ff] shadow-[0_0_16px_rgba(102,119,255,0.15)]',
-    icon: <FieldTimeOutlined />,
-    badgeClass: 'bg-[rgba(102,119,255,0.15)] text-[#6677ff] border border-[rgba(102,119,255,0.2)]',
-    badgeText: '进行中',
-    buttonClass:
-      'bg-gradient-to-br from-[#6677ff] to-[#2f27b0] text-white shadow-[0_4px_16px_rgba(102,119,255,0.3)] hover:shadow-[0_6px_24px_rgba(102,119,255,0.4)]',
-    buttonText: '继续答题',
-    progressBar:
-      'bg-gradient-to-r from-[#6677ff] to-[#2f27b0] shadow-[0_0_8px_rgba(102,119,255,0.3)]',
-    topLine: 'bg-gradient-to-r from-transparent via-[rgba(102,119,255,0.3)] to-transparent',
+    accent: '#6677ff',
     clickable: true,
+    icon: <FieldTimeOutlined />,
+    badgeClass: '',
+    badgeText: '进行中',
+    buttonTone: 'accent',
+    buttonText: '继续答题',
+    progressTone: 'accent',
+    topLine: true,
   },
   ended: {
-    border:
-      'border-[rgba(7,193,96,0.2)] shadow-[0_0_20px_rgba(7,193,96,0.06),inset_0_1px_0_rgba(7,193,96,0.1)] hover:-translate-y-0.5 hover:bg-white/[0.06] hover:shadow-[0_8px_32px_rgba(7,193,96,0.12),inset_0_1px_0_rgba(7,193,96,0.15)] hover:border-[rgba(7,193,96,0.3)]',
-    iconBg: 'bg-[rgba(7,193,96,0.15)] text-[#07c160] shadow-[0_0_16px_rgba(7,193,96,0.15)]',
-    icon: <DesktopOutlined />,
-    badgeClass: 'bg-[rgba(7,193,96,0.15)] text-[#07c160] border border-[rgba(7,193,96,0.2)]',
-    badgeText: '已结束',
-    buttonClass:
-      'bg-gradient-to-br from-[#07c160] to-[#05a34e] text-white shadow-[0_4px_16px_rgba(7,193,96,0.3)] hover:shadow-[0_6px_24px_rgba(7,193,96,0.4)]',
-    buttonText: '查看详情',
-    progressBar: 'bg-gradient-to-r from-[#07c160] to-[#05a34e] shadow-[0_0_8px_rgba(7,193,96,0.3)]',
-    topLine: 'bg-gradient-to-r from-transparent via-[rgba(7,193,96,0.3)] to-transparent',
+    accent: '#07c160',
     clickable: true,
+    icon: <DesktopOutlined />,
+    badgeClass: '',
+    badgeText: '已结束',
+    buttonTone: 'accent',
+    buttonText: '查看详情',
+    progressTone: 'accent',
+    topLine: true,
   },
   notStarted: {
-    border:
-      'border-white/[0.06] hover:-translate-y-0.5 hover:bg-white/[0.06] hover:shadow-[0_4px_16px_rgba(255,255,255,0.04)]',
-    iconBg: 'bg-[rgba(140,140,141,0.1)] text-[#8c8c8d]',
+    clickable: false,
     icon: <InboxOutlined />,
     badgeClass: 'bg-[rgba(140,140,141,0.1)] text-[#8c8c8d] border border-[rgba(140,140,141,0.15)]',
     badgeText: '未开始',
-    buttonClass:
-      'bg-[rgba(140,140,141,0.15)] text-[#8c8c8d] cursor-not-allowed border border-[rgba(140,140,141,0.15)]',
+    buttonTone: 'gray',
     buttonText: '暂不可进入',
-    progressBar: 'bg-[rgba(140,140,141,0.3)]',
-    topLine: null,
-    clickable: false,
+    progressTone: 'gray',
+    topLine: false,
   },
 }
 
@@ -142,6 +136,47 @@ export default function AssessmentCard({ assessment }: AssessmentCardProps) {
         ? 'ended'
         : 'notStarted'
   const cardStyle = STYLES[visualState]
+  const accent = cardStyle.accent
+
+  // token 派生：状态色统一经 --accent（color-mix），中性态回落灰色
+  const iconStyle: CSSProperties = accent
+    ? {
+        background: 'color-mix(in srgb, var(--accent) 15%, transparent)',
+        color: 'var(--accent)',
+        boxShadow: '0 0 16px color-mix(in srgb, var(--accent) 15%, transparent)',
+      }
+    : { background: 'rgba(140,140,141,0.1)', color: '#8c8c8d' }
+
+  const badgeStyle: CSSProperties = accent
+    ? {
+        background: 'color-mix(in srgb, var(--accent) 15%, transparent)',
+        color: 'var(--accent)',
+        border: '1px solid color-mix(in srgb, var(--accent) 20%, transparent)',
+      }
+    : {}
+
+  const progressStyle: CSSProperties = accent
+    ? {
+        background:
+          'linear-gradient(to right, var(--accent), color-mix(in srgb, var(--accent) 70%, black))',
+        boxShadow: '0 0 8px color-mix(in srgb, var(--accent) 30%, transparent)',
+      }
+    : { background: 'rgba(140,140,141,0.3)' }
+
+  const buttonStyle: CSSProperties =
+    cardStyle.buttonTone === 'accent' && accent
+      ? {
+          background:
+            'linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent) 65%, black))',
+          color: '#fff',
+          boxShadow: '0 4px 16px color-mix(in srgb, var(--accent) 30%, transparent)',
+        }
+      : {
+          background: 'rgba(140,140,141,0.15)',
+          color: 'rgba(140,140,141,0.7)',
+          border: '1px solid rgba(140,140,141,0.15)',
+          cursor: 'not-allowed',
+        }
 
   const epoch = assessment.epoch
   const direction = assessment.direction
@@ -150,19 +185,28 @@ export default function AssessmentCard({ assessment }: AssessmentCardProps) {
   const allowTeam = assessment.allowTeam
 
   return (
-    <div
-      className={`relative bg-white/[0.04] border rounded-2xl p-6 max-sm:p-[18px] backdrop-blur-[24px] transition-all overflow-hidden ${cardStyle.border}`}
+    <SmokedGlassCard
+      hoverable={cardStyle.clickable}
+      accent={accent}
+      radius={16}
+      className={`overflow-hidden max-sm:[--sgc-padding:18px] ${cardStyle.dimmed ? 'opacity-70' : ''}`}
+      style={{ '--sgc-padding': '24px' } as CSSProperties}
     >
-      {cardStyle.topLine && (
+      {cardStyle.topLine && accent && (
         <div
-          className={`absolute top-0 left-0 right-0 h-px ${cardStyle.topLine} pointer-events-none`}
+          className="absolute top-0 left-0 right-0 h-px pointer-events-none"
+          style={{
+            background:
+              'linear-gradient(to right, transparent, color-mix(in srgb, var(--accent) 30%, transparent), transparent)',
+          }}
         />
       )}
 
       <div className="flex justify-between items-start mb-5">
         <div className="flex items-center gap-[14px]">
           <div
-            className={`w-11 h-11 rounded-xl flex items-center justify-center text-xl shrink-0 backdrop-blur-[8px] ${cardStyle.iconBg}`}
+            className="w-11 h-11 rounded-xl flex items-center justify-center text-xl shrink-0 backdrop-blur-[8px]"
+            style={iconStyle}
           >
             {cardStyle.icon}
           </div>
@@ -175,6 +219,7 @@ export default function AssessmentCard({ assessment }: AssessmentCardProps) {
         </div>
         <span
           className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap shrink-0 backdrop-blur-[8px] ${cardStyle.badgeClass}`}
+          style={badgeStyle}
         >
           {cardStyle.badgeText}
         </span>
@@ -216,8 +261,8 @@ export default function AssessmentCard({ assessment }: AssessmentCardProps) {
           </div>
           <div className="h-[6px] bg-white/[0.06] rounded-[3px] overflow-hidden">
             <div
-              className={`h-full rounded-[3px] transition-[width] duration-300 ${cardStyle.progressBar}`}
-              style={{ width: `${progressPercent}%` }}
+              className="h-full rounded-[3px] transition-[width] duration-300"
+              style={{ ...progressStyle, width: `${progressPercent}%` }}
             />
           </div>
         </div>
@@ -225,7 +270,8 @@ export default function AssessmentCard({ assessment }: AssessmentCardProps) {
 
       <div className="flex justify-end">
         <button
-          className={`inline-flex items-center gap-[6px] px-5 py-2 rounded-lg text-[13px] font-medium border-none cursor-pointer transition-all backdrop-blur-[8px] ${cardStyle.buttonClass}`}
+          className="inline-flex items-center gap-[6px] px-5 py-2 rounded-lg text-[13px] font-medium border-none cursor-pointer transition-all backdrop-blur-[8px]"
+          style={buttonStyle}
           onClick={() => {
             if (!cardStyle.clickable) return
             router.push(`/assessment/${assessment.id.toString()}/questions`)
@@ -235,7 +281,7 @@ export default function AssessmentCard({ assessment }: AssessmentCardProps) {
           {cardStyle.clickable && <RightOutlined className="text-xs" />}
         </button>
       </div>
-    </div>
+    </SmokedGlassCard>
   )
 }
 

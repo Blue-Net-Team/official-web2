@@ -13,6 +13,8 @@
 'use client'
 
 import { useState } from 'react'
+import type { CSSProperties } from 'react'
+import SmokedGlassCard from '@/components/SmokedGlassCard'
 import type { UserInfo } from '@/apis/schema/type'
 import type { UpdateProfileRequestDTO } from '@/apis/schema/profile.dto'
 import {
@@ -133,7 +135,12 @@ export default function ProfileInfo({ profile, onUpdate }: ProfileInfoProps) {
   const genderLabel = profile.gender ? GENDER_LABELS[profile.gender] : '-'
 
   return (
-    <div className="bg-white/[0.03] backdrop-blur-[20px] border border-white/[0.05] rounded-2xl p-8 max-[640px]:p-5">
+    <SmokedGlassCard
+      tone="soft"
+      radius={16}
+      className="max-[640px]:[--sgc-padding:20px]"
+      style={{ '--sgc-padding': '32px' } as CSSProperties}
+    >
       <div className="text-lg font-semibold text-white mb-6 flex items-center gap-[10px] [&>svg]:w-5 [&>svg]:h-5 [&>svg]:text-[#6677ff]">
         <EditOutlined />
         基本信息
@@ -417,6 +424,6 @@ export default function ProfileInfo({ profile, onUpdate }: ProfileInfoProps) {
           </div>
         </>
       )}
-    </div>
+    </SmokedGlassCard>
   )
 }
