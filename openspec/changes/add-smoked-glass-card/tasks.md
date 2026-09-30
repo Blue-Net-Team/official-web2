@@ -33,4 +33,4 @@
 
 - [x] 6.1 删除 `/glass-demo` 路由（page.tsx + module.css）。定稿截图存档于 `src/frontend/.playwright-mcp/page-2026-09-30T18-55-03-478Z.png`（competitions）与 `page-2026-09-30T18-55-43-612Z.png`（achievements），贴 #70 由用户确认后手动进行
 - [x] 6.2 全局搜索排查：`glass-card` 已清零；残留的 `backdrop-blur` 均为范围外局部用法（Members 筛选控件条、考核答题页信息条、报名表单容器、按钮/徽章局部毛玻璃），无卡片级玻璃配方残留
-- [ ] 6.3 完整回归 + 提交：**待办**——4.3/5.2 登录验证未完成后不提交；登录走查（/members 有数据、/assessment 四状态、/profile 全 Tab）通过后再按规范提交（`ref #70`）
+- [x] 6.3 完整回归 + 提交：已按规范提交 `e059c6a9 feat: 新增 SmokedGlassCard 烟色玻璃卡片组件并统一全站卡片样式`（含 `ref #70`）；登录走查覆盖 /competitions、/achievements、/resources、/lab-environment、/members、/profile 全 Tab、/assessment
