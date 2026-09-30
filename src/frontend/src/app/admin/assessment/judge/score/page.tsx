@@ -257,7 +257,13 @@ export default function AssessmentJudgementManagementPage() {
       })
       const list = response.data ?? []
       setQuestions(list)
-      setSelectedQuestionId((current) => current ?? list[0]?.questionId)
+      // 切换考核轮次后题目集合已变化：保留仍存在的选中项，否则清空或回退到第一题，
+      // 避免沿用上一轮次的题目导致右侧提交列表显示错误轮次的人员。
+      setSelectedQuestionId((current) =>
+        current !== undefined && list.some((item) => item.questionId === current)
+          ? current
+          : list[0]?.questionId
+      )
     } catch {
       messageApi.error('加载题目评分汇总失败')
     } finally {
