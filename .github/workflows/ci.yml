@@ -1,6 +1,7 @@
 # CI 流水线：每次推送自动测试 + 构建镜像（路径级过滤，只处理实际变更的服务）
 # 前端镜像不在此构建（由 cd-frontend.yml 在后端健康后构建）。
 # 不可变镜像 tag = trigger/<svc> 中的语义化版本号（x.y.z），另有浮动 latest(master/main)/develop(develop)。
+# trigger/* 仅控制 CD（cd-deploy 自行读取做状态差检测），CI 只关注业务代码变更。
 
 name: CI
 
@@ -20,21 +21,15 @@ env:
 
 jobs:
   # ==================== 变更检测 ====================
-  # 计算本次变更涉及哪些服务；同时产出 changed-services.json 供 CD 编排器读取。
+  # 计算本次变更涉及哪些服务。
 
   changes:
     runs-on: ubuntu-latest
     outputs:
       api_code: ${{ steps.filter.outputs.api == 'true' || steps.filter.outputs.all == 'true' }}
-      api_release: ${{ steps.filter.outputs.api_trigger == 'true' || steps.filter.outputs.all == 'true' }}
       frontend_code: ${{ steps.filter.outputs.frontend == 'true' || steps.filter.outputs.all == 'true' }}
-      frontend_release: ${{ steps.filter.outputs.frontend_trigger == 'true' || steps.filter.outputs.all == 'true' }}
       judge_code: ${{ steps.filter.outputs.judge == 'true' || steps.filter.outputs.all == 'true' }}
-      judge_release: ${{ steps.filter.outputs.judge_trigger == 'true' || steps.filter.outputs.all == 'true' }}
       ai_code: ${{ steps.filter.outputs.ai == 'true' || steps.filter.outputs.all == 'true' }}
-      ai_release: ${{ steps.filter.outputs.ai_trigger == 'true' || steps.filter.outputs.all == 'true' }}
-      infra_code: ${{ steps.filter.outputs.infra == 'true' || steps.filter.outputs.all == 'true' }}
-      infra_release: ${{ steps.filter.outputs.infra_trigger == 'true' || steps.filter.outputs.all == 'true' }}
     steps:
     - uses: actions/checkout@v4
 
@@ -46,55 +41,22 @@ jobs:
           api:
             - 'src/backend/**'
             - 'src/backend/Dockerfile'
-          api_trigger:
-            - 'trigger/api'
           frontend:
             - 'src/frontend/**'
             - 'src/frontend/Dockerfile'
-          frontend_trigger:
-            - 'trigger/frontend'
           judge:
             - 'src/judge-service/**'
             - 'src/judge-service/Dockerfile'
-          judge_trigger:
-            - 'trigger/judge'
           ai:
             - 'src/ai-service/**'
             - 'src/ai-service/Dockerfile'
-          ai_trigger:
-            - 'trigger/ai'
-          infra:
-            - 'docker/docker-compose.yml'
-            - 'docker/.env*'
-          infra_trigger:
-            - 'trigger/infra'
           all:
             - '.github/workflows/**'
-            - 'docker/docker-compose.yml'
-
-    - name: Generate changed-services.json
-      run: |
-        cat > changed-services.json <<'EOF'
-        {
-          "api":      { "codeChanged": "${{ steps.filter.outputs.api == 'true' || steps.filter.outputs.all == 'true' }}", "versionBumped": "${{ steps.filter.outputs.api_trigger == 'true' || steps.filter.outputs.all == 'true' }}" },
-          "frontend": { "codeChanged": "${{ steps.filter.outputs.frontend == 'true' || steps.filter.outputs.all == 'true' }}", "versionBumped": "${{ steps.filter.outputs.frontend_trigger == 'true' || steps.filter.outputs.all == 'true' }}" },
-          "judge":    { "codeChanged": "${{ steps.filter.outputs.judge == 'true' || steps.filter.outputs.all == 'true' }}", "versionBumped": "${{ steps.filter.outputs.judge_trigger == 'true' || steps.filter.outputs.all == 'true' }}" },
-          "ai":       { "codeChanged": "${{ steps.filter.outputs.ai == 'true' || steps.filter.outputs.all == 'true' }}", "versionBumped": "${{ steps.filter.outputs.ai_trigger == 'true' || steps.filter.outputs.all == 'true' }}" },
-          "infra":    { "codeChanged": "${{ steps.filter.outputs.infra == 'true' || steps.filter.outputs.all == 'true' }}", "versionBumped": "${{ steps.filter.outputs.infra_trigger == 'true' || steps.filter.outputs.all == 'true' }}" }
-        }
-        EOF
-
-    - name: Upload changed-services.json
-      uses: actions/upload-artifact@v4
-      with:
-        name: changed-services
-        path: changed-services.json
-        retention-days: 1
 
   # ==================== API 服务测试 ====================
 
   api-service-test:
-    if: needs.changes.outputs.api_code == 'true' || needs.changes.outputs.api_release == 'true'
+    if: needs.changes.outputs.api_code == 'true'
     runs-on: ubuntu-latest
     needs: [changes]
     defaults:
@@ -141,7 +103,7 @@ jobs:
   # ==================== 前端测试 ====================
 
   frontend-test:
-    if: needs.changes.outputs.frontend_code == 'true' || needs.changes.outputs.frontend_release == 'true'
+    if: needs.changes.outputs.frontend_code == 'true'
     runs-on: ubuntu-latest
     needs: [changes]
     defaults:
@@ -175,7 +137,7 @@ jobs:
   # ==================== 判题服务测试 ====================
 
   judge-service-test:
-    if: needs.changes.outputs.judge_code == 'true' || needs.changes.outputs.judge_release == 'true'
+    if: needs.changes.outputs.judge_code == 'true'
     runs-on: ubuntu-latest
     needs: [changes]
 
@@ -219,7 +181,7 @@ jobs:
   # ==================== AI 服务测试 ====================
 
   ai-service-test:
-    if: needs.changes.outputs.ai_code == 'true' || needs.changes.outputs.ai_release == 'true'
+    if: needs.changes.outputs.ai_code == 'true'
     runs-on: ubuntu-latest
     needs: [changes]
     defaults:
@@ -244,7 +206,7 @@ jobs:
   # tag：trigger/api 版本号（不可变）+ sha + 分支 + latest(master/main)
 
   build-api-service:
-    if: github.event_name != 'pull_request' && (needs.changes.outputs.api_code == 'true' || needs.changes.outputs.api_release == 'true')
+    if: github.event_name != 'pull_request' && needs.changes.outputs.api_code == 'true'
     runs-on: ubuntu-latest
     needs: [changes, api-service-test]
     permissions:
@@ -335,7 +297,7 @@ jobs:
   # ==================== 构建判题服务 ====================
 
   build-judge-service:
-    if: github.event_name != 'pull_request' && (needs.changes.outputs.judge_code == 'true' || needs.changes.outputs.judge_release == 'true')
+    if: github.event_name != 'pull_request' && needs.changes.outputs.judge_code == 'true'
     runs-on: ubuntu-latest
     needs: [changes, judge-service-test]
     permissions:
@@ -425,7 +387,7 @@ jobs:
   # ==================== 构建 AI 服务 ====================
 
   build-ai-service:
-    if: github.event_name != 'pull_request' && (needs.changes.outputs.ai_code == 'true' || needs.changes.outputs.ai_release == 'true')
+    if: github.event_name != 'pull_request' && needs.changes.outputs.ai_code == 'true'
     runs-on: ubuntu-latest
     needs: [changes, ai-service-test]
     permissions:

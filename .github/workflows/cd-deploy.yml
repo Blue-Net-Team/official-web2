@@ -1,5 +1,5 @@
 # CD 编排器：CI 成功后（或手动）调度各服务 CD。
-# 自动 CD 条件 = changed-services.json 中该服务 versionBumped=true 且 trigger/<svc> 存在。
+# 自动 CD 条件 = trigger/<svc> 存在且版本号 ≠ 最近 deploy/<svc>/v* git tag（状态差检测）。
 # 仅 codeChanged 的推送不部署（构建不部署规则）。
 # 手动 CD 按 target_service 部署浮动 latest(prod)/develop(dev) 镜像。
 
