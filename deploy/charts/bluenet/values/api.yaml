@@ -173,7 +173,10 @@ volumes:
   - name: github-keys
     secret:
       secretName: bluenet-github-keys
-      defaultMode: 0400
+      # 镜像以非 root 用户（appuser, uid=100）运行，且不属于 root 组。
+      # 0400 会导致 AccessDeniedException（线上事故），须对所有者之外开放读权限。
+      # 卷本身是 readOnly 且仅本容器挂载，0444 可接受。
+      defaultMode: 0444
 volumeMounts:
   - name: github-keys
     mountPath: /app/github-issue-private-key.pem
