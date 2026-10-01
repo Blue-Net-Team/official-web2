@@ -2,9 +2,10 @@
 # 全面 helm 部署，不使用 SSH/compose。
 #
 # 注意：NEXT_PUBLIC_* 是构建期注入，改变目标地址必须重新构建镜像。
-#   - SSR（服务端）目标：vars.K8S_BACKEND_*（集群内 Service DNS，如 bluenet-api:8080）
+#   - SSR 构建期预渲染目标：vars.BACKEND_*（GitHub Runner 公网可达的生产地址）
+#     不可传集群内 Service DNS，构建容器解析不到集群网络，会导致预渲染数据为空
+#   - 运行时 SSR 目标：由容器运行环境变量 BACKEND_HOST 决定（集群内 Service DNS）
 #   - 浏览器侧目标：vars.PUBLIC_*（生产域名，经 nginx）
-#   未设置上述变量时回退旧 vars（BACKEND_HOST 等），行为与迁移前一致。
 
 name: CD Frontend
 
@@ -116,10 +117,11 @@ jobs:
         labels: ${{ steps.meta.outputs.labels }}
         build-args: |
           CACHE_BUST=${{ github.sha }}_${{ github.run_id }}
-          # SSR 目标：集群内 Service DNS
-          BUILD_BACKEND_HOST=${{ vars.K8S_BACKEND_HOST || vars.BACKEND_HOST }}
-          BUILD_BACKEND_PORT=${{ vars.K8S_BACKEND_PORT || vars.BACKEND_PORT }}
-          BUILD_SSL_ENABLED=${{ vars.K8S_SSL_ENABLED || 'false' }}
+          # SSR 预渲染目标：必须是构建期（GitHub Runner）公网可达的地址，
+          # 不可使用集群内 Service DNS（如 bluenet-api），否则构建期取不到数据
+          BUILD_BACKEND_HOST=${{ vars.BACKEND_HOST }}
+          BUILD_BACKEND_PORT=${{ vars.BACKEND_PORT }}
+          BUILD_SSL_ENABLED=${{ vars.SSL_ENABLED || 'false' }}
           # 浏览器侧目标：生产域名（经 nginx）
           NEXT_PUBLIC_BACKEND_HOST=${{ vars.PUBLIC_HOST || vars.BACKEND_HOST }}
           NEXT_PUBLIC_BACKEND_PORT=${{ vars.PUBLIC_PORT || vars.BACKEND_PORT }}

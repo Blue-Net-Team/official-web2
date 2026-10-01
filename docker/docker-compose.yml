@@ -133,7 +133,9 @@ services:
       context: ../src/frontend
       dockerfile: Dockerfile
       args:
-        BUILD_BACKEND_HOST: ${BACKEND_HOST:-api-service}
+        # 构建期（docker build 阶段）SSR 预渲染地址：构建容器不在 compose 网络内，
+        # 默认的 api-service 解析不到；Docker Desktop 用 host.docker.internal 指向宿主机
+        BUILD_BACKEND_HOST: ${BUILD_BACKEND_HOST:-${BACKEND_HOST:-api-service}}
         BUILD_BACKEND_PORT: ${BACKEND_PORT:-8080}
         BUILD_SSL_ENABLED: ${SSL_ENABLED:-false}
         NEXT_PUBLIC_BACKEND_HOST: ${NEXT_PUBLIC_BACKEND_HOST:-localhost}
