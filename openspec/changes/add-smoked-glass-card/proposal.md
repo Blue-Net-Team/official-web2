@@ -25,7 +25,7 @@ Issue #70 反馈竞赛、成就页面的卡片是“透明玻璃、无厚度感�
 
 ### Modified Capabilities
 
-（无。现有 spec 均未定义玻璃卡片视觉需求；`assessment-card-visual-state` 的对外状态视觉要求不变，token 化属实现方式演进。）
+- `assessment-card-visual-state`: 状态配色映射调整——`inProgress`（进行中）由蓝紫 `#6677ff` 改为绿 `#07c160`，`ended`（已结束）由绿 `#07c160` 改为蓝紫 `#6677ff`（用户拍板：进行中=绿、已结束=蓝紫）；既有「重构不改变组件对外契约」的逐像素等价约束被本次显式配色变更取代
 
 ## Impact
 

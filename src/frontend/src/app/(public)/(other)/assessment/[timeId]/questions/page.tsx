@@ -1,6 +1,8 @@
 'use client'
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
+import type { CSSProperties } from 'react'
+import SmokedGlassCard from '@/components/SmokedGlassCard'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import {
   ArrowLeftOutlined,
@@ -354,7 +356,11 @@ export default function QuestionsPage() {
 
             {/* 队伍信息区域 */}
             {timeInfo?.allowTeam && !ended && (
-              <div className="mb-6 p-4 rounded-xl bg-white/[0.04] border border-white/[0.08] backdrop-blur-xl">
+              <SmokedGlassCard
+                radius={12}
+                className="mb-6"
+                style={{ '--sgc-padding': '16px' } as CSSProperties}
+              >
                 {teamLoading ? (
                   <div className="flex items-center gap-2 text-white/45">
                     <Spin size="small" />
@@ -408,7 +414,7 @@ export default function QuestionsPage() {
                     </div>
                   </div>
                 )}
-              </div>
+              </SmokedGlassCard>
             )}
           </div>
         </div>
@@ -420,34 +426,34 @@ export default function QuestionsPage() {
         ) : (
           <>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-7">
-              <div className="flex items-center gap-3 p-4 rounded-xl bg-white/[0.04] border border-white/[0.08] backdrop-blur-xl">
+              <SmokedGlassCard radius={12} style={{ '--sgc-padding': '16px' } as CSSProperties}>
                 <FileTextOutlined className="text-[22px] text-white/40" />
                 <div className="flex flex-col">
                   <span className="text-xl font-semibold text-white">{totalElements}</span>
                   <span className="text-xs text-white/45">题目总数</span>
                 </div>
-              </div>
-              <div className="flex items-center gap-3 p-4 rounded-xl bg-white/[0.04] border border-white/[0.08] backdrop-blur-xl">
+              </SmokedGlassCard>
+              <SmokedGlassCard radius={12} style={{ '--sgc-padding': '16px' } as CSSProperties}>
                 <CheckCircleOutlined className="text-[22px] text-[#07c160]" />
                 <div className="flex flex-col">
                   <span className="text-xl font-semibold text-white">{answeredCount}</span>
                   <span className="text-xs text-white/45">已作答</span>
                 </div>
-              </div>
-              <div className="flex items-center gap-3 p-4 rounded-xl bg-white/[0.04] border border-white/[0.08] backdrop-blur-xl">
+              </SmokedGlassCard>
+              <SmokedGlassCard radius={12} style={{ '--sgc-padding': '16px' } as CSSProperties}>
                 <MinusCircleOutlined className="text-[22px] text-[#8c8c8d]/60" />
                 <div className="flex flex-col">
                   <span className="text-xl font-semibold text-white">{unansweredCount}</span>
                   <span className="text-xs text-white/45">未作答</span>
                 </div>
-              </div>
-              <div className="flex items-center gap-3 p-4 rounded-xl bg-white/[0.04] border border-white/[0.08] backdrop-blur-xl">
+              </SmokedGlassCard>
+              <SmokedGlassCard radius={12} style={{ '--sgc-padding': '16px' } as CSSProperties}>
                 <TrophyOutlined className="text-[22px] text-[#fa8c16]" />
                 <div className="flex flex-col">
                   <span className="text-xl font-semibold text-white">{totalScore}</span>
                   <span className="text-xs text-white/45">总分</span>
                 </div>
-              </div>
+              </SmokedGlassCard>
             </div>
 
             <Table<AssessmentQuestionDTO>

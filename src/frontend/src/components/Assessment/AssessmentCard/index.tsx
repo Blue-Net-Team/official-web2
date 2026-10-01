@@ -65,7 +65,7 @@ const STYLES: Record<VisualState, VisualStateStyle> = {
     topLine: false,
   },
   inProgress: {
-    accent: '#6677ff',
+    accent: '#07c160',
     clickable: true,
     icon: <FieldTimeOutlined />,
     badgeClass: '',
@@ -76,7 +76,7 @@ const STYLES: Record<VisualState, VisualStateStyle> = {
     topLine: true,
   },
   ended: {
-    accent: '#07c160',
+    accent: '#6677ff',
     clickable: true,
     icon: <DesktopOutlined />,
     badgeClass: '',

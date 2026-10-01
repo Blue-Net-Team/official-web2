@@ -29,6 +29,16 @@
 - [x] 5.1 Profile 7 处面板迁移为 `SmokedGlassCard tone="soft"`：`ProfileSidebar`（sticky 保留）、`ProfileInfo`、`ProfileInfoDisplay`、`ExperienceSection`（含空状态）、`MemberAchievements`、`AssessmentList` 空状态容器；`ProfileTabs` 不动
 - [x] 5.2 E2E 验证 `/profile` 全 Tab——已登录走查：个人信息/我的考核/项目经历/个人成就/实习经历各 Tab 的 soft 面板渲染正常，panel 内嵌 panel（经历区空态）层次清晰，soft 浓度无需调整
 
+## 7. 补漏：考核答题页磨砂卡片（实施后用户指出）
+
+- [x] 7.1 `assessment/[timeId]/questions/page.tsx` 5 处无底色磨砂卡片迁移为 `SmokedGlassCard`（radius 12，padding 16，不悬浮）：4 张统计小卡（题目总数/已作答/未作答/总分）+ 队伍信息条——与 #70 同配方残留，同属本 change 治理范围
+- [x] 7.2 验证：`tsc --noEmit` + eslint 通过；页面需考核数据才能完整渲染，同 4.3 遗留一并待有数据环境复核。注意：同页 QuestionDetail/QuestionSidebar 的 `bg-white/[0.06]` 实色面板（非磨砂）未纳入本次，如需统一为 soft tone 另行立项
+
+## 8. 状态配色对调（用户追加需求，更新 spec）
+
+- [x] 8.1 更新 `assessment-card-visual-state` 需求：`inProgress`（进行中）主题色蓝紫→绿 `#07c160`，`ended`（已结束）绿→蓝紫 `#6677ff`；「逐像素等价」约束显式由新配色映射取代（change 内新增 delta spec，MODIFIED 两个 requirement）
+- [x] 8.2 代码同步：AssessmentCard `STYLES` 两个状态的 `accent` 对调（进行中=绿、已结束=蓝紫）
+
 ## 6. 清理与收尾
 
 - [x] 6.1 删除 `/glass-demo` 路由（page.tsx + module.css）。定稿截图存档于 `src/frontend/.playwright-mcp/page-2026-09-30T18-55-03-478Z.png`（competitions）与 `page-2026-09-30T18-55-43-612Z.png`（achievements），贴 #70 由用户确认后手动进行
