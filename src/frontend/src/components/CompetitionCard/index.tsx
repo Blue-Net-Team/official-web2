@@ -49,11 +49,11 @@ export default function CompetitionCard({ competition }: CompetitionCardProps) {
         className={`relative z-[2] flex flex-col gap-3 justify-center h-fit py-6 md:py-0 px-8 md:px-0`}
       >
         <div
-          className="flex justify-between items-center gap-4
+          className="flex items-center gap-4
           max-md:flex-col max-md:items-start max-md:gap-3"
         >
           <div
-            className="flex items-center gap-4 flex-1 min-w-0
+            className="flex items-center gap-4 min-w-0
             max-md:w-full max-md:justify-start max-md:gap-3"
           >
             {/* Logo */}
@@ -79,15 +79,15 @@ export default function CompetitionCard({ competition }: CompetitionCardProps) {
             >
               {levelLabel}
             </Tag>
+            {competition.month && (
+              <span
+                className="text-2xl font-normal text-white/40 shrink-0 font-[Inter,sans-serif]
+                max-md:text-[18px]"
+              >
+                {competition.month}
+              </span>
+            )}
           </div>
-          {competition.month && (
-            <span
-              className="text-2xl font-normal text-white/40 shrink-0 font-[Inter,sans-serif]
-              max-md:text-[18px]"
-            >
-              {competition.month}
-            </span>
-          )}
         </div>
 
         <div className="flex flex-col gap-2">
