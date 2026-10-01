@@ -11,8 +11,8 @@ interface AchievementStatsProps {
 const AchievementStats = ({ stats }: AchievementStatsProps) => {
   const statItems = [
     {
-      title: '总成就',
-      value: stats.totalAchievements,
+      title: '竞赛总数',
+      value: stats.competitionCount,
       icon: <TrophyOutlined className="text-2xl text-[#1890ff]" />,
       color: '#1890ff',
     },

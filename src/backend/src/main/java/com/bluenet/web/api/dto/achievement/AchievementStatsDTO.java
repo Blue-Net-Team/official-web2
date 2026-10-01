@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 @Schema(description = "成就统计信息")
 public class AchievementStatsDTO {
     @Schema(description = "总成就数")
-    private Long totalAchievements;
+    private Long competitionCount;
 
     @Schema(description = "国家级奖项数")
     private Long nationalCount;

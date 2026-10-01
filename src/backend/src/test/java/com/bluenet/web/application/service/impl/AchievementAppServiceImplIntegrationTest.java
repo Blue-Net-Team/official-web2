@@ -386,7 +386,7 @@ class AchievementAppServiceImplIntegrationTest extends DBIntegrationTest {
 
         AchievementStatistics statistics = achievementAppService.getAchievementStats();
 
-        assertThat(statistics.getTotalAchievements()).isEqualTo(4L);
+        assertThat(statistics.getCompetitionCount()).isEqualTo(4L);
         assertThat(statistics.getNationalCount()).isEqualTo(1L);
         assertThat(statistics.getProvincialCount()).isEqualTo(2L);
         assertThat(statistics.getSchoolCount()).isEqualTo(1L);

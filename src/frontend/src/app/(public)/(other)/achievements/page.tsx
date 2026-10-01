@@ -15,7 +15,7 @@ const YEARS = [2024, 2023, 2022, 2021, 2020]
 
 export default function AchievementsPage() {
   const [stats, setStats] = useState<AchievementStatsDTO>({
-    totalAchievements: 0,
+    competitionCount: 0,
     nationalCount: 0,
     provincialCount: 0,
     schoolCount: 0,

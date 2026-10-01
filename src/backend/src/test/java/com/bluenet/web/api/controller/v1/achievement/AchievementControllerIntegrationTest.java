@@ -129,13 +129,13 @@ class AchievementControllerIntegrationTest extends APIIntegrationTest {
     @DisplayName("getAchievementStats: 应返回成就统计数据")
     void getAchievementStats_shouldReturnStats() throws Exception {
         AchievementStatistics statistics = AchievementStatistics.builder()
-                .totalAchievements(10L)
+                .competitionCount(10L)
                 .nationalCount(3L)
                 .provincialCount(4L)
                 .schoolCount(3L)
                 .build();
         AchievementStatsDTO dto = AchievementStatsDTO.builder()
-                .totalAchievements(10L)
+                .competitionCount(10L)
                 .nationalCount(3L)
                 .provincialCount(4L)
                 .schoolCount(3L)
@@ -146,7 +146,7 @@ class AchievementControllerIntegrationTest extends APIIntegrationTest {
         mockMvc.perform(get("/api/v1/achievements/stats"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200))
-                .andExpect(jsonPath("$.data.totalAchievements").value(10))
+                .andExpect(jsonPath("$.data.competitionCount").value(10))
                 .andExpect(jsonPath("$.data.nationalCount").value(3));
     }
 }
