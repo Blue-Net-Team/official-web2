@@ -130,9 +130,9 @@ function ResourceCard({ resource }: { resource: SoftwareResourceDTO }) {
       className="block group"
     >
       <SmokedGlassCard hoverable radius={16} style={{ '--sgc-padding': '20px' } as CSSProperties}>
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex-1">
-            <div className="flex items-center gap-3 mb-2">
+        <div>
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center flex-wrap gap-x-3 gap-y-2">
               <h3 className="text-lg font-semibold text-white group-hover:text-blue-300 transition-colors">
                 {resource.name}
               </h3>
@@ -145,11 +145,11 @@ function ResourceCard({ resource }: { resource: SoftwareResourceDTO }) {
                 {SOFTWARE_RESOURCE_DIRECTION_LABELS[resource.direction]}
               </span>
             </div>
-            {resource.description && (
-              <p className="text-white/60 text-sm leading-relaxed">{resource.description}</p>
-            )}
+            <span className="text-blue-400 text-sm whitespace-nowrap shrink-0">前往下载 →</span>
           </div>
-          <span className="text-blue-400 text-sm whitespace-nowrap">前往下载 →</span>
+          {resource.description && (
+            <p className="mt-2 text-white/60 text-sm leading-relaxed">{resource.description}</p>
+          )}
         </div>
       </SmokedGlassCard>
     </a>
