@@ -44,7 +44,7 @@ logo 在竞赛卡片仅渲染 28px 高，256×256 已覆盖 2x 屏；同时低�
 ## Risks / Trade-offs
 
 - [重构破坏头像裁剪] → 唯一消费方 ProfileSidebar，改动仅为引用路径；E2E 验证时回归头像上传路径。
-- [Canvas toBlob 产出 JPEG 丢失透明通道] → 与现有 avatar 行为一致；logo 场景若上传 PNG 透明底会变黑/白底。可接受（本期不处理，记录为已知限制）。
+- [裁剪改变原图格式/丢失透明信息] → 输出 MIME 从源 objectURL blob 读取，PNG 保留透明通道；quality 参数仅对 JPEG 生效。裁剪仅做几何裁剪，不做格式转换。
 - [React 19 兼容 cast] → 保留 `react-easy-crop` 的 `_Cropper as unknown as React.FC` 写法，不做升级或类型"修正"。
 
 ## Open Questions

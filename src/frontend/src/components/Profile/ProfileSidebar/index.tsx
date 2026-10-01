@@ -19,7 +19,7 @@ import {
 import { App, Tag, Modal, Button } from 'antd'
 import { QrcodeOutlined } from '@ant-design/icons'
 import Image, { type StaticImageData } from 'next/image'
-import AvatarCropModal from '../AvatarCropModal'
+import ImageCropModal from '@/components/common/ImageCropModal'
 import { ReferralPosterModal } from '../ReferralPoster'
 import cvIcon from '@/assets/icon/direction/cv_icon.png'
 import structIcon from '@/assets/icon/direction/struct_icon.png'
@@ -120,7 +120,8 @@ export default function ProfileSidebar({
       setUploading(true)
       setCropModalOpen(false)
       try {
-        const file = new File([blob], 'avatar.jpg', { type: 'image/jpeg' })
+        const ext = blob.type === 'image/png' ? 'png' : blob.type === 'image/webp' ? 'webp' : 'jpg'
+        const file = new File([blob], `avatar.${ext}`, { type: blob.type })
         const res = await fileService.upload(file, 'AVATAR')
         if (res.code === 200 && res.data) {
           await fileService.updateAvatar(res.data.id)
@@ -337,9 +338,11 @@ export default function ProfileSidebar({
       </SmokedGlassCard>
 
       {allowAvatarUpload && (
-        <AvatarCropModal
+        <ImageCropModal
           open={cropModalOpen}
           imageSrc={cropImageSrc}
+          title="裁剪头像"
+          cropShape="round"
           onConfirm={handleCropConfirm}
           onCancel={handleCropCancel}
         />

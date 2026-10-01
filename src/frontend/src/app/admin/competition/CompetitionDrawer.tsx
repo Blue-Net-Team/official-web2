@@ -24,6 +24,7 @@ import { COMPETITION_LEVEL_LABELS, COMPETITION_LEVEL_COLORS } from '@/types/comp
 import { fileService } from '@/apis/services/file.service'
 import { API_BASE_URL } from '@/apis/config'
 import { adminCompetitionService } from '@/apis/services/admin-competition.service'
+import ImageCropModal from '@/components/common/ImageCropModal'
 
 export type DrawerMode = 'view' | 'edit' | 'create'
 
@@ -58,6 +59,8 @@ export default function CompetitionDrawer({
   const [coverUploading, setCoverUploading] = useState(false)
   const [logoFileId, setLogoFileId] = useState<number | null>(null)
   const [coverFileId, setCoverFileId] = useState<number | null>(null)
+  const [logoCropOpen, setLogoCropOpen] = useState(false)
+  const [logoCropSrc, setLogoCropSrc] = useState<string | null>(null)
 
   // 当打开或数据/模式变化时重置表单
   useEffect(() => {
@@ -98,9 +101,20 @@ export default function CompetitionDrawer({
     }
   }
 
-  const handleLogoUpload = async (file: File) => {
+  // 选择 logo 后先进入裁剪弹窗，确认后再上传
+  const handleLogoSelect = (file: File) => {
+    const url = URL.createObjectURL(file)
+    setLogoCropSrc(url)
+    setLogoCropOpen(true)
+    return false
+  }
+
+  const handleLogoCropConfirm = async (blob: Blob) => {
+    setLogoCropOpen(false)
     setLogoUploading(true)
     try {
+      const ext = blob.type === 'image/png' ? 'png' : blob.type === 'image/webp' ? 'webp' : 'jpg'
+      const file = new File([blob], `logo.${ext}`, { type: blob.type })
       const res = await fileService.upload(file, 'NORMAL_IMG')
       if (res.code === 200 && res.data) {
         setLogoFileId(res.data.id)
@@ -108,8 +122,19 @@ export default function CompetitionDrawer({
       }
     } finally {
       setLogoUploading(false)
+      if (logoCropSrc) {
+        URL.revokeObjectURL(logoCropSrc)
+        setLogoCropSrc(null)
+      }
     }
-    return false
+  }
+
+  const handleLogoCropCancel = () => {
+    setLogoCropOpen(false)
+    if (logoCropSrc) {
+      URL.revokeObjectURL(logoCropSrc)
+      setLogoCropSrc(null)
+    }
   }
 
   const handleCoverUpload = async (file: File) => {
@@ -134,49 +159,60 @@ export default function CompetitionDrawer({
         : (competition?.name ?? '竞赛详情')
 
   return (
-    <Drawer
-      title={title}
-      placement="right"
-      width={480}
-      open={open}
-      onClose={onClose}
-      styles={{ body: { padding: 0 } }}
-      footer={
-        <div className="flex justify-end gap-2">
-          {mode === 'view' && competition ? (
-            <>
-              <Button danger icon={<DeleteOutlined />} onClick={() => onDelete(competition)}>
-                删除
-              </Button>
-              <Button type="primary" icon={<EditOutlined />} onClick={onEdit}>
-                编辑
-              </Button>
-            </>
-          ) : (
-            <>
-              <Button onClick={onClose}>取消</Button>
-              <Button type="primary" loading={saving} onClick={handleSave}>
-                {mode === 'create' ? '创建' : '保存'}
-              </Button>
-            </>
-          )}
-        </div>
-      }
-    >
-      {mode === 'view' && competition ? (
-        <DetailView competition={competition} />
-      ) : (
-        <FormView
-          form={form}
-          logoFileId={logoFileId}
-          coverFileId={coverFileId}
-          logoUploading={logoUploading}
-          coverUploading={coverUploading}
-          onLogoUpload={handleLogoUpload}
-          onCoverUpload={handleCoverUpload}
+    <>
+      <Drawer
+        title={title}
+        placement="right"
+        width={480}
+        open={open}
+        onClose={onClose}
+        styles={{ body: { padding: 0 } }}
+        footer={
+          <div className="flex justify-end gap-2">
+            {mode === 'view' && competition ? (
+              <>
+                <Button danger icon={<DeleteOutlined />} onClick={() => onDelete(competition)}>
+                  删除
+                </Button>
+                <Button type="primary" icon={<EditOutlined />} onClick={onEdit}>
+                  编辑
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button onClick={onClose}>取消</Button>
+                <Button type="primary" loading={saving} onClick={handleSave}>
+                  {mode === 'create' ? '创建' : '保存'}
+                </Button>
+              </>
+            )}
+          </div>
+        }
+      >
+        {mode === 'view' && competition ? (
+          <DetailView competition={competition} />
+        ) : (
+          <FormView
+            form={form}
+            logoFileId={logoFileId}
+            coverFileId={coverFileId}
+            logoUploading={logoUploading}
+            coverUploading={coverUploading}
+            onLogoUpload={handleLogoSelect}
+            onCoverUpload={handleCoverUpload}
+          />
+        )}
+        <ImageCropModal
+          open={logoCropOpen}
+          imageSrc={logoCropSrc}
+          title="裁剪 Logo"
+          outputSize={256}
+          aspect={1}
+          onConfirm={handleLogoCropConfirm}
+          onCancel={handleLogoCropCancel}
         />
-      )}
-    </Drawer>
+      </Drawer>
+    </>
   )
 }
 

@@ -1,4 +1,3 @@
-export { default as AvatarCropModal } from './AvatarCropModal'
 export { default as AssessmentList } from './AssessmentList'
 export { default as ExperienceCard } from './ExperienceCard'
 export { default as ExperienceSection } from './ExperienceSection'
