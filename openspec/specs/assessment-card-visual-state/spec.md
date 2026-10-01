@@ -32,9 +32,11 @@ TBD - created by archiving change assessment-card-visual-state. Update Purpose a
 各状态 SHALL 呈现下述既定表现（取值与重构前逐一等价）：
 
 - `eliminated`：边框灰且半透明、图标底灰、图标为 `InboxOutlined`、徽章红底（`#ff4d4f`）文案「已被淘汰」、按钮灰且禁用样式文案「已被淘汰」、进度条灰、无顶部高光线
-- `inProgress`：边框与图标底蓝紫（`#6677ff`）、图标为 `FieldTimeOutlined`、徽章蓝紫文案「进行中」、按钮蓝紫渐变文案「继续答题」、进度条蓝紫渐变、顶部蓝紫高光线
-- `ended`：边框与图标底绿（`#07c160`）、图标为 `DesktopOutlined`、徽章绿文案「已结束」、按钮绿渐变文案「查看详情」、进度条绿渐变、顶部绿高光线
+- `inProgress`：边框与图标底绿（`#07c160`）、图标为 `FieldTimeOutlined`、徽章绿文案「进行中」、按钮绿渐变文案「继续答题」、进度条绿渐变、顶部绿高光线
+- `ended`：边框与图标底蓝紫（`#6677ff`）、图标为 `DesktopOutlined`、徽章蓝紫文案「已结束」、按钮蓝紫渐变文案「查看详情」、进度条蓝紫渐变、顶部蓝紫高光线
 - `notStarted`：边框与图标底灰、图标为 `InboxOutlined`、徽章灰文案「未开始」、按钮灰且禁用样式文案「暂不可进入」、进度条灰、无顶部高光线
+
+> 配色说明：进行中=绿（可操作的「进行」语义）、已结束=蓝紫（中性的「归档」语义）。
 
 #### Scenario: 淘汰态图标与进度条显式归位
 - **WHEN** 视觉状态为 `eliminated`
@@ -42,11 +44,11 @@ TBD - created by archiving change assessment-card-visual-state. Update Purpose a
 
 #### Scenario: 进行中态整组视觉一致
 - **WHEN** 视觉状态为 `inProgress`
-- **THEN** 边框、图标底、徽章、按钮、进度条 SHALL 全部呈现蓝紫主题，徽章文案为「进行中」，按钮文案为「继续答题」，并显示顶部蓝紫高光线
+- **THEN** 边框、图标底、徽章、按钮、进度条 SHALL 全部呈现绿色主题，徽章文案为「进行中」，按钮文案为「继续答题」，并显示顶部绿色高光线
 
 #### Scenario: 已结束态整组视觉一致
 - **WHEN** 视觉状态为 `ended`
-- **THEN** 边框、图标底、徽章、按钮、进度条 SHALL 全部呈现绿色主题，图标为 `DesktopOutlined`，徽章文案为「已结束」，按钮文案为「查看详情」
+- **THEN** 边框、图标底、徽章、按钮、进度条 SHALL 全部呈现蓝紫主题，图标为 `DesktopOutlined`，徽章文案为「已结束」，按钮文案为「查看详情」
 
 #### Scenario: 进度条仅在有题目时渲染
 - **WHEN** 考核 `totalQuestions` 为 0 或空
@@ -66,7 +68,9 @@ TBD - created by archiving change assessment-card-visual-state. Update Purpose a
 
 ### Requirement: 重构不改变组件对外契约
 
-本能力以纯前端组件内部重构方式实现，组件 props SHALL 保持为 `assessment: AssessmentTimeDTO` 不变，对外渲染结果 SHALL 与重构前逐像素等价，调用方 SHALL NOT 需要任何修改。
+本能力以纯前端组件内部重构方式实现，组件 props SHALL 保持为 `assessment: AssessmentTimeDTO` 不变，调用方 SHALL NOT 需要任何修改。
+
+2026-09 配色对调（进行中=绿、已结束=蓝紫）后的当前实现为基准；既有「对外渲染结果与重构前逐像素等价」的约束已由该显式配色变更取代，除配色外组件渲染结果 SHALL 无其它差异。
 
 #### Scenario: 调用方无需改动
 - **WHEN** 重构完成后
