@@ -1,0 +1,114 @@
+/* ==========================================================================
+ * SmokedGlassTabs —— 烟色玻璃胶囊 Tab（全站统一 Tab 组件）
+ *
+ * 材质与 SmokedGlassCard 同源：
+ * - 容器 = 烟色玻璃胶囊（deep 默认；tone='soft' 为淡一档面板态）
+ * - 选中指示器 = 浓烟胶囊，材质对齐 SmokedGlassCard accent 变体
+ *   （22% accent 边框 / 10% accent 光晕 / 14% accent 内高光，color-mix 派生）
+ * - 禁用「无底色纯磨砂」配方（Issue #70 已证缺陷形态）
+ *
+ * 实现：包装 antd Tabs，保留 a11y / 键盘导航 / 受控 API；
+ * 指示器位置由 JS 量取激活 Tab 的几何后写入 --sgt-pill-left / --sgt-pill-width，
+ * CSS 负责过渡动画；文字高亮用 color transition 渐变。
+ * ========================================================================== */
+
+.tabs {
+  /* 外边距由调用方控制（如 Tailwind mb-6），此处不得重置 margin；
+     antd 默认导航外边距已由局部 ConfigProvider horizontalMargin='0' 关闭 */
+  --sgt-pill-left: 6px;
+  --sgt-pill-width: 0px;
+}
+
+/* ---------- 胶囊容器：烟色玻璃（deep，默认） ---------- */
+.tabs :global(.ant-tabs-nav) {
+  position: relative;
+  width: fit-content;
+  max-width: 100%;
+  padding: 6px;
+  border-radius: 999px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0) 42%),
+    linear-gradient(160deg, #1b1b24 0%, #12121a 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(12px) saturate(1.2);
+  -webkit-backdrop-filter: blur(12px) saturate(1.2);
+}
+
+/* ---------- tone='soft'：淡一档烟色，面板内嵌场景（如 Profile） ----------
+ * 配方对齐 SmokedGlassCard .soft */
+.soft :global(.ant-tabs-nav) {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0) 45%),
+    linear-gradient(160deg, rgba(30, 30, 40, 0.5) 0%, rgba(20, 20, 28, 0.5) 100%);
+  border-color: rgba(255, 255, 255, 0.09);
+  box-shadow: none;
+  backdrop-filter: blur(20px) saturate(1.3);
+  -webkit-backdrop-filter: blur(20px) saturate(1.3);
+}
+
+.tabs :global(.ant-tabs-nav::before) {
+  /* 隐藏 antd 默认底部边框线 */
+  display: none;
+}
+
+.tabs :global(.ant-tabs-ink-bar) {
+  display: none;
+}
+
+/* ---------- 滑动指示器：浓烟玻璃胶囊 ----------
+ * 材质对齐 SmokedGlassCard accent 变体：
+ * 底色比容器抬亮一档，边框/光晕/内高光由 accent 单变量 color-mix 派生 */
+.tabs :global(.ant-tabs-nav::after) {
+  content: '';
+  position: absolute;
+  /* 负 z-index：压在 nav 自身背景之上、Tab 内容之下，
+     避免与 antd 内部 nav-wrap 的层叠结构纠缠 */
+  z-index: -1;
+  left: var(--sgt-pill-left);
+  top: 6px;
+  height: calc(100% - 12px);
+  width: var(--sgt-pill-width);
+  border-radius: 999px;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0) 42%),
+    linear-gradient(160deg, #262635 0%, #191926 100%);
+  border: 1px solid color-mix(in srgb, var(--sgt-accent, #6677ff) 22%, transparent);
+  box-shadow:
+    0 4px 16px rgba(0, 0, 0, 0.35),
+    0 0 32px color-mix(in srgb, var(--sgt-accent, #6677ff) 10%, transparent),
+    inset 0 1px 0 color-mix(in srgb, var(--sgt-accent, #6677ff) 14%, transparent);
+  transition:
+    left 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+    width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Tab 列表正常流渲染即可（指示器用负 z-index 沉底） */
+.tabs :global(.ant-tabs-nav-list) {
+  position: relative;
+}
+
+/* ---------- Tab 项 ----------
+ * 文字颜色由组件内局部 ConfigProvider 的 Tabs token 控制（itemColor/itemSelectedColor），
+ * 此处只保留几何与动效，避免 CSS 特异性压过 token。 */
+.tabs :global(.ant-tabs .ant-tabs-tab) {
+  margin: 0 !important;
+  padding: 0 !important;
+  border-radius: 999px;
+}
+
+.tabs :global(.ant-tabs .ant-tabs-tab-btn) {
+  padding: 8px 20px;
+  border-radius: 999px;
+  /* 文字高亮 / 暗淡的颜色动画 */
+  transition: color 0.3s ease;
+}
+
+/* 键盘导航焦点可见性（color-mix 需要显式色值，token 无法表达） */
+.tabs :global(.ant-tabs .ant-tabs-tab-btn:focus-visible) {
+  outline: 2px solid color-mix(in srgb, var(--sgt-accent, #6677ff) 60%, transparent);
+  outline-offset: 2px;
+}

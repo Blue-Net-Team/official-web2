@@ -14,12 +14,13 @@ import {
 } from '@ant-design/icons'
 import {
   ProfileSidebar,
-  ProfileTabs,
   ProfileInfo,
   AssessmentList,
   ExperienceSection,
   MemberAchievements,
 } from '@/components/Profile'
+import { buildTabItems } from '@/components/Profile'
+import SmokedGlassTabs from '@/components/SmokedGlassTabs'
 import { API_BASE_URL } from '@/apis/config'
 import { Spin } from 'antd'
 import DarkVeil from '@/components/Reactbits/DarkVeil'
@@ -64,6 +65,8 @@ export default function ProfilePage() {
   const getExperiencesByType = (type: string) => {
     return experiences.filter((e) => e.type === type)
   }
+
+  const profileTabItems = buildTabItems(PROFILE_TABS, tabCounts)
 
   if (loading) {
     return (
@@ -110,11 +113,12 @@ export default function ProfilePage() {
         <ProfileSidebar profile={sidebarProfile} onAvatarUpdate={refresh} />
 
         <div className="flex-1 min-w-0">
-          <ProfileTabs
-            activeTab={currentTab}
-            tabs={PROFILE_TABS}
-            tabCounts={tabCounts}
-            onTabChange={handleTabChange}
+          <SmokedGlassTabs
+            tone="soft"
+            className="mb-6"
+            activeKey={currentTab}
+            items={profileTabItems}
+            onChange={handleTabChange}
           />
 
           {currentTab === 'profile' && <ProfileInfo profile={profile} onUpdate={refresh} />}

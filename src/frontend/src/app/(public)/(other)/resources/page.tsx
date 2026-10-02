@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { CSSProperties } from 'react'
 import DarkVeil from '@/components/Reactbits/DarkVeil'
 import SmokedGlassCard from '@/components/SmokedGlassCard'
+import DirectionTabs from './DirectionTabs'
 import { softwareResourceService } from '@/apis/services/software-resource.service'
 import { SOFTWARE_RESOURCE_DIRECTION_LABELS } from '@/apis/schema/enumerate'
 import type { SoftwareResourceDTO } from '@/apis/schema/type'
@@ -62,24 +63,12 @@ export default async function ResourcesPage({ searchParams }: PageProps) {
           </p>
         </section>
 
-        <nav className="w-full flex flex-wrap justify-center gap-3 mb-8">
-          {TABS.map((item) => {
-            const active = activeTab.key === item.key
-            return (
-              <Link
-                key={item.key}
-                href={buildHref(item.key, 0)}
-                className={`px-5 py-2 rounded-full text-sm font-medium transition-colors ${
-                  active
-                    ? 'bg-white/20 text-white border border-white/30'
-                    : 'bg-white/5 text-white/70 border border-white/10 hover:bg-white/10 hover:text-white'
-                }`}
-              >
-                {item.label}
-              </Link>
-            )
-          })}
-        </nav>
+        <div className="w-full flex justify-center mb-8">
+          <DirectionTabs
+            tabs={TABS.map((t) => ({ key: t.key, label: t.label }))}
+            activeKey={activeTab.key}
+          />
+        </div>
 
         <section className="w-full max-w-[960px]">
           {resources.length === 0 ? (

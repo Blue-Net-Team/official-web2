@@ -10,10 +10,11 @@ import type { ExperienceType } from '@/apis/schema/enumerate'
 import {
   ProfileSidebar,
   ProfileInfoDisplay,
-  ProfileTabs,
   ExperienceSection,
   MemberAchievements,
 } from '@/components/Profile'
+import { buildTabItems } from '@/components/Profile'
+import SmokedGlassTabs from '@/components/SmokedGlassTabs'
 import type { SidebarProfile } from '@/components/Profile/ProfileSidebar'
 import type { ProfileDisplayData } from '@/components/Profile/ProfileInfoDisplay'
 import { UserOutlined, FolderOutlined, TrophyOutlined, SolutionOutlined } from '@ant-design/icons'
@@ -103,6 +104,7 @@ export default function MemberProfilePage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState('profile')
+  const tabItems = buildTabItems(TAB_CONFIG, tabCounts)
 
   const [experienceCache, setExperienceCache] = useState<ExperienceCache>({
     projects: null,
@@ -271,11 +273,12 @@ export default function MemberProfilePage() {
           onTabChange={setActiveTab}
         />
         <div className="flex-1 min-w-0">
-          <ProfileTabs
-            activeTab={activeTab}
-            tabs={TAB_CONFIG}
-            tabCounts={tabCounts}
-            onTabChange={setActiveTab}
+          <SmokedGlassTabs
+            tone="soft"
+            className="mb-6"
+            activeKey={activeTab}
+            items={tabItems}
+            onChange={setActiveTab}
           />
           {activeTab === 'profile' && <ProfileInfoDisplay profile={displayData} />}
           {activeTab === 'projects' && renderExperience('PROJECT', '项目经历')}

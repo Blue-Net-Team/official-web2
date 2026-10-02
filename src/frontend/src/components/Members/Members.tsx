@@ -1,13 +1,15 @@
 'use client'
 
 import React, { useState, useEffect, useMemo, useRef } from 'react'
-import { Pagination } from 'antd'
+import { Badge, Pagination } from 'antd'
+import type { TabsProps } from 'antd'
 import { MemberCard } from './MemberCard'
 import { MembersProps, FilterTab } from './Members.types'
 import { Direction, DIRECTION_LABELS } from '@/apis/schema/enumerate'
 import { memberService } from '@/apis/services/member.service'
 import type { MemberBriefDTO } from '@/apis/schema/type'
 import { usePagination } from '@/hooks'
+import SmokedGlassTabs from '@/components/SmokedGlassTabs'
 
 const PAGE_SIZE = 16
 
@@ -74,8 +76,21 @@ export const Members: React.FC<MembersProps> = ({ initialPage = 0 }) => {
     return tabs
   }, [directionCounts])
 
-  const handleFilterChange = (filter: Direction | 'ALL') => {
-    setActiveFilter(filter)
+  const filterItems: TabsProps['items'] = useMemo(
+    () =>
+      filterTabs.map((tab) => ({
+        key: tab.key,
+        label: (
+          <span>
+            {tab.label} <Badge count={tab.count} size="small" color="#6677ff" />
+          </span>
+        ),
+      })),
+    [filterTabs]
+  )
+
+  const handleFilterChange = (key: string) => {
+    setActiveFilter(key as Direction | 'ALL')
     setCurrentPage(0)
   }
 
@@ -89,28 +104,11 @@ export const Members: React.FC<MembersProps> = ({ initialPage = 0 }) => {
   return (
     <>
       <section className="w-full px-16 pb-10 flex justify-center max-md:px-5 max-md:pb-6 max-[1024px]:px-10 max-[1024px]:pb-8">
-        <div className="flex gap-3 p-2 bg-white/[0.05] backdrop-blur-xl rounded-2xl border border-white/[0.08] flex-wrap justify-center max-md:gap-2">
-          {filterTabs.map((tab) => (
-            <button
-              key={tab.key}
-              className={`px-6 py-3 rounded-xl text-sm font-medium border-none cursor-pointer transition-all duration-300 flex items-center gap-2 font-[inherit] max-md:px-4 max-md:py-2.5 max-md:text-[13px] ${
-                activeFilter === tab.key
-                  ? 'text-white bg-gradient-to-br from-[#6677ff]/30 to-[#2f27b0]/30 border border-[#6677ff]/40'
-                  : 'text-white/60 bg-transparent hover:text-white/90 hover:bg-white/[0.05]'
-              }`}
-              onClick={() => handleFilterChange(tab.key)}
-            >
-              {tab.label}
-              <span
-                className={`px-2 py-0.5 rounded-[10px] text-xs ${
-                  activeFilter === tab.key ? 'bg-white/20 text-white' : 'bg-white/10 text-white/50'
-                }`}
-              >
-                {tab.count}
-              </span>
-            </button>
-          ))}
-        </div>
+        <SmokedGlassTabs
+          activeKey={activeFilter}
+          items={filterItems}
+          onChange={handleFilterChange}
+        />
       </section>
 
       <section
