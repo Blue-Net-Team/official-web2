@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Button, Card, Empty, Select, Spin } from 'antd'
+import { Button, Card, Empty, Grid, Select, Spin } from 'antd'
 import { Column } from '@ant-design/charts'
 import { ReloadOutlined } from '@ant-design/icons'
 import { aiTraceService } from '@/apis/services/ai-trace.service'
@@ -63,12 +63,10 @@ function StatCard({
 /** 横向条形列表（检索工具使用） */
 function BarList({
   items,
-  maxWidth,
   emptyText,
   warnLabel,
 }: {
   items: AiCountItemDTO[]
-  maxWidth: number
   emptyText: string
   warnLabel?: string
 }) {
@@ -90,18 +88,18 @@ function BarList({
               {item.label}
             </span>
             <span
-              className="h-2 shrink-0 overflow-hidden rounded"
-              style={{ width: maxWidth, background: 'rgba(255,255,255,0.1)' }}
+              className="h-2 min-w-0 flex-1 overflow-hidden rounded"
+              style={{ background: 'rgba(255,255,255,0.1)' }}
             >
               <span
                 className="block h-full rounded"
                 style={{
-                  width: Math.max((item.count / max) * maxWidth, 2),
+                  width: `${Math.max((item.count / max) * 100, 2)}%`,
                   background: isWarn ? '#faad14' : '#fa8c16',
                 }}
               />
             </span>
-            <span className="font-mono text-xs text-white/45">{item.count}</span>
+            <span className="shrink-0 font-mono text-xs text-white/45">{item.count}</span>
           </div>
         )
       })}
@@ -114,6 +112,8 @@ export default function AiTraceStatisticsPage() {
   const [stats, setStats] = useState<AiTraceStatisticsDTO | null>(null)
   const [loading, setLoading] = useState(false)
   const [loadError, setLoadError] = useState<string | null>(null)
+  const screens = Grid.useBreakpoint()
+  const isMobile = !screens.md
 
   const fetchStats = useCallback(async () => {
     setLoading(true)
@@ -191,7 +191,7 @@ export default function AiTraceStatisticsPage() {
 
       <Spin spinning={loading}>
         {/* 概览指标 */}
-        <div className="flex gap-4">
+        <div className={isMobile ? 'grid grid-cols-2 gap-2.5' : 'flex gap-4'}>
           <StatCard
             title="会话总数"
             value={String(overview?.conversationCount ?? 0)}
@@ -216,7 +216,7 @@ export default function AiTraceStatisticsPage() {
         </div>
 
         {/* 中部：意图分布 + 动作分布 */}
-        <div className="mt-4 flex gap-4">
+        <div className={`mt-4 flex gap-4 ${isMobile ? 'flex-col' : ''}`}>
           <Card
             size="small"
             title={<span className="text-sm font-semibold text-white/90">意图分布</span>}
@@ -241,18 +241,18 @@ export default function AiTraceStatisticsPage() {
                         {intentLabel(item.label)}
                       </span>
                       <span
-                        className="h-2 shrink-0 overflow-hidden rounded"
-                        style={{ width: 480, background: 'rgba(255,255,255,0.1)' }}
+                        className="h-2 min-w-0 flex-1 overflow-hidden rounded"
+                        style={{ background: 'rgba(255,255,255,0.1)' }}
                       >
                         <span
                           className="block h-full rounded"
                           style={{
-                            width: Math.max((item.count / max) * 480, 2),
+                            width: `${Math.max((item.count / max) * 100, 2)}%`,
                             background: intentColor(item.label),
                           }}
                         />
                       </span>
-                      <span className="font-mono text-xs text-white/45">{item.count}</span>
+                      <span className="shrink-0 font-mono text-xs text-white/45">{item.count}</span>
                     </div>
                   )
                 })}
@@ -263,7 +263,7 @@ export default function AiTraceStatisticsPage() {
           <Card
             size="small"
             title={<span className="text-sm font-semibold text-white/90">处理动作分布</span>}
-            style={{ width: 400, flex: '0 0 400px' }}
+            style={isMobile ? { width: '100%' } : { width: 400, flex: '0 0 400px' }}
             styles={{ body: { padding: 20 } }}
           >
             {/* 堆叠横条 */}
@@ -321,7 +321,7 @@ export default function AiTraceStatisticsPage() {
         </div>
 
         {/* 底部：趋势 + 工具使用 */}
-        <div className="mt-4 flex gap-4">
+        <div className={`mt-4 flex gap-4 ${isMobile ? 'flex-col' : ''}`}>
           <Card
             size="small"
             title={<span className="text-sm font-semibold text-white/90">会话量趋势</span>}
@@ -359,7 +359,7 @@ export default function AiTraceStatisticsPage() {
           <Card
             size="small"
             title={<span className="text-sm font-semibold text-white/90">检索工具使用</span>}
-            style={{ width: 440, flex: '0 0 440px' }}
+            style={isMobile ? { width: '100%' } : { width: 440, flex: '0 0 440px' }}
             styles={{ body: { padding: 20 } }}
           >
             <div className="mb-3 text-[11px] text-white/25">
@@ -367,7 +367,6 @@ export default function AiTraceStatisticsPage() {
             </div>
             <BarList
               items={stats?.tools ?? []}
-              maxWidth={280}
               emptyText="该区间内没有工具调用"
               warnLabel="chunk_search"
             />
