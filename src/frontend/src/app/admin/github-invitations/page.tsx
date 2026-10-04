@@ -198,11 +198,46 @@ export default function AdminGitHubInvitationsPage() {
           </Space>
         }
         extra={
-          <Space wrap>
+          isMobile ? undefined : (
+            <Space wrap>
+              <Input.Search
+                placeholder="搜索姓名 / 学号 / 邮箱"
+                allowClear
+                style={{ width: 220 }}
+                onSearch={(value) => {
+                  setFilters((prev) => ({ ...prev, keyword: value }))
+                  setCurrentPage(0)
+                }}
+              />
+              <Select
+                placeholder="方向"
+                allowClear
+                style={{ width: 140 }}
+                options={directionOptions}
+                onChange={(value) => {
+                  setFilters((prev) => ({ ...prev, direction: value }))
+                  setCurrentPage(0)
+                }}
+              />
+              <Button
+                type="primary"
+                icon={<SendOutlined />}
+                disabled={selectedRowKeys.length === 0}
+                loading={batchInviting}
+                onClick={handleBatchInvite}
+              >
+                批量邀请{selectedRowKeys.length > 0 ? `（${selectedRowKeys.length}）` : ''}
+              </Button>
+            </Space>
+          )
+        }
+      >
+        {isMobile && (
+          <div className="flex flex-wrap items-center gap-2 pb-3">
             <Input.Search
               placeholder="搜索姓名 / 学号 / 邮箱"
               allowClear
-              style={{ width: isMobile ? '100%' : 220 }}
+              className="min-w-0 flex-[1_1_100%]"
               onSearch={(value) => {
                 setFilters((prev) => ({ ...prev, keyword: value }))
                 setCurrentPage(0)
@@ -211,7 +246,7 @@ export default function AdminGitHubInvitationsPage() {
             <Select
               placeholder="方向"
               allowClear
-              style={{ width: 140 }}
+              className="min-w-0 flex-1"
               options={directionOptions}
               onChange={(value) => {
                 setFilters((prev) => ({ ...prev, direction: value }))
@@ -227,9 +262,8 @@ export default function AdminGitHubInvitationsPage() {
             >
               批量邀请{selectedRowKeys.length > 0 ? `（${selectedRowKeys.length}）` : ''}
             </Button>
-          </Space>
-        }
-      >
+          </div>
+        )}
         <Spin spinning={loading}>
           {isMobile ? (
             <div className="flex flex-col gap-3">
