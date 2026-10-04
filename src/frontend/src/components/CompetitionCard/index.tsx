@@ -45,7 +45,7 @@ export default function CompetitionCard({ competition }: CompetitionCardProps) {
       )}
       {/* 内容区域 */}
       <div
-        className={`relative z-[2] flex flex-col gap-3 justify-center h-fit py-6 md:py-0 px-8 md:px-0`}
+        className={`relative z-[2] flex flex-col gap-3 justify-center h-fit py-6 md:py-7 px-8 md:px-0`}
       >
         <div
           className="flex items-center gap-4
