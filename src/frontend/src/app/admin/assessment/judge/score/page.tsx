@@ -24,7 +24,7 @@ import {
   Timeline,
 } from 'antd'
 import type { TableColumnsType } from 'antd'
-import { DownloadOutlined, TeamOutlined } from '@ant-design/icons'
+import { CrownOutlined, DownloadOutlined, TeamOutlined } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import type {
   AssessmentCandidateQuestionScoreDTO,
@@ -58,6 +58,76 @@ import {
 
 const sanitizeFilenameSegment = (value: string) => value.replace(/[\\/:*?"<>|]/g, '_').trim()
 
+/** 移动端提交列表的成员卡片（任务：admin-mobile-card-adaptation）。 */
+function SubmissionMemberCard({
+  record,
+  indented,
+  onReview,
+}: {
+  record: AssessmentQuestionSubmissionDTO
+  indented: boolean
+  onReview: () => void
+}) {
+  const judged = !!record.latestJudgement
+  const resultCode = record.latestJudgement?.resultCode
+  return (
+    <div
+      className={`flex flex-col gap-2 rounded-xl border border-white/[0.08] bg-white/[0.045] p-3 ${indented ? 'ml-3' : ''} ${indented ? 'border-l-2 border-l-[#fa8c16]' : ''}`}
+    >
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="font-medium text-white/85">{record.username}</span>
+            {record.isLeader && (
+              <Tag color="blue" bordered={false} icon={<CrownOutlined />}>
+                队长
+              </Tag>
+            )}
+            {record.teamId && !record.isLeader && record.teamName && (
+              <Tag bordered={false}>{record.teamName}</Tag>
+            )}
+            {getReferralTag(record)}
+          </div>
+          <div className="mt-0.5 font-mono text-xs text-white/35">学号 {record.studentId}</div>
+        </div>
+        <div className="shrink-0 text-right">
+          <div className="font-semibold text-white/90">
+            {judged ? (
+              <>
+                {formatScore(record.latestJudgement!.score)}{' '}
+                <span className="text-xs font-normal text-white/40">
+                  / {formatScore(record.maxScore)}
+                </span>
+              </>
+            ) : (
+              <span className="text-sm text-white/40">— / {formatScore(record.maxScore)}</span>
+            )}
+          </div>
+          <div className="mt-1">
+            {judged ? (
+              <Tag color="green" bordered={false}>
+                已评分{resultCode ? ` · ${resultCode}` : ''}
+              </Tag>
+            ) : (
+              <Tag color="orange" bordered={false}>
+                待评分
+              </Tag>
+            )}
+          </div>
+        </div>
+      </div>
+      <div className="flex items-center justify-between border-t border-white/[0.08] pt-2">
+        <span className="text-xs text-white/35">
+          {formatTime(record.latestJudgement?.judgedAt)}
+        </span>
+        <Button type="primary" size="small" onClick={onReview}>
+          {judged ? '改分' : '评分'}
+        </Button>
+      </div>
+    </div>
+  )
+}
+
 /**
  * 拼接管理端下载考生作品时使用的文件名（不含扩展名）。
  * 任一关键字段缺失时返回 undefined，让 fileService 回落到响应头里的原始文件名。
@@ -80,6 +150,7 @@ const buildWorkFilename = (params: {
 export default function AssessmentJudgementManagementPage() {
   const { message: messageApi } = App.useApp()
   const screens = Grid.useBreakpoint()
+  const isMobile = !screens.md
   const [form] = Form.useForm<{ score: number }>()
 
   const { userInfo } = useAuth()
@@ -670,8 +741,10 @@ export default function AssessmentJudgementManagementPage() {
             <div className="flex items-center gap-1.5">
               <span className="text-white/85">{record.username}</span>
               {record.teamId && (
-                <Tag color={record.isLeader ? 'blue' : 'default'}>
-                  {record.isLeader ? '👑' : ''}
+                <Tag
+                  color={record.isLeader ? 'blue' : 'default'}
+                  icon={record.isLeader ? <CrownOutlined /> : undefined}
+                >
                   {record.teamName}
                 </Tag>
               )}
@@ -1076,57 +1149,99 @@ export default function AssessmentJudgementManagementPage() {
         styles={{ body: { padding: 0 } }}
       >
         <Spin spinning={loadingSubmissions}>
-          <div className="overscroll-contain">
-            <Table
-              rowKey="key"
-              size="small"
-              pagination={false}
-              columns={submissionColumns}
-              dataSource={groupedSubmissions}
-              rowSelection={
-                selectedQuestion?.questionType === 'FILE_UPLOAD'
-                  ? {
-                      type: 'checkbox',
-                      selectedRowKeys: selectedSubmissionIds,
-                      onChange: (keys) => setSelectedSubmissionIds(keys as number[]),
-                      getCheckboxProps: (record) => ({
-                        disabled: record.type === 'team' || !record.fileId,
-                      }),
-                    }
-                  : undefined
-              }
-              scroll={{ y: 'calc(100vh - 360px)' }}
-              onRow={(record) => ({
-                onClick: () => {
-                  if (record.type === 'team') return
-                  setReviewing(record as AssessmentQuestionSubmissionDTO)
-                },
-                className: record.type === 'team' ? '' : 'cursor-pointer',
-              })}
-              expandable={{
-                expandedRowRender: (record) => {
-                  if (record.type !== 'team') return null
+          {isMobile ? (
+            <div className="flex flex-col gap-2.5 p-3">
+              {groupedSubmissions.length === 0 ? (
+                <div className="px-4 py-10 text-center text-sm text-white/40">
+                  {selectedQuestionId ? '暂无提交' : '请选择左侧题目查看提交'}
+                </div>
+              ) : (
+                groupedSubmissions.map((record) => {
+                  if (record.type === 'team') {
+                    return (
+                      <div
+                        key={record.key}
+                        className="flex items-center gap-2 rounded-xl border border-[#1677ff40] bg-[#1677ff14] px-3.5 py-2.5"
+                      >
+                        <TeamOutlined className="shrink-0 text-[#4096ff]" />
+                        <span className="truncate font-medium text-white/90">
+                          {record.teamName}
+                        </span>
+                        <Tag bordered={false}>{record.memberCount}人</Tag>
+                        <Tag
+                          color="blue"
+                          bordered={false}
+                          className="hidden min-[420px]:inline-flex"
+                        >
+                          队长: {record.leaderName}
+                        </Tag>
+                      </div>
+                    )
+                  }
                   return (
-                    <Table
-                      size="small"
-                      showHeader={false}
-                      pagination={false}
-                      columns={submissionMemberColumns}
-                      dataSource={record.members ?? []}
-                      rowKey="answerId"
-                      onRow={(m) => ({
-                        onClick: () => setReviewing(m),
-                        className: 'cursor-pointer',
-                      })}
+                    <SubmissionMemberCard
+                      key={record.key}
+                      record={record}
+                      indented={!!record.teamId}
+                      onReview={() => setReviewing(record)}
                     />
                   )
-                },
-                rowExpandable: (record) => record.type === 'team',
-                defaultExpandAllRows: true,
-              }}
-              locale={{ emptyText: selectedQuestionId ? '暂无提交' : '请选择左侧题目查看提交' }}
-            />
-          </div>
+                })
+              )}
+            </div>
+          ) : (
+            <div className="overscroll-contain">
+              <Table
+                rowKey="key"
+                size="small"
+                pagination={false}
+                columns={submissionColumns}
+                dataSource={groupedSubmissions}
+                rowSelection={
+                  selectedQuestion?.questionType === 'FILE_UPLOAD'
+                    ? {
+                        type: 'checkbox',
+                        selectedRowKeys: selectedSubmissionIds,
+                        onChange: (keys) => setSelectedSubmissionIds(keys as number[]),
+                        getCheckboxProps: (record) => ({
+                          disabled: record.type === 'team' || !record.fileId,
+                        }),
+                      }
+                    : undefined
+                }
+                scroll={{ y: 'calc(100vh - 360px)' }}
+                onRow={(record) => ({
+                  onClick: () => {
+                    if (record.type === 'team') return
+                    setReviewing(record as AssessmentQuestionSubmissionDTO)
+                  },
+                  className: record.type === 'team' ? '' : 'cursor-pointer',
+                })}
+                expandable={{
+                  expandedRowRender: (record) => {
+                    if (record.type !== 'team') return null
+                    return (
+                      <Table
+                        size="small"
+                        showHeader={false}
+                        pagination={false}
+                        columns={submissionMemberColumns}
+                        dataSource={record.members ?? []}
+                        rowKey="answerId"
+                        onRow={(m) => ({
+                          onClick: () => setReviewing(m),
+                          className: 'cursor-pointer',
+                        })}
+                      />
+                    )
+                  },
+                  rowExpandable: (record) => record.type === 'team',
+                  defaultExpandAllRows: true,
+                }}
+                locale={{ emptyText: selectedQuestionId ? '暂无提交' : '请选择左侧题目查看提交' }}
+              />
+            </div>
+          )}
         </Spin>
       </Card>
     </div>
