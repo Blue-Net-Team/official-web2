@@ -7,6 +7,7 @@ import { WechatOutlined } from '@ant-design/icons'
 import Image from 'next/image'
 import { qrcodeService, ConsultationQrcodeDTO } from '@/apis/services/qrcode.service'
 import { API_BASE_URL } from '@/apis/config'
+import SmokedGlassCard from '@/components/SmokedGlassCard'
 
 interface ConsultationQrcodeProps {
   popoverPlacement?: PopoverProps['placement']
@@ -51,7 +52,11 @@ const ConsultationQrcode: React.FC<ConsultationQrcodeProps> = ({ popoverPlacemen
   )
 
   return (
-    <div className="p-5 bg-white/[0.03] border border-[#6677ff]/20 rounded-xl max-md:p-4">
+    <SmokedGlassCard
+      tone="soft"
+      radius={12}
+      style={{ '--sgc-padding': '20px' } as React.CSSProperties}
+    >
       <div className="flex items-center gap-2 mb-4">
         <WechatOutlined className="text-xl text-[#6677ff]" />
         <span className="text-base font-medium text-white">加入咨询群</span>
@@ -82,7 +87,7 @@ const ConsultationQrcode: React.FC<ConsultationQrcodeProps> = ({ popoverPlacemen
       <div className="mt-4 pt-3 border-t border-white/10 text-center text-xs text-white/40">
         <span>如有疑问，欢迎扫码咨询</span>
       </div>
-    </div>
+    </SmokedGlassCard>
   )
 }
 

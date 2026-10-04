@@ -1,17 +1,32 @@
-/* 方向卡片 shimmer 效果 */
-.directionItem::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-  transition: left 0.5s ease;
+/* 主报名卡片：覆写 SmokedGlassCard 内边距，移动端收窄 */
+.mainCard {
+  --sgc-padding: 40px;
 }
 
-.directionItem:hover::before {
-  left: 100%;
+@media (max-width: 640px) {
+  .mainCard {
+    --sgc-padding: 28px;
+  }
+}
+
+/* 方向卡片 hover/选中态主题色高亮（颜色由 SmokedGlassCard 注入的 --accent 变量驱动） */
+.directionItem:hover .directionName,
+.directionItem.selected .directionName {
+  color: var(--accent);
+}
+
+.directionName {
+  transition: color 0.3s ease;
+}
+
+.directionItem.selected {
+  border-color: var(--accent);
+  /* 背景保持 .smoked 基础渐变不变，选中色通过边框 + 内外光晕表达，
+     三者都在组件的 transition 列表内，选中/取消选中全程平滑动画 */
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.35),
+    0 0 30px color-mix(in srgb, var(--accent) 30%, transparent),
+    inset 0 0 24px color-mix(in srgb, var(--accent) 12%, transparent);
 }
 
 /* 提交按钮 shimmer 效果 */

@@ -12,6 +12,7 @@ import { GENDER_OPTIONS } from './constants'
 import AvatarUpload from './AvatarUpload'
 import MobileDirectionSelector from './MobileDirectionSelector'
 import PolicyModal from './PolicyModal'
+import SmokedGlassCard from '@/components/SmokedGlassCard'
 import { enrollmentNotice, privacyPolicy } from './policies'
 import styles from '@/app/(public)/(other)/enroll/styles.module.css'
 
@@ -61,14 +62,11 @@ const EnrollForm: React.FC<EnrollFormProps> = ({
   }
 
   return (
-    <div className="w-full max-w-[600px] bg-[rgba(20,20,30,0.6)] border border-[rgba(102,119,255,0.15)] rounded-3xl p-10 max-sm:p-7 max-sm:rounded-2xl backdrop-blur-[20px] relative overflow-hidden shadow-[0_0_60px_rgba(102,119,255,0.1),inset_0_0_60px_rgba(102,119,255,0.02)] animate-[fadeInUp_0.8s_cubic-bezier(0.4,0,0.2,1)]">
-      <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-[#6677ff] via-[#ff6b35] to-[#2f27b0] shadow-[0_0_20px_#6677ff]" />
-
-      <div className="absolute w-[60px] max-sm:w-10 h-[60px] max-sm:h-10 border-2 border-[rgba(102,119,255,0.3)] top-[15px] left-[15px] border-r-0 border-b-0 rounded-tl-xl" />
-      <div className="absolute w-[60px] max-sm:w-10 h-[60px] max-sm:h-10 border-2 border-[rgba(102,119,255,0.3)] top-[15px] right-[15px] border-l-0 border-b-0 rounded-tr-xl" />
-      <div className="absolute w-[60px] max-sm:w-10 h-[60px] max-sm:h-10 border-2 border-[rgba(102,119,255,0.3)] bottom-[15px] left-[15px] border-r-0 border-t-0 rounded-bl-xl" />
-      <div className="absolute w-[60px] max-sm:w-10 h-[60px] max-sm:h-10 border-2 border-[rgba(102,119,255,0.3)] bottom-[15px] right-[15px] border-l-0 border-t-0 rounded-br-xl" />
-
+    <SmokedGlassCard
+      radius={24}
+      className={`${styles.mainCard} w-full max-w-[600px] relative overflow-hidden animate-[fadeInUp_0.8s_cubic-bezier(0.4,0,0.2,1)]`}
+      style={{ maxWidth: 600 }}
+    >
       <div className="text-center mb-8 relative">
         <h1 className="text-[36px] max-sm:text-[28px] font-bold text-white mb-3 font-['Orbitron'] tracking-[4px] max-sm:tracking-[2px] bg-gradient-to-br from-white via-[#6677ff] to-[#ff6b35] bg-clip-text text-transparent animate-[titleGlow_3s_ease-in-out_infinite]">
           加入蓝网
@@ -326,7 +324,7 @@ const EnrollForm: React.FC<EnrollFormProps> = ({
           content={policyModalContent}
         />
       </Form>
-    </div>
+    </SmokedGlassCard>
   )
 }
 

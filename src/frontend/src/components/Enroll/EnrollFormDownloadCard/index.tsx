@@ -5,6 +5,7 @@ import { Spin } from 'antd'
 import { FileTextOutlined, DownloadOutlined } from '@ant-design/icons'
 import { enrollFormService, EnrollFormDTO } from '@/apis/services/enroll-form.service'
 import { API_BASE_URL } from '@/apis/config'
+import SmokedGlassCard from '@/components/SmokedGlassCard'
 
 /**
  * 报名表下载卡片。
@@ -37,7 +38,11 @@ const EnrollFormDownloadCard: React.FC = () => {
   }
 
   return (
-    <div className="p-5 bg-white/[0.03] border border-[#6677ff]/20 rounded-xl max-md:p-4">
+    <SmokedGlassCard
+      tone="soft"
+      radius={12}
+      style={{ '--sgc-padding': '20px' } as React.CSSProperties}
+    >
       <div className="flex items-center gap-2 mb-4">
         <FileTextOutlined className="text-xl text-[#6677ff]" />
         <span className="text-base font-medium text-white">报名表</span>
@@ -63,7 +68,7 @@ const EnrollFormDownloadCard: React.FC = () => {
           </>
         )
       )}
-    </div>
+    </SmokedGlassCard>
   )
 }
 
