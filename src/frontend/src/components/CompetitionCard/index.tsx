@@ -1,6 +1,6 @@
 'use client'
 
-import { CSSProperties, useState } from 'react'
+import { useState } from 'react'
 import Image from 'next/image'
 import { Tag } from 'antd'
 import { CompetitionResponseDTO } from '@/apis/schema/type'
@@ -30,8 +30,7 @@ export default function CompetitionCard({ competition }: CompetitionCardProps) {
     <SmokedGlassCard
       hoverable
       radius={24}
-      className="w-full md:min-h-[150px] flex flex-col md:flex-row md:items-center relative overflow-hidden"
-      style={{ '--sgc-padding': '0 32px' } as CSSProperties}
+      className="w-full md:min-h-[150px] flex flex-col md:flex-row md:items-center relative overflow-hidden [--sgc-padding:0] md:[--sgc-padding:0_32px]"
     >
       {coverUrl && (
         <div
