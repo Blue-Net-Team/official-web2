@@ -1,7 +1,19 @@
 'use client'
 
 import { useCallback, useMemo, useState } from 'react'
-import { App, Button, Drawer, Image, Pagination, Select, Spin, Table, Tag, Tooltip } from 'antd'
+import {
+  App,
+  Button,
+  Drawer,
+  Grid,
+  Image,
+  Pagination,
+  Select,
+  Spin,
+  Table,
+  Tag,
+  Tooltip,
+} from 'antd'
 import { EyeOutlined, GithubOutlined } from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
 import { usePagination, useApi } from '@/hooks'
@@ -20,6 +32,8 @@ const STATUS_OPTIONS = [
 
 export default function BugReportManagementPage() {
   const { message: messageApi } = App.useApp()
+  const screens = Grid.useBreakpoint()
+  const isMobile = !screens.md
 
   // Filter state
   const [filterStatus, setFilterStatus] = useState<BugReportStatus | undefined>(undefined)
@@ -224,15 +238,68 @@ export default function BugReportManagementPage() {
 
       {/* Table */}
       <Spin spinning={loading}>
-        <Table
-          columns={columns}
-          dataSource={data}
-          rowKey="id"
-          size="small"
-          pagination={false}
-          scroll={{ x: 'max-content' }}
-          locale={{ emptyText: '暂无 Bug 报告' }}
-        />
+        {isMobile ? (
+          <div className="flex flex-col gap-3">
+            {data.length === 0 ? (
+              <div className="rounded-xl border border-white/[0.08] bg-white/[0.045] px-4 py-10 text-center text-sm text-white/40">
+                暂无 Bug 报告
+              </div>
+            ) : (
+              data.map((report) => (
+                <div
+                  key={report.id}
+                  className="flex flex-col gap-2 rounded-xl border border-white/[0.08] bg-white/[0.045] p-3.5"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <Tag color={BUG_REPORT_STATUS_COLORS[report.status]}>
+                      {BUG_REPORT_STATUS_LABELS[report.status]}
+                    </Tag>
+                    {report.githubIssueNumber ? (
+                      <a
+                        href={report.githubIssueUrl ?? undefined}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-xs text-blue-400 hover:text-blue-300"
+                      >
+                        <GithubOutlined />#{report.githubIssueNumber}
+                      </a>
+                    ) : (
+                      <span className="text-xs text-white/25">未关联 Issue</span>
+                    )}
+                  </div>
+                  <div className="text-sm font-medium text-white/90">
+                    {renderMultiline(report.title)}
+                  </div>
+                  <div className="text-xs text-white/40">{renderMultiline(report.description)}</div>
+                  <div className="flex items-center justify-between border-t border-white/[0.08] pt-2">
+                    <span className="truncate text-xs text-white/35">
+                      ID {report.id} · {report.pageUrl || '-'}
+                    </span>
+                    <Button
+                      type="text"
+                      size="small"
+                      icon={<EyeOutlined />}
+                      onClick={() => handleViewDetail(report)}
+                      className="shrink-0"
+                    >
+                      查看详情
+                    </Button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        ) : (
+          <Table
+            columns={columns}
+            dataSource={data}
+            rowKey="id"
+            size="small"
+            pagination={false}
+            scroll={{ x: 'max-content' }}
+            locale={{ emptyText: '暂无 Bug 报告' }}
+          />
+        )}
       </Spin>
 
       {/* Pagination */}
@@ -253,7 +320,7 @@ export default function BugReportManagementPage() {
         title={`Bug 报告详情 #${detailData?.id}`}
         open={detailOpen}
         onClose={() => setDetailOpen(false)}
-        width={560}
+        width={screens.md ? 560 : '100%'}
       >
         <Spin spinning={detailLoading}>
           {detailData && (

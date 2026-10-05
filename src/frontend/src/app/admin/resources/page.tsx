@@ -1,8 +1,29 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { App, Button, Form, Input, Modal, Pagination, Select, Spin, Switch, Table } from 'antd'
-import { PlusOutlined, EditOutlined, DeleteOutlined, HolderOutlined } from '@ant-design/icons'
+import {
+  App,
+  Button,
+  Form,
+  Grid,
+  Input,
+  Modal,
+  Pagination,
+  Select,
+  Spin,
+  Switch,
+  Table,
+  Tag,
+} from 'antd'
+import {
+  ArrowDownOutlined,
+  ArrowUpOutlined,
+  PlusOutlined,
+  EditOutlined,
+  DeleteOutlined,
+  HolderOutlined,
+  LinkOutlined,
+} from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
 import { DndContext, PointerSensor, useSensor, useSensors, closestCenter } from '@dnd-kit/core'
 import type { DragEndEvent } from '@dnd-kit/core'
@@ -56,6 +77,8 @@ interface FormValues {
 export default function SoftwareResourceManagementPage() {
   const { message: messageApi } = App.useApp()
   const { isAdmin } = useAuth()
+  const screens = Grid.useBreakpoint()
+  const isMobile = !screens.md
   const [form] = Form.useForm<FormValues>()
 
   const [resources, setResources] = useState<SoftwareResourceDTO[]>([])
@@ -245,6 +268,31 @@ export default function SoftwareResourceManagementPage() {
     }
   }
 
+  /** 移动端上移/下移调序（与拖拽共用同一批量排序 API） */
+  const handleMove = async (index: number, offset: -1 | 1) => {
+    const target = index + offset
+    if (target < 0 || target >= displayList.length) return
+    const newList = arrayMove(displayList, index, target)
+    setDisplayList(newList)
+
+    const baseSortOrder = page * PAGE_SIZE
+    const sortItems = newList.map((item, i) => ({
+      id: item.id,
+      sortOrder: baseSortOrder + i + 1,
+    }))
+
+    try {
+      const res = await adminSoftwareResourceService.batchUpdateSortOrder({ items: sortItems })
+      if (res.code !== 200) {
+        setDisplayList(resources)
+        messageApi.error(res.msg || '排序更新失败')
+      }
+    } catch {
+      setDisplayList(resources)
+      messageApi.error('排序更新失败')
+    }
+  }
+
   const directionOptions = useMemo(
     () =>
       Object.entries(SOFTWARE_RESOURCE_DIRECTION_LABELS).map(([value, label]) => ({
@@ -353,7 +401,99 @@ export default function SoftwareResourceManagementPage() {
       </div>
 
       <Spin spinning={loading}>
-        {isAdmin ? (
+        {isMobile ? (
+          <div className="flex flex-col gap-3">
+            {displayList.length === 0 ? (
+              <div className="rounded-xl border border-white/[0.08] bg-white/[0.045] px-4 py-10 text-center text-sm text-white/40">
+                暂无资源数据
+              </div>
+            ) : (
+              displayList.map((resource, index) => (
+                <div
+                  key={resource.id}
+                  className="flex flex-col gap-2 rounded-xl border border-white/[0.08] bg-white/[0.045] p-3.5"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="truncate font-medium text-white/90">{resource.name}</span>
+                    {isAdmin ? (
+                      <Switch
+                        size="small"
+                        checked={resource.status === 'ACTIVE'}
+                        checkedChildren="启用"
+                        unCheckedChildren="禁用"
+                        onChange={(checked) => handleToggleStatus(resource, checked)}
+                      />
+                    ) : (
+                      <Tag
+                        color={resource.status === 'ACTIVE' ? 'green' : 'default'}
+                        bordered={false}
+                      >
+                        {SOFTWARE_RESOURCE_STATUS_LABELS[resource.status] || resource.status}
+                      </Tag>
+                    )}
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2 text-xs">
+                    <Tag color="blue" bordered={false}>
+                      {SOFTWARE_RESOURCE_DIRECTION_LABELS[resource.direction] || resource.direction}
+                    </Tag>
+                    <span className="text-white/40">{resource.category || '-'}</span>
+                  </div>
+                  {resource.description && (
+                    <div className="text-xs text-white/40 [display:-webkit-box] [-webkit-line-clamp:2] [-webkit-box-orient:vertical] overflow-hidden">
+                      {resource.description}
+                    </div>
+                  )}
+                  <div className="flex items-center justify-between gap-2 border-t border-white/[0.08] pt-2">
+                    {resource.externalUrl ? (
+                      <a
+                        href={resource.externalUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex min-w-0 items-center gap-1 truncate text-xs text-blue-400 hover:text-blue-300"
+                      >
+                        <LinkOutlined />
+                        <span className="truncate">{resource.externalUrl}</span>
+                      </a>
+                    ) : (
+                      <span className="text-xs text-white/25">-</span>
+                    )}
+                    {isAdmin && (
+                      <span className="flex shrink-0 items-center gap-1">
+                        <Button
+                          type="text"
+                          size="small"
+                          icon={<ArrowUpOutlined />}
+                          disabled={index === 0}
+                          onClick={() => handleMove(index, -1)}
+                        />
+                        <Button
+                          type="text"
+                          size="small"
+                          icon={<ArrowDownOutlined />}
+                          disabled={index === displayList.length - 1}
+                          onClick={() => handleMove(index, 1)}
+                        />
+                        <Button
+                          type="text"
+                          size="small"
+                          icon={<EditOutlined />}
+                          onClick={() => openEditModal(resource)}
+                        />
+                        <Button
+                          type="text"
+                          size="small"
+                          danger
+                          icon={<DeleteOutlined />}
+                          onClick={() => handleDeleteClick(resource)}
+                        />
+                      </span>
+                    )}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        ) : isAdmin ? (
           <DndContext
             sensors={sensors}
             collisionDetection={closestCenter}

@@ -1,7 +1,21 @@
 'use client'
 
 import { useCallback, useMemo, useState } from 'react'
-import { App, Button, Card, Input, Modal, Pagination, Select, Space, Spin, Table, Tag } from 'antd'
+import {
+  App,
+  Button,
+  Card,
+  Checkbox,
+  Grid,
+  Input,
+  Modal,
+  Pagination,
+  Select,
+  Space,
+  Spin,
+  Table,
+  Tag,
+} from 'antd'
 import type { TableColumnsType } from 'antd'
 import { GithubOutlined, SendOutlined } from '@ant-design/icons'
 import { usePagination, useAuth } from '@/hooks'
@@ -23,6 +37,8 @@ interface FilterValues {
 export default function AdminGitHubInvitationsPage() {
   const { message: messageApi } = App.useApp()
   const { userInfo } = useAuth()
+  const screens = Grid.useBreakpoint()
+  const isMobile = !screens.md
   const roleLevel = getRoleLevel(userInfo?.roleName || '')
 
   const [filters, setFilters] = useState<FilterValues>({ keyword: '' })
@@ -182,11 +198,46 @@ export default function AdminGitHubInvitationsPage() {
           </Space>
         }
         extra={
-          <Space wrap>
+          isMobile ? undefined : (
+            <Space wrap>
+              <Input.Search
+                placeholder="搜索姓名 / 学号 / 邮箱"
+                allowClear
+                style={{ width: 220 }}
+                onSearch={(value) => {
+                  setFilters((prev) => ({ ...prev, keyword: value }))
+                  setCurrentPage(0)
+                }}
+              />
+              <Select
+                placeholder="方向"
+                allowClear
+                style={{ width: 140 }}
+                options={directionOptions}
+                onChange={(value) => {
+                  setFilters((prev) => ({ ...prev, direction: value }))
+                  setCurrentPage(0)
+                }}
+              />
+              <Button
+                type="primary"
+                icon={<SendOutlined />}
+                disabled={selectedRowKeys.length === 0}
+                loading={batchInviting}
+                onClick={handleBatchInvite}
+              >
+                批量邀请{selectedRowKeys.length > 0 ? `（${selectedRowKeys.length}）` : ''}
+              </Button>
+            </Space>
+          )
+        }
+      >
+        {isMobile && (
+          <div className="flex flex-wrap items-center gap-2 pb-3">
             <Input.Search
               placeholder="搜索姓名 / 学号 / 邮箱"
               allowClear
-              style={{ width: 220 }}
+              className="min-w-0 flex-[1_1_100%]"
               onSearch={(value) => {
                 setFilters((prev) => ({ ...prev, keyword: value }))
                 setCurrentPage(0)
@@ -195,7 +246,7 @@ export default function AdminGitHubInvitationsPage() {
             <Select
               placeholder="方向"
               allowClear
-              style={{ width: 140 }}
+              className="min-w-0 flex-1"
               options={directionOptions}
               onChange={(value) => {
                 setFilters((prev) => ({ ...prev, direction: value }))
@@ -211,20 +262,75 @@ export default function AdminGitHubInvitationsPage() {
             >
               批量邀请{selectedRowKeys.length > 0 ? `（${selectedRowKeys.length}）` : ''}
             </Button>
-          </Space>
-        }
-      >
+          </div>
+        )}
         <Spin spinning={loading}>
-          <Table<AdminUserListItemDTO>
-            rowKey="id"
-            columns={columns}
-            dataSource={data}
-            pagination={false}
-            rowSelection={{
-              selectedRowKeys,
-              onChange: setSelectedRowKeys,
-            }}
-          />
+          {isMobile ? (
+            <div className="flex flex-col gap-3">
+              {data.length === 0 ? (
+                <div className="rounded-xl border border-white/[0.08] bg-white/[0.045] px-4 py-10 text-center text-sm text-white/40">
+                  暂无用户数据
+                </div>
+              ) : (
+                data.map((user) => (
+                  <div
+                    key={user.id}
+                    className="flex items-center gap-3 rounded-xl border border-white/[0.08] bg-white/[0.045] p-3"
+                  >
+                    <Checkbox
+                      checked={selectedRowKeys.includes(user.id)}
+                      onChange={(e) =>
+                        setSelectedRowKeys((prev) =>
+                          e.target.checked ? [...prev, user.id] : prev.filter((k) => k !== user.id)
+                        )
+                      }
+                    />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="truncate font-medium text-white/90">{user.username}</span>
+                        {user.roleName ? (
+                          <Tag color={getRoleTagColor(user.roleName)} bordered={false}>
+                            {ROLE_LABELS[user.roleName] || user.roleName}
+                          </Tag>
+                        ) : (
+                          <Tag bordered={false}>-</Tag>
+                        )}
+                      </div>
+                      <div className="mt-0.5 truncate text-xs text-white/40">
+                        {user.direction
+                          ? DIRECTION_LABELS[user.direction as keyof typeof DIRECTION_LABELS] ||
+                            user.direction
+                          : '-'}{' '}
+                        · {user.email || '-'}
+                      </div>
+                      <div className="mt-1">{renderGithubStatus(user)}</div>
+                    </div>
+                    <Button
+                      type="primary"
+                      size="small"
+                      icon={<SendOutlined />}
+                      loading={invitingUserIds.includes(user.id)}
+                      onClick={() => handleInvite(user)}
+                      className="shrink-0"
+                    >
+                      邀请
+                    </Button>
+                  </div>
+                ))
+              )}
+            </div>
+          ) : (
+            <Table<AdminUserListItemDTO>
+              rowKey="id"
+              columns={columns}
+              dataSource={data}
+              pagination={false}
+              rowSelection={{
+                selectedRowKeys,
+                onChange: setSelectedRowKeys,
+              }}
+            />
+          )}
           <div style={{ marginTop: 16, textAlign: 'right' }}>
             <Pagination
               current={currentPage + 1}

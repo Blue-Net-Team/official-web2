@@ -4,9 +4,11 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   App,
   Button,
+  Checkbox,
   Descriptions,
   Drawer,
   Form,
+  Grid,
   Input,
   Modal,
   Pagination,
@@ -64,6 +66,8 @@ interface FilterValues {
 export default function AdminUserManagementPage() {
   const { message: messageApi, modal } = App.useApp()
   const { userInfo } = useAuth()
+  const screens = Grid.useBreakpoint()
+  const isMobile = !screens.md
 
   // Filters
   const [filters, setFilters] = useState<FilterValues>({
@@ -532,11 +536,39 @@ export default function AdminUserManagementPage() {
         <Input.Search
           allowClear
           placeholder="搜索学号 / 姓名"
-          style={{ width: 220 }}
+          style={{ width: isMobile ? '100%' : 220 }}
           value={filters.keyword}
           onChange={(e) => handleFilterChange({ keyword: e.target.value })}
           onSearch={() => setCurrentPage(0)}
         />
+        {isMobile && (
+          <>
+            <Select
+              allowClear
+              placeholder="角色"
+              style={{ flex: 1, minWidth: 100 }}
+              value={filters.roleId}
+              options={ROLE_OPTIONS}
+              onChange={(v) => handleFilterChange({ roleId: v })}
+            />
+            <Select
+              allowClear
+              placeholder="方向"
+              style={{ flex: 1, minWidth: 100 }}
+              value={filters.direction}
+              options={DIRECTION_OPTIONS}
+              onChange={(v) => handleFilterChange({ direction: v })}
+            />
+            <Select
+              allowClear
+              placeholder="学院"
+              style={{ flex: 1, minWidth: 100 }}
+              value={filters.collegeId}
+              options={collegeOptions}
+              onChange={(v) => handleFilterChange({ collegeId: v })}
+            />
+          </>
+        )}
       </div>
 
       {/* Batch operations */}
@@ -580,30 +612,118 @@ export default function AdminUserManagementPage() {
         </Button>
       </div>
 
-      {/* Table */}
+      {/* Table / Mobile Cards */}
       <Spin spinning={loading}>
-        <Table
-          rowSelection={{
-            selectedRowKeys,
-            onChange: setSelectedRowKeys,
-          }}
-          columns={columns}
-          dataSource={data}
-          rowKey="id"
-          size="small"
-          pagination={false}
-          scroll={{ x: 'max-content' }}
-          locale={{ emptyText: '暂无用户数据' }}
-          onChange={(_, tableFilters) => {
-            setFilters((prev) => ({
-              ...prev,
-              roleId: tableFilters.roleId?.[0] as number | undefined,
-              direction: tableFilters.direction?.[0] as string | undefined,
-              collegeId: tableFilters.collegeId?.[0] as number | undefined,
-            }))
-            setCurrentPage(0)
-          }}
-        />
+        {isMobile ? (
+          <div className="flex flex-col gap-3">
+            {data.length === 0 ? (
+              <div className="rounded-xl border border-white/[0.08] bg-white/[0.045] px-4 py-10 text-center text-sm text-white/40">
+                暂无用户数据
+              </div>
+            ) : (
+              data.map((user) => (
+                <div
+                  key={user.id}
+                  className="flex flex-col gap-2.5 rounded-xl border border-white/[0.08] bg-white/[0.045] p-3.5"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex min-w-0 items-center gap-2">
+                      <Checkbox
+                        checked={selectedRowKeys.includes(user.id)}
+                        onChange={(e) =>
+                          setSelectedRowKeys((prev) =>
+                            e.target.checked
+                              ? [...prev, user.id]
+                              : prev.filter((k) => k !== user.id)
+                          )
+                        }
+                      />
+                      <span className="truncate font-medium text-white/90">{user.username}</span>
+                      {user.roleName ? (
+                        <Tag color={getRoleTagColor(user.roleName)} bordered={false}>
+                          {ROLE_LABELS[user.roleName] || user.roleName}
+                        </Tag>
+                      ) : (
+                        <Tag bordered={false}>-</Tag>
+                      )}
+                    </div>
+                    {user.disable ? <Tag color="red">已禁用</Tag> : <Tag color="green">正常</Tag>}
+                  </div>
+                  <div className="grid grid-cols-2 gap-x-3 gap-y-1 pl-6 text-xs text-white/40">
+                    <span className="truncate">学号 {user.studentId || '-'}</span>
+                    <span className="truncate">
+                      方向{' '}
+                      {user.direction
+                        ? DIRECTION_LABELS[user.direction as keyof typeof DIRECTION_LABELS] ||
+                          user.direction
+                        : '-'}
+                    </span>
+                    <span className="truncate">学院 {user.college || '-'}</span>
+                    <span className="truncate">年级 {user.assessmentGradeYear ?? '-'}</span>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5 border-t border-white/[0.08] pt-2 pl-6">
+                    <Button
+                      type="text"
+                      size="small"
+                      icon={<EyeOutlined />}
+                      onClick={() => handleViewDetail(user)}
+                    >
+                      详情
+                    </Button>
+                    <Button
+                      type="text"
+                      size="small"
+                      icon={<EditOutlined />}
+                      onClick={() => handleEdit(user)}
+                    >
+                      编辑
+                    </Button>
+                    <Button
+                      type="text"
+                      size="small"
+                      icon={<LockOutlined />}
+                      onClick={() => handleResetPassword(user)}
+                    >
+                      密码
+                    </Button>
+                    <Button
+                      type="text"
+                      size="small"
+                      danger
+                      icon={<DeleteOutlined />}
+                      onClick={() => handleDelete(user)}
+                    >
+                      删除
+                    </Button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        ) : (
+          <Table
+            rowSelection={{
+              selectedRowKeys,
+              onChange: setSelectedRowKeys,
+            }}
+            columns={columns}
+            dataSource={data}
+            rowKey="id"
+            size="small"
+            pagination={false}
+            scroll={{ x: 'max-content' }}
+            locale={{ emptyText: '暂无用户数据' }}
+            onChange={(_, tableFilters) => {
+              setFilters((prev) => ({
+                ...prev,
+                roleId: tableFilters.roleId?.[0] as number | undefined,
+                direction: tableFilters.direction?.[0] as string | undefined,
+                collegeId: tableFilters.collegeId?.[0] as number | undefined,
+              }))
+              setCurrentPage(0)
+            }}
+          />
+        )}
       </Spin>
 
       {/* Pagination */}

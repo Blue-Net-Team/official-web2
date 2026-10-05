@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { Button, Card, Empty, Spin, Tag } from 'antd'
+import { Button, Card, Empty, Grid, Spin, Tag } from 'antd'
 import { ArrowLeftOutlined } from '@ant-design/icons'
 import { aiTraceService } from '@/apis/services/ai-trace.service'
 import type { AiConversationDetailDTO } from '@/apis/schema/ai-trace.dto'
@@ -29,6 +29,8 @@ function readSeqFromLocation(): number | null {
 export default function AiTraceConversationDetailPage() {
   const params = useParams()
   const router = useRouter()
+  const screens = Grid.useBreakpoint()
+  const isMobile = !screens.md
   const conversationId = typeof params.id === 'string' ? params.id : ''
 
   const [detail, setDetail] = useState<AiConversationDetailDTO | null>(null)
@@ -118,57 +120,92 @@ export default function AiTraceConversationDetailPage() {
             </div>
           </Card>
         ) : (
-          <div className="flex items-stretch gap-4">
-            {/* 左栏：会话内的提问导航 */}
-            <Card
-              size="small"
-              title={<span className="text-xs font-semibold text-white/45">本会话消息</span>}
-              style={{ width: 264, flex: '0 0 264px' }}
-              styles={{ body: { padding: 12, display: 'flex', flexDirection: 'column', gap: 8 } }}
-            >
-              {turns.length === 0 ? (
-                <span className="text-xs text-white/25">该会话暂无提问记录</span>
-              ) : (
-                turns.map((turn) => {
-                  const active = turn.seq === activeSeq
-                  return (
-                    <button
-                      key={turn.seq}
-                      type="button"
-                      onClick={() => setActiveSeq(turn.seq)}
-                      className={`w-full rounded-md border px-3 py-2.5 text-left transition-colors ${
-                        active
-                          ? 'border-[#fa8c1659] bg-[#fa8c162e]'
-                          : 'border-white/[0.08] hover:bg-white/[0.04]'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between gap-2">
-                        <span
-                          className={`text-xs font-semibold ${active ? 'text-[#fa8c16]' : 'text-white/60'}`}
-                        >
-                          第 {turn.seq} 次提问
-                        </span>
-                        <span className="font-mono text-[11px] text-white/25">
-                          {formatTime(turn.createdAt)}
-                        </span>
-                      </div>
-                      <div className="mt-1 text-xs break-words text-white/90">
-                        {turn.userInput || '（空）'}
-                      </div>
-                      <div className="mt-1 text-[11px] text-white/25">
-                        {[
-                          intentLabel(turn.intent),
-                          turn.action ? actionLabel(turn.action) : null,
-                          formatDuration(turn.durationMs),
-                        ]
-                          .filter(Boolean)
-                          .join(' · ')}
-                      </div>
-                    </button>
-                  )
-                })
-              )}
-            </Card>
+          <div className={`flex items-stretch gap-4 ${isMobile ? 'flex-col' : ''}`}>
+            {/* 提问导航：桌面端为左侧栏，移动端为横向滚动胶囊条 */}
+            {isMobile ? (
+              <>
+                <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1">
+                  {turns.map((turn) => {
+                    const active = turn.seq === activeSeq
+                    return (
+                      <button
+                        key={turn.seq}
+                        type="button"
+                        onClick={() => setActiveSeq(turn.seq)}
+                        className={`shrink-0 rounded-full border px-3 py-1.5 text-xs transition-colors ${
+                          active
+                            ? 'border-[#fa8c1659] bg-[#fa8c162e] text-[#fa8c16]'
+                            : 'border-white/[0.1] bg-white/[0.06] text-white/60'
+                        }`}
+                      >
+                        第 {turn.seq} 次 · {formatTime(turn.createdAt)}
+                      </button>
+                    )
+                  })}
+                </div>
+                {activeTurn && (
+                  <div className="text-xs text-white/45">
+                    {[
+                      intentLabel(activeTurn.intent),
+                      activeTurn.action ? actionLabel(activeTurn.action) : null,
+                      formatDuration(activeTurn.durationMs),
+                    ]
+                      .filter(Boolean)
+                      .join(' · ')}
+                  </div>
+                )}
+              </>
+            ) : (
+              <Card
+                size="small"
+                title={<span className="text-xs font-semibold text-white/45">本会话消息</span>}
+                style={{ width: 264, flex: '0 0 264px' }}
+                styles={{ body: { padding: 12, display: 'flex', flexDirection: 'column', gap: 8 } }}
+              >
+                {turns.length === 0 ? (
+                  <span className="text-xs text-white/25">该会话暂无提问记录</span>
+                ) : (
+                  turns.map((turn) => {
+                    const active = turn.seq === activeSeq
+                    return (
+                      <button
+                        key={turn.seq}
+                        type="button"
+                        onClick={() => setActiveSeq(turn.seq)}
+                        className={`w-full rounded-md border px-3 py-2.5 text-left transition-colors ${
+                          active
+                            ? 'border-[#fa8c1659] bg-[#fa8c162e]'
+                            : 'border-white/[0.08] hover:bg-white/[0.04]'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <span
+                            className={`text-xs font-semibold ${active ? 'text-[#fa8c16]' : 'text-white/60'}`}
+                          >
+                            第 {turn.seq} 次提问
+                          </span>
+                          <span className="font-mono text-[11px] text-white/25">
+                            {formatTime(turn.createdAt)}
+                          </span>
+                        </div>
+                        <div className="mt-1 text-xs break-words text-white/90">
+                          {turn.userInput || '（空）'}
+                        </div>
+                        <div className="mt-1 text-[11px] text-white/25">
+                          {[
+                            intentLabel(turn.intent),
+                            turn.action ? actionLabel(turn.action) : null,
+                            formatDuration(turn.durationMs),
+                          ]
+                            .filter(Boolean)
+                            .join(' · ')}
+                        </div>
+                      </button>
+                    )
+                  })
+                )}
+              </Card>
+            )}
 
             {/* 右栏：完整原始事件流 */}
             <Card size="small" className="min-w-0 flex-1" styles={{ body: { padding: 20 } }}>

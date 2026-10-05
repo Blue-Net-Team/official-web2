@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>管理平台移动端适配 - 设计稿</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { background:#0a0a0d; font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif; }
+  .phone {
+    width:375px; min-height:812px; border-radius:28px; overflow:hidden;
+    background:linear-gradient(180deg,#101014 0%,#0c0c10 100%);
+    border:1px solid rgba(255,255,255,.09);
+    box-shadow:0 24px 60px rgba(0,0,0,.55);
+  }
+  .glass {
+    background:rgba(255,255,255,.045);
+    border:1px solid rgba(255,255,255,.085);
+    border-radius:12px;
+  }
+  .hairline { border-color:rgba(255,255,255,.08); }
+  .t1{color:rgba(255,255,255,.92)} .t2{color:rgba(255,255,255,.6)} .t3{color:rgba(255,255,255,.38)}
+  .accent{color:#fa8c16}
+  .btn-primary{background:#fa8c16;color:#1a1206;font-weight:600;border-radius:8px}
+  .btn-ghost{background:rgba(255,255,255,.07);color:rgba(255,255,255,.75);border-radius:8px;border:1px solid rgba(255,255,255,.09)}
+  .tag{display:inline-flex;align-items:center;gap:3px;font-size:11px;padding:1px 7px;border-radius:5px;border:1px solid transparent;line-height:18px}
+  .chip{display:inline-flex;align-items:center;font-size:11px;padding:2px 8px;border-radius:999px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.6);white-space:nowrap}
+  .clamp2{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .bar{height:6px;border-radius:999px;background:rgba(255,255,255,.1)}
+  .num{font-variant-numeric:tabular-nums}
+  ::-webkit-scrollbar{width:0;height:0}
+</style>
+</head>
+<body class="p-10">
+<div class="flex flex-wrap gap-10">
+
+<!-- ============ 1. 用户管理 ============ -->
+<section>
+  <h2 class="t2 text-sm mb-3">① 用户管理 <span class="t3">users/page.tsx</span></h2>
+  <div class="phone p-4 flex flex-col gap-3">
+    <div class="flex items-center justify-between">
+      <span class="t1 text-base font-semibold">用户管理</span>
+      <span class="btn-primary text-xs px-3 py-1.5">+ 新建用户</span>
+    </div>
+    <div class="glass flex items-center gap-2 px-3 py-2 t3 text-sm"><svg class="inline-block " style="width:1em;height:1em;vertical-align:-.125em" viewBox="0 0 1024 1024" fill="currentColor"><path d="M909.6 854.5L747 691.9c-4.7-4.7-10.9-7-17-7H670c27.2-39.8 43.3-87.8 43.3-139.7C713.3 373.5 585.8 246 429.7 246S146 373.5 146 529.7s127.5 283.7 283.7 283.7c51.9 0 99.9-16.1 139.7-43.3v60c0 6.1 2.4 12.3 7 17l162.6 162.6c9.4 9.4 24.6 9.4 33.9 0l28.3-28.3c9.4-9.4 9.4-24.6.1-33.9zM429.7 678.3c-82.1 0-148.7-66.5-148.7-148.7s66.5-148.7 148.7-148.7 148.7 66.5 148.7 148.7-66.6 148.7-148.7 148.7z"/></svg> 搜索姓名 / 学号 / 邮箱</div>
+    <div class="flex gap-2">
+      <span class="chip">角色 ▾</span><span class="chip">方向 ▾</span><span class="chip">学院 ▾</span>
+    </div>
+    <!-- card -->
+    <div class="glass p-3.5 flex flex-col gap-2.5">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="t1 font-medium">张明远</span>
+          <span class="tag" style="background:rgba(250,140,22,.14);color:#fa8c16">超级管理员</span>
+        </div>
+        <span class="tag" style="background:rgba(82,196,26,.13);color:#52c41a">正常</span>
+      </div>
+      <div class="grid grid-cols-2 gap-x-3 gap-y-1 text-xs t3 num">
+        <span>学号 2023010401</span><span>方向 人工智能</span>
+        <span>学院 计算机学院</span><span>年级 2023级</span>
+      </div>
+      <div class="flex gap-2 pt-1 hairline border-t">
+        <span class="btn-ghost text-xs px-2.5 py-1">查看</span>
+        <span class="btn-ghost text-xs px-2.5 py-1">编辑</span>
+        <span class="btn-ghost text-xs px-2.5 py-1">重置密码</span>
+        <span class="text-xs px-2.5 py-1 rounded-lg" style="background:rgba(255,77,79,.12);color:#ff7875">禁用</span>
+      </div>
+    </div>
+    <div class="glass p-3.5 flex flex-col gap-2.5">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="t1 font-medium">李思颖</span>
+          <span class="tag" style="background:rgba(22,119,255,.13);color:#4096ff">正式成员</span>
+        </div>
+        <span class="tag" style="background:rgba(82,196,26,.13);color:#52c41a">正常</span>
+      </div>
+      <div class="grid grid-cols-2 gap-x-3 gap-y-1 text-xs t3 num">
+        <span>学号 2022040333</span><span>方向 前端开发</span>
+        <span>学院 软件学院</span><span>年级 2022级</span>
+      </div>
+      <div class="flex gap-2 pt-1 hairline border-t">
+        <span class="btn-ghost text-xs px-2.5 py-1">查看</span>
+        <span class="btn-ghost text-xs px-2.5 py-1">编辑</span>
+        <span class="btn-ghost text-xs px-2.5 py-1">重置密码</span>
+        <span class="text-xs px-2.5 py-1 rounded-lg" style="background:rgba(255,77,79,.12);color:#ff7875">禁用</span>
+      </div>
+    </div>
+    <div class="t3 text-xs text-center mt-auto pt-3">‹ 1 / 8 ›　共 113 个用户</div>
+  </div>
+</section>
+
+<!-- ============ 2. GitHub 邀请 ============ -->
+<section>
+  <h2 class="t2 text-sm mb-3">② GitHub 组织邀请 <span class="t3">github-invitations</span></h2>
+  <div class="phone p-4 flex flex-col gap-3">
+    <div class="t1 text-base font-semibold">GitHub 组织邀请</div>
+    <div class="glass flex items-center gap-2 px-3 py-2 t3 text-sm"><svg class="inline-block " style="width:1em;height:1em;vertical-align:-.125em" viewBox="0 0 1024 1024" fill="currentColor"><path d="M909.6 854.5L747 691.9c-4.7-4.7-10.9-7-17-7H670c27.2-39.8 43.3-87.8 43.3-139.7C713.3 373.5 585.8 246 429.7 246S146 373.5 146 529.7s127.5 283.7 283.7 283.7c51.9 0 99.9-16.1 139.7-43.3v60c0 6.1 2.4 12.3 7 17l162.6 162.6c9.4 9.4 24.6 9.4 33.9 0l28.3-28.3c9.4-9.4 9.4-24.6.1-33.9zM429.7 678.3c-82.1 0-148.7-66.5-148.7-148.7s66.5-148.7 148.7-148.7 148.7 66.5 148.7 148.7-66.6 148.7-148.7 148.7z"/></svg> 搜索姓名 / 学号 / 邮箱</div>
+    <div class="flex items-center justify-between">
+      <span class="chip">方向 ▾</span>
+      <span class="btn-primary text-xs px-3 py-1.5">批量邀请（2）</span>
+    </div>
+    <div class="glass p-3 flex items-center gap-3">
+      <input type="checkbox" checked class="accent-[#fa8c16] w-4 h-4 shrink-0">
+      <div class="flex-1 min-w-0">
+        <div class="flex items-center gap-2">
+          <span class="t1 font-medium">王梓豪</span>
+          <span class="tag" style="background:rgba(22,119,255,.13);color:#4096ff">正式成员</span>
+        </div>
+        <div class="text-xs t3 mt-0.5">AI · wangzihao@stu.xxx.edu.cn</div>
+        <div class="mt-1"><span class="tag" style="background:rgba(255,255,255,.07);color:rgba(255,255,255,.5);border-color:rgba(255,255,255,.12)">未绑定 GitHub</span></div>
+      </div>
+      <span class="btn-primary text-xs px-3 py-1.5 shrink-0">邀请</span>
+    </div>
+    <div class="glass p-3 flex items-center gap-3" style="border-color:rgba(250,140,22,.35);background:rgba(250,140,22,.06)">
+      <input type="checkbox" checked class="w-4 h-4 shrink-0">
+      <div class="flex-1 min-w-0">
+        <div class="flex items-center gap-2">
+          <span class="t1 font-medium">陈雨桐</span>
+          <span class="tag" style="background:rgba(22,119,255,.13);color:#4096ff">正式成员</span>
+        </div>
+        <div class="text-xs t3 mt-0.5">前端 · yutongchen@stu.xxx.edu.cn</div>
+        <div class="mt-1"><span class="tag" style="background:rgba(22,119,255,.13);color:#4096ff">@yutong-chen</span></div>
+      </div>
+      <span class="btn-primary text-xs px-3 py-1.5 shrink-0">邀请</span>
+    </div>
+    <div class="glass p-3 flex items-center gap-3 opacity-60">
+      <input type="checkbox" class="w-4 h-4 shrink-0">
+      <div class="flex-1 min-w-0">
+        <div class="flex items-center gap-2">
+          <span class="t1 font-medium">刘一帆</span>
+          <span class="tag" style="background:rgba(255,255,255,.07);color:rgba(255,255,255,.5);border-color:rgba(255,255,255,.12)">候选人</span>
+        </div>
+        <div class="text-xs t3 mt-0.5">后端 · liuyifan@stu.xxx.edu.cn</div>
+        <div class="mt-1"><span class="tag" style="background:rgba(255,255,255,.07);color:rgba(255,255,255,.5);border-color:rgba(255,255,255,.12)">未绑定 GitHub</span></div>
+      </div>
+      <span class="btn-primary text-xs px-3 py-1.5 shrink-0">邀请</span>
+    </div>
+    <div class="t3 text-xs text-center mt-auto pt-3">‹ 1 / 8 ›　共 113 个用户</div>
+  </div>
+</section>
+
+<!-- ============ 3. 考核时间管理 ============ -->
+<section>
+  <h2 class="t2 text-sm mb-3">③ 考核时间管理 <span class="t3">assessment/time</span></h2>
+  <div class="phone p-4 flex flex-col gap-3">
+    <div class="flex items-center justify-between">
+      <span class="t1 text-base font-semibold">考核时间管理</span>
+      <span class="btn-primary text-xs px-3 py-1.5">+ 新增</span>
+    </div>
+    <div class="flex gap-2"><span class="chip">筛选方向 ▾</span><span class="chip">筛选年级 ▾</span></div>
+    <div class="glass p-3.5 flex flex-col gap-2.5">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="tag" style="background:rgba(22,119,255,.13);color:#4096ff">全局</span>
+          <span class="t1 font-medium">第 1 轮</span>
+          <span class="t3 text-xs">· 2023级</span>
+        </div>
+        <span class="tag" style="background:rgba(82,196,26,.13);color:#52c41a">进行中</span>
+      </div>
+      <div class="glass px-3 py-2 flex items-center gap-2 text-xs num" style="border-radius:8px">
+        <span class="accent"><svg class="inline-block " style="width:1em;height:1em;vertical-align:-.125em" viewBox="0 0 1024 1024" fill="currentColor"><path d="M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448 448-200.6 448-448S759.4 64 512 64zm0 820c-205.4 0-372-166.6-372-372s166.6-372 372-372 372 166.6 372 372-166.6 372-372 372zm62.5-375.5H536V300.5c0-13.2-10.8-24-24-24h-6.6c-13.2 0-24 10.8-24 24V512h111.5c13.2 0 24 10.8 24 24v6.6c0 13.2-10.7 24-24 24z"/></svg></span>
+        <span class="t1">2025-10-01 09:00 ~ 10-07 21:00</span>
+      </div>
+      <div class="flex items-center justify-between text-xs t3">
+        <span>限时 120 分钟 · 不允许组队</span>
+        <span class="flex gap-1">
+          <span class="btn-ghost px-2 py-1">编辑</span>
+          <span class="px-2 py-1 rounded-lg" style="background:rgba(255,77,79,.12);color:#ff7875">删除</span>
+        </span>
+      </div>
+    </div>
+    <div class="glass p-3.5 flex flex-col gap-2.5">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="tag" style="background:rgba(255,255,255,.07);color:rgba(255,255,255,.65);border-color:rgba(255,255,255,.12)">人工智能</span>
+          <span class="t1 font-medium">最终考核</span>
+        </div>
+        <span class="tag" style="background:rgba(255,255,255,.07);color:rgba(255,255,255,.5);border-color:rgba(255,255,255,.12)">未开始</span>
+      </div>
+      <div class="glass px-3 py-2 flex items-center gap-2 text-xs num" style="border-radius:8px">
+        <span class="t3"><svg class="inline-block " style="width:1em;height:1em;vertical-align:-.125em" viewBox="0 0 1024 1024" fill="currentColor"><path d="M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448 448-200.6 448-448S759.4 64 512 64zm0 820c-205.4 0-372-166.6-372-372s166.6-372 372-372 372 166.6 372 372-166.6 372-372 372zm62.5-375.5H536V300.5c0-13.2-10.8-24-24-24h-6.6c-13.2 0-24 10.8-24 24V512h111.5c13.2 0 24 10.8 24 24v6.6c0 13.2-10.7 24-24 24z"/></svg></span>
+        <span class="t1">2025-11-02 14:00 ~ 11-02 18:00</span>
+      </div>
+      <div class="flex items-center justify-between text-xs t3">
+        <span>不限时 · 允许组队</span>
+        <span class="flex gap-1">
+          <span class="btn-ghost px-2 py-1">编辑</span>
+          <span class="px-2 py-1 rounded-lg" style="background:rgba(255,77,79,.12);color:#ff7875">删除</span>
+        </span>
+      </div>
+    </div>
+    <div class="t3 text-xs text-center mt-auto pt-3">‹ 1 / 2 ›　共 32 条</div>
+  </div>
+</section>
+
+<!-- ============ 4. 题目评分 ============ -->
+<section>
+  <h2 class="t2 text-sm mb-3">④ 题目评分 <span class="t3">judge/score（提交列表）</span></h2>
+  <div class="phone p-4 flex flex-col gap-3">
+    <div class="flex items-center justify-between">
+      <span class="t1 text-base font-semibold">评分 · 第1轮 - 智能问答系统</span>
+    </div>
+    <div class="glass flex items-center gap-2 px-3 py-2 t3 text-sm"><svg class="inline-block " style="width:1em;height:1em;vertical-align:-.125em" viewBox="0 0 1024 1024" fill="currentColor"><path d="M909.6 854.5L747 691.9c-4.7-4.7-10.9-7-17-7H670c27.2-39.8 43.3-87.8 43.3-139.7C713.3 373.5 585.8 246 429.7 246S146 373.5 146 529.7s127.5 283.7 283.7 283.7c51.9 0 99.9-16.1 139.7-43.3v60c0 6.1 2.4 12.3 7 17l162.6 162.6c9.4 9.4 24.6 9.4 33.9 0l28.3-28.3c9.4-9.4 9.4-24.6.1-33.9zM429.7 678.3c-82.1 0-148.7-66.5-148.7-148.7s66.5-148.7 148.7-148.7 148.7 66.5 148.7 148.7-66.6 148.7-148.7 148.7z"/></svg> 搜索考生 / 学号</div>
+    <!-- team header card -->
+    <div class="glass px-3.5 py-2.5 flex items-center gap-2" style="background:rgba(22,119,255,.07);border-color:rgba(22,119,255,.25)">
+      <span class="t1"><svg class="inline-block " style="width:1em;height:1em;vertical-align:-.125em" viewBox="0 0 1024 1024" fill="currentColor"><path d="M608 192c-17.7 0-32 14.3-32 32v128h160c17.7 0 32-14.3 32-32V224c0-17.7-14.3-32-32-32H608zm-320 0c-17.7 0-32 14.3-32 32v128h160c17.7 0 32-14.3 32-32V224c0-17.7-14.3-32-32-32H288zM480 512c17.7 0 32-14.3 32-32V320H352v160c0 17.7 14.3 32 32 32h96zM192 448c-17.7 0-32 14.3-32 32v128h160c17.7 0 32-14.3 32-32V480c0-17.7-14.3-32-32-32H192zm576 0c-17.7 0-32 14.3-32 32v128h160c17.7 0 32-14.3 32-32V480c0-17.7-14.3-32-32-32H768zM608 768c-17.7 0-32 14.3-32 32v128h160c17.7 0 32-14.3 32-32V800c0-17.7-14.3-32-32-32H608zM288 768c-17.7 0-32 14.3-32 32v128h160c17.7 0 32-14.3 32-32V800c0-17.7-14.3-32-32-32H288z"/></svg> 你说的都队</span>
+      <span class="chip">3人</span>
+      <span class="tag" style="background:rgba(22,119,255,.13);color:#4096ff">队长: 赵凯</span>
+    </div>
+    <!-- member card -->
+    <div class="glass p-3.5 flex flex-col gap-2 ml-3" style="border-left:3px solid rgba(250,140,22,.5)">
+      <div class="flex items-center justify-between">
+        <div>
+          <div class="flex items-center gap-1.5">
+            <span class="t1 font-medium">赵凯</span><span class="tag" style="background:rgba(22,119,255,.13);color:#4096ff"><svg class="inline-block " style="width:1em;height:1em;vertical-align:-.125em" viewBox="0 0 1024 1024" fill="currentColor"><path d="M899.6 392.7L744 331.1V192c0-17.7-14.3-32-32-32H312c-17.7 0-32 14.3-32 32v139.1L124.4 392.7c-12.7 5.1-19 19.6-14.1 32.3l71.9 187.5c4.8 12.5 17.4 19.6 30.1 16.9l174.3-40.9V872c0 17.7 14.3 32 32 32h190c17.7 0 32-14.3 32-32V598.6l174.3 40.9c12.7 2.7 25.3-4.4 30.1-16.9l71.9-187.5c4.9-12.7-1.4-27.2-14.1-32.4z"/></svg> 队长</span>
+          </div>
+          <div class="text-xs t3 mt-0.5 num">学号 2022010218</div>
+        </div>
+        <div class="text-right">
+          <div class="t1 font-semibold num">86 <span class="t3 text-xs font-normal">/ 100</span></div>
+          <span class="tag mt-1" style="background:rgba(82,196,26,.13);color:#52c41a">已评分 · A</span>
+        </div>
+      </div>
+      <div class="flex items-center justify-between text-xs t3">
+        <span>评判 10-03 20:14</span>
+        <span class="btn-primary px-4 py-1">改分</span>
+      </div>
+    </div>
+    <div class="glass p-3.5 flex flex-col gap-2 ml-3">
+      <div class="flex items-center justify-between">
+        <div>
+          <div class="flex items-center gap-1.5">
+            <span class="t1 font-medium">孙萌</span>
+          </div>
+          <div class="text-xs t3 mt-0.5 num">学号 2022010356</div>
+        </div>
+        <div class="text-right">
+          <div class="t3 text-sm">— <span class="text-xs">/ 100</span></div>
+          <span class="tag mt-1" style="background:rgba(250,140,22,.13);color:#fa8c16">待评分</span>
+        </div>
+      </div>
+      <div class="flex items-center justify-end text-xs t3">
+        <span class="btn-primary px-4 py-1">评分</span>
+      </div>
+    </div>
+    <div class="t3 text-xs text-center mt-auto pt-3">‹ 1 / 5 ›　共 71 份提交</div>
+  </div>
+</section>
+
+<!-- ============ 5. Bug 报告 ============ -->
+<section>
+  <h2 class="t2 text-sm mb-3">⑤ Bug 报告 <span class="t3">bug-report</span></h2>
+  <div class="phone p-4 flex flex-col gap-3">
+    <div class="t1 text-base font-semibold">Bug 报告管理</div>
+    <div class="flex gap-2"><span class="chip">筛选状态 ▾</span></div>
+    <div class="glass p-3.5 flex flex-col gap-2">
+      <div class="flex items-center justify-between">
+        <span class="tag" style="background:rgba(250,140,22,.13);color:#fa8c16">处理中</span>
+        <a class="text-xs" style="color:#4096ff">GitHub Issue #128 ↗</a>
+      </div>
+      <div class="t1 text-sm font-medium clamp2">移动端用户管理页操作列固定后遮挡内容，无法正常查看用户信息</div>
+      <div class="text-xs t3 clamp2">在手机浏览器打开 /admin/users，操作列完全掩盖信息栏，需要左右滚动才能看到学号和方向…</div>
+      <div class="flex items-center justify-between pt-1 hairline border-t">
+        <span class="t3 text-xs num">ID 1024 · /admin/users</span>
+        <span class="btn-ghost text-xs px-3 py-1">查看详情</span>
+      </div>
+    </div>
+    <div class="glass p-3.5 flex flex-col gap-2">
+      <div class="flex items-center justify-between">
+        <span class="tag" style="background:rgba(255,255,255,.07);color:rgba(255,255,255,.5);border-color:rgba(255,255,255,.12)">待处理</span>
+        <span class="t3 text-xs">未关联 Issue</span>
+      </div>
+      <div class="t1 text-sm font-medium clamp2">上传头像后预览图片变形</div>
+      <div class="text-xs t3 clamp2">选择竖版照片上传后，预览区域被拉伸变形，实际已保存的图片是正常的…</div>
+      <div class="flex items-center justify-between pt-1 hairline border-t">
+        <span class="t3 text-xs num">ID 1023 · /profile</span>
+        <span class="btn-ghost text-xs px-3 py-1">查看详情</span>
+      </div>
+    </div>
+    <div class="t3 text-xs text-center mt-auto pt-3">‹ 1 / 3 ›　共 37 条报告</div>
+  </div>
+</section>
+
+<!-- ============ 6. AI 对话详情 ============ -->
+<section>
+  <h2 class="t2 text-sm mb-3">⑥ AI 对话详情 <span class="t3">ai-traces/conversations/[id]</span></h2>
+  <div class="phone p-4 flex flex-col gap-3">
+    <div class="flex items-center gap-2">
+      <span style="color:#4096ff">← 返回列表</span>
+      <span class="t3">|</span>
+      <span class="t2 text-xs font-mono truncate">conv-a81f…3c</span>
+      <span class="chip shrink-0">8 次提问</span>
+    </div>
+    <!-- turn chips: horizontal scroll -->
+    <div class="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4">
+      <span class="chip shrink-0" style="background:rgba(250,140,22,.15);color:#fa8c16;border-color:rgba(250,140,22,.4)">第 1 次 · 09:41</span>
+      <span class="chip shrink-0">第 2 次 · 09:43</span>
+      <span class="chip shrink-0">第 3 次 · 09:47</span>
+      <span class="chip shrink-0">第 4 次 · 09:52</span>
+      <span class="chip shrink-0">…</span>
+    </div>
+    <div class="t3 text-xs">当前：第 1 次提问 · 智能问答 · chunk_search · 3.2s</div>
+    <!-- detail card full width -->
+    <div class="glass p-3.5 flex flex-col gap-3">
+      <div>
+        <div class="t3 text-xs mb-1">用户输入</div>
+        <div class="t1 text-sm bg-white/5 rounded-md px-3 py-2 whitespace-pre-wrap">实验室的 GPU 服务器怎么申请使用？</div>
+      </div>
+      <div class="flex items-center gap-2 text-xs">
+        <span class="tag" style="background:rgba(22,119,255,.13);color:#4096ff">意图: 资源咨询</span>
+        <span class="tag" style="background:rgba(82,196,26,.13);color:#52c41a">动作: answer</span>
+        <span class="t3 num">3.2s</span>
+      </div>
+      <div class="hairline border-t pt-3">
+        <div class="t3 text-xs mb-1.5">AI 回答</div>
+        <div class="t2 text-sm leading-relaxed whitespace-pre-wrap">你可以在「实验室环境」页面查看 GPU 服务器清单，填写申请表后等待方向管理员审批，通常 1-2 个工作日内开通账号…</div>
+      </div>
+      <div class="hairline border-t pt-3">
+        <div class="t3 text-xs mb-1.5">检索到的资料片段（2）</div>
+        <div class="text-xs t3 bg-white/5 rounded-md px-2.5 py-1.5 mb-1.5">《实验室服务器使用规范》§3 …</div>
+        <div class="text-xs t3 bg-white/5 rounded-md px-2.5 py-1.5">《GPU 预约流程》…</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 7. AI 分析面板 ============ -->
+<section>
+  <h2 class="t2 text-sm mb-3">⑦ AI 对话分析 <span class="t3">ai-traces/statistics</span></h2>
+  <div class="phone p-4 flex flex-col gap-3">
+    <div class="flex items-center justify-between">
+      <span class="t1 text-base font-semibold">对话分析</span>
+      <span class="chip">近 7 天 ▾</span>
+    </div>
+    <!-- stat cards: full width stacked -->
+    <div class="grid grid-cols-2 gap-2.5">
+      <div class="glass p-3"><div class="t3 text-xs">总会话</div><div class="t1 text-xl font-semibold num mt-0.5">1,286</div></div>
+      <div class="glass p-3"><div class="t3 text-xs">总提问</div><div class="t1 text-xl font-semibold num mt-0.5">4,932</div></div>
+      <div class="glass p-3"><div class="t3 text-xs">平均响应</div><div class="t1 text-xl font-semibold num mt-0.5">2.8s</div></div>
+      <div class="glass p-3"><div class="t3 text-xs">拒答率</div><div class="t1 text-xl font-semibold num mt-0.5">3.1%</div></div>
+    </div>
+    <!-- trend chart full width -->
+    <div class="glass p-3.5">
+      <div class="t2 text-sm font-medium mb-1">会话量趋势</div>
+      <div class="t3 text-xs mb-2">每日新增会话数 · 峰值 10-03</div>
+      <svg viewBox="0 0 320 110" class="w-full">
+        <g>
+          <rect x="8"   y="55" width="22" height="50" rx="3" fill="rgba(250,140,22,.35)"/>
+          <rect x="48"  y="40" width="22" height="65" rx="3" fill="rgba(250,140,22,.35)"/>
+          <rect x="88"  y="62" width="22" height="43" rx="3" fill="rgba(250,140,22,.35)"/>
+          <rect x="128" y="28" width="22" height="77" rx="3" fill="rgba(250,140,22,.35)"/>
+          <rect x="168" y="45" width="22" height="60" rx="3" fill="rgba(250,140,22,.35)"/>
+          <rect x="208" y="12" width="22" height="93" rx="3" fill="#fa8c16"/>
+          <rect x="248" y="50" width="22" height="55" rx="3" fill="rgba(250,140,22,.35)"/>
+          <rect x="288" y="58" width="22" height="47" rx="3" fill="rgba(250,140,22,.35)"/>
+        </g>
+      </svg>
+      <div class="flex justify-between t3 text-[10px] num mt-1"><span>09-27</span><span>09-30</span><span>10-03</span></div>
+    </div>
+    <!-- tools -->
+    <div class="glass p-3.5 flex flex-col gap-2.5">
+      <div class="t2 text-sm font-medium">检索工具使用</div>
+      <div>
+        <div class="flex justify-between text-xs t2 mb-1"><span>tag_search</span><span class="num">312</span></div>
+        <div class="bar"><div style="width:82%;height:6px;border-radius:999px;background:#fa8c16"></div></div>
+      </div>
+      <div>
+        <div class="flex justify-between text-xs t2 mb-1"><span>chunk_search</span><span class="num" style="color:#ff7875">96</span></div>
+        <div class="bar"><div style="width:28%;height:6px;border-radius:999px;background:rgba(255,120,117,.7)"></div></div>
+      </div>
+      <div>
+        <div class="flex justify-between text-xs t2 mb-1"><span>knowledge_lookup</span><span class="num">41</span></div>
+        <div class="bar"><div style="width:12%;height:6px;border-radius:999px;background:rgba(255,255,255,.35)"></div></div>
+      </div>
+      <div class="t3 text-[11px]"><svg class="inline-block " style="width:1em;height:1em;vertical-align:-.125em" viewBox="0 0 1024 1024" fill="currentColor"><path d="M464 720a48 48 0 1096 0 48 48 0 10-96 0zm16-304v184c0 4.4 3.6 8 8 8h48c4.4 0 8-3.6 8-8V416c0-4.4-3.6-8-8-8h-48c-4.4 0-8 3.6-8 8zm475.7 440l-416-720c-6.2-10.7-16.9-16-27.7-16s-21.6 5.3-27.7 16l-416 720C56 877.4 71.4 904 96 904h832c24.6 0 40-26.6 27.7-48z"/></svg> chunk_search 占比高说明标签覆盖差</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 8. 资源库管理 ============ -->
+<section>
+  <h2 class="t2 text-sm mb-3">⑧ 资源库管理 <span class="t3">resources</span></h2>
+  <div class="phone p-4 flex flex-col gap-3">
+    <div class="flex items-center justify-between">
+      <span class="t1 text-base font-semibold">软件资源管理</span>
+      <span class="btn-primary text-xs px-3 py-1.5">+ 新增资源</span>
+    </div>
+    <div class="glass p-3.5 flex flex-col gap-2">
+      <div class="flex items-center justify-between">
+        <span class="t1 font-medium">JetBrains 全家桶教育授权</span>
+        <span class="flex items-center gap-1.5 text-xs t2">
+          <span class="w-8 h-4.5 rounded-full relative inline-block" style="width:34px;height:19px;background:#fa8c16">
+            <span class="absolute rounded-full bg-white" style="width:15px;height:15px;top:2px;right:2px"></span>
+          </span>启用
+        </span>
+      </div>
+      <div class="flex items-center gap-2 text-xs">
+        <span class="tag" style="background:rgba(22,119,255,.13);color:#4096ff">人工智能</span>
+        <span class="t3">开发工具</span>
+      </div>
+      <div class="text-xs t3 clamp2">通过学校教育邮箱申请 JetBrains 全系 IDE 免费授权，包含 IntelliJ IDEA、PyCharm 等。</div>
+      <div class="flex items-center justify-between pt-1 hairline border-t">
+        <a class="text-xs" style="color:#4096ff">jetbrains.com/student ↗</a>
+        <span class="flex gap-1 text-xs">
+          <span class="btn-ghost px-2 py-1">↑↓ 调序</span>
+          <span class="btn-ghost px-2 py-1">编辑</span>
+          <span class="px-2 py-1 rounded-lg" style="background:rgba(255,77,79,.12);color:#ff7875">删除</span>
+        </span>
+      </div>
+    </div>
+    <div class="glass p-3.5 flex flex-col gap-2">
+      <div class="flex items-center justify-between">
+        <span class="t1 font-medium">GitHub Student Pack</span>
+        <span class="flex items-center gap-1.5 text-xs t3">
+          <span class="inline-block rounded-full" style="width:34px;height:19px;background:rgba(255,255,255,.14)">
+            <span class="block rounded-full bg-white" style="width:15px;height:15px;margin:2px"></span>
+          </span>禁用
+        </span>
+      </div>
+      <div class="flex items-center gap-2 text-xs">
+        <span class="tag" style="background:rgba(255,255,255,.07);color:rgba(255,255,255,.65);border-color:rgba(255,255,255,.12)">前端</span>
+        <span class="t3">权益申请</span>
+      </div>
+      <div class="text-xs t3 clamp2">面向学生的 GitHub 教育礼包，包含 Copilot 免费版、DigitalOcean 额度等。</div>
+      <div class="flex items-center justify-between pt-1 hairline border-t">
+        <a class="text-xs" style="color:#4096ff">education.github.com ↗</a>
+        <span class="flex gap-1 text-xs">
+          <span class="btn-ghost px-2 py-1">↑↓ 调序</span>
+          <span class="btn-ghost px-2 py-1">编辑</span>
+          <span class="px-2 py-1 rounded-lg" style="background:rgba(255,77,79,.12);color:#ff7875">删除</span>
+        </span>
+      </div>
+    </div>
+    <div class="t3 text-xs text-center mt-auto pt-3">‹ 1 / 4 ›　共 76 个资源</div>
+  </div>
+</section>
+
+</div>
+</body>
+</html>

@@ -16,7 +16,13 @@ import {
   Table,
   Tag,
 } from 'antd'
-import { PlusOutlined, EditOutlined, DeleteOutlined, TeamOutlined } from '@ant-design/icons'
+import {
+  PlusOutlined,
+  EditOutlined,
+  DeleteOutlined,
+  TeamOutlined,
+  ClockCircleOutlined,
+} from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
 import dayjs from 'dayjs'
 import type {
@@ -316,20 +322,109 @@ export default function AssessmentTimeManagementPage() {
         />
       </div>
 
-      {/* Table */}
+      {/* List */}
       <Spin spinning={loading}>
-        <Table
-          dataSource={filteredList}
-          columns={columns}
-          rowKey={(record) => String(record.id)}
-          size="small"
-          pagination={false}
-          onRow={(record) => ({
-            onClick: () => handleRowClick(record),
-            className: 'cursor-pointer',
-          })}
-          locale={{ emptyText: '暂无考核时间数据' }}
-        />
+        {isMobile ? (
+          <div className="flex flex-col gap-3">
+            {filteredList.length === 0 ? (
+              <div className="rounded-xl border border-white/[0.08] bg-white/[0.045] px-4 py-10 text-center text-sm text-white/40">
+                暂无考核时间数据
+              </div>
+            ) : (
+              filteredList.map((item) => {
+                const status = getAssessmentStatus(item.startTime, item.endTime)
+                return (
+                  <div
+                    key={item.id}
+                    className="flex cursor-pointer flex-col gap-2.5 rounded-xl border border-white/[0.08] bg-white/[0.045] p-3.5"
+                    onClick={() => handleRowClick(item)}
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex min-w-0 items-center gap-2">
+                        {item.direction ? (
+                          <Tag bordered={false}>{DIRECTION_LABELS[item.direction]}</Tag>
+                        ) : (
+                          <Tag color="blue" bordered={false}>
+                            全局
+                          </Tag>
+                        )}
+                        <span className="truncate font-medium text-white/90">
+                          {item.epoch === 0 ? '最终考核' : `第 ${item.epoch} 轮`}
+                        </span>
+                        {item.grade != null && (
+                          <span className="shrink-0 text-xs text-white/40">{item.grade}级</span>
+                        )}
+                      </div>
+                      <Tag color={status.color} bordered={false} className="shrink-0">
+                        {status.label}
+                      </Tag>
+                    </div>
+                    <div className="flex items-center gap-2 rounded-lg border border-white/[0.08] bg-white/5 px-3 py-2 text-xs whitespace-nowrap text-white/90">
+                      <ClockCircleOutlined className="shrink-0 text-[#fa8c16]" />
+                      <span className="num">
+                        {dayjs(item.startTime).format('YYYY-MM-DD HH:mm')} ~{' '}
+                        {dayjs(item.endTime).format(
+                          dayjs(item.startTime).isSame(item.endTime, 'day')
+                            ? 'HH:mm'
+                            : 'MM-DD HH:mm'
+                        )}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-xs text-white/40">
+                      <span>
+                        {item.timeLimit ? `${item.timeLimitMinutes} 分钟` : '不限时'} ·{' '}
+                        {item.allowTeam ? (
+                          <span className="inline-flex items-center gap-1">
+                            <TeamOutlined />
+                            允许组队
+                          </span>
+                        ) : (
+                          '不允许组队'
+                        )}
+                      </span>
+                      {canOperate(item.direction) && (
+                        <span className="flex shrink-0 gap-1">
+                          <Button
+                            type="text"
+                            size="small"
+                            icon={<EditOutlined />}
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleEdit(item)
+                            }}
+                          />
+                          <Button
+                            type="text"
+                            size="small"
+                            danger
+                            icon={<DeleteOutlined />}
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleDeleteClick(item)
+                            }}
+                          />
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                )
+              })
+            )}
+          </div>
+        ) : (
+          <Table
+            dataSource={filteredList}
+            columns={columns}
+            rowKey={(record) => String(record.id)}
+            size="small"
+            pagination={false}
+            onRow={(record) => ({
+              onClick: () => handleRowClick(record),
+              className: 'cursor-pointer',
+            })}
+            locale={{ emptyText: '暂无考核时间数据' }}
+          />
+        )}
       </Spin>
 
       {/* Pagination */}
