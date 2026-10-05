@@ -5,27 +5,42 @@
 ```mermaid
 flowchart TB
     subgraph Network["Docker Network (bluenet_network)"]
-        Frontend["Frontend\n:3000"]
-        Backend["Backend\n:8080"]
-        Database["Database\nPostgreSQL :5432"]
-        MinIO["MinIO\n:9000"]
-        RabbitMQ["RabbitMQ\n:5672"]
+        Nginx["Nginx<br/>:80/:443"]
+        Frontend["Frontend<br/>Next.js :3000"]
+        Backend["Backend<br/>Spring Boot :8080"]
+        Judge["Judge Service<br/>:8090"]
+        AI["AI Service<br/>Python :8000"]
+        Database["Database<br/>PostgreSQL :5432"]
+        Redis["Redis<br/>:6379"]
+        MinIO["MinIO<br/>:9000"]
+        RabbitMQ["RabbitMQ<br/>:5672"]
     end
 
     Browser["用户浏览器"]
-    Browser -- "CSR 请求" --> Backend
-    Browser -- "页面请求" --> Frontend
+    Browser -- "CSR 请求" --> Nginx
+    Browser -- "页面请求" --> Nginx
     Browser -- "预签名 URL 上传" --> MinIO
+    Nginx -- "转发" --> Frontend
+    Nginx -- "转发 /api/v1" --> Backend
+    Nginx -- "转发 /ai/v1" --> AI
     Frontend -- "SSR 请求" --> Backend
     Backend --> Database
-    Backend --> MinIO
+    Backend --> Redis
     Backend --> RabbitMQ
+    Backend --> MinIO
+    Judge --> RabbitMQ
+    Judge --> MinIO
+    Judge --> Database
+    AI --> Database
+    AI --> Backend
 ```
 
 说明：
 - SSR 请求在 Docker 内部网络中使用 `backend` 主机名。
 - CSR 请求由浏览器发起，使用 `NEXT_PUBLIC_BACKEND_HOST`。
 - 文件直传 OSS 时，浏览器直接使用 `MINIO_PUBLIC_URL` 访问 MinIO，不经过后端。
+- 本图为单机（同机）部署视角；生产多服务器集群部署的网络拓扑见 [04-04-集群部署](./04-04-集群部署.md)，逻辑服务架构见 [02-02-技术架构](../02-项目概述/02-02-技术架构.md)。
+- 生产环境对象存储使用阿里云 OSS（SDK 访问，无容器节点），本图中的 MinIO 仅用于本地/开发环境。
 
 ## Profile 分组
 
