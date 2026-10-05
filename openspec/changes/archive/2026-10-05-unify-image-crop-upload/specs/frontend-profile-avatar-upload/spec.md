@@ -1,26 +1,6 @@
-# Profile Avatar Upload Specification
+# frontend-profile-avatar-upload
 
-定义用户个人主页头像上传功能，包括点击头像触发文件选择、裁剪弹窗、文件校验和上传处理。
-
-## Requirements
-
-### Requirement: 头像区域点击触发文件选择
-系统 SHALL 允许已登录用户点击头像圆形区域触发文件选择对话框，hover 时显示半透明遮罩与编辑图标作为视觉提示。
-
-#### Scenario: hover 头像区域显示遮罩
-- **WHEN** 用户鼠标悬停在头像圆形区域上
-- **THEN** 头像上叠加半透明遮罩层
-- **AND** 遮罩层中显示编辑图标（如相机图标）和提示文案
-
-#### Scenario: 点击头像区域触发文件选择
-- **WHEN** 用户点击头像圆形区域
-- **THEN** 系统弹出文件选择对话框
-- **AND** 文件选择仅允许图片格式（jpg/png/gif/webp）
-
-#### Scenario: 上传中头像区域显示 loading
-- **WHEN** 头像正在上传中
-- **THEN** 头像区域显示 loading 状态（Spinner 或旋转图标）
-- **AND** 头像区域不可重复点击
+## MODIFIED Requirements
 
 ### Requirement: 头像裁剪弹窗
 系统 SHALL 在用户选择图片后弹出裁剪弹窗，允许用户调整裁剪区域后再上传。裁剪状态管理（弹窗开关、objectURL 生命周期）SHALL 经共享 hook `useImageCropUpload` 处理，ProfileSidebar MUST NOT 再手写裁剪状态样板代码。
@@ -56,12 +36,3 @@
 - **WHEN** 用户选择了超过 5MB 的图片文件
 - **THEN** 系统显示错误提示"图片大小不能超过 5MB"
 - **AND** 不打开裁剪弹窗，不发起上传请求
-
-### Requirement: 上传失败处理
-系统 SHALL 在头像上传失败时给出错误提示并恢复可操作状态。
-
-#### Scenario: 上传失败
-- **WHEN** 头像上传请求失败（网络错误或服务端错误）
-- **THEN** 系统显示错误提示"头像上传失败，请重试"
-- **AND** 关闭裁剪弹窗
-- **AND** 恢复头像区域为可点击状态

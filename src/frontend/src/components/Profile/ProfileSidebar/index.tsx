@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import type { CSSProperties } from 'react'
 import SmokedGlassCard from '@/components/SmokedGlassCard'
 import type { TabCounts } from '@/apis/schema/type'
@@ -8,6 +8,8 @@ import { DIRECTION_LABELS, ROLE_LABELS, getRoleTagColor, Direction } from '@/api
 import { API_BASE_URL } from '@/apis/config'
 import { getRoleLevel } from '@/utils/RoleUtils'
 import { fileService } from '@/apis/services/file.service'
+import { usePresignedUpload } from '@/hooks/usePresignedUpload'
+import { useImageCropUpload } from '@/hooks/useImageCropUpload'
 import {
   DesktopOutlined,
   BookOutlined,
@@ -19,14 +21,10 @@ import {
 import { App, Tag, Modal, Button } from 'antd'
 import { QrcodeOutlined } from '@ant-design/icons'
 import Image, { type StaticImageData } from 'next/image'
-import ImageCropModal from '@/components/common/ImageCropModal'
 import { ReferralPosterModal } from '../ReferralPoster'
 import cvIcon from '@/assets/icon/direction/cv_icon.png'
 import structIcon from '@/assets/icon/direction/struct_icon.png'
 import embedIcon from '@/assets/icon/direction/embed_icon.png'
-
-const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
-const MAX_SIZE = 5 * 1024 * 1024
 
 /**
  * 统一的侧边栏用户数据接口
@@ -79,10 +77,23 @@ export default function ProfileSidebar({
   onAvatarUpdate,
 }: ProfileSidebarProps) {
   const { message: messageApi } = App.useApp()
-  const [uploading, setUploading] = useState(false)
-  const [cropModalOpen, setCropModalOpen] = useState(false)
-  const [cropImageSrc, setCropImageSrc] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const presigned = usePresignedUpload()
+  const {
+    selectFile,
+    cropModal,
+    uploading,
+    fileId: uploadedAvatarFileId,
+    reset: resetCropUpload,
+  } = useImageCropUpload({
+    fileType: 'AVATAR',
+    upload: presigned.upload,
+    cropShape: 'round',
+    aspect: 1,
+    outputSize: 512,
+    title: '裁剪头像',
+    onError: useCallback((msg: string) => messageApi.error(msg), [messageApi]),
+  })
 
   const directionLabel = profile.direction ? DIRECTION_LABELS[profile.direction] : '-'
   const displayName = profile.nickname || profile.username
@@ -94,62 +105,34 @@ export default function ProfileSidebar({
     fileInputRef.current?.click()
   }, [uploading])
 
-  const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
+  const handleFileChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0]
+      if (!file) return
 
-    e.target.value = ''
-
-    if (!ALLOWED_TYPES.includes(file.type)) {
-      messageApi.error('请选择图片文件（JPG/PNG/GIF/WEBP）')
-      return
-    }
-
-    if (file.size > MAX_SIZE) {
-      messageApi.error('图片大小不能超过 5MB')
-      return
-    }
-
-    const url = URL.createObjectURL(file)
-    setCropImageSrc(url)
-    setCropModalOpen(true)
-  }, [])
-
-  const handleCropConfirm = useCallback(
-    async (blob: Blob) => {
-      setUploading(true)
-      setCropModalOpen(false)
-      try {
-        const ext = blob.type === 'image/png' ? 'png' : blob.type === 'image/webp' ? 'webp' : 'jpg'
-        const file = new File([blob], `avatar.${ext}`, { type: blob.type })
-        const res = await fileService.upload(file, 'AVATAR')
-        if (res.code === 200 && res.data) {
-          await fileService.updateAvatar(res.data.id)
-          messageApi.success('头像更新成功')
-          onAvatarUpdate?.()
-        } else {
-          messageApi.error(res.msg || '头像上传失败，请重试')
-        }
-      } catch {
-        messageApi.error('头像上传失败，请重试')
-      } finally {
-        setUploading(false)
-        if (cropImageSrc) {
-          URL.revokeObjectURL(cropImageSrc)
-          setCropImageSrc(null)
-        }
-      }
+      e.target.value = ''
+      selectFile(file)
     },
-    [onAvatarUpdate, cropImageSrc]
+    [selectFile]
   )
 
-  const handleCropCancel = useCallback(() => {
-    setCropModalOpen(false)
-    if (cropImageSrc) {
-      URL.revokeObjectURL(cropImageSrc)
-      setCropImageSrc(null)
+  // 裁剪上传成功后绑定新头像并刷新页面数据
+  useEffect(() => {
+    if (uploadedAvatarFileId == null) return
+
+    const bindAvatar = async () => {
+      try {
+        await fileService.updateAvatar(uploadedAvatarFileId)
+        messageApi.success('头像更新成功')
+        onAvatarUpdate?.()
+      } catch {
+        messageApi.error('头像更新失败，请重试')
+      } finally {
+        resetCropUpload()
+      }
     }
-  }, [cropImageSrc])
+    bindAvatar()
+  }, [uploadedAvatarFileId, onAvatarUpdate, messageApi, resetCropUpload])
 
   const handleStatClick = (tab: string) => {
     if (tabCounts && tabCounts[tab as keyof TabCounts] > 0) {
@@ -203,7 +186,7 @@ export default function ProfileSidebar({
                 title="点击上传头像"
                 ref={fileInputRef}
                 type="file"
-                accept="image/jpeg,image/png,image/gif,image/webp"
+                accept="image/jpeg,image/png,image/webp"
                 onChange={handleFileChange}
                 className="hidden"
               />
@@ -337,16 +320,7 @@ export default function ProfileSidebar({
         )}
       </SmokedGlassCard>
 
-      {allowAvatarUpload && (
-        <ImageCropModal
-          open={cropModalOpen}
-          imageSrc={cropImageSrc}
-          title="裁剪头像"
-          cropShape="round"
-          onConfirm={handleCropConfirm}
-          onCancel={handleCropCancel}
-        />
-      )}
+      {allowAvatarUpload && cropModal}
 
       <Modal
         open={qrcodeModalOpen}

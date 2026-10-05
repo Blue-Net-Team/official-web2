@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useRef } from 'react'
 import { Form, Input, Select, Button, Spin, Tooltip } from 'antd'
 import type { MessageInstance } from 'antd/es/message/interface'
 import type { FormInstance } from 'antd/es/form'
@@ -10,6 +10,7 @@ import { Direction } from '@/apis/schema/type'
 import type { CollegeDTO } from '@/apis/schema/type'
 import { GENDER_OPTIONS } from './constants'
 import AvatarUpload from './AvatarUpload'
+import type { AvatarUploadHandle } from './AvatarUpload'
 import MobileDirectionSelector from './MobileDirectionSelector'
 import PolicyModal from './PolicyModal'
 import SmokedGlassCard from '@/components/SmokedGlassCard'
@@ -22,16 +23,13 @@ interface EnrollFormProps {
   form: FormInstance
   selectedDirection: Direction
   handleDirectionSelect: (direction: Direction) => void
-  avatarPreview: string
-  uploadingAvatar: boolean
-  uploadProgress: number
-  handleAvatarSelect: (file: File) => void
+  handleAvatarUploaded: (fileId: number) => void
   introLength: number
   handleIntroChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void
   colleges: CollegeDTO[]
   loadingColleges: boolean
   submitting: boolean
-  handleSubmit: () => Promise<void>
+  handleSubmit: () => Promise<boolean>
   messageApi: MessageInstance
 }
 
@@ -39,10 +37,7 @@ const EnrollForm: React.FC<EnrollFormProps> = ({
   form,
   selectedDirection,
   handleDirectionSelect,
-  avatarPreview,
-  uploadingAvatar,
-  uploadProgress,
-  handleAvatarSelect,
+  handleAvatarUploaded,
   introLength,
   handleIntroChange,
   colleges,
@@ -51,6 +46,15 @@ const EnrollForm: React.FC<EnrollFormProps> = ({
   handleSubmit,
   messageApi,
 }) => {
+  const avatarUploadRef = useRef<AvatarUploadHandle>(null)
+  const [uploadingAvatar, setUploadingAvatar] = useState(false)
+
+  const onFinish = async () => {
+    const success = await handleSubmit()
+    if (success) {
+      avatarUploadRef.current?.reset()
+    }
+  }
   const [policyModalOpen, setPolicyModalOpen] = useState(false)
   const [policyModalTitle, setPolicyModalTitle] = useState('')
   const [policyModalContent, setPolicyModalContent] = useState('')
@@ -79,17 +83,16 @@ const EnrollForm: React.FC<EnrollFormProps> = ({
       <Form
         form={form}
         layout="vertical"
-        onFinish={handleSubmit}
+        onFinish={onFinish}
         className="flex flex-col gap-[18px]"
         initialValues={{ direction: selectedDirection }}
       >
         <div className="flex items-start gap-6 max-sm:flex-col max-sm:items-center mb-8 p-6 max-sm:p-5 bg-white/[0.03] rounded-2xl border border-white/[0.05] animate-[slideIn_0.6s_cubic-bezier(0.4,0,0.2,1)_0.1s_both]">
           <AvatarUpload
-            previewUrl={avatarPreview}
-            uploading={uploadingAvatar}
-            uploadProgress={uploadProgress}
-            onFileSelect={handleAvatarSelect}
+            ref={avatarUploadRef}
             messageApi={messageApi}
+            onUploaded={handleAvatarUploaded}
+            onUploadingChange={setUploadingAvatar}
           />
           <div className="flex-1 max-sm:w-full flex flex-col gap-[14px]">
             <div className="flex flex-col gap-[6px]">

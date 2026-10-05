@@ -6,6 +6,9 @@ export { useAuth } from './useAuth'
 export { usePagination } from './usePagination'
 export type { UsePaginationReturn } from './usePagination'
 
+export { useImageCropUpload } from './useImageCropUpload'
+export type { UseImageCropUploadOptions, UseImageCropUploadReturn } from './useImageCropUpload'
+
 export { useListApi } from './useListApi'
 export type { UseListApiReturn } from './useListApi'
 

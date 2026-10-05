@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import {
   Button,
   Descriptions,
@@ -13,6 +13,7 @@ import {
   Spin,
   Tag,
   Upload,
+  App,
 } from 'antd'
 import { DeleteOutlined, EditOutlined, PlusOutlined } from '@ant-design/icons'
 import type {
@@ -24,7 +25,8 @@ import { COMPETITION_LEVEL_LABELS, COMPETITION_LEVEL_COLORS } from '@/types/comp
 import { fileService } from '@/apis/services/file.service'
 import { API_BASE_URL } from '@/apis/config'
 import { adminCompetitionService } from '@/apis/services/admin-competition.service'
-import ImageCropModal from '@/components/common/ImageCropModal'
+import { usePresignedUpload } from '@/hooks/usePresignedUpload'
+import { useImageCropUpload } from '@/hooks/useImageCropUpload'
 
 export type DrawerMode = 'view' | 'edit' | 'create'
 
@@ -54,13 +56,35 @@ export default function CompetitionDrawer({
   onEdit,
 }: CompetitionDrawerProps) {
   const [form] = Form.useForm<CompetitionRequestDTO>()
+  const { message: messageApi } = App.useApp()
   const [saving, setSaving] = useState(false)
-  const [logoUploading, setLogoUploading] = useState(false)
   const [coverUploading, setCoverUploading] = useState(false)
   const [logoFileId, setLogoFileId] = useState<number | null>(null)
   const [coverFileId, setCoverFileId] = useState<number | null>(null)
-  const [logoCropOpen, setLogoCropOpen] = useState(false)
-  const [logoCropSrc, setLogoCropSrc] = useState<string | null>(null)
+  const presigned = usePresignedUpload()
+  const {
+    selectFile: selectLogoFile,
+    cropModal: logoCropModal,
+    uploading: logoUploading,
+    fileId: uploadedLogoFileId,
+    reset: resetLogoUpload,
+  } = useImageCropUpload({
+    fileType: 'NORMAL_IMG',
+    upload: presigned.upload,
+    cropShape: 'rect',
+    aspect: 1,
+    outputSize: 256,
+    title: '裁剪 Logo',
+    onError: useCallback((msg: string) => messageApi.error(msg), [messageApi]),
+  })
+
+  // 裁剪上传成功后回填 logoFileId
+  useEffect(() => {
+    if (uploadedLogoFileId == null) return
+    setLogoFileId(uploadedLogoFileId)
+    form.setFieldValue('logoFileId', uploadedLogoFileId)
+    resetLogoUpload()
+  }, [uploadedLogoFileId, form, resetLogoUpload])
 
   // 当打开或数据/模式变化时重置表单
   useEffect(() => {
@@ -101,40 +125,10 @@ export default function CompetitionDrawer({
     }
   }
 
-  // 选择 logo 后先进入裁剪弹窗，确认后再上传
+  // 选择 logo 后先进入裁剪弹窗，确认后由 useImageCropUpload 上传
   const handleLogoSelect = (file: File) => {
-    const url = URL.createObjectURL(file)
-    setLogoCropSrc(url)
-    setLogoCropOpen(true)
+    selectLogoFile(file)
     return false
-  }
-
-  const handleLogoCropConfirm = async (blob: Blob) => {
-    setLogoCropOpen(false)
-    setLogoUploading(true)
-    try {
-      const ext = blob.type === 'image/png' ? 'png' : blob.type === 'image/webp' ? 'webp' : 'jpg'
-      const file = new File([blob], `logo.${ext}`, { type: blob.type })
-      const res = await fileService.upload(file, 'NORMAL_IMG')
-      if (res.code === 200 && res.data) {
-        setLogoFileId(res.data.id)
-        form.setFieldValue('logoFileId', res.data.id)
-      }
-    } finally {
-      setLogoUploading(false)
-      if (logoCropSrc) {
-        URL.revokeObjectURL(logoCropSrc)
-        setLogoCropSrc(null)
-      }
-    }
-  }
-
-  const handleLogoCropCancel = () => {
-    setLogoCropOpen(false)
-    if (logoCropSrc) {
-      URL.revokeObjectURL(logoCropSrc)
-      setLogoCropSrc(null)
-    }
   }
 
   const handleCoverUpload = async (file: File) => {
@@ -202,15 +196,7 @@ export default function CompetitionDrawer({
             onCoverUpload={handleCoverUpload}
           />
         )}
-        <ImageCropModal
-          open={logoCropOpen}
-          imageSrc={logoCropSrc}
-          title="裁剪 Logo"
-          outputSize={256}
-          aspect={1}
-          onConfirm={handleLogoCropConfirm}
-          onCancel={handleLogoCropCancel}
-        />
+        {logoCropModal}
       </Drawer>
     </>
   )

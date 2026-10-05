@@ -26,7 +26,7 @@
 - **THEN** 输出仍为 JPEG 格式 blob（质量 0.9）
 
 ### Requirement: 竞赛 logo 上传前强制裁剪
-在竞赛创建/编辑界面（CompetitionDrawer），管理员选择 logo 图片后，系统 SHALL 先弹出裁剪弹窗（正方形），用户确认后 SHALL 将裁剪生成的 blob 经既有文件上传接口（`fileService.upload`，类型 `NORMAL_IMG`）上传，并用返回的 fileId 回填 `logoFileId`。上传原始未裁剪文件的路径 MUST NOT 存在。
+在竞赛创建/编辑界面（CompetitionDrawer），管理员选择 logo 图片后，系统 SHALL 先弹出裁剪弹窗（正方形），用户确认后 SHALL 将裁剪生成的 blob 经预签名直传通道（`usePresignedUpload`）上传（类型 `NORMAL_IMG`），并用返回的 fileId 回填 `logoFileId`。上传原始未裁剪文件的路径 MUST NOT 存在。裁剪状态管理 SHALL 经共享 hook `useImageCropUpload` 处理，CompetitionDrawer MUST NOT 再手写裁剪状态样板代码。
 
 #### Scenario: 选择 logo 图片后弹出裁剪
 - **WHEN** 管理员在竞赛创建/编辑表单中选择一张 logo 图片

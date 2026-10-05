@@ -15,10 +15,7 @@ const EnrollPageContent: React.FC = () => {
     form,
     selectedDirection,
     handleDirectionSelect,
-    avatarPreview,
-    uploadingAvatar,
-    uploadProgress,
-    handleAvatarSelect,
+    handleAvatarUploaded,
     introLength,
     handleIntroChange,
     colleges,
@@ -46,10 +43,7 @@ const EnrollPageContent: React.FC = () => {
             form={form}
             selectedDirection={selectedDirection}
             handleDirectionSelect={handleDirectionSelect}
-            avatarPreview={avatarPreview}
-            uploadingAvatar={uploadingAvatar}
-            uploadProgress={uploadProgress}
-            handleAvatarSelect={handleAvatarSelect}
+            handleAvatarUploaded={handleAvatarUploaded}
             introLength={introLength}
             handleIntroChange={handleIntroChange}
             colleges={colleges}
