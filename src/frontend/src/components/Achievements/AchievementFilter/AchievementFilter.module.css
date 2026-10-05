@@ -1,0 +1,65 @@
+/* ==========================================================================
+ * AchievementFilter —— 筛选下拉烟色玻璃化
+ *
+ * 材质配方与 SmokedGlassCard.module.css 保持一致（渐变底色保底 +
+ * backdrop-filter 增强），保证全站玻璃质感统一；
+ * 在 backdrop-filter 不生效的环境仍是有形的深色面板，优雅降级。
+ *
+ * 注意：antd v6 Select 不再有 .ant-select-selector 内层节点，
+ * 边框/底色直接渲染在 .ant-select 根节点上，故玻璃材质施加于根节点。
+ * ==========================================================================
+ */
+
+@media (min-width: 768px) {
+  .smokedSelect {
+    min-width: 140px;
+  }
+}
+
+.smokedSelect {
+  /* 玻璃材质直接作用于 .ant-select 根节点 */
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0) 45%),
+    linear-gradient(160deg, rgba(30, 30, 40, 0.5) 0%, rgba(20, 20, 28, 0.5) 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.09) !important;
+  border-radius: 12px !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(20px) saturate(1.3);
+  -webkit-backdrop-filter: blur(20px) saturate(1.3);
+  transition: border-color 0.3s ease;
+}
+
+.smokedSelect:hover {
+  border-color: rgba(255, 255, 255, 0.16) !important;
+}
+
+.smokedSelect:global(.ant-select-focused),
+.smokedSelect:global(.ant-select-open) {
+  border-color: rgba(102, 119, 255, 0.55) !important;
+  box-shadow:
+    0 0 0 2px rgba(102, 119, 255, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+/* 下拉弹层同步玻璃化（popup 经 portal 渲染到 body，
+ * 通过 classNames.popup.root 挂载到下方独立类，无法作后代选择器） */
+.smokedDropdown {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0) 45%),
+    linear-gradient(160deg, #1e1e28 0%, #14141c 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  backdrop-filter: blur(20px) saturate(1.3);
+  -webkit-backdrop-filter: blur(20px) saturate(1.3);
+}
+
+.smokedDropdown :global(.ant-select-item) {
+  transition: background 0.2s ease;
+}
+
+.smokedDropdown :global(.ant-select-item-option-selected) {
+  background: rgba(102, 119, 255, 0.18) !important;
+}
+
+.smokedDropdown :global(.ant-select-item-option-active:not(.ant-select-item-option-selected)) {
+  background: rgba(255, 255, 255, 0.06) !important;
+}

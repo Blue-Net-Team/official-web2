@@ -3,6 +3,7 @@
 import { useRouter, usePathname } from 'next/navigation'
 import { Select, Space } from 'antd'
 import { AWARD_LEVEL_LABELS, ACHIEVEMENT_TYPE_LABELS } from '@/apis/schema/enumerate'
+import styles from './AchievementFilter.module.css'
 
 interface AchievementFilterProps {
   type?: string
@@ -80,30 +81,33 @@ const AchievementFilter = ({
   }
 
   return (
-    <Space size={16} wrap className="flex gap-4 max-md:flex-col max-md:gap-3">
+    <Space className="flex gap-4 max-md:flex-row max-md:flex-nowrap max-md:gap-2 max-md:overflow-x-auto max-md:[scrollbar-width:none] max-md:[&::-webkit-scrollbar]:hidden">
       <Select
         value={type}
         onChange={handleTypeChange}
         options={typeOptions}
-        className="min-w-[120px] max-md:w-full"
+        className={`min-w-[120px] max-md:min-w-[104px] max-md:flex-1 ${styles.smokedSelect}`}
         placeholder="成就类型"
         allowClear
+        classNames={{ popup: { root: styles.smokedDropdown } }}
       />
       <Select
         value={awardLevel}
         onChange={handleAwardLevelChange}
         options={awardLevelOptions}
-        className="min-w-[120px] max-md:w-full"
+        className={`min-w-[120px] max-md:min-w-[104px] max-md:flex-1 ${styles.smokedSelect}`}
         placeholder="奖项级别"
         allowClear
+        classNames={{ popup: { root: styles.smokedDropdown } }}
       />
       <Select
         value={year}
         onChange={handleYearChange}
         options={yearOptions}
-        className="min-w-[120px] max-md:w-full"
+        className={`min-w-[120px] max-md:min-w-[104px] max-md:flex-1 ${styles.smokedSelect}`}
         placeholder="获奖年份"
         allowClear
+        classNames={{ popup: { root: styles.smokedDropdown } }}
       />
     </Space>
   )
