@@ -226,3 +226,16 @@
     opacity: 1;
   }
 }
+
+/* ==========================================================================
+ * flex 子项默认 min-width:auto，内容 min-content（如 SmokedGlassTabs 的
+ * fit-content 胶囊 Tab 条）会把 Layout 主轴撑破视口，产生横向滚动。
+ * 允许所有 Layout 内容区在主轴收缩，溢出交给内部滚动容器处理。
+ * ========================================================================== */
+.ant-layout,
+.ant-layout-content,
+.ant-layout-header,
+.ant-layout-footer,
+.ant-layout-sider {
+  min-width: 0;
+}

@@ -38,7 +38,8 @@ export default function SmokedGlassTabs({
 }: SmokedGlassTabsProps) {
   const rootRef = useRef<HTMLDivElement>(null)
 
-  /** 量取当前激活 Tab 按钮的位置与宽度，写入 CSS 变量驱动指示器平移 */
+  /** 量取当前激活 Tab 按钮的位置与尺寸，写入 CSS 变量驱动指示器平移
+   * （移动端换行时行号不定，left/top/width/height 均由实际几何得出） */
   const updatePill = useCallback(() => {
     const root = rootRef.current
     if (!root) return
@@ -51,7 +52,17 @@ export default function SmokedGlassTabs({
     const navRect = nav.getBoundingClientRect()
     const btnRect = activeBtn.getBoundingClientRect()
     root.style.setProperty('--sgt-pill-left', `${btnRect.left - navRect.left}px`)
+    root.style.setProperty('--sgt-pill-top', `${btnRect.top - navRect.top}px`)
     root.style.setProperty('--sgt-pill-width', `${btnRect.width}px`)
+    root.style.setProperty('--sgt-pill-height', `${btnRect.height}px`)
+
+    /* 检测换行态：列表高度明显大于单行按钮高度时，
+     * 给根节点加 .wrapped（圆角矩形 + padding=半径），恢复单行时移除 */
+    const list = root.querySelector('.ant-tabs-nav-list')
+    if (list) {
+      const wrapped = list.getBoundingClientRect().height > btnRect.height + 4
+      root.classList.toggle(styles.wrapped, wrapped)
+    }
   }, [])
 
   useEffect(() => {

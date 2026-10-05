@@ -10,19 +10,42 @@
  * 实现：包装 antd Tabs，保留 a11y / 键盘导航 / 受控 API；
  * 指示器位置由 JS 量取激活 Tab 的几何后写入 --sgt-pill-left / --sgt-pill-width，
  * CSS 负责过渡动画；文字高亮用 color transition 渐变。
+ *
+ * 响应式（移动优先，对齐 Tailwind v4 默认断点刻度）：
+ * - 基准形态 = 移动端：占满容器宽度、尺寸紧凑、tab 条页面居中
+ * - ≥sm（40rem/640px）：恢复桌面 fit-content 药丸与常规尺寸
+ * - ≥lg（64rem/1024px）：.tabs 还原为块级（profile 等内容区左对齐；
+ *   页面级居中由调用方布局承担，如 members 的 flex justify-center）
  * ========================================================================== */
 
 .tabs {
   /* 外边距由调用方控制（如 Tailwind mb-6），此处不得重置 margin；
      antd 默认导航外边距已由局部 ConfigProvider horizontalMargin='0' 关闭 */
   --sgt-pill-left: 6px;
+  --sgt-pill-top: 6px;
   --sgt-pill-width: 0px;
+  --sgt-pill-height: 0px;
+  /* 掐断 min-content 放大链：fit-content 的 nav 会让 flex 祖先
+     （Layout content 等 min-width:auto 的 flex 子项）被撑破视口 */
+  min-width: 0;
+  max-width: 100%;
+  /* 基准（移动端）：占满容器宽度，tab 条在页面水平居中 */
+  display: flex;
+  justify-content: center;
+  width: 100%;
 }
 
-/* ---------- 胶囊容器：烟色玻璃（deep，默认） ---------- */
+.tabs :global(.ant-tabs) {
+  min-width: 0;
+  max-width: 100%;
+  width: 100%;
+}
+
+/* ---------- 胶囊容器：烟色玻璃（deep，默认） ----------
+ * 基准（移动端）占满容器宽度；≥sm 恢复 fit-content 药丸 */
 .tabs :global(.ant-tabs-nav) {
   position: relative;
-  width: fit-content;
+  width: 100%;
   max-width: 100%;
   padding: 6px;
   border-radius: 999px;
@@ -35,6 +58,10 @@
     inset 0 1px 0 rgba(255, 255, 255, 0.08);
   backdrop-filter: blur(12px) saturate(1.2);
   -webkit-backdrop-filter: blur(12px) saturate(1.2);
+  /* 换行态切换圆角/padding 时过渡（.wrapped 由 JS 检测添加） */
+  transition:
+    border-radius 0.3s ease,
+    padding 0.3s ease;
 }
 
 /* ---------- tone='soft'：淡一档烟色，面板内嵌场景（如 Profile） ----------
@@ -68,8 +95,8 @@
      避免与 antd 内部 nav-wrap 的层叠结构纠缠 */
   z-index: -1;
   left: var(--sgt-pill-left);
-  top: 6px;
-  height: calc(100% - 12px);
+  top: var(--sgt-pill-top);
+  height: var(--sgt-pill-height);
   width: var(--sgt-pill-width);
   border-radius: 999px;
   pointer-events: none;
@@ -83,12 +110,27 @@
     inset 0 1px 0 color-mix(in srgb, var(--sgt-accent, #6677ff) 14%, transparent);
   transition:
     left 0.35s cubic-bezier(0.4, 0, 0.2, 1),
-    width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    top 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+    width 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+    height 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Tab 列表正常流渲染即可（指示器用负 z-index 沉底） */
+/* Tab 列表：换行全宽度生效（不限移动端）——tab 较多时换行而不是
+ * antd 横向滚动（滚动会让 absolute 指示器跟随失效）；
+ * 列表占满胶囊宽度，item 行在父胶囊内水平居中 */
 .tabs :global(.ant-tabs-nav-list) {
   position: relative;
+  flex-wrap: wrap;
+  justify-content: center;
+  row-gap: 2px;
+  width: 100%;
+}
+
+/* 换行态（JS 检测后给根节点加 .wrapped）：
+ * 不再是单排药丸形，改为固定圆角矩形，x 方向 padding = 圆角半径 */
+.wrapped :global(.ant-tabs-nav) {
+  border-radius: 20px;
+  padding: 6px 20px;
 }
 
 /* ---------- Tab 项 ----------
@@ -101,7 +143,9 @@
 }
 
 .tabs :global(.ant-tabs .ant-tabs-tab-btn) {
-  padding: 8px 20px;
+  /* 基准（移动端）紧凑尺寸；≥sm 恢复常规尺寸 */
+  padding: 6px 12px;
+  font-size: 13px;
   border-radius: 999px;
   /* 文字高亮 / 暗淡的颜色动画 */
   transition: color 0.3s ease;
@@ -111,4 +155,35 @@
 .tabs :global(.ant-tabs .ant-tabs-tab-btn:focus-visible) {
   outline: 2px solid color-mix(in srgb, var(--sgt-accent, #6677ff) 60%, transparent);
   outline-offset: 2px;
+}
+
+/* nav 换行全局生效，antd 溢出下拉（"..."）不会再出现，直接禁用 */
+.tabs :global(.ant-tabs-nav-operations) {
+  display: none !important;
+}
+
+/* ---------- ≥sm（40rem/640px，Tailwind sm）：桌面形态 ---------- */
+@media (width >= 40rem) {
+  .tabs :global(.ant-tabs) {
+    width: auto;
+  }
+
+  .tabs :global(.ant-tabs-nav) {
+    width: fit-content;
+  }
+
+  .tabs :global(.ant-tabs .ant-tabs-tab-btn) {
+    padding: 8px 20px;
+    font-size: 14px;
+  }
+}
+
+/* ---------- ≥lg（64rem/1024px，Tailwind lg）：还原容器自适应宽度 ----------
+ * 页面级居中由调用方布局承担：members 的 section 是 flex justify-center，
+ * .tabs 作为 flex 子项收缩到内容宽后居中；profile 等内容区场景父级是块级，
+ * .tabs 撑满容器、tab 条左对齐 */
+@media (width >= 64rem) {
+  .tabs {
+    width: auto;
+  }
 }
