@@ -34,7 +34,7 @@ import {
 import { Form, Input, Button, message, Select, Tag, Upload } from 'antd'
 import type { UploadFile } from 'antd/es/upload/interface'
 import { userService } from '@/apis/services/user.service'
-import { fileService } from '@/apis/services/file.service'
+import { usePresignedUpload } from '@/hooks/usePresignedUpload'
 import { useAuth } from '@/hooks'
 import Image from 'next/image'
 import { API_BASE_URL } from '@/apis/config'
@@ -55,6 +55,7 @@ function isMemberOrAbove(roleName: string | undefined): boolean {
 }
 
 export default function ProfileInfo({ profile, onUpdate }: ProfileInfoProps) {
+  const { upload } = usePresignedUpload()
   const [isEditing, setIsEditing] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [changeEmailOpen, setChangeEmailOpen] = useState(false)
@@ -112,12 +113,12 @@ export default function ProfileInfo({ profile, onUpdate }: ProfileInfoProps) {
   const handleQrcodeUpload = async (file: File) => {
     setQrcodeUploading(true)
     try {
-      const res = await fileService.upload(file, 'QRCODE')
-      if (res.code === 200 && res.data) {
-        setQrcodeFileId(res.data.id)
+      const id = await upload(file, 'QRCODE')
+      if (id != null) {
+        setQrcodeFileId(id)
         message.success('二维码上传成功')
       } else {
-        message.error(res.msg || '二维码上传失败')
+        message.error('二维码上传失败')
       }
     } catch {
       message.error('二维码上传失败，请重试')

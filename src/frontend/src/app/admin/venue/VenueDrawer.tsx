@@ -1,12 +1,12 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Button, Descriptions, Divider, Drawer, Form, Image, Input, Spin, Upload } from 'antd'
+import { Button, Descriptions, Divider, Drawer, Form, Image, Input, Spin, Upload, App } from 'antd'
 import { DeleteOutlined, EditOutlined, PlusOutlined } from '@ant-design/icons'
 import type { VenueDTO, CreateVenueRequestDTO, UpdateVenueRequestDTO } from '@/apis/schema/type'
-import { fileService } from '@/apis/services/file.service'
 import { API_BASE_URL } from '@/apis/config'
 import { adminVenueService } from '@/apis/services/admin-venue.service'
+import { usePresignedUpload } from '@/hooks/usePresignedUpload'
 
 export type DrawerMode = 'view' | 'edit' | 'create'
 
@@ -30,6 +30,8 @@ export default function VenueDrawer({
   onEdit,
 }: VenueDrawerProps) {
   const [form] = Form.useForm<CreateVenueRequestDTO>()
+  const { message: messageApi } = App.useApp()
+  const { upload } = usePresignedUpload()
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [imageFileId, setImageFileId] = useState<number | null>(null)
@@ -73,11 +75,15 @@ export default function VenueDrawer({
   const handleUpload = async (file: File) => {
     setUploading(true)
     try {
-      const res = await fileService.upload(file, 'NORMAL_IMG')
-      if (res.code === 200 && res.data) {
-        setImageFileId(res.data.id)
-        form.setFieldValue('imageFileId', res.data.id)
+      const id = await upload(file, 'NORMAL_IMG')
+      if (id != null) {
+        setImageFileId(id)
+        form.setFieldValue('imageFileId', id)
+      } else {
+        messageApi.error('图片上传失败，请重试')
       }
+    } catch {
+      messageApi.error('图片上传失败，请重试')
     } finally {
       setUploading(false)
     }

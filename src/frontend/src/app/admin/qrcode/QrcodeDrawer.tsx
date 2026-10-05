@@ -23,7 +23,7 @@ import type {
   UpdateAssessmentQrcodeRequestDTO,
 } from '@/apis/services/qrcode.service'
 import { API_BASE_URL } from '@/apis/config'
-import { fileService } from '@/apis/services/file.service'
+import { usePresignedUpload } from '@/hooks/usePresignedUpload'
 import { qrcodeService } from '@/apis/services/qrcode.service'
 import { adminAssessmentTimeService } from '@/apis/services/admin-assessment-time.service'
 import type { AssessmentTimeDTO } from '@/apis/schema/assessment.dto'
@@ -72,6 +72,7 @@ export default function QrcodeDrawer({
 }: QrcodeDrawerProps) {
   const [form] = Form.useForm()
   const { message: messageApi } = App.useApp()
+  const { upload } = usePresignedUpload()
   const [saving, setSaving] = useState(false)
   const [fileUploading, setFileUploading] = useState(false)
   const [fileId, setFileId] = useState<number | null>(null)
@@ -193,18 +194,16 @@ export default function QrcodeDrawer({
   const handleFileUpload = async (file: File) => {
     try {
       setFileUploading(true)
-      const response = await fileService.upload(file, FILE_TYPE)
-      if (response.code === 200 && response.data) {
-        const uploadedFileId = response.data.id
+      const uploadedFileId = await upload(file, FILE_TYPE)
+      if (uploadedFileId != null) {
         setFileId(uploadedFileId)
         form.setFieldValue('fileId', uploadedFileId)
         messageApi.success('文件上传成功')
       } else {
-        messageApi.error(`文件上传失败: ${response.msg}`)
+        messageApi.error('文件上传失败，请重试')
       }
-    } catch (error) {
-      console.error('文件上传失败:', error)
-      messageApi.error('文件上传失败')
+    } catch {
+      messageApi.error('文件上传失败，请重试')
     } finally {
       setFileUploading(false)
     }

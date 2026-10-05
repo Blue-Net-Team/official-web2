@@ -22,7 +22,6 @@ import type {
   CompetitionResponseDTO,
 } from '@/apis/schema/type'
 import { COMPETITION_LEVEL_LABELS, COMPETITION_LEVEL_COLORS } from '@/types/competition'
-import { fileService } from '@/apis/services/file.service'
 import { API_BASE_URL } from '@/apis/config'
 import { adminCompetitionService } from '@/apis/services/admin-competition.service'
 import { usePresignedUpload } from '@/hooks/usePresignedUpload'
@@ -134,11 +133,15 @@ export default function CompetitionDrawer({
   const handleCoverUpload = async (file: File) => {
     setCoverUploading(true)
     try {
-      const res = await fileService.upload(file, 'NORMAL_IMG')
-      if (res.code === 200 && res.data) {
-        setCoverFileId(res.data.id)
-        form.setFieldValue('coverFileId', res.data.id)
+      const id = await presigned.upload(file, 'NORMAL_IMG')
+      if (id != null) {
+        setCoverFileId(id)
+        form.setFieldValue('coverFileId', id)
+      } else {
+        messageApi.error('封面上传失败，请重试')
       }
+    } catch {
+      messageApi.error('封面上传失败，请重试')
     } finally {
       setCoverUploading(false)
     }

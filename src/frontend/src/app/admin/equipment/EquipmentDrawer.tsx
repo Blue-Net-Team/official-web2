@@ -1,16 +1,16 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Button, Descriptions, Divider, Drawer, Form, Image, Input, Spin, Upload } from 'antd'
+import { Button, Descriptions, Divider, Drawer, Form, Image, Input, Spin, Upload, App } from 'antd'
 import { DeleteOutlined, EditOutlined, PlusOutlined } from '@ant-design/icons'
 import type {
   EquipmentDTO,
   CreateEquipmentRequestDTO,
   UpdateEquipmentRequestDTO,
 } from '@/apis/schema/type'
-import { fileService } from '@/apis/services/file.service'
 import { API_BASE_URL } from '@/apis/config'
 import { adminEquipmentService } from '@/apis/services/admin-equipment.service'
+import { usePresignedUpload } from '@/hooks/usePresignedUpload'
 
 export type DrawerMode = 'view' | 'edit' | 'create'
 
@@ -34,6 +34,8 @@ export default function EquipmentDrawer({
   onEdit,
 }: EquipmentDrawerProps) {
   const [form] = Form.useForm<CreateEquipmentRequestDTO>()
+  const { message: messageApi } = App.useApp()
+  const { upload } = usePresignedUpload()
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [imageFileId, setImageFileId] = useState<number | null>(null)
@@ -77,11 +79,15 @@ export default function EquipmentDrawer({
   const handleUpload = async (file: File) => {
     setUploading(true)
     try {
-      const res = await fileService.upload(file, 'NORMAL_IMG')
-      if (res.code === 200 && res.data) {
-        setImageFileId(res.data.id)
-        form.setFieldValue('imageFileId', res.data.id)
+      const id = await upload(file, 'NORMAL_IMG')
+      if (id != null) {
+        setImageFileId(id)
+        form.setFieldValue('imageFileId', id)
+      } else {
+        messageApi.error('图片上传失败，请重试')
       }
+    } catch {
+      messageApi.error('图片上传失败，请重试')
     } finally {
       setUploading(false)
     }

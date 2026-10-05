@@ -1,11 +1,6 @@
 import { publicClient, apiClient } from '../client'
 import { API_BASE_URL } from '../config'
-import {
-  ResponseMessage,
-  FileInfo,
-  PrepareUploadResponse,
-  ConfirmUploadResponse,
-} from '../schema/type'
+import { ResponseMessage, PrepareUploadResponse, ConfirmUploadResponse } from '../schema/type'
 import type { FileType } from '../schema/enumerate'
 import SparkMD5 from 'spark-md5'
 
@@ -74,37 +69,6 @@ export async function calculateFileMd5(
 }
 
 export const fileService = {
-  /**
-   * 统一文件上传接口（已废弃，保留作为回滚备选）
-   * 对应后端 POST /api/v1/file/upload
-   * @deprecated 请使用预签名直传流程
-   */
-  async upload(
-    file: File,
-    type: FileType,
-    onProgress?: (progress: number) => void
-  ): Promise<ResponseMessage<FileInfo>> {
-    const formData = new FormData()
-    formData.append('file', file)
-    formData.append('type', type)
-
-    const client = type === 'AVATAR' || type === 'NORMAL_IMG' ? publicClient : apiClient
-
-    const response = await client.post<ResponseMessage<FileInfo>>('/file/upload', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-      onUploadProgress: onProgress
-        ? (event) => {
-            if (event.total) {
-              onProgress(Math.round((event.loaded * 100) / event.total))
-            }
-          }
-        : undefined,
-    })
-    return response.data
-  },
-
   /**
    * 预签名上传准备
    * 对应后端 POST /api/v1/file/prepare-upload

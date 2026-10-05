@@ -26,8 +26,8 @@ import type {
 } from '@/apis/schema/type'
 import { ACHIEVEMENT_TYPE_LABELS, AWARD_LEVEL_LABELS } from '@/apis/schema/enumerate'
 import { API_BASE_URL } from '@/apis/config'
-import { fileService } from '@/apis/services/file.service'
 import { adminAchievementService } from '@/apis/services/admin-achievement.service'
+import { usePresignedUpload } from '@/hooks/usePresignedUpload'
 import { adminUserService } from '@/apis/services/admin-user.service'
 import { competitionService } from '@/apis/services/competition.service'
 
@@ -68,6 +68,7 @@ export default function AchievementDrawer({
 }: AchievementDrawerProps) {
   const [form] = Form.useForm<AchievementFormValues>()
   const { message: messageApi } = App.useApp()
+  const { upload } = usePresignedUpload()
   const [saving, setSaving] = useState(false)
   const [fileUploading, setFileUploading] = useState(false)
   const [fileId, setFileId] = useState<number | null>(null)
@@ -252,18 +253,16 @@ export default function AchievementDrawer({
   const handleFileUpload = async (file: File) => {
     try {
       setFileUploading(true)
-      const response = await fileService.upload(file, FILE_TYPE)
-      if (response.code === 200 && response.data) {
-        const uploadedFileId = response.data.id
+      const uploadedFileId = await upload(file, FILE_TYPE)
+      if (uploadedFileId != null) {
         setFileId(uploadedFileId)
         form.setFieldValue('fileId', uploadedFileId)
         messageApi.success('文件上传成功')
       } else {
-        messageApi.error(`文件上传失败: ${response.msg}`)
+        messageApi.error('文件上传失败，请重试')
       }
-    } catch (error) {
-      console.error('文件上传失败:', error)
-      messageApi.error('文件上传失败')
+    } catch {
+      messageApi.error('文件上传失败，请重试')
     } finally {
       setFileUploading(false)
     }
