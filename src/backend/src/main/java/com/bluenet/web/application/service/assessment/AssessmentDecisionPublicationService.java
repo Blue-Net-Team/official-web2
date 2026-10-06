@@ -2,6 +2,7 @@ package com.bluenet.web.application.service.assessment;
 
 import com.bluenet.web.application.message.MessageDispatcher;
 import com.bluenet.web.application.message.MessageRequest;
+import com.bluenet.web.application.message.template.AdmissionWelcomeTemplate;
 import com.bluenet.web.application.message.template.AssessmentDecisionNotificationTemplate;
 import com.bluenet.web.domain.exception.DataNotFound;
 import com.bluenet.web.domain.model.enumerate.MessageChannel;
@@ -34,13 +35,15 @@ public class AssessmentDecisionPublicationService {
     private final RoleRepository roleRepository;
     private final MessageDispatcher messageDispatcher;
     private final AssessmentDecisionNotificationTemplate notificationTemplate;
+    private final AdmissionWelcomeTemplate admissionWelcomeTemplate;
     private final RoleTypeResolver roleTypeResolver;
     private final GitHubOrgInvitationService gitHubOrgInvitationService;
 
     /**
      * 发布单个考生的决策结果。
      * <p>
-     * 若该考生通过全局最终考核且当前角色为 CANDIDATE，则自动升级为 MEMBER。 无论是否升级，都会异步发送决策邮件通知。
+     * 若该考生通过全局最终考核且当前角色为 CANDIDATE，则自动升级为 MEMBER。
+     * 无论是否升级，都会异步发送邮件通知；全局最终轮通过（录取）发送欢迎邮件， 其余场景发送决策结果通知邮件。
      * </p>
      *
      * @param decision
@@ -91,23 +94,42 @@ public class AssessmentDecisionPublicationService {
             return;
         }
 
+        boolean isFinalRound = assessmentTime.isGlobalFinalAssessment();
+        boolean passed = Boolean.TRUE.equals(decision.getPassed());
+        if (isFinalRound && passed) {
+            sendAdmissionWelcomeEmail(user, assessmentTime);
+            return;
+        }
+
         String subject = "[蓝网] 考核结果通知";
         String directionLabel = assessmentTime.getDirection() != null
                 ? assessmentTime.getDirection().getDescription()
                 : "全局";
         int epoch = assessmentTime.getEpoch() != null ? assessmentTime.getEpoch() : 0;
-        boolean isFinalRound = assessmentTime.isGlobalFinalAssessment();
 
-        String resultText;
-        if (isFinalRound) {
-            resultText = Boolean.TRUE.equals(decision.getPassed()) ? "录取" : "淘汰";
-        } else {
-            resultText = Boolean.TRUE.equals(decision.getPassed()) ? "通过" : "未通过";
-        }
+        String resultText = passed ? "通过" : (isFinalRound ? "淘汰" : "未通过");
 
         String nickname = user.getNickname() != null ? user.getNickname() : user.getUsername();
         String htmlContent = notificationTemplate.buildHtml(nickname, directionLabel, epoch, resultText);
         messageDispatcher.dispatchAsync(
                 MessageRequest.html(MessageChannel.EMAIL, user.getEmail(), subject, htmlContent));
+    }
+
+    /**
+     * 发送录取欢迎邮件（全局最终轮通过）。
+     */
+    private void sendAdmissionWelcomeEmail(User user, AssessmentTime assessmentTime) {
+        String directionLabel = assessmentTime.getDirection() != null
+                ? assessmentTime.getDirection().getDescription()
+                : "全局";
+        int epoch = assessmentTime.getEpoch() != null ? assessmentTime.getEpoch() : 0;
+        String nickname = user.getNickname() != null ? user.getNickname() : user.getUsername();
+        String htmlContent = admissionWelcomeTemplate.buildHtml(nickname, directionLabel, epoch);
+        messageDispatcher.dispatchAsync(
+                MessageRequest.html(
+                        MessageChannel.EMAIL,
+                        user.getEmail(),
+                        admissionWelcomeTemplate.getSubject(),
+                        htmlContent));
     }
 }

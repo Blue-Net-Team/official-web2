@@ -73,14 +73,15 @@ class MessageTemplateAppServiceImplIntegrationTest extends DBIntegrationTest {
     void listTemplates_shouldReturnAllRegisteredTemplates() {
         List<MessageTemplateInfo> result = messageTemplateAppService.listTemplates();
 
-        assertThat(result).hasSize(4);
+        assertThat(result).hasSize(5);
         assertThat(result)
                 .extracting(MessageTemplateInfo::code)
                 .containsExactlyInAnyOrder(
                         EMAIL_VERIFICATION_CODE,
                         "ENROLL_APPROVAL_CREDENTIAL",
                         "ENROLL_REJECTION",
-                        "ASSESSMENT_DECISION_NOTIFICATION");
+                        "ASSESSMENT_DECISION_NOTIFICATION",
+                        "ADMISSION_WELCOME");
     }
 
     @Test

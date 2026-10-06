@@ -2,6 +2,7 @@ package com.bluenet.web.application.service.assessment;
 
 import com.bluenet.web.application.message.MessageDispatcher;
 import com.bluenet.web.application.message.MessageRequest;
+import com.bluenet.web.application.message.template.AdmissionWelcomeTemplate;
 import com.bluenet.web.application.message.template.AssessmentDecisionNotificationTemplate;
 import com.bluenet.web.domain.model.entity.AssessmentDecision;
 import com.bluenet.web.domain.model.entity.AssessmentTime;
@@ -17,6 +18,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -46,6 +48,9 @@ class AssessmentDecisionPublicationServiceTest {
     private AssessmentDecisionNotificationTemplate notificationTemplate;
 
     @Mock
+    private AdmissionWelcomeTemplate admissionWelcomeTemplate;
+
+    @Mock
     private RoleTypeResolver roleTypeResolver;
 
     @Mock
@@ -60,11 +65,16 @@ class AssessmentDecisionPublicationServiceTest {
                 roleRepository,
                 messageDispatcher,
                 notificationTemplate,
+                admissionWelcomeTemplate,
                 roleTypeResolver,
                 gitHubOrgInvitationService);
 
         lenient().when(notificationTemplate.buildHtml(anyString(), anyString(), anyInt(), anyString()))
-                .thenReturn("<html>content</html>");
+                .thenReturn("<html>notification</html>");
+        lenient().when(admissionWelcomeTemplate.buildHtml(anyString(), anyString(), anyInt()))
+                .thenReturn("<html>welcome</html>");
+        lenient().when(admissionWelcomeTemplate.getSubject())
+                .thenReturn("[蓝网] 欢迎加入蓝网团队");
     }
 
     private AssessmentTime globalFinalAssessmentTime() {
@@ -127,7 +137,42 @@ class AssessmentDecisionPublicationServiceTest {
         assertEquals(MEMBER_ROLE_ID, user.getRoleId());
         verify(userRepository).save(user);
         verify(gitHubOrgInvitationService).inviteAsync(user);
-        verify(messageDispatcher).dispatchAsync(any(MessageRequest.class));
+        // 最终轮通过：发送录取欢迎邮件，且不再发送结果通知邮件
+        verify(admissionWelcomeTemplate).buildHtml("考生", "全局", 0);
+        verify(notificationTemplate, never()).buildHtml(anyString(), anyString(), anyInt(), anyString());
+        ArgumentCaptor<MessageRequest> captor = ArgumentCaptor.forClass(MessageRequest.class);
+        verify(messageDispatcher).dispatchAsync(captor.capture());
+        assertEquals("[蓝网] 欢迎加入蓝网团队", captor.getValue().subject());
+        assertEquals("<html>welcome</html>", captor.getValue().content());
+        assertEquals("candidate@example.com", captor.getValue().recipient());
+    }
+
+    @Test
+    @DisplayName("全局最终考核淘汰：仍发送结果通知邮件（淘汰），不发送欢迎邮件")
+    void publish_globalFinalEliminated_shouldSendResultNotification() {
+        User user = candidateUser(5L);
+        stubCandidateLookup(user);
+        AssessmentDecision failedDecision = AssessmentDecision.create(user.getId(), 10L, false, 99L, null);
+
+        service.publish(failedDecision, globalFinalAssessmentTime());
+
+        verify(notificationTemplate).buildHtml("考生", "全局", 0, "淘汰");
+        verify(admissionWelcomeTemplate, never()).buildHtml(anyString(), anyString(), anyInt());
+        ArgumentCaptor<MessageRequest> captor = ArgumentCaptor.forClass(MessageRequest.class);
+        verify(messageDispatcher).dispatchAsync(captor.capture());
+        assertEquals("<html>notification</html>", captor.getValue().content());
+    }
+
+    @Test
+    @DisplayName("非最终考核通过：发送结果通知邮件（通过），不发送欢迎邮件")
+    void publish_nonFinalPassed_shouldSendResultNotification() {
+        User user = candidateUser(6L);
+        stubCandidateLookup(user);
+
+        service.publish(passedDecision(user.getId()), directionAssessmentTime());
+
+        verify(notificationTemplate).buildHtml("考生", "计算机视觉", 1, "通过");
+        verify(admissionWelcomeTemplate, never()).buildHtml(anyString(), anyString(), anyInt());
     }
 
     @Test
@@ -142,6 +187,21 @@ class AssessmentDecisionPublicationServiceTest {
         verify(userRepository, never()).save(any());
         verify(gitHubOrgInvitationService, never()).inviteAsync(any());
         verify(messageDispatcher).dispatchAsync(any(MessageRequest.class));
+    }
+
+    @Test
+    @DisplayName("无邮箱考生：跳过欢迎邮件但角色升级仍完成")
+    void publish_globalFinalPassedWithoutEmail_shouldSkipEmailButPromote() {
+        User user = candidateUser(7L);
+        user.setEmail(null);
+        stubCandidateLookup(user);
+        when(roleRepository.findByName(RoleType.MEMBER.getName()))
+                .thenReturn(Optional.of(Role.reconstruct(MEMBER_ROLE_ID, RoleType.MEMBER.getName())));
+
+        service.publish(passedDecision(user.getId()), globalFinalAssessmentTime());
+
+        assertEquals(MEMBER_ROLE_ID, user.getRoleId());
+        verify(messageDispatcher, never()).dispatchAsync(any(MessageRequest.class));
     }
 
     @Test

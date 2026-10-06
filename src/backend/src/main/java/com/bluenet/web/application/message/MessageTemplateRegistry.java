@@ -120,6 +120,27 @@ public class MessageTemplateRegistry {
                         </div>
                         """);
 
+        register(
+                "ADMISSION_WELCOME",
+                "录取欢迎通知",
+                "[蓝网] 欢迎加入蓝网团队",
+                "全局最终轮考核通过（录取）后发送的欢迎加入团队邮件",
+                List.of("nickname", "directionLabel", "epoch"),
+                """
+                        <div style="font-family: 'Microsoft YaHei', sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                          <h2 style="color: #52c41a;">🎉 欢迎加入蓝网团队！</h2>
+                          <p>{{nickname}} 你好，</p>
+                          <p>恭喜你顺利通过 <strong>{{directionLabel}}方向第{{epoch}}轮</strong> 全局最终考核，正式成为蓝网团队的一员！</p>
+                          <p>你的账号角色已升级为正式组员，现在可以访问组员的全部功能与资源。</p>
+                          <div style="background:#f6ffed;border:1px solid #b7eb8f;border-radius:8px;padding:16px;margin:16px 0;">
+                            <p style="margin:0;">我们已向你发出 <strong>Blue-Net-Team GitHub 组织</strong> 的邀请，请留意查收并完成加入。如长时间未收到邀请，请联系方向管理员。</p>
+                          </div>
+                          <p>期待你在蓝网团队中的成长与创造，欢迎！</p>
+                          <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
+                          <p style="color: #999; font-size: 12px;">此邮件由系统自动发送，请勿回复。</p>
+                        </div>
+                        """);
+
         if (mapper != null) {
             loadFromDatabase();
         }
