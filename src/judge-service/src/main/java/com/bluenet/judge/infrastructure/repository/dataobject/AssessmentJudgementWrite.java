@@ -35,4 +35,6 @@ public class AssessmentJudgementWrite {
     private String source;
     /** 评判人类型。 */
     private String reviewerType;
+    /** 评判评论。 */
+    private String comment;
 }

@@ -279,7 +279,7 @@ public class FormalJudgeWorkflow {
                 verdict.status(),
                 visibleText(bundle.input(), verdict.status()),
                 visibleText(bundle.expectedOutput(), verdict.status()),
-                visibleText(result.stdout(), verdict.status()),
+                visibleNormalizedText(result.stdout(), verdict.status()),
                 visibleText(result.stdout(), verdict.status()),
                 visibleText(result.stderr(), verdict.status()),
                 result.timeUsedMs(),
@@ -301,7 +301,7 @@ public class FormalJudgeWorkflow {
                 verdict.status(),
                 new String(bundle.input(), StandardCharsets.UTF_8),
                 new String(bundle.expectedOutput(), StandardCharsets.UTF_8),
-                new String(result.stdout(), StandardCharsets.UTF_8),
+                normalizeOutput(result.stdout()),
                 new String(result.stdout(), StandardCharsets.UTF_8),
                 new String(result.stderr(), StandardCharsets.UTF_8),
                 result.timeUsedMs(),
@@ -325,6 +325,7 @@ public class FormalJudgeWorkflow {
                 .resultCode(summary.resultCode())
                 .source("AUTO")
                 .reviewerType("SYSTEM")
+                .comment("自动评判通过 " + summary.acceptedCount() + " 个测试点")
                 .build();
     }
 
@@ -364,6 +365,16 @@ public class FormalJudgeWorkflow {
             return "";
         }
         return new String(content, StandardCharsets.UTF_8);
+    }
+
+    /**
+     * 根据用例结果决定是否保存归一化后的可见文本（实际参与比对的输出）。
+     */
+    private String visibleNormalizedText(byte[] content, String status) {
+        if ("AC".equals(status)) {
+            return "";
+        }
+        return normalizeOutput(content);
     }
 
     /**
