@@ -23,12 +23,12 @@
         INSERT INTO tb_assessment_judgement (
             answer_id, question_id, assessment_time_id, user_id,
             score, max_score, status, result_code, source, reviewer_type,
-            comment, judged_at, created_at, updated_at
+            judged_at, created_at, updated_at
         )
         VALUES (
             #{judgement.answerId}, #{judgement.questionId}, #{judgement.assessmentTimeId}, #{judgement.userId},
             #{judgement.score}, #{judgement.maxScore}, #{judgement.status}, #{judgement.resultCode},
-            #{judgement.source}, #{judgement.reviewerType}, #{judgement.comment},
+            #{judgement.source}, #{judgement.reviewerType},
             CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
         )
     </insert>

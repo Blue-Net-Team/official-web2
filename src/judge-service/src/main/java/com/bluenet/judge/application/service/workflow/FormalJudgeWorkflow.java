@@ -325,7 +325,6 @@ public class FormalJudgeWorkflow {
                 .resultCode(summary.resultCode())
                 .source("AUTO")
                 .reviewerType("SYSTEM")
-                .comment("自动评判通过 " + summary.acceptedCount() + " 个测试点")
                 .build();
     }
 
