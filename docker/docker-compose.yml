@@ -171,6 +171,9 @@ services:
       context: ../src/judge-service
       dockerfile: Dockerfile
     container_name: bluenet-judge-service
+    # isolate 沙箱需要创建 user/mount/pid namespace 并管理 cgroup，
+    # Docker 默认 seccomp 会拦截 clone/unshare 调用，必须放开容器权限。
+    privileged: true
     ports:
       - "8090:8090"
     environment:
