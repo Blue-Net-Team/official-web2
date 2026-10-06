@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import SmokedGlassCard from '@/components/SmokedGlassCard'
 import { RESULT_LABELS, RESULT_COLOR_CLASSES } from './constants'
 import type { JudgeResultPanelProps } from './types'
 import type { JudgeCaseResultDTO } from '@/apis/schema/assessment.dto'
@@ -59,7 +60,7 @@ function renderJudgeCase(caseResult: JudgeCaseResultDTO) {
   return (
     <div
       key={`${caseResult.caseNo}-${caseResult.testcaseType}`}
-      className="rounded-lg bg-white/[0.04] border border-white/[0.08] p-4 flex flex-col gap-3"
+      className="rounded-lg border border-white/[0.15] p-4 flex flex-col gap-3"
     >
       <div className="flex items-center justify-between gap-3">
         <span className="text-sm font-semibold text-white">用例 {caseResult.caseNo}</span>
@@ -101,7 +102,7 @@ export default function JudgeResultPanel({
   if (!judgeResult) return null
 
   return (
-    <div className="rounded-xl bg-white/[0.04] border border-white/[0.08] p-5 flex flex-col gap-4">
+    <SmokedGlassCard radius={12} className="flex flex-col gap-4">
       <div className="flex items-center justify-between gap-3">
         <span className="text-sm font-semibold text-white">
           判题状态：{judgeResult.statusMessage || judgeResult.status}
@@ -114,6 +115,6 @@ export default function JudgeResultPanel({
       {visibleCaseResults.length > 0 && (
         <div className="flex flex-col gap-3">{visibleCaseResults.map(renderJudgeCase)}</div>
       )}
-    </div>
+    </SmokedGlassCard>
   )
 }

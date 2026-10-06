@@ -1,6 +1,8 @@
 'use client'
 
+import type { CSSProperties } from 'react'
 import { CheckSquareOutlined, CheckCircleOutlined, RedoOutlined } from '@ant-design/icons'
+import SmokedGlassCard from '@/components/SmokedGlassCard'
 import { OPTION_LABELS } from './constants'
 import type { ChoiceQuestionProps } from './types'
 
@@ -19,7 +21,11 @@ export default function ChoiceQuestion({
   const options = (question.content as { options?: string[] } | null)?.options ?? []
 
   return (
-    <section className="bg-white/[0.06] border border-white/[0.08] rounded-xl p-7 h-fit">
+    <SmokedGlassCard
+      radius={12}
+      className="h-fit"
+      style={{ '--sgc-padding': '28px' } as CSSProperties}
+    >
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2.5">
           <CheckSquareOutlined className="text-xl text-[#6677ff]" />
@@ -88,6 +94,6 @@ export default function ChoiceQuestion({
           )
         })}
       </div>
-    </section>
+    </SmokedGlassCard>
   )
 }

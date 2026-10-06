@@ -2,13 +2,12 @@
 
 ### Requirement: 考生考题页面容器级玻璃材质统一为烟色玻璃
 
-考生考题页面（assessment questions 列表页与 QuestionDetail 作答页）的所有容器级面板 SHALL 使用 `SmokedGlassCard` 组件渲染，MUST NOT 使用无底色纯透明玻璃配方（`bg-white/[0.0x]` + 细边框、无深色保底底色的容器壳）。
+考生考题页面（assessment questions 列表页与 QuestionDetail 作答页）的所有容器级面板 SHALL 使用 `SmokedGlassCard` 组件渲染，MUST NOT 使用无底色纯透明玻璃配方（`bg-white/[0.0x]` + 细边框、无深色保底底色的容器壳）。考题页作为 DarkVeil 全屏场景，所有容器面板统一使用 deep（浓烟）档：不透明深色实底可阻挡背景光斑染色，保证任何帧下视觉稳定。
 
-#### Scenario: 作答页主内容卡
+#### Scenario: 作答页容器面板
 
-- **WHEN** 考生打开题目作答页查看题面
-- **THEN** 题面主卡以 `<SmokedGlassCard>`（默认 `tone="deep"`）渲染，不挂 `hoverable`（卡片本身不可点）
-- **AND** 页面其余容器面板（队伍、倒计时、提交、题目导航、算法题/选择题 section、编辑器容器）以 `<SmokedGlassCard tone="soft">` 渲染
+- **WHEN** 考生打开题目作答页
+- **THEN** 题面主卡及页面所有容器面板（队伍、倒计时、提交、答题信息、算法题/选择题 section、编辑器容器、判题结果）均以 `<SmokedGlassCard>`（deep，不挂 `hoverable`）渲染
 
 #### Scenario: backdrop-filter 失效环境
 

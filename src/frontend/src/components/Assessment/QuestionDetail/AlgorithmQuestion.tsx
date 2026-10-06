@@ -1,8 +1,10 @@
 'use client'
 
+import type { CSSProperties } from 'react'
 import { Select } from 'antd'
 import { ExperimentOutlined } from '@ant-design/icons'
 import { MarkdownRenderer } from '@/components/Assessment'
+import SmokedGlassCard from '@/components/SmokedGlassCard'
 import CodeEditor from '@/components/CodeEditor'
 import { RESULT_LABELS, RESULT_COLOR_CLASSES } from './constants'
 import type { AlgorithmQuestionProps } from './types'
@@ -51,7 +53,11 @@ export default function AlgorithmQuestion({
   const algorithmContent = question.content as AlgorithmContent | null
 
   return (
-    <section className="bg-white/[0.06] border border-white/[0.08] rounded-xl p-7 h-fit flex flex-col gap-6">
+    <SmokedGlassCard
+      radius={12}
+      className="h-fit flex flex-col gap-6"
+      style={{ '--sgc-padding': '28px' } as CSSProperties}
+    >
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-2.5">
           <ExperimentOutlined className="text-xl text-[#6677ff]" />
@@ -66,7 +72,7 @@ export default function AlgorithmQuestion({
         algorithmContent?.constraints) && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           {algorithmContent.inputDescription && (
-            <div className="rounded-lg bg-white/[0.04] p-4">
+            <div className="rounded-lg border border-white/[0.15] p-4">
               <p className="text-xs text-white/35 mb-2">输入说明</p>
               <p className="text-sm text-white/65 whitespace-pre-wrap m-0">
                 {algorithmContent.inputDescription}
@@ -74,7 +80,7 @@ export default function AlgorithmQuestion({
             </div>
           )}
           {algorithmContent.outputDescription && (
-            <div className="rounded-lg bg-white/[0.04] p-4">
+            <div className="rounded-lg border border-white/[0.15] p-4">
               <p className="text-xs text-white/35 mb-2">输出说明</p>
               <p className="text-sm text-white/65 whitespace-pre-wrap m-0">
                 {algorithmContent.outputDescription}
@@ -82,7 +88,7 @@ export default function AlgorithmQuestion({
             </div>
           )}
           {algorithmContent.constraints && (
-            <div className="rounded-lg bg-white/[0.04] p-4">
+            <div className="rounded-lg border border-white/[0.15] p-4">
               <p className="text-xs text-white/35 mb-2">数据范围</p>
               <p className="text-sm text-white/65 whitespace-pre-wrap m-0">
                 {algorithmContent.constraints}
@@ -92,7 +98,7 @@ export default function AlgorithmQuestion({
         </div>
       )}
       {algorithmContent?.examples?.map((example, index) => (
-        <div key={index} className="rounded-lg bg-white/[0.04] border border-white/[0.08] p-4">
+        <div key={index} className="rounded-lg border border-white/[0.15] p-4">
           <p className="text-sm font-semibold text-white mb-3">样例 {index + 1}</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {renderTextCell('样例输入 stdin', example.input, '无输入')}
@@ -109,7 +115,7 @@ export default function AlgorithmQuestion({
         </div>
       ))}
 
-      <div className="rounded-xl bg-white/[0.04] border border-white/[0.08] p-5 flex flex-col gap-4">
+      <div className="rounded-xl border border-white/[0.15] p-5 flex flex-col gap-4">
         <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
           <div className="flex items-center gap-3">
             <span className="text-sm text-white/65">语言</span>
@@ -170,6 +176,6 @@ export default function AlgorithmQuestion({
           )}
         </div>
       </div>
-    </section>
+    </SmokedGlassCard>
   )
 }

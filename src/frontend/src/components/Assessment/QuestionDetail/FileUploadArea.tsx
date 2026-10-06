@@ -34,7 +34,7 @@ export default function FileUploadArea({
   onSetUploadedFile,
 }: FileUploadAreaProps) {
   const renderUploadedFileRow = (meta: string, onRemove: () => void) => (
-    <div className="flex items-center justify-between p-3.5 rounded-lg bg-white/[0.08]">
+    <div className="flex items-center justify-between p-3.5 rounded-lg border border-white/[0.15]">
       <div className="flex items-center gap-3">
         <div className="w-9 h-9 rounded-md bg-[#6677ff]/[0.1] flex items-center justify-center flex-shrink-0">
           <FileOutlined className="text-base text-[#6677ff]" />

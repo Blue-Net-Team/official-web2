@@ -11,6 +11,7 @@ import {
   CheckCircleOutlined,
 } from '@ant-design/icons'
 import { Alert, Button, Collapse, Tag, Modal, Select, message, Tooltip } from 'antd'
+import SmokedGlassCard from '@/components/SmokedGlassCard'
 import type { AssessmentTeamDTO, AssessmentTeamMemberDTO } from '@/apis/schema/assessment.dto'
 import { DIRECTION_LABELS } from '@/apis/schema/enumerate'
 
@@ -80,7 +81,7 @@ export default function TeamPanel({
   )
 
   return (
-    <div className="bg-white/[0.06] border border-white/[0.08] rounded-xl p-5 flex flex-col gap-4">
+    <SmokedGlassCard radius={12} className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <TeamOutlined className="text-base text-[#6677ff]" />
@@ -276,6 +277,6 @@ export default function TeamPanel({
         />
         <p className="text-white/45 text-[13px] mt-2">队伍解散后，所有成员将需要重新组队。</p>
       </Modal>
-    </div>
+    </SmokedGlassCard>
   )
 }

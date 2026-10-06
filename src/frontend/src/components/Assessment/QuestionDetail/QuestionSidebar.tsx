@@ -11,6 +11,7 @@ import {
   RightOutlined,
 } from '@ant-design/icons'
 import { fileService } from '@/apis/services/file.service'
+import SmokedGlassCard from '@/components/SmokedGlassCard'
 import { LANGUAGE_LABELS } from './constants'
 import { formatFileSize } from './utils'
 import type { QuestionSidebarProps } from './types'
@@ -53,7 +54,7 @@ export default function QuestionSidebar({
   return (
     <div className="flex flex-col gap-6">
       {/* 答题信息 */}
-      <div className="bg-white/[0.06] border border-white/[0.08] rounded-xl p-5 flex flex-col gap-4">
+      <SmokedGlassCard radius={12} className="flex flex-col gap-4">
         <h3 className="text-sm font-semibold text-white m-0">答题信息</h3>
         <hr className="w-full h-px bg-white/[0.04] border-none m-0" />
         <div className="flex justify-between items-center">
@@ -87,17 +88,17 @@ export default function QuestionSidebar({
             </div>
           </>
         )}
-      </div>
+      </SmokedGlassCard>
 
       {/* 文件上传题已上传文件 */}
       {isFileUpload && uploadedFile && !isAnswered && !isExpired && (
-        <div className="bg-white/[0.06] border border-[#07c160]/[0.1] rounded-xl p-5 flex flex-col gap-4">
+        <SmokedGlassCard radius={12} className="flex flex-col gap-4">
           <div className="flex items-center gap-2">
             <CheckCircleOutlined className="text-base text-[#07c160]" />
             <span className="text-sm font-semibold text-white">已上传文件</span>
           </div>
           <hr className="w-full h-px bg-white/[0.04] border-none m-0" />
-          <div className="flex items-center gap-3 p-3.5 rounded-lg bg-white/[0.08]">
+          <div className="flex items-center gap-3 p-3.5 rounded-lg border border-white/[0.15]">
             <div className="w-9 h-9 rounded-md bg-[#6677ff]/[0.1] flex items-center justify-center flex-shrink-0">
               <FileOutlined className="text-base text-[#6677ff]" />
             </div>
@@ -117,12 +118,12 @@ export default function QuestionSidebar({
               <DeleteOutlined className="text-sm text-[#f5222d]!" />
             </button>
           </div>
-        </div>
+        </SmokedGlassCard>
       )}
 
       {/* 已提交信息 */}
       {isAnswered && !isResubmitting && (
-        <div className="bg-white/[0.06] border border-[#07c160]/[0.1] rounded-xl p-5 flex flex-col gap-4">
+        <SmokedGlassCard radius={12} className="flex flex-col gap-4">
           <div className="flex items-center gap-2">
             <CheckCircleOutlined className="text-base text-[#07c160]" />
             <span className="text-sm font-semibold text-white">已提交</span>
@@ -211,7 +212,7 @@ export default function QuestionSidebar({
                 {answer.comments.map((comment) => (
                   <div
                     key={comment.id}
-                    className="rounded-lg border border-white/[0.06] bg-white/[0.03] px-3 py-2.5 flex flex-col gap-1"
+                    className="rounded-lg border border-white/[0.15] px-3 py-2.5 flex flex-col gap-1"
                   >
                     <div className="flex items-center justify-between">
                       <span className="text-[13px] text-white/70">
@@ -236,7 +237,7 @@ export default function QuestionSidebar({
               </div>
             </div>
           )}
-        </div>
+        </SmokedGlassCard>
       )}
 
       {/* 按钮区域 */}

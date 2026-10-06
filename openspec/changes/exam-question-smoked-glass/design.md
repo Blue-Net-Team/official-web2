@@ -24,14 +24,16 @@
 
 QuestionDetail 是纯 Tailwind 页面，`SmokedGlassCard` 是 CSS Modules 组件，但组件支持 `className` 透传 + `--sgc-padding` CSS 变量，可直接嵌入 Tailwind 布局。选择包组件（而非把材质复制成 Tailwind 工具类）以保持"全站唯一玻璃实现"的约束不被稀释。
 
-### 决策 2：tone 映射
+### 决策 2：tone 映射（实施时按用户要求修正——全部 deep）
+
+初始设计为题面 deep / 侧栏 soft 两档；实施评审时用户拍板：**考题页所有容器面板统一用 deep（浓烟）**，理由是 deep 的不透明实底在 DarkVeil 光斑下观感更稳、整页材质统一。最终映射：
 
 ```
-题面主卡 (QuestionDetail/index.tsx)     → deep（视觉锚点，不挂 hoverable——
-                                           规范中 hover 反馈只属于可交互卡）
-侧栏全部面板 / 算法题 / 选择题 section
-/ 编辑器容器 / 提交记录 / 判题结果        → soft（数据容器）
+题面主卡 + 侧栏全部面板 + 算法题/选择题 section
+/ 编辑器容器 / 提交记录 / 判题结果 / 倒计时 / 队伍面板   → 全部 deep（默认档，不挂 hoverable）
 ```
+
+注：这与全站 "deep=可交互卡 / soft=数据容器" 的一般规范不同，是考题页作为沉浸式全屏场景的特判（ DarkVeil 光斑会透过 soft 半透底导致面板被染色）。
 
 ### 决策 3：内边距归组件（用户拍板方案 B）
 

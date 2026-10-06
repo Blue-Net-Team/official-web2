@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, type CSSProperties } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import {
   ArrowLeftOutlined,
@@ -41,6 +41,7 @@ import type {
 import { DIRECTION_LABELS as DirectionLabels } from '@/apis/schema/enumerate'
 import { QuestionTypeLabels } from '@/types/assessment'
 import { MarkdownRenderer } from '@/components/Assessment'
+import SmokedGlassCard from '@/components/SmokedGlassCard'
 import FileUploadArea from './FileUploadArea'
 import ChoiceQuestion from './ChoiceQuestion'
 import AlgorithmQuestion from './AlgorithmQuestion'
@@ -797,7 +798,11 @@ export default function QuestionDetailPage() {
           {/* Main Content */}
           <main className="flex-1 min-w-0 flex flex-col gap-6">
             {/* 题目描述 */}
-            <section className="bg-white/[0.06] border border-white/[0.08] rounded-xl p-7 h-fit">
+            <SmokedGlassCard
+              radius={12}
+              className="h-fit"
+              style={{ '--sgc-padding': '28px' } as CSSProperties}
+            >
               <div className="flex items-center gap-2.5">
                 <FileTextOutlined className="text-xl text-[#fa8c16]" />
                 <h2 className="text-base font-semibold text-white m-0">{question.title}</h2>
@@ -822,11 +827,15 @@ export default function QuestionDetailPage() {
                   </div>
                 )}
               </div>
-            </section>
+            </SmokedGlassCard>
 
             {/* 附件下载 */}
             {question.attachmentId && (
-              <div className="bg-white/[0.06] border border-white/[0.08] rounded-xl px-5 py-4 flex items-center gap-3.5">
+              <SmokedGlassCard
+                radius={12}
+                className="flex items-center gap-3.5"
+                style={{ '--sgc-padding': '16px 20px' } as CSSProperties}
+              >
                 <div className="w-10 h-10 rounded-lg bg-[#6677ff]/[0.1] flex items-center justify-center flex-shrink-0">
                   <PaperClipOutlined className="text-lg text-[#6677ff]" />
                 </div>
@@ -843,12 +852,16 @@ export default function QuestionDetailPage() {
                   <DownOutlined className="text-sm" />
                   下载附件
                 </button>
-              </div>
+              </SmokedGlassCard>
             )}
 
             {/* 答题区域 - 根据题型渲染不同组件 */}
             {isFileUpload ? (
-              <section className="bg-white/[0.06] border border-white/[0.08] rounded-xl p-7 h-fit">
+              <SmokedGlassCard
+                radius={12}
+                className="h-fit"
+                style={{ '--sgc-padding': '28px' } as CSSProperties}
+              >
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2.5">
                     <UploadOutlined className="text-xl text-[#6677ff]" />
@@ -860,7 +873,7 @@ export default function QuestionDetailPage() {
                 <div className="flex-1 pt-[18px]">
                   {/* 允许组队但未在队伍中：显示创建/加入队伍按钮 */}
                   {showTeamActionInUpload ? (
-                    <div className="flex flex-col items-center gap-4 py-8 px-4 rounded-[10px] bg-white/[0.03] border border-white/[0.06]">
+                    <div className="flex flex-col items-center gap-4 py-8 px-4 rounded-[10px] border border-white/[0.15]">
                       <TeamOutlined className="text-[32px] text-[#6677ff]/40" />
                       <p className="text-[13px] text-white/45 m-0">
                         本考核允许组队，请先创建或加入队伍
@@ -894,7 +907,7 @@ export default function QuestionDetailPage() {
                           </div>
                         </div>
                       ) : (
-                        <div className="flex items-center gap-4 p-5 rounded-[10px] bg-white/[0.03] border border-white/[0.06]">
+                        <div className="flex items-center gap-4 p-5 rounded-[10px] border border-white/[0.15]">
                           <TeamOutlined className="text-[32px] text-white/20" />
                           <div>
                             <p className="text-base font-semibold text-white/45 mb-1">
@@ -924,7 +937,7 @@ export default function QuestionDetailPage() {
                     />
                   )}
                 </div>
-              </section>
+              </SmokedGlassCard>
             ) : isChoiceQuestion ? (
               <ChoiceQuestion
                 question={question}
@@ -966,13 +979,17 @@ export default function QuestionDetailPage() {
                 />
               </>
             ) : (
-              <div className="flex flex-col items-center justify-center gap-3 min-h-[200px] bg-white/[0.06] border border-white/[0.08] rounded-xl px-5 py-10">
+              <SmokedGlassCard
+                radius={12}
+                className="flex flex-col items-center justify-center gap-3 min-h-[200px]"
+                style={{ '--sgc-padding': '40px 20px' } as CSSProperties}
+              >
                 <ExperimentOutlined className="text-[40px] text-white/15" />
                 <p className="text-base font-medium text-white/40 m-0">暂不支持该题型</p>
                 <p className="text-[13px] text-white/25 m-0">
                   {QuestionTypeLabels[question.questionType]}
                 </p>
-              </div>
+              </SmokedGlassCard>
             )}
           </main>
 
