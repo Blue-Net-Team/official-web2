@@ -213,23 +213,25 @@ export default function ForgotPasswordPage() {
   return (
     <ConfigProvider theme={stepTheme}>
       <div
-        className="relative w-full h-full flex overflow-hidden bg-[length:100%_120%] bg-[center_bottom]"
+        className="relative w-full min-h-screen flex overflow-hidden bg-[length:100%_120%] bg-[center_bottom]"
         style={{ backgroundImage: `url(${loginBg.src})` as string }}
       >
         {/* Left Panel - Form */}
-        <div className="w-1/2 min-w-[500px] h-full flex flex-col justify-center items-center relative z-2 bg-[rgba(20,20,25,0.65)] backdrop-blur-[20px] border-r border-white/[0.08] shadow-[0_8px_32px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.05)] max-lg:w-full max-lg:min-w-0 max-lg:p-10 max-lg:border-r-0 max-lg:bg-[rgba(20,20,25,0.75)] max-lg:px-6">
+        <div className="w-1/2 min-w-[500px] min-h-screen flex flex-col justify-center items-center relative z-2 bg-[rgba(20,20,25,0.65)] backdrop-blur-[20px] border-r border-white/[0.08] shadow-[0_8px_32px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.05)] max-lg:w-full max-lg:min-w-0 max-lg:p-10 max-lg:border-r-0 max-lg:bg-[rgba(20,20,25,0.75)] max-lg:px-6">
           <div className="w-full max-w-[400px] animate-[fadeIn_0.6s_ease-out]">
             {/* Logo */}
-            <div className="flex flex-row items-center gap-3 mb-3">
-              <div className="w-12 h-12 rounded-xl flex items-center justify-center overflow-hidden">
-                <Image src={logo} alt="蓝网Logo" width={48} height={48} priority />
+            <div className="flex flex-col items-center mb-12">
+              <div className="flex flex-row items-center gap-3 mb-3">
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center overflow-hidden">
+                  <Image src={logo} alt="蓝网Logo" width={48} height={48} priority />
+                </div>
+                <h1 className="text-[32px] font-bold text-white tracking-[2px] m-0">蓝网</h1>
               </div>
-              <h1 className="text-[32px] font-bold text-white tracking-[2px] m-0">蓝网</h1>
+              <p className="text-sm text-white/50 m-0">全校规模最大的科创团队</p>
             </div>
-            <p className="text-sm text-white/50 mb-6">全校规模最大的科创团队</p>
 
             {/* Title */}
-            <div className="mb-5 pt-4">
+            <div className="mb-5">
               <h2 className="text-[28px] font-bold text-white m-0">重置密码</h2>
               <p className="text-sm text-white/60 mt-2">{STEP_DESCRIPTIONS[currentStep]}</p>
             </div>
