@@ -19,6 +19,15 @@ export function formatDate(dateStr: string): string {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`
 }
 
+/** 考核上传允许的压缩包扩展名（大小写不敏感） */
+export const ALLOWED_ARCHIVE_EXTENSIONS = ['zip', 'rar', '7z', 'tar', 'gz', 'tar.gz', 'bz2', 'xz']
+
+/** 校验文件扩展名是否在允许列表内（优先匹配复合后缀如 .tar.gz） */
+export function isAllowedArchive(filename: string, allowedExtensions: string[]): boolean {
+  const lower = filename.toLowerCase()
+  return allowedExtensions.some((ext) => lower.endsWith(`.${ext.toLowerCase()}`))
+}
+
 export function formatFileSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`

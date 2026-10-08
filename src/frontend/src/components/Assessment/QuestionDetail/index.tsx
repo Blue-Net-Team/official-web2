@@ -50,7 +50,13 @@ import QuestionSidebar from './QuestionSidebar'
 import CountdownSection from './CountdownSection'
 import TeamPanel from './TeamPanel'
 import DarkVeil from '@/components/Reactbits/DarkVeil'
-import { getStatusInfo, formatFileSize, getUploadPhase } from './utils'
+import {
+  getStatusInfo,
+  formatFileSize,
+  getUploadPhase,
+  ALLOWED_ARCHIVE_EXTENSIONS,
+  isAllowedArchive,
+} from './utils'
 import { LANGUAGE_LABELS } from './constants'
 import type { UploadedFileInfo } from './types'
 
@@ -682,9 +688,13 @@ export default function QuestionDetailPage() {
   const showTeamPanel = allowTeam && isFileUpload
   const showTeamActionInUpload = allowTeam && isFileUpload && !isInTeam && !isExpired
 
-  const allowedExtsText = fileContent?.allowedExtensions
-    ? `支持 ${fileContent.allowedExtensions.join(', ')} 格式`
-    : '支持所有文件格式'
+  // 题目级配置优先，缺省使用压缩包白名单常量
+  const effectiveAllowedExtensions =
+    fileContent?.allowedExtensions && fileContent.allowedExtensions.length > 0
+      ? fileContent.allowedExtensions
+      : ALLOWED_ARCHIVE_EXTENSIONS
+
+  const allowedExtsText = `支持 ${effectiveAllowedExtensions.join(', ')} 等压缩包格式`
   const maxSizeText = fileContent?.maxFileSize
     ? `最大 ${formatFileSize(fileContent.maxFileSize)}`
     : ''
@@ -701,7 +711,7 @@ export default function QuestionDetailPage() {
     name: 'file',
     multiple: false,
     showUploadList: false,
-    accept: fileContent?.allowedExtensions?.map((ext) => `.${ext}`).join(',') || undefined,
+    accept: effectiveAllowedExtensions.map((ext) => `.${ext}`).join(','),
     customRequest: async ({ file, onSuccess, onError }) => {
       try {
         const fileId = await upload(file as File, 'WORK')
@@ -717,21 +727,43 @@ export default function QuestionDetailPage() {
           onError?.(new Error('上传失败'))
         }
       } catch (error) {
-        message.error('上传失败，请重试')
+        // 透传底层错误信息；内部错误码与用户主动取消不弹提示
+        const rawMsg = error instanceof Error ? error.message : ''
+        if (rawMsg !== 'UPLOAD_ABORTED') {
+          message.error(rawMsg || '上传失败，请重试')
+        }
         onError?.(error as Error)
       }
     },
     beforeUpload: (file) => {
+      if (!isAllowedArchive(file.name, effectiveAllowedExtensions)) {
+        message.error('仅支持 zip、rar、7z 等压缩包格式，请将文件压缩后再上传')
+        return Upload.LIST_IGNORE
+      }
+      if (file.size === 0) {
+        message.error('文件内容为空，请压缩后重新选择')
+        return Upload.LIST_IGNORE
+      }
       if (fileContent?.maxFileSize && file.size > fileContent.maxFileSize) {
         message.error(`文件大小不能超过 ${formatFileSize(fileContent.maxFileSize)}`)
         return Upload.LIST_IGNORE
       }
       return true
     },
+    onDrop: (e) => {
+      // 文件夹拖拽检测：Chromium/WebKit 支持 webkitGetAsEntry；不支持时由 beforeUpload 兜底
+      const items = e.dataTransfer?.items
+      const entry = items?.[0]?.webkitGetAsEntry?.()
+      if (entry?.isDirectory) {
+        e.preventDefault()
+        e.stopPropagation()
+        message.error('不支持上传文件夹，请压缩后上传')
+      }
+    },
   }
 
   const dropHintText = [
-    fileContent?.allowedExtensions ? `${fileContent.allowedExtensions.join(', ')}` : '所有文件格式',
+    `${effectiveAllowedExtensions.join(', ')} 压缩包`,
     fileContent?.maxFileSize ? `最大 ${formatFileSize(fileContent.maxFileSize)}` : '',
   ]
     .filter(Boolean)
@@ -810,14 +842,14 @@ export default function QuestionDetailPage() {
               <hr className="w-full h-px bg-white/[0.04] border-none m-0 my-4" />
               <div className="flex flex-col gap-4">
                 <MarkdownRenderer content={fileContent?.content} emptyText="暂无题目描述" />
-                {fileContent?.allowedExtensions && (
+                {
                   <div className="flex gap-2 text-[13px] text-white/45">
                     <span className="flex-shrink-0 text-white/45">允许的文件类型：</span>
                     <span className="text-white/65 leading-relaxed">
-                      {fileContent.allowedExtensions.join(', ')}
+                      {effectiveAllowedExtensions.join(', ')}
                     </span>
                   </div>
-                )}
+                }
                 {fileContent?.maxFileSize && (
                   <div className="flex gap-2 text-[13px] text-white/45">
                     <span className="flex-shrink-0 text-white/45">最大文件大小：</span>
