@@ -10,7 +10,7 @@
       api / judge  → mvnw test（测试）→ mvnw clean package -DskipTests（打包）→ docker compose build
       ai           → uv sync --frozen --no-dev → uv run ruff check . → docker compose build
       frontend     → pnpm install --frozen-lockfile → tsc --noEmit → pnpm lint → docker compose build
-      infra        → 无镜像可构建，仅确保基础设施运行（compose --profile infra up -d）
+      infra        → 无镜像可构建，仅确保基础设施运行（compose --profile infra-local up -d）
 
     启动（-Action up）：
       先确保基础设施（pgsql / redis / rabbitmq / oss）运行，
@@ -192,7 +192,7 @@ if ($Action -eq 'build') {
     foreach ($s in $Selected) {
         if ($s -eq 'infra') {
             Invoke-Step 'infra：无可构建镜像，确保基础设施运行'
-            Invoke-Compose --profile infra up -d
+            Invoke-Compose --profile infra-local up -d
             continue
         }
         Invoke-Step "构建 $s（按 CI 流水线）"
@@ -209,7 +209,7 @@ if ($Action -eq 'build') {
 
 # ---------- Action: up ----------
 Invoke-Step '启动基础设施（pgsql / redis / rabbitmq / oss）'
-Invoke-Compose --profile infra up -d
+Invoke-Compose --profile infra-local up -d
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 $AppServices = $Selected | Where-Object { $_ -ne 'infra' }
