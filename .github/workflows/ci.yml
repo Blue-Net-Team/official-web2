@@ -41,15 +41,19 @@ jobs:
           api:
             - 'src/backend/**'
             - 'src/backend/Dockerfile'
+            - 'trigger/api'
           frontend:
             - 'src/frontend/**'
             - 'src/frontend/Dockerfile'
+            - 'trigger/frontend'
           judge:
             - 'src/judge-service/**'
             - 'src/judge-service/Dockerfile'
+            - 'trigger/judge'
           ai:
             - 'src/ai-service/**'
             - 'src/ai-service/Dockerfile'
+            - 'trigger/ai'
           all:
             - '.github/workflows/**'
 
