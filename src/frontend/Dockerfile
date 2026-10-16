@@ -22,7 +22,15 @@ ARG NEXT_PUBLIC_AI_SERVICE_PORT=8000
 ARG NEXT_PUBLIC_AI_SERVICE_SSL_ENABLED=false
 ARG NEXT_PUBLIC_AI_SERVICE_PREFIX=/ai/v1
 
-# 安装 pnpm
+# 依赖安装源：默认官方源（CI 不受影响）；国内构建可传
+# --build-arg NPM_REGISTRY=https://registry.npmmirror.com 加速。
+# pnpm-lock.yaml 不记录 registry 地址，切换源不改变锁文件。
+ARG NPM_REGISTRY=https://registry.npmjs.org
+ENV NPM_CONFIG_REGISTRY=${NPM_REGISTRY}
+
+# 安装 pnpm（支持国内镜像源加速）
+ARG COREPACK_NPM_REGISTRY=https://registry.npmjs.org
+ENV COREPACK_NPM_REGISTRY=$COREPACK_NPM_REGISTRY
 RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
 
 WORKDIR /app
@@ -40,6 +48,16 @@ RUN echo "Cache bust: ${CACHE_BUST}" > /dev/null
 # 复制源代码（宿主机 node_modules 即使被 dockerignore 忽略也做一次清理，确保使用容器内安装的依赖）
 COPY ./ ./
 RUN rm -rf /app/node_modules && pnpm install --frozen-lockfile
+
+# 自托管 Monaco Editor：把 monaco-editor 的 AMD 产物复制到 public 下随镜像发布，
+# 避免运行时从 jsdelivr CDN 拉取（国内网络超时，编辑器无法加载）。
+# 对应代码中的 loader.config({ paths: { vs: '/monaco/vs' } })。
+# 先 rm 再拷：若目标已存在（例如仓库里误提交过 public/monaco），cp -r 会嵌套成
+# public/monaco/vs/vs 导致 404，这里保证幂等。
+RUN rm -rf public/monaco \
+ && mkdir -p public/monaco \
+ && cp -r node_modules/monaco-editor/min/vs public/monaco/vs \
+ && test -f public/monaco/vs/loader.js
 
 # 设置构建时的环境变量并构建应用
 ENV BACKEND_HOST=${BUILD_BACKEND_HOST}

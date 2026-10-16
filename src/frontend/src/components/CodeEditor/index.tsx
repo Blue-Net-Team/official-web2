@@ -1,8 +1,12 @@
 'use client'
 
 import { useCallback, useMemo } from 'react'
-import Editor from '@monaco-editor/react'
+import Editor, { loader } from '@monaco-editor/react'
 import type { ProgrammingLanguage } from '@/apis/schema/assessment.dto'
+
+// Monaco 自托管：不走 jsdelivr 等公网 CDN（国内会 ERR_CONNECTION_TIMED_OUT 导致编辑器打不开）。
+// vs 目录由构建阶段从 node_modules/monaco-editor/min/vs 复制到 public/monaco/vs，同源加载。
+loader.config({ paths: { vs: '/monaco/vs' } })
 
 /** 项目语言标识 → Monaco Editor 语言标识映射 */
 const LANGUAGE_MAP: Record<ProgrammingLanguage, string> = {

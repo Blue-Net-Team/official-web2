@@ -155,3 +155,6 @@ __pycache__/
 
 # cluster sectet
 **/k3s.yaml
+# Monaco 自托管产物：由 Dockerfile 构建阶段从 node_modules/monaco-editor 生成，
+# 不入库（避免 16MB 静态资源进仓库；也不要用版本控制的副本覆盖构建产物）
+src/frontend/public/monaco/
