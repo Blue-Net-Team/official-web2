@@ -19,6 +19,7 @@ import com.bluenet.web.domain.model.entity.File;
 import com.bluenet.web.domain.model.entity.JudgeProblemConfig;
 import com.bluenet.web.domain.model.entity.User;
 import com.bluenet.web.domain.model.vo.question_content.AlgorithmContent;
+import com.bluenet.web.domain.model.vo.question_content.QuestionContent;
 import com.bluenet.web.domain.repository.AssessmentAnswerRepository;
 import com.bluenet.web.domain.repository.AssessmentQuestionRepository;
 import com.bluenet.web.domain.repository.AssessmentTimeRepository;
@@ -26,6 +27,7 @@ import com.bluenet.web.domain.repository.FileRepository;
 import com.bluenet.web.domain.repository.JudgeProblemConfigRepository;
 import com.bluenet.web.domain.service.AssessmentDecisionDomainService;
 import com.bluenet.web.domain.util.GradeCalculator;
+import com.bluenet.web.domain.util.TestcaseTextSanitizer;
 import com.bluenet.web.infrastructure.security.principal.RoleTypeResolver;
 import com.bluenet.web.infrastructure.storage.JudgeAssetStorage;
 import com.bluenet.web.infrastructure.adapter.LoginContext;
@@ -85,6 +87,7 @@ public class AssessmentQuestionAppServiceImpl implements AssessmentQuestionAppSe
         AssessmentTime time = assessmentTimeRepository.findById(command.assessmentTimeId())
                 .orElseThrow(() -> new IllegalArgumentException("考核时间不存在"));
 
+        normalizeQuestionContent(command.content());
         validateQuestionContent(command.questionType(), command.content());
 
         assessmentQuestionRepository.findByTimeIdAndQuestionNo(command.assessmentTimeId(), command.questionNo())
@@ -128,6 +131,7 @@ public class AssessmentQuestionAppServiceImpl implements AssessmentQuestionAppSe
         QuestionType questionType = command.questionType() != null
                 ? command.questionType()
                 : existing.getQuestionType();
+        normalizeQuestionContent(command.content());
         validateQuestionContent(questionType, command.content());
 
         if (command.questionNo() != null) {
@@ -414,8 +418,50 @@ public class AssessmentQuestionAppServiceImpl implements AssessmentQuestionAppSe
         log.info("题目附件更新成功 - questionId={}, fileId={}", questionId, fileId);
     }
 
+    /**
+     * 归一化算法题用例文本，剥离浏览器录入带入的不可见字符。
+     *
+     * @param content
+     *            题目内容，非算法题或为空时不做处理
+     */
+    private void normalizeQuestionContent(QuestionContent content) {
+        if (!(content instanceof AlgorithmContent algorithmContent)) {
+            return;
+        }
+        if (algorithmContent.getExamples() != null) {
+            for (AlgorithmContent.Example example : algorithmContent.getExamples()) {
+                if (example == null) {
+                    continue;
+                }
+                example.setInput(TestcaseTextSanitizer.sanitize(example.getInput()));
+                example.setExpectedOutput(TestcaseTextSanitizer.sanitize(example.getExpectedOutput()));
+            }
+        }
+        normalizeTestCases(algorithmContent.getRunTestCases());
+        normalizeTestCases(algorithmContent.getTestCases());
+    }
+
+    /**
+     * 归一化用例集合的输入与期望输出。
+     *
+     * @param testCases
+     *            用例集合，可为空
+     */
+    private void normalizeTestCases(List<AlgorithmContent.TestCase> testCases) {
+        if (testCases == null) {
+            return;
+        }
+        for (AlgorithmContent.TestCase testCase : testCases) {
+            if (testCase == null) {
+                continue;
+            }
+            testCase.setInput(TestcaseTextSanitizer.sanitize(testCase.getInput()));
+            testCase.setExpectedOutput(TestcaseTextSanitizer.sanitize(testCase.getExpectedOutput()));
+        }
+    }
+
     private void validateQuestionContent(QuestionType questionType,
-            com.bluenet.web.domain.model.vo.question_content.QuestionContent content) {
+            QuestionContent content) {
         if (questionType != QuestionType.ALGORITHM) {
             return;
         }

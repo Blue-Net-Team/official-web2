@@ -3,6 +3,7 @@ package com.bluenet.web.domain.model.entity;
 import com.bluenet.web.domain.model.enumerate.AlgorithmTestcaseType;
 import com.bluenet.web.domain.model.enumerate.JudgeJobStatus;
 import com.bluenet.web.domain.model.enumerate.ProgrammingLanguage;
+import com.bluenet.web.domain.util.TestcaseTextSanitizer;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -148,7 +149,7 @@ public class AlgorithmJudgeJob {
                 language,
                 sourceCode,
                 testcaseType,
-                customInput,
+                TestcaseTextSanitizer.sanitize(customInput),
                 JudgeJobStatus.PENDING,
                 0,
                 3,

@@ -48,6 +48,38 @@ class AlgorithmJudgeJobTest {
     }
 
     @Test
+    @DisplayName("create: 自定义输入中的不可见字符应被剥离")
+    void create_withInvisibleCharactersInCustomInput_shouldSanitize() {
+        AlgorithmJudgeJob job = AlgorithmJudgeJob.create(
+                1L,
+                2L,
+                3L,
+                4L,
+                ProgrammingLanguage.PYTHON,
+                "print(1)",
+                AlgorithmTestcaseType.CUSTOM_RUN,
+                "0 12\u200b 0 3\u200b 0\r\n");
+
+        assertThat(job.getCustomInput()).isEqualTo("0 12 0 3 0\n");
+    }
+
+    @Test
+    @DisplayName("create: 自定义输入中的非 ASCII 空格应归一为 ASCII 空格")
+    void create_withNonAsciiSpaceInCustomInput_shouldNormalize() {
+        AlgorithmJudgeJob job = AlgorithmJudgeJob.create(
+                1L,
+                2L,
+                3L,
+                4L,
+                ProgrammingLanguage.PYTHON,
+                "print(1)",
+                AlgorithmTestcaseType.CUSTOM_RUN,
+                "12\u00a034");
+
+        assertThat(job.getCustomInput()).isEqualTo("12 34");
+    }
+
+    @Test
     @DisplayName("create: 编程语言为空应抛异常")
     void create_withNullLanguage_shouldThrow() {
         assertThatThrownBy(

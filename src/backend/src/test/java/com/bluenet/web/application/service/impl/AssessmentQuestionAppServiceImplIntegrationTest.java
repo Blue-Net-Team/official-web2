@@ -13,6 +13,7 @@ import com.bluenet.web.domain.model.entity.AssessmentTime;
 import com.bluenet.web.domain.model.entity.File;
 import com.bluenet.web.domain.model.entity.User;
 import com.bluenet.web.domain.model.enumerate.Direction;
+import com.bluenet.web.domain.model.vo.question_content.AlgorithmContent;
 import com.bluenet.web.domain.model.enumerate.FileType;
 import com.bluenet.web.domain.model.enumerate.QuestionType;
 import com.bluenet.web.domain.repository.AssessmentAnswerRepository;
@@ -38,6 +39,8 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.math.BigDecimal;
 import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -179,6 +182,69 @@ class AssessmentQuestionAppServiceImplIntegrationTest extends DBIntegrationTest 
                 new BigDecimal("100"));
 
         assertThrows(IllegalArgumentException.class, () -> assessmentQuestionAppService.createQuestion(command));
+    }
+
+    @Test
+    @DisplayName("createQuestion: 用例文本中的不可见字符应被剥离")
+    void createQuestion_withInvisibleCharactersInTestcases_shouldSanitize() {
+        AssessmentTime time = createTime(Direction.COMPUTER_VISION, 2024);
+        AlgorithmContent content = algorithmContent("\ufeff0 12\u200b 0 3\u200b 0", "12 3 0 0 0\u200b");
+
+        AssessmentQuestionResult result = assessmentQuestionAppService.createQuestion(
+                new AssessmentQuestionCommands.CreateAssessmentQuestionCommand(
+                        time.getId(),
+                        1,
+                        QuestionType.ALGORITHM,
+                        "算法题",
+                        content,
+                        null,
+                        new BigDecimal("100")));
+
+        AssessmentQuestion saved = assessmentQuestionRepository.findById(result.id()).orElseThrow();
+        AlgorithmContent persisted = (AlgorithmContent) saved.getContent();
+        assertEquals("0 12 0 3 0", persisted.getExamples().get(0).getInput());
+        assertEquals("12 3 0 0 0", persisted.getExamples().get(0).getExpectedOutput());
+        assertEquals("0 12 0 3 0", persisted.getRunTestCases().get(0).getInput());
+        assertEquals("算法题", persisted.getContent());
+    }
+
+    @Test
+    @DisplayName("createQuestion: 用例输入只含零宽字符应被拒绝")
+    void createQuestion_testcaseWithOnlyZeroWidthSpace_shouldThrow() {
+        AssessmentTime time = createTime(Direction.COMPUTER_VISION, 2024);
+        AlgorithmContent content = algorithmContent("1", "1");
+        content.getRunTestCases().get(0).setInput("\u200b\ufeff");
+
+        IllegalArgumentException exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> assessmentQuestionAppService.createQuestion(
+                        new AssessmentQuestionCommands.CreateAssessmentQuestionCommand(
+                                time.getId(),
+                                1,
+                                QuestionType.ALGORITHM,
+                                "算法题",
+                                content,
+                                null,
+                                new BigDecimal("100"))));
+
+        assertTrue(exception.getMessage().contains("第1个用例"));
+    }
+
+    private AlgorithmContent algorithmContent(String input, String expectedOutput) {
+        AlgorithmContent content = new AlgorithmContent();
+        content.setContent("算法题");
+        content.setStarterCode(Map.of("PYTHON", "print(1)"));
+
+        AlgorithmContent.Example example = new AlgorithmContent.Example();
+        example.setInput(input);
+        example.setExpectedOutput(expectedOutput);
+        content.setExamples(List.of(example));
+
+        AlgorithmContent.TestCase runTestCase = new AlgorithmContent.TestCase();
+        runTestCase.setInput(input);
+        runTestCase.setExpectedOutput(expectedOutput);
+        content.setRunTestCases(List.of(runTestCase));
+        return content;
     }
 
     @Test
