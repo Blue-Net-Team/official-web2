@@ -40,13 +40,13 @@
 
 ## 7. 测试环境存量数据
 
-- [ ] 7.1 执行定位 SQL 找出测试环境中受影响的题目：
+- [x] 7.1 执行定位 SQL 找出测试环境中受影响的题目：
 
 ```sql
 SELECT id, title
 FROM tb_assessment_question
-WHERE content ~ ('[' || chr(8203) || chr(8204) || chr(8205) || chr(65279) || chr(160) || chr(12288) || ']');
+WHERE content::text ~ ('[' || chr(8203) || chr(8204) || chr(8205) || chr(65279) || chr(160) || chr(12288) || ']');
 ```
 
-- [ ] 7.2 对查询结果中每道题，在管理端打开并保存一次，触发 `updateQuestion` 归一化
-- [ ] 7.3 重新执行 7.1 的 SQL，确认结果为空
+- [x] 7.2 对查询结果中每道题，在管理端打开并保存一次，触发 `updateQuestion` 归一化
+- [x] 7.3 重新执行 7.1 的 SQL，确认结果为空

@@ -117,7 +117,7 @@ public static String sanitize(String input)
    ```sql
    SELECT id, title
    FROM tb_assessment_question
-   WHERE content ~ ('[' || chr(8203) || chr(8204) || chr(8205) || chr(65279) || chr(160) || chr(12288) || ']');
+   WHERE content::text ~ ('[' || chr(8203) || chr(8204) || chr(8205) || chr(65279) || chr(160) || chr(12288) || ']');
    ```
 
 3. 对查询结果中的每道题，在管理端打开并保存一次，触发 `updateQuestion` 归一化
