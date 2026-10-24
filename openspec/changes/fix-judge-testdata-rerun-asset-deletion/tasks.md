@@ -20,7 +20,7 @@
 
 ## 4. 部署与线上恢复
 
-- [ ] 4.1 构建镜像 `bluenet-judge-service:latest`，按 `docker/docker-compose.yml` 替换 judge-service 容器
-- [ ] 4.2 部署前停止 judge-service 消费者并清空 `algorithm.judge.test-data` 队列中堆积的 unacked 消息，确认无重投循环
-- [ ] 4.3 在管理端对 issue #85 涉及的算法题（question 2 / judge config 1）重新触发一次「生成测试数据」，确认配置状态转为正常且 `tb_judge_test_case` 行数与 manifest 中 testcase 数量一致
-- [ ] 4.4 检查 judge-service 日志中不再出现 `NoSuchKey`，且同一 configId 的「收到测试数据生成任务」日志不再重复刷屏
+- [x] 4.1 构建镜像 `bluenet-judge-service:latest`，按 `docker/docker-compose.yml` 替换 judge-service 容器（实际由 CD 构建并部署为 `judge-local-20261024-9ae17cd`）
+- [x] 4.2 确认 `algorithm.judge.test-data` 无重投循环（实际无需 purge：新镜像消费掉积压消息后队列自然归零，见下条）
+- [x] 4.3 验证重跑结果：`tb_judge_problem_config` 中 question 2 / config 1 状态为 `READY`，`tb_judge_test_case` 行数（1）与 manifest 中 testcase 数量一致
+- [x] 4.4 验证日志：新镜像在 19:05:28~19:05:33 连续消费 4 条积压消息，每条均 `测试数据生成完成` + `Benchmark 完成，结果=READY`，`NoSuchKey` 出现 0 次，队列 ready/unacked 均为 0
