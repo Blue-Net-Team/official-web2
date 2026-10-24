@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useDeferredValue, useEffect, useMemo, useState, type ReactNode } from 'react'
 import {
   Alert,
   App,
@@ -12,6 +12,7 @@ import {
   Input,
   InputNumber,
   Radio,
+  Segmented,
   Select,
   Space,
   Tabs,
@@ -38,7 +39,8 @@ import type {
 import { adminAssessmentQuestionService } from '@/apis/services/admin-assessment-question.service'
 import { adminJudgeProblemConfigService } from '@/apis/services/admin-judge-problem-config.service'
 import { usePresignedUpload } from '@/hooks/usePresignedUpload'
-import { MarkdownRenderer, QuestionStemMarkdownEditor } from '@/components/Assessment'
+import { QuestionStatementPreview } from '@/components/Assessment/QuestionStatement'
+import { buildPreviewStatement, type PreviewSourceValues } from './buildPreviewStatement'
 import CodeEditor from '@/components/CodeEditor'
 import type { CodeEditorProps } from '@/components/CodeEditor'
 import { QUESTION_TYPE_LABELS } from '@/app/admin/assessment/judge/shared'
@@ -404,6 +406,16 @@ function renderJudgeStatus(status?: string | null) {
   return <Tag color={option.color}>{option.text}</Tag>
 }
 
+/** 右侧预览延后追赶表单值：左侧输入保持同步响应，右侧不阻塞击键。 */
+function DeferredStatementPreview({
+  statement,
+}: {
+  statement: ReturnType<typeof buildPreviewStatement>
+}) {
+  const deferred = useDeferredValue(statement)
+  return <QuestionStatementPreview statement={deferred} />
+}
+
 export default function QuestionDrawer({
   open,
   question,
@@ -419,6 +431,8 @@ export default function QuestionDrawer({
   const screens = Grid.useBreakpoint()
   const [judgeConfig, setJudgeConfig] = useState<JudgeProblemConfigDTO | null>(null)
   const [judgeConfigLoading, setJudgeConfigLoading] = useState(false)
+  /** 窄视口下「编辑 / 预览」二选一 */
+  const [mobilePane, setMobilePane] = useState<'edit' | 'preview'>('edit')
 
   const isViewMode = mode === 'view'
   const isCreateMode = mode === 'create'
@@ -660,20 +674,19 @@ export default function QuestionDrawer({
 
   const drawerWidth = !screens.md ? '100vw' : isViewMode ? 500 : 'min(1120px, calc(100vw - 48px))'
 
+  /**
+   * 题干字段：左列只放纯编辑控件，不再自带内嵌预览 ——
+   * 预览统一由右列按考生端版式渲染，避免「框里再套一个左右分栏」的碎片化。
+   */
   const renderStemField = (
     name: 'fileContent' | 'choiceContent' | 'algorithmContent',
     rows: number,
     placeholder: string
-  ) =>
-    isViewMode ? (
-      <Form.Item label="题干" shouldUpdate>
-        {({ getFieldValue }) => <MarkdownRenderer content={getFieldValue(name) as string} />}
-      </Form.Item>
-    ) : (
-      <Form.Item name={name} label="题干">
-        <QuestionStemMarkdownEditor rows={rows} placeholder={placeholder} />
-      </Form.Item>
-    )
+  ) => (
+    <Form.Item name={name} label="题干">
+      <Input.TextArea rows={rows} placeholder={placeholder} disabled={isViewMode} />
+    </Form.Item>
+  )
 
   /**
    * 算法题题面补充字段（输入说明 / 输出说明 / 数据范围）。
@@ -685,20 +698,11 @@ export default function QuestionDrawer({
     name: 'inputDescription' | 'outputDescription' | 'constraints',
     label: string,
     placeholder: string
-  ) =>
-    isViewMode ? (
-      <Form.Item label={label} shouldUpdate>
-        {({ getFieldValue }) => (
-          <div className="overflow-x-auto">
-            <MarkdownRenderer content={getFieldValue(name) as string} />
-          </div>
-        )}
-      </Form.Item>
-    ) : (
-      <Form.Item name={name} label={label}>
-        <QuestionStemMarkdownEditor rows={3} placeholder={placeholder} />
-      </Form.Item>
-    )
+  ) => (
+    <Form.Item name={name} label={label}>
+      <Input.TextArea rows={3} placeholder={placeholder} disabled={isViewMode} />
+    </Form.Item>
+  )
 
   const renderAlgorithmTestCases = (
     name: 'examples' | 'runTestCases',
@@ -1158,15 +1162,29 @@ export default function QuestionDrawer({
 
   const renderAlgorithmTabs = () => (
     <Tabs
+      className="statement-tabs flex flex-col flex-1 min-h-0"
       items={[
-        { key: 'statement', label: '题面信息', children: renderAlgorithmStatementFields() },
-        { key: 'judge-config', label: '判题配置', children: renderJudgeConfigFields() },
-        { key: 'language-limits', label: '资源限制', children: renderLanguageLimitFields() },
+        {
+          key: 'statement',
+          label: '题面信息',
+          children: renderStatementWorkspace(renderAlgorithmStatementFields()),
+        },
+        {
+          key: 'judge-config',
+          label: '判题配置',
+          children: <div className="h-full overflow-y-auto">{renderJudgeConfigFields()}</div>,
+        },
+        {
+          key: 'language-limits',
+          label: '资源限制',
+          children: <div className="h-full overflow-y-auto">{renderLanguageLimitFields()}</div>,
+        },
       ]}
     />
   )
 
-  const renderContentFields = () => {
+  /** 左列的编辑控件（按题型） */
+  const renderEditFields = () => {
     const type = questionTypeValue
     if (!type) return null
 
@@ -1301,11 +1319,82 @@ export default function QuestionDrawer({
         )
 
       case 'ALGORITHM':
-        return renderAlgorithmTabs()
+        // 算法题的题面字段由「题面信息」tab 内部的左右分栏承载
+        return renderAlgorithmStatementFields()
 
       default:
         return null
     }
+  }
+
+  /** 从当前表单值构造预览数据（白名单，不含答案/运行用例/语言模板） */
+  const buildPreview = (values: Record<string, unknown>) =>
+    buildPreviewStatement(values as unknown as PreviewSourceValues)
+
+  /** 考生端题面的只读渲染（查看态，或移动端的“预览”页签） */
+  const renderPreviewOnly = () => (
+    <Form.Item noStyle shouldUpdate>
+      {(instance) => (
+        <div className="overflow-x-auto">
+          <DeferredStatementPreview statement={buildPreview(instance.getFieldsValue(true))} />
+        </div>
+      )}
+    </Form.Item>
+  )
+
+  /**
+   * 题面工作区：左列全部编辑控件，右列考生端版式预览。
+   *
+   * 宽视口左右分栏、两列各自滚动；窄视口退化为「编辑 / 预览」二选一。
+   */
+  const renderStatementWorkspace = (editFields: ReactNode) => {
+    if (isViewMode) return renderPreviewOnly()
+
+    const splitView = Boolean(screens.lg)
+    const preview = (
+      <Form.Item noStyle shouldUpdate>
+        {(instance) => (
+          <DeferredStatementPreview statement={buildPreview(instance.getFieldsValue(true))} />
+        )}
+      </Form.Item>
+    )
+
+    if (!splitView) {
+      return (
+        <div className="flex flex-col gap-4">
+          <Segmented
+            value={mobilePane}
+            onChange={(value) => setMobilePane(value as 'edit' | 'preview')}
+            options={[
+              { label: '编辑题面', value: 'edit' },
+              { label: '预览题面', value: 'preview' },
+            ]}
+          />
+          {mobilePane === 'edit' ? editFields : preview}
+        </div>
+      )
+    }
+
+    return (
+      <div className="flex gap-6 flex-1 min-h-0">
+        <div className="w-1/2 min-w-0 overflow-y-auto pr-1" data-testid="statement-edit-pane">
+          {editFields}
+        </div>
+        <div
+          className="w-1/2 min-w-0 overflow-y-auto border-l border-white/[0.08] pl-6"
+          data-testid="statement-preview-pane"
+        >
+          <p className="text-xs text-white/35 mb-3">考生端题面预览</p>
+          {preview}
+        </div>
+      </div>
+    )
+  }
+
+  const renderContentFields = () => {
+    if (!questionTypeValue) return null
+    if (questionTypeValue === 'ALGORITHM' && !isViewMode) return renderAlgorithmTabs()
+    return renderStatementWorkspace(renderEditFields())
   }
 
   const isAlgorithm = questionTypeValue === 'ALGORITHM'
@@ -1316,6 +1405,13 @@ export default function QuestionDrawer({
       open={open}
       onClose={onClose}
       width={drawerWidth}
+      styles={{
+        body: {
+          ...(screens.lg && !isViewMode
+            ? { display: 'flex', flexDirection: 'column', overflow: 'hidden' }
+            : {}),
+        },
+      }}
       footer={
         isViewMode ? (
           <div className="flex justify-end gap-2">
@@ -1346,6 +1442,7 @@ export default function QuestionDrawer({
       <Form
         form={form}
         layout="vertical"
+        className={screens.lg && !isViewMode ? 'flex flex-col flex-1 min-h-0' : undefined}
         disabled={isViewMode}
         initialValues={{
           questionType: 'FILE_UPLOAD',
@@ -1370,56 +1467,63 @@ export default function QuestionDrawer({
           confirmOutputLimitKb: 1024,
         }}
       >
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Form.Item
-            name="questionNo"
-            label="题号"
-            rules={[{ required: true, message: '请输入题号' }]}
-          >
-            <InputNumber min={1} placeholder="题号" className="w-full" />
+        {/* 题型元信息：不随左右分栏收缩 */}
+        <div className="shrink-0">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Form.Item
+              name="questionNo"
+              label="题号"
+              rules={[{ required: true, message: '请输入题号' }]}
+            >
+              <InputNumber min={1} placeholder="题号" className="w-full" />
+            </Form.Item>
+
+            <Form.Item
+              name="questionType"
+              label="题型"
+              rules={[{ required: true, message: '请选择题型' }]}
+            >
+              <Select options={QUESTION_TYPE_OPTIONS} placeholder="选择题型" />
+            </Form.Item>
+          </div>
+
+          <Form.Item name="title" label="标题" rules={[{ required: true, message: '请输入标题' }]}>
+            <Input placeholder="题目标题" />
           </Form.Item>
 
-          <Form.Item
-            name="questionType"
-            label="题型"
-            rules={[{ required: true, message: '请选择题型' }]}
-          >
-            <Select options={QUESTION_TYPE_OPTIONS} placeholder="选择题型" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Form.Item
+              name="score"
+              label="分值"
+              rules={[{ required: true, message: '请输入分值' }]}
+            >
+              <InputNumber min={0} precision={1} placeholder="分值" className="w-full" />
+            </Form.Item>
+
+            <Form.Item label="附件">
+              <Space size={8}>
+                <Upload
+                  beforeUpload={handleUpload}
+                  showUploadList={false}
+                  accept=".pdf,.doc,.docx,.zip,.rar,.png,.jpg,.jpeg"
+                >
+                  <Button icon={<PaperClipOutlined />} disabled={isViewMode}>
+                    {attachmentIdValue ? '更换附件' : '上传附件'}
+                  </Button>
+                </Upload>
+                {attachmentIdValue ? (
+                  <span className="text-white/50 text-sm">已上传 (ID: {attachmentIdValue})</span>
+                ) : null}
+              </Space>
+            </Form.Item>
+          </div>
+
+          {/* 附件 ID 单独用隐藏字段承载：Upload 不能被带 name 的 Form.Item 包裹，
+              否则其 onChange 会把 { file, fileList } 对象写进字段，提交时后端无法反序列化为 Long */}
+          <Form.Item name="attachmentId" hidden>
+            <Input />
           </Form.Item>
         </div>
-
-        <Form.Item name="title" label="标题" rules={[{ required: true, message: '请输入标题' }]}>
-          <Input placeholder="题目标题" />
-        </Form.Item>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Form.Item name="score" label="分值" rules={[{ required: true, message: '请输入分值' }]}>
-            <InputNumber min={0} precision={1} placeholder="分值" className="w-full" />
-          </Form.Item>
-
-          <Form.Item label="附件">
-            <Space size={8}>
-              <Upload
-                beforeUpload={handleUpload}
-                showUploadList={false}
-                accept=".pdf,.doc,.docx,.zip,.rar,.png,.jpg,.jpeg"
-              >
-                <Button icon={<PaperClipOutlined />} disabled={isViewMode}>
-                  {attachmentIdValue ? '更换附件' : '上传附件'}
-                </Button>
-              </Upload>
-              {attachmentIdValue ? (
-                <span className="text-white/50 text-sm">已上传 (ID: {attachmentIdValue})</span>
-              ) : null}
-            </Space>
-          </Form.Item>
-        </div>
-
-        {/* 附件 ID 单独用隐藏字段承载：Upload 不能被带 name 的 Form.Item 包裹，
-            否则其 onChange 会把 { file, fileList } 对象写进字段，提交时后端无法反序列化为 Long */}
-        <Form.Item name="attachmentId" hidden>
-          <Input />
-        </Form.Item>
 
         {renderContentFields()}
       </Form>

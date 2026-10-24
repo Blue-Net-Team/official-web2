@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback, useRef, type CSSProperties } from 're
 import { useParams, useRouter } from 'next/navigation'
 import {
   ArrowLeftOutlined,
-  FileTextOutlined,
   PaperClipOutlined,
   DownOutlined,
   WarningOutlined,
@@ -41,7 +40,7 @@ import type {
 } from '@/apis/schema/assessment.dto'
 import { DIRECTION_LABELS as DirectionLabels } from '@/apis/schema/enumerate'
 import { QuestionTypeLabels } from '@/types/assessment'
-import { MarkdownRenderer } from '@/components/Assessment'
+import { StemCard } from '@/components/Assessment/QuestionStatement'
 import SmokedGlassCard from '@/components/SmokedGlassCard'
 import FileUploadArea from './FileUploadArea'
 import ChoiceQuestion from './ChoiceQuestion'
@@ -915,18 +914,7 @@ export default function QuestionDetailPage() {
           {/* Main Content */}
           <main className="flex-1 min-w-0 flex flex-col gap-6">
             {/* 题目描述 */}
-            <SmokedGlassCard
-              radius={12}
-              className="h-fit"
-              style={{ '--sgc-padding': '28px' } as CSSProperties}
-            >
-              <div className="flex items-center gap-2.5">
-                <FileTextOutlined className="text-xl text-[#fa8c16]" />
-                <h2 className="text-base font-semibold text-white m-0">{question.title}</h2>
-              </div>
-              <hr className="w-full h-px bg-white/[0.04] border-none m-0 my-4" />
-              <MarkdownRenderer content={questionContent?.content} emptyText="暂无题目描述" />
-            </SmokedGlassCard>
+            <StemCard title={question.title} content={questionContent?.content} />
 
             {/* 附件下载 */}
             {question.attachmentId && (

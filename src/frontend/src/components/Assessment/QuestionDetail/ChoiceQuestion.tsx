@@ -3,7 +3,7 @@
 import type { CSSProperties } from 'react'
 import { CheckSquareOutlined, CheckCircleOutlined, RedoOutlined } from '@ant-design/icons'
 import SmokedGlassCard from '@/components/SmokedGlassCard'
-import { OPTION_LABELS } from './constants'
+import { ChoiceStatement } from '@/components/Assessment/QuestionStatement'
 import type { ChoiceQuestionProps } from './types'
 
 export default function ChoiceQuestion({
@@ -19,6 +19,7 @@ export default function ChoiceQuestion({
 }: ChoiceQuestionProps) {
   const isSingleChoice = question.questionType === 'SINGLE_CHOICE'
   const options = (question.content as { options?: string[] } | null)?.options ?? []
+  const isLocked = isAnswered && !isResubmitting
 
   return (
     <SmokedGlassCard
@@ -51,48 +52,21 @@ export default function ChoiceQuestion({
         </div>
       </div>
       <hr className="w-full h-px bg-white/[0.04] border-none m-0" />
-      <div className="flex flex-col gap-3 mt-4">
-        {options.map((option, index) => {
-          const label = OPTION_LABELS[index] || `${index + 1}`
-          const isSelected = isSingleChoice
-            ? selectedOption === option
-            : selectedOptions.includes(option)
-          const isLocked = isAnswered && !isResubmitting
-
-          return (
-            <div
-              key={index}
-              onClick={() => {
-                if (isLocked || isExpired) return
-                if (isSingleChoice) {
-                  onSelectOption(option)
-                } else {
-                  onToggleOption(option)
-                }
-              }}
-              className={`flex items-center gap-4 p-4 rounded-xl transition-all duration-200 border ${
-                isSelected
-                  ? 'bg-[#6677ff]/[0.08] border-[#6677ff]/[0.3]'
-                  : 'bg-white/[0.04] border-white/[0.08]'
-              } ${
-                !isLocked && !isExpired ? 'cursor-pointer hover:bg-white/[0.06]' : ''
-              } ${isLocked ? 'opacity-90' : ''}`}
-            >
-              <span
-                className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold flex-shrink-0 ${
-                  isSelected ? 'bg-[#6677ff] text-white' : 'bg-white/[0.08] text-white/45'
-                }`}
-              >
-                {label}
-              </span>
-              <span
-                className={`text-sm ${isSelected ? 'text-white font-medium' : 'text-white/65'}`}
-              >
-                {option}
-              </span>
-            </div>
-          )
-        })}
+      <div className="mt-4">
+        <ChoiceStatement
+          options={options}
+          selectedValues={
+            isSingleChoice ? (selectedOption ? [selectedOption] : []) : selectedOptions
+          }
+          disabled={isLocked || isExpired}
+          onSelect={(option) => {
+            if (isSingleChoice) {
+              onSelectOption(option)
+            } else {
+              onToggleOption(option)
+            }
+          }}
+        />
       </div>
     </SmokedGlassCard>
   )

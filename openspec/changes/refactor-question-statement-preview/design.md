@@ -151,5 +151,13 @@ QuestionStatementPreview
 
 ## Open Questions
 
-- 「题面信息」tab 锁高后，判题配置 / 资源限制两个 tab 是否也需要与之视觉对齐（例如统一顶部高度），还是保持自然高度由抽屉 body 滚动 —— 需在实际页面里看一眼再定。
-- 移动端单栏下的「编辑 / 预览」切换应当复用 antd `Tabs` 还是用分段控件（Segmented），需要与抽屉内已有的 tab 层级区分开，避免两级 tab 视觉混淆。
+- 「题面信息」tab 锁高后，判题配置 / 资源限制两个 tab 是否也需要与之视觉对齐 —— **已定**：这两个 tab 各自内部 `overflow-y-auto`，抽屉 body 统一 `overflow: hidden`，三者高度一致、无跳变。
+- 移动端「编辑 / 预览」切换控件形态 —— **已定**：使用 antd `Segmented`，与一级 `Tabs` 在形态与位置上均能区分。
+- **新增待解**：预览在查看态（抽屉固定 500px）里仍是 3 栏布局，因为 `md:grid-cols-3` 走的是**视口**断点而非容器宽度，500px 容器内三栏各约 90px，公式需要频繁横向滚动。若要让预览按容器宽度退化，需要把 `AlgorithmStatement` 的栅格改为 CSS container query（`@container` + `@md`），属于独立改动。
+
+## 实施记录（偏差与实测）
+
+- **`ChoiceStatement` 的 props 必须含选中态**：实施时确认选中样式逐项内联（容器边框底色、序号圆点、文字字重三层），外层包裹无法复现，故按 `selectedValues` + `onSelect` 契约实现；`onSelect` 缺省即渲染静态列表（预览态）。
+- **`getFieldsValue()` 在查看态取不到值**：查看态不渲染任何编辑字段，antd 未注册这些字段，`getFieldsValue()` 返回的是"已注册字段"子集，导致预览只剩标题。必须用 `getFieldsValue(true)` 读取全量 store。这是本次唯一一处"设计没预料到、实现才发现"的问题。
+- **题面/三段说明在左列必须退化为纯 `Input.TextArea`**：否则题干会保留自带的左右分栏预览，形成"分栏里再套分栏"。改完后 `QuestionStemMarkdownEditor` 归零并删除。
+- **考生端零回归的验证方式**：未用肉眼比对截图，而是对 4 个题型页面在抽取前后各取 9 个区域的归一化 `outerHTML` 做 sha256，全部一致；重构完成后再复检一次仍一致（唯一差异来自验证数据标题被改名，替换标题后哈希相同）。

@@ -251,3 +251,26 @@
   overflow-y: hidden;
   padding: 2px 0;
 }
+
+/* ==========================================================================
+ * 管理端「题面信息」tab 内的左右分栏需要撑满抽屉剩余高度，
+ * 让左右两列各自滚动而不是整页滚动。antd Tabs 默认内容区不参与 flex 伸缩，
+ * 这里为带 statement-tabs 类的 Tabs 打通 flex 链路。
+ * ========================================================================== */
+.statement-tabs .ant-tabs-content-holder {
+  display: flex;
+  min-height: 0;
+}
+
+.statement-tabs .ant-tabs-content {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+.statement-tabs .ant-tabs-tabpane {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
