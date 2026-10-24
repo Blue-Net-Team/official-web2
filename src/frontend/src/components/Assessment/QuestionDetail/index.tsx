@@ -28,6 +28,7 @@ import { usePresignedUpload } from '@/hooks/usePresignedUpload'
 import type {
   AssessmentQuestionDTO,
   AssessmentAnswerDTO,
+  BaseQuestionContent,
   FileUploadContent,
   AlgorithmContent,
   AssessmentTimeDTO,
@@ -657,7 +658,8 @@ export default function QuestionDetailPage() {
     )
   }
 
-  const fileContent = question.content as FileUploadContent | null
+  // 题干是四类题型共有的字段（BaseQuestionContent.content），由「题目描述」面板唯一渲染
+  const questionContent = question.content as BaseQuestionContent | null
   const isFileUpload = question.questionType === 'FILE_UPLOAD'
   const isSingleChoice = question.questionType === 'SINGLE_CHOICE'
   const isMultipleChoice = question.questionType === 'MULTIPLE_CHOICE'
@@ -686,88 +688,171 @@ export default function QuestionDetailPage() {
   const isTeamLeader = isInTeam && teamInfo?.leaderId === userInfo?.id
   const canUploadFile = !allowTeam || isTeamLeader
   const showTeamPanel = allowTeam && isFileUpload
-  const showTeamActionInUpload = allowTeam && isFileUpload && !isInTeam && !isExpired
 
-  // 题目级配置优先，缺省使用压缩包白名单常量
-  const effectiveAllowedExtensions =
-    fileContent?.allowedExtensions && fileContent.allowedExtensions.length > 0
-      ? fileContent.allowedExtensions
-      : ALLOWED_ARCHIVE_EXTENSIONS
+  // 上传约束与上传组件配置只属于文件上传题：以下派生值全部定义在函数作用域内，
+  // 算法题/选择题的代码路径无法引用，避免上传信息渗漏到其它题型
+  const renderFileUploadAnswer = () => {
+    const fileContent = question.content as FileUploadContent | null
+    const showTeamActionInUpload = allowTeam && !isInTeam && !isExpired
 
-  const allowedExtsText = `支持 ${effectiveAllowedExtensions.join(', ')} 等压缩包格式`
-  const maxSizeText = fileContent?.maxFileSize
-    ? `最大 ${formatFileSize(fileContent.maxFileSize)}`
-    : ''
-  const uploadHintText = [allowedExtsText, maxSizeText].filter(Boolean).join('，')
+    // 题目级配置优先，缺省使用压缩包白名单常量
+    const effectiveAllowedExtensions =
+      fileContent?.allowedExtensions && fileContent.allowedExtensions.length > 0
+        ? fileContent.allowedExtensions
+        : ALLOWED_ARCHIVE_EXTENSIONS
 
-  const uploadPhase = getUploadPhase(isExpired, isAnswered, isResubmitting, !!uploadedFile)
+    const allowedExtsText = `支持 ${effectiveAllowedExtensions.join(', ')} 等压缩包格式`
+    const maxSizeText = fileContent?.maxFileSize
+      ? `最大 ${formatFileSize(fileContent.maxFileSize)}`
+      : ''
+    const uploadHintText = [allowedExtsText, maxSizeText].filter(Boolean).join('，')
+
+    const uploadPhase = getUploadPhase(isExpired, isAnswered, isResubmitting, !!uploadedFile)
+
+    const draggerProps: UploadProps = {
+      name: 'file',
+      multiple: false,
+      showUploadList: false,
+      accept: effectiveAllowedExtensions.map((ext) => `.${ext}`).join(','),
+      customRequest: async ({ file, onSuccess, onError }) => {
+        try {
+          const fileId = await upload(file as File, 'WORK')
+          if (fileId != null) {
+            setUploadedFile({
+              id: fileId,
+              name: (file as File).name,
+              size: (file as File).size,
+            })
+            message.success('文件上传成功')
+            onSuccess?.({ id: fileId })
+          } else {
+            onError?.(new Error('上传失败'))
+          }
+        } catch (error) {
+          // 透传底层错误信息；内部错误码与用户主动取消不弹提示
+          const rawMsg = error instanceof Error ? error.message : ''
+          if (rawMsg !== 'UPLOAD_ABORTED') {
+            message.error(rawMsg || '上传失败，请重试')
+          }
+          onError?.(error as Error)
+        }
+      },
+      beforeUpload: (file) => {
+        if (!isAllowedArchive(file.name, effectiveAllowedExtensions)) {
+          message.error('仅支持 zip、rar、7z 等压缩包格式，请将文件压缩后再上传')
+          return Upload.LIST_IGNORE
+        }
+        if (file.size === 0) {
+          message.error('文件内容为空，请压缩后重新选择')
+          return Upload.LIST_IGNORE
+        }
+        if (fileContent?.maxFileSize && file.size > fileContent.maxFileSize) {
+          message.error(`文件大小不能超过 ${formatFileSize(fileContent.maxFileSize)}`)
+          return Upload.LIST_IGNORE
+        }
+        return true
+      },
+      onDrop: (e) => {
+        // 文件夹拖拽检测：Chromium/WebKit 支持 webkitGetAsEntry；不支持时由 beforeUpload 兜底
+        const items = e.dataTransfer?.items
+        const entry = items?.[0]?.webkitGetAsEntry?.()
+        if (entry?.isDirectory) {
+          e.preventDefault()
+          e.stopPropagation()
+          message.error('不支持上传文件夹，请压缩后上传')
+        }
+      },
+    }
+
+    const dropHintText = [
+      `${effectiveAllowedExtensions.join(', ')} 压缩包`,
+      fileContent?.maxFileSize ? `最大 ${formatFileSize(fileContent.maxFileSize)}` : '',
+    ]
+      .filter(Boolean)
+      .join(' · ')
+
+    return (
+      <SmokedGlassCard
+        radius={12}
+        className="h-fit"
+        style={{ '--sgc-padding': '28px' } as CSSProperties}
+      >
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2.5">
+            <UploadOutlined className="text-xl text-[#6677ff]" />
+            <h2 className="text-base font-semibold text-white m-0">上传答案</h2>
+          </div>
+          <span className="text-xs text-white/30 flex-shrink-0">{uploadHintText}</span>
+        </div>
+        <hr className="w-full h-px bg-white/[0.04] border-none m-0" />
+        <div className="flex-1 pt-[18px]">
+          {/* 允许组队但未在队伍中：显示创建/加入队伍按钮 */}
+          {showTeamActionInUpload ? (
+            <div className="flex flex-col items-center gap-4 py-8 px-4 rounded-[10px] border border-white/[0.15]">
+              <TeamOutlined className="text-[32px] text-[#6677ff]/40" />
+              <p className="text-[13px] text-white/45 m-0">本考核允许组队，请先创建或加入队伍</p>
+              <div className="flex gap-3">
+                <Button
+                  type="primary"
+                  icon={<PlusOutlined />}
+                  onClick={() => router.push(`/assessment/${timeId}/questions`)}
+                >
+                  去创建/加入队伍
+                </Button>
+              </div>
+            </div>
+          ) : /* 在队伍中但不是队长：只读显示 */
+          allowTeam && isInTeam && !isTeamLeader ? (
+            <div className="flex flex-col gap-4">
+              {answer?.fileId ? (
+                <div className="flex items-center gap-4 p-5 rounded-[10px] bg-[#07c160]/[0.06] border border-[#07c160]/[0.12]">
+                  <CheckCircleOutlined className="text-[32px] text-[#07c160]" />
+                  <div className="flex-1">
+                    <p className="text-base font-semibold text-[#07c160] mb-1">队长已提交</p>
+                    <p className="text-[13px] text-white/45 m-0">
+                      提交时间：
+                      {answer?.submitTime
+                        ? new Date(answer.submitTime).toLocaleString('zh-CN')
+                        : '-'}
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center gap-4 p-5 rounded-[10px] border border-white/[0.15]">
+                  <TeamOutlined className="text-[32px] text-white/20" />
+                  <div>
+                    <p className="text-base font-semibold text-white/45 mb-1">等待队长提交</p>
+                    <p className="text-[13px] text-white/30 m-0">您无上传权限，请联系队长</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            /* 普通情况或队长：正常上传 */
+            <FileUploadArea
+              uploadPhase={uploadPhase}
+              uploadedFile={uploadedFile}
+              uploadProgress={uploadProgress}
+              presignedPhase={presignedPhase}
+              isExpired={isExpired}
+              answer={answer}
+              dropHintText={dropHintText}
+              draggerProps={draggerProps}
+              onResubmit={() => setIsResubmitting(true)}
+              onRemoveFile={handleRemoveFile}
+              onSetUploadedFile={setUploadedFile}
+            />
+          )}
+        </div>
+      </SmokedGlassCard>
+    )
+  }
+
   const visibleJudgeCaseResults = judgeResult
     ? judgeResult.caseResults.filter(
         (caseResult) => judgeResult.testcaseType !== 'FORMAL' || caseResult.status !== 'AC'
       )
     : []
-
-  const draggerProps: UploadProps = {
-    name: 'file',
-    multiple: false,
-    showUploadList: false,
-    accept: effectiveAllowedExtensions.map((ext) => `.${ext}`).join(','),
-    customRequest: async ({ file, onSuccess, onError }) => {
-      try {
-        const fileId = await upload(file as File, 'WORK')
-        if (fileId != null) {
-          setUploadedFile({
-            id: fileId,
-            name: (file as File).name,
-            size: (file as File).size,
-          })
-          message.success('文件上传成功')
-          onSuccess?.({ id: fileId })
-        } else {
-          onError?.(new Error('上传失败'))
-        }
-      } catch (error) {
-        // 透传底层错误信息；内部错误码与用户主动取消不弹提示
-        const rawMsg = error instanceof Error ? error.message : ''
-        if (rawMsg !== 'UPLOAD_ABORTED') {
-          message.error(rawMsg || '上传失败，请重试')
-        }
-        onError?.(error as Error)
-      }
-    },
-    beforeUpload: (file) => {
-      if (!isAllowedArchive(file.name, effectiveAllowedExtensions)) {
-        message.error('仅支持 zip、rar、7z 等压缩包格式，请将文件压缩后再上传')
-        return Upload.LIST_IGNORE
-      }
-      if (file.size === 0) {
-        message.error('文件内容为空，请压缩后重新选择')
-        return Upload.LIST_IGNORE
-      }
-      if (fileContent?.maxFileSize && file.size > fileContent.maxFileSize) {
-        message.error(`文件大小不能超过 ${formatFileSize(fileContent.maxFileSize)}`)
-        return Upload.LIST_IGNORE
-      }
-      return true
-    },
-    onDrop: (e) => {
-      // 文件夹拖拽检测：Chromium/WebKit 支持 webkitGetAsEntry；不支持时由 beforeUpload 兜底
-      const items = e.dataTransfer?.items
-      const entry = items?.[0]?.webkitGetAsEntry?.()
-      if (entry?.isDirectory) {
-        e.preventDefault()
-        e.stopPropagation()
-        message.error('不支持上传文件夹，请压缩后上传')
-      }
-    },
-  }
-
-  const dropHintText = [
-    `${effectiveAllowedExtensions.join(', ')} 压缩包`,
-    fileContent?.maxFileSize ? `最大 ${formatFileSize(fileContent.maxFileSize)}` : '',
-  ]
-    .filter(Boolean)
-    .join(' · ')
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] relative flex flex-col">
@@ -840,25 +925,7 @@ export default function QuestionDetailPage() {
                 <h2 className="text-base font-semibold text-white m-0">{question.title}</h2>
               </div>
               <hr className="w-full h-px bg-white/[0.04] border-none m-0 my-4" />
-              <div className="flex flex-col gap-4">
-                <MarkdownRenderer content={fileContent?.content} emptyText="暂无题目描述" />
-                {
-                  <div className="flex gap-2 text-[13px] text-white/45">
-                    <span className="flex-shrink-0 text-white/45">允许的文件类型：</span>
-                    <span className="text-white/65 leading-relaxed">
-                      {effectiveAllowedExtensions.join(', ')}
-                    </span>
-                  </div>
-                }
-                {fileContent?.maxFileSize && (
-                  <div className="flex gap-2 text-[13px] text-white/45">
-                    <span className="flex-shrink-0 text-white/45">最大文件大小：</span>
-                    <span className="text-white/65 leading-relaxed">
-                      {formatFileSize(fileContent.maxFileSize)}
-                    </span>
-                  </div>
-                )}
-              </div>
+              <MarkdownRenderer content={questionContent?.content} emptyText="暂无题目描述" />
             </SmokedGlassCard>
 
             {/* 附件下载 */}
@@ -889,87 +956,7 @@ export default function QuestionDetailPage() {
 
             {/* 答题区域 - 根据题型渲染不同组件 */}
             {isFileUpload ? (
-              <SmokedGlassCard
-                radius={12}
-                className="h-fit"
-                style={{ '--sgc-padding': '28px' } as CSSProperties}
-              >
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-2.5">
-                    <UploadOutlined className="text-xl text-[#6677ff]" />
-                    <h2 className="text-base font-semibold text-white m-0">上传答案</h2>
-                  </div>
-                  <span className="text-xs text-white/30 flex-shrink-0">{uploadHintText}</span>
-                </div>
-                <hr className="w-full h-px bg-white/[0.04] border-none m-0" />
-                <div className="flex-1 pt-[18px]">
-                  {/* 允许组队但未在队伍中：显示创建/加入队伍按钮 */}
-                  {showTeamActionInUpload ? (
-                    <div className="flex flex-col items-center gap-4 py-8 px-4 rounded-[10px] border border-white/[0.15]">
-                      <TeamOutlined className="text-[32px] text-[#6677ff]/40" />
-                      <p className="text-[13px] text-white/45 m-0">
-                        本考核允许组队，请先创建或加入队伍
-                      </p>
-                      <div className="flex gap-3">
-                        <Button
-                          type="primary"
-                          icon={<PlusOutlined />}
-                          onClick={() => router.push(`/assessment/${timeId}/questions`)}
-                        >
-                          去创建/加入队伍
-                        </Button>
-                      </div>
-                    </div>
-                  ) : /* 在队伍中但不是队长：只读显示 */
-                  allowTeam && isInTeam && !isTeamLeader ? (
-                    <div className="flex flex-col gap-4">
-                      {answer?.fileId ? (
-                        <div className="flex items-center gap-4 p-5 rounded-[10px] bg-[#07c160]/[0.06] border border-[#07c160]/[0.12]">
-                          <CheckCircleOutlined className="text-[32px] text-[#07c160]" />
-                          <div className="flex-1">
-                            <p className="text-base font-semibold text-[#07c160] mb-1">
-                              队长已提交
-                            </p>
-                            <p className="text-[13px] text-white/45 m-0">
-                              提交时间：
-                              {answer?.submitTime
-                                ? new Date(answer.submitTime).toLocaleString('zh-CN')
-                                : '-'}
-                            </p>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-4 p-5 rounded-[10px] border border-white/[0.15]">
-                          <TeamOutlined className="text-[32px] text-white/20" />
-                          <div>
-                            <p className="text-base font-semibold text-white/45 mb-1">
-                              等待队长提交
-                            </p>
-                            <p className="text-[13px] text-white/30 m-0">
-                              您无上传权限，请联系队长
-                            </p>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    /* 普通情况或队长：正常上传 */
-                    <FileUploadArea
-                      uploadPhase={uploadPhase}
-                      uploadedFile={uploadedFile}
-                      uploadProgress={uploadProgress}
-                      presignedPhase={presignedPhase}
-                      isExpired={isExpired}
-                      answer={answer}
-                      dropHintText={dropHintText}
-                      draggerProps={draggerProps}
-                      onResubmit={() => setIsResubmitting(true)}
-                      onRemoveFile={handleRemoveFile}
-                      onSetUploadedFile={setUploadedFile}
-                    />
-                  )}
-                </div>
-              </SmokedGlassCard>
+              renderFileUploadAnswer()
             ) : isChoiceQuestion ? (
               <ChoiceQuestion
                 question={question}

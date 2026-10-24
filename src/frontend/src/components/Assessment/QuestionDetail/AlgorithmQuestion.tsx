@@ -3,7 +3,6 @@
 import type { CSSProperties } from 'react'
 import { Select } from 'antd'
 import { ExperimentOutlined } from '@ant-design/icons'
-import { MarkdownRenderer } from '@/components/Assessment'
 import SmokedGlassCard from '@/components/SmokedGlassCard'
 import CodeEditor from '@/components/CodeEditor'
 import { RESULT_LABELS, RESULT_COLOR_CLASSES } from './constants'
@@ -61,12 +60,11 @@ export default function AlgorithmQuestion({
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-2.5">
           <ExperimentOutlined className="text-xl text-[#6677ff]" />
-          <h2 className="text-base font-semibold text-white m-0">算法题</h2>
+          <h2 className="text-base font-semibold text-white m-0">代码作答</h2>
         </div>
         <div className="text-xs text-white/45">正式资源限制由判题配置决定</div>
       </div>
       <hr className="w-full h-px bg-white/[0.04] border-none m-0" />
-      <MarkdownRenderer content={algorithmContent?.content} emptyText="暂无题目描述" />
       {(algorithmContent?.inputDescription ||
         algorithmContent?.outputDescription ||
         algorithmContent?.constraints) && (
