@@ -56,6 +56,8 @@ public class TestDataGenerationWorkflow {
     public void handle(Long configId) {
         try {
             List<JudgeTestCaseRecord> oldTestCases = judgeMetadataRepository.findTestCasesByConfigId(configId);
+            // 先清理上一版资产，再生成并写入本次对象；顺序不可倒置。
+            deleteOldTestcaseAssets(oldTestCases);
 
             JudgeManifestBundle bundle = judgeManifestLoader.load(configId);
             List<GeneratedTestCaseWrite> generatedTestCases = generateTestCases(bundle);
@@ -64,8 +66,6 @@ public class TestDataGenerationWorkflow {
             txTemplate.executeWithoutResult(status -> {
                 judgeMetadataRepository.replaceGeneratedTestCases(configId, generatedTestCases);
             });
-
-            deleteOldTestcaseAssets(oldTestCases);
 
             log.info(
                     "测试数据生成完成，配置编号={}，标准解语言={}，测试用例数量={}",
@@ -81,10 +81,19 @@ public class TestDataGenerationWorkflow {
     }
 
     /**
-     * 删除旧的测试用例 OSS 资产，失败仅记录日志不影响主流程。
+     * 生成前清理上一版测试用例 OSS 资产，失败仅记录日志不影响主流程。
+     * <p>
+     * 测试用例对象键是内容寻址的（{@code questions/{questionId}/current/testcases/{caseNo}-{sha256}.in|out}），
+     * generator 源码与 generatorArgs 不变时新旧键完全相同，因此清理必须在写入之前完成，
+     * 否则会把本次刚上传的活对象删掉，导致后续 benchmark 读取抛 NoSuchKey。
+     * </p>
+     * <p>
+     * 该顺序依赖「清理之后本次生成必然写入对象」这一前提。若将来引入「内容哈希相同则跳过上传」
+     * 的优化，必须重新评估此处顺序，否则会重现对象被删后不再写回的缺陷。
+     * </p>
      *
      * @param oldTestCases
-     *            已生成的旧测试用例记录列表。
+     *            上一版测试用例记录列表。
      */
     private void deleteOldTestcaseAssets(List<JudgeTestCaseRecord> oldTestCases) {
         if (oldTestCases == null || oldTestCases.isEmpty()) {
@@ -199,6 +208,7 @@ public class TestDataGenerationWorkflow {
             byte[] input,
             byte[] output) {
         int caseNo = testcase.path("caseNo").asInt();
+        // 对象键内容寻址：内容相同则键相同。该特性依赖「清理旧键发生在本次写入之前」（见 deleteOldTestcaseAssets）。
         String baseKey = "questions/%d/current/testcases/%04d".formatted(bundle.config().getQuestionId(), caseNo);
         String inputHash = sha256(input);
         String outputHash = sha256(output);
