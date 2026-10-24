@@ -5,6 +5,7 @@ import { Select } from 'antd'
 import { ExperimentOutlined } from '@ant-design/icons'
 import SmokedGlassCard from '@/components/SmokedGlassCard'
 import CodeEditor from '@/components/CodeEditor'
+import { MarkdownRenderer } from '@/components/Assessment'
 import { RESULT_LABELS, RESULT_COLOR_CLASSES } from './constants'
 import type { AlgorithmQuestionProps } from './types'
 import type { AlgorithmContent } from '@/apis/schema/assessment.dto'
@@ -72,25 +73,31 @@ export default function AlgorithmQuestion({
           {algorithmContent.inputDescription && (
             <div className="rounded-lg border border-white/[0.15] p-4">
               <p className="text-xs text-white/35 mb-2">输入说明</p>
-              <p className="text-sm text-white/65 whitespace-pre-wrap m-0">
-                {algorithmContent.inputDescription}
-              </p>
+              <MarkdownRenderer
+                content={algorithmContent.inputDescription}
+                compact
+                className="text-sm text-white/65"
+              />
             </div>
           )}
           {algorithmContent.outputDescription && (
             <div className="rounded-lg border border-white/[0.15] p-4">
               <p className="text-xs text-white/35 mb-2">输出说明</p>
-              <p className="text-sm text-white/65 whitespace-pre-wrap m-0">
-                {algorithmContent.outputDescription}
-              </p>
+              <MarkdownRenderer
+                content={algorithmContent.outputDescription}
+                compact
+                className="text-sm text-white/65"
+              />
             </div>
           )}
           {algorithmContent.constraints && (
             <div className="rounded-lg border border-white/[0.15] p-4">
               <p className="text-xs text-white/35 mb-2">数据范围</p>
-              <p className="text-sm text-white/65 whitespace-pre-wrap m-0">
-                {algorithmContent.constraints}
-              </p>
+              <MarkdownRenderer
+                content={algorithmContent.constraints}
+                compact
+                className="text-sm text-white/65"
+              />
             </div>
           )}
         </div>

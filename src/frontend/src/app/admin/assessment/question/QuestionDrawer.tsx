@@ -675,6 +675,31 @@ export default function QuestionDrawer({
       </Form.Item>
     )
 
+  /**
+   * 算法题题面补充字段（输入说明 / 输出说明 / 数据范围）。
+   *
+   * 与 renderStemField 结构对称：编辑态实时预览 Markdown，查看态直接输出渲染结果，
+   * 不留下被 disabled 的空输入框。rows=3 使编辑器高度与原来的 TextArea 一致。
+   */
+  const renderStatementField = (
+    name: 'inputDescription' | 'outputDescription' | 'constraints',
+    label: string,
+    placeholder: string
+  ) =>
+    isViewMode ? (
+      <Form.Item label={label} shouldUpdate>
+        {({ getFieldValue }) => (
+          <div className="overflow-x-auto">
+            <MarkdownRenderer content={getFieldValue(name) as string} />
+          </div>
+        )}
+      </Form.Item>
+    ) : (
+      <Form.Item name={name} label={label}>
+        <QuestionStemMarkdownEditor rows={3} placeholder={placeholder} />
+      </Form.Item>
+    )
+
   const renderAlgorithmTestCases = (
     name: 'examples' | 'runTestCases',
     label: string,
@@ -741,15 +766,17 @@ export default function QuestionDrawer({
   const renderAlgorithmStatementFields = () => (
     <>
       {renderStemField('algorithmContent', 10, '输入题目描述，支持 Markdown')}
-      <Form.Item name="inputDescription" label="输入说明">
-        <Input.TextArea rows={3} placeholder="描述标准输入格式" disabled={isViewMode} />
-      </Form.Item>
-      <Form.Item name="outputDescription" label="输出说明">
-        <Input.TextArea rows={3} placeholder="描述标准输出格式" disabled={isViewMode} />
-      </Form.Item>
-      <Form.Item name="constraints" label="数据范围">
-        <Input.TextArea rows={3} placeholder="描述数据范围和约束" disabled={isViewMode} />
-      </Form.Item>
+      {renderStatementField(
+        'inputDescription',
+        '输入说明',
+        '描述标准输入格式，支持 Markdown 与公式'
+      )}
+      {renderStatementField(
+        'outputDescription',
+        '输出说明',
+        '描述标准输出格式，支持 Markdown 与公式'
+      )}
+      {renderStatementField('constraints', '数据范围', '描述数据范围和约束，支持 Markdown 与公式')}
       {renderAlgorithmTestCases('examples', '题面样例', '添加样例', true)}
       {renderAlgorithmTestCases('runTestCases', '默认运行用例', '添加默认运行用例')}
       <Form.List name="starterCodeTemplates">
