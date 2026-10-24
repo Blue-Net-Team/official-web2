@@ -3,7 +3,7 @@
 考生答题页：渲染题面与各类题型作答工作区（代码作答、选项作答、文件上传），展示判题结果，并规定页面容器与内层元素的视觉分层规则。
 ## Requirements
 ### Requirement: Algorithm question editor experience for candidates
-The assessment question detail page SHALL render an algorithm question workspace with statement, examples, language selector, starter code, code editor, run controls, submit controls, and result panels. The input description, output description, and constraints sections SHALL render as Markdown with LaTeX math support.
+The assessment question detail page SHALL render an algorithm question workspace with statement, examples, language selector, starter code, code editor, run controls, submit controls, and result panels. The statement, input description, output description, constraints, and examples SHALL render through shared stateless statement components, and the three sections SHALL render as Markdown with LaTeX math support.
 
 #### Scenario: Candidate opens algorithm question with one template
 - **WHEN** the algorithm question provides only a Python starter template
@@ -16,6 +16,14 @@ The assessment question detail page SHALL render an algorithm question workspace
 #### Scenario: Statement sections render Markdown with math
 - **WHEN** a candidate opens an algorithm question whose input description, output description, or constraints contain Markdown and LaTeX math
 - **THEN** the page SHALL render those sections as formatted content with typeset formulas instead of literal Markdown and formula source text
+
+#### Scenario: Statement renders through shared components
+- **WHEN** a candidate opens an algorithm question detail page
+- **THEN** the stem card, the three statement sections, and the example blocks SHALL be rendered by the same shared statement components the admin preview uses, and the code workspace SHALL be rendered separately from the statement
+
+#### Scenario: Statement visual output is unchanged by the extraction
+- **WHEN** the statement rendering is moved into shared components
+- **THEN** the candidate-facing DOM structure, spacing, borders, and icons of the stem card, statement sections, and example blocks SHALL remain identical to the previous inline rendering
 
 #### Scenario: Statement sections stay inside their narrow columns
 - **WHEN** a statement section containing a display formula is rendered in the three-column statement grid on a desktop viewport
