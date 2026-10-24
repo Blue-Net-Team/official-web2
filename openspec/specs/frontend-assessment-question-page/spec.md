@@ -1,9 +1,11 @@
 ## Purpose
 
-定义考生考题详情页（`/assessment/[timeId]/questions/[questionId]`）在四类题型（文件上传 / 单选 / 多选 / 算法）下的展示与交互要求：题干渲染来源、作答工作区内容、算法题运行与提交链路、判题结果展示，以及页面容器面板的玻璃材质规范。
+定义考生考题详情页（`/assessment/[timeId]/questions/[questionId]`）在四类题型（文件上传 / 单选 / 多选 / 算法）下的展示与交互要求：题干唯一渲染来源、共享题面组件与 Markdown/LaTeX 数学渲染、各题型作答工作区、算法题运行与提交链路、判题结果展示，以及页面容器与内层元素的视觉分层规则。
+
 ## Requirements
+
 ### Requirement: Algorithm question editor experience for candidates
-The assessment question detail page SHALL render an algorithm question workspace with examples, language selector, starter code, code editor, run controls, submit controls, and result panels. The question statement SHALL be rendered by the shared question description panel instead of the algorithm workspace.
+The assessment question detail page SHALL render an algorithm question workspace with examples, language selector, starter code, code editor, run controls, submit controls, and result panels. The question stem SHALL be rendered by the shared stem card instead of the algorithm workspace. The input description, output description, constraints, and examples SHALL render through shared stateless statement components, and the three sections SHALL render as Markdown with LaTeX math support.
 
 #### Scenario: Candidate opens algorithm question with one template
 - **WHEN** the algorithm question provides only a Python starter template
@@ -16,6 +18,38 @@ The assessment question detail page SHALL render an algorithm question workspace
 #### Scenario: Algorithm workspace heading
 - **WHEN** the algorithm answer workspace is rendered
 - **THEN** its heading SHALL be an action phrase consistent with the other answer panels and MUST NOT repeat the question type label already shown in the page header
+
+#### Scenario: Statement sections render Markdown with math
+- **WHEN** a candidate opens an algorithm question whose input description, output description, or constraints contain Markdown and LaTeX math
+- **THEN** the page SHALL render those sections as formatted content with typeset formulas instead of literal Markdown and formula source text
+
+#### Scenario: Statement renders through shared components
+- **WHEN** a candidate opens an algorithm question detail page
+- **THEN** the stem card, the three statement sections, and the example blocks SHALL be rendered by the same shared statement components the admin preview uses, and the code workspace SHALL be rendered separately from the statement
+
+#### Scenario: Statement visual output is unchanged by the extraction
+- **WHEN** the statement rendering is moved into shared components
+- **THEN** the candidate-facing DOM structure, spacing, borders, and icons of the stem card, statement sections, and example blocks SHALL remain identical to the previous inline rendering
+
+#### Scenario: Statement sections stay inside their narrow columns
+- **WHEN** a statement section containing a display formula is rendered in the three-column statement grid on a desktop viewport
+- **THEN** the section SHALL use the compact Markdown layout and SHALL keep the formula inside the column bounds via horizontal scrolling rather than overflowing or breaking the grid
+
+#### Scenario: Statement sections stack on narrow viewports
+- **WHEN** a candidate opens an algorithm question on a viewport below the medium breakpoint
+- **THEN** the statement sections SHALL stack vertically at full width and remain legible with the compact Markdown layout
+
+#### Scenario: Empty statement sections are omitted
+- **WHEN** an algorithm question leaves any of the input description, output description, or constraints empty
+- **THEN** the page SHALL omit that section and SHALL still render the sections that have content
+
+#### Scenario: Malformed formula in a statement section
+- **WHEN** a statement section contains an invalid LaTeX expression
+- **THEN** the page SHALL show the invalid expression highlighted as an error and continue rendering the remaining statement, examples, and answer controls
+
+#### Scenario: Default run testcases are not rendered
+- **WHEN** an algorithm question is configured with default run testcases
+- **THEN** the candidate-facing statement SHALL NOT display those testcases and they SHALL only be executed when the candidate triggers a default run
 
 ### Requirement: Run algorithm code from question page
 The assessment question detail page SHALL allow candidates to run algorithm code against system default testcases or custom input without submitting a scored answer.
@@ -131,4 +165,3 @@ The assessment question detail page SHALL display automatic judgement results fo
 
 - **WHEN** 题目内容未提供 `allowedExtensions`
 - **THEN** 上传作答区使用系统压缩包白名单展示提示，且该校验规则与上传组件的 `accept`/`beforeUpload` 保持一致
-
