@@ -1,7 +1,9 @@
-## ADDED Requirements
+## Purpose
 
+考生答题页：渲染题面与各类题型作答工作区（代码作答、选项作答、文件上传），展示判题结果，并规定页面容器与内层元素的视觉分层规则。
+## Requirements
 ### Requirement: Algorithm question editor experience for candidates
-The assessment question detail page SHALL render an algorithm question workspace with statement, examples, language selector, starter code, code editor, run controls, submit controls, and result panels.
+The assessment question detail page SHALL render an algorithm question workspace with statement, examples, language selector, starter code, code editor, run controls, submit controls, and result panels. The input description, output description, and constraints sections SHALL render as Markdown with LaTeX math support.
 
 #### Scenario: Candidate opens algorithm question with one template
 - **WHEN** the algorithm question provides only a Python starter template
@@ -10,6 +12,30 @@ The assessment question detail page SHALL render an algorithm question workspace
 #### Scenario: Candidate opens algorithm question with multiple templates
 - **WHEN** the algorithm question provides multiple starter templates
 - **THEN** the page SHALL allow the candidate to choose one of the configured languages
+
+#### Scenario: Statement sections render Markdown with math
+- **WHEN** a candidate opens an algorithm question whose input description, output description, or constraints contain Markdown and LaTeX math
+- **THEN** the page SHALL render those sections as formatted content with typeset formulas instead of literal Markdown and formula source text
+
+#### Scenario: Statement sections stay inside their narrow columns
+- **WHEN** a statement section containing a display formula is rendered in the three-column statement grid on a desktop viewport
+- **THEN** the section SHALL use the compact Markdown layout and SHALL keep the formula inside the column bounds via horizontal scrolling rather than overflowing or breaking the grid
+
+#### Scenario: Statement sections stack on narrow viewports
+- **WHEN** a candidate opens an algorithm question on a viewport below the medium breakpoint
+- **THEN** the statement sections SHALL stack vertically at full width and remain legible with the compact Markdown layout
+
+#### Scenario: Empty statement sections are omitted
+- **WHEN** an algorithm question leaves any of the input description, output description, or constraints empty
+- **THEN** the page SHALL omit that section and SHALL still render the sections that have content
+
+#### Scenario: Malformed formula in a statement section
+- **WHEN** a statement section contains an invalid LaTeX expression
+- **THEN** the page SHALL show the invalid expression highlighted as an error and continue rendering the remaining statement, examples, and answer controls
+
+#### Scenario: Default run testcases are not rendered
+- **WHEN** an algorithm question is configured with default run testcases
+- **THEN** the candidate-facing statement SHALL NOT display those testcases and they SHALL only be executed when the candidate triggers a default run
 
 ### Requirement: Run algorithm code from question page
 The assessment question detail page SHALL allow candidates to run algorithm code against system default testcases or custom input without submitting a scored answer.
@@ -39,6 +65,7 @@ The assessment question detail page SHALL display automatic judgement results fo
 #### Scenario: Choice answer is submitted
 - **WHEN** the candidate submits a single choice or multiple choice answer
 - **THEN** the page SHALL show whether the answer was judged correct and the awarded score after the backend returns the judgement
+
 ### Requirement: 考生考题页面容器级玻璃材质统一为烟色玻璃
 
 考生考题页面（assessment questions 列表页与 QuestionDetail 作答页）的所有容器级面板 SHALL 使用 `SmokedGlassCard` 组件渲染，MUST NOT 使用无底色纯透明玻璃配方（`bg-white/[0.0x]` + 细边框、无深色保底底色的容器壳）。考题页作为 DarkVeil 全屏场景，所有容器面板统一使用 deep（浓烟）档：不透明深色实底可阻挡背景光斑染色，保证任何帧下视觉稳定。
@@ -60,7 +87,7 @@ The assessment question detail page SHALL display automatic judgement results fo
 
 ### Requirement: 面板内层元素分层规则
 
-面板内部的元素按"容器 / 内层格子 / 内联点缀"三级处理：仅容器级元素使用 SmokedGlassCard；内层格子去底留框；内联点缀与 antd 原子组件保持原样。
+面板内部的元素 SHALL 按"容器 / 内层格子 / 内联点缀"三级处理：仅容器级元素使用 SmokedGlassCard；内层格子去底留框；内联点缀与 antd 原子组件保持原样。
 
 #### Scenario: 内层格子去底留框
 
@@ -76,3 +103,4 @@ The assessment question detail page SHALL display automatic judgement results fo
 
 - **WHEN** 面板内存在 antd 原子组件（Select、Tag、Button、Upload、Collapse、Tooltip、Modal 等）
 - **THEN** 组件样式由全局 ConfigProvider（darkAlgorithm）token 驱动，不做任何组件级样式覆盖
+
