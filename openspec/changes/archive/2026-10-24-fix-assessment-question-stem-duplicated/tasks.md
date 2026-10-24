@@ -2,7 +2,7 @@
 
 - [x] 1.1 在 `src/frontend/src/components/Assessment/QuestionDetail/index.tsx` 中，将通用「题目描述」面板的题干取值由 `fileContent?.content` 改为按 `BaseQuestionContent` 窄化取 `content`（`questionContent?.content`），移除对 `FileUploadContent` 的硬 cast 依赖
 - [x] 1.2 在 `src/frontend/src/components/Assessment/QuestionDetail/AlgorithmQuestion.tsx` 中删除 `<MarkdownRenderer content={algorithmContent?.content} emptyText="暂无题目描述" />`，并移除不再使用的 `MarkdownRenderer` 导入
-- [ ] 1.3 确认算法卡在无题干渲染后，首个内容块（输入/输出/数据范围网格或样例）与卡片头部的 `<hr>` 间距合理，无空段落或双分隔线
+- [x] 1.3 确认算法卡在无题干渲染后，首个内容块（输入/输出/数据范围网格或样例）与卡片头部的 `<hr>` 间距合理，无空段落或双分隔线
 
 ## 2. 上传约束收归文件上传题
 
@@ -19,7 +19,7 @@
 
 ## 4. 逐题型自测
 
-- [ ] 4.1 算法题：题面只出现一次；无「允许的文件类型 / 最大文件大小」；输入输出说明、数据范围、样例、语言选择、编辑器、运行/提交控件齐全可用
+- [x] 4.1 算法题：题面只出现一次；无「允许的文件类型 / 最大文件大小」；输入输出说明、数据范围、样例、语言选择、编辑器、运行/提交控件齐全可用
 - [ ] 4.2 文件上传题：题面只出现一次；扩展名与大小提示仅在上传区可见；正常上传、非法扩展名、超大小、空文件、拖拽文件夹、重新提交均行为不变
 - [ ] 4.3 单选题与多选题：题面只出现一次；页面不再出现任何文件类型或大小提示；选项选中/提交/重新提交正常
 - [ ] 4.4 过期态（`isExpired`）：顶部横幅、只读编辑器、隐藏提交/重新提交按钮等行为不变
