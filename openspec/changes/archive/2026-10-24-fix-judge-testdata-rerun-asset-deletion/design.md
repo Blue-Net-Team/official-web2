@@ -76,12 +76,13 @@ questions/{questionId}/current/testcases/{caseNo:04d}-{sha256(内容)}.out
 
 ## Migration Plan
 
-1. 停 `bluenet-judge-service` 容器，使 `algorithm.judge.test-data` 不再被消费
-2. 清空该队列中残留消息（管理台 purge 或 `rabbitmqctl purge_queue`），确认无 unacked 积压
-3. 构建并部署包含本次修复的镜像，启动容器
-4. 对受影响的算法题（如 question 2 / judge config 1）在管理端重新触发一次「生成测试数据」；由于键为内容寻址，重新生成会把被删除的同名对象写回，无需手工修复数据或修改数据库
-5. 验证：配置状态由 `FAILED`/`GENERATING` 转为 `READY`（或 benchmark 后的等价正常态），judge-service 日志中不再出现 `NoSuchKey`，`tb_judge_test_case` 行数与 manifest 中 testcase 数量一致
-6. 回滚：若部署后出现异常，回退到上一个 `judge-0.1.5` 之前的镜像；已删除对象可通过再次触发生成重建，回滚不丢数据
+1. 部署包含本次修复的 judge-service 镜像（测试环境由 CD 完成，镜像标签形如 `judge-local-<yyyymmdd>-<commit>`）
+2. 观察 `algorithm.judge.test-data` 的 `messages_ready` / `messages_unacknowledged`：积压消息会被新镜像逐条消费，每条都应出现 `测试数据生成完成` 与 `Benchmark 完成，结果=READY`
+3. 确认队列归零且日志中不再出现 `NoSuchKey`；若队列长时间不归零，再执行「停消费者 → 只清 `test-data` 队列 → 重启消费者」，不可触碰 `algorithm.judge.formal` 与 `algorithm.judge.run`
+4. 对受影响的算法题（如 question 2 / judge config 1）确认配置状态为 `READY`，且 `tb_judge_test_case` 行数与 manifest 中 testcase 数量一致；由于键为内容寻址，重新生成会把曾删除的同名对象写回，无需手工修复数据
+5. 回滚：若部署后出现异常，回退到上一个镜像；已删除对象可通过再次触发生成重建，回滚不丢数据
+
+> 实测结论：本次部署后积压的 4 条消息在 5 秒内全部成功消费，队列自然归零，**无需提前 purge**。原计划中的「停消费者 + purge」仅作为兜底手段保留。
 
 ## Open Questions
 
