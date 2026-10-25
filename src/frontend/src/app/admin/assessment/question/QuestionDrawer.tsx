@@ -1,6 +1,14 @@
 'use client'
 
-import { useDeferredValue, useEffect, useMemo, useState, type ReactNode } from 'react'
+import {
+  useCallback,
+  useDeferredValue,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react'
 import {
   Alert,
   App,
@@ -211,6 +219,9 @@ const DEFAULT_FORM_VALUES: FormValues = {
 }
 
 const DEFAULT_GENERATOR_ARGS = '{\n  "n": 10\n}'
+
+/** 抽屉 body 的滚动容器选择器（唯一的纵向滚动容器）。 */
+const DRAWER_SCROLL_CONTAINER_SELECTOR = '.ant-drawer-body'
 
 /** 表单用数组编辑语言模板，提交给后端时需要合并为 starterCode map。 */
 function buildStarterCodeMap(templates: FormValues['starterCodeTemplates']) {
@@ -428,6 +439,14 @@ export default function QuestionDrawer({
 }: QuestionDrawerProps) {
   const { message: messageApi } = App.useApp()
   const [form] = Form.useForm<FormValues>()
+  /**
+   * `<Form ref>` 的回调拿到的是 antd 的 FormRef（form 实例 + `nativeElement`）。
+   * 这里只存住原生 `<form>` 节点，用来向上找抽屉的滚动容器。
+   */
+  const formNativeElementRef = useRef<HTMLElement | null>(null)
+  const attachFormRef = useCallback((instance: { nativeElement?: HTMLElement } | null) => {
+    formNativeElementRef.current = instance?.nativeElement ?? null
+  }, [])
   const screens = Grid.useBreakpoint()
   const [judgeConfig, setJudgeConfig] = useState<JudgeProblemConfigDTO | null>(null)
   const [judgeConfigLoading, setJudgeConfigLoading] = useState(false)
@@ -436,6 +455,20 @@ export default function QuestionDrawer({
 
   const isViewMode = mode === 'view'
   const isCreateMode = mode === 'create'
+
+  /**
+   * 把抽屉 body 的滚动位置复位到顶部。
+   *
+   * body 是唯一滚动容器，切 tab 后如果不复位，会从一个长 tab 的中段直接
+   * 落到新 tab 的中段，看起来像内容缺失。容器通过 Form 的 DOM 向上找最近的
+   * `.ant-drawer-body`，不用全局 query，避免多抽屉并存时认错容器。
+   */
+  const resetDrawerScroll = () => {
+    const scroller = formNativeElementRef.current?.closest(DRAWER_SCROLL_CONTAINER_SELECTOR)
+    if (scroller instanceof HTMLElement) {
+      scroller.scrollTo({ top: 0 })
+    }
+  }
   const questionTypeValue = Form.useWatch('questionType', form)
   const attachmentIdValue = Form.useWatch('attachmentId', form)
   const optionsValue = Form.useWatch('options', form)
@@ -1176,7 +1209,7 @@ export default function QuestionDrawer({
 
   const renderAlgorithmTabs = () => (
     <Tabs
-      className="statement-tabs flex flex-col flex-1 min-h-0"
+      onChange={resetDrawerScroll}
       items={[
         {
           key: 'statement',
@@ -1186,12 +1219,12 @@ export default function QuestionDrawer({
         {
           key: 'judge-config',
           label: '判题配置',
-          children: <div className="h-full overflow-y-auto">{renderJudgeConfigFields()}</div>,
+          children: renderJudgeConfigFields(),
         },
         {
           key: 'language-limits',
           label: '资源限制',
-          children: <div className="h-full overflow-y-auto">{renderLanguageLimitFields()}</div>,
+          children: renderLanguageLimitFields(),
         },
       ]}
     />
@@ -1359,10 +1392,12 @@ export default function QuestionDrawer({
   /**
    * 题面工作区：左列全部编辑控件，右列考生端版式预览。
    *
-   * 宽视口左右分栏、两列各自滚动；窄视口退化为「编辑 / 预览」二选一。
-   * 工作区带视口高度下限（min-h），屏幕够高时撑满抽屉剩余空间，屏幕较矮时
-   * 两列维持可用的编辑高度，超出部分交给抽屉 body 整体滚动 —— 既不会把编辑区
-   * 压成一条小窗口，也不会让右列预览被挤出可视范围。
+   * 宽视口左右分栏、窄视口退化为「编辑 / 预览」二选一。
+   * 三层高度/滚动职责在这里分清：
+   *   - 抽屉 body：唯一的纵向滚动容器，元信息与整个左列都随它滚
+   *   - 左列：不设溢出，随内容自然变长（编辑器都是 autoSize）
+   *   - 右列：sticky + 视口高度上限，自身保留滚动，编辑时始终看得见
+   * 全程不需要 flex 高度链，也不需要 min-h 魔法下限。
    */
   const renderStatementWorkspace = (editFields: ReactNode) => {
     if (isViewMode) return renderPreviewOnly()
@@ -1393,12 +1428,12 @@ export default function QuestionDrawer({
     }
 
     return (
-      <div className="flex gap-6 flex-1 min-h-[620px]">
-        <div className="w-1/2 min-w-0 overflow-y-auto pr-1" data-testid="statement-edit-pane">
+      <div className="flex gap-6">
+        <div className="w-1/2 min-w-0 pr-1" data-testid="statement-edit-pane">
           {editFields}
         </div>
         <div
-          className="w-1/2 min-w-0 overflow-y-auto border-l border-white/[0.08] pl-6"
+          className="question-drawer-preview-pane w-1/2 min-w-0 border-l border-white/[0.08] pl-6"
           data-testid="statement-preview-pane"
         >
           <p className="text-xs text-white/35 mb-3">考生端题面预览</p>
@@ -1423,12 +1458,8 @@ export default function QuestionDrawer({
       onClose={onClose}
       width={drawerWidth}
       styles={{
-        // 抽屉整体可纵向滚动：矮屏时先滚抽屉本体，左右两列仍各自独立滚动
-        body: {
-          ...(screens.lg && !isViewMode
-            ? { display: 'flex', flexDirection: 'column', overflowY: 'auto', overflowX: 'hidden' }
-            : {}),
-        },
+        // 抽屉 body 是唯一滚动容器；左右两列不再各自开滚动条
+        body: { overflowY: 'auto', overflowX: 'hidden' },
       }}
       footer={
         isViewMode ? (
@@ -1458,9 +1489,9 @@ export default function QuestionDrawer({
       }
     >
       <Form
+        ref={attachFormRef}
         form={form}
         layout="vertical"
-        className={screens.lg && !isViewMode ? 'flex flex-col flex-1 min-h-0' : undefined}
         disabled={isViewMode}
         initialValues={{
           questionType: 'FILE_UPLOAD',

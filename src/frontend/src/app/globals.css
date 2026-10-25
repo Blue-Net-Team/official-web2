@@ -253,24 +253,33 @@
 }
 
 /* ==========================================================================
- * 管理端「题面信息」tab 内的左右分栏需要撑满抽屉剩余高度，
- * 让左右两列各自滚动而不是整页滚动。antd Tabs 默认内容区不参与 flex 伸缩，
- * 这里为带 statement-tabs 类的 Tabs 打通 flex 链路。
+ * 管理端考题抽屉的滚动契约：抽屉 body 是唯一的纵向滚动容器。
+ *
+ * 抽屉里的 header/footer 固定，元信息、Tabs 导航条、左列编辑控件全部随 body
+ * 一起向上滚出视野（导航条不吸顶，否则会盖住上面的输入框）。不要再引入内层
+ * overflow 高度链（旧 .statement-tabs 补丁）。
  * ========================================================================== */
-.statement-tabs .ant-tabs-content-holder {
-  display: flex;
-  min-height: 0;
+:root {
+  /*
+   * 抽屉上下固定区（header + footer）+ body 内边距 + 预览列 sticky 让位，
+   * 共同决定预览列还能占多少高度。它是“视口铉除量”而不是内容高度：
+   *   header 57 + footer 50 + body padding 24×2 + sticky top 16 ≈ 171px
+   * 故意取整留几像素余量。改 Drawer 的 header/footer 尺寸时只改这一处。
+   */
+  --question-drawer-chrome-h: 171px;
 }
 
-.statement-tabs .ant-tabs-content {
-  display: flex;
-  flex: 1;
-  min-height: 0;
-}
-
-.statement-tabs .ant-tabs-tabpane {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  min-height: 0;
+/*
+ * 右列预览：sticky 在抽屉 body 的滚动容器里，高度封顶在抽屉可视区内（不会
+ * 撑到 footer 下面），超出部分自己滚 —— 左列可以无限变长，预览却始终留在
+ * 视野内。vh 与 dvh 两套声明只用于降级顺序。
+ */
+.question-drawer-preview-pane {
+  position: sticky;
+  top: 1rem;
+  align-self: flex-start;
+  max-height: calc(100vh - var(--question-drawer-chrome-h));
+  max-height: calc(100dvh - var(--question-drawer-chrome-h));
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
