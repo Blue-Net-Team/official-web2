@@ -20,7 +20,11 @@ The admin question drawer SHALL render the algorithm statement editing area as a
 
 #### Scenario: Panes scroll independently
 - **WHEN** the combined height of the left pane controls exceeds the available height
-- **THEN** the left pane SHALL scroll independently while the right pane keeps its own scroll position, and the drawer body itself SHALL not scroll
+- **THEN** the left pane SHALL grow with its content and scroll together with the drawer body, while the right pane SHALL stay pinned in view and keep its own vertical scroll bounded by the viewport height
+
+#### Scenario: Right pane stays visible for a long statement
+- **WHEN** the left pane content is taller than the viewport
+- **THEN** the right pane SHALL remain within the viewport while the drawer body scrolls, so the preview does not scroll out of view
 
 ### Requirement: Preview mirrors the candidate-facing statement
 The right pane preview SHALL reuse the same statement rendering components as the candidate-facing question page so that the preview and the candidate page cannot diverge.
