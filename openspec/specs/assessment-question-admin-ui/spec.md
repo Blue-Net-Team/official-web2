@@ -131,7 +131,7 @@ Step 3 SHALL 展示考题表格，包含题号、题型、标题、分值、附�
 - **THEN** Step 1 自动选中其方向，只能管理该方向考核时间下的考题
 
 ### Requirement: Markdown question stem editing
-The admin question drawer SHALL allow administrators to write Markdown content for every question type that has a stem content field, and additionally for the algorithm question statement fields `inputDescription`, `outputDescription`, and `constraints`, with all statement editing controls placed in the left pane of the statement editing area.
+The admin question drawer SHALL allow administrators to write Markdown content for every question type that has a stem content field, and additionally for the algorithm question statement fields `inputDescription`, `outputDescription`, `constraints`, and each example's `explanation`, with all statement editing controls placed in the left pane of the statement editing area.
 
 #### Scenario: Edit file upload question stem as Markdown
 - **WHEN** an administrator creates or edits a file upload question
@@ -149,6 +149,14 @@ The admin question drawer SHALL allow administrators to write Markdown content f
 - **WHEN** an administrator creates or edits an algorithm question
 - **THEN** the input description, output description, and constraints fields accept Markdown content including LaTeX math, and save the raw Markdown source to the existing `content.inputDescription`, `content.outputDescription`, and `content.constraints` string fields without changing the request contract
 
+#### Scenario: Edit example explanation as Markdown
+- **WHEN** an administrator writes the explanation of a statement example
+- **THEN** the field accepts Markdown content including LaTeX math and saves the raw source to the existing `content.examples[].explanation` string field without changing the request contract
+
+#### Scenario: Example input and expected output stay plain text
+- **WHEN** an administrator writes the input or expected output of a statement example
+- **THEN** those values remain plain text and are rendered as verbatim code, without Markdown or math interpretation
+
 #### Scenario: Statement editing controls share one column
 - **WHEN** an administrator edits an algorithm question on a viewport at or above the medium breakpoint
 - **THEN** the stem, input description, output description, constraints, examples, default run testcases, and language template controls all appear in the left pane and no field renders its own nested edit-preview split
@@ -159,6 +167,14 @@ The admin question drawer SHALL provide a candidate-facing statement preview in 
 #### Scenario: Desktop preview layout
 - **WHEN** an administrator edits a question on a desktop-size viewport
 - **THEN** the drawer uses a wide responsive layout and displays the statement editing controls and the rendered statement preview side by side
+
+#### Scenario: Drawer and panes scroll independently
+- **WHEN** an administrator edits a question on a viewport too short to show the whole statement area
+- **THEN** the drawer body itself scrolls vertically while the edit pane and the preview pane each keep their own independent vertical scrollbar with a usable minimum height instead of being squeezed into a short strip
+
+#### Scenario: Markdown editors grow with their content
+- **WHEN** an administrator writes a longer stem, statement description, or example explanation
+- **THEN** that Markdown editor grows in height up to a per-field cap instead of staying fixed at a few visible lines
 
 #### Scenario: Mobile preview layout
 - **WHEN** an administrator edits a question on a mobile-size viewport

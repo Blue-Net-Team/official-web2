@@ -5,7 +5,7 @@
 ## Requirements
 
 ### Requirement: Algorithm question editor experience for candidates
-The assessment question detail page SHALL render an algorithm question workspace with examples, language selector, starter code, code editor, run controls, submit controls, and result panels. The question stem SHALL be rendered by the shared stem card instead of the algorithm workspace. The input description, output description, constraints, and examples SHALL render through shared stateless statement components, and the three sections SHALL render as Markdown with LaTeX math support.
+The assessment question detail page SHALL render an algorithm question workspace with examples, language selector, starter code, code editor, run controls, submit controls, and result panels. The question stem SHALL be rendered by the shared stem card instead of the algorithm workspace. The input description, output description, constraints, and examples SHALL render through shared stateless statement components; the three sections and each example's explanation SHALL render as Markdown with LaTeX math support, while example input and expected output SHALL remain verbatim text.
 
 #### Scenario: Candidate opens algorithm question with one template
 - **WHEN** the algorithm question provides only a Python starter template
@@ -22,6 +22,14 @@ The assessment question detail page SHALL render an algorithm question workspace
 #### Scenario: Statement sections render Markdown with math
 - **WHEN** a candidate opens an algorithm question whose input description, output description, or constraints contain Markdown and LaTeX math
 - **THEN** the page SHALL render those sections as formatted content with typeset formulas instead of literal Markdown and formula source text
+
+#### Scenario: Example explanation renders Markdown with math
+- **WHEN** an algorithm question's statement example carries an explanation containing Markdown and LaTeX math
+- **THEN** the page SHALL render that explanation with typeset formulas instead of literal formula source text, and the example input and expected output SHALL stay verbatim
+
+#### Scenario: Example without explanation
+- **WHEN** a statement example has no explanation or only whitespace
+- **THEN** the example block renders input and expected output only, with no empty explanation area
 
 #### Scenario: Statement renders through shared components
 - **WHEN** a candidate opens an algorithm question detail page

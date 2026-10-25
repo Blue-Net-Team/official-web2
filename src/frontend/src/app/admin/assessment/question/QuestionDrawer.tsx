@@ -680,11 +680,17 @@ export default function QuestionDrawer({
    */
   const renderStemField = (
     name: 'fileContent' | 'choiceContent' | 'algorithmContent',
-    rows: number,
+    minRows: number,
     placeholder: string
   ) => (
     <Form.Item name={name} label="题干">
-      <Input.TextArea rows={rows} placeholder={placeholder} disabled={isViewMode} />
+      {/* 自动增高：Markdown 越写越长时编辑区随之变长（封顶后框内滚动），
+          不再被固定 rows 锁死在小窗口里 */}
+      <Input.TextArea
+        autoSize={{ minRows, maxRows: 40 }}
+        placeholder={placeholder}
+        disabled={isViewMode}
+      />
     </Form.Item>
   )
 
@@ -692,7 +698,7 @@ export default function QuestionDrawer({
    * 算法题题面补充字段（输入说明 / 输出说明 / 数据范围）。
    *
    * 与 renderStemField 结构对称：编辑态实时预览 Markdown，查看态直接输出渲染结果，
-   * 不留下被 disabled 的空输入框。rows=3 使编辑器高度与原来的 TextArea 一致。
+   * 不留下被 disabled 的空输入框。默认 3 行起步，内容变长时自动增高。
    */
   const renderStatementField = (
     name: 'inputDescription' | 'outputDescription' | 'constraints',
@@ -700,7 +706,11 @@ export default function QuestionDrawer({
     placeholder: string
   ) => (
     <Form.Item name={name} label={label}>
-      <Input.TextArea rows={3} placeholder={placeholder} disabled={isViewMode} />
+      <Input.TextArea
+        autoSize={{ minRows: 3, maxRows: 20 }}
+        placeholder={placeholder}
+        disabled={isViewMode}
+      />
     </Form.Item>
   )
 
@@ -757,7 +767,11 @@ export default function QuestionDrawer({
               </div>
               {includeExplanation && (
                 <Form.Item name={[field.name, 'explanation']} label="样例说明" className="mt-2">
-                  <Input.TextArea rows={2} placeholder="可选，支持普通文本" disabled={isViewMode} />
+                  <Input.TextArea
+                    autoSize={{ minRows: 2, maxRows: 12 }}
+                    placeholder="可选，支持 Markdown 与 LaTeX 公式"
+                    disabled={isViewMode}
+                  />
                 </Form.Item>
               )}
             </div>
@@ -769,7 +783,7 @@ export default function QuestionDrawer({
 
   const renderAlgorithmStatementFields = () => (
     <>
-      {renderStemField('algorithmContent', 10, '输入题目描述，支持 Markdown')}
+      {renderStemField('algorithmContent', 16, '输入题目描述，支持 Markdown')}
       {renderStatementField(
         'inputDescription',
         '输入说明',
@@ -1190,12 +1204,12 @@ export default function QuestionDrawer({
 
     switch (type) {
       case 'FILE_UPLOAD':
-        return renderStemField('fileContent', 10, '输入题目描述/要求，支持 Markdown')
+        return renderStemField('fileContent', 16, '输入题目描述/要求，支持 Markdown')
 
       case 'SINGLE_CHOICE':
         return (
           <>
-            {renderStemField('choiceContent', 8, '输入题目描述，支持 Markdown')}
+            {renderStemField('choiceContent', 12, '输入题目描述，支持 Markdown')}
             <Form.List name="options">
               {(fields, { add, remove }) => (
                 <>
@@ -1258,7 +1272,7 @@ export default function QuestionDrawer({
       case 'MULTIPLE_CHOICE':
         return (
           <>
-            {renderStemField('choiceContent', 8, '输入题目描述，支持 Markdown')}
+            {renderStemField('choiceContent', 12, '输入题目描述，支持 Markdown')}
             <Form.List name="options">
               {(fields, { add, remove }) => (
                 <>
@@ -1346,6 +1360,9 @@ export default function QuestionDrawer({
    * 题面工作区：左列全部编辑控件，右列考生端版式预览。
    *
    * 宽视口左右分栏、两列各自滚动；窄视口退化为「编辑 / 预览」二选一。
+   * 工作区带视口高度下限（min-h），屏幕够高时撑满抽屉剩余空间，屏幕较矮时
+   * 两列维持可用的编辑高度，超出部分交给抽屉 body 整体滚动 —— 既不会把编辑区
+   * 压成一条小窗口，也不会让右列预览被挤出可视范围。
    */
   const renderStatementWorkspace = (editFields: ReactNode) => {
     if (isViewMode) return renderPreviewOnly()
@@ -1376,7 +1393,7 @@ export default function QuestionDrawer({
     }
 
     return (
-      <div className="flex gap-6 flex-1 min-h-0">
+      <div className="flex gap-6 flex-1 min-h-[620px]">
         <div className="w-1/2 min-w-0 overflow-y-auto pr-1" data-testid="statement-edit-pane">
           {editFields}
         </div>
@@ -1406,9 +1423,10 @@ export default function QuestionDrawer({
       onClose={onClose}
       width={drawerWidth}
       styles={{
+        // 抽屉整体可纵向滚动：矮屏时先滚抽屉本体，左右两列仍各自独立滚动
         body: {
           ...(screens.lg && !isViewMode
-            ? { display: 'flex', flexDirection: 'column', overflow: 'hidden' }
+            ? { display: 'flex', flexDirection: 'column', overflowY: 'auto', overflowX: 'hidden' }
             : {}),
         },
       }}

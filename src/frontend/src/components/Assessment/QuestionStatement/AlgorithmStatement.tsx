@@ -77,10 +77,14 @@ export default function AlgorithmStatement({
           <p className="text-[11px] text-white/30 mt-3 mb-0">
             换行会按原样保留显示；判题会忽略首尾空白，但中间换行和内容顺序需要一致。
           </p>
-          {example.explanation && (
-            <p className="text-xs text-white/45 mt-3 mb-0 whitespace-pre-wrap">
-              {example.explanation}
-            </p>
+          {example.explanation?.trim() && (
+            <div className="mt-3">
+              <MarkdownRenderer
+                content={example.explanation}
+                compact
+                className="text-xs text-white/45"
+              />
+            </div>
           )}
         </div>
       ))}
