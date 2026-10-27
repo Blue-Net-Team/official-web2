@@ -2,7 +2,13 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { App, Button, Empty, Grid, Modal, Pagination, Select, Spin, Table, Tag } from 'antd'
-import { PlusOutlined, EditOutlined, DeleteOutlined, PaperClipOutlined } from '@ant-design/icons'
+import {
+  PlusOutlined,
+  EditOutlined,
+  DeleteOutlined,
+  PaperClipOutlined,
+  CopyOutlined,
+} from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
 import type {
   AssessmentQuestionDTO,
@@ -15,6 +21,7 @@ import { adminAssessmentQuestionService } from '@/apis/services/admin-assessment
 import { useAuth } from '@/hooks'
 import { getRoleLevel } from '@/utils/RoleUtils'
 import QuestionDrawer, { QUESTION_TYPE_LABELS, type DrawerMode } from './QuestionDrawer'
+import CloneQuestionModal from './CloneQuestionModal'
 import { usePagination } from '@/hooks'
 import { ResponseMessage, PageDTO } from '@/apis/schema/type'
 
@@ -65,6 +72,10 @@ export default function AssessmentQuestionManagementPage() {
   // Delete modal state
   const [deleteModalOpen, setDeleteModalOpen] = useState(false)
   const [deletingItem, setDeletingItem] = useState<AssessmentQuestionDTO | null>(null)
+
+  // Clone modal state
+  const [cloneModalOpen, setCloneModalOpen] = useState(false)
+  const [cloningItem, setCloningItem] = useState<AssessmentQuestionDTO | null>(null)
 
   // Permission: 全局考核仅 SUPER_ADMIN 可操作；其他情况 DIRECTION_ADMIN 只能操作本方向。
   const canOperate = useMemo(() => {
@@ -155,11 +166,13 @@ export default function AssessmentQuestionManagementPage() {
 
   // 切换方向筛选并重置分页；__GLOBAL__ 映射为 null 表示全局。
   const handleDirectionChange = (value: DirectionFilterValue | undefined) => {
+    setCloneModalOpen(false)
     setFilterDirection(value === GLOBAL_DIRECTION_VALUE ? null : value)
   }
 
   // 切换考核时间筛选并重置分页。
   const handleTimeChange = (value: number | undefined) => {
+    setCloneModalOpen(false)
     setFilterTimeId(value)
     reset()
   }
@@ -185,6 +198,12 @@ export default function AssessmentQuestionManagementPage() {
     setDrawerOpen(true)
   }, [])
 
+  // 打开单题克隆弹窗。
+  const handleCloneClick = useCallback((item: AssessmentQuestionDTO) => {
+    setCloningItem(item)
+    setCloneModalOpen(true)
+  }, [])
+
   // 打开删除确认弹窗。
   const handleDeleteClick = useCallback((item: AssessmentQuestionDTO) => {
     setDeletingItem(item)
@@ -204,6 +223,12 @@ export default function AssessmentQuestionManagementPage() {
       const msg = (err as { response?: { data?: { msg?: string } } })?.response?.data?.msg
       messageApi.error(msg || '删除失败')
     }
+  }
+
+  const handleCloneSuccess = () => {
+    setCloneModalOpen(false)
+    setCloningItem(null)
+    refresh()
   }
 
   // 抽屉保存成功后关闭抽屉并刷新列表。
@@ -254,7 +279,7 @@ export default function AssessmentQuestionManagementPage() {
       {
         title: '操作',
         key: 'action',
-        width: 80,
+        width: 120,
         render: (_: unknown, record: AssessmentQuestionDTO) =>
           canOperate ? (
             <div className="flex gap-1">
@@ -265,6 +290,16 @@ export default function AssessmentQuestionManagementPage() {
                 onClick={(e) => {
                   e.stopPropagation()
                   handleEdit(record)
+                }}
+              />
+              <Button
+                type="text"
+                size="small"
+                icon={<CopyOutlined />}
+                title="克隆"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  handleCloneClick(record)
                 }}
               />
               <Button
@@ -287,7 +322,7 @@ export default function AssessmentQuestionManagementPage() {
     }
 
     return cols
-  }, [isMobile, canOperate, handleEdit, handleDeleteClick, handleRowClick])
+  }, [isMobile, canOperate, handleEdit, handleCloneClick, handleDeleteClick, handleRowClick])
 
   // 空状态文案随方向和考核时间筛选状态变化。
   const emptyText =
@@ -388,6 +423,15 @@ export default function AssessmentQuestionManagementPage() {
             onSuccess={handleDrawerSuccess}
             onDelete={handleDeleteClick}
             onEdit={() => setDrawerMode('edit')}
+          />
+
+          <CloneQuestionModal
+            open={cloneModalOpen}
+            question={cloningItem}
+            sourceAssessmentTime={selectedTime}
+            assessmentTimes={assessmentTimes}
+            onClose={() => setCloneModalOpen(false)}
+            onSuccess={handleCloneSuccess}
           />
 
           {/* Delete confirmation modal */}

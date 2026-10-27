@@ -12,4 +12,11 @@ public class FileUploadContent extends QuestionContent {
     public void sanitizeForUser() {
         // 文件上传题无需擦除任何信息
     }
+
+    @Override
+    public FileUploadContent deepCopy() {
+        FileUploadContent copy = new FileUploadContent();
+        copy.setContent(getContent());
+        return copy;
+    }
 }

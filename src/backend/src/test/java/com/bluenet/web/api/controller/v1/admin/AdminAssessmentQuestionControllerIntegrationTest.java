@@ -4,6 +4,7 @@ import com.bluenet.web.APIIntegrationTest;
 import com.bluenet.web.api.converter.assessment_question.AssessmentQuestionRequestConverter;
 import com.bluenet.web.api.converter.assessment_question.AssessmentQuestionResponseConverter;
 import com.bluenet.web.api.dto.assessment_question.AssessmentQuestionDTO;
+import com.bluenet.web.api.dto.assessment_question.CloneQuestionRequestDTO;
 import com.bluenet.web.api.dto.assessment_question.CreateQuestionRequestDTO;
 import com.bluenet.web.api.dto.assessment_question.UpdateQuestionRequestDTO;
 import com.bluenet.web.application.command.assessment_question.AssessmentQuestionCommands;
@@ -11,6 +12,7 @@ import com.bluenet.web.application.result.assessment.AssessmentQuestionResult;
 import com.bluenet.web.application.service.AssessmentQuestionAppService;
 import com.bluenet.web.domain.exception.DataConflict;
 import com.bluenet.web.domain.exception.DataNotFound;
+import com.bluenet.web.domain.exception.Forbidden;
 import com.bluenet.web.domain.model.enumerate.QuestionType;
 import com.bluenet.web.infrastructure.security.principal.WithSecurityPrincipal;
 import io.github.ivencn.infra.security.principal.UserCTX;
@@ -34,6 +36,7 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -281,6 +284,116 @@ class AdminAssessmentQuestionControllerIntegrationTest extends APIIntegrationTes
                 .andExpect(status().isOk())
                 .andReturn();
         assertThat(result.getResponse().getStatus()).isEqualTo(200);
+    }
+
+    @Test
+    @DisplayName("cloneQuestion: 无权限用户应返回 403")
+    @WithSecurityPrincipal(roleType = "MEMBER", roleId = 3L, permissions = {})
+    void cloneQuestion_asMember_shouldReturn403() throws Exception {
+        mockMvc.perform(
+                post("/api/v1/admin/assessment-questions/{id}/clone", 1L)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(cloneRequest())))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("cloneQuestion: 非法参数应返回 400")
+    @WithSecurityPrincipal(userId = SUPER_ADMIN_USER_ID, roleType = "SUPER_ADMIN", roleId = 1L, permissions = {
+            "assessment-question:clone" })
+    void cloneQuestion_withInvalidRequest_shouldReturn400() throws Exception {
+        mockMvc.perform(
+                post("/api/v1/admin/assessment-questions/{id}/clone", 1L)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(CloneQuestionRequestDTO.builder().build())))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("cloneQuestion: 源或目标不存在应返回 404")
+    @WithSecurityPrincipal(userId = SUPER_ADMIN_USER_ID, roleType = "SUPER_ADMIN", roleId = 1L, permissions = {
+            "assessment-question:clone" })
+    void cloneQuestion_whenNotFound_shouldReturn404() throws Exception {
+        when(
+                assessmentQuestionAppService.cloneQuestion(
+                        anyLong(),
+                        any(AssessmentQuestionCommands.CloneAssessmentQuestionCommand.class)))
+                                .thenThrow(new DataNotFound("目标考核时间不存在"));
+
+        mockMvc.perform(
+                post("/api/v1/admin/assessment-questions/{id}/clone", 1L)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(cloneRequest())))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("cloneQuestion: 题号冲突应返回 409")
+    @WithSecurityPrincipal(userId = SUPER_ADMIN_USER_ID, roleType = "SUPER_ADMIN", roleId = 1L, permissions = {
+            "assessment-question:clone" })
+    void cloneQuestion_whenQuestionNoConflicts_shouldReturn409() throws Exception {
+        when(
+                assessmentQuestionAppService.cloneQuestion(
+                        anyLong(),
+                        any(AssessmentQuestionCommands.CloneAssessmentQuestionCommand.class)))
+                                .thenThrow(new DataConflict("题号重复"));
+
+        mockMvc.perform(
+                post("/api/v1/admin/assessment-questions/{id}/clone", 1L)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(cloneRequest())))
+                .andExpect(status().isConflict());
+    }
+
+    @Test
+    @DisplayName("cloneQuestion: 方向越权应返回 403")
+    @WithSecurityPrincipal(userId = SUPER_ADMIN_USER_ID, roleType = "SUPER_ADMIN", roleId = 1L, permissions = {
+            "assessment-question:clone" })
+    void cloneQuestion_whenDirectionForbidden_shouldReturn403() throws Exception {
+        when(
+                assessmentQuestionAppService.cloneQuestion(
+                        anyLong(),
+                        any(AssessmentQuestionCommands.CloneAssessmentQuestionCommand.class)))
+                                .thenThrow(new Forbidden("只能在本方向克隆"));
+
+        mockMvc.perform(
+                post("/api/v1/admin/assessment-questions/{id}/clone", 1L)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(cloneRequest())))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("cloneQuestion: 超级管理员应成功克隆并返回新题目")
+    @WithSecurityPrincipal(userId = SUPER_ADMIN_USER_ID, roleType = "SUPER_ADMIN", roleId = 1L, permissions = {
+            "assessment-question:clone" })
+    void cloneQuestion_asSuperAdmin_shouldReturnCreatedQuestion() throws Exception {
+        when(
+                assessmentQuestionAppService.cloneQuestion(
+                        anyLong(),
+                        any(AssessmentQuestionCommands.CloneAssessmentQuestionCommand.class)))
+                                .thenReturn(
+                                        new AssessmentQuestionResult(
+                                                2L, 2L, 3, QuestionType.ALGORITHM, "题目一", null, null, BigDecimal.TEN,
+                                                null));
+        when(responseConverter.toDTO(any(AssessmentQuestionResult.class))).thenReturn(
+                AssessmentQuestionDTO.builder().id(2L).assessmentTimeId(2L).questionNo(3).build());
+
+        mockMvc.perform(
+                post("/api/v1/admin/assessment-questions/{id}/clone", 1L)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(cloneRequest())))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.id").value(2))
+                .andExpect(jsonPath("$.data.assessmentTimeId").value(2))
+                .andExpect(jsonPath("$.data.questionNo").value(3));
+    }
+
+    private CloneQuestionRequestDTO cloneRequest() {
+        return CloneQuestionRequestDTO.builder()
+                .targetAssessmentTimeId(2L)
+                .targetQuestionNo(3)
+                .build();
     }
 
     @Test

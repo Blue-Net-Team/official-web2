@@ -3,6 +3,7 @@ package com.bluenet.web.api.controller.v1.admin;
 import io.github.ivencn.infra.web.response.PageDTO;
 import io.github.ivencn.infra.web.response.ResponseMessage;
 import com.bluenet.web.api.dto.assessment_question.AssessmentQuestionDTO;
+import com.bluenet.web.api.dto.assessment_question.CloneQuestionRequestDTO;
 import com.bluenet.web.api.dto.assessment_question.CreateQuestionRequestDTO;
 import com.bluenet.web.api.dto.assessment_question.ResponseMessageAssessmentQuestion;
 import com.bluenet.web.api.dto.assessment_question.ResponseMessageAssessmentQuestionList;
@@ -12,6 +13,7 @@ import com.bluenet.web.api.converter.assessment_question.AssessmentQuestionReque
 import com.bluenet.web.api.converter.assessment_question.AssessmentQuestionResponseConverter;
 import com.bluenet.web.application.service.AssessmentQuestionAppService;
 import io.github.ivencn.infra.security.principal.AccessLevel;
+import io.github.ivencn.infra.security.principal.UserCTX;
 import io.github.ivencn.infra.security.annotation.RequiresPermission;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -56,6 +58,27 @@ public class AdminAssessmentQuestionController {
         AssessmentQuestionDTO created = responseConverter
                 .toDTO(assessmentQuestionAppService.createQuestion(command));
         return ResponseMessage.success(created);
+    }
+
+    @Operation(summary = "克隆考题", description = "将单道考题独立克隆到同方向的目标考核时间；算法题复制判题源码配置并重置为草稿")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "克隆成功", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseMessageAssessmentQuestion.class))),
+            @ApiResponse(responseCode = "400", description = "参数错误或源目标考核时间相同", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseMessage.class))),
+            @ApiResponse(responseCode = "403", description = "无克隆权限或方向越权", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseMessage.class))),
+            @ApiResponse(responseCode = "404", description = "源考题或目标考核时间不存在", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseMessage.class))),
+            @ApiResponse(responseCode = "409", description = "目标题号重复", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseMessage.class)))
+    })
+    @RequiresPermission(name = "克隆考题", value = "assessment-question:clone", access = AccessLevel.PROTECTED)
+    @PostMapping("/{id}/clone")
+    public ResponseMessage<AssessmentQuestionDTO> cloneQuestion(
+            @Parameter(description = "源考题ID", required = true) @PathVariable Long id,
+            @Valid @RequestBody CloneQuestionRequestDTO request) {
+        Long userId = UserCTX.getCurrentUserId();
+        AssessmentQuestionCommands.CloneAssessmentQuestionCommand command = assessmentQuestionRequestConverter
+                .toCommand(id, request);
+        AssessmentQuestionDTO cloned = responseConverter
+                .toDTO(assessmentQuestionAppService.cloneQuestion(userId, command));
+        return ResponseMessage.success(cloned);
     }
 
     @Operation(summary = "更新考题", description = "更新考题信息")

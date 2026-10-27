@@ -23,6 +23,18 @@ public interface AssessmentQuestionAppService {
     AssessmentQuestionResult createQuestion(AssessmentQuestionCommands.CreateAssessmentQuestionCommand command);
 
     /**
+     * 将单道考题独立克隆到目标考核时间。
+     *
+     * @param userId
+     *            当前用户ID
+     * @param command
+     *            克隆命令
+     * @return 新创建的考核题目
+     */
+    AssessmentQuestionResult cloneQuestion(Long userId,
+            AssessmentQuestionCommands.CloneAssessmentQuestionCommand command);
+
+    /**
      * 更新考核题目。
      *
      * @param command

@@ -3,6 +3,7 @@ package com.bluenet.web.domain.model.vo.question_content;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Data
@@ -20,5 +21,14 @@ public class SingleChoiceContent extends QuestionContent {
     @Override
     public void sanitizeForUser() {
         this.correctAnswer = null;
+    }
+
+    @Override
+    public SingleChoiceContent deepCopy() {
+        SingleChoiceContent copy = new SingleChoiceContent();
+        copy.setContent(getContent());
+        copy.setOptions(options == null ? null : new ArrayList<>(options));
+        copy.setCorrectAnswer(correctAnswer);
+        return copy;
     }
 }

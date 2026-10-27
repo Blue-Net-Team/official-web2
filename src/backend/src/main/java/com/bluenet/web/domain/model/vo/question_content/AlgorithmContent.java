@@ -3,6 +3,8 @@ package com.bluenet.web.domain.model.vo.question_content;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -49,6 +51,61 @@ public class AlgorithmContent extends QuestionContent {
     @Override
     public void sanitizeForUser() {
         this.testCases = null;
+    }
+
+    @Override
+    public AlgorithmContent deepCopy() {
+        AlgorithmContent copy = new AlgorithmContent();
+        copy.setContent(getContent());
+        copy.setInputDescription(inputDescription);
+        copy.setOutputDescription(outputDescription);
+        copy.setConstraints(constraints);
+        copy.setExamples(copyExamples(examples));
+        copy.setRunTestCases(copyTestCases(runTestCases));
+        copy.setTestCases(copyTestCases(testCases));
+        copy.setStarterCode(starterCode == null ? null : new HashMap<>(starterCode));
+        copy.setTimeLimit(timeLimit);
+        copy.setMemoryLimit(memoryLimit);
+        return copy;
+    }
+
+    private List<Example> copyExamples(List<Example> source) {
+        if (source == null) {
+            return null;
+        }
+        List<Example> copies = new ArrayList<>(source.size());
+        for (Example example : source) {
+            if (example == null) {
+                copies.add(null);
+                continue;
+            }
+            Example copy = new Example();
+            copy.setInput(example.getInput());
+            copy.setExpectedOutput(example.getExpectedOutput());
+            copy.setExplanation(example.getExplanation());
+            copies.add(copy);
+        }
+        return copies;
+    }
+
+    private List<TestCase> copyTestCases(List<TestCase> source) {
+        if (source == null) {
+            return null;
+        }
+        List<TestCase> copies = new ArrayList<>(source.size());
+        for (TestCase testCase : source) {
+            if (testCase == null) {
+                copies.add(null);
+                continue;
+            }
+            TestCase copy = new TestCase();
+            copy.setInput(testCase.getInput());
+            copy.setExpectedOutput(testCase.getExpectedOutput());
+            copy.setHidden(testCase.getHidden());
+            copy.setWeight(testCase.getWeight());
+            copies.add(copy);
+        }
+        return copies;
     }
 
     @Data

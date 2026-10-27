@@ -375,6 +375,14 @@ export interface CreateQuestionRequestDTO {
   score: number
 }
 
+/** 克隆考题请求 - 对应后端 CloneQuestionRequestDTO */
+export interface CloneQuestionRequestDTO {
+  /** 目标考核时间ID */
+  targetAssessmentTimeId: number
+  /** 目标题号 */
+  targetQuestionNo: number
+}
+
 /** 更新考题请求 - 对应后端 UpdateQuestionRequestDTO */
 export interface UpdateQuestionRequestDTO {
   /** 题号 */

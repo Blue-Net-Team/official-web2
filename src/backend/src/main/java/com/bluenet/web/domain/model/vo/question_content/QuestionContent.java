@@ -20,4 +20,11 @@ public abstract class QuestionContent {
      * 擦除不应暴露给考生的敏感信息（如正确答案、评测用例等）。 每个子类需实现具体的擦除逻辑。
      */
     public abstract void sanitizeForUser();
+
+    /**
+     * 创建包含独立嵌套集合和值对象的深复制。
+     *
+     * @return 与当前内容互不影响的副本
+     */
+    public abstract QuestionContent deepCopy();
 }

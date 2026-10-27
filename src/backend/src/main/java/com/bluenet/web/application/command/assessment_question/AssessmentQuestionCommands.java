@@ -41,6 +41,22 @@ public class AssessmentQuestionCommands {
     }
 
     /**
+     * 克隆考核题目命令。
+     *
+     * @param sourceQuestionId
+     *            源题目ID
+     * @param targetAssessmentTimeId
+     *            目标考核时间ID
+     * @param targetQuestionNo
+     *            目标题号
+     */
+    public record CloneAssessmentQuestionCommand(
+            Long sourceQuestionId,
+            Long targetAssessmentTimeId,
+            Integer targetQuestionNo) {
+    }
+
+    /**
      * 更新考核题目命令。
      * <p>
      * 用于更新已有的考核题目。

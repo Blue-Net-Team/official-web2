@@ -4,6 +4,7 @@ import com.bluenet.web.APIIntegrationTest;
 import com.bluenet.web.api.converter.assessment_question.AssessmentQuestionRequestConverter;
 import com.bluenet.web.api.converter.assessment_question.AssessmentQuestionResponseConverter;
 import com.bluenet.web.api.dto.assessment_question.AssessmentQuestionDTO;
+import com.bluenet.web.api.dto.assessment_question.CloneQuestionRequestDTO;
 import com.bluenet.web.api.dto.assessment_question.CreateQuestionRequestDTO;
 import com.bluenet.web.api.dto.assessment_question.UpdateQuestionRequestDTO;
 import com.bluenet.web.application.command.assessment_question.AssessmentQuestionCommands;
@@ -180,6 +181,39 @@ class AdminAssessmentQuestionControllerTest extends APIIntegrationTest {
                         .param("fileId", "10"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200));
+    }
+
+    @Test
+    @DisplayName("cloneQuestion: 管理员克隆考题应返回新题目 DTO")
+    @WithSecurityPrincipal(userId = ADMIN_USER_ID, roleType = "SUPER_ADMIN", roleId = 1L, permissions = {
+            "assessment-question:clone" })
+    void cloneQuestion_shouldReturnNewQuestionDto() throws Exception {
+        CloneQuestionRequestDTO request = CloneQuestionRequestDTO.builder()
+                .targetAssessmentTimeId(2L)
+                .targetQuestionNo(7)
+                .build();
+        AssessmentQuestionCommands.CloneAssessmentQuestionCommand command = new AssessmentQuestionCommands.CloneAssessmentQuestionCommand(
+                1L, 2L, 7);
+        AssessmentQuestionResult result = new AssessmentQuestionResult(
+                2L, 2L, 7, QuestionType.SINGLE_CHOICE, "题目一", null, null, BigDecimal.TEN, null);
+        AssessmentQuestionDTO dto = AssessmentQuestionDTO.builder()
+                .id(2L)
+                .assessmentTimeId(2L)
+                .questionNo(7)
+                .title("题目一")
+                .build();
+        when(assessmentQuestionRequestConverter.toCommand(1L, request)).thenReturn(command);
+        when(assessmentQuestionAppService.cloneQuestion(ADMIN_USER_ID, command)).thenReturn(result);
+        when(responseConverter.toDTO(result)).thenReturn(dto);
+
+        mockMvc.perform(
+                post("/api/v1/admin/assessment-questions/{id}/clone", 1L)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.id").value(2))
+                .andExpect(jsonPath("$.data.assessmentTimeId").value(2))
+                .andExpect(jsonPath("$.data.questionNo").value(7));
     }
 
     @Test

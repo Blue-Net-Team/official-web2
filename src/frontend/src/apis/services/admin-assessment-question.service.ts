@@ -2,6 +2,7 @@ import { apiClient } from '../client'
 import { ResponseMessage, PageDTO } from '../schema/type'
 import type {
   AssessmentQuestionDTO,
+  CloneQuestionRequestDTO,
   CreateQuestionRequestDTO,
   UpdateQuestionRequestDTO,
 } from '@/apis/schema/assessment.dto'
@@ -34,6 +35,21 @@ export const adminAssessmentQuestionService = {
   async create(data: CreateQuestionRequestDTO): Promise<ResponseMessage<AssessmentQuestionDTO>> {
     const response = await apiClient.post<ResponseMessage<AssessmentQuestionDTO>>(
       '/admin/assessment-questions',
+      data
+    )
+    return response.data
+  },
+
+  /**
+   * 克隆考题到指定考核时间
+   * POST /api/v1/admin/assessment-questions/{id}/clone
+   */
+  async clone(
+    id: number,
+    data: CloneQuestionRequestDTO
+  ): Promise<ResponseMessage<AssessmentQuestionDTO>> {
+    const response = await apiClient.post<ResponseMessage<AssessmentQuestionDTO>>(
+      `/admin/assessment-questions/${id}/clone`,
       data
     )
     return response.data

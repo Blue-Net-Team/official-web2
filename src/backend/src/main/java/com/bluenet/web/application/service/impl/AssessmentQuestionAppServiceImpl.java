@@ -3,13 +3,17 @@ package com.bluenet.web.application.service.impl;
 import com.bluenet.web.application.result.assessment.AssessmentQuestionResult;
 import com.bluenet.web.application.result.user.UserQuestionListResult;
 import com.bluenet.web.application.command.assessment_question.AssessmentQuestionCommands;
+import com.bluenet.web.application.command.judge.JudgeProblemConfigCommands;
 import com.bluenet.web.application.service.AssessmentQuestionAppService;
 import com.bluenet.web.application.service.AssessmentSessionAppService;
+import com.bluenet.web.application.service.JudgeProblemConfigAdminService;
 import com.bluenet.web.application.command.assessment_session.AssessmentSessionCommands;
 import com.bluenet.web.application.result.assessment.AssessmentSessionResult;
+import com.bluenet.web.application.result.judge.JudgeProblemConfigResult;
 import com.bluenet.web.domain.exception.BadRequest;
 import com.bluenet.web.domain.exception.DataConflict;
 import com.bluenet.web.domain.exception.DataNotFound;
+import com.bluenet.web.domain.exception.Unauthorized;
 import com.bluenet.web.domain.model.entity.AssessmentQuestion;
 import com.bluenet.web.domain.model.enumerate.FileType;
 import com.bluenet.web.domain.model.enumerate.QuestionType;
@@ -25,7 +29,9 @@ import com.bluenet.web.domain.repository.AssessmentQuestionRepository;
 import com.bluenet.web.domain.repository.AssessmentTimeRepository;
 import com.bluenet.web.domain.repository.FileRepository;
 import com.bluenet.web.domain.repository.JudgeProblemConfigRepository;
+import com.bluenet.web.domain.repository.UserRepository;
 import com.bluenet.web.domain.service.AssessmentDecisionDomainService;
+import com.bluenet.web.application.policy.AssessmentQuestionClonePolicy;
 import com.bluenet.web.domain.util.GradeCalculator;
 import com.bluenet.web.domain.util.TestcaseTextSanitizer;
 import com.bluenet.web.infrastructure.security.principal.RoleTypeResolver;
@@ -38,6 +44,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -66,6 +73,9 @@ public class AssessmentQuestionAppServiceImpl implements AssessmentQuestionAppSe
     private final JudgeProblemConfigRepository judgeProblemConfigRepository;
     private final JudgeAssetStorage judgeAssetStorage;
     private final AssessmentDecisionDomainService assessmentDecisionDomainService;
+    private final UserRepository userRepository;
+    private final AssessmentQuestionClonePolicy assessmentQuestionClonePolicy;
+    private final JudgeProblemConfigAdminService judgeProblemConfigAdminService;
 
     /**
      * 创建考题。
@@ -106,6 +116,114 @@ public class AssessmentQuestionAppServiceImpl implements AssessmentQuestionAppSe
 
         assessmentQuestionRepository.save(entity);
         return toResult(entity, null);
+    }
+
+    @Override
+    @Transactional
+    public AssessmentQuestionResult cloneQuestion(
+            Long userId,
+            AssessmentQuestionCommands.CloneAssessmentQuestionCommand command) {
+        User currentUser = userRepository.findById(userId)
+                .orElseThrow(() -> new Unauthorized("用户不存在"));
+        AssessmentQuestion source = assessmentQuestionRepository.findById(command.sourceQuestionId())
+                .orElseThrow(() -> new DataNotFound("源考题不存在，ID: " + command.sourceQuestionId()));
+        AssessmentTime sourceTime = assessmentTimeRepository.findById(source.getAssessmentTimeId())
+                .orElseThrow(() -> new DataNotFound("源考核时间不存在"));
+        AssessmentTime targetTime = assessmentTimeRepository.findById(command.targetAssessmentTimeId())
+                .orElseThrow(() -> new DataNotFound("目标考核时间不存在"));
+        if (sourceTime.getId().equals(targetTime.getId())) {
+            throw new BadRequest("源考核时间与目标考核时间不能相同");
+        }
+        if (command.targetQuestionNo() == null || command.targetQuestionNo() <= 0) {
+            throw new BadRequest("目标题号必须大于0");
+        }
+        assessmentQuestionClonePolicy.validate(currentUser, sourceTime, targetTime);
+        assessmentQuestionRepository
+                .findByTimeIdAndQuestionNo(targetTime.getId(), command.targetQuestionNo())
+                .ifPresent(question -> {
+                    throw new DataConflict("目标考核时间下题号 " + command.targetQuestionNo() + " 已存在");
+                });
+
+        QuestionContent content = source.getContent() == null ? null : source.getContent().deepCopy();
+        normalizeQuestionContent(content);
+        validateQuestionContent(source.getQuestionType(), content);
+        AssessmentQuestion target = AssessmentQuestion.create(
+                targetTime.getId(),
+                command.targetQuestionNo(),
+                source.getQuestionType(),
+                source.getTitle(),
+                content,
+                source.getAttachmentId(),
+                source.getScore());
+        assessmentQuestionRepository.save(target);
+        if (source.getQuestionType() == QuestionType.ALGORITHM) {
+            try {
+                cloneJudgeConfiguration(source.getId(), target.getId());
+            } catch (RuntimeException | Error ex) {
+                cleanupClonedJudgeAssets(target.getId());
+                throw ex;
+            }
+        }
+        return toResult(target, null);
+    }
+
+    private void cloneJudgeConfiguration(Long sourceQuestionId, Long targetQuestionId) {
+        JudgeProblemConfigResult sourceConfig = judgeProblemConfigAdminService
+                .findByQuestionId(sourceQuestionId)
+                .orElse(null);
+        if (sourceConfig == null) {
+            return;
+        }
+        validateCloneSources(sourceConfig);
+
+        List<JudgeProblemConfigCommands.StandardSolutionCommand> solutions = sourceConfig.standardSolutions()
+                .stream()
+                .map(
+                        solution -> new JudgeProblemConfigCommands.StandardSolutionCommand(
+                                solution.language(), solution.source(), solution.primarySolution()))
+                .toList();
+        List<JudgeProblemConfigCommands.TestcaseConfigCommand> testcases = sourceConfig.testcases()
+                .stream()
+                .map(
+                        testcase -> new JudgeProblemConfigCommands.TestcaseConfigCommand(
+                                testcase.caseNo(),
+                                testcase.category(),
+                                testcase.generatorArgs(),
+                                testcase.weight(),
+                                testcase.hidden(),
+                                testcase.sample(),
+                                testcase.description()))
+                .toList();
+        judgeProblemConfigAdminService.upsert(
+                targetQuestionId,
+                new JudgeProblemConfigCommands.UpsertCommand(
+                        sourceConfig.generatorLanguage(),
+                        sourceConfig.generatorSource(),
+                        sourceConfig.primaryStandardLanguage(),
+                        sourceConfig.benchmarkRepeatTimes(),
+                        BigDecimal.valueOf(sourceConfig.marginMultiplier()),
+                        sourceConfig.minExtraMs(),
+                        sourceConfig.roundToMs(),
+                        solutions,
+                        testcases));
+    }
+
+    private void validateCloneSources(JudgeProblemConfigResult sourceConfig) {
+        if (!hasText(sourceConfig.generatorSource())) {
+            throw new IllegalStateException("源算法题 generator 源码缺失，无法克隆");
+        }
+        if (sourceConfig.standardSolutions() == null || sourceConfig.standardSolutions().isEmpty()
+                || sourceConfig.standardSolutions().stream().anyMatch(solution -> !hasText(solution.source()))) {
+            throw new IllegalStateException("源算法题标准解源码缺失，无法克隆");
+        }
+    }
+
+    private void cleanupClonedJudgeAssets(Long targetQuestionId) {
+        try {
+            judgeAssetStorage.deleteByPrefix("questions/" + targetQuestionId + "/current/");
+        } catch (Exception cleanupError) {
+            log.warn("清理克隆失败的判题资产失败，questionId={}", targetQuestionId, cleanupError);
+        }
     }
 
     /**
