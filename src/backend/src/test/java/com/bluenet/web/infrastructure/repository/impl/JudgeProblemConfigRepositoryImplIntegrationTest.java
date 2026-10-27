@@ -85,6 +85,31 @@ class JudgeProblemConfigRepositoryImplIntegrationTest extends DBIntegrationTest 
     }
 
     @Test
+    @DisplayName("upsertCurrentConfig: 应沿用传入状态而非强制回草稿")
+    void upsertCurrentConfig_shouldPersistGivenStatus() {
+        Long questionId = nextQuestionId();
+        Long configId = createConfig(questionId);
+        judgeProblemConfigRepository.markGenerating(configId);
+
+        JudgeProblemConfig config = JudgeProblemConfig.create(
+                questionId,
+                "python",
+                "generator.py",
+                "hash-" + questionId,
+                "cpp",
+                5,
+                new BigDecimal("1.5"),
+                50,
+                50,
+                "READY");
+
+        Long updatedId = judgeProblemConfigRepository.upsertCurrentConfig(config);
+
+        assertThat(updatedId).isEqualTo(configId);
+        assertThat(judgeProblemConfigMapper.selectById(configId).getStatus()).isEqualTo("READY");
+    }
+
+    @Test
     @DisplayName("findByQuestionId: 存在返回配置，不存在返回空")
     void findByQuestionId_shouldReturnOptional() {
         Long questionId = nextQuestionId();

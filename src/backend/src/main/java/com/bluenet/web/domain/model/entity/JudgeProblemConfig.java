@@ -67,6 +67,9 @@ public class JudgeProblemConfig {
      */
     private Integer roundToMs;
 
+    /**
+     * 新建判题配置，状态默认置为草稿。
+     */
     public static JudgeProblemConfig create(
             Long questionId,
             String generatorLanguage,
@@ -77,6 +80,37 @@ public class JudgeProblemConfig {
             BigDecimal marginMultiplier,
             Integer minExtraMs,
             Integer roundToMs) {
+        return create(
+                questionId,
+                generatorLanguage,
+                generatorObjectKey,
+                generatorObjectHash,
+                primaryStandardLanguage,
+                benchmarkRepeatTimes,
+                marginMultiplier,
+                minExtraMs,
+                roundToMs,
+                "DRAFT");
+    }
+
+    /**
+     * 新建判题配置，并指定保存后的状态。
+     *
+     * <p>
+     * 仅当本次保存未改动任何判题相关内容时才允许沿用既有状态，避免把已生成测试数据的配置打回草稿。
+     * </p>
+     */
+    public static JudgeProblemConfig create(
+            Long questionId,
+            String generatorLanguage,
+            String generatorObjectKey,
+            String generatorObjectHash,
+            String primaryStandardLanguage,
+            Integer benchmarkRepeatTimes,
+            BigDecimal marginMultiplier,
+            Integer minExtraMs,
+            Integer roundToMs,
+            String status) {
         return new JudgeProblemConfig(
                 null,
                 questionId,
@@ -86,7 +120,7 @@ public class JudgeProblemConfig {
                 null,
                 null,
                 primaryStandardLanguage,
-                null,
+                status,
                 benchmarkRepeatTimes,
                 marginMultiplier,
                 minExtraMs,

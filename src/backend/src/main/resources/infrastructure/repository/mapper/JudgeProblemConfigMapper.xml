@@ -25,7 +25,7 @@
         )
         VALUES (
             #{config.questionId}, #{config.generatorLanguage}, #{config.generatorObjectKey}, #{config.generatorObjectHash},
-            #{config.primaryStandardLanguage}, 'DRAFT', #{config.benchmarkRepeatTimes}, #{config.marginMultiplier},
+            #{config.primaryStandardLanguage}, #{config.status}, #{config.benchmarkRepeatTimes}, #{config.marginMultiplier},
             #{config.minExtraMs}, #{config.roundToMs}
         )
         ON CONFLICT (question_id) DO UPDATE SET
@@ -33,7 +33,7 @@
             generator_object_key = EXCLUDED.generator_object_key,
             generator_object_hash = EXCLUDED.generator_object_hash,
             primary_standard_language = EXCLUDED.primary_standard_language,
-            status = 'DRAFT',
+            status = EXCLUDED.status,
             benchmark_repeat_times = EXCLUDED.benchmark_repeat_times,
             margin_multiplier = EXCLUDED.margin_multiplier,
             min_extra_ms = EXCLUDED.min_extra_ms,

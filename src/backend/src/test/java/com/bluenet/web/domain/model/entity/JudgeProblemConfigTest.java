@@ -36,11 +36,30 @@ class JudgeProblemConfigTest {
         assertThat(config.getManifestObjectKey()).isNull();
         assertThat(config.getManifestObjectHash()).isNull();
         assertThat(config.getPrimaryStandardLanguage()).isEqualTo("cpp");
-        assertThat(config.getStatus()).isNull();
+        assertThat(config.getStatus()).isEqualTo("DRAFT");
         assertThat(config.getBenchmarkRepeatTimes()).isEqualTo(5);
         assertThat(config.getMarginMultiplier()).isEqualTo(marginMultiplier);
         assertThat(config.getMinExtraMs()).isEqualTo(50);
         assertThat(config.getRoundToMs()).isEqualTo(100);
+    }
+
+    @Test
+    @DisplayName("create: 应允许指定保存后的状态")
+    void create_withStatus_shouldKeepStatus() {
+        JudgeProblemConfig config = JudgeProblemConfig.create(
+                1L,
+                "python",
+                "generator.py",
+                "hash-1",
+                "cpp",
+                5,
+                new BigDecimal("1.5"),
+                50,
+                100,
+                "READY");
+
+        assertThat(config.getStatus()).isEqualTo("READY");
+        assertThat(config.getId()).isNull();
     }
 
     @Test
