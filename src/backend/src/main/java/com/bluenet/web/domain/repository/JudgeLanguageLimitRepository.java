@@ -2,10 +2,21 @@ package com.bluenet.web.domain.repository;
 
 import com.bluenet.web.domain.model.entity.JudgeLanguageLimit;
 
+import java.util.List;
+
 /**
  * 算法题语言资源限制仓储接口。
  */
 public interface JudgeLanguageLimitRepository {
+    /**
+     * 查询题目全部语言资源限制，按语言名升序返回。
+     *
+     * @param questionId
+     *            算法题目主键。
+     * @return 语言资源限制列表；无记录时返回空列表。
+     */
+    List<JudgeLanguageLimit> findByQuestionId(Long questionId);
+
     /**
      * 判断题目指定语言是否存在已确认的正式判题资源限制。
      *

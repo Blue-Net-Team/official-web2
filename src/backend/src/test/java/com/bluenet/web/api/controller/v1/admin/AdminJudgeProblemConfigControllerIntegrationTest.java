@@ -4,9 +4,11 @@ import com.bluenet.web.APIIntegrationTest;
 import com.bluenet.web.api.converter.judge.JudgeProblemConfigRequestConverter;
 import com.bluenet.web.api.converter.judge.JudgeProblemConfigResponseConverter;
 import com.bluenet.web.api.dto.judge.ConfirmJudgeLanguageLimitRequestDTO;
+import com.bluenet.web.api.dto.judge.JudgeLanguageLimitDTO;
 import com.bluenet.web.api.dto.judge.JudgeProblemConfigDTO;
 import com.bluenet.web.api.dto.judge.UpsertJudgeProblemConfigRequestDTO;
 import com.bluenet.web.application.command.judge.JudgeProblemConfigCommands;
+import com.bluenet.web.application.result.judge.JudgeLanguageLimitResult;
 import com.bluenet.web.application.result.judge.JudgeProblemConfigResult;
 import com.bluenet.web.application.service.JudgeProblemConfigAdminService;
 import com.bluenet.web.infrastructure.security.principal.WithSecurityPrincipal;
@@ -27,6 +29,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -84,10 +87,20 @@ class AdminJudgeProblemConfigControllerIntegrationTest extends APIIntegrationTes
                 100,
                 10,
                 List.of(),
-                List.of());
+                List.of(),
+                List.of(
+                        new JudgeLanguageLimitResult(
+                                "python", 1200, 262144, 1024, true, LocalDateTime.of(2026, 1, 2, 3, 4, 5))));
     }
 
     private JudgeProblemConfigDTO configDTO() {
+        return configDTO(
+                List.of(
+                        new JudgeLanguageLimitDTO(
+                                "python", 1200, 262144, 1024, true, LocalDateTime.of(2026, 1, 2, 3, 4, 5))));
+    }
+
+    private JudgeProblemConfigDTO configDTO(List<JudgeLanguageLimitDTO> languageLimits) {
         return new JudgeProblemConfigDTO(
                 1L,
                 1L,
@@ -102,7 +115,8 @@ class AdminJudgeProblemConfigControllerIntegrationTest extends APIIntegrationTes
                 100,
                 10,
                 List.of(),
-                List.of());
+                List.of(),
+                languageLimits);
     }
 
     private UpsertJudgeProblemConfigRequestDTO validUpsertRequest() {
@@ -144,8 +158,30 @@ class AdminJudgeProblemConfigControllerIntegrationTest extends APIIntegrationTes
         MvcResult result = mockMvc.perform(get("/api/v1/admin/judge/questions/{questionId}/config", 1L))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.id").value(1))
+                .andExpect(jsonPath("$.data.languageLimits").isArray())
+                .andExpect(jsonPath("$.data.languageLimits[0].language").value("python"))
+                .andExpect(jsonPath("$.data.languageLimits[0].timeLimitMs").value(1200))
+                .andExpect(jsonPath("$.data.languageLimits[0].memoryLimitKb").value(262144))
+                .andExpect(jsonPath("$.data.languageLimits[0].outputLimitKb").value(1024))
+                .andExpect(jsonPath("$.data.languageLimits[0].confirmed").value(true))
+                .andExpect(jsonPath("$.data.languageLimits[0].confirmedAt").exists())
                 .andReturn();
         assertThat(result.getResponse().getStatus()).isEqualTo(200);
+    }
+
+    @Test
+    @DisplayName("get: 无语言限制时应返回空数组")
+    @WithSecurityPrincipal(userId = SUPER_ADMIN_USER_ID, roleType = "SUPER_ADMIN", roleId = 1L, permissions = {
+            "judge-problem-config:read" })
+    void get_withoutLanguageLimits_shouldReturnEmptyArray() throws Exception {
+        when(judgeProblemConfigAdminService.findByQuestionId(1L)).thenReturn(Optional.of(configResult()));
+        when(judgeProblemConfigResponseConverter.toDTO(any(JudgeProblemConfigResult.class)))
+                .thenReturn(configDTO(List.of()));
+
+        mockMvc.perform(get("/api/v1/admin/judge/questions/{questionId}/config", 1L))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.languageLimits").isArray())
+                .andExpect(jsonPath("$.data.languageLimits").isEmpty());
     }
 
     @Test

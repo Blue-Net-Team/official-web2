@@ -31,6 +31,8 @@ import java.util.List;
  *            已配置的各语言标准解元数据和 benchmark 结果。
  * @param testcases
  *            已配置的测试用例生成参数。
+ * @param languageLimits
+ *            按语言名升序排列的语言资源限制列表。
  */
 public record JudgeProblemConfigDTO(
         Long id,
@@ -46,5 +48,6 @@ public record JudgeProblemConfigDTO(
         Integer minExtraMs,
         Integer roundToMs,
         List<JudgeStandardSolutionDTO> standardSolutions,
-        List<JudgeTestcaseConfigDTO> testcases) {
+        List<JudgeTestcaseConfigDTO> testcases,
+        List<JudgeLanguageLimitDTO> languageLimits) {
 }

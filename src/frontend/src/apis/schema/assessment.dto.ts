@@ -258,6 +258,22 @@ export interface JudgeTestcaseConfigDTO {
   description: string | null
 }
 
+/** 已持久化的语言资源限制 */
+export interface JudgeLanguageLimitDTO {
+  /** 编程语言 */
+  language: string
+  /** 正式判题限时毫秒 */
+  timeLimitMs: number
+  /** 正式判题内存限制 KB */
+  memoryLimitKb: number
+  /** 正式判题输出限制 KB */
+  outputLimitKb: number
+  /** 是否已确认 */
+  confirmed: boolean
+  /** 确认时间 */
+  confirmedAt: string | null
+}
+
 /** 算法题当前判题配置 */
 export interface JudgeProblemConfigDTO {
   /** 判题配置ID */
@@ -288,6 +304,8 @@ export interface JudgeProblemConfigDTO {
   standardSolutions: JudgeStandardSolutionDTO[]
   /** 测试用例生成配置列表 */
   testcases: JudgeTestcaseConfigDTO[]
+  /** 按语言名升序排列的已持久化资源限制；旧后端可能不返回 */
+  languageLimits?: JudgeLanguageLimitDTO[]
 }
 
 /** 保存标准解源码请求 */

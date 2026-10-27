@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -74,6 +75,46 @@ class JudgeLanguageLimitRepositoryImplIntegrationTest extends DBIntegrationTest 
         upsertLimit(questionId, configId, "cpp", 2000);
 
         assertThat(judgeLanguageLimitRepository.existsConfirmedByQuestionIdAndLanguage(questionId, "cpp")).isTrue();
+    }
+
+    @Test
+    @DisplayName("findByQuestionId: 应返回该题全量限制及完整字段")
+    void findByQuestionId_shouldReturnAllFields() {
+        Long configId = createConfig();
+        Long questionId = configId + 100;
+        upsertLimit(questionId, configId, "python", 1200);
+
+        List<JudgeLanguageLimit> limits = judgeLanguageLimitRepository.findByQuestionId(questionId);
+
+        assertThat(limits).hasSize(1);
+        JudgeLanguageLimit limit = limits.getFirst();
+        assertThat(limit.getQuestionId()).isEqualTo(questionId);
+        assertThat(limit.getLanguage()).isEqualTo("python");
+        assertThat(limit.getTimeLimitMs()).isEqualTo(1200);
+        assertThat(limit.getMemoryLimitKb()).isEqualTo(65536);
+        assertThat(limit.getOutputLimitKb()).isEqualTo(1024);
+        assertThat(limit.getConfirmed()).isTrue();
+        assertThat(limit.getConfirmedAt()).isNotNull();
+        assertThat(limit.getSourceConfigId()).isEqualTo(configId);
+    }
+
+    @Test
+    @DisplayName("findByQuestionId: 多语言应按语言名升序返回")
+    void findByQuestionId_multipleLanguages_shouldOrderByLanguage() {
+        Long configId = createConfig();
+        Long questionId = configId + 100;
+        upsertLimit(questionId, configId, "python", 1200);
+        upsertLimit(questionId, configId, "cpp", 1000);
+
+        List<JudgeLanguageLimit> limits = judgeLanguageLimitRepository.findByQuestionId(questionId);
+
+        assertThat(limits).extracting(JudgeLanguageLimit::getLanguage).containsExactly("cpp", "python");
+    }
+
+    @Test
+    @DisplayName("findByQuestionId: 无限制行时应返回空列表")
+    void findByQuestionId_withoutLimits_shouldReturnEmptyList() {
+        assertThat(judgeLanguageLimitRepository.findByQuestionId(-1L)).isNotNull().isEmpty();
     }
 
     @Test

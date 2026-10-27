@@ -1,10 +1,24 @@
 package com.bluenet.web.infrastructure.repository.mapper;
 
+import com.bluenet.web.infrastructure.repository.dataobject.JudgeLanguageLimitDO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import java.util.List;
+
 @Mapper
 public interface JudgeLanguageLimitMapper {
+    /**
+     * 按题目读取全部语言资源限制，并按语言名升序返回。
+     * <p>
+     * 限制以题目和语言为业务键，按题目而非来源配置读取，避免配置原地更新影响限制回显。
+     *
+     * @param questionId
+     *            算法题目主键。
+     * @return 该题的语言资源限制列表；无记录时返回空列表。
+     */
+    List<JudgeLanguageLimitDO> selectByQuestionId(@Param("questionId") Long questionId);
+
     /**
      * 判断题目指定语言是否存在已确认的正式判题资源限制。
      *

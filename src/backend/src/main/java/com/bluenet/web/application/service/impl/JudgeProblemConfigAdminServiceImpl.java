@@ -1,5 +1,6 @@
 package com.bluenet.web.application.service.impl;
 
+import com.bluenet.web.application.result.judge.JudgeLanguageLimitResult;
 import com.bluenet.web.application.result.judge.JudgeProblemConfigResult;
 import com.bluenet.web.application.result.judge.JudgeStandardSolutionResult;
 import com.bluenet.web.application.result.judge.JudgeTestcaseConfigResult;
@@ -127,7 +128,8 @@ public class JudgeProblemConfigAdminServiceImpl implements JudgeProblemConfigAdm
                                 config.getMinExtraMs(),
                                 config.getRoundToMs(),
                                 standardSolutions(config.getId()),
-                                testcaseConfigs(config.getId())));
+                                testcaseConfigs(config.getId()),
+                                languageLimits(config.getQuestionId())));
     }
 
     /**
@@ -337,6 +339,27 @@ public class JudgeProblemConfigAdminServiceImpl implements JudgeProblemConfigAdm
                                 solution.getPeakMemoryKb(),
                                 solution.getSuggestedTimeLimitMs(),
                                 solution.getBenchmarkMessage()))
+                .toList();
+    }
+
+    /**
+     * 查询题目全部语言资源限制结果。
+     *
+     * @param questionId
+     *            算法题目主键。
+     * @return 按语言名升序排列的语言资源限制结果列表。
+     */
+    private List<JudgeLanguageLimitResult> languageLimits(Long questionId) {
+        return judgeLanguageLimitRepository.findByQuestionId(questionId)
+                .stream()
+                .map(
+                        limit -> new JudgeLanguageLimitResult(
+                                limit.getLanguage(),
+                                limit.getTimeLimitMs(),
+                                limit.getMemoryLimitKb(),
+                                limit.getOutputLimitKb(),
+                                limit.getConfirmed(),
+                                limit.getConfirmedAt()))
                 .toList();
     }
 

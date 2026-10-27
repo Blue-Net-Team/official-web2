@@ -33,6 +33,8 @@ import java.util.List;
  *            标准解列表
  * @param testcases
  *            测试用例配置列表
+ * @param languageLimits
+ *            按语言名升序排列的语言资源限制列表
  */
 public record JudgeProblemConfigResult(
         Long id,
@@ -48,5 +50,6 @@ public record JudgeProblemConfigResult(
         Integer minExtraMs,
         Integer roundToMs,
         List<JudgeStandardSolutionResult> standardSolutions,
-        List<JudgeTestcaseConfigResult> testcases) {
+        List<JudgeTestcaseConfigResult> testcases,
+        List<JudgeLanguageLimitResult> languageLimits) {
 }

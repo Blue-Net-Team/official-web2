@@ -51,7 +51,7 @@ import { QuestionStatementPreview } from '@/components/Assessment/QuestionStatem
 import { buildPreviewStatement, type PreviewSourceValues } from './buildPreviewStatement'
 import CodeEditor from '@/components/CodeEditor'
 import type { CodeEditorProps } from '@/components/CodeEditor'
-import { QUESTION_TYPE_LABELS } from '@/app/admin/assessment/judge/shared'
+import { formatTime, QUESTION_TYPE_LABELS } from '@/app/admin/assessment/judge/shared'
 
 export type DrawerMode = 'view' | 'edit' | 'create'
 export { QUESTION_TYPE_LABELS }
@@ -123,7 +123,7 @@ interface FormValues {
   roundToMs: number
   standardSolutions: JudgeStandardSolutionForm[]
   testcases: JudgeTestcaseConfigForm[]
-  confirmLanguage: ProgrammingLanguage
+  confirmLanguage?: ProgrammingLanguage
   confirmTimeLimitMs: number | null
   confirmMemoryLimitKb: number | null
   confirmOutputLimitKb: number | null
@@ -212,7 +212,6 @@ const DEFAULT_FORM_VALUES: FormValues = {
   roundToMs: 50,
   standardSolutions: [],
   testcases: [],
-  confirmLanguage: 'python',
   confirmTimeLimitMs: null,
   confirmMemoryLimitKb: null,
   confirmOutputLimitKb: 1024,
@@ -475,6 +474,29 @@ export default function QuestionDrawer({
   const standardSolutionsValue = Form.useWatch('standardSolutions', form)
   const generatorLanguage = Form.useWatch('generatorLanguage', form)
 
+  /** 按当前语言回填已确认限制；未确认时使用 benchmark 建议值或宽松默认值。 */
+  const applyLanguageLimitForm = useCallback(
+    (config: JudgeProblemConfigDTO, language?: ProgrammingLanguage) => {
+      const solutions = config.standardSolutions
+      const currentLanguage = language ?? form.getFieldValue('confirmLanguage')
+      const selectedLanguage = solutions.some((solution) => solution.language === currentLanguage)
+        ? currentLanguage
+        : solutions[0]?.language
+      const solution = solutions.find((item) => item.language === selectedLanguage)
+      const confirmedLimit = config.languageLimits?.find(
+        (limit) => limit.language === selectedLanguage && limit.confirmed
+      )
+
+      form.setFieldsValue({
+        confirmLanguage: selectedLanguage,
+        confirmTimeLimitMs: confirmedLimit?.timeLimitMs ?? solution?.suggestedTimeLimitMs ?? 5000,
+        confirmMemoryLimitKb: confirmedLimit?.memoryLimitKb ?? solution?.peakMemoryKb ?? 262144,
+        confirmOutputLimitKb: confirmedLimit?.outputLimitKb ?? 1024,
+      })
+    },
+    [form]
+  )
+
   // Populate form on open.
   useEffect(() => {
     if (!open) return
@@ -512,6 +534,7 @@ export default function QuestionDrawer({
         }
         setJudgeConfig(res.data)
         form.setFieldsValue(parseJudgeConfigToForm(res.data))
+        applyLanguageLimitForm(res.data)
       })
       .catch(() => {
         if (!cancelled) setJudgeConfig(null)
@@ -523,7 +546,7 @@ export default function QuestionDrawer({
     return () => {
       cancelled = true
     }
-  }, [open, question, form])
+  }, [open, question, form, applyLanguageLimitForm])
 
   // Reset content fields when type changes.
   useEffect(() => {
@@ -553,6 +576,10 @@ export default function QuestionDrawer({
         roundToMs: 50,
         standardSolutions: [],
         testcases: [],
+        confirmLanguage: undefined,
+        confirmTimeLimitMs: null,
+        confirmMemoryLimitKb: null,
+        confirmOutputLimitKb: 1024,
       })
     }
   }, [questionTypeValue, form, open, isViewMode])
@@ -567,6 +594,7 @@ export default function QuestionDrawer({
       }
       setJudgeConfig(res.data)
       form.setFieldsValue(parseJudgeConfigToForm(res.data))
+      applyLanguageLimitForm(res.data)
     } finally {
       setJudgeConfigLoading(false)
     }
@@ -622,6 +650,7 @@ export default function QuestionDrawer({
     if (res.data) {
       setJudgeConfig(res.data)
       form.setFieldsValue(parseJudgeConfigToForm(res.data))
+      applyLanguageLimitForm(res.data)
     }
   }
 
@@ -659,6 +688,9 @@ export default function QuestionDrawer({
         'confirmMemoryLimitKb',
         'confirmOutputLimitKb',
       ])
+      if (!values.confirmLanguage) {
+        throw new Error('请选择要确认的语言')
+      }
       if (
         values.confirmTimeLimitMs == null ||
         values.confirmMemoryLimitKb == null ||
@@ -1131,6 +1163,52 @@ export default function QuestionDrawer({
         <Alert type="warning" showIcon message="当前算法题尚未保存判题配置。" />
       ) : (
         <>
+          <div className="text-white/50 text-sm mb-2">语言资源限制</div>
+          {(judgeConfig.languageLimits ?? []).length === 0 ? (
+            <Alert type="info" showIcon message="暂无语言资源限制记录。" className="mb-4" />
+          ) : (
+            <div className="overflow-x-auto mb-5">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-white/50 border-b border-white/10">
+                    <th className="text-left py-2 pr-3">语言</th>
+                    <th className="text-left py-2 pr-3">时间(ms)</th>
+                    <th className="text-left py-2 pr-3">内存(KB)</th>
+                    <th className="text-left py-2 pr-3">输出(KB)</th>
+                    <th className="text-left py-2 pr-3">确认状态</th>
+                    <th className="text-left py-2 pr-3">确认时间</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(judgeConfig.languageLimits ?? []).map((limit) => {
+                    const isHistorical = !judgeConfig.standardSolutions.some(
+                      (solution) => solution.language === limit.language
+                    )
+                    return (
+                      <tr key={limit.language} className="border-b border-white/5">
+                        <td className="py-2 pr-3">
+                          <Space size={4}>
+                            <span>{limit.language}</span>
+                            {isHistorical && <Tag color="warning">历史遗留</Tag>}
+                          </Space>
+                        </td>
+                        <td className="py-2 pr-3">{limit.timeLimitMs}</td>
+                        <td className="py-2 pr-3">{limit.memoryLimitKb}</td>
+                        <td className="py-2 pr-3">{limit.outputLimitKb}</td>
+                        <td className="py-2 pr-3">
+                          <Tag color={limit.confirmed ? 'success' : 'default'}>
+                            {limit.confirmed ? '已确认' : '待确认'}
+                          </Tag>
+                        </td>
+                        <td className="py-2 pr-3">{formatTime(limit.confirmedAt)}</td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+          <div className="text-white/50 text-sm mb-2">Benchmark 结果</div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
@@ -1169,10 +1247,13 @@ export default function QuestionDrawer({
                   rules={[{ required: true, message: '请选择语言' }]}
                 >
                   <Select
-                    options={(standardSolutionsValue || []).map((solution) => ({
+                    options={judgeConfig.standardSolutions.map((solution) => ({
                       value: solution.language,
                       label: solution.language,
                     }))}
+                    onChange={(language: ProgrammingLanguage) =>
+                      applyLanguageLimitForm(judgeConfig, language)
+                    }
                   />
                 </Form.Item>
                 <Form.Item
@@ -1510,7 +1591,6 @@ export default function QuestionDrawer({
           roundToMs: 50,
           standardSolutions: [],
           testcases: [],
-          confirmLanguage: 'python',
           confirmTimeLimitMs: null,
           confirmMemoryLimitKb: null,
           confirmOutputLimitKb: 1024,

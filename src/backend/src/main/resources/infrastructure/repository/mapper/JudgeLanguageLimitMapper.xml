@@ -1,6 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.bluenet.web.infrastructure.repository.mapper.JudgeLanguageLimitMapper">
+    <select id="selectByQuestionId" resultType="com.bluenet.web.infrastructure.repository.dataobject.JudgeLanguageLimitDO">
+        SELECT id, question_id, language, time_limit_ms, memory_limit_kb, output_limit_kb,
+               confirmed, confirmed_at, source_config_id
+        FROM tb_judge_language_limit
+        WHERE question_id = #{questionId}
+        ORDER BY language ASC
+    </select>
+
     <select id="countConfirmedByQuestionIdAndLanguage" resultType="int">
         SELECT COUNT(*)
         FROM tb_judge_language_limit

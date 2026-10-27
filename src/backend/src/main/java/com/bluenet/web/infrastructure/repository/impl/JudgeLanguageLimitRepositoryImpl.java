@@ -6,6 +6,8 @@ import com.bluenet.web.infrastructure.repository.mapper.JudgeLanguageLimitMapper
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 /**
  * 算法题语言资源限制仓储实现。
  */
@@ -14,6 +16,24 @@ import org.springframework.stereotype.Repository;
 public class JudgeLanguageLimitRepositoryImpl implements JudgeLanguageLimitRepository {
 
     private final JudgeLanguageLimitMapper judgeLanguageLimitMapper;
+
+    @Override
+    public List<JudgeLanguageLimit> findByQuestionId(Long questionId) {
+        return judgeLanguageLimitMapper.selectByQuestionId(questionId)
+                .stream()
+                .map(
+                        dataObject -> JudgeLanguageLimit.reconstruct(
+                                dataObject.getId(),
+                                dataObject.getQuestionId(),
+                                dataObject.getLanguage(),
+                                dataObject.getTimeLimitMs(),
+                                dataObject.getMemoryLimitKb(),
+                                dataObject.getOutputLimitKb(),
+                                dataObject.getConfirmed(),
+                                dataObject.getConfirmedAt(),
+                                dataObject.getSourceConfigId()))
+                .toList();
+    }
 
     @Override
     public boolean existsConfirmedByQuestionIdAndLanguage(Long questionId, String language) {

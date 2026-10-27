@@ -1,8 +1,10 @@
 package com.bluenet.web.api.converter.judge;
 
+import com.bluenet.web.api.dto.judge.JudgeLanguageLimitDTO;
 import com.bluenet.web.api.dto.judge.JudgeProblemConfigDTO;
 import com.bluenet.web.api.dto.judge.JudgeStandardSolutionDTO;
 import com.bluenet.web.api.dto.judge.JudgeTestcaseConfigDTO;
+import com.bluenet.web.application.result.judge.JudgeLanguageLimitResult;
 import com.bluenet.web.application.result.judge.JudgeProblemConfigResult;
 import com.bluenet.web.application.result.judge.JudgeStandardSolutionResult;
 import com.bluenet.web.application.result.judge.JudgeTestcaseConfigResult;
@@ -37,7 +39,24 @@ public class JudgeProblemConfigResponseConverter {
                 result.minExtraMs(),
                 result.roundToMs(),
                 toStandardSolutionDTOs(result.standardSolutions()),
-                toTestcaseConfigDTOs(result.testcases()));
+                toTestcaseConfigDTOs(result.testcases()),
+                toLanguageLimitDTOs(result.languageLimits()));
+    }
+
+    private List<JudgeLanguageLimitDTO> toLanguageLimitDTOs(List<JudgeLanguageLimitResult> results) {
+        if (results == null) {
+            return List.of();
+        }
+        return results.stream()
+                .map(
+                        result -> new JudgeLanguageLimitDTO(
+                                result.language(),
+                                result.timeLimitMs(),
+                                result.memoryLimitKb(),
+                                result.outputLimitKb(),
+                                result.confirmed(),
+                                result.confirmedAt()))
+                .toList();
     }
 
     private List<JudgeStandardSolutionDTO> toStandardSolutionDTOs(List<JudgeStandardSolutionResult> results) {
