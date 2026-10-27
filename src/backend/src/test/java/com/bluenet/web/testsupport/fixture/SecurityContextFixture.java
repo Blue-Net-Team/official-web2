@@ -4,6 +4,7 @@ import com.bluenet.web.domain.model.entity.User;
 import com.bluenet.web.domain.model.enumerate.Direction;
 import com.bluenet.web.domain.model.enumerate.RoleType;
 import com.bluenet.web.domain.repository.UserRepository;
+import com.bluenet.web.infrastructure.adapter.LoginContext;
 import io.github.ivencn.infra.security.principal.SecurityPrincipal;
 import io.github.ivencn.infra.security.principal.UserCTX;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -28,31 +29,42 @@ public final class SecurityContextFixture {
     }
 
     public static void asMember(User user) {
-        UserCTX.setPrincipal(principal(user, RoleType.MEMBER));
+        as(user, RoleType.MEMBER);
     }
 
     public static void asCandidate(User user) {
-        UserCTX.setPrincipal(principal(user, RoleType.CANDIDATE));
+        as(user, RoleType.CANDIDATE);
     }
 
     public static void asDirectionAdmin(User user, Direction direction) {
-        UserCTX.setPrincipal(principal(user, RoleType.DIRECTION_ADMIN));
+        as(user, RoleType.DIRECTION_ADMIN);
     }
 
     public static void asSuperAdmin(User user) {
-        UserCTX.setPrincipal(principal(user, RoleType.SUPER_ADMIN));
+        as(user, RoleType.SUPER_ADMIN);
     }
 
+    /**
+     * 同时写入框架主体与业务侧登录上下文。
+     *
+     * <p>
+     * 应用服务读取的是 {@link LoginContext}（由 {@code IvenUserDetailsLoader} 在真实认证时写入）， 只设框架
+     * {@code UserCTX} 会让服务层报 「未登录」，所以夹具必须两边都写。
+     * </p>
+     */
     public static void as(User user, RoleType roleType) {
         UserCTX.setPrincipal(principal(user, roleType));
+        LoginContext.set(user, roleType);
     }
 
     public static void as(User user, RoleType roleType, Set<String> permissions) {
         UserCTX.setPrincipal(principal(user, roleType, permissions));
+        LoginContext.set(user, roleType);
     }
 
     public static void clear() {
         UserCTX.clear();
+        LoginContext.clear();
     }
 
     /**
