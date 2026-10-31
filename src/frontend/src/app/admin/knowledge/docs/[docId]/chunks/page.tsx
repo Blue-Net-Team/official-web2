@@ -55,7 +55,7 @@ export default function KnowledgeChunksPage() {
       if (!docId) return
       if (!silent) setLoading(true)
       try {
-        const res = await knowledgeService.listChunks(docId, page - 1, pageSize)
+        const res = await knowledgeService.listChunks(docId, page - 1, pageSize, silent)
         if (res.code === 200 && res.data) {
           setChunks(res.data.content)
           setTotal(res.data.totalElements)
@@ -70,7 +70,7 @@ export default function KnowledgeChunksPage() {
   const fetchDocStatus = useCallback(async () => {
     if (!docId) return
     try {
-      const res = await knowledgeService.getDocumentDetail(docId)
+      const res = await knowledgeService.getDocumentDetail(docId, true)
       if (res.code === 200 && res.data) {
         setDocStatus(res.data.status)
       }
@@ -81,7 +81,7 @@ export default function KnowledgeChunksPage() {
 
   const fetchTagPool = useCallback(async () => {
     try {
-      const res = await knowledgeService.listTags(0, 500)
+      const res = await knowledgeService.listTags(0, 500, true)
       if (res.code === 200 && res.data) {
         setTagPool(res.data.content)
       }
@@ -132,11 +132,9 @@ export default function KnowledgeChunksPage() {
         messageApi.success('分段已删除')
         fetchChunks()
         fetchDocStatus()
-      } else {
-        messageApi.error(res.msg || '删除失败')
       }
     } catch {
-      messageApi.error('删除失败')
+      // API 错误已由响应拦截器统一提示
     } finally {
       setDeletingChunkId(null)
     }
@@ -165,11 +163,9 @@ export default function KnowledgeChunksPage() {
         messageApi.success('保存成功，向量化后台进行中')
         setEditModalOpen(false)
         fetchChunks(true)
-      } else {
-        messageApi.error(res.msg || '保存失败')
       }
     } catch {
-      messageApi.error('保存失败')
+      // API 错误已由响应拦截器统一提示
     } finally {
       setSaving(false)
     }

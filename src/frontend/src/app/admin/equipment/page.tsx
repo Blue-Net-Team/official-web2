@@ -74,7 +74,7 @@ export default function EquipmentManagementPage() {
       setDrawerOpen(false)
       fetchEquipments()
     } catch {
-      messageApi.error('删除失败')
+      // API 错误已由响应拦截器统一提示
     }
   }
 

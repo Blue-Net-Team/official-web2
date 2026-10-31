@@ -142,8 +142,7 @@ export default function AssessmentTimeDrawer({
     } catch (err: unknown) {
       // Form validation errors are handled by antd
       if (err && typeof err === 'object' && 'errorFields' in err) return
-      const msg = (err as { response?: { data?: { msg?: string } } })?.response?.data?.msg
-      messageApi.error(msg || '操作失败')
+      // API 错误已由响应拦截器统一提示
     }
   }
 

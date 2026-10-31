@@ -32,7 +32,7 @@ export default function KnowledgeTagsPage() {
     async (silent = false) => {
       if (!silent) setLoading(true)
       try {
-        const res = await knowledgeService.listTags(page - 1, pageSize)
+        const res = await knowledgeService.listTags(page - 1, pageSize, silent)
         if (res.code === 200 && res.data) {
           setTags(res.data.content)
           setTotal(res.data.totalElements)
@@ -92,11 +92,9 @@ export default function KnowledgeTagsPage() {
         messageApi.success('更新成功')
         setEditModalOpen(false)
         fetchTags()
-      } else {
-        messageApi.error(res.msg || '更新失败')
       }
     } catch {
-      messageApi.error('更新失败')
+      // API 错误已由响应拦截器统一提示
     } finally {
       setSaving(false)
     }
@@ -119,11 +117,9 @@ export default function KnowledgeTagsPage() {
         setCreateName('')
         setCreateDescription('')
         fetchTags()
-      } else {
-        messageApi.error(res.msg || '创建失败')
       }
     } catch {
-      messageApi.error('创建失败')
+      // API 错误已由响应拦截器统一提示
     } finally {
       setSaving(false)
     }
@@ -135,11 +131,9 @@ export default function KnowledgeTagsPage() {
       if (res.code === 200) {
         messageApi.success(`已删除，自动解除 ${res.data ?? 0} 个分片关联`)
         fetchTags()
-      } else {
-        messageApi.error(res.msg || '删除失败')
       }
     } catch {
-      messageApi.error('删除失败')
+      // API 错误已由响应拦截器统一提示
     }
   }
 

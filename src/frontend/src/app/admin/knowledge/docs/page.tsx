@@ -42,7 +42,7 @@ export default function KnowledgeDocsPage() {
     async (silent = false) => {
       if (!silent) setLoading(true)
       try {
-        const res = await knowledgeService.listDocuments(page - 1, pageSize)
+        const res = await knowledgeService.listDocuments(page - 1, pageSize, silent)
         if (res.code === 200 && res.data) {
           setDocs(res.data.content)
           setTotal(res.data.totalElements)
@@ -90,11 +90,9 @@ export default function KnowledgeDocsPage() {
       if (res.code === 200) {
         messageApi.success('上传成功，开始解析')
         fetchDocs()
-      } else {
-        messageApi.error(res.msg || '上传失败')
       }
-    } catch (e) {
-      messageApi.error('上传失败')
+    } catch {
+      // API 错误已由响应拦截器统一提示
     } finally {
       setUploading(false)
     }
@@ -120,11 +118,9 @@ export default function KnowledgeDocsPage() {
       if (res.code === 200) {
         messageApi.success('附件已更换，重新解析已触发')
         fetchDocs()
-      } else {
-        messageApi.error(res.msg || '更换附件失败')
       }
     } catch {
-      messageApi.error('更换附件失败')
+      // API 错误已由响应拦截器统一提示
     } finally {
       setReplacing(false)
       setReplacingDoc(null)
@@ -137,11 +133,9 @@ export default function KnowledgeDocsPage() {
       if (res.code === 200) {
         messageApi.success('重新解析已触发')
         fetchDocs()
-      } else {
-        messageApi.error(res.msg || '操作失败')
       }
     } catch {
-      messageApi.error('操作失败')
+      // API 错误已由响应拦截器统一提示
     }
   }
 
@@ -151,11 +145,9 @@ export default function KnowledgeDocsPage() {
       if (res.code === 200) {
         messageApi.success('取消请求已发送')
         fetchDocs()
-      } else {
-        messageApi.error(res.msg || '操作失败')
       }
     } catch {
-      messageApi.error('操作失败')
+      // API 错误已由响应拦截器统一提示
     }
   }
 
@@ -177,11 +169,9 @@ export default function KnowledgeDocsPage() {
         messageApi.success('删除成功')
         setDeleteModalOpen(false)
         fetchDocs()
-      } else {
-        messageApi.error(res.msg || '删除失败')
       }
     } catch {
-      messageApi.error('删除失败')
+      // API 错误已由响应拦截器统一提示
     } finally {
       setDeleteLoading(false)
     }

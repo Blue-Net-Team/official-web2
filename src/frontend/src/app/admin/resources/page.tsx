@@ -104,11 +104,9 @@ export default function SoftwareResourceManagementPage() {
         if (res.code === 200 && res.data) {
           setResources(res.data.content)
           setTotal(res.data.totalElements)
-        } else {
-          messageApi.error(res.msg || '获取资源列表失败')
         }
       } catch {
-        messageApi.error('获取资源列表失败')
+        // API 错误已由响应拦截器统一提示
       } finally {
         setLoading(false)
       }
@@ -171,8 +169,6 @@ export default function SoftwareResourceManagementPage() {
           messageApi.success('创建成功')
           setModalOpen(false)
           fetchResources(page)
-        } else {
-          messageApi.error(res.msg || '创建失败')
         }
       } else if (editingResource) {
         const res = await adminSoftwareResourceService.update(editingResource.id, {
@@ -183,8 +179,6 @@ export default function SoftwareResourceManagementPage() {
           messageApi.success('更新成功')
           setModalOpen(false)
           fetchResources(page)
-        } else {
-          messageApi.error(res.msg || '更新失败')
         }
       }
     } catch {
@@ -205,11 +199,9 @@ export default function SoftwareResourceManagementPage() {
         messageApi.success('删除成功')
         setDeleteModalOpen(false)
         fetchResources(page)
-      } else {
-        messageApi.error(res.msg || '删除失败')
       }
     } catch {
-      messageApi.error('删除失败')
+      // API 错误已由响应拦截器统一提示
     }
   }
 
@@ -227,11 +219,9 @@ export default function SoftwareResourceManagementPage() {
       if (res.code === 200) {
         messageApi.success(checked ? '已启用' : '已禁用')
         fetchResources(page)
-      } else {
-        messageApi.error(res.msg || '操作失败')
       }
     } catch {
-      messageApi.error('操作失败')
+      // API 错误已由响应拦截器统一提示
     }
   }
 
@@ -259,12 +249,10 @@ export default function SoftwareResourceManagementPage() {
       const res = await adminSoftwareResourceService.batchUpdateSortOrder({ items: sortItems })
       if (res.code !== 200) {
         setDisplayList(resources)
-        messageApi.error(res.msg || '排序更新失败')
       }
     } catch {
       // Revert on failure
       setDisplayList(resources)
-      messageApi.error('排序更新失败')
     }
   }
 
@@ -285,11 +273,9 @@ export default function SoftwareResourceManagementPage() {
       const res = await adminSoftwareResourceService.batchUpdateSortOrder({ items: sortItems })
       if (res.code !== 200) {
         setDisplayList(resources)
-        messageApi.error(res.msg || '排序更新失败')
       }
     } catch {
       setDisplayList(resources)
-      messageApi.error('排序更新失败')
     }
   }
 

@@ -71,7 +71,7 @@ export default function ExperienceSection({
       }
       handleCloseModal()
     } catch {
-      message.error('操作失败，请重试')
+      // API 错误已由响应拦截器统一提示
     } finally {
       setIsSubmitting(false)
     }
@@ -83,7 +83,7 @@ export default function ExperienceSection({
       await onDelete?.(id)
       message.success('删除成功')
     } catch {
-      message.error('删除失败')
+      // API 错误已由响应拦截器统一提示
     }
   }
 

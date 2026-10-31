@@ -89,12 +89,9 @@ export default function AchievementManagementPage() {
           if (response.code === 200) {
             messageApi.success('删除成功')
             refresh()
-          } else {
-            messageApi.error(`删除失败: ${response.msg}`)
           }
         } catch (error) {
           console.error('删除成就失败:', error)
-          messageApi.error('删除成就失败')
         }
       },
     })

@@ -92,15 +92,19 @@ export const fileService = {
    * 预签名上传确认
    * 对应后端 POST /api/v1/file/confirm-upload
    */
-  async confirmUpload(dto: {
-    fileId: number
-    callbackToken: string
-    md5: string
-    size: number
-  }): Promise<ResponseMessage<ConfirmUploadResponse>> {
+  async confirmUpload(
+    dto: {
+      fileId: number
+      callbackToken: string
+      md5: string
+      size: number
+    },
+    skipErrorMessage = false
+  ): Promise<ResponseMessage<ConfirmUploadResponse>> {
     const response = await apiClient.post<ResponseMessage<ConfirmUploadResponse>>(
       '/file/confirm-upload',
-      dto
+      dto,
+      { skipErrorMessage }
     )
     return response.data
   },

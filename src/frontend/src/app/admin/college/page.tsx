@@ -28,7 +28,7 @@ export default function CollegeManagementPage() {
         setColleges(res.data)
       }
     } catch {
-      messageApi.error('获取学院列表失败')
+      // API 错误已由响应拦截器统一提示
     } finally {
       setLoading(false)
     }
@@ -63,7 +63,7 @@ export default function CollegeManagementPage() {
       setDeleteModalOpen(false)
       fetchColleges()
     } catch {
-      messageApi.error('删除失败')
+      // API 错误已由响应拦截器统一提示
     }
   }
 

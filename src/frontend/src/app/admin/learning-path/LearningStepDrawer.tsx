@@ -2,10 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import { App, Button, Drawer, Form, Input } from 'antd'
-import { AxiosError } from 'axios'
 import type { LearningStepDTO } from '@/apis/schema/direction.dto'
 import { adminDirectionService } from '@/apis/services/direction.service'
-import type { ResponseMessage } from '@/apis/schema/type'
 
 interface LearningStepDrawerProps {
   open: boolean
@@ -62,20 +60,9 @@ export default function LearningStepDrawer({
       if (response.code === 200) {
         messageApi.success(isEdit ? '更新成功' : '创建成功')
         onSuccess()
-      } else {
-        messageApi.error(`保存失败: ${response.msg}`)
       }
-    } catch (error) {
-      if (error instanceof AxiosError) {
-        // 透出后端业务错误消息
-        const data = error.response?.data as ResponseMessage<unknown> | undefined
-        messageApi.error(data?.msg || '保存失败')
-      } else if (error instanceof Error && error.message) {
-        // 表单校验失败等本地错误不重复提示
-        if (!('errorFields' in error)) {
-          messageApi.error('保存失败')
-        }
-      }
+    } catch {
+      // API 错误已由响应拦截器统一提示
     } finally {
       setSaving(false)
     }

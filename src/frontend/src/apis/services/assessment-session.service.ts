@@ -13,7 +13,8 @@ export const assessmentSessionService = {
    */
   async getSession(assessmentTimeId: number): Promise<ResponseMessage<AssessmentSessionDTO>> {
     const response = await apiClient.get<ResponseMessage<AssessmentSessionDTO>>(
-      `/assessment-sessions/${assessmentTimeId}`
+      `/assessment-sessions/${assessmentTimeId}`,
+      { skipErrorMessage: true }
     )
     return response.data
   },

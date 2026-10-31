@@ -109,7 +109,7 @@ export default function CompetitionManagementPage() {
       setDrawerOpen(false)
       refresh()
     } catch {
-      messageApi.error('删除失败')
+      // API 错误已由响应拦截器统一提示
     }
   }
 
@@ -144,7 +144,6 @@ export default function CompetitionManagementPage() {
     } catch {
       // Revert on failure
       setDisplayList(data)
-      messageApi.error('排序更新失败')
     }
   }
 
@@ -154,7 +153,7 @@ export default function CompetitionManagementPage() {
       await adminCompetitionService.moveCompetition(id, { direction })
       refresh()
     } catch {
-      messageApi.error(direction === 'UP' ? '上移失败' : '下移失败')
+      // API 错误已由响应拦截器统一提示
     }
   }
 

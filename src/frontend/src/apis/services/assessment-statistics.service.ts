@@ -11,7 +11,8 @@ export const assessmentStatisticsService = {
     questionId: number
   ): Promise<ResponseMessage<QuestionStatisticsDTO>> {
     const response = await apiClient.get<ResponseMessage<QuestionStatisticsDTO>>(
-      `/assessment-statistics/questions/${questionId}`
+      `/assessment-statistics/questions/${questionId}`,
+      { skipErrorMessage: true }
     )
     return response.data
   },

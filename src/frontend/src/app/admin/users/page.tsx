@@ -152,7 +152,7 @@ export default function AdminUserManagementPage() {
     try {
       await fetchDetail(user.id)
     } catch {
-      messageApi.error('获取用户详情失败')
+      // API 错误已由响应拦截器统一提示
     }
   }
 
@@ -187,11 +187,9 @@ export default function AdminUserManagementPage() {
         messageApi.success('更新成功')
         setEditModalOpen(false)
         refresh()
-      } else {
-        messageApi.error(res.msg || '更新失败')
       }
     } catch {
-      messageApi.error('更新失败')
+      // API 错误已由响应拦截器统一提示
     } finally {
       setEditSubmitting(false)
     }
@@ -217,11 +215,9 @@ export default function AdminUserManagementPage() {
       if (res.code === 200) {
         messageApi.success('密码已重置')
         setResetModalOpen(false)
-      } else {
-        messageApi.error(res.msg || '重置失败')
       }
     } catch {
-      messageApi.error('重置失败')
+      // API 错误已由响应拦截器统一提示
     } finally {
       setResetSubmitting(false)
     }
@@ -255,11 +251,9 @@ export default function AdminUserManagementPage() {
         messageApi.success('删除成功')
         setDeleteModalOpen(false)
         refresh()
-      } else {
-        messageApi.error(res.msg || '删除失败')
       }
     } catch {
-      messageApi.error('删除失败')
+      // API 错误已由响应拦截器统一提示
     } finally {
       setDeleteSubmitting(false)
     }
@@ -289,11 +283,9 @@ export default function AdminUserManagementPage() {
             messageApi.success('批量删除成功')
             setSelectedRowKeys([])
             refresh()
-          } else {
-            messageApi.error(res.msg || '批量删除失败')
           }
         } catch {
-          messageApi.error('批量删除失败')
+          // API 错误已由响应拦截器统一提示
         } finally {
           setBatchSubmitting(false)
         }
@@ -313,11 +305,9 @@ export default function AdminUserManagementPage() {
         messageApi.success(disable ? '批量禁用成功' : '批量启用成功')
         setSelectedRowKeys([])
         refresh()
-      } else {
-        messageApi.error(res.msg || '操作失败')
       }
     } catch {
-      messageApi.error('操作失败')
+      // API 错误已由响应拦截器统一提示
     } finally {
       setBatchSubmitting(false)
     }
@@ -345,11 +335,9 @@ export default function AdminUserManagementPage() {
         setBatchRoleModalOpen(false)
         setSelectedRowKeys([])
         refresh()
-      } else {
-        messageApi.error(res.msg || '操作失败')
       }
     } catch {
-      messageApi.error('操作失败')
+      // API 错误已由响应拦截器统一提示
     } finally {
       setBatchSubmitting(false)
     }
@@ -384,11 +372,9 @@ export default function AdminUserManagementPage() {
         messageApi.success('用户创建成功')
         setCreateModalOpen(false)
         refresh()
-      } else {
-        messageApi.error(res.msg || '创建失败')
       }
     } catch {
-      messageApi.error('创建失败')
+      // API 错误已由响应拦截器统一提示
     } finally {
       setCreateSubmitting(false)
     }

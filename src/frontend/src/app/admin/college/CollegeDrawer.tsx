@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { App, Button, Drawer, Form, Input } from 'antd'
+import { Button, Drawer, Form, Input } from 'antd'
 import type { CollegeDTO, CreateCollegeRequestDTO } from '@/apis/schema/type'
 import { adminCollegeService } from '@/apis/services/admin-college.service'
 
@@ -23,7 +23,6 @@ export default function CollegeDrawer({
   onSuccess,
 }: CollegeDrawerProps) {
   const [form] = Form.useForm<CreateCollegeRequestDTO>()
-  const { message: messageApi } = App.useApp()
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
@@ -47,7 +46,7 @@ export default function CollegeDrawer({
       }
       onSuccess()
     } catch {
-      messageApi.error('保存失败')
+      // API 错误已由响应拦截器统一提示
     } finally {
       setSaving(false)
     }

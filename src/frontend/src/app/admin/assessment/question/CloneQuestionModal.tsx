@@ -99,10 +99,9 @@ export default function CloneQuestionModal({
 
       if (sequence !== requestSequence.current) return
       form.setFieldsValue({ targetQuestionNo: nextQuestionNo })
-    } catch (err) {
+    } catch {
       if (sequence !== requestSequence.current) return
-      const msg = (err as { response?: { data?: { msg?: string } } })?.response?.data?.msg
-      messageApi.error(msg || '读取目标题号失败，请重试')
+      // API 错误已由响应拦截器统一提示
     } finally {
       if (sequence === requestSequence.current) setDefaultNoLoading(false)
     }
@@ -118,8 +117,7 @@ export default function CloneQuestionModal({
       onSuccess()
     } catch (err: unknown) {
       if (err && typeof err === 'object' && 'errorFields' in err) return
-      const msg = (err as { response?: { data?: { msg?: string } } })?.response?.data?.msg
-      messageApi.error(msg || '克隆失败，请检查目标题号后重试')
+      // API 错误已由响应拦截器统一提示
     } finally {
       setSubmitting(false)
     }

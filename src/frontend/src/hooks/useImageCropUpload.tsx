@@ -4,6 +4,7 @@ import { useState, useCallback, useRef } from 'react'
 import type { ReactNode } from 'react'
 import ImageCropModal from '@/components/common/ImageCropModal'
 import type { FileType } from '@/apis/schema/enumerate'
+import { isPresignedUploadApiError } from './usePresignedUpload'
 
 export interface UseImageCropUploadOptions {
   /** 上传通道（预签名直传或旧通道适配函数），返回 fileId；失败时抛出异常或返回 null */
@@ -131,8 +132,10 @@ export function useImageCropUpload(options: UseImageCropUploadOptions): UseImage
         } else {
           fail('上传失败，请重试')
         }
-      } catch {
-        fail('上传失败，请重试')
+      } catch (error) {
+        if (!isPresignedUploadApiError(error)) {
+          fail('上传失败，请重试')
+        }
       } finally {
         setUploading(false)
       }

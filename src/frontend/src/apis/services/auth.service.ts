@@ -70,7 +70,9 @@ export const authService = {
    * 用于页面刷新后恢复登录状态和获取 CSRF Token
    */
   async getAuthMe(): Promise<ResponseMessage<AuthMeResponseDTO>> {
-    const response = await publicClient.get<ResponseMessage<AuthMeResponseDTO>>('/auth/me')
+    const response = await publicClient.get<ResponseMessage<AuthMeResponseDTO>>('/auth/me', {
+      skipErrorMessage: true,
+    })
     return response.data
   },
 
@@ -99,8 +101,10 @@ export const authService = {
    * 对应后端 GET /api/v1/auth/github/status
    * 返回 GitHub 用户名（未绑定返回 null）
    */
-  async getGithubBindingStatus(): Promise<ResponseMessage<string | null>> {
-    const response = await apiClient.get<ResponseMessage<string | null>>('/auth/github/status')
+  async getGithubBindingStatus(silent = false): Promise<ResponseMessage<string | null>> {
+    const response = await apiClient.get<ResponseMessage<string | null>>('/auth/github/status', {
+      skipErrorMessage: silent,
+    })
     return response.data
   },
 

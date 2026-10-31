@@ -6,7 +6,7 @@ import { DeleteOutlined, EditOutlined, PlusOutlined } from '@ant-design/icons'
 import type { VenueDTO, CreateVenueRequestDTO, UpdateVenueRequestDTO } from '@/apis/schema/type'
 import { API_BASE_URL } from '@/apis/config'
 import { adminVenueService } from '@/apis/services/admin-venue.service'
-import { usePresignedUpload } from '@/hooks/usePresignedUpload'
+import { isPresignedUploadApiError, usePresignedUpload } from '@/hooks/usePresignedUpload'
 
 export type DrawerMode = 'view' | 'edit' | 'create'
 
@@ -82,8 +82,10 @@ export default function VenueDrawer({
       } else {
         messageApi.error('图片上传失败，请重试')
       }
-    } catch {
-      messageApi.error('图片上传失败，请重试')
+    } catch (error) {
+      if (!isPresignedUploadApiError(error)) {
+        messageApi.error('图片上传失败，请重试')
+      }
     } finally {
       setUploading(false)
     }

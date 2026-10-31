@@ -100,7 +100,7 @@ function LoginPageContent() {
         window.location.href = res.data
       }
     } catch {
-      messageApi.error('获取 GitHub 授权链接失败')
+      // API 错误已由响应拦截器统一提示
     }
   }
 
@@ -120,9 +120,8 @@ function LoginPageContent() {
       await sendVerificationCode(email)
       setCountdown(60)
       messageApi.success('验证码已发送')
-    } catch (error: unknown) {
-      const errorMsg = error instanceof Error ? error.message : '发送失败，请稍后重试'
-      messageApi.error(errorMsg)
+    } catch {
+      // API 错误已由响应拦截器统一提示
     } finally {
       setSendingCode(false)
     }
@@ -152,15 +151,8 @@ function LoginPageContent() {
         })
         messageApi.success('登录成功')
         router.push('/')
-      } catch (error) {
-        const errormessage = error instanceof Error ? error.message : '登录失败，请稍后重试'
-        if (errormessage.includes('408') || errormessage.includes('超时')) {
-          messageApi.error('网络超时，请稍后重试')
-        } else if (errormessage.includes('5') || errormessage.includes('服务器')) {
-          messageApi.error('服务器错误，请稍后重试')
-        } else {
-          messageApi.error(errormessage)
-        }
+      } catch {
+        // API 错误已由响应拦截器统一提示
       }
     } else {
       if (!values.email || !values.verifyCode) {
@@ -172,13 +164,8 @@ function LoginPageContent() {
         await loginWithEmail(values.email, values.verifyCode)
         messageApi.success('登录成功')
         router.push('/')
-      } catch (error) {
-        const errormessage = error instanceof Error ? error.message : '登录失败，请稍后重试'
-        if (errormessage.includes('验证码')) {
-          messageApi.error('验证码错误或已过期，请重新获取')
-        } else {
-          messageApi.error(errormessage)
-        }
+      } catch {
+        // API 错误已由响应拦截器统一提示
       }
     }
   }

@@ -126,7 +126,7 @@ export default function ProfileSidebar({
         messageApi.success('头像更新成功')
         onAvatarUpdate?.()
       } catch {
-        messageApi.error('头像更新失败，请重试')
+        // API 错误已由响应拦截器统一提示
       } finally {
         resetCropUpload()
       }

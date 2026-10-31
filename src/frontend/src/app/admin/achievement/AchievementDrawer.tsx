@@ -27,7 +27,7 @@ import type {
 import { ACHIEVEMENT_TYPE_LABELS, AWARD_LEVEL_LABELS } from '@/apis/schema/enumerate'
 import { API_BASE_URL } from '@/apis/config'
 import { adminAchievementService } from '@/apis/services/admin-achievement.service'
-import { usePresignedUpload } from '@/hooks/usePresignedUpload'
+import { isPresignedUploadApiError, usePresignedUpload } from '@/hooks/usePresignedUpload'
 import { adminUserService } from '@/apis/services/admin-user.service'
 import { competitionService } from '@/apis/services/competition.service'
 
@@ -243,8 +243,6 @@ export default function AchievementDrawer({
       onSuccess()
     } catch (error) {
       console.error('保存失败:', error)
-      const err = error as { response?: { data?: { msg?: string } } }
-      messageApi.error(err.response?.data?.msg || '保存失败')
     } finally {
       setSaving(false)
     }
@@ -261,8 +259,10 @@ export default function AchievementDrawer({
       } else {
         messageApi.error('文件上传失败，请重试')
       }
-    } catch {
-      messageApi.error('文件上传失败，请重试')
+    } catch (error) {
+      if (!isPresignedUploadApiError(error)) {
+        messageApi.error('文件上传失败，请重试')
+      }
     } finally {
       setFileUploading(false)
     }

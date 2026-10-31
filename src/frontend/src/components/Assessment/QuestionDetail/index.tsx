@@ -23,7 +23,7 @@ import { algorithmJudgeService } from '@/apis/services/algorithm-judge.service'
 import { assessmentStatisticsService } from '@/apis/services/assessment-statistics.service'
 import { fileService } from '@/apis/services/file.service'
 import { useAuth } from '@/hooks'
-import { usePresignedUpload } from '@/hooks/usePresignedUpload'
+import { isPresignedUploadApiError, usePresignedUpload } from '@/hooks/usePresignedUpload'
 import type {
   AssessmentQuestionDTO,
   AssessmentAnswerDTO,
@@ -323,11 +323,8 @@ export default function QuestionDetailPage() {
         setIsResubmitting(false)
         setUploadedFile(null)
         message.success('提交成功')
-      } else {
-        message.error(response.msg || '提交失败')
       }
     } catch (error) {
-      message.error('提交失败，请重试')
       console.error('Submit error:', error)
     } finally {
       setSubmitting(false)
@@ -354,11 +351,8 @@ export default function QuestionDetailPage() {
         setIsResubmitting(false)
         setUploadedFile(null)
         message.success('重新提交成功')
-      } else {
-        message.error(response.msg || '重新提交失败')
       }
     } catch (error) {
-      message.error('重新提交失败，请重试')
       console.error('Resubmit error:', error)
     } finally {
       setSubmitting(false)
@@ -391,11 +385,8 @@ export default function QuestionDetailPage() {
         setAnswer(response.data)
         setIsResubmitting(false)
         message.success(hasExistingAnswer ? '重新提交成功' : '提交成功')
-      } else {
-        message.error(response.msg || '提交失败')
       }
     } catch (error) {
-      message.error('提交失败，请重试')
       console.error('Choice submit error:', error)
     } finally {
       setSubmitting(false)
@@ -436,11 +427,8 @@ export default function QuestionDetailPage() {
         setPollingFormalJob(false)
         setPollingJobId(response.data.judgeJobId)
         message.success('运行任务已提交')
-      } else {
-        message.error(response.msg || '运行失败')
       }
     } catch (error) {
-      message.error('运行失败，请重试')
       console.error('Algorithm run error:', error)
     } finally {
       setSubmitting(false)
@@ -479,11 +467,8 @@ export default function QuestionDetailPage() {
         setPollingFormalJob(true)
         setPollingJobId(response.data.judgeJobId)
         message.success('提交成功，正在判题')
-      } else {
-        message.error(response.msg || '提交失败')
       }
     } catch (error) {
-      message.error('提交失败，请重试')
       console.error('Algorithm submit error:', error)
     } finally {
       setSubmitting(false)
@@ -505,12 +490,9 @@ export default function QuestionDetailPage() {
           if (response.code === 200 && response.data) {
             setAnswer(response.data)
             message.warning('考核时间已到，已自动提交')
-          } else {
-            message.error('自动提交失败')
           }
         })
         .catch((error) => {
-          message.error('自动提交失败')
           console.error('Auto-submit error:', error)
         })
         .finally(() => setSubmitting(false))
@@ -531,12 +513,9 @@ export default function QuestionDetailPage() {
           if (response.code === 200 && response.data) {
             setAnswer(response.data)
             message.warning('考核时间已到，已自动提交')
-          } else {
-            message.error('自动提交失败')
           }
         })
         .catch((error) => {
-          message.error('自动提交失败')
           console.error('Auto-submit error:', error)
         })
         .finally(() => setSubmitting(false))
@@ -552,7 +531,7 @@ export default function QuestionDetailPage() {
     try {
       await fileService.downloadFile(fileId)
     } catch {
-      message.error('文件不存在或无权访问')
+      // API 错误已由响应拦截器统一提示
     }
   }
 
@@ -565,11 +544,7 @@ export default function QuestionDetailPage() {
       if (response.code === 200) {
         setTeamInfo(null)
         message.success('已退出队伍')
-      } else {
-        message.error(response.msg || '退出失败')
       }
-    } catch (error) {
-      message.error('退出失败')
     } finally {
       setTeamLoading(false)
     }
@@ -586,11 +561,7 @@ export default function QuestionDetailPage() {
       if (response.code === 200 && response.data) {
         setTeamInfo(response.data)
         message.success('队长转让成功')
-      } else {
-        message.error(response.msg || '转让失败')
       }
-    } catch (error) {
-      message.error('转让失败')
     } finally {
       setTeamLoading(false)
     }
@@ -604,11 +575,7 @@ export default function QuestionDetailPage() {
       if (response.code === 200) {
         setTeamInfo(null)
         message.success('队伍已解散')
-      } else {
-        message.error(response.msg || '解散失败')
       }
-    } catch (error) {
-      message.error('解散失败')
     } finally {
       setTeamLoading(false)
     }
@@ -730,7 +697,7 @@ export default function QuestionDetailPage() {
         } catch (error) {
           // 透传底层错误信息；内部错误码与用户主动取消不弹提示
           const rawMsg = error instanceof Error ? error.message : ''
-          if (rawMsg !== 'UPLOAD_ABORTED') {
+          if (rawMsg !== 'UPLOAD_ABORTED' && !isPresignedUploadApiError(error)) {
             message.error(rawMsg || '上传失败，请重试')
           }
           onError?.(error as Error)

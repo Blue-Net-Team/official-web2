@@ -64,11 +64,16 @@ export const knowledgeService = {
    * 查询文档列表
    * GET /api/v1/admin/knowledge/docs
    */
-  async listDocuments(page = 0, size = 20): Promise<ResponseMessage<PageDTO<KnowledgeDocDTO>>> {
+  async listDocuments(
+    page = 0,
+    size = 20,
+    silent = false
+  ): Promise<ResponseMessage<PageDTO<KnowledgeDocDTO>>> {
     const response = await apiClient.get<ResponseMessage<PageDTO<KnowledgeDocDTO>>>(
       '/admin/knowledge/docs',
       {
         params: { page, size },
+        skipErrorMessage: silent,
       }
     )
     return response.data
@@ -78,9 +83,10 @@ export const knowledgeService = {
    * 查询文档详情
    * GET /api/v1/admin/knowledge/docs/{id}
    */
-  async getDocumentDetail(id: number): Promise<ResponseMessage<KnowledgeDocDTO>> {
+  async getDocumentDetail(id: number, silent = false): Promise<ResponseMessage<KnowledgeDocDTO>> {
     const response = await apiClient.get<ResponseMessage<KnowledgeDocDTO>>(
-      `/admin/knowledge/docs/${id}`
+      `/admin/knowledge/docs/${id}`,
+      { skipErrorMessage: silent }
     )
     return response.data
   },
@@ -123,12 +129,14 @@ export const knowledgeService = {
   async listChunks(
     id: number,
     page = 0,
-    size = 20
+    size = 20,
+    silent = false
   ): Promise<ResponseMessage<PageDTO<KnowledgeChunkDTO>>> {
     const response = await apiClient.get<ResponseMessage<PageDTO<KnowledgeChunkDTO>>>(
       `/admin/knowledge/docs/${id}/chunks`,
       {
         params: { page, size },
+        skipErrorMessage: silent,
       }
     )
     return response.data
@@ -138,11 +146,16 @@ export const knowledgeService = {
    * 查询标签列表
    * GET /api/v1/admin/knowledge/tags
    */
-  async listTags(page = 0, size = 20): Promise<ResponseMessage<PageDTO<KnowledgeTagDTO>>> {
+  async listTags(
+    page = 0,
+    size = 20,
+    silent = false
+  ): Promise<ResponseMessage<PageDTO<KnowledgeTagDTO>>> {
     const response = await apiClient.get<ResponseMessage<PageDTO<KnowledgeTagDTO>>>(
       '/admin/knowledge/tags',
       {
         params: { page, size },
+        skipErrorMessage: silent,
       }
     )
     return response.data

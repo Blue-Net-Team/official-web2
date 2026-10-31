@@ -30,7 +30,7 @@ export const assessmentAnswerService = {
   async getMyAnswer(questionId: number): Promise<ResponseMessage<AssessmentAnswerDTO>> {
     const response = await apiClient.get<ResponseMessage<AssessmentAnswerDTO>>(
       '/assessment-answers',
-      { params: { questionId } }
+      { params: { questionId }, skipErrorMessage: true }
     )
     return response.data
   },

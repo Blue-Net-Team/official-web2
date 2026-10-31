@@ -24,7 +24,7 @@ import type {
 import { COMPETITION_LEVEL_LABELS, COMPETITION_LEVEL_COLORS } from '@/types/competition'
 import { API_BASE_URL } from '@/apis/config'
 import { adminCompetitionService } from '@/apis/services/admin-competition.service'
-import { usePresignedUpload } from '@/hooks/usePresignedUpload'
+import { isPresignedUploadApiError, usePresignedUpload } from '@/hooks/usePresignedUpload'
 import { useImageCropUpload } from '@/hooks/useImageCropUpload'
 
 export type DrawerMode = 'view' | 'edit' | 'create'
@@ -140,8 +140,10 @@ export default function CompetitionDrawer({
       } else {
         messageApi.error('封面上传失败，请重试')
       }
-    } catch {
-      messageApi.error('封面上传失败，请重试')
+    } catch (error) {
+      if (!isPresignedUploadApiError(error)) {
+        messageApi.error('封面上传失败，请重试')
+      }
     } finally {
       setCoverUploading(false)
     }

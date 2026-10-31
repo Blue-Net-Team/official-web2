@@ -65,11 +65,9 @@ export default function ChangeEmailModal({
       if (res.code === 200) {
         messageApi.success('验证码已发送至原邮箱')
         startCountdown('original')
-      } else {
-        messageApi.error(res.msg || '发送验证码失败')
       }
     } catch {
-      messageApi.error('发送验证码失败，请重试')
+      // API 错误已由响应拦截器统一提示
     } finally {
       setSendingOriginal(false)
     }
@@ -95,11 +93,9 @@ export default function ChangeEmailModal({
       if (res.code === 200) {
         messageApi.success('验证码已发送至新邮箱')
         startCountdown('new')
-      } else {
-        messageApi.error(res.msg || '发送验证码失败')
       }
     } catch {
-      messageApi.error('发送验证码失败，请重试')
+      // API 错误已由响应拦截器统一提示
     } finally {
       setSendingNew(false)
     }
@@ -157,11 +153,9 @@ export default function ChangeEmailModal({
         messageApi.success('邮箱修改成功')
         onSuccess()
         handleReset()
-      } else {
-        messageApi.error(res.msg || '修改邮箱失败')
       }
     } catch {
-      messageApi.error('修改邮箱失败，请重试')
+      // API 错误已由响应拦截器统一提示
     } finally {
       setSubmitting(false)
     }

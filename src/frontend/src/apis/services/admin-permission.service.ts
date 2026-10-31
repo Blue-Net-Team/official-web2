@@ -23,8 +23,13 @@ export const adminPermissionService = {
     return response.data
   },
 
-  async getPermissionDetail(id: number): Promise<ResponseMessage<PermissionDTO>> {
-    const response = await apiClient.get<ResponseMessage<PermissionDTO>>(`/admin/permissions/${id}`)
+  async getPermissionDetail(id: number, silent = false): Promise<ResponseMessage<PermissionDTO>> {
+    const response = await apiClient.get<ResponseMessage<PermissionDTO>>(
+      `/admin/permissions/${id}`,
+      {
+        skipErrorMessage: silent,
+      }
+    )
     return response.data
   },
 

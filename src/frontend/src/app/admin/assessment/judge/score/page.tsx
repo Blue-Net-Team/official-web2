@@ -304,7 +304,7 @@ export default function AssessmentJudgementManagementPage() {
           )
         }
       } catch {
-        messageApi.error('加载考核时间失败')
+        // API 错误已由响应拦截器统一提示
       } finally {
         setLoadingTimes(false)
       }
@@ -336,7 +336,7 @@ export default function AssessmentJudgementManagementPage() {
           : list[0]?.questionId
       )
     } catch {
-      messageApi.error('加载题目评分汇总失败')
+      // API 错误已由响应拦截器统一提示
     } finally {
       setLoadingQuestions(false)
     }
@@ -359,7 +359,7 @@ export default function AssessmentJudgementManagementPage() {
       )
       setSubmissions(response.data ?? [])
     } catch {
-      messageApi.error('加载题目提交失败')
+      // API 错误已由响应拦截器统一提示
     } finally {
       setLoadingSubmissions(false)
     }
@@ -379,7 +379,7 @@ export default function AssessmentJudgementManagementPage() {
       })
       setCandidateScores(response.data ?? [])
     } catch {
-      messageApi.error('加载人员评分视图失败')
+      // API 错误已由响应拦截器统一提示
     } finally {
       setLoadingCandidates(false)
     }
@@ -409,7 +409,7 @@ export default function AssessmentJudgementManagementPage() {
         )
       })
     } catch {
-      messageApi.error('加载录用决策数据失败')
+      // API 错误已由响应拦截器统一提示
     } finally {
       setLoadingDecisions(false)
     }
@@ -480,7 +480,7 @@ export default function AssessmentJudgementManagementPage() {
       const response = await adminCommentService.listComments(answerId)
       setComments(response.data ?? [])
     } catch {
-      messageApi.error('加载评论失败')
+      // API 错误已由响应拦截器统一提示
     } finally {
       setLoadingComments(false)
     }
@@ -501,7 +501,7 @@ export default function AssessmentJudgementManagementPage() {
       commentForm.resetFields()
       await fetchComments(reviewing.answerId)
     } catch {
-      messageApi.error('提交评论失败')
+      // API 错误已由响应拦截器统一提示
     } finally {
       setSavingComment(false)
     }
@@ -521,7 +521,7 @@ export default function AssessmentJudgementManagementPage() {
       setEditingCommentId(null)
       await fetchComments(reviewing!.answerId)
     } catch {
-      messageApi.error('更新评论失败')
+      // API 错误已由响应拦截器统一提示
     } finally {
       setSavingComment(false)
     }
@@ -536,7 +536,7 @@ export default function AssessmentJudgementManagementPage() {
         await fetchComments(reviewing.answerId)
       }
     } catch {
-      messageApi.error('删除评论失败')
+      // API 错误已由响应拦截器统一提示
     }
   }
 
@@ -554,7 +554,7 @@ export default function AssessmentJudgementManagementPage() {
       setReviewing(null)
       await refreshAfterScore()
     } catch {
-      messageApi.error('确认最终评分失败')
+      // API 错误已由响应拦截器统一提示
     } finally {
       setSavingFinalize(false)
     }
@@ -590,7 +590,7 @@ export default function AssessmentJudgementManagementPage() {
       messageApi.success(passed ? '已标记通过' : '已标记淘汰')
       await fetchDecisionWorkspace()
     } catch {
-      messageApi.error('保存决策失败')
+      // API 错误已由响应拦截器统一提示
     } finally {
       setSavingDecisionUserId(null)
     }
@@ -603,7 +603,7 @@ export default function AssessmentJudgementManagementPage() {
       const res = await adminAssessmentJudgementService.publishDecisions(assessmentTimeId)
       messageApi.success(`已发送 ${res.data} 封通知邮件`)
     } catch {
-      messageApi.error('发布失败，请稍后重试')
+      // API 错误已由响应拦截器统一提示
     }
   }
 
@@ -645,7 +645,7 @@ export default function AssessmentJudgementManagementPage() {
       await fileService.downloadBatch(entries, zipName)
       setSelectedSubmissionIds([])
     } catch {
-      messageApi.error('批量下载失败')
+      // API 错误已由响应拦截器统一提示
     }
   }
 
@@ -924,7 +924,7 @@ export default function AssessmentJudgementManagementPage() {
           [question.questionId]: detail,
         }))
       } catch {
-        messageApi.error('加载题目提交记录失败')
+        // API 错误已由响应拦截器统一提示
       } finally {
         setLoadingCandidateQuestionIds((current) =>
           current.filter((id) => id !== question.questionId)

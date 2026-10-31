@@ -54,12 +54,9 @@ export default function MessageTemplateDrawer({
       if (response.code === 200) {
         messageApi.success('保存成功')
         onSuccess()
-      } else {
-        messageApi.error(`保存失败: ${response.msg}`)
       }
     } catch (error) {
       console.error('保存模板失败:', error)
-      messageApi.error('保存失败')
     } finally {
       setSaving(false)
     }
@@ -119,12 +116,9 @@ export default function MessageTemplateDrawer({
       if (response.code === 200 && response.data) {
         setPreviewHtml(response.data)
         setActiveTab('preview')
-      } else {
-        messageApi.error(`预览失败: ${response.msg}`)
       }
     } catch (error) {
       console.error('预览模板失败:', error)
-      messageApi.error('预览失败')
     } finally {
       setPreviewing(false)
     }

@@ -77,11 +77,9 @@ export default function AdminGitHubInvitationsPage() {
         } else {
           messageApi.error(`${user.username}：${res.data.reason}`)
         }
-      } else {
-        messageApi.error(res.msg || '邀请失败')
       }
     } catch {
-      messageApi.error('邀请失败')
+      // API 错误已由响应拦截器统一提示
     } finally {
       setInvitingUserIds((prev) => prev.filter((id) => id !== user.id))
     }
@@ -100,11 +98,9 @@ export default function AdminGitHubInvitationsPage() {
       )
       if (res.code === 200 && res.data) {
         setBatchResult(res.data)
-      } else {
-        messageApi.error(res.msg || '批量邀请失败')
       }
     } catch {
-      messageApi.error('批量邀请失败')
+      // API 错误已由响应拦截器统一提示
     } finally {
       setBatchInviting(false)
     }

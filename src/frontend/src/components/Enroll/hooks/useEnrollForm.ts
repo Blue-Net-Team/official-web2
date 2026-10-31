@@ -49,7 +49,7 @@ export function useEnrollForm() {
           setColleges(response.data)
         }
       } catch {
-        messageApi.error('获取学院列表失败')
+        // API 错误已由响应拦截器统一提示
       } finally {
         setLoadingColleges(false)
       }
@@ -107,10 +107,8 @@ export function useEnrollForm() {
           setIntroLength(0)
           setSelectedDirection('COMPUTER_VISION')
           return true
-        } else {
-          messageApi.error(response.msg || '报名失败，请稍后重试')
-          return false
         }
+        return false
       } catch (error: unknown) {
         if (error && typeof error === 'object' && 'response' in error) {
           const err = error as {
@@ -124,11 +122,6 @@ export function useEnrollForm() {
           }
           if (err.response?.data?.code === 409) {
             if (err.response.data.data?.status !== 'PENDING') {
-              messageApi.error(
-                err.response.data.data?.status
-                  ? '该报名已审核，无法更新报名信息'
-                  : err.response.data.msg || '该报名已审核，无法更新报名信息'
-              )
               return false
             }
             modal.confirm({
@@ -141,7 +134,6 @@ export function useEnrollForm() {
             return false
           }
         }
-        messageApi.error('网络错误，请稍后重试')
         return false
       } finally {
         setSubmitting(false)

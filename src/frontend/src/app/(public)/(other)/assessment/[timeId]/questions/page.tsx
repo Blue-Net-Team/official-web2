@@ -178,13 +178,10 @@ export default function QuestionsPage() {
         setCreateTeamModalOpen(false)
         createTeamForm.resetFields()
         message.success('队伍创建成功')
-      } else {
-        message.error(response.msg || '创建失败')
       }
     } catch (err: unknown) {
       if (err && typeof err === 'object' && 'errorFields' in err) return
-      const msg = (err as { response?: { data?: { msg?: string } } })?.response?.data?.msg
-      message.error(msg || '创建失败')
+      // API 错误已由响应拦截器统一提示
     } finally {
       setTeamActionLoading(false)
     }
@@ -203,13 +200,10 @@ export default function QuestionsPage() {
         setJoinTeamModalOpen(false)
         joinTeamForm.resetFields()
         message.success('加入队伍成功')
-      } else {
-        message.error(response.msg || '加入失败')
       }
     } catch (err: unknown) {
       if (err && typeof err === 'object' && 'errorFields' in err) return
-      const msg = (err as { response?: { data?: { msg?: string } } })?.response?.data?.msg
-      message.error(msg || '加入失败')
+      // API 错误已由响应拦截器统一提示
     } finally {
       setTeamActionLoading(false)
     }

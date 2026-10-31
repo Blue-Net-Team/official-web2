@@ -23,7 +23,7 @@ import type {
   UpdateAssessmentQrcodeRequestDTO,
 } from '@/apis/services/qrcode.service'
 import { API_BASE_URL } from '@/apis/config'
-import { usePresignedUpload } from '@/hooks/usePresignedUpload'
+import { isPresignedUploadApiError, usePresignedUpload } from '@/hooks/usePresignedUpload'
 import { qrcodeService } from '@/apis/services/qrcode.service'
 import { adminAssessmentTimeService } from '@/apis/services/admin-assessment-time.service'
 import type { AssessmentTimeDTO } from '@/apis/schema/assessment.dto'
@@ -92,7 +92,7 @@ export default function QrcodeDrawer({
       const times = response.data?.content.filter((item) => item.direction === dir) ?? []
       setAssessmentTimes(times)
     } catch {
-      messageApi.error('加载考核时间失败')
+      // API 错误已由响应拦截器统一提示
     } finally {
       setLoadingTimes(false)
     }
@@ -185,7 +185,6 @@ export default function QrcodeDrawer({
       onSuccess()
     } catch (error) {
       console.error('保存失败:', error)
-      messageApi.error('保存失败')
     } finally {
       setSaving(false)
     }
@@ -202,8 +201,10 @@ export default function QrcodeDrawer({
       } else {
         messageApi.error('文件上传失败，请重试')
       }
-    } catch {
-      messageApi.error('文件上传失败，请重试')
+    } catch (error) {
+      if (!isPresignedUploadApiError(error)) {
+        messageApi.error('文件上传失败，请重试')
+      }
     } finally {
       setFileUploading(false)
     }

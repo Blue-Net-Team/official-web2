@@ -96,7 +96,7 @@ export default function AssessmentJudgementManagementPage() {
           )
         }
       } catch {
-        messageApi.error('加载考核时间失败')
+        // API 错误已由响应拦截器统一提示
       } finally {
         setLoadingTimes(false)
       }
@@ -128,7 +128,7 @@ export default function AssessmentJudgementManagementPage() {
         )
       })
     } catch {
-      messageApi.error('加载录用决策数据失败')
+      // API 错误已由响应拦截器统一提示
     } finally {
       setLoadingDecisions(false)
     }
@@ -166,7 +166,7 @@ export default function AssessmentJudgementManagementPage() {
       messageApi.success(passed ? '已标记通过' : '已标记淘汰')
       await fetchDecisionWorkspace()
     } catch {
-      messageApi.error('保存决策失败')
+      // API 错误已由响应拦截器统一提示
     } finally {
       setSavingDecisionUserId(null)
     }
@@ -179,7 +179,7 @@ export default function AssessmentJudgementManagementPage() {
       const res = await adminAssessmentJudgementService.publishDecisions(assessmentTimeId)
       messageApi.success(`已发送 ${res.data} 封通知邮件`)
     } catch {
-      messageApi.error('发布失败，请稍后重试')
+      // API 错误已由响应拦截器统一提示
     }
   }
 

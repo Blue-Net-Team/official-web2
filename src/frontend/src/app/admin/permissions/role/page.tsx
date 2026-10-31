@@ -125,7 +125,7 @@ export default function RolePermissionPage() {
           setSelectedPermissionIds(ids)
         }
       } catch {
-        message.error('加载角色权限失败')
+        // API 错误已由响应拦截器统一提示
       }
     },
     [fetchRolePerms, fetchTree, resetPreview, message, treeData]
@@ -138,7 +138,7 @@ export default function RolePermissionPage() {
   const handlePermissionSelect = useCallback(
     async (permissionId: number) => {
       try {
-        await fetchPreview(permissionId)
+        await fetchPreview(permissionId, true)
       } catch {
         // silently ignore
       }
@@ -168,7 +168,6 @@ export default function RolePermissionPage() {
           permissionIds: toAdd,
         })
         if (res.code !== 200) {
-          message.error(res.msg || '分配权限失败')
           return
         }
       }
@@ -177,7 +176,6 @@ export default function RolePermissionPage() {
           permissionIds: toRemove,
         })
         if (res.code !== 200) {
-          message.error(res.msg || '移除权限失败')
           return
         }
       }
@@ -193,7 +191,7 @@ export default function RolePermissionPage() {
         setSelectedPermissionIds(ids)
       }
     } catch {
-      message.error('操作失败')
+      // API 错误已由响应拦截器统一提示
     } finally {
       setSaving(false)
     }

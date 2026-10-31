@@ -102,8 +102,8 @@ export default function ChangePasswordPage() {
         setToken(res.data)
         setCurrentStep(1)
       }
-    } catch (error: unknown) {
-      messageApi.error(getErrorMessage(error, '验证失败'))
+    } catch {
+      // API 错误已由响应拦截器统一提示
     } finally {
       setLoading(false)
     }
@@ -134,7 +134,6 @@ export default function ChangePasswordPage() {
       setTimeout(() => router.push('/login'), 2000)
     } catch (error: unknown) {
       const msg = getErrorMessage(error, '修改失败')
-      messageApi.error(msg)
       // Token expired - go back to step 1
       if (msg.includes('过期') || msg.includes('重新开始')) {
         setCurrentStep(0)

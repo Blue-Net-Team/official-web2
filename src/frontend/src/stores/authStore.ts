@@ -3,7 +3,6 @@ import { persist } from 'zustand/middleware'
 import { UserInfo, StudentIdLoginRequestDTO, UserAuthResponseDTO } from '@/apis/schema/type'
 import { authService } from '@/apis/services/auth.service'
 import { hashPassword } from '@/utils/passwordHash'
-import { AxiosError } from 'axios'
 
 interface AuthState {
   /** CSRF Token（内存存储，不持久化） */
@@ -58,9 +57,6 @@ const authStore = create<AuthState>()(
           }
         } catch (error) {
           set({ isLoading: false })
-          if (error instanceof AxiosError && error.response?.data?.msg) {
-            throw new Error(error.response.data.msg)
-          }
           throw error
         }
       },
@@ -87,22 +83,12 @@ const authStore = create<AuthState>()(
           }
         } catch (error) {
           set({ isLoading: false })
-          if (error instanceof AxiosError && error.response?.data?.msg) {
-            throw new Error(error.response.data.msg)
-          }
           throw error
         }
       },
 
       sendVerificationCode: async (email: string) => {
-        try {
-          await authService.sendVerificationCode({ email })
-        } catch (error) {
-          if (error instanceof AxiosError && error.response?.data?.msg) {
-            throw new Error(error.response.data.msg)
-          }
-          throw error
-        }
+        await authService.sendVerificationCode({ email })
       },
 
       logout: async () => {

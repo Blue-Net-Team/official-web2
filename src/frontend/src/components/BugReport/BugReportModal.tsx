@@ -80,11 +80,9 @@ export default function BugReportModal({ open, onClose }: BugReportModalProps) {
         form.resetFields()
         setFileList([])
         onClose()
-      } else {
-        messageApi.error(res.msg || '提交失败')
       }
     } catch {
-      messageApi.error('提交失败')
+      // API 错误已由响应拦截器统一提示
     } finally {
       setSubmitting(false)
     }

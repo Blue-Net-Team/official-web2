@@ -60,7 +60,7 @@ export default function PermissionRolePage() {
       try {
         await Promise.all([fetchDetail(permissionId), fetchRoles(permissionId)])
       } catch {
-        message.error('加载权限详情失败')
+        // API 错误已由响应拦截器统一提示
       }
     },
     [fetchDetail, fetchRoles, message]
@@ -113,7 +113,6 @@ export default function PermissionRolePage() {
           roleNames: toAdd,
         })
         if (res.code !== 200) {
-          message.error(res.msg || '添加角色失败')
           return
         }
       }
@@ -122,14 +121,13 @@ export default function PermissionRolePage() {
           roleNames: toRemove,
         })
         if (res.code !== 200) {
-          message.error(res.msg || '移除角色失败')
           return
         }
       }
       message.success('角色分配已更新')
       await fetchRoles(selectedPermissionId)
     } catch {
-      message.error('操作失败')
+      // API 错误已由响应拦截器统一提示
     } finally {
       setSaving(false)
     }

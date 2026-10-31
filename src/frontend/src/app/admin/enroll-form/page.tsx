@@ -12,7 +12,7 @@ import {
 import type { UploadProps } from 'antd'
 import dayjs from 'dayjs'
 import { enrollFormService, EnrollFormDTO } from '@/apis/services/enroll-form.service'
-import { usePresignedUpload } from '@/hooks/usePresignedUpload'
+import { isPresignedUploadApiError, usePresignedUpload } from '@/hooks/usePresignedUpload'
 
 const { Dragger } = Upload
 
@@ -37,7 +37,6 @@ export default function EnrollFormManagementPage() {
       }
     } catch (error) {
       console.error('获取报名表失败:', error)
-      messageApi.error('获取报名表失败，请稍后重试')
     } finally {
       setLoading(false)
     }
@@ -66,12 +65,12 @@ export default function EnrollFormManagementPage() {
         messageApi.success('报名表已更新')
         reset()
         await loadCurrentForm()
-      } else {
-        messageApi.error(`设置报名表失败: ${response.msg}`)
       }
     } catch (error) {
       console.error('更新报名表失败:', error)
-      messageApi.error(error instanceof Error ? error.message : '更新报名表失败，请稍后重试')
+      if (error instanceof Error && !isPresignedUploadApiError(error)) {
+        messageApi.error(error.message)
+      }
     }
   }
 
@@ -89,12 +88,9 @@ export default function EnrollFormManagementPage() {
           if (response.code === 200) {
             messageApi.success('报名表已删除')
             await loadCurrentForm()
-          } else {
-            messageApi.error(`删除失败: ${response.msg}`)
           }
         } catch (error) {
           console.error('删除报名表失败:', error)
-          messageApi.error('删除报名表失败，请稍后重试')
         } finally {
           setDeleting(false)
         }

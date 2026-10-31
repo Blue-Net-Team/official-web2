@@ -68,7 +68,7 @@ export default function EnrollManagementPage() {
       const res = await adminEnrollService.getStatistics()
       if (res.data) setStatistics(res.data)
     } catch {
-      messageApi.error('获取报名统计失败，请稍后重试')
+      // API 错误已由响应拦截器统一提示
     }
   }, [messageApi])
 
@@ -92,7 +92,6 @@ export default function EnrollManagementPage() {
       const res = await adminEnrollService.getDetail(enrollment.id)
       if (res.data) setDrawerDetail(res.data)
     } catch {
-      messageApi.error('获取报名详情失败，请稍后重试')
       setDrawerOpen(false)
     } finally {
       setDrawerLoading(false)
@@ -110,7 +109,7 @@ export default function EnrollManagementPage() {
         await fetchStatistics()
       }
     } catch {
-      messageApi.error('审核通过失败，请稍后重试')
+      // API 错误已由响应拦截器统一提示
     }
   }
 
@@ -136,7 +135,7 @@ export default function EnrollManagementPage() {
         await fetchStatistics()
       }
     } catch {
-      messageApi.error('拒绝报名失败，请稍后重试')
+      // API 错误已由响应拦截器统一提示
     }
   }
 

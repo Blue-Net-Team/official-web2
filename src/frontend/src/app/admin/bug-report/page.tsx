@@ -1,19 +1,7 @@
 'use client'
 
 import { useCallback, useMemo, useState } from 'react'
-import {
-  App,
-  Button,
-  Drawer,
-  Grid,
-  Image,
-  Pagination,
-  Select,
-  Spin,
-  Table,
-  Tag,
-  Tooltip,
-} from 'antd'
+import { Button, Drawer, Grid, Image, Pagination, Select, Spin, Table, Tag, Tooltip } from 'antd'
 import { EyeOutlined, GithubOutlined } from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
 import { usePagination, useApi } from '@/hooks'
@@ -31,7 +19,6 @@ const STATUS_OPTIONS = [
 ]
 
 export default function BugReportManagementPage() {
-  const { message: messageApi } = App.useApp()
   const screens = Grid.useBreakpoint()
   const isMobile = !screens.md
 
@@ -75,7 +62,7 @@ export default function BugReportManagementPage() {
     try {
       await fetchDetail(record.id)
     } catch {
-      messageApi.error('获取详情失败')
+      // API 错误已由响应拦截器统一提示
     }
   }
 

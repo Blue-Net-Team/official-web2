@@ -48,7 +48,8 @@ import type {
 } from '@/apis/schema/assessment.dto'
 import { adminAssessmentQuestionService } from '@/apis/services/admin-assessment-question.service'
 import { adminJudgeProblemConfigService } from '@/apis/services/admin-judge-problem-config.service'
-import { usePresignedUpload } from '@/hooks/usePresignedUpload'
+import { AxiosError } from 'axios'
+import { isPresignedUploadApiError, usePresignedUpload } from '@/hooks/usePresignedUpload'
 import { QuestionStatementPreview } from '@/components/Assessment/QuestionStatement'
 import { buildPreviewStatement, type PreviewSourceValues } from './buildPreviewStatement'
 import {
@@ -689,11 +690,9 @@ export default function QuestionDrawer({
       onSuccess()
     } catch (err: unknown) {
       if (err && typeof err === 'object' && 'errorFields' in err) return
-      const msg =
-        err instanceof Error
-          ? err.message
-          : (err as { response?: { data?: { msg?: string } } })?.response?.data?.msg
-      messageApi.error(msg || '操作失败')
+      if (err instanceof Error && !(err instanceof AxiosError)) {
+        messageApi.error(err.message)
+      }
     }
   }
 
@@ -729,8 +728,9 @@ export default function QuestionDrawer({
       await refreshJudgeConfig(question.id)
     } catch (err: unknown) {
       if (err && typeof err === 'object' && 'errorFields' in err) return
-      const msg = (err as { response?: { data?: { msg?: string } } })?.response?.data?.msg
-      messageApi.error(msg || '确认失败')
+      if (err instanceof Error && !(err instanceof AxiosError)) {
+        messageApi.error(err.message)
+      }
     }
   }
 
@@ -776,8 +776,10 @@ export default function QuestionDrawer({
         form.setFieldsValue({ attachmentId: fileId })
         messageApi.success('附件上传成功')
       }
-    } catch {
-      messageApi.error('附件上传失败')
+    } catch (error) {
+      if (!isPresignedUploadApiError(error)) {
+        messageApi.error('附件上传失败')
+      }
     }
     return false
   }

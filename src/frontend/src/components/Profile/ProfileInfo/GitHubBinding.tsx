@@ -35,7 +35,7 @@ export default function GitHubBinding({ initialGithubUsername }: GitHubBindingPr
 
   const refreshStatus = useCallback(async () => {
     try {
-      const res = await authService.getGithubBindingStatus()
+      const res = await authService.getGithubBindingStatus(true)
       setGithubUsername(res.data)
     } catch {
       // Ignore
@@ -50,7 +50,7 @@ export default function GitHubBinding({ initialGithubUsername }: GitHubBindingPr
         window.location.href = res.data
       }
     } catch {
-      messageApi.error('获取 GitHub 授权链接失败')
+      // API 错误已由响应拦截器统一提示
     } finally {
       setBindLoading(false)
     }
@@ -70,7 +70,7 @@ export default function GitHubBinding({ initialGithubUsername }: GitHubBindingPr
           setGithubUsername(null)
           messageApi.success('已解绑 GitHub 账号')
         } catch {
-          messageApi.error('解绑失败，请稍后重试')
+          // API 错误已由响应拦截器统一提示
         } finally {
           setLoading(false)
         }

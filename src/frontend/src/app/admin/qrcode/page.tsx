@@ -53,7 +53,6 @@ export default function QrcodeManagementPage() {
       }
     } catch (error) {
       console.error('加载咨询群二维码失败:', error)
-      messageApi.error('加载咨询群二维码失败')
     } finally {
       setLoading(false)
     }
@@ -68,7 +67,6 @@ export default function QrcodeManagementPage() {
       }
     } catch (error) {
       console.error('加载考核群二维码失败:', error)
-      messageApi.error('加载考核群二维码失败')
     } finally {
       setLoading(false)
     }
@@ -121,12 +119,9 @@ export default function QrcodeManagementPage() {
           if (response.code === 200) {
             messageApi.success('删除成功')
             loadData()
-          } else {
-            messageApi.error(`删除失败: ${response.msg}`)
           }
         } catch (error) {
           console.error('删除失败:', error)
-          messageApi.error('删除失败')
         }
       },
     })

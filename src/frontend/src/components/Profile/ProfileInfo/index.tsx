@@ -34,7 +34,7 @@ import {
 import { Form, Input, Button, message, Select, Tag, Upload } from 'antd'
 import type { UploadFile } from 'antd/es/upload/interface'
 import { userService } from '@/apis/services/user.service'
-import { usePresignedUpload } from '@/hooks/usePresignedUpload'
+import { isPresignedUploadApiError, usePresignedUpload } from '@/hooks/usePresignedUpload'
 import { useAuth } from '@/hooks'
 import Image from 'next/image'
 import { API_BASE_URL } from '@/apis/config'
@@ -100,11 +100,9 @@ export default function ProfileInfo({ profile, onUpdate }: ProfileInfoProps) {
         message.success('保存成功')
         setIsEditing(false)
         onUpdate?.()
-      } else {
-        message.error(res.msg || '保存失败，请重试')
       }
     } catch {
-      message.error('保存失败，请重试')
+      // API 错误已由响应拦截器统一提示
     } finally {
       setIsSubmitting(false)
     }
@@ -120,8 +118,10 @@ export default function ProfileInfo({ profile, onUpdate }: ProfileInfoProps) {
       } else {
         message.error('二维码上传失败')
       }
-    } catch {
-      message.error('二维码上传失败，请重试')
+    } catch (error) {
+      if (!isPresignedUploadApiError(error)) {
+        message.error('二维码上传失败，请重试')
+      }
     } finally {
       setQrcodeUploading(false)
     }

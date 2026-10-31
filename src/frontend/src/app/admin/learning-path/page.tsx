@@ -97,12 +97,9 @@ export default function LearningPathManagementPage() {
         const response = await adminDirectionService.getLearningPath(slug)
         if (response.code === 200 && response.data) {
           setSteps(response.data.steps)
-        } else {
-          messageApi.error(response.msg || '获取学习路径失败')
         }
       } catch (error) {
         console.error('获取学习路径失败:', error)
-        messageApi.error('获取学习路径失败')
       } finally {
         setLoading(false)
       }
@@ -130,12 +127,9 @@ export default function LearningPathManagementPage() {
       if (response.code === 200) {
         messageApi.success('删除成功')
         fetchSteps(activeDirection)
-      } else {
-        messageApi.error(`删除失败: ${response.msg}`)
       }
     } catch (error) {
       console.error('删除学习步骤失败:', error)
-      messageApi.error('删除失败')
     }
   }
 
@@ -167,7 +161,6 @@ export default function LearningPathManagementPage() {
     } catch (error) {
       console.error('排序更新失败:', error)
       setSteps(previousList)
-      messageApi.error('排序更新失败')
     }
   }
 

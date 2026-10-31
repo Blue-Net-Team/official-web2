@@ -219,9 +219,8 @@ export default function AssessmentQuestionManagementPage() {
       setDeleteModalOpen(false)
       setDrawerOpen(false)
       refresh()
-    } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { msg?: string } } })?.response?.data?.msg
-      messageApi.error(msg || '删除失败')
+    } catch {
+      // API 错误已由响应拦截器统一提示
     }
   }
 

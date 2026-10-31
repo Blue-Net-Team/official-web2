@@ -3,6 +3,22 @@
 import { useCallback, useRef, useState, useEffect } from 'react'
 import { fileService, calculateFileMd5 } from '@/apis/services/file.service'
 import type { FileType } from '@/apis/schema/enumerate'
+import { AxiosError } from 'axios'
+
+const PRESIGNED_API_ERROR = 'PresignedUploadApiError'
+
+function createPresignedApiError(message: string): Error {
+  const error = new Error(message)
+  error.name = PRESIGNED_API_ERROR
+  return error
+}
+
+/** 准备/确认上传的 Axios 错误已由响应拦截器提示，页面不应重复提示。 */
+export function isPresignedUploadApiError(error: unknown): boolean {
+  return (
+    error instanceof AxiosError || (error instanceof Error && error.name === PRESIGNED_API_ERROR)
+  )
+}
 
 export type UploadPhase = 'idle' | 'preparing' | 'uploading' | 'verifying' | 'completed' | 'error'
 
@@ -133,7 +149,7 @@ export function usePresignedUpload(): UsePresignedUploadReturn {
       for (let attempt = 0; attempt <= CONFIRM_RETRY_DELAYS.length; attempt++) {
         if (cancelledRef.current) return null
         try {
-          const res = await fileService.confirmUpload(dto)
+          const res = await fileService.confirmUpload(dto, attempt < CONFIRM_RETRY_DELAYS.length)
           if (res.code === 200 && res.data) {
             if (res.data.status === 'ACTIVE') {
               return res.data.fileId
@@ -141,7 +157,7 @@ export function usePresignedUpload(): UsePresignedUploadReturn {
               throw new Error('文件校验未通过')
             }
           } else {
-            throw new Error(res.msg || '确认上传失败')
+            throw createPresignedApiError(res.msg || '确认上传失败')
           }
         } catch (err) {
           if (cancelledRef.current) return null
@@ -193,7 +209,7 @@ export function usePresignedUpload(): UsePresignedUploadReturn {
         if (cancelledRef.current) return null
 
         if (prepareRes.code !== 200 || !prepareRes.data) {
-          throw new Error(prepareRes.msg || '准备上传失败')
+          throw createPresignedApiError(prepareRes.msg || '准备上传失败')
         }
 
         prepareResult = prepareRes.data
@@ -225,7 +241,7 @@ export function usePresignedUpload(): UsePresignedUploadReturn {
               })
               if (cancelledRef.current) return null
               if (newPrepareRes.code !== 200 || !newPrepareRes.data) {
-                throw new Error(newPrepareRes.msg || '重新准备上传失败')
+                throw createPresignedApiError(newPrepareRes.msg || '重新准备上传失败')
               }
               prepareResult = newPrepareRes.data
             } else if (putAttempts >= MAX_PUT_ATTEMPTS) {

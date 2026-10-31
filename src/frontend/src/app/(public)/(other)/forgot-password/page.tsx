@@ -6,24 +6,10 @@ import { EyeInvisibleOutlined, EyeOutlined, ArrowLeftOutlined } from '@ant-desig
 import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { AxiosError } from 'axios'
 import logo from '@/assets/logo.png'
 import loginBg from '@/assets/Login/bg.png'
 import { authService } from '@/apis/services/auth.service'
 import { hashPassword } from '@/utils/passwordHash'
-import { ResponseMessage } from '@/apis/schema/type'
-
-/** 从 AxiosError 中提取后端返回的错误消息 */
-function getErrorMessage(error: unknown, fallback: string): string {
-  if (error instanceof AxiosError) {
-    const data = error.response?.data as ResponseMessage<unknown> | undefined
-    return data?.msg || fallback
-  }
-  if (error instanceof Error) {
-    return error.message
-  }
-  return fallback
-}
 
 const primaryColor = '#fa8c16'
 const primaryColorHover = '#ffa940'
@@ -119,8 +105,8 @@ export default function ForgotPasswordPage() {
         setResetToken(res.data)
         setCurrentStep(1)
       }
-    } catch (error: unknown) {
-      messageApi.error(getErrorMessage(error, '验证失败'))
+    } catch {
+      // API 错误已由响应拦截器统一提示
     } finally {
       setLoading(false)
     }
@@ -139,8 +125,8 @@ export default function ForgotPasswordPage() {
         setResetToken(res.data)
         setCurrentStep(2)
       }
-    } catch (error: unknown) {
-      messageApi.error(getErrorMessage(error, '验证失败'))
+    } catch {
+      // API 错误已由响应拦截器统一提示
     } finally {
       setLoading(false)
     }
@@ -153,8 +139,8 @@ export default function ForgotPasswordPage() {
       await authService.resetPasswordSendCode(resetToken)
       setCountdown(60)
       messageApi.success('验证码已发送')
-    } catch (error: unknown) {
-      messageApi.error(getErrorMessage(error, '发送失败'))
+    } catch {
+      // API 错误已由响应拦截器统一提示
     }
   }, [resetToken, countdown, messageApi])
 
@@ -168,8 +154,8 @@ export default function ForgotPasswordPage() {
     try {
       await authService.resetPasswordVerifyCode(resetToken, code.trim())
       setCurrentStep(3)
-    } catch (error: unknown) {
-      messageApi.error(getErrorMessage(error, '验证码错误'))
+    } catch {
+      // API 错误已由响应拦截器统一提示
     } finally {
       setLoading(false)
     }
@@ -196,8 +182,8 @@ export default function ForgotPasswordPage() {
       await authService.resetPassword(resetToken, hashedNew, hashedConfirm)
       messageApi.success('密码重置成功，即将跳转到登录页')
       setTimeout(() => router.push('/login'), 3000)
-    } catch (error: unknown) {
-      messageApi.error(getErrorMessage(error, '重置失败'))
+    } catch {
+      // API 错误已由响应拦截器统一提示
     } finally {
       setLoading(false)
     }

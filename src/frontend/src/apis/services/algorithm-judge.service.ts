@@ -32,7 +32,8 @@ export const algorithmJudgeService = {
 
   async getJob(jobId: number): Promise<ResponseMessage<JudgeJobPollingResponseDTO>> {
     const response = await apiClient.get<ResponseMessage<JudgeJobPollingResponseDTO>>(
-      `/algorithm-judge/jobs/${jobId}`
+      `/algorithm-judge/jobs/${jobId}`,
+      { skipErrorMessage: true }
     )
     return response.data
   },
