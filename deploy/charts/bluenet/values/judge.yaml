@@ -51,7 +51,7 @@ env:
   - name: STORAGE_PROVIDER
     value: aliyun-oss
   - name: JUDGE_STORAGE_BUCKET
-    value: bluenet-judge-dev
+    value: bluenet-judge2026
   - name: ALIYUN_OSS_ENDPOINT
     value: "oss-cn-beijing.aliyuncs.com"
   - name: ALIYUN_OSS_PUBLIC_ENDPOINT
