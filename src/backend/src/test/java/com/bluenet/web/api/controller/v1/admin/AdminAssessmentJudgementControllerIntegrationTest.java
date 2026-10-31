@@ -365,6 +365,8 @@ class AdminAssessmentJudgementControllerIntegrationTest extends APIIntegrationTe
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value(400))
+                .andExpect(jsonPath("$.msg").value("最终得分不能为空"))
                 .andReturn();
         assertThat(result.getResponse().getStatus()).isEqualTo(400);
     }

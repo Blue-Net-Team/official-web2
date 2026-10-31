@@ -10,5 +10,5 @@ import org.springframework.web.multipart.MultipartFile;
 @Schema(description = "上传知识库文档请求")
 public record UploadKnowledgeDocRequestDTO(
         @Schema(description = "文档标题，不传则使用文件名") String title,
-        @NotNull @Schema(description = "Markdown 文件") MultipartFile file) {
+        @NotNull(message = "Markdown 文件不能为空") @Schema(description = "Markdown 文件") MultipartFile file) {
 }

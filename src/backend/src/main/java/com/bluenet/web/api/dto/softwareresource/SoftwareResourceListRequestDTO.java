@@ -27,11 +27,11 @@ public class SoftwareResourceListRequestDTO {
     private String keyword;
 
     @Schema(description = "页码，从 0 开始", example = "0")
-    @Min(0)
+    @Min(value = 0, message = "页码必须大于等于0")
     private Integer page;
 
     @Schema(description = "每页大小", example = "20")
-    @Min(1)
-    @Max(100)
+    @Min(value = 1, message = "每页大小必须大于等于1")
+    @Max(value = 100, message = "每页大小必须小于等于100")
     private Integer size;
 }

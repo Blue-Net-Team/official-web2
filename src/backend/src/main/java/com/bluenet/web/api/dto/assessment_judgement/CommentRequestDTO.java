@@ -10,7 +10,7 @@ import java.math.BigDecimal;
  */
 @Data
 public class CommentRequestDTO {
-    @NotNull
+    @NotNull(message = "答案ID不能为空")
     private Long answerId;
     private String content;
     private BigDecimal score;

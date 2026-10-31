@@ -14,7 +14,7 @@ import jakarta.validation.constraints.NotNull;
  *            该语言正式提交允许产生的最大输出，单位 KB。
  */
 public record ConfirmJudgeLanguageLimitRequestDTO(
-        @NotNull @Min(1) Integer timeLimitMs,
-        @NotNull @Min(1) Integer memoryLimitKb,
-        @NotNull @Min(1) Integer outputLimitKb) {
+        @NotNull(message = "时间限制不能为空") @Min(value = 1, message = "时间限制必须大于等于1毫秒") Integer timeLimitMs,
+        @NotNull(message = "内存限制不能为空") @Min(value = 1, message = "内存限制必须大于等于1KB") Integer memoryLimitKb,
+        @NotNull(message = "输出限制不能为空") @Min(value = 1, message = "输出限制必须大于等于1KB") Integer outputLimitKb) {
 }

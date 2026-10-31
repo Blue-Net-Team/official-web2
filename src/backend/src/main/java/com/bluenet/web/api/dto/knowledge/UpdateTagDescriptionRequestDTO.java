@@ -8,5 +8,5 @@ import jakarta.validation.constraints.NotBlank;
  */
 @Schema(description = "更新标签描述请求")
 public record UpdateTagDescriptionRequestDTO(
-        @NotBlank @Schema(description = "标签描述") String description) {
+        @NotBlank(message = "标签描述不能为空") @Schema(description = "标签描述") String description) {
 }

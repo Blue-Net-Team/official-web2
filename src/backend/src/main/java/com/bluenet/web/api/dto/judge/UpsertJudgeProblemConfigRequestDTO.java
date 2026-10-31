@@ -34,15 +34,15 @@ import java.util.List;
  *            测试用例生成配置。
  */
 public record UpsertJudgeProblemConfigRequestDTO(
-        @NotBlank String generatorLanguage,
-        @NotBlank String generatorSource,
-        @NotBlank String primaryStandardLanguage,
-        @NotNull @Min(1) Integer benchmarkRepeatTimes,
-        @NotNull @DecimalMin("1.0") BigDecimal marginMultiplier,
-        @NotNull @Min(0) Integer minExtraMs,
-        @NotNull @Min(1) Integer roundToMs,
-        @Valid @NotEmpty List<StandardSolutionRequest> standardSolutions,
-        @Valid @NotEmpty List<TestcaseConfigRequest> testcases) {
+        @NotBlank(message = "生成器语言不能为空") String generatorLanguage,
+        @NotBlank(message = "生成器源码不能为空") String generatorSource,
+        @NotBlank(message = "主标准解语言不能为空") String primaryStandardLanguage,
+        @NotNull(message = "基准测试重复次数不能为空") @Min(value = 1, message = "基准测试重复次数必须大于等于1") Integer benchmarkRepeatTimes,
+        @NotNull(message = "时限倍率不能为空") @DecimalMin(value = "1.0", message = "时限倍率必须大于等于1.0") BigDecimal marginMultiplier,
+        @NotNull(message = "最小额外时间不能为空") @Min(value = 0, message = "最小额外时间必须大于等于0毫秒") Integer minExtraMs,
+        @NotNull(message = "取整粒度不能为空") @Min(value = 1, message = "取整粒度必须大于等于1毫秒") Integer roundToMs,
+        @Valid @NotEmpty(message = "标准解列表不能为空") List<StandardSolutionRequest> standardSolutions,
+        @Valid @NotEmpty(message = "测试用例列表不能为空") List<TestcaseConfigRequest> testcases) {
 
     /**
      * 管理员提交的单个语言标准解源码。
@@ -55,8 +55,8 @@ public record UpsertJudgeProblemConfigRequestDTO(
      *            是否为用于生成标准输出的主标准解。
      */
     public record StandardSolutionRequest(
-            @NotBlank String language,
-            @NotBlank String source,
+            @NotBlank(message = "标准解语言不能为空") String language,
+            @NotBlank(message = "标准解源码不能为空") String source,
             Boolean primarySolution) {
     }
 
@@ -79,10 +79,10 @@ public record UpsertJudgeProblemConfigRequestDTO(
      *            测试用例说明。
      */
     public record TestcaseConfigRequest(
-            @NotNull @Min(1) Integer caseNo,
-            @NotBlank String category,
+            @NotNull(message = "测试用例序号不能为空") @Min(value = 1, message = "测试用例序号必须大于等于1") Integer caseNo,
+            @NotBlank(message = "测试用例分类不能为空") String category,
             JsonNode generatorArgs,
-            @NotNull @DecimalMin("0.0") BigDecimal weight,
+            @NotNull(message = "测试用例权重不能为空") @DecimalMin(value = "0.0", message = "测试用例权重必须大于等于0.0") BigDecimal weight,
             Boolean hidden,
             Boolean sample,
             String description) {

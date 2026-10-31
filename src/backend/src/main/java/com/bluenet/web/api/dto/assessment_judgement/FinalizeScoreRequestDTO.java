@@ -10,8 +10,8 @@ import java.math.BigDecimal;
  */
 @Data
 public class FinalizeScoreRequestDTO {
-    @NotNull
+    @NotNull(message = "答案ID不能为空")
     private Long answerId;
-    @NotNull
+    @NotNull(message = "最终得分不能为空")
     private BigDecimal score;
 }
