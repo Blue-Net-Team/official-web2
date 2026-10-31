@@ -19,6 +19,7 @@ import {
   Grid,
   Input,
   InputNumber,
+  Popconfirm,
   Radio,
   Segmented,
   Select,
@@ -32,6 +33,7 @@ import {
   PaperClipOutlined,
   PlusOutlined,
   ReloadOutlined,
+  SignatureOutlined,
 } from '@ant-design/icons'
 import type {
   AlgorithmTestCase,
@@ -49,6 +51,11 @@ import { adminJudgeProblemConfigService } from '@/apis/services/admin-judge-prob
 import { usePresignedUpload } from '@/hooks/usePresignedUpload'
 import { QuestionStatementPreview } from '@/components/Assessment/QuestionStatement'
 import { buildPreviewStatement, type PreviewSourceValues } from './buildPreviewStatement'
+import {
+  hasJudgeDraftContent,
+  mapJudgeConfigDraftToForm,
+  missingJudgeDraftSourceFields,
+} from './judgeConfigDraft'
 import CodeEditor from '@/components/CodeEditor'
 import type { CodeEditorProps } from '@/components/CodeEditor'
 import { formatTime, QUESTION_TYPE_LABELS } from '@/app/admin/assessment/judge/shared'
@@ -449,6 +456,7 @@ export default function QuestionDrawer({
   const screens = Grid.useBreakpoint()
   const [judgeConfig, setJudgeConfig] = useState<JudgeProblemConfigDTO | null>(null)
   const [judgeConfigLoading, setJudgeConfigLoading] = useState(false)
+  const [aiDraftLoading, setAiDraftLoading] = useState(false)
   /** 窄视口下「编辑 / 预览」二选一 */
   const [mobilePane, setMobilePane] = useState<'edit' | 'preview'>('edit')
 
@@ -473,6 +481,16 @@ export default function QuestionDrawer({
   const optionsValue = Form.useWatch('options', form)
   const standardSolutionsValue = Form.useWatch('standardSolutions', form)
   const generatorLanguage = Form.useWatch('generatorLanguage', form)
+  const generatorSourceValue = Form.useWatch('generatorSource', form)
+  const examplesValue = Form.useWatch('examples', form)
+  const runTestCasesValue = Form.useWatch('runTestCases', form)
+  const testcasesValue = Form.useWatch('testcases', form)
+  const hasAiDraftContent = hasJudgeDraftContent({
+    examples: examplesValue,
+    runTestCases: runTestCasesValue,
+    generatorSource: generatorSourceValue,
+    testcases: testcasesValue,
+  })
 
   /** 按当前语言回填已确认限制；未确认时使用 benchmark 建议值或宽松默认值。 */
   const applyLanguageLimitForm = useCallback(
@@ -716,6 +734,39 @@ export default function QuestionDrawer({
     }
   }
 
+  const handleGenerateAiDraft = async () => {
+    if (aiDraftLoading) return
+    const values = form.getFieldsValue(true)
+    const missingFields = missingJudgeDraftSourceFields(values)
+    if (missingFields.length > 0) {
+      messageApi.error(`请先填写：${missingFields.join('、')}`)
+      return
+    }
+
+    setAiDraftLoading(true)
+    try {
+      const draft = await adminJudgeProblemConfigService.generateDraft({
+        content: values.algorithmContent,
+        inputDescription: values.inputDescription,
+        outputDescription: values.outputDescription,
+        constraints: values.constraints,
+      })
+      const patch = mapJudgeConfigDraftToForm(draft)
+      form.setFieldsValue(patch)
+      messageApi.success(
+        `已生成 ${patch.examples.length} 个书面用例、${patch.runTestCases.length} 个默认运行用例和 ${patch.testcases.length} 个正式用例配置，请检查后保存`
+      )
+    } catch (err: unknown) {
+      const msg =
+        err instanceof Error
+          ? err.message
+          : (err as { response?: { data?: { msg?: string } } })?.response?.data?.msg
+      messageApi.error(msg || 'AI 生成失败，请稍后重试')
+    } finally {
+      setAiDraftLoading(false)
+    }
+  }
+
   const { upload } = usePresignedUpload()
 
   const handleUpload = async (file: File) => {
@@ -920,6 +971,33 @@ export default function QuestionDrawer({
     </>
   )
 
+  const renderAiDraftButton = () => {
+    const button = (
+      <Button
+        size="small"
+        type="primary"
+        ghost
+        icon={<SignatureOutlined />}
+        loading={aiDraftLoading}
+        onClick={hasAiDraftContent ? undefined : handleGenerateAiDraft}
+      >
+        AI 补全用例配置
+      </Button>
+    )
+    if (!hasAiDraftContent) return button
+    return (
+      <Popconfirm
+        title="重新生成将覆盖现有草稿"
+        description="将覆盖书面用例、默认运行用例、Generator 和正式用例配置，标准解保持不变。"
+        okText="继续生成"
+        cancelText="取消"
+        onConfirm={handleGenerateAiDraft}
+      >
+        {button}
+      </Popconfirm>
+    )
+  }
+
   const renderJudgeConfigFields = () => (
     <>
       <div className="mb-4 flex items-center gap-2">
@@ -935,6 +1013,7 @@ export default function QuestionDrawer({
             刷新
           </Button>
         )}
+        {!isViewMode && <div className="ml-auto">{renderAiDraftButton()}</div>}
       </div>
       {judgeConfig && !isViewMode && (
         <Alert

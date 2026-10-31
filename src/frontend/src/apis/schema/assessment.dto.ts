@@ -336,6 +336,34 @@ export interface UpsertJudgeTestcaseConfigRequestDTO {
   description?: string | null
 }
 
+/** AI 判题配置草稿生成请求，来自当前未保存题面 */
+export interface GenerateJudgeConfigDraftRequestDTO {
+  content: string
+  inputDescription: string
+  outputDescription: string
+  constraints: string
+}
+
+/** AI 生成的正式用例配置，generatorArgs 在传输层为 JSON 对象 */
+export interface AiJudgeTestcaseConfigDTO {
+  caseNo: number
+  category: string
+  generatorArgs: Record<string, unknown>
+  weight: number
+  hidden: true
+  sample: false
+  description: string
+}
+
+/** 非持久化 AI 判题配置草稿；不包含标准解和 Benchmark 字段 */
+export interface JudgeConfigDraftDTO {
+  examples: AlgorithmExample[]
+  runTestCases: AlgorithmTestCase[]
+  generatorLanguage: 'python'
+  generatorSource: string
+  testcases: AiJudgeTestcaseConfigDTO[]
+}
+
 /** 保存算法题判题配置请求 */
 export interface UpsertJudgeProblemConfigRequestDTO {
   /** generator 源码语言 */

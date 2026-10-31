@@ -1,7 +1,10 @@
 import { apiClient } from '../client'
+import { AI_CHAT_BASE_URL } from '../config'
 import { ResponseMessage } from '../schema/type'
 import type {
   ConfirmJudgeLanguageLimitRequestDTO,
+  GenerateJudgeConfigDraftRequestDTO,
+  JudgeConfigDraftDTO,
   JudgeProblemConfigDTO,
   ProgrammingLanguage,
   UpsertJudgeProblemConfigRequestDTO,
@@ -12,6 +15,32 @@ import type {
  * 对应后端 /api/v1/admin/judge/questions/{questionId}/config 接口。
  */
 export const adminJudgeProblemConfigService = {
+  /** 与 AI 客服一致直连 AI Service，基于当前未保存题面生成临时草稿。 */
+  async generateDraft(data: GenerateJudgeConfigDraftRequestDTO): Promise<JudgeConfigDraftDTO> {
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), 150000)
+    try {
+      const response = await fetch(`${AI_CHAT_BASE_URL}/judge-config-drafts`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+        signal: controller.signal,
+      })
+      if (!response.ok) {
+        const error = await response.json().catch(() => null)
+        throw new Error(error?.detail || `AI 服务请求失败: ${response.status}`)
+      }
+      return (await response.json()) as JudgeConfigDraftDTO
+    } catch (error) {
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        throw new Error('AI 生成超时，请稍后重试')
+      }
+      throw error
+    } finally {
+      clearTimeout(timeout)
+    }
+  },
+
   /**
    * 查询指定算法题当前判题配置。
    *
