@@ -4,8 +4,48 @@ from __future__ import annotations
 
 import logging
 import sys
+from typing import Iterable
 
 from loguru import logger
+
+# 健康检查路径：这些请求的访问日志属于噪声，默认不输出
+DEFAULT_ACCESS_LOG_IGNORED_PATHS: frozenset[str] = frozenset({
+    "/ai/v1/health"
+})
+
+
+class HealthCheckFilter(logging.Filter):
+    """过滤 uvicorn 访问日志中的健康检查请求。
+
+    uvicorn 的 access 日志通过 ``record.args`` 传递请求信息
+    （client_addr, method, path, http_version, status_code），
+    这里优先按完整的 path 判断，避免误伤名字相似的业务接口。
+    """
+
+    def __init__(self, ignored_paths: Iterable[str] = DEFAULT_ACCESS_LOG_IGNORED_PATHS) -> None:
+        super().__init__()
+        self._ignored_paths = frozenset(ignored_paths)
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        if record.name != "uvicorn.access":
+            return True
+
+        path: str | None = None
+        args = record.args
+        if isinstance(args, tuple) and len(args) >= 3 and isinstance(args[2], str):
+            path = args[2]
+        elif record.msg:
+            # 兜底：从原始日志模板中提取路径
+            message = record.getMessage()
+            for part in message.split():
+                if part.startswith("/"):
+                    path = part
+                    break
+
+        if not path:
+            return True
+
+        return path.split("?", 1)[0] not in self._ignored_paths
 
 
 class InterceptHandler(logging.Handler):
@@ -50,3 +90,10 @@ def setup_logging() -> None:
         logging_logger = logging.getLogger(name)
         logging_logger.handlers = [InterceptHandler()]
         logging_logger.propagate = False
+
+    # 过滤健康检查访问日志（无法预知 uvicorn 何时创建该 logger，重复设置无副作用）
+    access_logger = logging.getLogger("uvicorn.access")
+    access_filter = HealthCheckFilter()
+    access_logger.addFilter(access_filter)
+    for handler in access_logger.handlers:
+        handler.addFilter(access_filter)
