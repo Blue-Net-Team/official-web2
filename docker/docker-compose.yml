@@ -113,6 +113,8 @@ services:
     volumes:
       - ${GITHUB_ISSUE_PRIVATE_KEY_PATH:-docker/null.pem}:/app/github-issue-private-key.pem:ro
       - ${GITHUB_ORG_PRIVATE_KEY_PATH:-docker/null.pem}:/app/github-org-private-key.pem:ro
+    # 宽松内存兜底：保留 384MiB 最大堆及 JVM 非堆空间，峰值容量仍需后续压测确认。
+    mem_limit: 640m
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/api/v1/health"]
       interval: 10s
@@ -201,6 +203,8 @@ services:
       JUDGE_OUTPUT_LIMIT_KB: ${JUDGE_OUTPUT_LIMIT_KB:-1024}
       JUDGE_GENERATED_FILE_LIMIT_MB: ${JUDGE_GENERATED_FILE_LIMIT_MB:-64}
       JUDGE_NETWORK_DISABLED: ${JUDGE_NETWORK_DISABLED:-true}
+    # 包含 JVM、编译器、语言运行时及沙箱子进程的宽松内存兜底。
+    mem_limit: 1g
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8090/api/v1/judge/health"]
       interval: 10s

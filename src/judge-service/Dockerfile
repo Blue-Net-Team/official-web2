@@ -44,6 +44,8 @@ RUN groupadd --system appgroup \
 
 # Judge Service HTTP 端口。
 ENV JUDGE_SERVER_PORT=8090
+# 默认不加载 JDWP；本地需要远程调试时显式设为 true。
+ENV JUDGE_DEBUG_ENABLED=false
 # JDWP 远程调试端口，IDEA 使用 localhost:5005 attach。
 ENV JUDGE_DEBUG_PORT=5005
 # 是否在 JVM 启动时等待调试器连接；本地调试可设为 y。
@@ -81,6 +83,8 @@ ENV JUDGE_WORK_ROOT=/var/lib/bluenet-judge/work
 ENV LANG=C.UTF-8
 # 容器时区，确保 LocalDateTime.now() 返回北京时间。
 ENV TZ=Asia/Shanghai
+# 默认降低初始堆预留，保留原最大堆容量；可通过环境变量覆盖。
+ENV JAVA_OPTS="-Xms64m -Xmx384m -XX:+UseSerialGC"
 
 WORKDIR /app
 
@@ -91,4 +95,4 @@ RUN mkdir -p /var/lib/bluenet-judge/work
 EXPOSE 8090
 EXPOSE 5005
 
-ENTRYPOINT ["sh", "-c", "exec java -Dfile.encoding=UTF-8 -Xms256m -Xmx384m -XX:+UseSerialGC -agentlib:jdwp=transport=dt_socket,server=y,suspend=${JUDGE_DEBUG_SUSPEND},address=*:${JUDGE_DEBUG_PORT} -jar /app/judge-service.jar"]
+ENTRYPOINT ["sh", "-c", "if [ \"${JUDGE_DEBUG_ENABLED}\" = \"true\" ]; then JDWP_OPTS=\"-agentlib:jdwp=transport=dt_socket,server=y,suspend=${JUDGE_DEBUG_SUSPEND},address=*:${JUDGE_DEBUG_PORT}\"; fi; exec java $JAVA_OPTS -Dfile.encoding=UTF-8 $JDWP_OPTS -jar /app/judge-service.jar"]

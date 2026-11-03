@@ -25,6 +25,7 @@ ENV MINIO_AK=admin
 ENV MINIO_SK=admin123
 ENV LANG C.UTF-8
 ENV TZ=Asia/Shanghai
+ENV JAVA_OPTS="-Xms64m -Xmx384m -XX:+UseSerialGC"
 
 WORKDIR /app
 
@@ -34,9 +35,4 @@ EXPOSE 8080
 
 USER appuser
 
-ENTRYPOINT ["java", \
-  "-Dfile.encoding=UTF-8", \
-  "-Xms256m", \
-  "-Xmx384m", \
-  "-XX:+UseSerialGC", \
-  "-jar", "backend.jar"]
+ENTRYPOINT ["sh", "-c", "exec java $JAVA_OPTS -Dfile.encoding=UTF-8 -jar /app/backend.jar"]
