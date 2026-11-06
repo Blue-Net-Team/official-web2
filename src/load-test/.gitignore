@@ -1,0 +1,10 @@
+.env
+.env.*
+!.env.example
+results/*
+!results/README.md
+!results/TEMPLATE.md
+*.log
+.venv/
+__pycache__/
+*.pyc

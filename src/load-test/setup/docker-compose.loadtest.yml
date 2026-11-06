@@ -1,0 +1,14 @@
+# Dedicated local load-test overrides. Never use this file against shared/production environments.
+services:
+  api-service:
+    environment:
+      MINIO_PUBLIC_URL: http://host.docker.internal:7000
+      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health,metrics
+      GITHUB_APP_POLLING_ENABLED: "false"
+      GITHUB_ISSUE_SYNC_CRON: 0 0 0 1 1 *
+      ELIMINATED_USER_DISABLE_CRON: 0 0 0 1 1 *
+      ORPHAN_FILE_CLEANUP_CRON: 0 0 0 1 1 *
+    restart: "no"
+
+  judge-service:
+    restart: "no"
