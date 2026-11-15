@@ -1,0 +1,139 @@
+# judge-service 本地配置；仅集群内访问，保留 isolate 所需特权。
+# JUDGE_STORAGE_BUCKET 必须与 api.yaml 完全一致。
+
+fullnameOverride: bluenet-judge
+kind: Deployment
+containerName: judge
+replicas: 1
+
+image:
+  repository: bluenet-judge-service
+  tag: 0.1.6-local-613fd46e
+  pullPolicy: IfNotPresent
+
+service:
+  enabled: true
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 8090
+      targetPort: 8090
+
+containerSecurityContext:
+  privileged: true
+
+env:
+  - name: DATABASE_HOST
+    value: bluenet-postgres
+  - name: DATABASE_PORT
+    value: "5432"
+  - name: DATABASE_NAME
+    value: db_blue_net
+  - name: DATABASE_USERNAME
+    value: postgres
+  - name: DATABASE_PASSWORD
+    valueFrom:
+      secretKeyRef: { name: bluenet-postgres, key: postgres-password }
+
+  - name: JUDGE_SANDBOX_ENGINE
+    value: isolate
+  - name: JUDGE_WORK_ROOT
+    value: /var/lib/bluenet-judge/work
+  - name: JUDGE_SERVER_PORT
+    value: "8090"
+
+  - name: STORAGE_PROVIDER
+    value: minio
+  - name: JUDGE_STORAGE_BUCKET
+    value: bluenet-judge-dev
+  - name: MINIO_ENDPOINT
+    value: bluenet-rustfs
+  - name: MINIO_PORT
+    value: "9000"
+  - name: MINIO_USE_SSL
+    value: "false"
+  - name: MINIO_AK
+    valueFrom:
+      secretKeyRef: { name: bluenet-rustfs, key: access-key }
+  - name: MINIO_SK
+    valueFrom:
+      secretKeyRef: { name: bluenet-rustfs, key: secret-key }
+
+  - name: RABBITMQ_HOST
+    value: bluenet-rabbitmq
+  - name: RABBITMQ_PORT
+    value: "5672"
+  - name: RABBITMQ_USERNAME
+    valueFrom:
+      secretKeyRef: { name: bluenet-rabbitmq, key: username }
+  - name: RABBITMQ_PASSWORD
+    valueFrom:
+      secretKeyRef: { name: bluenet-rabbitmq, key: password }
+  - name: JUDGE_RABBITMQ_EXCHANGE
+    value: algorithm.judge
+  - name: JUDGE_FORMAL_QUEUE
+    value: algorithm.judge.formal
+  - name: JUDGE_TEST_DATA_QUEUE
+    value: algorithm.judge.test-data
+  - name: JUDGE_RUN_QUEUE
+    value: algorithm.judge.run
+  - name: JUDGE_FORMAL_ROUTING_KEY
+    value: judge.formal
+  - name: JUDGE_TEST_DATA_ROUTING_KEY
+    value: judge.test-data
+  - name: JUDGE_RUN_ROUTING_KEY
+    value: judge.run
+
+  - name: JUDGE_CPU_TIME_SECONDS
+    value: "2"
+  - name: JUDGE_WALL_TIME_SECONDS
+    value: "5"
+  - name: JUDGE_MEMORY_LIMIT_MB
+    value: "256"
+  - name: JUDGE_PROCESS_LIMIT
+    value: "32"
+  - name: JUDGE_OUTPUT_LIMIT_KB
+    value: "1024"
+  - name: JUDGE_GENERATED_FILE_LIMIT_MB
+    value: "64"
+  - name: JUDGE_NETWORK_DISABLED
+    value: "true"
+
+  - name: LANG
+    value: C.UTF-8
+  - name: TZ
+    value: Asia/Shanghai
+
+volumes:
+  - name: judge-work
+    emptyDir: {}
+volumeMounts:
+  - name: judge-work
+    mountPath: /var/lib/bluenet-judge/work
+
+probes:
+  startup:
+    httpGet: { path: /api/v1/judge/health, port: 8090 }
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 60
+  liveness:
+    httpGet: { path: /api/v1/judge/health, port: 8090 }
+    initialDelaySeconds: 120
+    periodSeconds: 15
+    timeoutSeconds: 5
+    failureThreshold: 5
+  readiness:
+    httpGet: { path: /api/v1/judge/health, port: 8090 }
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 6
+
+resources:
+  requests:
+    memory: 256Mi
+    cpu: 500m
+  limits:
+    memory: 1Gi
+    cpu: "1"

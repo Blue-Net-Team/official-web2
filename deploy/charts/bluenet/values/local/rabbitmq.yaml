@@ -1,0 +1,87 @@
+# RabbitMQ 本地配置；固定到 bluenet/role=mq 节点。
+
+fullnameOverride: bluenet-rabbitmq
+kind: StatefulSet
+containerName: rabbitmq
+replicas: 1
+persistence:
+  enabled: true
+  storageClassName: hostpath
+  size: 2Gi
+  mountPath: /var/lib/rabbitmq
+
+image:
+  repository: rabbitmq
+  tag: 3-management
+  pullPolicy: IfNotPresent
+
+service:
+  enabled: true
+  type: NodePort
+  ports:
+    - name: amqp
+      port: 5672
+      targetPort: 5672
+      nodePort: 30572
+    - name: management
+      port: 15672
+      targetPort: 15672
+      nodePort: 30672
+
+env:
+  - name: RABBITMQ_DEFAULT_USER
+    valueFrom:
+      secretKeyRef:
+        name: bluenet-rabbitmq
+        key: username
+  - name: RABBITMQ_DEFAULT_PASS
+    valueFrom:
+      secretKeyRef:
+        name: bluenet-rabbitmq
+        key: password
+  - name: RABBITMQ_ERLANG_COOKIE
+    valueFrom:
+      secretKeyRef:
+        name: bluenet-rabbitmq
+        key: erlang-cookie
+  - name: RABBITMQ_NODENAME
+    value: "rabbit@localhost"
+  - name: TZ
+    value: Asia/Shanghai
+
+volumeMounts:
+  - name: data
+    mountPath: /var/lib/rabbitmq
+
+probes:
+  startup:
+    exec:
+      command: ["rabbitmq-diagnostics", "-q", "ping"]
+    periodSeconds: 10
+    timeoutSeconds: 10
+    failureThreshold: 30
+  liveness:
+    exec:
+      command: ["rabbitmq-diagnostics", "-q", "ping"]
+    initialDelaySeconds: 60
+    periodSeconds: 30
+    timeoutSeconds: 10
+    failureThreshold: 5
+  readiness:
+    exec:
+      command: ["rabbitmq-diagnostics", "-q", "ping"]
+    initialDelaySeconds: 20
+    periodSeconds: 15
+    timeoutSeconds: 10
+    failureThreshold: 5
+
+nodeSelector:
+  bluenet/role: mq
+
+resources:
+  requests:
+    memory: 256Mi
+    cpu: 200m
+  limits:
+    memory: 512Mi
+    cpu: 500m

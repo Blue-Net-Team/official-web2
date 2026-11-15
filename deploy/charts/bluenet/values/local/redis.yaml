@@ -1,0 +1,73 @@
+# Redis 本地配置；固定到 bluenet/role=db 节点。
+
+fullnameOverride: bluenet-redis
+kind: StatefulSet
+containerName: redis
+replicas: 1
+persistence:
+  enabled: true
+  storageClassName: hostpath
+  size: 2Gi
+  mountPath: /data
+
+image:
+  repository: redis
+  tag: "7"
+  pullPolicy: IfNotPresent
+
+service:
+  enabled: true
+  type: NodePort
+  ports:
+    - name: redis
+      port: 6379
+      targetPort: 6379
+      nodePort: 30379
+
+command: ["sh", "-c"]
+args:
+  - |
+    set -e
+    if [ -n "${REDIS_PASSWORD}" ]; then
+      exec redis-server --appendonly yes --maxmemory 192mb --maxmemory-policy allkeys-lru --requirepass "${REDIS_PASSWORD}"
+    else
+      exec redis-server --appendonly yes --maxmemory 192mb --maxmemory-policy allkeys-lru
+    fi
+
+env:
+  - name: REDIS_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: bluenet-redis
+        key: redis-password
+  - name: TZ
+    value: Asia/Shanghai
+
+volumeMounts:
+  - name: data
+    mountPath: /data
+
+probes:
+  liveness:
+    exec:
+      command: ["sh", "-c", "redis-cli ${REDIS_PASSWORD:+-a \"$REDIS_PASSWORD\"} ping | grep -q PONG"]
+    initialDelaySeconds: 15
+    periodSeconds: 10
+    timeoutSeconds: 5
+  readiness:
+    exec:
+      command: ["sh", "-c", "redis-cli ${REDIS_PASSWORD:+-a \"$REDIS_PASSWORD\"} ping | grep -q PONG"]
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    timeoutSeconds: 5
+
+nodeSelector:
+  bluenet/role: db
+
+resources:
+  requests:
+    memory: 64Mi
+    cpu: 100m
+  limits:
+    memory: 256Mi
+    cpu: 300m

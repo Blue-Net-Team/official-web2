@@ -1,0 +1,89 @@
+# frontend 本地五节点 kind 配置。
+# NEXT_PUBLIC_* 同时是镜像构建期参数；修改域名后必须重新构建前端镜像。
+
+fullnameOverride: bluenet-frontend
+kind: Deployment
+containerName: frontend
+replicas: 1
+
+image:
+  repository: bluenet-frontend
+  tag: 0.5.0-local-613fd46e
+  pullPolicy: IfNotPresent
+
+strategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxSurge: 1
+    maxUnavailable: 0
+minReadySeconds: 10
+
+service:
+  enabled: true
+  type: NodePort
+  ports:
+    - name: http
+      port: 3000
+      targetPort: 3000
+      nodePort: 30000
+
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          topologyKey: kubernetes.io/hostname
+          labelSelector:
+            matchLabels:
+              app.kubernetes.io/name: bluenet-frontend
+              app.kubernetes.io/instance: bluenet-frontend
+
+env:
+  - name: BACKEND_HOST
+    value: bluenet-api
+  - name: BACKEND_PORT
+    value: "8080"
+  - name: SSL_ENABLED
+    value: "false"
+  - name: API_PREFIX
+    value: /api/v1
+  - name: NEXT_PUBLIC_BACKEND_HOST
+    value: "bluenet.local"
+  - name: NEXT_PUBLIC_BACKEND_PORT
+    value: "443"
+  - name: NEXT_PUBLIC_SSL_ENABLED
+    value: "true"
+  - name: NEXT_PUBLIC_API_PREFIX
+    value: /api/v1
+  - name: NEXT_PUBLIC_AI_SERVICE_HOST
+    value: "bluenet.local"
+  - name: NEXT_PUBLIC_AI_SERVICE_PORT
+    value: "443"
+  - name: NEXT_PUBLIC_AI_SERVICE_SSL_ENABLED
+    value: "true"
+  - name: NEXT_PUBLIC_AI_SERVICE_PREFIX
+    value: /ai/v1
+  - name: NODE_OPTIONS
+    value: "--max-old-space-size=384"
+  - name: TZ
+    value: Asia/Shanghai
+
+probes:
+  liveness:
+    tcpSocket: { port: 3000 }
+    initialDelaySeconds: 30
+    periodSeconds: 15
+    timeoutSeconds: 5
+  readiness:
+    tcpSocket: { port: 3000 }
+    initialDelaySeconds: 15
+    periodSeconds: 10
+    timeoutSeconds: 5
+
+resources:
+  requests:
+    memory: 384Mi
+    cpu: 200m
+  limits:
+    memory: 640Mi
+    cpu: 500m

@@ -1,0 +1,81 @@
+# RustFS 本地对象存储；S3 与控制台通过集群外 Docker nginx 转发。
+# 数据为全新本地环境，不迁移旧 Docker volume。
+
+fullnameOverride: bluenet-rustfs
+kind: StatefulSet
+containerName: rustfs
+replicas: 1
+
+persistence:
+  enabled: true
+  storageClassName: hostpath
+  size: 10Gi
+  mountPath: /data
+
+image:
+  repository: rustfs/rustfs
+  tag: "1.0.1"
+  pullPolicy: IfNotPresent
+
+service:
+  enabled: true
+  type: NodePort
+  ports:
+    - name: s3
+      port: 9000
+      targetPort: 9000
+      nodePort: 30700
+    - name: console
+      port: 7001
+      targetPort: 7001
+      nodePort: 30701
+
+args: ["/data"]
+
+env:
+  - name: RUSTFS_ACCESS_KEY
+    valueFrom:
+      secretKeyRef: { name: bluenet-rustfs, key: access-key }
+  - name: RUSTFS_SECRET_KEY
+    valueFrom:
+      secretKeyRef: { name: bluenet-rustfs, key: secret-key }
+  - name: RUSTFS_ADDRESS
+    value: ":9000"
+  - name: RUSTFS_CONSOLE_ADDRESS
+    value: ":7001"
+  - name: RUSTFS_CONSOLE_ENABLE
+    value: "true"
+  - name: TZ
+    value: Asia/Shanghai
+
+volumeMounts:
+  - name: data
+    mountPath: /data
+
+probes:
+  startup:
+    tcpSocket: { port: 9000 }
+    periodSeconds: 5
+    timeoutSeconds: 5
+    failureThreshold: 30
+  liveness:
+    tcpSocket: { port: 9000 }
+    periodSeconds: 15
+    timeoutSeconds: 5
+    failureThreshold: 5
+  readiness:
+    tcpSocket: { port: 9000 }
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 6
+
+nodeSelector:
+  bluenet/role: db
+
+resources:
+  requests:
+    memory: 128Mi
+    cpu: 100m
+  limits:
+    memory: 512Mi
+    cpu: 500m
