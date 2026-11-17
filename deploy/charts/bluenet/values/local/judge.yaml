@@ -8,8 +8,18 @@ replicas: 1
 
 image:
   repository: bluenet-judge-service
-  tag: 0.1.6-local-613fd46e
+  tag: 0.1.6-local-e64b82d4
   pullPolicy: IfNotPresent
+
+extraContainerPorts:
+  - name: management
+    containerPort: 8091
+    protocol: TCP
+
+podAnnotations:
+  prometheus.io/scrape: "true"
+  prometheus.io/port: "8091"
+  prometheus.io/path: /actuator/prometheus
 
 service:
   enabled: true
@@ -23,6 +33,13 @@ containerSecurityContext:
   privileged: true
 
 env:
+  - name: MANAGEMENT_SERVER_PORT
+    value: "8091"
+  - name: MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE
+    value: health,info,metrics,prometheus
+  - name: MANAGEMENT_PROMETHEUS_METRICS_EXPORT_ENABLED
+    value: "true"
+
   - name: DATABASE_HOST
     value: bluenet-postgres
   - name: DATABASE_PORT

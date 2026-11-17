@@ -37,6 +37,12 @@ command: []
 args: []
 
 # 服务端口（同时用于 Service 与容器 ports）
+# 仅加入容器端口列表，不创建 Service（例如本地 Actuator 管理端口）
+extraContainerPorts: []
+# - name: management
+#   containerPort: 8081
+#   protocol: TCP
+
 service:
   enabled: false
   type: ClusterIP         # ClusterIP | NodePort | LoadBalancer

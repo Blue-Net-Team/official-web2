@@ -27,6 +27,10 @@ service:
       port: 15672
       targetPort: 15672
       nodePort: 30672
+    - name: prometheus
+      port: 15692
+      targetPort: 15692
+      nodePort: 30692
 
 env:
   - name: RABBITMQ_DEFAULT_USER

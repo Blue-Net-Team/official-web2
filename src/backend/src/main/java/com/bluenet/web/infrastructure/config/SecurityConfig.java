@@ -97,6 +97,9 @@ public class SecurityConfig {
                 // 配置授权规则
                 .authorizeHttpRequests(
                         auth -> auth
+                                // 仅独立管理端口暴露该端点；默认业务配置没有 Prometheus endpoint。
+                                .requestMatchers("/actuator/prometheus")
+                                .permitAll()
                                 .requestMatchers("/api/v1/**")
                                 .permitAll()
                                 .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html")

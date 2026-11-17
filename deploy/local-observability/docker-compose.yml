@@ -1,0 +1,112 @@
+name: bluenet-local-observability
+
+services:
+  prometheus:
+    image: prom/prometheus:v3.2.1
+    restart: unless-stopped
+    entrypoint: /bin/sh
+    env_file:
+      - .private/kubernetes.env
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.template.yml:ro
+      - ./.private/ca.crt:/etc/bluenet/kubernetes-ca.crt:ro
+      - ./.private/token:/etc/bluenet/kubernetes-token:ro
+      - ./.private/kubeconfig:/etc/bluenet/kubeconfig:ro
+      - prometheus-data:/prometheus
+    command:
+      - -c
+      - |
+        sed \
+          -e "s|__KUBERNETES_API_SERVER__|$${KUBERNETES_API_SERVER}|g" \
+          -e "s|__KUBERNETES_TLS_SERVER_NAME__|$${KUBERNETES_TLS_SERVER_NAME}|g" \
+          /etc/prometheus/prometheus.template.yml > /tmp/prometheus.yml
+        promtool check config /tmp/prometheus.yml
+        exec prometheus --config.file=/tmp/prometheus.yml --storage.tsdb.path=/prometheus --storage.tsdb.retention.time=7d --web.listen-address=0.0.0.0:9090
+    ports:
+      - "127.0.0.1:${PROMETHEUS_PORT:-9090}:9090"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9090/-/healthy"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    networks:
+      - observability
+      - kind
+
+  kube-state-metrics:
+    image: registry.k8s.io/kube-state-metrics/kube-state-metrics:v2.15.0
+    restart: unless-stopped
+    command:
+      - --kubeconfig=/etc/bluenet/kubeconfig
+      - --resources=pods
+      - --namespaces=bluenet
+    volumes:
+      - ./.private/ca.crt:/etc/bluenet/kubernetes-ca.crt:ro
+      - ./.private/kubeconfig:/etc/bluenet/kubeconfig:ro
+    networks:
+      - observability
+
+  grafana:
+    image: grafana/grafana:12.0.2
+    restart: unless-stopped
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:?set GRAFANA_ADMIN_USER in .env}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?set GRAFANA_ADMIN_PASSWORD in .env}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_ANALYTICS_REPORTING_ENABLED: "false"
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+    ports:
+      - "127.0.0.1:${GRAFANA_PORT:-3001}:3000"
+    depends_on:
+      prometheus:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    networks:
+      - observability
+
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter:v0.17.1
+    restart: unless-stopped
+    environment:
+      DATA_SOURCE_NAME: postgresql://bluenet_monitor:${POSTGRES_MONITOR_PASSWORD:?set POSTGRES_MONITOR_PASSWORD in .env}@desktop-worker:30432/db_blue_net?sslmode=disable
+      PG_EXPORTER_AUTO_DISCOVER_DATABASES: "false"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9187/metrics"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    networks:
+      - observability
+      - kind
+
+  redis-exporter:
+    image: oliver006/redis_exporter:v1.74.0
+    restart: unless-stopped
+    environment:
+      REDIS_ADDR: desktop-worker:30379
+      REDIS_PASSWORD: ${REDIS_PASSWORD-}
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9121/metrics"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    networks:
+      - observability
+      - kind
+
+networks:
+  observability:
+    driver: bridge
+  kind:
+    external: true
+
+volumes:
+  prometheus-data:
+  grafana-data:

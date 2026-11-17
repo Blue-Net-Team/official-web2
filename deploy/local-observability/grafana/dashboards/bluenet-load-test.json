@@ -1,0 +1,1038 @@
+{
+  "uid": "bluenet-local-load-test",
+  "title": "BlueNet Local Load Test",
+  "description": "System metrics only. Use k6 JSONL/report for business throughput and valid completed workflows.",
+  "timezone": "utc",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "15s",
+  "time": {
+    "from": "now-30m",
+    "to": "now"
+  },
+  "templating": {
+    "list": [
+      {
+        "name": "namespace",
+        "type": "query",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "bluenet-prometheus"
+        },
+        "query": "label_values(container_memory_working_set_bytes, namespace)",
+        "current": {
+          "text": "bluenet",
+          "value": "bluenet"
+        },
+        "refresh": 2
+      },
+      {
+        "name": "pod",
+        "type": "query",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "bluenet-prometheus"
+        },
+        "query": "label_values(kube_pod_info{namespace=\"$namespace\"}, pod)",
+        "includeAll": true,
+        "multi": true,
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        },
+        "refresh": 2
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Scrape target health",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "bluenet-prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (job) (up)",
+          "legendFormat": "{{pod}} {{uri}} {{job}} {{queue}} {{state}} {{mode}}"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Pod CPU usage",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "bluenet-prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "cores",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "(sum by (namespace, pod) (rate(container_cpu_usage_seconds_total{job=\"kubernetes-resource\", namespace=\"$namespace\", pod=~\"$pod\", container!=\"\"}[$__rate_interval]))) and on(namespace, pod) kube_pod_info{namespace=\"$namespace\"}",
+          "legendFormat": "{{pod}} {{uri}} {{job}} {{queue}} {{state}} {{mode}}"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Pod memory working set",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "bluenet-prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "(sum by (namespace, pod) (container_memory_working_set_bytes{job=\"kubernetes-resource\", namespace=\"$namespace\", pod=~\"$pod\", container!=\"\"})) and on(namespace, pod) kube_pod_info{namespace=\"$namespace\"}",
+          "legendFormat": "{{pod}} {{uri}} {{job}} {{queue}} {{state}} {{mode}}"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Container restarts",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "bluenet-prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (pod, container) (kube_pod_container_status_restarts_total{namespace=\"$namespace\", pod=~\"$pod\"})",
+          "legendFormat": "{{pod}} {{uri}} {{job}} {{queue}} {{state}} {{mode}}"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Last termination: OOMKilled",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "bluenet-prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 16
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (pod, container) (kube_pod_container_status_last_terminated_reason{namespace=\"$namespace\", pod=~\"$pod\", reason=\"OOMKilled\"})",
+          "legendFormat": "{{pod}} {{uri}} {{job}} {{queue}} {{state}} {{mode}}"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "API HTTP request rate",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "bluenet-prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 16
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "(sum by (pod, uri) (rate(http_server_requests_seconds_count{service=\"bluenet-api\", namespace=\"$namespace\"}[$__rate_interval]))) and on(namespace, pod) kube_pod_info{namespace=\"$namespace\"}",
+          "legendFormat": "{{pod}} {{uri}} {{job}} {{queue}} {{state}} {{mode}}"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "title": "API HTTP P95",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "bluenet-prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 24
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "(histogram_quantile(0.95, sum by (le, pod, uri) (rate(http_server_requests_seconds_bucket{service=\"bluenet-api\", namespace=\"$namespace\"}[$__rate_interval])))) and on(namespace, pod) kube_pod_info{namespace=\"$namespace\"}",
+          "legendFormat": "{{pod}} {{uri}} {{job}} {{queue}} {{state}} {{mode}}"
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "title": "API HTTP P99",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "bluenet-prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 24
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "(histogram_quantile(0.99, sum by (le, pod, uri) (rate(http_server_requests_seconds_bucket{service=\"bluenet-api\", namespace=\"$namespace\"}[$__rate_interval])))) and on(namespace, pod) kube_pod_info{namespace=\"$namespace\"}",
+          "legendFormat": "{{pod}} {{uri}} {{job}} {{queue}} {{state}} {{mode}}"
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "title": "API HTTP 5xx ratio",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "bluenet-prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 32
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "(sum by (pod) (rate(http_server_requests_seconds_count{service=\"bluenet-api\", namespace=\"$namespace\", status=~\"5..\"}[$__rate_interval])) / clamp_min(sum by (pod) (rate(http_server_requests_seconds_count{service=\"bluenet-api\", namespace=\"$namespace\"}[$__rate_interval])), 1e-9)) and on(namespace, pod) kube_pod_info{namespace=\"$namespace\"}",
+          "legendFormat": "{{pod}} {{uri}} {{job}} {{queue}} {{state}} {{mode}}"
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "title": "JVM heap used",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "bluenet-prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 32
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "(sum by (pod) (jvm_memory_used_bytes{namespace=\"$namespace\", area=\"heap\"})) and on(namespace, pod) kube_pod_info{namespace=\"$namespace\"}",
+          "legendFormat": "{{pod}} {{uri}} {{job}} {{queue}} {{state}} {{mode}}"
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "title": "JVM non-heap used",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "bluenet-prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 40
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "(sum by (pod) (jvm_memory_used_bytes{namespace=\"$namespace\", area=\"nonheap\"})) and on(namespace, pod) kube_pod_info{namespace=\"$namespace\"}",
+          "legendFormat": "{{pod}} {{uri}} {{job}} {{queue}} {{state}} {{mode}}"
+        }
+      ]
+    },
+    {
+      "id": 12,
+      "title": "JVM mean GC pause",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "bluenet-prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 40
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "((sum by (pod) (rate(jvm_gc_pause_seconds_sum{namespace=\"$namespace\"}[$__rate_interval]))) / clamp_min(sum by (pod) (rate(jvm_gc_pause_seconds_count{namespace=\"$namespace\"}[$__rate_interval])), 1e-9)) and on(namespace, pod) kube_pod_info{namespace=\"$namespace\"}",
+          "legendFormat": "{{pod}} {{uri}} {{job}} {{queue}} {{state}} {{mode}}"
+        }
+      ]
+    },
+    {
+      "id": 13,
+      "title": "JVM live threads",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "bluenet-prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 48
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "(jvm_threads_live_threads{namespace=\"$namespace\"}) and on(namespace, pod) kube_pod_info{namespace=\"$namespace\"}",
+          "legendFormat": "{{pod}} {{uri}} {{job}} {{queue}} {{state}} {{mode}}"
+        }
+      ]
+    },
+    {
+      "id": 14,
+      "title": "JVM direct buffer used",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "bluenet-prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 48
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "(sum by (pod) (jvm_buffer_memory_used_bytes{namespace=\"$namespace\", id=\"direct\"})) and on(namespace, pod) kube_pod_info{namespace=\"$namespace\"}",
+          "legendFormat": "{{pod}} {{uri}} {{job}} {{queue}} {{state}} {{mode}}"
+        }
+      ]
+    },
+    {
+      "id": 15,
+      "title": "RabbitMQ messages ready",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "bluenet-prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 56
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "rabbitmq_queue_messages_ready{queue=~\"algorithm.judge.(run|formal)\"}",
+          "legendFormat": "{{pod}} {{uri}} {{job}} {{queue}} {{state}} {{mode}}"
+        }
+      ]
+    },
+    {
+      "id": 16,
+      "title": "RabbitMQ messages unacknowledged",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "bluenet-prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 56
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "rabbitmq_queue_messages_unacked{queue=~\"algorithm.judge.(run|formal)\"}",
+          "legendFormat": "{{pod}} {{uri}} {{job}} {{queue}} {{state}} {{mode}}"
+        }
+      ]
+    },
+    {
+      "id": 17,
+      "title": "RabbitMQ publish rate",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "bluenet-prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 64
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "msgps",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (queue) (rate(rabbitmq_queue_messages_published_total{queue=~\"algorithm.judge.(run|formal)\"}[$__rate_interval]))",
+          "legendFormat": "{{pod}} {{uri}} {{job}} {{queue}} {{state}} {{mode}}"
+        }
+      ]
+    },
+    {
+      "id": 18,
+      "title": "RabbitMQ global acknowledgement rate",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "bluenet-prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 64
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "msgps",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (protocol) (rate(rabbitmq_global_messages_acknowledged_total[$__rate_interval]))",
+          "legendFormat": "{{pod}} {{uri}} {{job}} {{queue}} {{state}} {{mode}}"
+        }
+      ]
+    },
+    {
+      "id": 19,
+      "title": "PostgreSQL connections by state",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "bluenet-prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 72
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (state) (pg_stat_activity_count{datname=\"db_blue_net\"})",
+          "legendFormat": "{{pod}} {{uri}} {{job}} {{queue}} {{state}} {{mode}}"
+        }
+      ]
+    },
+    {
+      "id": 20,
+      "title": "PostgreSQL locks by mode",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "bluenet-prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 72
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (mode) (pg_locks_count{datname=\"db_blue_net\"})",
+          "legendFormat": "{{pod}} {{uri}} {{job}} {{queue}} {{state}} {{mode}}"
+        }
+      ]
+    },
+    {
+      "id": 21,
+      "title": "PostgreSQL transaction rate",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "bluenet-prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 80
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(rate(pg_stat_database_xact_commit_total{datname=\"db_blue_net\"}[$__rate_interval]))",
+          "legendFormat": "commit/s"
+        },
+        {
+          "refId": "B",
+          "expr": "sum(rate(pg_stat_database_xact_rollback_total{datname=\"db_blue_net\"}[$__rate_interval]))",
+          "legendFormat": "rollback/s"
+        }
+      ]
+    },
+    {
+      "id": 22,
+      "title": "Redis memory used",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "bluenet-prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 80
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "redis_memory_used_bytes",
+          "legendFormat": "{{pod}} {{uri}} {{job}} {{queue}} {{state}} {{mode}}"
+        }
+      ]
+    },
+    {
+      "id": 23,
+      "title": "Redis connected clients",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "bluenet-prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 88
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "redis_connected_clients",
+          "legendFormat": "{{pod}} {{uri}} {{job}} {{queue}} {{state}} {{mode}}"
+        }
+      ]
+    },
+    {
+      "id": 24,
+      "title": "Redis keyspace hit ratio",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "bluenet-prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 88
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "rate(redis_keyspace_hits_total[$__rate_interval]) / clamp_min(rate(redis_keyspace_hits_total[$__rate_interval]) + rate(redis_keyspace_misses_total[$__rate_interval]), 1e-9)",
+          "legendFormat": "{{pod}} {{uri}} {{job}} {{queue}} {{state}} {{mode}}"
+        }
+      ]
+    }
+  ]
+}

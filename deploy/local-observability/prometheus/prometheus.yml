@@ -1,0 +1,114 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    environment: docker-desktop
+
+scrape_configs:
+  - job_name: bluenet-application
+    scheme: https
+    kubernetes_sd_configs:
+      - role: pod
+        api_server: https://__KUBERNETES_API_SERVER__
+        tls_config:
+          ca_file: /etc/bluenet/kubernetes-ca.crt
+          server_name: __KUBERNETES_TLS_SERVER_NAME__
+        bearer_token_file: /etc/bluenet/kubernetes-token
+    tls_config:
+      ca_file: /etc/bluenet/kubernetes-ca.crt
+      server_name: __KUBERNETES_TLS_SERVER_NAME__
+    bearer_token_file: /etc/bluenet/kubernetes-token
+    relabel_configs:
+      - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+        action: keep
+        regex: "true"
+      - source_labels: [__meta_kubernetes_pod_container_port_name]
+        action: keep
+        regex: management
+      - source_labels: [__meta_kubernetes_pod_phase]
+        action: keep
+        regex: Running
+      - target_label: __address__
+        replacement: __KUBERNETES_API_SERVER__
+      - source_labels: [__meta_kubernetes_namespace, __meta_kubernetes_pod_name, __meta_kubernetes_pod_annotation_prometheus_io_port]
+        separator: ";"
+        regex: "(.*);(.*);(.*)"
+        target_label: __metrics_path__
+        replacement: /api/v1/namespaces/$1/pods/$2:$3/proxy/actuator/prometheus
+      - source_labels: [__meta_kubernetes_namespace]
+        target_label: namespace
+      - source_labels: [__meta_kubernetes_pod_name]
+        target_label: pod
+      - source_labels: [__meta_kubernetes_pod_node_name]
+        target_label: node
+      - source_labels: [__meta_kubernetes_pod_label_app_kubernetes_io_name]
+        target_label: service
+
+  - job_name: kubernetes-resource
+    scheme: https
+    kubernetes_sd_configs:
+      - role: node
+        api_server: https://__KUBERNETES_API_SERVER__
+        tls_config:
+          ca_file: /etc/bluenet/kubernetes-ca.crt
+          server_name: __KUBERNETES_TLS_SERVER_NAME__
+        bearer_token_file: /etc/bluenet/kubernetes-token
+    tls_config:
+      ca_file: /etc/bluenet/kubernetes-ca.crt
+      server_name: __KUBERNETES_TLS_SERVER_NAME__
+    bearer_token_file: /etc/bluenet/kubernetes-token
+    relabel_configs:
+      - target_label: __address__
+        replacement: __KUBERNETES_API_SERVER__
+      - source_labels: [__meta_kubernetes_node_name]
+        target_label: __metrics_path__
+        replacement: /api/v1/nodes/$1/proxy/metrics/resource
+      - source_labels: [__meta_kubernetes_node_name]
+        target_label: node
+
+  - job_name: kubernetes-cadvisor
+    scheme: https
+    kubernetes_sd_configs:
+      - role: node
+        api_server: https://__KUBERNETES_API_SERVER__
+        tls_config:
+          ca_file: /etc/bluenet/kubernetes-ca.crt
+          server_name: __KUBERNETES_TLS_SERVER_NAME__
+        bearer_token_file: /etc/bluenet/kubernetes-token
+    tls_config:
+      ca_file: /etc/bluenet/kubernetes-ca.crt
+      server_name: __KUBERNETES_TLS_SERVER_NAME__
+    bearer_token_file: /etc/bluenet/kubernetes-token
+    relabel_configs:
+      - target_label: __address__
+        replacement: __KUBERNETES_API_SERVER__
+      - source_labels: [__meta_kubernetes_node_name]
+        target_label: __metrics_path__
+        replacement: /api/v1/nodes/$1/proxy/metrics/cadvisor
+      - source_labels: [__meta_kubernetes_node_name]
+        target_label: node
+
+  - job_name: kube-state-metrics
+    static_configs:
+      - targets: [kube-state-metrics:8080]
+        labels:
+          service: kube-state-metrics
+
+  - job_name: rabbitmq
+    metrics_path: /metrics/per-object
+    static_configs:
+      - targets: [desktop-worker2:30692]
+        labels:
+          service: rabbitmq
+
+  - job_name: postgres
+    static_configs:
+      - targets: [postgres-exporter:9187]
+        labels:
+          service: postgres
+
+  - job_name: redis
+    static_configs:
+      - targets: [redis-exporter:9121]
+        labels:
+          service: redis

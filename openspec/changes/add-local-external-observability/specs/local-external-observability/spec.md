@@ -2,12 +2,12 @@
 
 ### Requirement: 集群外监控运行环境
 
-系统 SHALL 提供独立的宿主机监控编排，以运行 Prometheus、Grafana、PostgreSQL exporter 和 Redis exporter，并 MUST 将全部监控工作负载、历史指标和 Dashboard 数据保存在 kind 集群外。该编排 MUST NOT 修改或隐含启动现有业务 Compose 服务。
+系统 SHALL 提供独立的宿主机监控编排，以运行 Prometheus、Grafana、PostgreSQL exporter 和 Redis exporter，并 MUST 将全部监控工作负载、历史指标和 Dashboard 数据保存在 Docker Desktop Kubernetes 集群外。该编排 MUST NOT 修改或隐含启动现有业务 Compose 服务。
 
 #### Scenario: 独立启动监控环境
 
-- **WHEN** 操作者在已运行本地 kind 的宿主机启动监控编排
-- **THEN** Prometheus、Grafana 和两个 exporter 在宿主机运行，kind 内没有新增监控 Pod、DaemonSet 或 sidecar，现有业务服务配置不发生变化
+- **WHEN** 操作者在已运行本地 Docker Desktop Kubernetes 的宿主机启动监控编排
+- **THEN** Prometheus、Grafana 和两个 exporter 在宿主机运行，Kubernetes 集群内没有新增监控 Pod、DaemonSet 或 sidecar，现有业务服务配置不发生变化
 
 #### Scenario: 停止监控后保留历史数据
 
@@ -20,7 +20,7 @@ API 与 Judge SHALL 提供 Prometheus 文本格式的 Actuator 指标端点，�
 
 #### Scenario: 分别采集两个 API 副本
 
-- **WHEN** 本地 kind 中运行两个带监控标记的 API Pod
+- **WHEN** 本地 Docker Desktop Kubernetes 中运行两个带监控标记的 API Pod
 - **THEN** Prometheus 为两个 Pod 分别建立目标并保存可区分的 Pod 标签，单副本 JVM 曲线不会与另一副本混合
 
 #### Scenario: 采集 ClusterIP Judge
@@ -68,7 +68,7 @@ API 与 Judge SHALL 提供 Prometheus 文本格式的 Actuator 指标端点，�
 
 ### Requirement: 中间件指标采集
 
-系统 SHALL 通过现有本地 NodePort 采集 RabbitMQ、PostgreSQL 和 Redis 指标，其中 PostgreSQL 与 Redis MUST 由宿主机 exporter 转换，RabbitMQ SHALL 使用其原生 Prometheus 指标端点。
+系统 SHALL 通过本地 NodePort 采集 RabbitMQ、PostgreSQL 和 Redis 指标，其中 PostgreSQL 与 Redis MUST 由宿主机 exporter 转换，RabbitMQ SHALL 使用其原生 Prometheus 指标端点。
 
 #### Scenario: 观察判题队列
 
@@ -92,11 +92,11 @@ API 与 Judge SHALL 提供 Prometheus 文本格式的 Actuator 指标端点，�
 #### Scenario: 从干净检出的仓库部署
 
 - **WHEN** 操作者根据示例配置本地监控
-- **THEN** 流程要求从当前 kind 和本地私有环境生成或注入凭据，不需要使用仓库中的真实秘密，也不会将秘密打印到日志或写入已跟踪文件
+- **THEN** 流程要求从当前 Docker Desktop Kubernetes 和本地私有环境生成或注入凭据，不需要使用仓库中的真实秘密，也不会将秘密打印到日志或写入已跟踪文件
 
 #### Scenario: 非本地环境误用
 
-- **WHEN** 监控初始化目标不是明确选择的本地 kind 上下文
+- **WHEN** 监控初始化目标不是明确选择的 `docker-desktop` 上下文
 - **THEN** 初始化 MUST 停止并要求显式确认，MUST NOT 将高权限代理身份创建到测试或生产集群
 
 ### Requirement: 预置压测可视化与目标健康
@@ -134,7 +134,7 @@ Grafana SHALL 自动配置 Prometheus 数据源和本地压测 Dashboard，展�
 #### Scenario: 清理监控但保留业务环境
 
 - **WHEN** 操作者执行保留数据的监控清理流程
-- **THEN** 外部监控容器和本地监控 RBAC 被移除，kind 业务工作负载及数据不受影响，监控历史卷保留
+- **THEN** 外部监控容器和本地监控 RBAC 被移除，Kubernetes 业务工作负载及数据不受影响，监控历史卷保留
 
 #### Scenario: 明确删除监控历史
 

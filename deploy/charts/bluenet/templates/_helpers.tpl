@@ -59,6 +59,9 @@ app.kubernetes.io/instance: {{ .Release.Name }}
       containerPort: {{ .targetPort | default .port }}
       protocol: {{ .protocol | default "TCP" }}
     {{- end }}
+    {{- with .Values.extraContainerPorts }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
   {{- end }}
   {{- with .Values.env }}
   env:

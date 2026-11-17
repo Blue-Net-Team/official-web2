@@ -111,6 +111,12 @@ npm test --prefix src/load-test
 uv run --project src/load-test python -m unittest discover -s src/load-test/tests -p 'test_*.py'
 ```
 
+## 本地 Kubernetes 外部指标对照（可选）
+
+Docker Desktop Kubernetes 压测可使用 `deploy/local-observability/README.md` 中的集群外 Prometheus/Grafana。它仅提供 Pod 资源、HTTP、JVM 和中间件历史曲线；本目录的 k6 吞吐、有效业务闭环定义、JSONL 采样和报告保持独立，不依赖 Prometheus/Grafana，也不由这些系统替代。
+
+对照时在 Grafana 选择与实验报告一致的 UTC 时间范围。应用 HTTP 请求计数不等于 k6 的有效业务完成数；未启动外部监控时，本目录现有场景和报告仍可独立运行。
+
 ## 停止与回滚
 
 停止当前 k6 进程即可中止负载；编排器仍会尝试保存部分结果。若需要恢复业务服务，只需去掉 `--reset` 并不再使用 `setup/docker-compose.loadtest.yml` 的压测 override。API Actuator metrics 暴露只由该 override 开启，不新增公网端口。

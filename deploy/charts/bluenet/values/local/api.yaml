@@ -9,13 +9,23 @@ replicas: 2
 
 image:
   repository: bluenet-api-service
-  tag: 1.2.0-local-613fd46e
+  tag: 1.2.0-local-e64b82d4
   pullPolicy: IfNotPresent
 
 strategy:
   rollingUpdate:
     maxSurge: 0
     maxUnavailable: 1
+
+extraContainerPorts:
+  - name: management
+    containerPort: 8081
+    protocol: TCP
+
+podAnnotations:
+  prometheus.io/scrape: "true"
+  prometheus.io/port: "8081"
+  prometheus.io/path: /actuator/prometheus
 
 service:
   enabled: true
@@ -38,6 +48,13 @@ affinity:
               app.kubernetes.io/instance: bluenet-api
 
 env:
+  - name: MANAGEMENT_SERVER_PORT
+    value: "8081"
+  - name: MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE
+    value: health,prometheus
+  - name: MANAGEMENT_PROMETHEUS_METRICS_EXPORT_ENABLED
+    value: "true"
+
   - name: DATABASE_HOST
     value: bluenet-postgres
   - name: DATABASE_PORT
@@ -94,7 +111,8 @@ env:
     valueFrom:
       secretKeyRef: { name: bluenet-api-secret, key: jwt-secret }
   - name: COOKIE_DOMAIN
-    value: ".bluenet.local"
+    # 跟随当前主机，兼容 bluenet.local 浏览器与 localhost k6 隔离压测。
+    value: ""
   - name: COOKIE_SECURE
     value: "true"
   - name: COOKIE_SAME_SITE
