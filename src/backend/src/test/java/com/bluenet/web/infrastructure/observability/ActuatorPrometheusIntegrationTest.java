@@ -15,12 +15,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {
         "management.server.port=0",
         "management.endpoints.web.exposure.include=health,prometheus",
-        "management.prometheus.metrics.export.enabled=true"
+        "management.prometheus.metrics.export.enabled=true",
+        "management.metrics.distribution.percentiles-histogram.http.server.requests=true"
 })
 @TestPropertySource(properties = {
         "management.server.port=0",
         "management.endpoints.web.exposure.include=health,prometheus",
-        "management.prometheus.metrics.export.enabled=true"
+        "management.prometheus.metrics.export.enabled=true",
+        "management.metrics.distribution.percentiles-histogram.http.server.requests=true"
 })
 class ActuatorPrometheusIntegrationTest extends APIIntegrationTest {
 
@@ -51,7 +53,8 @@ class ActuatorPrometheusIntegrationTest extends APIIntegrationTest {
                 .contains("text/plain");
         assertThat(metrics.getBody())
                 .contains("jvm_memory_used_bytes")
-                .contains("http_server_requests_seconds");
+                .contains("http_server_requests_seconds")
+                .contains("http_server_requests_seconds_bucket");
         assertThat(business.getStatusCode()).isNotEqualTo(HttpStatus.OK);
         assertThat(business.getBody()).doesNotContain("jvm_memory_used_bytes");
     }

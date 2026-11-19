@@ -196,6 +196,12 @@ cors:
 
 # Actuator 健康检查配置
 management:
+  metrics:
+    distribution:
+      percentiles-histogram:
+        http:
+          server:
+            requests: ${HTTP_SERVER_REQUESTS_HISTOGRAM_ENABLED:false}
   endpoints:
     web:
       exposure:

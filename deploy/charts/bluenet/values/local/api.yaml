@@ -54,6 +54,8 @@ env:
     value: health,prometheus
   - name: MANAGEMENT_PROMETHEUS_METRICS_EXPORT_ENABLED
     value: "true"
+  - name: HTTP_SERVER_REQUESTS_HISTOGRAM_ENABLED
+    value: "true"
 
   - name: DATABASE_HOST
     value: bluenet-postgres
