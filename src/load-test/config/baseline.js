@@ -6,7 +6,7 @@ export const BASELINE = Object.freeze({
   direction: 'computer_vision',
   grade: 2026,
   candidateRoleId: 4,
-  userCount: 8,
+  userCount: 100,
   setupTimeoutSeconds: 180,
   pollIntervalMilliseconds: 1000,
   jobTimeoutSeconds: 120,
@@ -24,18 +24,20 @@ export const BASELINE = Object.freeze({
   }),
   // 报名使用固定到达速率，学号由运行 ID 与全局迭代号共同生成。
   enrollment: Object.freeze({
-    operations: 30,
-    rate: 1,
+    operations: 300,
+    rate: 10,
     timeUnit: '1s',
     duration: '30s',
-    preAllocatedVUs: 1,
-    maxVUs: 4,
+    preAllocatedVUs: 10,
+    maxVUs: 20,
   }),
-  // 多题均匀分配；运行/提交各半，每个 VU 串行等待任务终态。
+  // 真实业务模型：100 人在线；默认 2.5 任务/秒，可用环境变量切换到高峰/尖峰。
   algorithm: Object.freeze({
-    questionCount: 3,
-    totalJobs: 12,
-    runPercent: 50,
-    vus: 3,
+    questionCount: 15,
+    runPercent: 500 / 6,
+    rate: 2.5,
+    duration: '30m',
+    preAllocatedVUs: 20,
+    maxVUs: 100,
   }),
 });
