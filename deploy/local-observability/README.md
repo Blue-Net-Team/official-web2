@@ -4,7 +4,7 @@
 
 - Prometheus：`http://127.0.0.1:9090`
 - Grafana：`http://127.0.0.1:3001`，Dashboard：**BlueNet Local / BlueNet Local Load Test**
-- 默认抓取间隔/保留期：15 秒 / 7 天；Dashboard 使用 UTC。
+- 默认抓取间隔/保留期：15 秒 / 7 天；Dashboard 使用 Asia/Shanghai，k6 报告保留 UTC 时间戳。
 - k6 继续负责业务吞吐、有效闭环与离线 JSONL/report。Grafana 的应用请求速率不能解释为有效业务完成数。
 
 ## 架构与网络
@@ -73,10 +73,10 @@ kubectl -n bluenet rollout status statefulset/bluenet-rabbitmq
 
 ## 健康检查与压测对照
 
-1. 打开 `http://127.0.0.1:9090/targets`：应有两个 API Pod、一个 Judge Pod、五个 resource 节点、五个 cAdvisor 节点，以及 kube-state-metrics、RabbitMQ、PostgreSQL、Redis。
+1. 打开 `http://127.0.0.1:9090/targets`：应有一个 API Pod、两个 Judge Pod、五个 resource 节点、五个 cAdvisor 节点，以及 kube-state-metrics、RabbitMQ、PostgreSQL、Redis。
 2. 所有预期 target 应为 `up`。`up == 0` 表示采集失败，不等于没有业务流量。
 3. 检查 Judge 仍是 ClusterIP，管理端口未生成 Service。
-4. 在 Grafana 选择与 k6 报告一致的 UTC 时间范围，比较 Pod CPU/memory working set、HTTP、JVM、队列和中间件曲线。
+4. 在 Grafana 选择与 k6 报告相同的绝对时间范围（Grafana 本地时间 UTC+8，报告为 UTC），比较 Pod CPU/memory working set、HTTP、JVM、队列和中间件曲线。
 5. `BASELINE.md` 记录实施前环境、代理 spike 和测试基线。
 
 静态校验：
