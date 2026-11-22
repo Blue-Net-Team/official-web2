@@ -248,6 +248,25 @@ jobs:
         distribution: 'temurin'
         cache: maven
 
+    - name: Configure iven-infra GitHub Packages access
+      if: steps.version.outputs.skip_build != 'true'
+      run: |
+        mkdir -p ~/.m2
+        cat > ~/.m2/settings.xml <<EOF
+        <settings>
+          <servers>
+            <server>
+              <id>iven-github</id>
+              <username>${IVEN_PACKAGES_USER}</username>
+              <password>${IVEN_PACKAGES_TOKEN}</password>
+            </server>
+          </servers>
+        </settings>
+        EOF
+      env:
+        IVEN_PACKAGES_USER: ${{ secrets.IVEN_PACKAGES_USER }}
+        IVEN_PACKAGES_TOKEN: ${{ secrets.IVEN_PACKAGES_TOKEN }}
+
     - name: Build api-service JAR
       if: steps.version.outputs.skip_build != 'true'
       working-directory: src/backend
