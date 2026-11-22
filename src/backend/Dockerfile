@@ -30,9 +30,11 @@ ENV JAVA_OPTS="-Xms64m -Xmx384m -XX:+UseSerialGC"
 WORKDIR /app
 
 COPY target/*.jar /app/backend.jar
+COPY docker-entrypoint.sh /app/docker-entrypoint.sh
+RUN chmod 0555 /app/docker-entrypoint.sh
 
 EXPOSE 8080
 
 USER appuser
 
-ENTRYPOINT ["sh", "-c", "exec java $JAVA_OPTS -Dfile.encoding=UTF-8 -jar /app/backend.jar"]
+ENTRYPOINT ["/app/docker-entrypoint.sh"]

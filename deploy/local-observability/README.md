@@ -47,12 +47,18 @@ PostgreSQL 角色 `bluenet_monitor` 仅获得 `pg_monitor`，不使用业务超�
 
 ## 更新本地 API/Judge
 
-先检查 3000 端口；本变更不需要启动或构建前端。
+先检查 3000 端口；本变更不需要启动或构建前端。本地 API 还需挂载 nginx CA，使 Pod 内预签名请求通过 TLS 校验：
+
+```powershell
+docker cp bluenet-local-nginx:/etc/nginx/certs/bluenet.local.crt $env:TEMP/bluenet.local.crt
+kubectl -n bluenet create secret generic bluenet-local-tls --from-file=ca.crt=$env:TEMP/bluenet.local.crt --dry-run=client -o yaml | kubectl apply -f -
+Remove-Item $env:TEMP/bluenet.local.crt
+```
 
 ```powershell
 mvn clean package
 # 若 IDE 锁定 Windows target 文件，请先暂停 IDE 的自动构建，不要强行结束用户进程。
-docker build -t bluenet-api-service:1.2.0-local-e64b82d4 src/backend
+docker build -t bluenet-api-service:1.2.0-local-truststore src/backend
 docker build -t bluenet-judge-service:0.1.6-local-e64b82d4 src/judge-service
 
 helm upgrade bluenet-api deploy/charts/bluenet -n bluenet -f deploy/charts/bluenet/values/local/api.yaml

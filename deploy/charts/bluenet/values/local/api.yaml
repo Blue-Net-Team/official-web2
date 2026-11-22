@@ -9,7 +9,7 @@ replicas: 2
 
 image:
   repository: bluenet-api-service
-  tag: 1.2.0-local-e64b82d4
+  tag: 1.2.0-local-truststore
   pullPolicy: IfNotPresent
 
 strategy:
@@ -36,6 +36,11 @@ service:
       targetPort: 8080
       nodePort: 30080
 
+hostAliases:
+  - ip: 172.19.0.1
+    hostnames:
+      - s3.bluenet.local
+
 affinity:
   podAntiAffinity:
     preferredDuringSchedulingIgnoredDuringExecution:
@@ -56,6 +61,8 @@ env:
     value: "true"
   - name: HTTP_SERVER_REQUESTS_HISTOGRAM_ENABLED
     value: "true"
+  - name: LOCAL_TLS_CA_FILE
+    value: /etc/bluenet/tls/ca.crt
 
   - name: DATABASE_HOST
     value: bluenet-postgres
@@ -183,11 +190,19 @@ env:
     value: Asia/Shanghai
 
 volumes:
+  - name: local-tls
+    secret:
+      secretName: bluenet-local-tls
+      defaultMode: 0444
   - name: github-keys
     secret:
       secretName: bluenet-github-keys
       defaultMode: 0444
 volumeMounts:
+  - name: local-tls
+    mountPath: /etc/bluenet/tls/ca.crt
+    subPath: ca.crt
+    readOnly: true
   - name: github-keys
     mountPath: /app/github-issue-private-key.pem
     subPath: github-issue-private-key.pem

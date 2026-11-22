@@ -74,6 +74,9 @@ resources:
   requests: {}
   limits: {}
 nodeSelector: {}
+hostAliases: []
+# - ip: 172.19.0.1
+#   hostnames: [s3.bluenet.local]
 tolerations: []
 affinity: {}
 topologySpreadConstraints: []

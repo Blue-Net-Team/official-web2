@@ -104,6 +104,10 @@ Pod 规格。Deployment / StatefulSet / CronJob 三种工作负载共用，保�
 nodeSelector:
   {{- toYaml . | nindent 2 }}
 {{- end }}
+{{- with .Values.hostAliases }}
+hostAliases:
+  {{- toYaml . | nindent 2 }}
+{{- end }}
 {{- with .Values.tolerations }}
 tolerations:
   {{- toYaml . | nindent 2 }}
