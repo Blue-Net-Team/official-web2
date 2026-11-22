@@ -1,6 +1,6 @@
 ## Context
 
-本地五节点 Docker Desktop Kubernetes 使用 Helm values 部署两个 API 副本、一个 Judge 副本及 PostgreSQL、Redis、RabbitMQ。`metrics-server` 只提供即时资源数据；API/Judge 虽有 Actuator，却没有 Prometheus 格式端点。现有 `src/load-test` 负责 k6 业务负载和 Docker Compose 压测的离线 JSONL/report，两者继续独立使用。
+本地五节点 Docker Desktop Kubernetes 使用 Helm values 部署一个 API 副本、两个 Judge 副本及 PostgreSQL、Redis、RabbitMQ。`metrics-server` 只提供即时资源数据；API/Judge 虽有 Actuator，却没有 Prometheus 格式端点。现有 `src/load-test` 负责 k6 业务负载和 Docker Compose 压测的离线 JSONL/report，两者继续独立使用。
 
 本变更严格采用集群外方案：Prometheus、Grafana、exporter、历史数据和 Dashboard 全部运行在宿主机，Kubernetes 集群内不新增监控 Pod、DaemonSet 或 sidecar。仅新增专用监控身份和本地应用指标端点。宿主机为 Windows/Docker Desktop 时，外部容器通过 `host.docker.internal` 访问宿主机映射的 Kubernetes API Server 与既有 NodePort。
 
@@ -40,7 +40,7 @@ https://<kubernetes-api-server>/api/v1/namespaces/<namespace>/pods/<pod>:<manage
 
 节点资源与容器指标分别通过 `nodes/<node>/proxy/metrics/resource` 和 `nodes/<node>/proxy/metrics/cadvisor` 抓取。保留 `namespace`、`pod`、`node` 等标签，并按服务、端口和暴露注解筛选目标。
 
-不采用直接 Pod IP，因为宿主机通常无法路由集群容器网络；不采用 Service NodePort，因为两个 API 副本的 JVM 曲线会混杂；不采用长期 `kubectl port-forward`，因为目标漂移和进程退出会破坏持续采集。
+不采用直接 Pod IP，因为宿主机通常无法路由集群容器网络；不采用 Service NodePort，避免多副本场景下 JVM 曲线混杂，并保持扩缩容后的按 Pod 观测能力；不采用长期 `kubectl port-forward`，因为目标漂移和进程退出会破坏持续采集。
 
 Docker Desktop 下 API Server 地址不能硬编码为 `6443` 或容器内的 `127.0.0.1`。配置生成流程读取当前 `docker-desktop` kubeconfig 的实际映射端口，以 `host.docker.internal` 为连接地址；TLS 使用集群 CA，并通过显式 `server_name` 匹配 kubeconfig 中的 API Server 名称。禁止把关闭 TLS 校验作为默认方案。
 
@@ -52,7 +52,7 @@ Docker Desktop 下 API Server 地址不能硬编码为 `6443` 或容器内的 `1
 - Judge：管理端口 `8091`，暴露 `health,info,metrics,prometheus`；业务探针继续走 `8090`。
 - 管理端口只声明为容器端口，不创建 Service/NodePort，由 API Server Pod Proxy 访问。
 
-为同时支持 `bluenet.local` 浏览器和 k6 仅允许的 `https://localhost` 隔离地址，本地 API 的 `COOKIE_DOMAIN` 置空并跟随当前主机；该调整不进入生产 values。
+为同时支持 `bluenet.local` 浏览器和 k6 仅允许的 `https://localhost` 隔离地址，本地 API 的 `COOKIE_DOMAIN` 置空并跟随当前主机；该调整不进入生产 values。另通过本地 `hostAliases` 将 `s3.bluenet.local` 指向 Docker 集群网关，避免 Pod 把对象存储域名解析为自身 127.0.0.1；预签名 URL 的 Host 保持不变。本地 nginx CA 通过 `bluenet-local-tls` Secret 挂载，API entrypoint 将其导入 JRE truststore 副本，保持 TLS 校验开启。
 
 独立管理端口把监控流量与业务认证/限流边界分开。实现必须用集成测试验证 `/actuator/prometheus` 可抓取且业务端口不能访问该端点；如果现有 Spring Security 过滤器仍拦截管理端口，只允许增加 `/actuator/prometheus` 精确路径规则；该端点只在本地管理端口暴露，禁止全局匿名开放 `/actuator/**`。本地 values 必须显式设置 `MANAGEMENT_PROMETHEUS_METRICS_EXPORT_ENABLED=true`，避免指标导出默认开关抑制 Registry。
 
@@ -83,7 +83,7 @@ Docker Desktop 下 API Server 地址不能硬编码为 `6443` 或容器内的 `1
 - PostgreSQL 连接、事务和锁，Redis 内存、客户端和命中率；
 - 所有 scrape target 的 `up` 与最近抓取状态。
 
-Grafana 与 k6 使用相同 UTC 时间窗口对照。Dashboard 不展示伪造的“总吞吐”面板，也不将 Prometheus 的应用请求计数冒充 k6 的有效业务闭环数。
+Grafana 使用 Asia/Shanghai 展示，k6 报告保留 UTC；两者按相同绝对时间窗口对照。Dashboard 不展示伪造的“总吞吐”面板，也不将 Prometheus 的应用请求计数冒充 k6 的有效业务闭环数。
 
 ## Risks / Trade-offs
 

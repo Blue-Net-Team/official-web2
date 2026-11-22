@@ -19,7 +19,7 @@
 
 ### Modified Capabilities
 
-无。现有集群管理、压测场景、吞吐结果和离线报告的需求保持不变。
+- `local-k3s-values`: 本地压测 API Deployment 缩容为一个副本，Judge 扩容为两个副本；其余拓扑约束保持不变。现有压测场景、吞吐结果和离线报告的需求保持不变。
 
 ## Impact
 

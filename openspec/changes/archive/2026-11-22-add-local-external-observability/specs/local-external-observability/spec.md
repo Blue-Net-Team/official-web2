@@ -18,10 +18,10 @@
 
 API 与 Judge SHALL 提供 Prometheus 文本格式的 Actuator 指标端点，外部 Prometheus MUST 通过 Kubernetes API Server 的 Pod 代理分别抓取每个目标，MUST NOT 通过 Service NodePort 混合采集多个 API 副本，也 MUST NOT 为 Judge 新增 NodePort。
 
-#### Scenario: 分别采集两个 API 副本
+#### Scenario: 采集当前 API 副本
 
-- **WHEN** 本地 Docker Desktop Kubernetes 中运行两个带监控标记的 API Pod
-- **THEN** Prometheus 为两个 Pod 分别建立目标并保存可区分的 Pod 标签，单副本 JVM 曲线不会与另一副本混合
+- **WHEN** 本地 Docker Desktop Kubernetes 中运行一个带监控标记的 API Pod
+- **THEN** Prometheus 为该 Pod 建立独立目标并保存 Pod 标签，不经过 Service 混采
 
 #### Scenario: 采集 ClusterIP Judge
 
@@ -115,11 +115,11 @@ Grafana SHALL 自动配置 Prometheus 数据源和本地压测 Dashboard，展�
 
 ### Requirement: 与现有压测结果保持边界
 
-本能力 SHALL 与 k6 和现有 JSONL/report 按 UTC 时间范围对照使用，MUST NOT 替换、删除或改变现有 k6 吞吐指标、有效业务闭环定义、采样文件或报告格式，也 MUST NOT 将应用请求计数解释为有效业务完成数。
+本能力 SHALL 与 k6 和现有 JSONL/report 按相同绝对时间范围对照使用（Grafana 使用 Asia/Shanghai，报告保留 UTC），MUST NOT 替换、删除或改变现有 k6 吞吐指标、有效业务闭环定义、采样文件或报告格式，也 MUST NOT 将应用请求计数解释为有效业务完成数。
 
 #### Scenario: 对照一次压测
 
-- **WHEN** 操作者完成一轮现有 k6 场景并在 Grafana 选择相同 UTC 时间窗口
+- **WHEN** 操作者完成一轮现有 k6 场景并在 Grafana 选择相同绝对时间窗口
 - **THEN** k6 继续产出原有业务结果，Grafana 独立提供系统指标曲线，两者可辅助定位延迟或资源异常
 
 #### Scenario: 仅运行原压测工具
