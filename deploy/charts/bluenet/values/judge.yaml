@@ -6,7 +6,7 @@
 fullnameOverride: bluenet-judge
 kind: Deployment
 containerName: judge
-replicas: 1
+replicas: 2
 
 image:
   repository: "<ACR-ADDRESS>/<SERVICE-NAMESPACE>/<SERVICE-REPO>"

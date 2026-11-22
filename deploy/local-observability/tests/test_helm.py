@@ -34,7 +34,7 @@ class LocalObservabilityHelmTest(unittest.TestCase):
         pod = deployment["spec"]["template"]
         container = pod["spec"]["containers"][0]
 
-        self.assertEqual(deployment["spec"]["replicas"], 2)
+        self.assertEqual(deployment["spec"]["replicas"], 1)
         self.assertEqual(pod["metadata"]["annotations"]["prometheus.io/port"], "8081")
         self.assertIn({"name": "management", "containerPort": 8081, "protocol": "TCP"}, container["ports"])
         self.assertTrue(all(port.get("nodePort") != 8081 for port in service["spec"]["ports"]))
@@ -45,6 +45,7 @@ class LocalObservabilityHelmTest(unittest.TestCase):
         service = find_kind(documents, "Service")
         container = deployment["spec"]["template"]["spec"]["containers"][0]
 
+        self.assertEqual(deployment["spec"]["replicas"], 2)
         self.assertEqual(service["spec"]["type"], "ClusterIP")
         self.assertEqual(service["spec"]["ports"], [{"name": "http", "port": 8090, "targetPort": 8090, "protocol": "TCP"}])
         self.assertIn({"name": "management", "containerPort": 8091, "protocol": "TCP"}, container["ports"])
