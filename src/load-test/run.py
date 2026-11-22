@@ -18,6 +18,7 @@ SCENARIOS = {
     "enrollment": "scenarios/enrollment.js",
     "file": "scenarios/assessment-file-upload.js",
     "algorithm": "scenarios/algorithm-python.js",
+    "algorithm-formal-burst": "scenarios/algorithm-formal-burst.js",
 }
 
 
