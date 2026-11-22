@@ -26,12 +26,16 @@ export function selectAlgorithmOperation(globalIteration, runPercent) {
 // 8 次一个周期；与 50% run/submit 交错后，两种操作都覆盖四种判题结果。
 const OUTCOMES = Object.freeze(['AC', 'WA', 'TLE', 'RE', 'WA', 'AC', 'RE', 'TLE']);
 
-const REALISTIC_OUTCOMES = Object.freeze([
-  'AC', 'WA', 'AC', 'RE', 'AC', 'AC', 'WA', 'AC', 'TLE', 'AC',
-  'WA', 'AC', 'AC', 'WA', 'AC', 'RE', 'AC', 'AC', 'WA', 'AC',
-]);
+// 100 次一个周期：WA 固定占 25 个四等分点，RE 占不与 WA 重叠的 10 个十等分点，
+// TLE 只放在 17/67，剩余 63 个位置均为 AC，避免错误结果集中爆发。
+const REALISTIC_OUTCOMES = Object.freeze(Array.from({ length: 100 }, (_, index) => {
+  if (index === 17 || index === 67) return 'TLE';
+  if (index % 20 === 0 || index % 20 === 5) return 'RE';
+  if (index % 4 === 2) return 'WA';
+  return 'AC';
+}));
 
-/** 20 次为一个周期：AC 12、WA 5、RE 2、TLE 1，并交错避免集中爆发。 */
+/** 100 次为一个周期：AC 63、WA 25、RE 10、TLE 2。 */
 export function selectRealisticOutcome(globalIteration) {
   if (!Number.isInteger(globalIteration) || globalIteration < 0) {
     throw new Error('globalIteration must be a non-negative integer');
@@ -47,13 +51,16 @@ export function selectAlgorithmOutcome(globalIteration) {
   return OUTCOMES[globalIteration % OUTCOMES.length];
 }
 
-/** 标准答案保持 AC；仅提交/运行代码按预期结果变化。 */
-export function sourceCodeForOutcome(outcome) {
+/** AC 使用当前题自己的标准解；WA 使用不可能等于任何夹具答案的固定错误输出。 */
+export function sourceCodeForOutcome(outcome, acceptedSourceCode) {
   switch (outcome) {
     case 'AC':
-      return 'a, b = map(int, input().split())\nprint(a + b)\n';
+      if (!acceptedSourceCode) {
+        throw new Error('AC outcome requires the current question standard solution');
+      }
+      return acceptedSourceCode;
     case 'WA':
-      return 'print(0)\n';
+      return 'print("load-test-wa")\n';
     case 'TLE':
       return 'while True:\n    pass\n';
     case 'RE':

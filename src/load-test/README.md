@@ -46,14 +46,25 @@ uv run --project src/load-test python src/load-test/run.py enrollment --reset --
 # 文件考核：正式窗口 5 分钟，至少 200 个完整上传答题人次
 uv run --project src/load-test python src/load-test/run.py file --reset --run-id file-baseline-01
 
-# Python：15 道题、100 名在线用户，默认 2.5 任务/秒、30 分钟
-uv run --project src/load-test python src/load-test/run.py algorithm --reset --run-id algorithm-baseline-01
+# Python 第一步：只创建 15 道题并运行标准解 benchmark，不提交考生任务
+$env:ALGORITHM_PREPARE_OUTPUT = "src/load-test/results/algorithm-prepared-context.json"
+k6 run src/load-test/scenarios/prepare-algorithm.js
+
+# Python 第二步：按每题 ceil(maxTimeMs)+100ms 确认限时
+uv run --project src/load-test python src/load-test/setup/measure_algorithm_limits.py `
+  src/load-test/results/algorithm-prepared-context.json `
+  src/load-test/results/algorithm-confirmed-context.json
+# k6 open() 按脚本目录解析相对路径，因此这里传绝对路径
+$env:ALGORITHM_CONTEXT_FILE = (Resolve-Path "src/load-test/results/algorithm-confirmed-context.json").Path
+
+# Python 第三步：100 名在线用户，默认 2.5 任务/秒、30 分钟
+uv run --project src/load-test python src/load-test/run.py algorithm --run-id algorithm-baseline-01
 
 # 高峰 5 任务/秒、短时尖峰 10 任务/秒（可直接修改 ALGORITHM_DURATION）
 $env:ALGORITHM_RATE = "5"
-uv run --project src/load-test python src/load-test/run.py algorithm --reset --run-id algorithm-peak-01
+uv run --project src/load-test python src/load-test/run.py algorithm --run-id algorithm-peak-01
 $env:ALGORITHM_RATE = "10"
-uv run --project src/load-test python src/load-test/run.py algorithm --reset --run-id algorithm-spike-01
+uv run --project src/load-test python src/load-test/run.py algorithm --run-id algorithm-spike-01
 Remove-Item Env:ALGORITHM_RATE
 ```
 
@@ -73,8 +84,10 @@ uv run --project src/load-test python src/load-test/run.py algorithm --preflight
 
 - 100 个测试考生与独立预登录会话；文件场景 VU 与用户一对一，算法到达率模式按全局样本轮转在线用户。
 - 1 KiB 固定 ZIP fixture。
-- 15 道具有独立 READY 判题配置的 Python 算法题。
-- 算法默认 2.5 任务/秒、30 分钟，运行/提交约 10:2；AC/WA/RE/TLE 为 60%/25%/10%/5%。
+- 15 道不同题型、独立 READY 判题配置的 Python 算法题：两数相加、数组求和/最大值/排序、闭区间求和、GCD、素数、斐波那契、阶乘、字符串反转、回文、字符计数、二分查找、去重计数、矩阵求和。AC 提交使用当前题自己的标准解。
+- 每题主标准解重复测速 5 次，正式限时来自真实 `maxTimeMs` 向上取整再加 100ms，不使用生产建议公式或固定 5000ms。
+- 算法准备上下文和确认上下文只保存题目、用户与测量数据，不保存登录会话或密码；正式场景 setup 会重新登录。准备完成后不能在正式场景前使用 `--reset` 删除这些数据。
+- 算法默认 2.5 任务/秒、30 分钟，运行/提交约 10:2；AC/WA/RE/TLE 为 63%/25%/10%/2%。
 - 可用 `ALGORITHM_RATE`、`ALGORITHM_DURATION` 切换到 5/s 高峰、10/s 尖峰或完整 2 小时。
 - 每 VU 同时最多一个非终态任务；任务 SUCCEEDED 后仍校验实际 case outcome 等于该样本预期。
 - 1 秒判题轮询间隔与 120 秒任务超时。

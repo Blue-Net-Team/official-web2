@@ -63,6 +63,8 @@ def set_phase(path: Path, phase: str) -> None:
 @click.option("--unique-variable", default="none", show_default=True)
 def main(scenario: str, run_id: str, reset: bool, preflight: bool, recovery_seconds: int, unique_variable: str) -> None:
     """编排重置、监控、k6、回收观察和报告，并在异常时仍保存部分实验数据。"""
+    if scenario.startswith("algorithm") and reset:
+        raise click.ClickException("先重置环境并完成 prepare-algorithm/measure limits，再不带 --reset 运行算法场景")
     if shutil.which("k6") is None and not Path("C:/Program Files/k6/k6.exe").is_file():
         raise click.ClickException("k6 is not installed")
     k6 = shutil.which("k6") or "C:/Program Files/k6/k6.exe"
@@ -76,6 +78,8 @@ def main(scenario: str, run_id: str, reset: bool, preflight: bool, recovery_seco
         "MONITOR_USER_STUDENT_ID": os.environ.get("MONITOR_USER_STUDENT_ID", "999999000001"),
         "MONITOR_USER_PASSWORD": os.environ.get("MONITOR_USER_PASSWORD", "LoadTestMonitor-Local"),
     }
+    if scenario.startswith("algorithm") and not env.get("ALGORITHM_CONTEXT_FILE"):
+        raise click.ClickException("算法场景需要 ALGORITHM_CONTEXT_FILE，先执行准备和测速确认步骤")
     if preflight:
         env["PREFLIGHT"] = "true"
 

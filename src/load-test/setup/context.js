@@ -3,6 +3,7 @@ import { login, passwordHash } from '../lib/auth.js';
 import { validateUserCapacity } from '../lib/config.js';
 import { makeNumericStudentId } from '../lib/identity.js';
 import { apiGet, apiPost, apiPut } from '../lib/k6-http.js';
+import { algorithmFixture } from '../lib/algorithm-fixtures.js';
 
 /** 生成后端 LocalDateTime 可接受的本地 ISO 字符串，不带 UTC 的 Z 后缀。 */
 function localDateTime(date) {
@@ -10,21 +11,9 @@ function localDateTime(date) {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
 }
 
-/** 为每道题生成独立但确定性的输入、标准 Python 源码和 generator。 */
-function algorithmFixture(index) {
-  const input = `${index} ${index}`;
-  return {
-    questionIndex: index,
-    input,
-    expectedOutput: String(index * 2),
-    sourceCode: 'a, b = map(int, input().split())\nprint(a + b)\n',
-    generatorSource: `print("${input}")\n`,
-  };
-}
-
 /**
- * 创建单道算法题并完成配置、测试数据生成和 Python 资源限制确认。
- * 只有 GENERATED/READY 状态才允许确认限制，FAILED 或超时都会中止初始化。
+ * 创建单道算法题并完成配置、测试数据生成和真实 Python benchmark。
+ * 只有 READY 且主标准解 DONE 才返回测量结果；资源限制由独立 Python 工具确认。
  */
 function createAlgorithmQuestion(config, session, assessmentTimeId, fixture) {
   const created = apiPost(
@@ -34,13 +23,13 @@ function createAlgorithmQuestion(config, session, assessmentTimeId, fixture) {
       assessmentTimeId,
       questionNo: fixture.questionIndex + 1,
       questionType: 'algorithm',
-      title: `压测 Python 两数相加 ${fixture.questionIndex}`,
+      title: `压测 Python ${fixture.questionIndex}：${fixture.title}`,
       content: {
         type: 'algorithm',
-        content: '读取两个整数并输出它们的和。',
-        inputDescription: '一行两个整数。',
-        outputDescription: '输出两数之和。',
-        constraints: `${fixture.questionIndex} <= 100`,
+        content: fixture.statement,
+        inputDescription: fixture.inputDescription,
+        outputDescription: fixture.outputDescription,
+        constraints: fixture.constraints,
         examples: [{ input: fixture.input, expectedOutput: fixture.expectedOutput }],
         runTestCases: [{ input: fixture.input, expectedOutput: fixture.expectedOutput, hidden: false, weight: 1 }],
         starterCode: { python: fixture.sourceCode },
@@ -59,7 +48,7 @@ function createAlgorithmQuestion(config, session, assessmentTimeId, fixture) {
       generatorLanguage: 'python',
       generatorSource: fixture.generatorSource,
       primaryStandardLanguage: 'python',
-      benchmarkRepeatTimes: 1,
+      benchmarkRepeatTimes: 5,
       marginMultiplier: 2,
       minExtraMs: 100,
       roundToMs: 100,
@@ -72,7 +61,7 @@ function createAlgorithmQuestion(config, session, assessmentTimeId, fixture) {
           weight: 1,
           hidden: false,
           sample: true,
-          description: '固定轻量两数相加用例',
+          description: `固定轻量用例：${fixture.title}`,
         },
       ],
     },
@@ -100,15 +89,24 @@ function createAlgorithmQuestion(config, session, assessmentTimeId, fixture) {
     if (status === 'FAILED') {
       throw new Error(`Algorithm question ${questionId} generation failed`);
     }
-    if (status === 'GENERATED' || status === 'READY') {
-      apiPut(
-        config.baseUrl,
-        `/api/v1/admin/judge/questions/${questionId}/config/language-limits/python`,
-        { timeLimitMs: 5000, memoryLimitKb: 262144, outputLimitKb: 1024 },
-        session.csrfToken,
-        'setup_confirm_python_limit',
+    if (status === 'READY') {
+      const solution = current.standardSolutions?.find(
+        (item) => item.language === 'python' && item.primarySolution === true,
       );
-      return { questionId, ...fixture };
+      if (!solution || solution.benchmarkStatus !== 'DONE') {
+        throw new Error(`Algorithm question ${questionId} has no completed primary Python benchmark`);
+      }
+      return {
+        questionId,
+        ...fixture,
+        benchmark: {
+          status: solution.benchmarkStatus,
+          p95TimeMs: solution.p95TimeMs,
+          maxTimeMs: solution.maxTimeMs,
+          peakMemoryKb: solution.peakMemoryKb,
+          benchmarkRepeatTimes: current.benchmarkRepeatTimes,
+        },
+      };
     }
     sleep(1);
   }

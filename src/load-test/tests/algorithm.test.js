@@ -37,7 +37,10 @@ test('distributes AC WA TLE RE across both run and submit', () => {
       new Set(['AC', 'WA', 'TLE', 'RE']),
     );
   }
-  assert.deepEqual([0, 1, 2, 3].map((index) => sourceCodeForOutcome(selectAlgorithmOutcome(index))).map((source) => source.length > 0), [true, true, true, true]);
+  const accepted = 'print(42)\n';
+  assert.deepEqual([0, 1, 2, 3].map((index) => sourceCodeForOutcome(selectAlgorithmOutcome(index), accepted)).map((source) => source.length > 0), [true, true, true, true]);
+  assert.equal(sourceCodeForOutcome('AC', accepted), accepted);
+  assert.throws(() => sourceCodeForOutcome('AC'), /standard solution/);
   assert.throws(() => selectAlgorithmOutcome(-1), /non-negative/);
   assert.throws(() => sourceCodeForOutcome('UNKNOWN'), /Unsupported/);
 });
@@ -52,10 +55,10 @@ test('reuses the same user across repeated VU iterations', () => {
 
 test('models realistic outcome distribution and run submit ratio', () => {
   const outcomes = { AC: 0, WA: 0, RE: 0, TLE: 0 };
-  for (let index = 0; index < 20; index += 1) {
+  for (let index = 0; index < 100; index += 1) {
     outcomes[selectRealisticOutcome(index)] += 1;
   }
-  assert.deepEqual(outcomes, { AC: 12, WA: 5, RE: 2, TLE: 1 });
+  assert.deepEqual(outcomes, { AC: 63, WA: 25, RE: 10, TLE: 2 });
   const operations = [0, 1, 2, 3, 4, 5].map((index) => selectAlgorithmOperation(index, 500 / 6));
   assert.equal(operations.filter((item) => item === 'run').length, 5);
   assert.equal(operations.filter((item) => item === 'submit').length, 1);

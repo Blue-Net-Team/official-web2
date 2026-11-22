@@ -3,9 +3,9 @@ import exec from 'k6/execution';
 import { Counter, Trend } from 'k6/metrics';
 import { selectAlgorithmOperation, selectAlgorithmOutcome, selectQuestion, selectRealisticOutcome, sourceCodeForOutcome } from '../lib/algorithm.js';
 import { assignUser } from '../lib/identity.js';
+import { login } from '../lib/auth.js';
 import { apiGet, apiPost } from '../lib/k6-http.js';
-import { makeRunId, runtimeConfig } from '../lib/runtime.js';
-import { initializeContext } from '../setup/context.js';
+import { runtimeConfig } from '../lib/runtime.js';
 
 // 创建、完成、失败、预期结果和轮询分别计量，并按 operation/questionId/outcome 拆分。
 const created = new Counter('algorithm_jobs_created');
@@ -17,6 +17,10 @@ const endToEnd = new Trend('algorithm_job_end_to_end', true);
 
 const config = runtimeConfig();
 const preflight = __ENV.PREFLIGHT === 'true';
+if (!__ENV.ALGORITHM_CONTEXT_FILE) {
+  throw new Error('ALGORITHM_CONTEXT_FILE is required; run prepare-algorithm.js and measure_algorithm_limits.py first');
+}
+const preparedContext = JSON.parse(open(__ENV.ALGORITHM_CONTEXT_FILE));
 const arrivalRate = Number(__ENV.ALGORITHM_RATE || config.algorithm.rate);
 const arrivalDuration = __ENV.ALGORITHM_DURATION || config.algorithm.duration;
 if (!Number.isFinite(arrivalRate) || arrivalRate <= 0) {
@@ -49,9 +53,26 @@ export const options = {
   },
 };
 
-/** 初始化多道 READY 算法题并预登录考生，避免初始化任务污染正式判题负载。 */
+/** 只接受已完成真实 benchmark 和管理员确认的上下文，禁止回退到固定限时。 */
 export function setup() {
-  return initializeContext(config, makeRunId());
+  for (const question of preparedContext.algorithms || []) {
+    if (question.benchmark?.status !== 'DONE'
+      || question.limitMeasurement?.source !== 'judge_benchmark_max'
+      || !Number.isFinite(question.timeLimitMs)
+      || question.timeLimitMs <= 0) {
+      throw new Error(`Algorithm question ${question.questionId} has no measured confirmed limit`);
+    }
+  }
+  if (!preparedContext.algorithms?.length || !preparedContext.users?.length) {
+    throw new Error('Prepared algorithm context requires questions and users');
+  }
+  return {
+    ...preparedContext,
+    users: preparedContext.users.map((user) => ({
+      ...user,
+      session: login(config.baseUrl, user.studentId, config.candidatePassword),
+    })),
+  };
 }
 
 /**
@@ -112,7 +133,7 @@ export default function (context) {
   const expectedOutcome = preflight
     ? selectAlgorithmOutcome(globalIteration)
     : selectRealisticOutcome(globalIteration);
-  const sourceCode = sourceCodeForOutcome(expectedOutcome);
+  const sourceCode = sourceCodeForOutcome(expectedOutcome, question.sourceCode);
   // 到达率模式下按全局样本轮转 100 名在线用户，不把在线人数等同于固定并发执行数。
   const user = assignUser(context.users, (globalIteration % context.users.length) + 1);
   const session = user.session;
